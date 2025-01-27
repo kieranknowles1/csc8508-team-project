@@ -58,12 +58,13 @@ target_precompile_headers(${PROJECT_NAME} PRIVATE
 	<assert.h>
     <functional>
 
-    <Vector.h>
-    <Matrix.h>
-    <Quaternion.h>
+    <NCLCoreClasses/Vector.h>
+    <NCLCoreClasses/Matrix.h>
+    <NCLCoreClasses/Quaternion.h>
 )
 
 target_include_directories (${PROJECT_NAME}
+    PRIVATE ${CMAKE_SOURCE_DIR}
     PRIVATE ${CMAKE_SOURCE_DIR}/NCLCoreClasses
     PRIVATE ${CMAKE_SOURCE_DIR}/OpenGLRendering
 )

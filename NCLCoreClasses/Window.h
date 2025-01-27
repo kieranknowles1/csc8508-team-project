@@ -46,7 +46,7 @@ namespace NCL {
 	};
 
 	using WindowEventHandler = std::function<void(WindowEvent e, uint32_t w, uint32_t h)>;
-	
+
 	class Window {
 	public:
 		static Window* CreateGameWindow(const WindowInitialisation& init);
@@ -92,9 +92,9 @@ namespace NCL {
 		void SetWindowEventHandler(const WindowEventHandler& e) {
 			eventHandler = e;
 		}
+		virtual ~Window();
 	protected:
 		Window();
-		virtual ~Window();
 
 		virtual void UpdateTitle() {}
 

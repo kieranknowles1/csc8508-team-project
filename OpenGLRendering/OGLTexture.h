@@ -6,7 +6,7 @@ Contact:richgdavison@gmail.com
 License: MIT (see LICENSE file at the top of the source tree)
 */////////////////////////////////////////////////////////////////////////////
 #pragma once
-#include "Texture.h"
+#include <NCLCoreClasses/Texture.h>
 #include "glad\gl.h"
 
 namespace NCL::Rendering {		
