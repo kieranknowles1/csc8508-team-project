@@ -71,9 +71,10 @@ target_include_directories (${PROJECT_NAME}
 ################################################################################
 # Dependencies
 ################################################################################
+find_package(OpenGL REQUIRED)
 set(ADDITIONAL_LIBRARY_DEPENDENCIES
     "NCLCoreClasses"
-    "opengl32.lib"
+    ${OPENGL_LIBRARIES}
 )
 
 if(USE_SDL2)

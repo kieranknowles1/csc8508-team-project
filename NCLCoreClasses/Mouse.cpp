@@ -1,5 +1,7 @@
 #include "Mouse.h"
 
+#include <cstring>
+
 using namespace NCL;
 
 Mouse::Mouse() {
@@ -35,7 +37,7 @@ void Mouse::UpdateFrameState(float msec) {
 }
 
 void	Mouse::Sleep() {
-	isAwake = false; 
+	isAwake = false;
 	memset(buttons		, 0, sizeof(bool)  * MouseButtons::MAX_VAL);
 	memset(holdButtons	, 0, sizeof(bool)  * MouseButtons::MAX_VAL);
 	memset(doubleClicks	, 0, sizeof(bool)  * MouseButtons::MAX_VAL);
@@ -45,7 +47,7 @@ void	Mouse::Sleep() {
 }
 
 void	Mouse::Wake() {
-	isAwake = true; 
+	isAwake = true;
 }
 
 void	Mouse::SetAbsolutePosition(const Vector2& pos) {

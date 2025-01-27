@@ -43,10 +43,10 @@ set(Rendering
     "Mesh.h"
 
     "Buffer.h"
-	
+
 	"MshLoader.cpp"
     "MshLoader.h"
-	
+
     "MeshMaterial.cpp"
     "MeshMaterial.h"
     "RendererBase.cpp"
@@ -89,6 +89,16 @@ set(Windowing_and_Input__Win32
 )
 source_group("Windowing and Input\\Win32" FILES ${Windowing_and_Input__Win32})
 
+set(Windowing_and_Input_SDL2
+    SDLKeyboard.cpp
+    SDLKeyboard.h
+    SDLMouse.cpp
+    SDLMouse.h
+    SDLWindow.cpp
+    SDLWindow.h
+)
+source_group("Windowing and Input\\SDL2" FILES ${Windowing_and_Input__Win32})
+
 set(ALL_FILES
     ${Asset_Handling}
     ${Header_Files}
@@ -96,8 +106,15 @@ set(ALL_FILES
     ${Rendering}
     ${Source_Files}
     ${Windowing_and_Input}
-    ${Windowing_and_Input__Win32}
 )
+
+if(WIN32)
+    list(APPEND ALL_FILES ${Windowing_and_Input__Win32})
+endif()
+
+if(USE_SDL2)
+    list(APPEND ALL_FILES ${Windowing_and_Input_SDL2})
+endif()
 
 ################################################################################
 # Target
@@ -118,13 +135,13 @@ target_precompile_headers(${PROJECT_NAME} PRIVATE
     <string>
     <iosfwd>
     <set>
-    <map> 
+    <map>
     <chrono>
     <thread>
     <filesystem>
     <functional>
 	<algorithm>
-	<assert.h>  
+	<assert.h>
 )
 
 ################################################################################

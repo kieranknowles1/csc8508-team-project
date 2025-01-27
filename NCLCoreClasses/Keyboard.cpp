@@ -1,5 +1,7 @@
 #include "Keyboard.h"
 
+#include <cstring>
+
 using namespace NCL;
 
 Keyboard::Keyboard() {
@@ -17,11 +19,11 @@ void Keyboard::UpdateFrameState(float msec) {
 }
 
 void Keyboard::Sleep() {
-	isAwake = false; 
+	isAwake = false;
 	memset(keyStates , 0, KeyCodes::MAXVALUE * sizeof(bool));
 	memset(holdStates, 0, KeyCodes::MAXVALUE * sizeof(bool));
 }
 
 void Keyboard::Wake() {
-	isAwake = true; 
+	isAwake = true;
 }

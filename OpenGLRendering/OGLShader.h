@@ -7,7 +7,7 @@ License: MIT (see LICENSE file at the top of the source tree)
 */////////////////////////////////////////////////////////////////////////////
 #pragma once
 #include <NCLCoreClasses/Shader.h>
-#include "glad\gl.h"
+#include "glad/gl.h"
 
 namespace NCL::Rendering {
 	using UniqueOGLShader = std::unique_ptr<class OGLShader>;
@@ -26,8 +26,8 @@ namespace NCL::Rendering {
 
 		int GetProgramID() const {
 			return programID;
-		}	
-			
+		}
+
 		static void	PrintCompileLog(GLuint object);
 		static void	PrintLinkLog(GLuint program);
 
