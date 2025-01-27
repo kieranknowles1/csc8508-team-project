@@ -34,7 +34,7 @@ set(ALL_FILES
 )
 
 set_source_files_properties(${ALL_FILES} PROPERTIES LANGUAGE CXX)
- 
+
 ################################################################################
 # Target
 ################################################################################
@@ -63,10 +63,10 @@ target_precompile_headers(${PROJECT_NAME} PRIVATE
     <Quaternion.h>
 )
 
-target_include_directories (${PROJECT_NAME} 
-    PUBLIC ${CMAKE_SOURCE_DIR}/NCLCoreClasses
-    PUBLIC ${CMAKE_SOURCE_DIR}/OpenGLRendering
-)	
+target_include_directories (${PROJECT_NAME}
+    PRIVATE ${CMAKE_SOURCE_DIR}/NCLCoreClasses
+    PRIVATE ${CMAKE_SOURCE_DIR}/OpenGLRendering
+)
 ################################################################################
 # Dependencies
 ################################################################################
