@@ -71,9 +71,15 @@ target_include_directories (${PROJECT_NAME}
 ################################################################################
 # Dependencies
 ################################################################################
+find_package(OpenGL REQUIRED)
 set(ADDITIONAL_LIBRARY_DEPENDENCIES
     "NCLCoreClasses"
-    "opengl32.lib"
+    ${OPENGL_LIBRARIES}
 )
+
+if(USE_SDL2)
+    find_package(SDL2 REQUIRED)
+    list(APPEND ADDITIONAL_LIBRARY_DEPENDENCIES SDL2::SDL2)
+endif()
 
 target_link_libraries(${PROJECT_NAME} PUBLIC "${ADDITIONAL_LIBRARY_DEPENDENCIES}")

@@ -4,6 +4,10 @@
 #include "Win32Window.h"
 #endif
 
+#ifdef CSC_USE_SDL2
+#include "SDLWindow.h"
+#endif
+
 #ifdef __ORBIS__
 #include "../Plugins/PlayStation4/PS4Window.h"
 #endif
@@ -33,7 +37,9 @@ Window* Window::CreateGameWindow(const WindowInitialisation& init) {
 	if (window) {
 		return nullptr;
 	}
-#ifdef _WIN32
+#if defined(CSC_USE_SDL2)
+  return new UnixCode::SDLWindow(init);
+#elif defined(_WIN32)
 	return new Win32Code::Win32Window(init);
 #endif
 	return nullptr;

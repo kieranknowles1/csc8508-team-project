@@ -7,9 +7,9 @@ License: MIT (see LICENSE file at the top of the source tree)
 */////////////////////////////////////////////////////////////////////////////
 #pragma once
 #include <NCLCoreClasses/Texture.h>
-#include "glad\gl.h"
+#include "glad/gl.h"
 
-namespace NCL::Rendering {		
+namespace NCL::Rendering {
 	using UniqueOGLTexture = std::unique_ptr<class OGLTexture>;
 	using SharedOGLTexture = std::shared_ptr<class OGLTexture>;
 
@@ -34,7 +34,7 @@ namespace NCL::Rendering {
 		GLuint GetObjectID() const	{
 			return texID;
 		}
-	protected:						
+	protected:
 		GLuint texID;
 	};
 }

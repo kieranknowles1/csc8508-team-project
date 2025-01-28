@@ -37,7 +37,9 @@ static void APIENTRY DebugCallback(GLenum source, GLenum type, GLuint id, GLenum
 
 OGLRenderer::OGLRenderer(Window& w) : RendererBase(w)	{
 	initState = false;
-#ifdef _WIN32
+#if defined(CSC_USE_SDL2)
+  InitWithSDL2(w);
+#elif defined(_WIN32)
 	InitWithWin32(w);
 #endif
 	boundMesh		= nullptr;
@@ -73,7 +75,15 @@ void OGLRenderer::EndFrame()		{
 }
 
 void OGLRenderer::SwapBuffers()   {
+#ifdef CSC_USE_SDL2
+  // TODO: The window should be responsible for this
+  auto sdlWindow = window->getSdlWindow();
+	SDL_GL_SwapWindow(sdlWindow);
+#elif defined(_WIN32)
 	::SwapBuffers(deviceContext);
+#else
+#error "No SwapBuffers implementation"
+#endif
 }
 
 void OGLRenderer::BindBufferAsUBO(const OGLBuffer& b, GLuint slotID) {
@@ -166,7 +176,7 @@ void OGLRenderer::BindTextureToShader(const OGLTexture& t, const std::string& un
 		std::cout << __FUNCTION__ << " has been called without a bound shader!\n";
 		return;//Debug message time!
 	}
-	
+
 	GLuint slot = glGetUniformLocation(activeShader->GetProgramID(), uniform.c_str());
 
 	if (slot < 0) {
@@ -251,7 +261,7 @@ void OGLRenderer::InitWithWin32(Window& w) {
 		WGL_CONTEXT_MAJOR_VERSION_ARB, major,
 		WGL_CONTEXT_MINOR_VERSION_ARB, minor,
 		WGL_CONTEXT_FLAGS_ARB, WGL_CONTEXT_FORWARD_COMPATIBLE_BIT_ARB
-#ifdef OPENGL_DEBUGGING 
+#ifdef OPENGL_DEBUGGING
 		| WGL_CONTEXT_DEBUG_BIT_ARB
 #endif		//No deprecated stuff!! DIE DIE DIE glBegin!!!!
 		,WGL_CONTEXT_PROFILE_MASK_ARB, WGL_CONTEXT_CORE_PROFILE_BIT_ARB,
@@ -284,7 +294,7 @@ void OGLRenderer::InitWithWin32(Window& w) {
 #endif
 
 	//If we get this far, everything's going well!
-	initState = true; 
+	initState = true;
 
 	wglSwapIntervalEXT = (PFNWGLSWAPINTERVALEXTPROC)wglGetProcAddress("wglSwapIntervalEXT");
 }
@@ -293,8 +303,13 @@ void OGLRenderer::DestroyWithWin32() {
 	wglDeleteContext(renderContext);
 }
 
+#endif
+
+// TODO: Implement for other platfoI'm
 bool OGLRenderer::SetVerticalSync(VerticalSyncState s) {
-	if (!wglSwapIntervalEXT) {
+#if defined(CSC_USE_SDL2)
+#elif defined(_WIN32)
+  if (!wglSwapIntervalEXT) {
 		return false;
 	}
 	GLuint state;
@@ -306,8 +321,10 @@ bool OGLRenderer::SetVerticalSync(VerticalSyncState s) {
 	}
 
 	return wglSwapIntervalEXT(state);
-}
+#else
+#error "No SetVerticalSync implementation"
 #endif
+}
 
 #ifdef OPENGL_DEBUGGING
 static void APIENTRY DebugCallback(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar *message, const void *userParam) {
@@ -341,4 +358,27 @@ static void APIENTRY DebugCallback(GLenum source, GLenum type, GLuint id, GLenum
 
 	std::cout << "OpenGL Debug Output: " + sourceName + ", " + typeName + ", " + severityName + ", " + string(message) + "\n";
 }
+#endif
+
+
+#ifdef CSC_USE_SDL2
+  void OGLRenderer::InitWithSDL2(Window& w) {
+		// This will throw if the window is not an SDLWindow
+		// Shouldn't happen, but we need to handle it
+		// TODO: Could we skip win32 and use SDL2 for all platforms?
+		auto& sdlWindow = dynamic_cast<UnixCode::SDLWindow&>(w);
+		this->window = &sdlWindow;
+		auto* handle = sdlWindow.getSdlWindow();
+
+		glContext = SDL_GL_CreateContext(handle);
+
+		if (!gladLoaderLoadGL()) {
+			throw std::runtime_error("Failed to initialise GLAD!");
+		}
+		initState = true;
+	}
+
+  void OGLRenderer::DestroyWithSDL2() {
+    // TODO: Implement
+ 	}
 #endif

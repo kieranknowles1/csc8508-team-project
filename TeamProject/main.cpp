@@ -1,4 +1,5 @@
 #include <stdexcept>
+#include <iostream>
 
 #include <NCLCoreClasses/Window.h>
 #include <NCLCoreClasses/GameTimer.h>
