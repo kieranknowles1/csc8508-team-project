@@ -15,6 +15,7 @@ License: MIT (see LICENSE file at the top of the source tree)
 #include "TextureLoader.h"
 
 #include "Mesh.h"
+#include <NCLCoreClasses/MshLoader.h>
 
 #ifdef _WIN32
 #include "Win32Window.h"
@@ -324,6 +325,18 @@ bool OGLRenderer::SetVerticalSync(VerticalSyncState s) {
 #else
 #error "No SetVerticalSync implementation"
 #endif
+}
+
+OGLMesh* NCL::Rendering::OGLRenderer::LoadMesh(const std::string& name) {
+	OGLMesh* mesh = new OGLMesh();
+	MshLoader::LoadMesh(name, *mesh);
+	mesh->SetPrimitiveType(GeometryPrimitive::Triangles);
+	mesh->UploadToGPU();
+	return mesh;
+}
+
+OGLShader* OGLRenderer::LoadShader(const std::string& vertex, const std::string& fragment) {
+	return new OGLShader(vertex, fragment);
 }
 
 #ifdef OPENGL_DEBUGGING

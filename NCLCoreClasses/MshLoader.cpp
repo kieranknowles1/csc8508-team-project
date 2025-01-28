@@ -14,6 +14,9 @@ using namespace Maths;
 
 bool MshLoader::LoadMesh(const std::string& filename, Mesh& destinationMesh) {
 	std::ifstream file(Assets::MESHDIR + filename);
+	if (!file.is_open()) {
+		std::cerr << __FUNCTION__ << "Could not open mesh " << filename << std::endl;
+	}
 
 	std::string filetype;
 	int fileVersion;
