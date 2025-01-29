@@ -1,5 +1,6 @@
 cmake_minimum_required(VERSION 3.30.0 FATAL_ERROR)
 project(CSC8508)
+
 set(CMAKE_CXX_STANDARD 20)
 
 option(USE_SDL2 "Use SDL2 for window creation and input" $<NOT:$<BOOL:WIN32>>)
