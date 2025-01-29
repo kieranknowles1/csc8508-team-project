@@ -79,21 +79,36 @@ if(MSVC)
     target_link_libraries(${PROJECT_NAME} "Winmm.lib")
 endif()
 
-include_directories("../OpenGLRendering/")
-include_directories("../NCLCoreClasses/")
-include_directories("../CSC8503CoreClasses/")
+set(INCLUDE_DIRECTORIES
+	${CMAKE_SOURCE_DIR}/OpenGLRendering/
+	${CMAKE_SOURCE_DIR}/NCLCoreClasses/
+	${CMAKE_SOURCE_DIR}/CSC8503CoreClasses/
+)
 
-target_link_libraries(${PROJECT_NAME} NCLCoreClasses)
-target_link_libraries(${PROJECT_NAME} CSC8503CoreClasses)
-target_link_libraries(${PROJECT_NAME} OpenGLRendering)
+target_include_directories(${PROJECT_NAME} PRIVATE
+	$<$<CONFIG:Debug>:${INCLUDE_DIRECTORIES}>
+	$<$<CONFIG:Release>:${INCLUDE_DIRECTORIES}>
+	$<$<CONFIG:NetworkTest>:${CMAKE_SOURCE_DIR}/CSC8503CoreClasses/>
+	$<$<CONFIG:NetworkTest>:${CMAKE_SOURCE_DIR}/NCLCoreClasses/>
+)
 
+target_link_libraries(${PROJECT_NAME} 
+	$<$<CONFIG:Debug>:NCLCoreClasses>
+	$<$<CONFIG:Debug>:CSC8503CoreClasses>
+	$<$<CONFIG:Debug>:OpenGLRendering>
 
-# Correct way to define NETWORK_TEST for Visual Studio
+	$<$<CONFIG:Release>:NCLCoreClasses>
+	$<$<CONFIG:Release>:CSC8503CoreClasses>
+	$<$<CONFIG:Release>:OpenGLRendering>
+
+	$<$<CONFIG:NetworkTest>:CSC8503CoreClasses>
+	$<$<CONFIG:NetworkTest>:NCLCoreClasses>
+)
+
 target_compile_definitions(${PROJECT_NAME} PRIVATE 
     $<$<CONFIG:NetworkTest>:NETWORK_TEST>
 )
 
-# Correct way to set compiler flags
 target_compile_options(${PROJECT_NAME} PRIVATE 
     $<$<CONFIG:NetworkTest>:-O2>
 )
