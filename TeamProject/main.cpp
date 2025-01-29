@@ -1,13 +1,7 @@
-#include <stdexcept>
-#include <iostream>
-
 #include <NCLCoreClasses/Window.h>
 #include <NCLCoreClasses/GameTimer.h>
-#include <OpenGLRendering/OGLRenderer.h>
 
-#include <OpenGLRendering/glad/gl.h>
-
-#include "Renderer.h"
+#include "TutorialGame.h"
 
 NCL::Window* createWindow() {
 	NCL::WindowInitialisation options = {
@@ -27,19 +21,19 @@ NCL::Window* createWindow() {
 
 int main(int argc, char** argv) {
 	auto window = createWindow();
-	auto renderer = new Renderer(*window);
 
+	window->ShowOSPointer(false);
+	window->LockMouseToWindow(true);
+
+	auto g = new NCL::CSC8503::TutorialGame();
 	// Clear delta time to exclude start up time
 	window->GetTimer().GetTimeDeltaSeconds();
-	// TODO: Way to exit from ingame, controller support
 	while (window->UpdateWindow() && !NCL::Window::GetKeyboard()->KeyDown(NCL::KeyCodes::ESCAPE)) {
 		float dt = window->GetTimer().GetTimeDeltaSeconds();
-		// TODO: Update loop
-		renderer->Update(dt);
 
-		renderer->Render();
+		window->SetTitle("Gametech frame time:" + std::to_string(1000.0f * dt));
+
+		g->UpdateGame(dt);
 	}
-
-	delete renderer;
 	delete window;
 }

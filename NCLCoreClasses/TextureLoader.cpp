@@ -24,7 +24,7 @@ bool TextureLoader::LoadTexture(const std::string& filename, char*& outData, uin
 	}
 
 	std::filesystem::path path(filename);
-	
+
 	std::string extension = path.extension().string();
 
 	bool isAbsolute = path.is_absolute();
