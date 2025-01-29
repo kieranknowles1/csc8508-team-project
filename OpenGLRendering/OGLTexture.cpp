@@ -60,7 +60,7 @@ UniqueOGLTexture OGLTexture::TextureFromFile(const std::string&name) {
 	uint32_t height		= 0;
 	uint32_t channels	= 0;
 	uint32_t flags		= 0;
-	TextureLoader::LoadTexture(name, texData, width, height, channels, flags);  
+	TextureLoader::LoadTexture(name, texData, width, height, channels, flags);
 
 	UniqueOGLTexture glTex = TextureFromData(texData, width, height, channels);
 
@@ -70,11 +70,11 @@ UniqueOGLTexture OGLTexture::TextureFromFile(const std::string&name) {
 }
 
 UniqueOGLTexture OGLTexture::LoadCubemap(
-	const std::string& xPosFile, 
-	const std::string& xNegFile, 
-	const std::string& yPosFile, 
-	const std::string& yNegFile, 
-	const std::string& zPosFile, 
+	const std::string& xPosFile,
+	const std::string& xNegFile,
+	const std::string& yPosFile,
+	const std::string& yNegFile,
+	const std::string& zPosFile,
 	const std::string& zNegFile) {
 
 	const std::string* filenames[6] = {&xPosFile,&xNegFile,&yPosFile,&yNegFile,&zPosFile,&zNegFile};

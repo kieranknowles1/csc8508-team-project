@@ -45,6 +45,9 @@ namespace NCL::Rendering {
 
 		bool SetVerticalSync(VerticalSyncState s) override;
 
+		OGLMesh* LoadMesh(const std::string& name);
+		OGLShader* LoadShader(const std::string& vertex, const std::string& fragment);
+
 	protected:
 		void BeginFrame()	override;
 		void RenderFrame()	override;
