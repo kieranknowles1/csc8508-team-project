@@ -68,13 +68,13 @@ namespace NCL {
 
 			GLuint lineVAO;
 			GLuint lineVertVBO;
-			size_t lineCount;
+			size_t lineCount = 0;
 
 			GLuint textVAO;
 			GLuint textVertVBO;
 			GLuint textColourVBO;
 			GLuint textTexVBO;
-			size_t textCount;
+			size_t textCount = 0;
 		};
 	}
 }
