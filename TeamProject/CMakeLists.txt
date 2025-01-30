@@ -1,6 +1,3 @@
-set(CMAKE_CONFIGURATION_TYPES "Debug;Release;NetworkTest" CACHE STRING "Build Configurations" FORCE)
-set(CMAKE_EXE_LINKER_FLAGS_NETWORKTEST "" CACHE STRING "Linker flags for NetworkTest Configuation")
-
 set(SOURCES
     GameTechRenderer.cpp
     GameTechRenderer.h
@@ -15,19 +12,7 @@ set(SOURCES
     TutorialGame.h
 )
 
-set(NETWORK_TEST_SOURCES
-	network_test.cpp
-	network.cpp
-)
-
-add_executable(${PROJECT_NAME})
-
-target_sources(${PROJECT_NAME} PRIVATE
-	$<$<CONFIG:Debug>:${SOURCES}>
-	$<$<CONFIG:Release>:${SOURCES}>
-	$<$<CONFIG:NetworkTest>:${NETWORK_TEST_SOURCES}>
-)
-
+add_executable(${PROJECT_NAME} ${SOURCES})
 
 set_target_properties(${PROJECT_NAME} PROPERTIES
     VS_GLOBAL_KEYWORD "Win32Proj"
@@ -83,34 +68,17 @@ set(INCLUDE_DIRECTORIES
 	${CMAKE_SOURCE_DIR}/OpenGLRendering/
 	${CMAKE_SOURCE_DIR}/NCLCoreClasses/
 	${CMAKE_SOURCE_DIR}/CSC8503CoreClasses/
+    ${CMAKE_SOURCE_DIR}/TeamProject/
+    ${CMAKE_SOURCE_DIR}/Network/
 )
 
-target_include_directories(${PROJECT_NAME} PRIVATE
-	$<$<CONFIG:Debug>:${INCLUDE_DIRECTORIES}>
-	$<$<CONFIG:Release>:${INCLUDE_DIRECTORIES}>
-	$<$<CONFIG:NetworkTest>:${CMAKE_SOURCE_DIR}/CSC8503CoreClasses/>
-	$<$<CONFIG:NetworkTest>:${CMAKE_SOURCE_DIR}/NCLCoreClasses/>
-)
+target_include_directories(${PROJECT_NAME} PRIVATE ${INCLUDE_DIRECTORIES}>)
 
 target_link_libraries(${PROJECT_NAME} 
-	$<$<CONFIG:Debug>:NCLCoreClasses>
-	$<$<CONFIG:Debug>:CSC8503CoreClasses>
-	$<$<CONFIG:Debug>:OpenGLRendering>
-
-	$<$<CONFIG:Release>:NCLCoreClasses>
-	$<$<CONFIG:Release>:CSC8503CoreClasses>
-	$<$<CONFIG:Release>:OpenGLRendering>
-
-	$<$<CONFIG:NetworkTest>:CSC8503CoreClasses>
-	$<$<CONFIG:NetworkTest>:NCLCoreClasses>
-)
-
-target_compile_definitions(${PROJECT_NAME} PRIVATE 
-    $<$<CONFIG:NetworkTest>:NETWORK_TEST>
-)
-
-target_compile_options(${PROJECT_NAME} PRIVATE 
-    $<$<CONFIG:NetworkTest>:-O2>
+	NCLCoreClasses
+	CSC8503CoreClasses
+	OpenGLRendering
+    Network
 )
 
 target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR})
