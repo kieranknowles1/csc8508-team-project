@@ -12,4 +12,5 @@ endif()
 add_subdirectory(NCLCoreClasses)
 add_subdirectory(CSC8503CoreClasses)
 add_subdirectory(OpenGLRendering)
+add_subdirectory(Network)
 add_subdirectory(TeamProject) # Working title
