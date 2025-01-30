@@ -8,6 +8,10 @@ if (USE_SDL2)
     add_definitions(-DCSC_USE_SDL2)
 endif()
 
+if (MSVC)
+    include("${CMAKE_SOURCE_DIR}/../vcpkg/scripts/buildsystems/vcpkg.cmake")
+endif()
+
 add_subdirectory(NCLCoreClasses)
 add_subdirectory(CSC8503CoreClasses)
 add_subdirectory(OpenGLRendering)

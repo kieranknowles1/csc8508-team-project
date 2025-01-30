@@ -64,7 +64,6 @@ target_precompile_headers(${PROJECT_NAME} PRIVATE
 if(MSVC)
     # Required for enet
     target_link_libraries(${PROJECT_NAME} "Winmm.lib")
-    list(APPEND CMAKE_PREFIX_PATH "${CMAKE_SOURCE_DIR}/vcpkg_installed/x64-windows/share")
 endif()
 find_package(Bullet CONFIG REQUIRED)
 
