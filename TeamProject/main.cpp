@@ -2,6 +2,7 @@
 #include <NCLCoreClasses/GameTimer.h>
 
 #include "TutorialGame.h"
+#include "BulletWorld.h"
 
 NCL::Window* createWindow() {
 	NCL::WindowInitialisation options = {
@@ -20,6 +21,13 @@ NCL::Window* createWindow() {
 }
 
 int main(int argc, char** argv) {
+	BulletWorld* phys = new BulletWorld();
+	for (int i = 0; i < 100; i++) {
+		phys->step(1.0f / 60.0f);
+	}
+	delete phys;
+	return 0;
+
 	auto window = createWindow();
 
 	window->ShowOSPointer(false);

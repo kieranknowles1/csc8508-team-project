@@ -1,4 +1,6 @@
 set(SOURCES
+    BulletWorld.cpp
+    BulletWorld.h
     GameTechRenderer.cpp
     GameTechRenderer.h
     Main.cpp
@@ -63,6 +65,7 @@ if(MSVC)
     # Required for enet
     target_link_libraries(${PROJECT_NAME} "Winmm.lib")
 endif()
+find_package(Bullet CONFIG REQUIRED)
 
 set(INCLUDE_DIRECTORIES
 	${CMAKE_SOURCE_DIR}/OpenGLRendering/
@@ -74,12 +77,11 @@ set(INCLUDE_DIRECTORIES
 
 target_include_directories(${PROJECT_NAME} PRIVATE ${INCLUDE_DIRECTORIES}>)
 
-target_link_libraries(${PROJECT_NAME} 
-	NCLCoreClasses
-	CSC8503CoreClasses
-	OpenGLRendering
-    Network
-)
+target_link_libraries(${PROJECT_NAME} NCLCoreClasses)
+target_link_libraries(${PROJECT_NAME} CSC8503CoreClasses)
+target_link_libraries(${PROJECT_NAME} OpenGLRendering)
+target_link_libraries(${PROJECT_NAME} Network)
+target_link_libraries(${PROJECT_NAME} ${BULLET_LIBRARIES})
 
 target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR})
 set_target_properties(${PROJECT_NAME} PROPERTIES
