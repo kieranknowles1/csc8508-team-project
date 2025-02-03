@@ -313,18 +313,19 @@ GameObject* TutorialGame::AddObjectToTestBulletPhysics() {
 
 	Vector3 dimensions = Vector3(5, 5, 5);
 
-	AABBVolume* volume = new AABBVolume(Vector3(dimensions));
-	testCube->SetBoundingVolume((CollisionVolume*)volume);
-
 	testCube->GetTransform()
 		.SetPosition(Vector3(0, 30, 0))
-		.SetScale(dimensions * 2.0f);
+		.SetScale(dimensions);
 
 	// Set render object
 	testCube->SetRenderObject(new RenderObject(&testCube->GetTransform(), cubeMesh, basicTex, basicShader));
 
 	// Create Bullet collision shape
 	btCollisionShape* shape = new btBoxShape(btVector3(dimensions.x / 2.0f, dimensions.y / 2.0f, dimensions.z / 2.0f));
+
+	// The object is is penetrating the floor, so I reduced the bullet collison margin to avoid sinking in the floor
+	shape->setMargin(0.01f);
+
 	PhysicsObject* physicsObject = new PhysicsObject(&testCube->GetTransform(), testCube->GetBoundingVolume());
 
 	// Initialize Bullet physics for the cube
@@ -350,22 +351,32 @@ A single function to add a large immoveable cube to the bottom of our world
 
 */
 GameObject* TutorialGame::AddFloorToWorld(const Vector3& position) {
-	Debug::Print("This is the floor", Vector2(5, 0));
 	GameObject* floor = new GameObject();
 
 	Vector3 floorSize = Vector3(200, 2, 200);
-	AABBVolume* volume = new AABBVolume(floorSize);
-	floor->SetBoundingVolume((CollisionVolume*)volume);
+
+	// setting the transform properties for the floor
 	floor->GetTransform()
-		.SetScale(floorSize * 2.0f)
+		.SetScale(floorSize)
 		.SetPosition(position);
 
+	// setting the render object for the floor
 	floor->SetRenderObject(new RenderObject(&floor->GetTransform(), cubeMesh, basicTex, basicShader));
-	floor->SetPhysicsObject(new PhysicsObject(&floor->GetTransform(), floor->GetBoundingVolume()));
 
-	floor->GetPhysicsObject()->SetInverseMass(0);
-	floor->GetPhysicsObject()->InitCubeInertia();
+	// creating a bullet collision shape
+	btCollisionShape* shape = new btBoxShape(btVector3(floorSize.x / 2.0f, floorSize.y / 2.0f, floorSize.z/ 2.0f));
 
+	// setting the collision margin for the floor
+	shape->setMargin(0.01f);
+
+	// Creating and initializing the physics object for the floor
+	PhysicsObject* physicsObject = new PhysicsObject(&floor->GetTransform(), floor->GetBoundingVolume());
+	physicsObject->InitBulletPhysics(bulletWorld, shape, 0.0f); // mass = 0.0f
+
+	// setting the physics object for the floor
+	floor->SetPhysicsObject(physicsObject);
+
+	// Adding the floor to the game world
 	world->AddGameObject(floor);
 
 	return floor;
