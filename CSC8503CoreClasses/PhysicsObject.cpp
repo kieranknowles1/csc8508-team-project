@@ -2,7 +2,7 @@
 #include "PhysicsSystem.h"
 #include "Transform.h"
 
-#include <bullet/btBulletDynamicsCommon.h>
+#include <btBulletDynamicsCommon.h>
 
 using namespace NCL;
 using namespace CSC8503;

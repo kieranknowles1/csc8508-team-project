@@ -9,7 +9,7 @@
 
 #include "StateGameObject.h"
 
-#include <bullet/btBulletDynamicsCommon.h>
+#include <btBulletDynamicsCommon.h>
 
 namespace NCL {
 	namespace CSC8503 {

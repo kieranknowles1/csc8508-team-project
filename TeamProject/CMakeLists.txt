@@ -1,6 +1,4 @@
 set(SOURCES
-    BulletWorld.cpp
-    BulletWorld.h
     GameTechRenderer.cpp
     GameTechRenderer.h
     Main.cpp
@@ -65,7 +63,6 @@ if(MSVC)
     # Required for enet
     target_link_libraries(${PROJECT_NAME} "Winmm.lib")
 endif()
-find_package(Bullet CONFIG REQUIRED)
 
 set(INCLUDE_DIRECTORIES
 	${CMAKE_SOURCE_DIR}/OpenGLRendering/
