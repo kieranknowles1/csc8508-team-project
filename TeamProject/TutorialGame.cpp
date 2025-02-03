@@ -14,6 +14,9 @@ using namespace NCL;
 using namespace CSC8503;
 
 TutorialGame::TutorialGame() : controller(*Window::GetWindow()->GetKeyboard(), *Window::GetWindow()->GetMouse()) {
+	/* Initializing the Bullet Physics World here as it should be done before Initialize the NCL framework's PhysicsSystem */
+	InitBullet();
+
 	world		= new GameWorld();
 #ifdef USEVULKAN
 	renderer	= new GameTechVulkanRenderer(*world);
@@ -103,12 +106,12 @@ void TutorialGame::UpdateGame(float dt) {
 
 	UpdateKeys();
 
-	if (useGravity) {
+	/*if (useGravity) {
 		Debug::Print("(G)ravity on", Vector2(5, 95), Debug::RED);
 	}
 	else {
 		Debug::Print("(G)ravity off", Vector2(5, 95), Debug::RED);
-	}
+	}*/
 	//This year we can draw debug textures as well!
 	//Debug::DrawTex(*basicTex, Vector2(10, 10), Vector2(5, 5), Debug::MAGENTA);
 
@@ -138,6 +141,27 @@ void TutorialGame::UpdateGame(float dt) {
 	SelectObject();
 	MoveSelectedObject();
 
+	/* Took a while to figure out why gravity wasn't working, I figured out after 
+	    reading the doc for the nth time that I forgot to update the world each frame
+		with bullet world's step simulation. Otherwise, physics interactions will not
+		occur 
+	*/
+
+	bulletWorld->stepSimulation(dt, 10);
+
+	// If the object exists, log its position after the simulation step
+	if (objectToTestBulletPhysics) {
+		btRigidBody* rigidBody = objectToTestBulletPhysics->GetPhysicsObject()->GetRigidBody();
+
+		if (rigidBody) {
+			btVector3 currentPos = rigidBody->getCenterOfMassPosition();
+			std::cout << "Current Position of Test Cube: "
+				<< currentPos.getX() << ", "
+				<< currentPos.getY() << ", "
+				<< currentPos.getZ() << std::endl;
+		}
+	}
+
 	world->UpdateWorld(dt);
 	renderer->Update(dt);
 	physics->Update(dt);
@@ -157,8 +181,7 @@ void TutorialGame::UpdateKeys() {
 	}
 
 	if (Window::GetKeyboard()->KeyPressed(KeyCodes::G)) {
-		useGravity = !useGravity; //Toggle gravity!
-		physics->UseGravity(useGravity);
+		// Bullet physics gravity will be on all the time, no toggling
 	}
 	//Running certain physics updates in a consistent order might cause some
 	//bias in the calculations - the same objects might keep 'winning' the constraint
@@ -251,6 +274,17 @@ void TutorialGame::DebugObjectMovement() {
 	}
 }
 
+/* Bullet Physics world has been initialized here */
+void TutorialGame::InitBullet() {
+	broadphase = new btDbvtBroadphase();
+	collisionConfig = new btDefaultCollisionConfiguration();
+	dispatcher = new btCollisionDispatcher(collisionConfig);
+	solver = new btSequentialImpulseConstraintSolver();
+
+	bulletWorld = new btDiscreteDynamicsWorld(dispatcher, broadphase, solver, collisionConfig);
+	bulletWorld->setGravity(btVector3(0, -9.8, 0));
+}
+
 void TutorialGame::InitCamera() {
 	world->GetMainCamera().SetNearPlane(0.1f);
 	world->GetMainCamera().SetFarPlane(500.0f);
@@ -264,10 +298,50 @@ void TutorialGame::InitWorld() {
 	world->ClearAndErase();
 	physics->Clear();
 
-	InitMixedGridWorld(15, 15, 3.5f, 3.5f);
+	//InitMixedGridWorld(15, 15, 3.5f, 3.5f);
 
-	InitGameExamples();
+	//InitGameExamples();
 	InitDefaultFloor();
+
+	// Testing the bullet physics
+	AddObjectToTestBulletPhysics();
+}
+
+/* Adding an object to test the bullet physics */
+GameObject* TutorialGame::AddObjectToTestBulletPhysics() {
+	GameObject* testCube = new GameObject("testCube");
+
+	Vector3 dimensions = Vector3(5, 5, 5);
+
+	AABBVolume* volume = new AABBVolume(Vector3(dimensions));
+	testCube->SetBoundingVolume((CollisionVolume*)volume);
+
+	testCube->GetTransform()
+		.SetPosition(Vector3(0, 30, 0))
+		.SetScale(dimensions * 2.0f);
+
+	// Set render object
+	testCube->SetRenderObject(new RenderObject(&testCube->GetTransform(), cubeMesh, basicTex, basicShader));
+
+	// Create Bullet collision shape
+	btCollisionShape* shape = new btBoxShape(btVector3(dimensions.x / 2.0f, dimensions.y / 2.0f, dimensions.z / 2.0f));
+	PhysicsObject* physicsObject = new PhysicsObject(&testCube->GetTransform(), testCube->GetBoundingVolume());
+
+	// Initialize Bullet physics for the cube
+	physicsObject->InitBulletPhysics(bulletWorld, shape, 1.0f); // mass = 1.0f
+
+	// Set the physics object for the game object
+	testCube->SetPhysicsObject(physicsObject);
+
+	// Initialize the physics properties for the physics object
+	testCube->GetPhysicsObject()->SetInverseMass(1.0f);
+	testCube->GetPhysicsObject()->InitCubeInertia();
+
+	world->AddGameObject(testCube);
+
+	objectToTestBulletPhysics = testCube;
+
+	return testCube;
 }
 
 /*
@@ -276,6 +350,7 @@ A single function to add a large immoveable cube to the bottom of our world
 
 */
 GameObject* TutorialGame::AddFloorToWorld(const Vector3& position) {
+	Debug::Print("This is the floor", Vector2(5, 0));
 	GameObject* floor = new GameObject();
 
 	Vector3 floorSize = Vector3(200, 2, 200);

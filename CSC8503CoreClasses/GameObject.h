@@ -2,6 +2,8 @@
 #include "Transform.h"
 #include "CollisionVolume.h"
 
+#include "PhysicsObject.h"
+
 using std::vector;
 
 namespace NCL::CSC8503 {
@@ -60,6 +62,13 @@ namespace NCL::CSC8503 {
 
 		virtual void OnCollisionEnd(GameObject* otherObject) {
 			//std::cout << "OnCollisionEnd event occured!\n";
+		}
+
+		virtual void Update(float dt) {
+			// TODO: We should only have one transform owned by bullet
+			if (physicsObject) {
+				physicsObject->UpdateFromBullet();
+			}
 		}
 
 		bool GetBroadphaseAABB(Vector3&outsize) const;

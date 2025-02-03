@@ -144,6 +144,8 @@ set_source_files_properties(${ALL_FILES} PROPERTIES LANGUAGE CXX)
 # Target
 ################################################################################
 add_library(${PROJECT_NAME} STATIC ${ALL_FILES})
+target_link_libraries(${PROJECT_NAME} PUBLIC ${BULLET_LIBRARIES})
+target_include_directories(${PROJECT_NAME} PUBLIC ${BULLET_INCLUDE_DIRS})
 
 #set(CMAKE_CXX_SOURCE_FILE_EXTENSIONS c;C;M;c++;cc;cpp;cxx;m;mm;mpp;CPP;ixx;cppm)
 
