@@ -9,6 +9,8 @@
 
 #include "StateGameObject.h"
 
+#include <bullet/btBulletDynamicsCommon.h>
+
 namespace NCL {
 	namespace CSC8503 {
 		class TutorialGame		{
@@ -25,6 +27,8 @@ namespace NCL {
 			void UpdateKeys();
 
 			void InitWorld();
+
+			GameObject* AddObjectToTestBulletPhysics();
 
 			/*
 			These are some of the world/object creation functions I created when testing the functionality
@@ -90,6 +94,16 @@ namespace NCL {
 			}
 
 			GameObject* objClosest = nullptr;
+
+			/* bullet physics stuff here */
+			btDiscreteDynamicsWorld* bulletWorld;
+			btBroadphaseInterface* broadphase;
+			btDefaultCollisionConfiguration* collisionConfig;
+			btCollisionDispatcher* dispatcher;
+			btSequentialImpulseConstraintSolver* solver;
+
+			void InitBullet(); // Initialises the Bullet physics world
+			GameObject* objectToTestBulletPhysics = nullptr;
 		};
 	}
 }
