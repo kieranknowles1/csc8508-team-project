@@ -15,5 +15,5 @@ IF NOT EXIST "../vcpkg" (
 
 mkdir build
 pushd build
-cmake ..
+cmake .. -DCMAKE_TOOLCHAIN_FILE=../../vcpkg/scripts/buildsystems/vcpkg.cmake
 popd
