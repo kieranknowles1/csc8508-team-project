@@ -11,6 +11,8 @@ https://research.ncl.ac.uk/game/
 #include <cmath>
 #include <cstdint>
 
+#include <LinearMath/btVector3.h>
+
 namespace NCL::Maths {
 
     template <typename T, uint32_t n>
@@ -27,6 +29,7 @@ namespace NCL::Maths {
     };
 
     using Vector2 = VectorTemplate<float, 2>;
+    // DEPRECATED: Prefer btVector3
     using Vector3 = VectorTemplate<float, 3>;
     using Vector4 = VectorTemplate<float, 4>;
 
@@ -99,6 +102,14 @@ namespace NCL::Maths {
         }
         T& operator[](int i) {
             return ((T*)this)[i];
+        }
+
+        // Implicit conversion operators to/from btVector3
+        operator btVector3() const {
+            return btVector3(x, y, z);
+        }
+
+        VectorTemplate<T, 3>(const btVector3& bullet) : x(bullet.x()), y(bullet.y()), z(bullet.z()) {
         }
     };
 
