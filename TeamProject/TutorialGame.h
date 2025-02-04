@@ -86,6 +86,11 @@ namespace NCL {
 			Mesh*	enemyMesh	= nullptr;
 			Mesh*	bonusMesh	= nullptr;
 
+			//EG Meshes:
+			Mesh* maxMesh = nullptr;
+			Mesh* maleguardMesh = nullptr;
+			Mesh* femaleguardMesh = nullptr;
+
 			//Coursework Additional functionality	
 			GameObject* lockedObject	= nullptr;
 			Vector3 lockedOffset		= Vector3(0, 14, 20);

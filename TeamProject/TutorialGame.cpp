@@ -61,6 +61,13 @@ void TutorialGame::InitialiseAssets() {
 	bonusMesh	= renderer->LoadMesh("19463_Kitten_Head_v1.msh");
 	capsuleMesh = renderer->LoadMesh("capsule.msh");
 
+	//EG Assets:
+
+	//EG character meshes:
+	maxMesh = renderer->LoadMesh("/Max/Rig_Maximilian.msh");
+	maleguardMesh = renderer->LoadMesh("/MaleGuard/Male_Guard.msh");
+	femaleguardMesh = renderer->LoadMesh("/FemaleGuard/Female_Guard.msh");
+
 	basicTex	= renderer->LoadTexture("checkerboard.png");
 	basicShader = renderer->LoadShader("scene.vert", "scene.frag");
 
