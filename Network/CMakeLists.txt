@@ -1,5 +1,8 @@
 set(SOURCES
-	Network.cpp
+	Server.cpp
+	Server.hpp
+	Client.cpp
+	Client.hpp
 )
 
 set(TEST_SOURCES
