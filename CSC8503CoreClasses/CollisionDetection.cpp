@@ -376,3 +376,4 @@ Vector3	CollisionDetection::UnprojectScreenPosition(Vector3 position, float aspe
 	return Vector3(transformed.x / transformed.w, transformed.y / transformed.w, transformed.z / transformed.w);
 }
 
+

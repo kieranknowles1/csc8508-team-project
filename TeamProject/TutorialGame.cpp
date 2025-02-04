@@ -84,18 +84,9 @@ TutorialGame::~TutorialGame()	{
 	delete world;
 }
 
-static void BulletRaycast(btDynamicsWorld* world, const btVector3& start, const btVector3& end) {
-	Debug::DrawLine(Vector3(start.x(), start.y(), start.z()), Vector3(end.x(), end.y(), end.z()), Vector4(1, 0, 0, 1));
-	btCollisionWorld::ClosestRayResultCallback resultCallback(start, end);
+static bool BulletRaycast(btDynamicsWorld* world, const btVector3& start, const btVector3& end, btCollisionWorld::ClosestRayResultCallback& resultCallback) {
 	world->rayTest(start, end, resultCallback);
-
-	if (resultCallback.hasHit()) {
-		btVector3 hitPoint = resultCallback.m_hitPointWorld;
-		std::cout << "Ray hit at (" << hitPoint.x() << ", " << hitPoint.y() << ", " << hitPoint.z() << ")\n";
-	}
-	else {
-		std::cout << "No hit detected.\n";
-	}
+	return resultCallback.hasHit();
 }
 
 void TutorialGame::UpdateGame(float dt) {
@@ -150,9 +141,17 @@ void TutorialGame::UpdateGame(float dt) {
 		}
 	}
 
-	//Debug::DrawLine(Vector3(), Vector3(0, 100, 0), Vector4(1, 0, 0, 1));
-	BulletRaycast(bulletWorld, btVector3(0, 0, 0), btVector3(0, 100, 0));
+	Debug::DrawLine(Vector3(), Vector3(0, 100, 0), Vector4(1, 0, 0, 1));
+	btCollisionWorld::ClosestRayResultCallback rayResult(btVector3(0, 0, 0), btVector3(0, 100, 0));
+	if (BulletRaycast(bulletWorld, btVector3(0, 0, 0), btVector3(0, 100, 0), rayResult)) {
+		btVector3 hitPoint = rayResult.m_hitPointWorld;
+		std::cout << "Ray hit at: " << hitPoint.x() << ", " << hitPoint.y() << ", " << hitPoint.z() << std::endl;
+	}
+	else {
+		std::cout << "No hit detected.\n";
+	}
 
+	
 	SelectObject();
 	MoveSelectedObject();
 

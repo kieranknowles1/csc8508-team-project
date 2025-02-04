@@ -114,6 +114,7 @@ namespace NCL {
 		static Matrix4		GenerateInverseProjection(float aspect, float fov, float nearPlane, float farPlane);
 		static Matrix4		GenerateInverseView(const Camera &c);
 
+
 	protected:
 
 	private:
