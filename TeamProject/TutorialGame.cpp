@@ -319,8 +319,6 @@ void TutorialGame::InitWorld() {
 GameObject* TutorialGame::AddCubeToWorld(const Vector3& position, Vector3 dimensions, float inverseMass) {
 	GameObject* cube = new GameObject();
 
-	dimensions = Vector3(5, 5, 5);
-
 	// Setting the transform properties for the cube
 	cube->GetTransform()
 		.SetPosition(position)
