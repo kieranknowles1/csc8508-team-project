@@ -28,8 +28,6 @@ namespace NCL {
 
 			void InitWorld();
 
-			GameObject* AddObjectToTestBulletPhysics();
-
 			/*
 			These are some of the world/object creation functions I created when testing the functionality
 			in the module. Feel free to mess around with them to see different objects being created in different
@@ -51,6 +49,9 @@ namespace NCL {
 			GameObject* AddFloorToWorld(const Vector3& position);
 			GameObject* AddSphereToWorld(const Vector3& position, float radius, float inverseMass = 10.0f);
 			GameObject* AddCubeToWorld(const Vector3& position, Vector3 dimensions, float inverseMass = 10.0f);
+			GameObject* AddCapsuleToWorld(const Vector3& position, float halfHeight, float radius, float inverseMass = 10.0f);
+
+			GameObject* AddInfinitePlaneToWorld(const Vector3& position, const Vector3& normal, float planeConstant);
 
 			GameObject* AddPlayerToWorld(const Vector3& position);
 			GameObject* AddEnemyToWorld(const Vector3& position);
@@ -73,6 +74,7 @@ namespace NCL {
 
 			GameObject* selectionObject = nullptr;
 
+			Mesh* planeMesh = nullptr;
 			Mesh*	capsuleMesh = nullptr;
 			Mesh*	cubeMesh	= nullptr;
 			Mesh*	sphereMesh	= nullptr;

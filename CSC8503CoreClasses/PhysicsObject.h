@@ -5,14 +5,12 @@
 using namespace NCL::Maths;
 
 namespace NCL {
-	class CollisionVolume;
-	
 	namespace CSC8503 {
-		class Transform;
+		class GameObject;
 
 		class PhysicsObject	{
 		public:
-			PhysicsObject(Transform* parentTransform, const CollisionVolume* parentVolume);
+			PhysicsObject(GameObject* parent);
 			~PhysicsObject();
 
 			// Add Bullet-specific methods
@@ -45,11 +43,12 @@ namespace NCL {
 			void InitCubeInertia();
 			void InitSphereInertia();
 
+			void InitCapsuleInertia();
+
 			void UpdateInertiaTensor();
 
 		protected:
-			const CollisionVolume* volume;
-			Transform* transform;
+			GameObject* parent;
 
 			float inverseMass;
 			float elasticity;

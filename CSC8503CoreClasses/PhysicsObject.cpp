@@ -7,13 +7,9 @@
 using namespace NCL;
 using namespace CSC8503;
 
-PhysicsObject::PhysicsObject(Transform* parentTransform, const CollisionVolume* parentVolume) 
-	: transform(parentTransform), volume(parentVolume), rigidBody(nullptr), motionState(nullptr), collisionShape(nullptr) {
+PhysicsObject::PhysicsObject(GameObject* parent) 
+	: parent(parent), rigidBody(nullptr), motionState(nullptr), collisionShape(nullptr), inverseMass(1.0f), elasticity(0.8f), friction(0.8f) {
 	
-	// Other physics properties would be implemented here
-	inverseMass = 1.0f;
-	elasticity	= 0.8f;
-	friction	= 0.8f;
 }
 
 PhysicsObject::~PhysicsObject()	{
@@ -34,7 +30,8 @@ void PhysicsObject::InitBulletPhysics(btDynamicsWorld* world, btCollisionShape* 
 	startTransform.setIdentity();
 
 	// Setting the starting position of the object using the NCL framework's transform
-	startTransform.setOrigin(btVector3(transform->GetPosition().x, transform->GetPosition().y, transform->GetPosition().z));
+	startTransform.setOrigin(btVector3(parent->GetTransform().GetPosition().x, parent->GetTransform().GetPosition().y, parent->GetTransform().GetPosition().z));
+	startTransform.setRotation(btQuaternion(parent->GetTransform().GetOrientation().x, parent->GetTransform().GetOrientation().y, parent->GetTransform().GetOrientation().z, parent->GetTransform().GetOrientation().w));
 
 	// MotionState has been used to retrieve and apply Bullet's physics transformations to the NCL object
 	motionState = new btDefaultMotionState(startTransform);
@@ -53,10 +50,6 @@ void PhysicsObject::InitBulletPhysics(btDynamicsWorld* world, btCollisionShape* 
 	// SetActivationState is used to prevent the object properties from being deactivated due to inactivity
 	rigidBody->setActivationState(DISABLE_DEACTIVATION);
 
-	/*rigidBody->setRestitution(elasticity);
-	rigidBody->setFriction(friction);
-	rigidBody->setDamping(0.99f, 0.99f);*/
-	// Log mass and inverse mass of the object
 	world->addRigidBody(rigidBody);
 }
 
@@ -68,8 +61,8 @@ void PhysicsObject::UpdateFromBullet() {
 	rigidBody->getMotionState()->getWorldTransform(trans);
 
 	// Converting Bullet's matrix to NCL's Transform and updating it
-	transform->SetPosition(Vector3(trans.getOrigin().x(), trans.getOrigin().y(), trans.getOrigin().z()));
-	transform->SetOrientation(Quaternion(trans.getRotation().w(), trans.getRotation().x(), trans.getRotation().y(), trans.getRotation().z()));
+	parent->GetTransform().SetPosition(Vector3(trans.getOrigin().x(), trans.getOrigin().y(), trans.getOrigin().z()));
+	parent->GetTransform().SetOrientation(Quaternion(trans.getRotation().w(), trans.getRotation().x(), trans.getRotation().y(), trans.getRotation().z()));
 }
 
 void PhysicsObject::AddForce(const Vector3& force) {
@@ -143,7 +136,7 @@ void PhysicsObject::ClearForces() {
 */
 
 void PhysicsObject::InitCubeInertia() {
-	Vector3 dimensions	= transform->GetScale();
+	Vector3 dimensions	= parent->GetTransform().GetScale();
 
 	Vector3 fullWidth = dimensions * 2.0f;
 
@@ -156,14 +149,36 @@ void PhysicsObject::InitCubeInertia() {
 
 void PhysicsObject::InitSphereInertia() {
 
-	float radius	= Vector::GetMaxElement(transform->GetScale());
+	float radius	= Vector::GetMaxElement(parent->GetTransform().GetScale());
 	float i			= 2.5f * inverseMass / (radius*radius);
 
 	inverseInertia	= Vector3(i, i, i);
 }
 
+void PhysicsObject::InitCapsuleInertia() {
+	float radius = parent->GetTransform().GetScale().x / 2.0f; // Assuming uniform scaling for the capsule
+	float height = parent->GetTransform().GetScale().y; // Capsule height
+
+	// Moment of inertia for a capsule (cylinder + 2 hemispherical ends)
+	float massFactor = 0.5f * inverseMass; // Mass factor for the capsule
+
+	// For the cylindrical part (the main body)
+	float cylI = (1.0f / 12.0f) * inverseMass * (3.0f * radius * radius + height * height);
+
+	// For the two hemispherical ends
+	float sphI = (2.0f / 5.0f) * inverseMass * radius * radius;
+
+	// Combine them (cylinder + two hemispheres)
+	float totalI = cylI + sphI;
+
+	// Inertia tensor (x, y, z axes)
+	inverseInertia.x = totalI; // Assume uniform inertia for the cylindrical shape along x
+	inverseInertia.y = totalI; // Same for y-axis
+	inverseInertia.z = totalI; // Same for z-axis
+}
+
 void PhysicsObject::UpdateInertiaTensor() {
-	Quaternion q = transform->GetOrientation();
+	Quaternion q = parent->GetTransform().GetOrientation();
 
 	Matrix3 invOrientation = Quaternion::RotationMatrix<Matrix3>(q.Conjugate());
 	Matrix3 orientation = Quaternion::RotationMatrix<Matrix3>(q);
