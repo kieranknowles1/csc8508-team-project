@@ -52,6 +52,7 @@ for this module, even in the coursework, but you can add it if you like!
 
 */
 void TutorialGame::InitialiseAssets() {
+	planeMesh = renderer->LoadMesh("Plane.msh");
 	cubeMesh	= renderer->LoadMesh("cube.msh");
 	sphereMesh	= renderer->LoadMesh("sphere.msh");
 	catMesh		= renderer->LoadMesh("ORIGAMI_Chat.msh");
@@ -303,47 +304,107 @@ void TutorialGame::InitWorld() {
 	//InitGameExamples();
 	InitDefaultFloor();
 
-	// Testing the bullet physics
-	AddObjectToTestBulletPhysics();
+	// Use this as a reference to create more cube objects
+	AddCubeToWorld(Vector3(0, 30, 0), Vector3(5, 5, 5), 1.0f);
+
+	// Use this as a reference to create more sphere objects
+	AddSphereToWorld(Vector3(10, 30, 0), 5.0f, 1.0f);
+
+	// Use this as a reference to create more capsule objects
+	AddCapsuleToWorld(Vector3(20, 30, 0), 3.0f, 2.0f, 1.0f);
+
 }
 
 /* Adding an object to test the bullet physics */
-GameObject* TutorialGame::AddObjectToTestBulletPhysics() {
-	GameObject* testCube = new GameObject("testCube");
+GameObject* TutorialGame::AddCubeToWorld(const Vector3& position, Vector3 dimensions, float inverseMass) {
+	GameObject* cube = new GameObject();
 
-	Vector3 dimensions = Vector3(5, 5, 5);
-
-	testCube->GetTransform()
-		.SetPosition(Vector3(0, 30, 0))
+	// Setting the transform properties for the cube
+	cube->GetTransform()
+		.SetPosition(position)
 		.SetScale(dimensions);
 
-	// Set render object
-	testCube->SetRenderObject(new RenderObject(&testCube->GetTransform(), cubeMesh, basicTex, basicShader));
+	// Setting render object
+	cube->SetRenderObject(new RenderObject(&cube->GetTransform(), cubeMesh, basicTex, basicShader));
 
-	// Create Bullet collision shape
+	// Setting the physics object for the cube
+	cube->SetPhysicsObject(new PhysicsObject(cube));
+
+	// Creating Bullet collision shape
 	btCollisionShape* shape = new btBoxShape(btVector3(dimensions.x / 2.0f, dimensions.y / 2.0f, dimensions.z / 2.0f));
 
-	// The object is is penetrating the floor, so I reduced the bullet collison margin to avoid sinking in the floor
+	// The object is penetrating the floor a bit, so I reduced the bullet collison margin to avoid sinking in the floor
 	shape->setMargin(0.01f);
 
-	PhysicsObject* physicsObject = new PhysicsObject(&testCube->GetTransform(), testCube->GetBoundingVolume());
-
 	// Initialize Bullet physics for the cube
-	physicsObject->InitBulletPhysics(bulletWorld, shape, 1.0f); // mass = 1.0f
+	cube->GetPhysicsObject()->InitBulletPhysics(bulletWorld, shape, inverseMass);
 
-	// Set the physics object for the game object
-	testCube->SetPhysicsObject(physicsObject);
+	// Setting the physics properties for the cube here
+	cube->GetPhysicsObject()->SetInverseMass(inverseMass);
+	cube->GetPhysicsObject()->InitCubeInertia();
 
-	// Initialize the physics properties for the physics object
-	testCube->GetPhysicsObject()->SetInverseMass(1.0f);
-	testCube->GetPhysicsObject()->InitCubeInertia();
+	world->AddGameObject(cube);
 
-	world->AddGameObject(testCube);
-
-	objectToTestBulletPhysics = testCube;
-
-	return testCube;
+	return cube;
 }
+
+GameObject* TutorialGame::AddCapsuleToWorld(const Vector3& position, float halfHeight, float radius, float inverseMass) {
+	GameObject* capsule = new GameObject();
+	
+	// Setting the transform properties for the capsule
+	capsule->GetTransform()
+		.SetPosition(position)
+		.SetScale(Vector3(radius, halfHeight, radius)); // Radius needs to be scaled to match the top and bottom caps of the capsule
+
+	// Setting the render object for the capsule
+	capsule->SetRenderObject(new RenderObject(&capsule->GetTransform(), capsuleMesh, basicTex, basicShader));
+
+	// Setting the physics object for the capsule
+	capsule->SetPhysicsObject(new PhysicsObject(capsule));
+
+	// Creating a Bullet collision shape for the capsule
+	btCollisionShape* shape = new btCapsuleShape(radius, halfHeight * 2);
+
+	// Initializing the physics object for the capsule
+	capsule->GetPhysicsObject()->InitBulletPhysics(bulletWorld, shape, inverseMass);
+
+	// Setting the physics properties for the capsule
+	capsule->GetPhysicsObject()->SetInverseMass(inverseMass);
+	capsule->GetPhysicsObject()->InitCapsuleInertia();
+
+	world->AddGameObject(capsule);
+
+	return capsule;
+}
+
+GameObject* TutorialGame::AddInfinitePlaneToWorld(const Vector3& position, const Vector3& normal, float planeConstant) {
+	GameObject* plane = new GameObject();
+
+	// Set the transform properties for the plane
+	plane->GetTransform()
+		.SetPosition(position)
+		.SetScale(Vector3(1, 1, 1)); // Scale does not affect Bullet's infinite plane
+
+	// Create Bullet collision shape for an infinite plane
+	btCollisionShape* shape = new btStaticPlaneShape(btVector3(normal.x, normal.y, normal.z), planeConstant);
+
+	// Set the render object
+	plane->SetRenderObject(new RenderObject(&plane->GetTransform(), planeMesh, basicTex, basicShader));
+
+	// Set the physics object
+	plane->SetPhysicsObject(new PhysicsObject(plane));
+
+	// Reduce collision margin (though planes typically don't use it)
+	shape->setMargin(0.01f);
+
+	// Initialize Bullet physics for the plane
+	plane->GetPhysicsObject()->InitBulletPhysics(bulletWorld, shape, 0.0f); // Static plane, so inverse mass = 0
+
+	world->AddGameObject(plane);
+
+	return plane;
+}
+
 
 /*
 
@@ -355,26 +416,25 @@ GameObject* TutorialGame::AddFloorToWorld(const Vector3& position) {
 
 	Vector3 floorSize = Vector3(200, 2, 200);
 
-	// setting the transform properties for the floor
+	// Setting the transform properties for the floor
 	floor->GetTransform()
-		.SetScale(floorSize)
-		.SetPosition(position);
+		.SetPosition(position)
+		.SetScale(floorSize);
 
-	// setting the render object for the floor
+	// Setting the render object for the floor
 	floor->SetRenderObject(new RenderObject(&floor->GetTransform(), cubeMesh, basicTex, basicShader));
 
-	// creating a bullet collision shape
+	// Setting the physics object for the floor
+	floor->SetPhysicsObject(new PhysicsObject(floor));
+
+	// Creating a bullet collision shape
 	btCollisionShape* shape = new btBoxShape(btVector3(floorSize.x / 2.0f, floorSize.y / 2.0f, floorSize.z/ 2.0f));
 
-	// setting the collision margin for the floor
+	// Setting the collision margin for the floor
 	shape->setMargin(0.01f);
 
-	// Creating and initializing the physics object for the floor
-	PhysicsObject* physicsObject = new PhysicsObject(&floor->GetTransform(), floor->GetBoundingVolume());
-	physicsObject->InitBulletPhysics(bulletWorld, shape, 0.0f); // mass = 0.0f
-
-	// setting the physics object for the floor
-	floor->SetPhysicsObject(physicsObject);
+	// Initializing the physics object for the floor
+	floor->GetPhysicsObject()->InitBulletPhysics(bulletWorld, shape, 0.0f);
 
 	// Adding the floor to the game world
 	world->AddGameObject(floor);
@@ -382,27 +442,31 @@ GameObject* TutorialGame::AddFloorToWorld(const Vector3& position) {
 	return floor;
 }
 
-/*
-
-Builds a game object that uses a sphere mesh for its graphics, and a bounding sphere for its
-rigid body representation. This and the cube function will let you build a lot of 'simple' 
-physics worlds. You'll probably need another function for the creation of OBB cubes too.
-
-*/
 GameObject* TutorialGame::AddSphereToWorld(const Vector3& position, float radius, float inverseMass) {
 	GameObject* sphere = new GameObject();
 
+	// Setting a uniform scale for the sphere
 	Vector3 sphereSize = Vector3(radius, radius, radius);
-	SphereVolume* volume = new SphereVolume(radius);
-	sphere->SetBoundingVolume((CollisionVolume*)volume);
 
+	// Setting the transform properties for the sphere
 	sphere->GetTransform()
-		.SetScale(sphereSize)
-		.SetPosition(position);
+		.SetPosition(position)
+		.SetScale(sphereSize);
 
+	// Setting the render object for the sphere
 	sphere->SetRenderObject(new RenderObject(&sphere->GetTransform(), sphereMesh, basicTex, basicShader));
-	sphere->SetPhysicsObject(new PhysicsObject(&sphere->GetTransform(), sphere->GetBoundingVolume()));
+	sphere->SetPhysicsObject(new PhysicsObject(sphere));
 
+	// Creating a Bullet collision shape for the sphere
+	btCollisionShape* shape = new btSphereShape(radius);
+
+	// Setting the collision margin for the sphere
+	shape->setMargin(0.01f);
+
+	// Initialize Bullet physics for the sphere
+	sphere->GetPhysicsObject()->InitBulletPhysics(bulletWorld, shape, inverseMass);
+
+	// Setting the physics properities for the sphere
 	sphere->GetPhysicsObject()->SetInverseMass(inverseMass);
 	sphere->GetPhysicsObject()->InitSphereInertia();
 
@@ -411,26 +475,28 @@ GameObject* TutorialGame::AddSphereToWorld(const Vector3& position, float radius
 	return sphere;
 }
 
-GameObject* TutorialGame::AddCubeToWorld(const Vector3& position, Vector3 dimensions, float inverseMass) {
-	GameObject* cube = new GameObject();
 
-	AABBVolume* volume = new AABBVolume(dimensions);
-	cube->SetBoundingVolume((CollisionVolume*)volume);
 
-	cube->GetTransform()
-		.SetPosition(position)
-		.SetScale(dimensions * 2.0f);
-
-	cube->SetRenderObject(new RenderObject(&cube->GetTransform(), cubeMesh, basicTex, basicShader));
-	cube->SetPhysicsObject(new PhysicsObject(&cube->GetTransform(), cube->GetBoundingVolume()));
-
-	cube->GetPhysicsObject()->SetInverseMass(inverseMass);
-	cube->GetPhysicsObject()->InitCubeInertia();
-
-	world->AddGameObject(cube);
-
-	return cube;
-}
+//GameObject* TutorialGame::AddCubeToWorld(const Vector3& position, Vector3 dimensions, float inverseMass) {
+//	GameObject* cube = new GameObject();
+//
+//	AABBVolume* volume = new AABBVolume(dimensions);
+//	cube->SetBoundingVolume((CollisionVolume*)volume);
+//
+//	cube->GetTransform()
+//		.SetPosition(position)
+//		.SetScale(dimensions * 2.0f);
+//
+//	cube->SetRenderObject(new RenderObject(&cube->GetTransform(), cubeMesh, basicTex, basicShader));
+//	cube->SetPhysicsObject(new PhysicsObject(&cube->GetTransform(), cube->GetBoundingVolume()));
+//
+//	cube->GetPhysicsObject()->SetInverseMass(inverseMass);
+//	cube->GetPhysicsObject()->InitCubeInertia();
+//
+//	world->AddGameObject(cube);
+//
+//	return cube;
+//}
 
 GameObject* TutorialGame::AddPlayerToWorld(const Vector3& position) {
 	float meshSize		= 1.0f;
@@ -446,7 +512,7 @@ GameObject* TutorialGame::AddPlayerToWorld(const Vector3& position) {
 		.SetPosition(position);
 
 	character->SetRenderObject(new RenderObject(&character->GetTransform(), catMesh, nullptr, basicShader));
-	character->SetPhysicsObject(new PhysicsObject(&character->GetTransform(), character->GetBoundingVolume()));
+	character->SetPhysicsObject(new PhysicsObject(character));
 
 	character->GetPhysicsObject()->SetInverseMass(inverseMass);
 	character->GetPhysicsObject()->InitSphereInertia();
@@ -470,7 +536,7 @@ GameObject* TutorialGame::AddEnemyToWorld(const Vector3& position) {
 		.SetPosition(position);
 
 	character->SetRenderObject(new RenderObject(&character->GetTransform(), enemyMesh, nullptr, basicShader));
-	character->SetPhysicsObject(new PhysicsObject(&character->GetTransform(), character->GetBoundingVolume()));
+	character->SetPhysicsObject(new PhysicsObject(character));
 
 	character->GetPhysicsObject()->SetInverseMass(inverseMass);
 	character->GetPhysicsObject()->InitSphereInertia();
@@ -490,7 +556,7 @@ GameObject* TutorialGame::AddBonusToWorld(const Vector3& position) {
 		.SetPosition(position);
 
 	apple->SetRenderObject(new RenderObject(&apple->GetTransform(), bonusMesh, nullptr, basicShader));
-	apple->SetPhysicsObject(new PhysicsObject(&apple->GetTransform(), apple->GetBoundingVolume()));
+	apple->SetPhysicsObject(new PhysicsObject(apple));
 
 	apple->GetPhysicsObject()->SetInverseMass(1.0f);
 	apple->GetPhysicsObject()->InitSphereInertia();
