@@ -6,24 +6,42 @@ set(SOURCES
 )
 
 set(TEST_SOURCES
-	NetworkTest.cpp
+	TestMain.cpp
 )
-
-add_library(Network ${SOURCES})
-add_executable(NetworkTest ${SOURCES} ${TEST_SOURCES})
 
 set(INCLUDE_DIRECTORIES
 	${CMAKE_SOURCE_DIR}/NCLCoreClasses/
 	${CMAKE_SOURCE_DIR}/CSC8503CoreClasses/
 )
 
-include_directories(${INCLUDE_DIRECTORIES} PRIVATE)
+# Assign a folder to a target.
+function(assign_folder target folder_name)
+	set_target_properties(${target} PROPERTIES FOLDER ${folder_name})
+endfunction()
 
-target_include_directories(Network PRIVATE ${CMAKE_SOURCE_DIR})
-
-target_link_libraries(Network
+# Production Network Library
+add_library(NetworkLib ${SOURCES})
+target_include_directories(NetworkLib PUBLIC ${INCLUDE_DIRECTORIES})
+target_link_libraries(NetworkLib PUBLIC
 	NCLCoreClasses
 	CSC8503CoreClasses
 )
+assign_folder(NetworkLib "Network")
 
-target_compile_definitions(Network PRIVATE $<$<CONFIG:Debug>:NETWORK_TEST>)
+# Testing library builds with NETWORK_TEST compiler definition.
+add_library(NetworkTestLib ${SOURCES})
+target_include_directories(NetworkTestLib PUBLIC ${INCLUDE_DIRECTORIES})
+target_link_libraries(NetworkTestLib PUBLIC
+	NCLCoreClasses
+	CSC8503CoreClasses
+)
+assign_folder(NetworkTestLib "Network/Test")
+target_compile_definitions(NetworkTestLib PRIVATE NETWORK_TEST)
+
+# Add test executable.
+add_executable(NetworkTest ${TEST_SOURCES})
+target_include_directories(NetworkTest PUBLIC ${INCLUDE_DIRECTORIES})
+target_link_libraries(NetworkTest PUBLIC
+	NetworkTestLib
+)
+assign_folder(NetworkTest "Network/Test")

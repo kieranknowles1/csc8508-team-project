@@ -1,7 +1,10 @@
 #include <stdexcept>
 #include <iostream>
 
+#include "Server.hpp"
 
 int main(int argc, char** argv) {
-    std::cout << "Starting Network Test!" << std::endl;
+	Server server;
+	server.Start();
+	server.Stop();
 }
