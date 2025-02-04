@@ -2,8 +2,7 @@
 #include <random>
 
 #include "Ray.h"
-#include "CollisionDetection.h"
-#include "QuadTree.h"
+#include <Camera.h>
 namespace NCL {
 		class Camera;
 		using Maths::Ray;

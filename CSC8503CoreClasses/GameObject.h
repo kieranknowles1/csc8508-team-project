@@ -1,6 +1,5 @@
 #pragma once
 #include "Transform.h"
-#include "CollisionVolume.h"
 
 #include "PhysicsObject.h"
 
@@ -15,14 +14,6 @@ namespace NCL::CSC8503 {
 	public:
 		GameObject(const std::string& name = "");
 		~GameObject();
-
-		void SetBoundingVolume(CollisionVolume* vol) {
-			boundingVolume = vol;
-		}
-
-		const CollisionVolume* GetBoundingVolume() const {
-			return boundingVolume;
-		}
 
 		bool IsActive() const {
 			return isActive;
@@ -57,10 +48,12 @@ namespace NCL::CSC8503 {
 		}
 
 		virtual void OnCollisionBegin(GameObject* otherObject) {
+			// TODO: OnCollisionEnter call from physics object
 			//std::cout << "OnCollisionBegin event occured!\n";
 		}
 
 		virtual void OnCollisionEnd(GameObject* otherObject) {
+			// TODO: OnCollisionEnd call from physics object
 			//std::cout << "OnCollisionEnd event occured!\n";
 		}
 
@@ -70,10 +63,6 @@ namespace NCL::CSC8503 {
 				physicsObject->UpdateFromBullet();
 			}
 		}
-
-		bool GetBroadphaseAABB(Vector3&outsize) const;
-
-		void UpdateBroadphaseAABB();
 
 		void SetWorldID(int newID) {
 			worldID = newID;
@@ -86,7 +75,6 @@ namespace NCL::CSC8503 {
 	protected:
 		Transform			transform;
 
-		CollisionVolume*	boundingVolume;
 		PhysicsObject*		physicsObject;
 		RenderObject*		renderObject;
 		NetworkObject*		networkObject;
@@ -94,8 +82,6 @@ namespace NCL::CSC8503 {
 		bool		isActive;
 		int			worldID;
 		std::string	name;
-
-		Vector3 broadphaseAABB;
 	};
 }
 
