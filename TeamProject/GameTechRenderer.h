@@ -41,7 +41,7 @@ namespace NCL {
 			void SetDebugStringBufferSizes(size_t newVertCount);
 			void SetDebugLineBufferSizes(size_t newVertCount);
 
-			vector<const RenderObject*> activeObjects;
+			std::vector<const RenderObject*> activeObjects;
 
 			OGLShader*  debugShader;
 			OGLShader*  skyboxShader;
@@ -60,11 +60,11 @@ namespace NCL {
 			Vector3		lightPosition;
 
 			//Debug data storage things
-			vector<Vector3> debugLineData;
+			std::vector<Vector3> debugLineData;
 
-			vector<Vector3> debugTextPos;
-			vector<Vector4> debugTextColours;
-			vector<Vector2> debugTextUVs;
+			std::vector<Vector3> debugTextPos;
+			std::vector<Vector4> debugTextColours;
+			std::vector<Vector2> debugTextUVs;
 
 			GLuint lineVAO;
 			GLuint lineVertVBO;

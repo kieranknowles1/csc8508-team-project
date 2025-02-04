@@ -5,7 +5,6 @@
 #ifdef USEVULKAN
 #include "GameTechVulkanRenderer.h"
 #endif
-#include "PhysicsSystem.h"
 
 #include "StateGameObject.h"
 
@@ -53,16 +52,15 @@ namespace NCL {
 
 			GameObject* AddInfinitePlaneToWorld(const Vector3& position, const Vector3& normal, float planeConstant);
 
-			GameObject* AddPlayerToWorld(const Vector3& position);
-			GameObject* AddEnemyToWorld(const Vector3& position);
-			GameObject* AddBonusToWorld(const Vector3& position);
+			//GameObject* AddPlayerToWorld(const Vector3& position);
+			//GameObject* AddEnemyToWorld(const Vector3& position);
+			//GameObject* AddBonusToWorld(const Vector3& position);
 
 #ifdef USEVULKAN
 			GameTechVulkanRenderer*	renderer;
 #else
 			GameTechRenderer* renderer;
 #endif
-			PhysicsSystem*		physics;
 			GameWorld*			world;
 
 			KeyboardMouseController controller;

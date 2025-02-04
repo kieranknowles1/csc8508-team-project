@@ -1,5 +1,5 @@
 #include "PhysicsObject.h"
-#include "PhysicsSystem.h"
+#include "GameObject.h"
 #include "Transform.h"
 
 #include <btBulletDynamicsCommon.h>
@@ -8,7 +8,7 @@ using namespace NCL;
 using namespace CSC8503;
 
 PhysicsObject::PhysicsObject(GameObject* parent) 
-	: parent(parent), rigidBody(nullptr), motionState(nullptr), collisionShape(nullptr), inverseMass(1.0f), elasticity(0.8f), friction(0.8f) {
+	: parent(parent), rigidBody(nullptr), motionState(nullptr), collisionShape(nullptr) {
 	
 }
 
@@ -99,89 +99,4 @@ void PhysicsObject::ClearForces() {
 	if (rigidBody) {
 		rigidBody->clearForces();
 	}
-}
-
-/* Bullet Physics Implementaton ends here*/
-
-/* Physics properties implemented using NCL's framework has been commented out, I might remove it as well */
-
-/*
-void PhysicsObject::ApplyAngularImpulse(const Vector3& force) {
-	angularVelocity += inverseInteriaTensor * force;
-}
-
-void PhysicsObject::ApplyLinearImpulse(const Vector3& force) {
-	linearVelocity += force * inverseMass;
-}
-
-void PhysicsObject::AddForce(const Vector3& addedForce) {
-	force += addedForce;
-}
-
-void PhysicsObject::AddForceAtPosition(const Vector3& addedForce, const Vector3& position) {
-	Vector3 localPos = position - transform->GetPosition();
-
-	force  += addedForce;
-	torque += Vector::Cross(localPos, addedForce);
-}
-
-void PhysicsObject::AddTorque(const Vector3& addedTorque) {
-	torque += addedTorque;
-}
-
-void PhysicsObject::ClearForces() {
-	force				= Vector3();
-	torque				= Vector3();
-}
-*/
-
-void PhysicsObject::InitCubeInertia() {
-	Vector3 dimensions	= parent->GetTransform().GetScale();
-
-	Vector3 fullWidth = dimensions * 2.0f;
-
-	Vector3 dimsSqr		= fullWidth * fullWidth;
-
-	inverseInertia.x = (12.0f * inverseMass) / (dimsSqr.y + dimsSqr.z);
-	inverseInertia.y = (12.0f * inverseMass) / (dimsSqr.x + dimsSqr.z);
-	inverseInertia.z = (12.0f * inverseMass) / (dimsSqr.x + dimsSqr.y);
-}
-
-void PhysicsObject::InitSphereInertia() {
-
-	float radius	= Vector::GetMaxElement(parent->GetTransform().GetScale());
-	float i			= 2.5f * inverseMass / (radius*radius);
-
-	inverseInertia	= Vector3(i, i, i);
-}
-
-void PhysicsObject::InitCapsuleInertia() {
-	float radius = parent->GetTransform().GetScale().x / 2.0f; // Assuming uniform scaling for the capsule
-	float height = parent->GetTransform().GetScale().y; // Capsule height
-
-	// Moment of inertia for a capsule (cylinder + 2 hemispherical ends)
-	float massFactor = 0.5f * inverseMass; // Mass factor for the capsule
-
-	// For the cylindrical part (the main body)
-	float cylI = (1.0f / 12.0f) * inverseMass * (3.0f * radius * radius + height * height);
-
-	// For the two hemispherical ends
-	float sphI = (2.0f / 5.0f) * inverseMass * radius * radius;
-
-	// Combine them (cylinder + two hemispheres)
-	float totalI = cylI + sphI;
-
-	// Inertia tensor (x, y, z axes)
-	inverseInertia.x = totalI; // Assume uniform inertia for the cylindrical shape along x
-	inverseInertia.y = totalI; // Same for y-axis
-	inverseInertia.z = totalI; // Same for z-axis
-}
-
-void PhysicsObject::UpdateInertiaTensor() {
-	Quaternion q = parent->GetTransform().GetOrientation();
-
-	Matrix3 invOrientation = Quaternion::RotationMatrix<Matrix3>(q.Conjugate());
-	Matrix3 orientation = Quaternion::RotationMatrix<Matrix3>(q);
-
-	inverseInteriaTensor = orientation * Matrix::Scale3x3(inverseInertia) *invOrientation;
 }

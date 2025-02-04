@@ -4,10 +4,9 @@
 #include "RenderObject.h"
 #include "TextureLoader.h"
 
-#include "PositionConstraint.h"
-#include "OrientationConstraint.h"
 #include "StateGameObject.h"
 
+#include <CSC8503CoreClasses/Debug.h>
 
 
 using namespace NCL;
@@ -25,8 +24,6 @@ TutorialGame::TutorialGame() : controller(*Window::GetWindow()->GetKeyboard(), *
 #else 
 	renderer = new GameTechRenderer(*world);
 #endif
-
-	physics		= new PhysicsSystem(*world);
 
 	forceMagnitude	= 10.0f;
 	useGravity		= false;
@@ -80,7 +77,6 @@ TutorialGame::~TutorialGame()	{
 	delete basicTex;
 	delete basicShader;
 
-	delete physics;
 	delete renderer;
 	delete world;
 }
@@ -165,7 +161,6 @@ void TutorialGame::UpdateGame(float dt) {
 
 	world->UpdateWorld(dt);
 	renderer->Update(dt);
-	physics->Update(dt);
 
 	renderer->Render();
 	Debug::UpdateRenderables(dt);
@@ -297,7 +292,8 @@ void TutorialGame::InitCamera() {
 
 void TutorialGame::InitWorld() {
 	world->ClearAndErase();
-	physics->Clear();
+	// TODO: Clear bullet
+	//physics->Clear();
 
 	//InitMixedGridWorld(15, 15, 3.5f, 3.5f);
 
@@ -339,10 +335,6 @@ GameObject* TutorialGame::AddCubeToWorld(const Vector3& position, Vector3 dimens
 	// Initialize Bullet physics for the cube
 	cube->GetPhysicsObject()->InitBulletPhysics(bulletWorld, shape, inverseMass);
 
-	// Setting the physics properties for the cube here
-	cube->GetPhysicsObject()->SetInverseMass(inverseMass);
-	cube->GetPhysicsObject()->InitCubeInertia();
-
 	world->AddGameObject(cube);
 
 	return cube;
@@ -367,10 +359,6 @@ GameObject* TutorialGame::AddCapsuleToWorld(const Vector3& position, float halfH
 
 	// Initializing the physics object for the capsule
 	capsule->GetPhysicsObject()->InitBulletPhysics(bulletWorld, shape, inverseMass);
-
-	// Setting the physics properties for the capsule
-	capsule->GetPhysicsObject()->SetInverseMass(inverseMass);
-	capsule->GetPhysicsObject()->InitCapsuleInertia();
 
 	world->AddGameObject(capsule);
 
@@ -466,114 +454,88 @@ GameObject* TutorialGame::AddSphereToWorld(const Vector3& position, float radius
 	// Initialize Bullet physics for the sphere
 	sphere->GetPhysicsObject()->InitBulletPhysics(bulletWorld, shape, inverseMass);
 
-	// Setting the physics properities for the sphere
-	sphere->GetPhysicsObject()->SetInverseMass(inverseMass);
-	sphere->GetPhysicsObject()->InitSphereInertia();
-
 	world->AddGameObject(sphere);
 
 	return sphere;
 }
 
-
-
-//GameObject* TutorialGame::AddCubeToWorld(const Vector3& position, Vector3 dimensions, float inverseMass) {
-//	GameObject* cube = new GameObject();
+// TODO: From 8503. Probably donnt need
+//GameObject* TutorialGame::AddPlayerToWorld(const Vector3& position) {
+//	float meshSize		= 1.0f;
+//	float inverseMass	= 0.5f;
 //
-//	AABBVolume* volume = new AABBVolume(dimensions);
-//	cube->SetBoundingVolume((CollisionVolume*)volume);
+//	GameObject* character = new GameObject();
+//	SphereVolume* volume  = new SphereVolume(1.0f);
 //
-//	cube->GetTransform()
-//		.SetPosition(position)
-//		.SetScale(dimensions * 2.0f);
+//	character->SetBoundingVolume((CollisionVolume*)volume);
 //
-//	cube->SetRenderObject(new RenderObject(&cube->GetTransform(), cubeMesh, basicTex, basicShader));
-//	cube->SetPhysicsObject(new PhysicsObject(&cube->GetTransform(), cube->GetBoundingVolume()));
+//	character->GetTransform()
+//		.SetScale(Vector3(meshSize, meshSize, meshSize))
+//		.SetPosition(position);
 //
-//	cube->GetPhysicsObject()->SetInverseMass(inverseMass);
-//	cube->GetPhysicsObject()->InitCubeInertia();
+//	character->SetRenderObject(new RenderObject(&character->GetTransform(), catMesh, nullptr, basicShader));
+//	character->SetPhysicsObject(new PhysicsObject(character));
 //
-//	world->AddGameObject(cube);
+//	character->GetPhysicsObject()->SetInverseMass(inverseMass);
+//	character->GetPhysicsObject()->InitSphereInertia();
 //
-//	return cube;
+//	world->AddGameObject(character);
+//
+//	return character;
 //}
-
-GameObject* TutorialGame::AddPlayerToWorld(const Vector3& position) {
-	float meshSize		= 1.0f;
-	float inverseMass	= 0.5f;
-
-	GameObject* character = new GameObject();
-	SphereVolume* volume  = new SphereVolume(1.0f);
-
-	character->SetBoundingVolume((CollisionVolume*)volume);
-
-	character->GetTransform()
-		.SetScale(Vector3(meshSize, meshSize, meshSize))
-		.SetPosition(position);
-
-	character->SetRenderObject(new RenderObject(&character->GetTransform(), catMesh, nullptr, basicShader));
-	character->SetPhysicsObject(new PhysicsObject(character));
-
-	character->GetPhysicsObject()->SetInverseMass(inverseMass);
-	character->GetPhysicsObject()->InitSphereInertia();
-
-	world->AddGameObject(character);
-
-	return character;
-}
-
-GameObject* TutorialGame::AddEnemyToWorld(const Vector3& position) {
-	float meshSize		= 3.0f;
-	float inverseMass	= 0.5f;
-
-	GameObject* character = new GameObject();
-
-	AABBVolume* volume = new AABBVolume(Vector3(0.3f, 0.9f, 0.3f) * meshSize);
-	character->SetBoundingVolume((CollisionVolume*)volume);
-
-	character->GetTransform()
-		.SetScale(Vector3(meshSize, meshSize, meshSize))
-		.SetPosition(position);
-
-	character->SetRenderObject(new RenderObject(&character->GetTransform(), enemyMesh, nullptr, basicShader));
-	character->SetPhysicsObject(new PhysicsObject(character));
-
-	character->GetPhysicsObject()->SetInverseMass(inverseMass);
-	character->GetPhysicsObject()->InitSphereInertia();
-
-	world->AddGameObject(character);
-
-	return character;
-}
-
-GameObject* TutorialGame::AddBonusToWorld(const Vector3& position) {
-	GameObject* apple = new GameObject();
-
-	SphereVolume* volume = new SphereVolume(0.5f);
-	apple->SetBoundingVolume((CollisionVolume*)volume);
-	apple->GetTransform()
-		.SetScale(Vector3(2, 2, 2))
-		.SetPosition(position);
-
-	apple->SetRenderObject(new RenderObject(&apple->GetTransform(), bonusMesh, nullptr, basicShader));
-	apple->SetPhysicsObject(new PhysicsObject(apple));
-
-	apple->GetPhysicsObject()->SetInverseMass(1.0f);
-	apple->GetPhysicsObject()->InitSphereInertia();
-
-	world->AddGameObject(apple);
-
-	return apple;
-}
+//
+//GameObject* TutorialGame::AddEnemyToWorld(const Vector3& position) {
+//	float meshSize		= 3.0f;
+//	float inverseMass	= 0.5f;
+//
+//	GameObject* character = new GameObject();
+//
+//	AABBVolume* volume = new AABBVolume(Vector3(0.3f, 0.9f, 0.3f) * meshSize);
+//	character->SetBoundingVolume((CollisionVolume*)volume);
+//
+//	character->GetTransform()
+//		.SetScale(Vector3(meshSize, meshSize, meshSize))
+//		.SetPosition(position);
+//
+//	character->SetRenderObject(new RenderObject(&character->GetTransform(), enemyMesh, nullptr, basicShader));
+//	character->SetPhysicsObject(new PhysicsObject(character));
+//
+//	character->GetPhysicsObject()->SetInverseMass(inverseMass);
+//	character->GetPhysicsObject()->InitSphereInertia();
+//
+//	world->AddGameObject(character);
+//
+//	return character;
+//}
+//
+//GameObject* TutorialGame::AddBonusToWorld(const Vector3& position) {
+//	GameObject* apple = new GameObject();
+//
+//	SphereVolume* volume = new SphereVolume(0.5f);
+//	apple->SetBoundingVolume((CollisionVolume*)volume);
+//	apple->GetTransform()
+//		.SetScale(Vector3(2, 2, 2))
+//		.SetPosition(position);
+//
+//	apple->SetRenderObject(new RenderObject(&apple->GetTransform(), bonusMesh, nullptr, basicShader));
+//	apple->SetPhysicsObject(new PhysicsObject(apple));
+//
+//	apple->GetPhysicsObject()->SetInverseMass(1.0f);
+//	apple->GetPhysicsObject()->InitSphereInertia();
+//
+//	world->AddGameObject(apple);
+//
+//	return apple;
+//}
 
 void TutorialGame::InitDefaultFloor() {
 	AddFloorToWorld(Vector3(0, -20, 0));
 }
 
 void TutorialGame::InitGameExamples() {
-	AddPlayerToWorld(Vector3(0, 5, 0));
-	AddEnemyToWorld(Vector3(5, 5, 0));
-	AddBonusToWorld(Vector3(10, 5, 0));
+	//AddPlayerToWorld(Vector3(0, 5, 0));
+	//AddEnemyToWorld(Vector3(5, 5, 0));
+	//AddBonusToWorld(Vector3(10, 5, 0));
 }
 
 void TutorialGame::InitSphereGridWorld(int numRows, int numCols, float rowSpacing, float colSpacing, float radius) {
@@ -641,18 +603,19 @@ bool TutorialGame::SelectObject() {
 				selectionObject = nullptr;
 			}
 
-			Ray ray = CollisionDetection::BuildRayFromMouse(world->GetMainCamera());
+			// TODO: Do the bullet way
+			//Ray ray = CollisionDetection::BuildRayFromMouse(world->GetMainCamera());
 
-			RayCollision closestCollision;
-			if (world->Raycast(ray, closestCollision, true)) {
-				selectionObject = (GameObject*)closestCollision.node;
+			//RayCollision closestCollision;
+			//if (world->Raycast(ray, closestCollision, true)) {
+			//	selectionObject = (GameObject*)closestCollision.node;
 
-				selectionObject->GetRenderObject()->SetColour(Vector4(0, 1, 0, 1));
-				return true;
-			}
-			else {
-				return false;
-			}
+			//	selectionObject->GetRenderObject()->SetColour(Vector4(0, 1, 0, 1));
+			//	return true;
+			//}
+			//else {
+			//	return false;
+			//}
 		}
 		if (Window::GetKeyboard()->KeyPressed(NCL::KeyCodes::L)) {
 			if (selectionObject) {
@@ -687,14 +650,15 @@ void TutorialGame::MoveSelectedObject() {
 	}
 	//Push the selected object!
 	if (Window::GetMouse()->ButtonPressed(NCL::MouseButtons::Right)) {
-		Ray ray = CollisionDetection::BuildRayFromMouse(world->GetMainCamera());
+		// TODO: Bullet
+		//Ray ray = CollisionDetection::BuildRayFromMouse(world->GetMainCamera());
 
-		RayCollision closestCollision;
-		if (world->Raycast(ray, closestCollision, true)) {
-			if (closestCollision.node == selectionObject) {
-				selectionObject->GetPhysicsObject()->AddForceAtPosition(ray.GetDirection() * forceMagnitude, closestCollision.collidedAt);
-			}
-		}
+		//RayCollision closestCollision;
+		//if (world->Raycast(ray, closestCollision, true)) {
+		//	if (closestCollision.node == selectionObject) {
+		//		selectionObject->GetPhysicsObject()->AddForceAtPosition(ray.GetDirection() * forceMagnitude, closestCollision.collidedAt);
+		//	}
+		//}
 	}
 }
 

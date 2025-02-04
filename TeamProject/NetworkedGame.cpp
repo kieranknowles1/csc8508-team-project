@@ -9,6 +9,8 @@
 
 #define COLLISION_MSG 30
 
+using namespace NCL::CSC8503;
+
 struct MessagePacket : public GamePacket {
 	short playerID;
 	short messageID;
