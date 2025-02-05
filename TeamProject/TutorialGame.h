@@ -59,10 +59,25 @@ namespace NCL {
 			Shader* basicShader = nullptr;
 
 			//Coursework Meshes
-			Mesh* catMesh = nullptr;
-			Mesh* kittenMesh = nullptr;
-			Mesh* enemyMesh = nullptr;
-			Mesh* bonusMesh = nullptr;
+			Mesh*	catMesh		= nullptr;
+			Mesh*	kittenMesh	= nullptr;
+			Mesh*	enemyMesh	= nullptr;
+			Mesh*	bonusMesh	= nullptr;
+
+			//EG Meshes:
+			Mesh* maxMesh = nullptr;
+			Mesh* maleguardMesh = nullptr;
+			Mesh* femaleguardMesh = nullptr;
+
+			//Coursework Additional functionality	
+			GameObject* lockedObject	= nullptr;
+			Vector3 lockedOffset		= Vector3(0, 14, 20);
+			void LockCameraToObject(GameObject* o) {
+				lockedObject = o;
+			}
+
+			GameObject* objClosest = nullptr;
+
 
 			/* bullet physics stuff here */
 			btDiscreteDynamicsWorld* bulletWorld;
