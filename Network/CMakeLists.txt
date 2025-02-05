@@ -3,6 +3,7 @@ set(SOURCES
 	Server.hpp
 	Client.cpp
 	Client.hpp
+	Network.hpp
 )
 
 set(TEST_SOURCES
