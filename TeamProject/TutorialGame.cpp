@@ -83,6 +83,10 @@ TutorialGame::~TutorialGame()	{
 	delete enemyMesh;
 	delete bonusMesh;
 
+	delete maxMesh;
+	delete maleguardMesh;
+	delete femaleguardMesh;
+
 	delete basicTex;
 	delete basicShader;
 
