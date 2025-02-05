@@ -8,6 +8,7 @@
 #include "PhysicsSystem.h"
 
 #include "StateGameObject.h"
+#include "PlayerController.h"
 #include "Turret.h"
 
 #include <btBulletDynamicsCommon.h>
@@ -106,6 +107,19 @@ namespace NCL {
 
 			void InitBullet(); // Initialises the Bullet physics world
 			GameObject* objectToTestBulletPhysics = nullptr;
+
+			//Player things
+			void InitPlayer();
+			PerspectiveCamera* mainCamera;
+			GameObject* player;
+			PlayerController* playerController;
+			bool freeCam = false;
+
+			//fixed update 
+			float accumulator = 0.0f;
+			float fixedDeltaTime = 1.0f / 60.0f;
+			void FixedUpdate();
+			
 			Turret* testTurret = nullptr;
 		};
 	}

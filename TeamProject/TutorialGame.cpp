@@ -111,6 +111,8 @@ void TutorialGame::UpdateGame(float dt) {
 
 	UpdateKeys();
 
+	// TODO: Remove the below comment and add what stepSimulation does concisely
+	/* Took a while to figure out why gravity wasn't working, I figured out after
 	/*if (useGravity) {
 		Debug::Print("(G)ravity on", Vector2(5, 95), Debug::RED);
 	}
@@ -161,6 +163,7 @@ void TutorialGame::UpdateGame(float dt) {
 		occur 
 	*/
 
+	bulletWorld->debugDrawWorld();
 	if (testTurret) {
 		testTurret->Update(dt);
 	}
@@ -320,6 +323,16 @@ void TutorialGame::InitWorld() {
 
 	//InitGameExamples();
 	InitDefaultFloor();
+
+	// Testing the bullet physics
+	AddObjectToTestBulletPhysics();
+	AddTurretToWorld();
+}
+
+Turret* TutorialGame::AddTurretToWorld() {
+	Turret* turret = new Turret();
+
+	Vector3 dimensions = Vector3(5, 5, 5);
 
 	// Testing the bullet physics
 	AddObjectToTestBulletPhysics();

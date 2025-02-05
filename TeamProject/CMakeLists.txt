@@ -10,6 +10,8 @@ set(SOURCES
     StateGameObject.h
     TutorialGame.cpp
     TutorialGame.h
+    PlayerController.cpp
+    PlayerController.h
     Turret.H
     Turret.cpp
 )
