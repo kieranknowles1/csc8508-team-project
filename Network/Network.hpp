@@ -13,7 +13,7 @@ void DebugOut(const std::string& message) {
 #endif
 
 
-const uint32_t MAX_CLIENTS = 8;
+const unsigned int MAX_CLIENTS = 8;
 
 
 /**
