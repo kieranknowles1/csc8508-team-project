@@ -1,6 +1,7 @@
 #pragma once
 
 #include <./enet/enet.h>
+#include <./enet/time.h>
 
 #ifdef NETWORK_TEST
 #include <iostream>
@@ -37,8 +38,18 @@ enum class Channel {
  */
 class Network {
 public:
-	Network() { if (enet_initialize()) m_initialised = true; }
-	~Network() { if (m_initialised) enet_deinitialize(); }
+	Network() { 
+#ifdef NETWORK_TEST
+		DebugOut("Initialising ENet");
+#endif
+		if (enet_initialize()) m_initialised = true;
+	}
+	~Network() {
+#ifdef NETWORK_TEST
+		DebugOut("Shutting down ENet.");
+#endif
+		if (m_initialised) enet_deinitialize();
+	}
 
 	/**
 	 * @brief Call to determine if enet was successfully initialised.

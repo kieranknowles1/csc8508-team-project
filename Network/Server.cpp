@@ -10,14 +10,14 @@ Server::~Server() {
 void Server::Start(bool threaded) {
 	if (threaded) {
 #ifdef NETWORK_TEST
-		DebugOut("Starting network on a separate thread.");
+		DebugOut("Creating thread.");
 #endif
-
 	}
 
 #ifdef NETWORK_TEST
-	DebugOut("Starting network on the main thread.");
+	DebugOut("Starting network.");
 #endif
+	CreateHost();
 }
 
 
@@ -33,7 +33,7 @@ void Server::Stop() {
 }
 
 
-bool Server::CreateHost() {
+void Server::CreateHost() {
 	address.host = ENET_HOST_ANY;
 	address.port = m_port;
 
@@ -41,15 +41,11 @@ bool Server::CreateHost() {
 
 	if (m_host == nullptr) {
 #ifdef NETWORK_TEST
-		DebugOut("Host creation failed.")
+		DebugOut("Host creation failed.");
 #endif
-		
 		m_state = ServerState::ERRORED;
-		return false;
 	}
 #ifdef NETWORK_TEST
-	DebugOut("Host created.")
+	DebugOut("Host created.");
 #endif
-
-	return true;
 }

@@ -51,7 +51,7 @@ public:
 
 
 protected:
-	bool CreateHost();
+	void CreateHost();
 
 	ServerState m_state = ServerState::STOPPED;
 

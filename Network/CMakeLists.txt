@@ -46,3 +46,9 @@ target_link_libraries(NetworkTest PUBLIC
 	NetworkTestLib
 )
 assign_folder(NetworkTest "Network/Test")
+
+# Enet Linking.
+if(MSVC)
+    target_link_libraries(NetworkLib PUBLIC "Winmm.lib")
+    target_link_libraries(NetworkTestLib PUBLIC "Winmm.lib")
+endif()
