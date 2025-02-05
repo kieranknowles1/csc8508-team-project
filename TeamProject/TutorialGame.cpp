@@ -5,6 +5,7 @@
 #include "TextureLoader.h"
 
 #include "StateGameObject.h"
+#include "BulletDebug.h"
 
 #include <CSC8503CoreClasses/Debug.h>
 
@@ -145,6 +146,7 @@ void TutorialGame::UpdateGame(float dt) {
 	*/
 
 	bulletWorld->stepSimulation(dt, 10);
+	bulletWorld->debugDrawWorld();
 
 	// If the object exists, log its position after the simulation step
 	if (objectToTestBulletPhysics) {
@@ -174,6 +176,10 @@ void TutorialGame::UpdateKeys() {
 
 	if (Window::GetKeyboard()->KeyPressed(KeyCodes::F2)) {
 		InitCamera(); //F2 will reset the camera to a specific default place
+	}
+
+	if (Window::GetKeyboard()->KeyPressed(KeyCodes::F3)) {
+		bulletDebug->toggle();
 	}
 
 	if (Window::GetKeyboard()->KeyPressed(KeyCodes::G)) {
@@ -279,6 +285,9 @@ void TutorialGame::InitBullet() {
 
 	bulletWorld = new btDiscreteDynamicsWorld(dispatcher, broadphase, solver, collisionConfig);
 	bulletWorld->setGravity(btVector3(0, -9.8, 0));
+
+	bulletDebug = new BulletDebug();
+	bulletWorld->setDebugDrawer(bulletDebug);
 }
 
 void TutorialGame::InitCamera() {
@@ -340,13 +349,13 @@ GameObject* TutorialGame::AddCubeToWorld(const Vector3& position, Vector3 dimens
 	return cube;
 }
 
-GameObject* TutorialGame::AddCapsuleToWorld(const Vector3& position, float halfHeight, float radius, float inverseMass) {
+GameObject* TutorialGame::AddCapsuleToWorld(const Vector3& position, float height, float radius, float inverseMass) {
 	GameObject* capsule = new GameObject();
 	
 	// Setting the transform properties for the capsule
 	capsule->GetTransform()
 		.SetPosition(position)
-		.SetScale(Vector3(radius, halfHeight, radius)); // Radius needs to be scaled to match the top and bottom caps of the capsule
+		.SetScale(Vector3(radius * 2, height, radius * 2)); // Radius needs to be scaled to match the top and bottom caps of the capsule
 
 	// Setting the render object for the capsule
 	capsule->SetRenderObject(new RenderObject(&capsule->GetTransform(), capsuleMesh, basicTex, basicShader));
@@ -355,7 +364,7 @@ GameObject* TutorialGame::AddCapsuleToWorld(const Vector3& position, float halfH
 	capsule->SetPhysicsObject(new PhysicsObject(capsule));
 
 	// Creating a Bullet collision shape for the capsule
-	btCollisionShape* shape = new btCapsuleShape(radius, halfHeight * 2);
+	btCollisionShape* shape = new btCapsuleShape(radius, height);
 
 	// Initializing the physics object for the capsule
 	capsule->GetPhysicsObject()->InitBulletPhysics(bulletWorld, shape, inverseMass);

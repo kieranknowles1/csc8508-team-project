@@ -2,6 +2,7 @@
 
 - [CSC8508 Team Project](#csc8508-team-project)
   - [Building](#building)
+  - [Controls](#controls)
 
 ## Building
 
@@ -12,3 +13,7 @@ When adding a new file to the project:
 1. Add the file to the `set(SOURCES` of the relevant `CMakeLists.txt`.
 2. Build `CMakePredefinedTargets/ZERO_CHECK`.
 3. Reload the solution when prompted.
+
+## Controls
+
+- `F3`: Toggle Bullet debug draw

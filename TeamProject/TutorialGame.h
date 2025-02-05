@@ -12,6 +12,8 @@
 
 namespace NCL {
 	namespace CSC8503 {
+		class BulletDebug;
+
 		class TutorialGame		{
 		public:
 			TutorialGame();
@@ -101,6 +103,8 @@ namespace NCL {
 			btDefaultCollisionConfiguration* collisionConfig;
 			btCollisionDispatcher* dispatcher;
 			btSequentialImpulseConstraintSolver* solver;
+
+			BulletDebug* bulletDebug;
 
 			void InitBullet(); // Initialises the Bullet physics world
 			GameObject* objectToTestBulletPhysics = nullptr;
