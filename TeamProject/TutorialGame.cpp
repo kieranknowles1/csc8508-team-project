@@ -5,6 +5,7 @@
 #include "TextureLoader.h"
 
 #include "StateGameObject.h"
+#include "BulletDebug.h"
 
 #include <CSC8503CoreClasses/Debug.h>
 
@@ -21,7 +22,7 @@ TutorialGame::TutorialGame() : controller(*Window::GetWindow()->GetKeyboard(), *
 	renderer	= new GameTechVulkanRenderer(*world);
 	renderer->Init();
 	renderer->InitStructures();
-#else 
+#else
 	renderer = new GameTechRenderer(*world);
 #endif
 
@@ -43,7 +44,7 @@ TutorialGame::TutorialGame() : controller(*Window::GetWindow()->GetKeyboard(), *
 
 /*
 
-Each of the little demo scenarios used in the game uses the same 2 meshes, 
+Each of the little demo scenarios used in the game uses the same 2 meshes,
 and the same texture and shader. There's no need to ever load in anything else
 for this module, even in the coursework, but you can add it if you like!
 
@@ -139,13 +140,14 @@ void TutorialGame::UpdateGame(float dt) {
 	MoveSelectedObject();
 
 	// TODO: Remove the below comment and add what stepSimulation does concisely
-	/* Took a while to figure out why gravity wasn't working, I figured out after 
+	/* Took a while to figure out why gravity wasn't working, I figured out after
 	    reading the doc for the nth time that I forgot to update the world each frame
 		with bullet world's step simulation. Otherwise, physics interactions will not
-		occur 
+		occur
 	*/
 
 	bulletWorld->stepSimulation(dt, 10);
+	bulletWorld->debugDrawWorld();
 
 	// TODO: Remove this testing code in a different commit
 	// If the object exists, log its position after the simulation step
@@ -176,6 +178,10 @@ void TutorialGame::UpdateKeys() {
 
 	if (Window::GetKeyboard()->KeyPressed(KeyCodes::F2)) {
 		InitCamera(); //F2 will reset the camera to a specific default place
+	}
+
+	if (Window::GetKeyboard()->KeyPressed(KeyCodes::F3)) {
+		bulletDebug->toggle();
 	}
 
 	if (Window::GetKeyboard()->KeyPressed(KeyCodes::G)) {
@@ -281,6 +287,9 @@ void TutorialGame::InitBullet() {
 
 	bulletWorld = new btDiscreteDynamicsWorld(dispatcher, broadphase, solver, collisionConfig);
 	bulletWorld->setGravity(btVector3(0, -9.8, 0));
+
+	bulletDebug = new BulletDebug();
+	bulletWorld->setDebugDrawer(bulletDebug);
 }
 
 void TutorialGame::InitCamera() {
@@ -346,9 +355,9 @@ GameObject* TutorialGame::AddCubeToWorld(const Vector3& position, Vector3 dimens
 	return cube;
 }
 
-GameObject* TutorialGame::AddCapsuleToWorld(const Vector3& position, float halfHeight, float radius, float inverseMass) {
+GameObject* TutorialGame::AddCapsuleToWorld(const Vector3& position, float height, float radius, float inverseMass) {
 	GameObject* capsule = new GameObject();
-	
+
 	// Setting the transform properties for the capsule
 	capsule->setInitialPosition(position);
 	capsule->setRenderScale(Vector3(radius * 2, halfHeight * 2, radius * 2));
@@ -357,7 +366,7 @@ GameObject* TutorialGame::AddCapsuleToWorld(const Vector3& position, float halfH
 	//capsule->SetOrientation(rotation);
 
 	// Creating a Bullet collision shape for the capsule
-	btCollisionShape* shape = new btCapsuleShape(radius, halfHeight * 2);
+	btCollisionShape* shape = new btCapsuleShape(radius, height);
 
 	// Setting the render object for the capsule
 	capsule->SetRenderObject(new RenderObject(capsule, capsuleMesh, basicTex, basicShader));
@@ -581,9 +590,9 @@ void TutorialGame::InitCubeGridWorld(int numRows, int numCols, float rowSpacing,
 
 /*
 Every frame, this code will let you perform a raycast, to see if there's an object
-underneath the cursor, and if so 'select it' into a pointer, so that it can be 
+underneath the cursor, and if so 'select it' into a pointer, so that it can be
 manipulated later. Pressing Q will let you toggle between this behaviour and instead
-letting you move the camera around. 
+letting you move the camera around.
 
 */
 bool TutorialGame::SelectObject() {
