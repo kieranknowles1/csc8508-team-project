@@ -39,6 +39,17 @@ bool Server::CreateHost() {
 
 	m_host = enet_host_create(&address, MAX_CLIENTS, static_cast<size_t>(Channel::CHANNEL_COUNT), 0, 0);
 
-	if (m_host == nullptr) return false;
+	if (m_host == nullptr) {
+#ifdef NETWORK_TEST
+		DebugOut("Host creation failed.")
+#endif
+		
+		m_state = ServerState::ERRORED;
+		return false;
+	}
+#ifdef NETWORK_TEST
+	DebugOut("Host created.")
+#endif
+
 	return true;
 }
