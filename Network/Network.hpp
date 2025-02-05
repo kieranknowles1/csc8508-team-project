@@ -15,6 +15,7 @@ void DebugOut(const std::string& message) {
 
 
 const unsigned int MAX_CLIENTS = 8;
+const float EVENT_WAIT = 1000; // ms
 
 
 /**
@@ -63,8 +64,16 @@ public:
 		return m_host != nullptr;
 	}
 
-private:
+	ENetEvent GetEvent(float waitTime) {
+		ENetEvent event;
+		enet_host_service(m_host, &event, waitTime);
+		return event;
+	}
+
+protected:
 	ENetHost* m_host = nullptr;
+
+private:
 	bool m_initialised = false;
 };
 

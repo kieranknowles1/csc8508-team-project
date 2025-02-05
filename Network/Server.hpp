@@ -3,27 +3,11 @@
 #include <string>
 #include <thread>
 #include <mutex>
+#include <array>
 
 #include <./enet/enet.h>
 
 #include "Network.hpp"
-
-
-
-
-
-
-
-template <typename Packet>
-class PacketHandler {
-public:
-	PacketHandler();
-	~PacketHandler();
-
-private:
-	
-
-};
 
 
 enum class ServerState {
@@ -41,7 +25,7 @@ public:
 
 	~Server();
 
-	void Start(bool threaded = false);
+	void Start();
 	void Stop();
 
 	std::string GetHostname() const { return m_hostName; }
@@ -51,6 +35,11 @@ public:
 
 
 protected:
+	void Run();
+	void Update();
+	void AttemptConnection(ENetEvent& event);
+	void RemoveConnection(ENetEvent& event);
+
 	ServerState m_state = ServerState::STOPPED;
 
 private:
@@ -60,6 +49,8 @@ private:
 	std::thread* m_thread = nullptr;
 	std::mutex m_stateMutex;
 
-	ENetPeer* connections[];
+	ENetPeer* connections[MAX_CLIENTS];
+	bool allowConnections = true;
+	uint32_t m_numConnections;
 };
 
