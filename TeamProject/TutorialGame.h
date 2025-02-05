@@ -8,6 +8,7 @@
 #include "PhysicsSystem.h"
 
 #include "StateGameObject.h"
+#include "Turret.h"
 
 #include <btBulletDynamicsCommon.h>
 
@@ -29,6 +30,7 @@ namespace NCL {
 			void InitWorld();
 
 			GameObject* AddObjectToTestBulletPhysics();
+			Turret* AddTurretToWorld();
 
 			/*
 			These are some of the world/object creation functions I created when testing the functionality
@@ -104,6 +106,7 @@ namespace NCL {
 
 			void InitBullet(); // Initialises the Bullet physics world
 			GameObject* objectToTestBulletPhysics = nullptr;
+			Turret* testTurret = nullptr;
 		};
 	}
 }

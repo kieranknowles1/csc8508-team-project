@@ -10,6 +10,8 @@ set(SOURCES
     StateGameObject.h
     TutorialGame.cpp
     TutorialGame.h
+    Turret.H
+    Turret.cpp
 )
 
 add_executable(${PROJECT_NAME} ${SOURCES})

@@ -141,7 +141,7 @@ void TutorialGame::UpdateGame(float dt) {
 		}
 	}
 
-	Debug::DrawLine(Vector3(), Vector3(0, 100, 0), Vector4(1, 0, 0, 1));
+	/*Debug::DrawLine(Vector3(), Vector3(0, 100, 0), Vector4(1, 0, 0, 1));
 	btCollisionWorld::ClosestRayResultCallback rayResult(btVector3(0, 0, 0), btVector3(0, 100, 0));
 	if (BulletRaycast(bulletWorld, btVector3(0, 0, 0), btVector3(0, 100, 0), rayResult)) {
 		btVector3 hitPoint = rayResult.m_hitPointWorld;
@@ -149,7 +149,7 @@ void TutorialGame::UpdateGame(float dt) {
 	}
 	else {
 		std::cout << "No hit detected.\n";
-	}
+	}*/
 
 	
 	SelectObject();
@@ -160,6 +160,10 @@ void TutorialGame::UpdateGame(float dt) {
 		with bullet world's step simulation. Otherwise, physics interactions will not
 		occur 
 	*/
+
+	if (testTurret) {
+		testTurret->Update(dt);
+	}
 
 	bulletWorld->stepSimulation(dt, 10);
 
@@ -319,6 +323,40 @@ void TutorialGame::InitWorld() {
 
 	// Testing the bullet physics
 	AddObjectToTestBulletPhysics();
+	AddTurretToWorld();
+}
+
+Turret* TutorialGame::AddTurretToWorld() {
+	Turret* turret = new Turret();
+
+	Vector3 dimensions = Vector3(5, 5, 5);
+
+	turret->GetTransform()
+		.SetPosition(Vector3(5, 5, 5))
+		.SetScale(dimensions);
+
+	turret->SetRenderObject(new RenderObject(&turret->GetTransform(), kittenMesh, basicTex, basicShader));
+
+	btCollisionShape* shape = new btBoxShape(btVector3(dimensions.x / 2.0f, dimensions.y / 2.0f, dimensions.z / 2.0f));
+
+	shape->setMargin(0.01f);
+
+	PhysicsObject* physicsObject = new PhysicsObject(&turret->GetTransform(), turret->GetBoundingVolume());
+
+	physicsObject->InitBulletPhysics(bulletWorld, shape, 1.0f);
+
+	turret->SetPhysicsObject(physicsObject);
+
+	turret->GetPhysicsObject()->SetInverseMass(1.0f);
+	turret->GetPhysicsObject()->InitCubeInertia();
+
+	turret->GetRenderObject()->SetColour(Vector4(1, 0, 0, 1));
+
+	world->AddGameObject(turret);
+
+	testTurret = turret;
+
+	return turret;
 }
 
 /* Adding an object to test the bullet physics */
