@@ -360,7 +360,7 @@ GameObject* TutorialGame::AddCapsuleToWorld(const Vector3& position, float heigh
 
 	// Setting the transform properties for the capsule
 	capsule->setInitialPosition(position);
-	capsule->setRenderScale(Vector3(radius * 2, halfHeight * 2, radius * 2));
+	capsule->setRenderScale(Vector3(radius * 2, height, radius * 2));
 
 	// TODO: Set the orientation of the capsule
 	//capsule->SetOrientation(rotation);
