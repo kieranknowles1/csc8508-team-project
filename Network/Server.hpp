@@ -18,6 +18,9 @@ void DebugOut(const std::string& message) {
 #endif
 
 
+
+
+
 template <typename Packet>
 class PacketHandler {
 public:
@@ -61,5 +64,7 @@ private:
 
 	std::thread* m_thread = nullptr;
 	std::mutex state_mutex;
+
+
 };
 
