@@ -1,8 +1,8 @@
 #pragma once
 #include "Transform.h"
-#include "CollisionVolume.h"
 
 #include "PhysicsObject.h"
+#include "btBulletDynamicsCommon.h";
 
 using std::vector;
 
@@ -16,20 +16,8 @@ namespace NCL::CSC8503 {
 		GameObject(const std::string& name = "");
 		~GameObject();
 
-		void SetBoundingVolume(CollisionVolume* vol) {
-			boundingVolume = vol;
-		}
-
-		const CollisionVolume* GetBoundingVolume() const {
-			return boundingVolume;
-		}
-
 		bool IsActive() const {
 			return isActive;
-		}
-
-		Transform& GetTransform() {
-			return transform;
 		}
 
 		RenderObject* GetRenderObject() const {
@@ -57,23 +45,18 @@ namespace NCL::CSC8503 {
 		}
 
 		virtual void OnCollisionBegin(GameObject* otherObject) {
+			// TODO: OnCollisionEnter call from physics object
 			//std::cout << "OnCollisionBegin event occured!\n";
 		}
 
 		virtual void OnCollisionEnd(GameObject* otherObject) {
+			// TODO: OnCollisionEnd call from physics object
 			//std::cout << "OnCollisionEnd event occured!\n";
 		}
 
 		virtual void Update(float dt) {
-			// TODO: We should only have one transform owned by bullet
-			if (physicsObject) {
-				physicsObject->UpdateFromBullet();
-			}
+			
 		}
-
-		bool GetBroadphaseAABB(Vector3&outsize) const;
-
-		void UpdateBroadphaseAABB();
 
 		void SetWorldID(int newID) {
 			worldID = newID;
@@ -83,10 +66,36 @@ namespace NCL::CSC8503 {
 			return worldID;
 		}
 
-	protected:
-		Transform			transform;
+		btTransform GetTransform() const {
+			return physicsObject->GetRigidBody()->getWorldTransform();
+		}
 
-		CollisionVolume*	boundingVolume;
+		void setInitialPosition(const Vector3& position) {
+			initialPosition = position;
+			hasSetInitialPosition = true;
+		}
+
+		void setInitialRotation(const Quaternion& rotation) {
+			initialRotation = rotation;
+			hasSetInitialRotation = true;
+		}
+
+		Vector3 getInitialPosition() const {
+			return initialPosition;
+		}
+		Quaternion getInitialRotation() const {
+			return initialRotation;
+		}
+
+		Vector3 getRenderScale() const {
+			return renderScale;
+		}
+
+		void setRenderScale(const Vector3& scale) {
+			renderScale = scale;
+		}
+		
+	protected:
 		PhysicsObject*		physicsObject;
 		RenderObject*		renderObject;
 		NetworkObject*		networkObject;
@@ -95,7 +104,11 @@ namespace NCL::CSC8503 {
 		int			worldID;
 		std::string	name;
 
-		Vector3 broadphaseAABB;
+		Vector3 renderScale; // Only affects rendering, not physics
+		Vector3 initialPosition;
+		Quaternion initialRotation;
+		bool hasSetInitialPosition;
+		bool hasSetInitialRotation;
 	};
 }
 

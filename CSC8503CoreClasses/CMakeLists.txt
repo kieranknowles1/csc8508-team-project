@@ -43,17 +43,7 @@ source_group("AI\\Pathfinding" FILES ${AI_Pathfinding})
 
 
 set(Collision_Detection
-    "AABBVolume.h"
-    "CapsuleVolume.h"
-    "CapsuleVolume.cpp"
-    "CollisionDetection.h"
-    "CollisionDetection.cpp"
-     "CollisionVolume.h"
-    "OBBVolume.h"
-    "QuadTree.h"
-    "QuadTree.cpp"
     "Ray.h"
-    "SphereVolume.h"
 )
 source_group("Collision Detection" FILES ${Collision_Detection})
 
@@ -72,16 +62,8 @@ set(Networking
 source_group("Networking" FILES ${Networking})
 
 set(Physics
-    "constraint.h"
-     "constraint.h"
-    "PositionConstraint.cpp"
-    "PositionConstraint.h"
-    "OrientationConstraint.cpp"
-    "OrientationConstraint.h"
     "PhysicsObject.cpp"
     "PhysicsObject.h"
-    "PhysicsSystem.cpp"
-    "PhysicsSystem.h"
 )
 source_group("Physics" FILES ${Physics})
 

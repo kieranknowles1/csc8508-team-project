@@ -1,4 +1,6 @@
 set(SOURCES
+    BulletDebug.cpp
+    BulletDebug.h
     GameTechRenderer.cpp
     GameTechRenderer.h
     Main.cpp
@@ -10,6 +12,8 @@ set(SOURCES
     StateGameObject.h
     TutorialGame.cpp
     TutorialGame.h
+    PlayerController.cpp
+    PlayerController.h
 )
 
 add_executable(${PROJECT_NAME} ${SOURCES})
@@ -77,7 +81,7 @@ target_include_directories(${PROJECT_NAME} PRIVATE ${INCLUDE_DIRECTORIES}>)
 target_link_libraries(${PROJECT_NAME} NCLCoreClasses)
 target_link_libraries(${PROJECT_NAME} CSC8503CoreClasses)
 target_link_libraries(${PROJECT_NAME} OpenGLRendering)
-target_link_libraries(${PROJECT_NAME} Network)
+target_link_libraries(${PROJECT_NAME} NetworkLib)
 target_link_libraries(${PROJECT_NAME} ${BULLET_LIBRARIES})
 
 target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR})

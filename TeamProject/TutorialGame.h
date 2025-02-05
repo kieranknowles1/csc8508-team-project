@@ -5,15 +5,17 @@
 #ifdef USEVULKAN
 #include "GameTechVulkanRenderer.h"
 #endif
-#include "PhysicsSystem.h"
 
 #include "StateGameObject.h"
+#include "PlayerController.h"
 
 #include <btBulletDynamicsCommon.h>
 
 namespace NCL {
 	namespace CSC8503 {
-		class TutorialGame		{
+		class BulletDebug;
+
+		class TutorialGame {
 		public:
 			TutorialGame();
 			~TutorialGame();
@@ -28,57 +30,33 @@ namespace NCL {
 
 			void InitWorld();
 
-			GameObject* AddObjectToTestBulletPhysics();
-
-			/*
-			These are some of the world/object creation functions I created when testing the functionality
-			in the module. Feel free to mess around with them to see different objects being created in different
-			test scenarios (constraints, collision types, and so on). 
-			*/
-			void InitGameExamples();
-
-			void InitSphereGridWorld(int numRows, int numCols, float rowSpacing, float colSpacing, float radius);
-			void InitMixedGridWorld(int numRows, int numCols, float rowSpacing, float colSpacing);
-			void InitCubeGridWorld(int numRows, int numCols, float rowSpacing, float colSpacing, const Vector3& cubeDims);
-
 			void InitDefaultFloor();
-
-			bool SelectObject();
-			void MoveSelectedObject();
-			void DebugObjectMovement();
-			void LockedObjectMovement();
 
 			GameObject* AddFloorToWorld(const Vector3& position);
 			GameObject* AddSphereToWorld(const Vector3& position, float radius, float inverseMass = 10.0f);
 			GameObject* AddCubeToWorld(const Vector3& position, Vector3 dimensions, float inverseMass = 10.0f);
+			GameObject* AddCapsuleToWorld(const Vector3& position, float halfHeight, float radius, float inverseMass = 10.0f);
 
-			GameObject* AddPlayerToWorld(const Vector3& position);
-			GameObject* AddEnemyToWorld(const Vector3& position);
-			GameObject* AddBonusToWorld(const Vector3& position);
+			GameObject* AddInfinitePlaneToWorld(const Vector3& position, const Vector3& normal, float planeConstant);
+
 
 #ifdef USEVULKAN
-			GameTechVulkanRenderer*	renderer;
+			GameTechVulkanRenderer* renderer;
 #else
 			GameTechRenderer* renderer;
 #endif
-			PhysicsSystem*		physics;
-			GameWorld*			world;
+			GameWorld* world;
 
 			KeyboardMouseController controller;
 
-			bool useGravity;
-			bool inSelectionMode;
 
-			float		forceMagnitude;
+			Mesh* planeMesh = nullptr;
+			Mesh* capsuleMesh = nullptr;
+			Mesh* cubeMesh = nullptr;
+			Mesh* sphereMesh = nullptr;
 
-			GameObject* selectionObject = nullptr;
-
-			Mesh*	capsuleMesh = nullptr;
-			Mesh*	cubeMesh	= nullptr;
-			Mesh*	sphereMesh	= nullptr;
-
-			Texture*	basicTex	= nullptr;
-			Shader*		basicShader = nullptr;
+			Texture* basicTex = nullptr;
+			Shader* basicShader = nullptr;
 
 			//Coursework Meshes
 			Mesh*	catMesh		= nullptr;
@@ -100,6 +78,7 @@ namespace NCL {
 
 			GameObject* objClosest = nullptr;
 
+
 			/* bullet physics stuff here */
 			btDiscreteDynamicsWorld* bulletWorld;
 			btBroadphaseInterface* broadphase;
@@ -107,9 +86,22 @@ namespace NCL {
 			btCollisionDispatcher* dispatcher;
 			btSequentialImpulseConstraintSolver* solver;
 
+			BulletDebug* bulletDebug;
+
 			void InitBullet(); // Initialises the Bullet physics world
 			GameObject* objectToTestBulletPhysics = nullptr;
+
+			//Player things
+			void InitPlayer();
+			PerspectiveCamera* mainCamera;
+			GameObject* player;
+			PlayerController* playerController;
+			bool freeCam = false;
+
+			//fixed update 
+			float accumulator = 0.0f;
+			float fixedDeltaTime = 1.0f / 60.0f;
+			void FixedUpdate();
 		};
 	}
 }
-

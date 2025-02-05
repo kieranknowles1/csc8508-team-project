@@ -1,7 +1,5 @@
 #include "GameWorld.h"
 #include "GameObject.h"
-#include "Constraint.h"
-#include "CollisionDetection.h"
 #include "Camera.h"
 
 
@@ -83,38 +81,40 @@ void GameWorld::UpdateWorld(float dt) {
 }
 
 bool GameWorld::Raycast(Ray& r, RayCollision& closestCollision, bool closestObject, GameObject* ignoreThis) const {
-	//The simplest raycast just goes through each object and sees if there's a collision
-	RayCollision collision;
-
-	for (auto& i : gameObjects) {
-		if (!i->GetBoundingVolume()) { //objects might not be collideable etc...
-			continue;
-		}
-		if (i == ignoreThis) {
-			continue;
-		}
-		RayCollision thisCollision;
-		if (CollisionDetection::RayIntersection(r, *i, thisCollision)) {
-				
-			if (!closestObject) {	
-				closestCollision		= collision;
-				closestCollision.node = i;
-				return true;
-			}
-			else {
-				if (thisCollision.rayDistance < collision.rayDistance) {
-					thisCollision.node = i;
-					collision = thisCollision;
-				}
-			}
-		}
-	}
-	if (collision.node) {
-		closestCollision		= collision;
-		closestCollision.node	= collision.node;
-		return true;
-	}
+	// TODO: Reimplement for bullet
 	return false;
+	////The simplest raycast just goes through each object and sees if there's a collision
+	//RayCollision collision;
+
+	//for (auto& i : gameObjects) {
+	//	if (!i->GetBoundingVolume()) { //objects might not be collideable etc...
+	//		continue;
+	//	}
+	//	if (i == ignoreThis) {
+	//		continue;
+	//	}
+	//	RayCollision thisCollision;
+	//	if (CollisionDetection::RayIntersection(r, *i, thisCollision)) {
+	//			
+	//		if (!closestObject) {	
+	//			closestCollision		= collision;
+	//			closestCollision.node = i;
+	//			return true;
+	//		}
+	//		else {
+	//			if (thisCollision.rayDistance < collision.rayDistance) {
+	//				thisCollision.node = i;
+	//				collision = thisCollision;
+	//			}
+	//		}
+	//	}
+	//}
+	//if (collision.node) {
+	//	closestCollision		= collision;
+	//	closestCollision.node	= collision.node;
+	//	return true;
+	//}
+	//return false;
 }
 
 
