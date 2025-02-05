@@ -7,6 +7,7 @@
 #endif
 
 #include "StateGameObject.h"
+#include "PlayerController.h"
 
 #include <btBulletDynamicsCommon.h>
 
@@ -14,7 +15,7 @@ namespace NCL {
 	namespace CSC8503 {
 		class BulletDebug;
 
-		class TutorialGame		{
+		class TutorialGame {
 		public:
 			TutorialGame();
 			~TutorialGame();
@@ -32,7 +33,7 @@ namespace NCL {
 			/*
 			These are some of the world/object creation functions I created when testing the functionality
 			in the module. Feel free to mess around with them to see different objects being created in different
-			test scenarios (constraints, collision types, and so on). 
+			test scenarios (constraints, collision types, and so on).
 			*/
 			void InitGameExamples();
 
@@ -59,11 +60,11 @@ namespace NCL {
 			//GameObject* AddBonusToWorld(const Vector3& position);
 
 #ifdef USEVULKAN
-			GameTechVulkanRenderer*	renderer;
+			GameTechVulkanRenderer* renderer;
 #else
 			GameTechRenderer* renderer;
 #endif
-			GameWorld*			world;
+			GameWorld* world;
 
 			KeyboardMouseController controller;
 
@@ -75,22 +76,22 @@ namespace NCL {
 			GameObject* selectionObject = nullptr;
 
 			Mesh* planeMesh = nullptr;
-			Mesh*	capsuleMesh = nullptr;
-			Mesh*	cubeMesh	= nullptr;
-			Mesh*	sphereMesh	= nullptr;
+			Mesh* capsuleMesh = nullptr;
+			Mesh* cubeMesh = nullptr;
+			Mesh* sphereMesh = nullptr;
 
-			Texture*	basicTex	= nullptr;
-			Shader*		basicShader = nullptr;
+			Texture* basicTex = nullptr;
+			Shader* basicShader = nullptr;
 
 			//Coursework Meshes
-			Mesh*	catMesh		= nullptr;
-			Mesh*	kittenMesh	= nullptr;
-			Mesh*	enemyMesh	= nullptr;
-			Mesh*	bonusMesh	= nullptr;
+			Mesh* catMesh = nullptr;
+			Mesh* kittenMesh = nullptr;
+			Mesh* enemyMesh = nullptr;
+			Mesh* bonusMesh = nullptr;
 
 			//Coursework Additional functionality	
-			GameObject* lockedObject	= nullptr;
-			Vector3 lockedOffset		= Vector3(0, 14, 20);
+			GameObject* lockedObject = nullptr;
+			Vector3 lockedOffset = Vector3(0, 14, 20);
 			void LockCameraToObject(GameObject* o) {
 				lockedObject = o;
 			}
@@ -108,7 +109,18 @@ namespace NCL {
 
 			void InitBullet(); // Initialises the Bullet physics world
 			GameObject* objectToTestBulletPhysics = nullptr;
+
+			//Player things
+			void InitPlayer();
+			PerspectiveCamera* mainCamera;
+			GameObject* player;
+			PlayerController* playerController;
+			bool freeCam = false;
+
+			//fixed update 
+			float accumulator = 0.0f;
+			float fixedDeltaTime = 1.0f / 60.0f;
+			void FixedUpdate();
 		};
 	}
 }
-

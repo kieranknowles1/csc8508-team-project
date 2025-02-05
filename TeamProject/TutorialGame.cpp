@@ -31,13 +31,15 @@ TutorialGame::TutorialGame() : controller(*Window::GetWindow()->GetKeyboard(), *
 	inSelectionMode = false;
 
 	world->GetMainCamera().SetController(controller);
-
+	mainCamera = &world->GetMainCamera();
 	controller.MapAxis(0, "Sidestep");
 	controller.MapAxis(1, "UpDown");
 	controller.MapAxis(2, "Forward");
 
 	controller.MapAxis(3, "XLook");
 	controller.MapAxis(4, "YLook");
+
+	controller.MapButton(2, "JumpButton");
 
 	InitialiseAssets();
 }
@@ -82,59 +84,18 @@ TutorialGame::~TutorialGame()	{
 	delete world;
 }
 
+
+
 void TutorialGame::UpdateGame(float dt) {
-	if (!inSelectionMode) {
-		world->GetMainCamera().UpdateCamera(dt);
-	}
-	//if (lockedObject != nullptr) {
-	//	Vector3 objPos = lockedObject->GetPosition();
-	//	Vector3 camPos = objPos + lockedOffset;
-
-	//	Matrix4 temp = Matrix::View(camPos, objPos, Vector3(0,1,0));
-
-	//	Matrix4 modelMat = Matrix::Inverse(temp);
-
-	//	Quaternion q(modelMat);
-	//	Vector3 angles = q.ToEuler(); //nearly there now!
-
-	//	world->GetMainCamera().SetPosition(camPos);
-	//	world->GetMainCamera().SetPitch(angles.x);
-	//	world->GetMainCamera().SetYaw(angles.y);
-	//}
-
-	UpdateKeys();
-
-	/*if (useGravity) {
-		Debug::Print("(G)ravity on", Vector2(5, 95), Debug::RED);
+	if (!freeCam) {
+		world->GetMainCamera().UpdateCamera(dt, false);
+		playerController->UpdateMovement(dt);
 	}
 	else {
-		Debug::Print("(G)ravity off", Vector2(5, 95), Debug::RED);
-	}*/
-	//This year we can draw debug textures as well!
-	//Debug::DrawTex(*basicTex, Vector2(10, 10), Vector2(5, 5), Debug::MAGENTA);
+		world->GetMainCamera().UpdateCamera(dt, true);
+	}
 
-	//RayCollision closestCollision;
-	//if (Window::GetKeyboard()->KeyPressed(KeyCodes::K) && selectionObject) {
-	//	Vector3 rayPos;
-	//	Vector3 rayDir;
-
-	//	rayDir = selectionObject->GetOrientation() * Vector3(0, 0, -1);
-
-	//	rayPos = selectionObject->GetPosition();
-
-	//	Ray r = Ray(rayPos, rayDir);
-
-	//	if (world->Raycast(r, closestCollision, true, selectionObject)) {
-	//		if (objClosest) {
-	//			objClosest->GetRenderObject()->SetColour(Vector4(1, 1, 1, 1));
-	//		}
-	//		objClosest = (GameObject*)closestCollision.node;
-
-	//		objClosest->GetRenderObject()->SetColour(Vector4(1, 0, 1, 1));
-	//	}
-	//}
-
-	Debug::DrawLine(Vector3(), Vector3(0, 100, 0), Vector4(1, 0, 0, 1));
+	UpdateKeys();
 
 	SelectObject();
 	MoveSelectedObject();
@@ -145,8 +106,10 @@ void TutorialGame::UpdateGame(float dt) {
 		with bullet world's step simulation. Otherwise, physics interactions will not
 		occur
 	*/
+	if (bulletWorld->stepSimulation(dt, 10)) {
+		FixedUpdate();
+	};
 
-	bulletWorld->stepSimulation(dt, 10);
 	bulletWorld->debugDrawWorld();
 
 	// TODO: Remove this testing code in a different commit
@@ -170,6 +133,15 @@ void TutorialGame::UpdateGame(float dt) {
 	Debug::UpdateRenderables(dt);
 }
 
+void TutorialGame::FixedUpdate() {
+	// set position to be equal to player
+	btTransform transformPlayer = player->GetPhysicsObject()->GetRigidBody()->getWorldTransform();
+	btVector3 playerPos = transformPlayer.getOrigin();
+	playerPos.setY(playerPos.getY() + 3);
+	mainCamera->SetPosition(playerPos);
+
+}
+
 void TutorialGame::UpdateKeys() {
 	if (Window::GetKeyboard()->KeyPressed(KeyCodes::F1)) {
 		InitWorld(); //We can reset the simulation at any time with F1
@@ -181,11 +153,14 @@ void TutorialGame::UpdateKeys() {
 	}
 
 	if (Window::GetKeyboard()->KeyPressed(KeyCodes::F3)) {
-		bulletDebug->toggle();
+	//	bulletDebug->toggle();
 	}
 
 	if (Window::GetKeyboard()->KeyPressed(KeyCodes::G)) {
 		// Bullet physics gravity will be on all the time, no toggling
+	}
+	if (Window::GetKeyboard()->KeyPressed(KeyCodes::F)) {
+		freeCam = !freeCam;
 	}
 	//Running certain physics updates in a consistent order might cause some
 	//bias in the calculations - the same objects might keep 'winning' the constraint
@@ -288,8 +263,8 @@ void TutorialGame::InitBullet() {
 	bulletWorld = new btDiscreteDynamicsWorld(dispatcher, broadphase, solver, collisionConfig);
 	bulletWorld->setGravity(btVector3(0, -9.8, 0));
 
-	bulletDebug = new BulletDebug();
-	bulletWorld->setDebugDrawer(bulletDebug);
+//	bulletDebug = new BulletDebug();
+	//bulletWorld->setDebugDrawer(bulletDebug);
 }
 
 void TutorialGame::InitCamera() {
@@ -318,7 +293,18 @@ void TutorialGame::InitWorld() {
 	AddSphereToWorld(Vector3(10, 30, 0), 5.0f, 1.0f);
 
 	// Use this as a reference to create more capsule objects
-	AddCapsuleToWorld(Vector3(20, 30, 0), 3.0f, 2.0f, 1.0f);
+	AddCapsuleToWorld(Vector3(20, 15, 0), 4.0f, 2.0f, 1.0f);
+	InitPlayer();
+
+}
+
+void TutorialGame::InitPlayer() {
+
+	player = AddCapsuleToWorld(Vector3(10, 4, 20), 4.0f, 2.0f, 10.0f);
+	player->GetPhysicsObject()->GetRigidBody()->setAngularFactor(0);
+	player->GetPhysicsObject()->GetRigidBody()->setFriction(1);
+	player->GetPhysicsObject()->GetRigidBody()->setDamping(0.999, 0);
+	playerController = new PlayerController(player, controller, mainCamera, bulletWorld);
 
 }
 
@@ -608,7 +594,7 @@ bool TutorialGame::SelectObject() {
 		}
 	}
 	if (inSelectionMode) {
-		Debug::Print("Press Q to change to camera mode!", Vector2(5, 85));
+		//Debug::Print("Press Q to change to camera mode!", Vector2(5, 85));
 
 		if (Window::GetMouse()->ButtonDown(NCL::MouseButtons::Left)) {
 			if (selectionObject) {	//set colour to deselected;
@@ -642,7 +628,7 @@ bool TutorialGame::SelectObject() {
 		}
 	}
 	else {
-		Debug::Print("Press Q to change to select mode!", Vector2(5, 85));
+	//	Debug::Print("Press Q to change to select mode!", Vector2(5, 85));
 	}
 	return false;
 }
