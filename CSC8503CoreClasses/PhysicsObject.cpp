@@ -29,9 +29,12 @@ void PhysicsObject::InitBulletPhysics(btDynamicsWorld* world, btCollisionShape* 
 	btTransform startTransform;
 	startTransform.setIdentity();
 
+	Vector3 initialPosition = parent->getInitialPosition();
+	Quaternion initialOrientation = parent->getInitialRotation();
+
 	// Setting the starting position of the object using the NCL framework's transform
-	startTransform.setOrigin(btVector3(parent->GetTransform().GetPosition().x, parent->GetTransform().GetPosition().y, parent->GetTransform().GetPosition().z));
-	startTransform.setRotation(btQuaternion(parent->GetTransform().GetOrientation().x, parent->GetTransform().GetOrientation().y, parent->GetTransform().GetOrientation().z, parent->GetTransform().GetOrientation().w));
+	startTransform.setOrigin(btVector3(initialPosition.x, initialPosition.y, initialPosition.z));
+	startTransform.setRotation(btQuaternion(initialOrientation.x, initialOrientation.y, initialOrientation.z));
 
 	// MotionState has been used to retrieve and apply Bullet's physics transformations to the NCL object
 	motionState = new btDefaultMotionState(startTransform);
@@ -60,9 +63,17 @@ void PhysicsObject::UpdateFromBullet() {
 	btTransform trans;
 	rigidBody->getMotionState()->getWorldTransform(trans);
 
-	// Converting Bullet's matrix to NCL's Transform and updating it
-	parent->GetTransform().SetPosition(Vector3(trans.getOrigin().x(), trans.getOrigin().y(), trans.getOrigin().z()));
-	parent->GetTransform().SetOrientation(Quaternion(trans.getRotation().w(), trans.getRotation().x(), trans.getRotation().y(), trans.getRotation().z()));
+	/* 
+		Converting Bullet's transform to NCL-friendly format and update the game object's internal state.
+		By NCL friendly format, I mean converting the Bullet's native data types like (btVector3) and (btQuaternion)
+		into NCL Equaivalents (NCL::Maths) -> Vector3 and Quaternion, so we can use them with our framework
+	*/
+	Vector3 newPosition = Vector3(trans.getOrigin().x(), trans.getOrigin().y(), trans.getOrigin().z());
+	Quaternion newOrientation = Quaternion(trans.getRotation().w(), trans.getRotation().x(), trans.getRotation().y(), trans.getRotation().z());
+
+	// Now, that we have converted the bullet's transform into NCL friendly format, we can update the position and orientation of the game object
+	//parent->SetPosition(newPosition);
+	//parent->SetOrientation(newOrientation);
 }
 
 void PhysicsObject::AddForce(const Vector3& force) {

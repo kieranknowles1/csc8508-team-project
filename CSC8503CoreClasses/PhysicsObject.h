@@ -25,6 +25,10 @@ namespace NCL {
 			void AddForceAtPosition(const Vector3& force, const Vector3& position);
 			void AddTorque(const Vector3& torque);
 
+			btMotionState* GetMotionState() const {
+				return motionState;
+			}
+
 			void ClearForces();
 
 		protected:
@@ -37,4 +41,3 @@ namespace NCL {
 		};
 	}
 }
-
