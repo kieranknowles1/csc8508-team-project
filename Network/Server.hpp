@@ -51,18 +51,15 @@ public:
 
 
 protected:
-	void CreateHost();
-
 	ServerState m_state = ServerState::STOPPED;
 
 private:
 	std::string m_hostName;
 	uint32_t m_port;
-	ENetAddress address;
 
 	std::thread* m_thread = nullptr;
 	std::mutex m_stateMutex;
 
-	ENetHost* m_host;
+	ENetPeer* connections[];
 };
 

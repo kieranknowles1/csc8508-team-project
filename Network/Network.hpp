@@ -38,17 +38,13 @@ enum class Channel {
  */
 class Network {
 public:
-	Network() { 
-#ifdef NETWORK_TEST
-		DebugOut("Initialising ENet");
-#endif
-		if (enet_initialize()) m_initialised = true;
+	Network() {
+		if (enet_initialize() == 0) m_initialised = true;
 	}
 	~Network() {
-#ifdef NETWORK_TEST
-		DebugOut("Shutting down ENet.");
-#endif
 		if (m_initialised) enet_deinitialize();
+		if (m_host) enet_host_destroy(m_host);
+		m_initialised = false;
 	}
 
 	/**
@@ -57,7 +53,18 @@ public:
 	 */
 	bool IsInitialised() { return m_initialised; }
 
+	/**
+	 * @brief Wrapper function for enet_host_create().
+	 * @see enet_host_create()
+	 * @return true if host was successfully created.
+	 */
+	bool CreateHost(ENetAddress* address, int maxClients, int nChannels, int incBandwidth, int outBandwidth) {
+		m_host = enet_host_create(address, maxClients, nChannels, incBandwidth, outBandwidth);
+		return m_host != nullptr;
+	}
+
 private:
+	ENetHost* m_host = nullptr;
 	bool m_initialised = false;
 };
 

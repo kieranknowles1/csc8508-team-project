@@ -8,44 +8,45 @@ Server::~Server() {
 
 
 void Server::Start(bool threaded) {
+	m_stateMutex.lock();
+
+	if (m_state == ServerState::ERRORED) {
+		m_stateMutex.unlock();
+		return;
+	}
+
+	m_state = ServerState::STARTING;
+
+	ENetAddress address;
+	address.host = ENET_HOST_ANY;
+	address.port = m_port;
+
+	if (!CreateHost(&address, MAX_CLIENTS, static_cast<size_t>(Channel::CHANNEL_COUNT), 0, 0)) {
+		m_state = ServerState::ERRORED;
+	}
+	m_stateMutex.unlock();
+
+
 	if (threaded) {
-#ifdef NETWORK_TEST
-		DebugOut("Creating thread.");
-#endif
+
+	}
+
+
+	m_stateMutex.lock();
+	if (m_state == ServerState::STARTING) {
+		m_state = ServerState::RUNNING;
 	}
 
 #ifdef NETWORK_TEST
-	DebugOut("Starting network.");
+	if (m_state == ServerState::RUNNING) DebugOut("Server Started Successfully");
 #endif
-	CreateHost();
+
+	m_stateMutex.unlock();
+
 }
 
 
 void Server::Stop() {
-#ifdef NETWORK_TEST
-	DebugOut("Stopping server.");
-#endif
 
-
-#ifdef NETWORK_TEST
-	DebugOut("Server stopped.");
-#endif
 }
 
-
-void Server::CreateHost() {
-	address.host = ENET_HOST_ANY;
-	address.port = m_port;
-
-	m_host = enet_host_create(&address, MAX_CLIENTS, static_cast<size_t>(Channel::CHANNEL_COUNT), 0, 0);
-
-	if (m_host == nullptr) {
-#ifdef NETWORK_TEST
-		DebugOut("Host creation failed.");
-#endif
-		m_state = ServerState::ERRORED;
-	}
-#ifdef NETWORK_TEST
-	DebugOut("Host created.");
-#endif
-}
