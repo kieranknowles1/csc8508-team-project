@@ -56,26 +56,6 @@ void PhysicsObject::InitBulletPhysics(btDynamicsWorld* world, btCollisionShape* 
 	world->addRigidBody(rigidBody);
 }
 
-// Updating the transform from Bullet's physics
-void PhysicsObject::UpdateFromBullet() {
-	if (!rigidBody || !motionState) return;
-
-	btTransform trans;
-	rigidBody->getMotionState()->getWorldTransform(trans);
-
-	/* 
-		Converting Bullet's transform to NCL-friendly format and update the game object's internal state.
-		By NCL friendly format, I mean converting the Bullet's native data types like (btVector3) and (btQuaternion)
-		into NCL Equaivalents (NCL::Maths) -> Vector3 and Quaternion, so we can use them with our framework
-	*/
-	Vector3 newPosition = Vector3(trans.getOrigin().x(), trans.getOrigin().y(), trans.getOrigin().z());
-	Quaternion newOrientation = Quaternion(trans.getRotation().w(), trans.getRotation().x(), trans.getRotation().y(), trans.getRotation().z());
-
-	// Now, that we have converted the bullet's transform into NCL friendly format, we can update the position and orientation of the game object
-	//parent->SetPosition(newPosition);
-	//parent->SetOrientation(newOrientation);
-}
-
 void PhysicsObject::AddForce(const Vector3& force) {
 	if (rigidBody) {
 		rigidBody->applyCentralForce(btVector3(force.x, force.y, force.z));

@@ -55,10 +55,7 @@ namespace NCL::CSC8503 {
 		}
 
 		virtual void Update(float dt) {
-			// TODO: We should only have one transform owned by bullet
-			if (physicsObject) {
-				physicsObject->UpdateFromBullet();
-			}
+			
 		}
 
 		void SetWorldID(int newID) {
