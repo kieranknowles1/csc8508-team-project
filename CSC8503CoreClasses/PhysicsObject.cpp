@@ -29,9 +29,12 @@ void PhysicsObject::InitBulletPhysics(btDynamicsWorld* world, btCollisionShape* 
 	btTransform startTransform;
 	startTransform.setIdentity();
 
+	Vector3 initialPosition = parent->getInitialPosition();
+	Quaternion initialOrientation = parent->getInitialRotation();
+
 	// Setting the starting position of the object using the NCL framework's transform
-	startTransform.setOrigin(btVector3(parent->GetTransform().GetPosition().x, parent->GetTransform().GetPosition().y, parent->GetTransform().GetPosition().z));
-	startTransform.setRotation(btQuaternion(parent->GetTransform().GetOrientation().x, parent->GetTransform().GetOrientation().y, parent->GetTransform().GetOrientation().z, parent->GetTransform().GetOrientation().w));
+	startTransform.setOrigin(btVector3(initialPosition.x, initialPosition.y, initialPosition.z));
+	startTransform.setRotation(btQuaternion(initialOrientation.x, initialOrientation.y, initialOrientation.z));
 
 	// MotionState has been used to retrieve and apply Bullet's physics transformations to the NCL object
 	motionState = new btDefaultMotionState(startTransform);
@@ -51,18 +54,6 @@ void PhysicsObject::InitBulletPhysics(btDynamicsWorld* world, btCollisionShape* 
 	rigidBody->setActivationState(DISABLE_DEACTIVATION);
 
 	world->addRigidBody(rigidBody);
-}
-
-// Updating the transform from Bullet's physics
-void PhysicsObject::UpdateFromBullet() {
-	if (!rigidBody || !motionState) return;
-
-	btTransform trans;
-	rigidBody->getMotionState()->getWorldTransform(trans);
-
-	// Converting Bullet's matrix to NCL's Transform and updating it
-	parent->GetTransform().SetPosition(Vector3(trans.getOrigin().x(), trans.getOrigin().y(), trans.getOrigin().z()));
-	parent->GetTransform().SetOrientation(Quaternion(trans.getRotation().w(), trans.getRotation().x(), trans.getRotation().y(), trans.getRotation().z()));
 }
 
 void PhysicsObject::AddForce(const Vector3& force) {
