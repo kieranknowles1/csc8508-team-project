@@ -4,7 +4,9 @@
 #include <thread>
 #include <mutex>
 
-#include <NetworkBase.h>
+#include <./enet/enet.h>
+
+#include "Network.hpp"
 
 
 
@@ -32,9 +34,9 @@ enum class ServerState {
 };
 
 
-class Server {
+class Server : public Network {
 public:
-	Server() : m_hostName("localhost"), m_port(12345) {}
+	Server() : m_hostName("localhost"), m_port(12345) { if (!IsInitialised()) m_state = ServerState::ERRORED; }
 	Server(const std::string& hostName, const uint32_t port) : m_hostName(hostName), m_port(port) {};
 
 	~Server();
@@ -46,16 +48,21 @@ public:
 	uint32_t GetPort() const { return m_port; }
 
 
+
+
 protected:
+	bool CreateHost();
+
 	ServerState m_state = ServerState::STOPPED;
 
 private:
 	std::string m_hostName;
 	uint32_t m_port;
+	ENetAddress address;
 
 	std::thread* m_thread = nullptr;
-	std::mutex state_mutex;
+	std::mutex m_stateMutex;
 
-
+	ENetHost* m_host;
 };
 

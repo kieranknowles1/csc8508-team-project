@@ -21,9 +21,6 @@ void Server::Start(bool threaded) {
 }
 
 
-
-
-
 void Server::Stop() {
 #ifdef NETWORK_TEST
 	DebugOut("Stopping server.");
@@ -33,4 +30,15 @@ void Server::Stop() {
 #ifdef NETWORK_TEST
 	DebugOut("Server stopped.");
 #endif
+}
+
+
+bool Server::CreateHost() {
+	address.host = ENET_HOST_ANY;
+	address.port = m_port;
+
+	m_host = enet_host_create(&address, MAX_CLIENTS, static_cast<size_t>(Channel::CHANNEL_COUNT), 0, 0);
+
+	if (m_host == nullptr) return false;
+	return true;
 }
