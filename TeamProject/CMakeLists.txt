@@ -14,6 +14,8 @@ set(SOURCES
     TutorialGame.h
     PlayerController.cpp
     PlayerController.h
+    Turret.H
+    Turret.cpp
 )
 
 add_executable(${PROJECT_NAME} ${SOURCES})
