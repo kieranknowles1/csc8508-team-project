@@ -26,18 +26,16 @@ TutorialGame::TutorialGame() : controller(*Window::GetWindow()->GetKeyboard(), *
 	renderer = new GameTechRenderer(*world);
 #endif
 
-	forceMagnitude	= 10.0f;
-	useGravity		= false;
-	inSelectionMode = false;
-
 	world->GetMainCamera().SetController(controller);
-
+	mainCamera = &world->GetMainCamera();
 	controller.MapAxis(0, "Sidestep");
 	controller.MapAxis(1, "UpDown");
 	controller.MapAxis(2, "Forward");
 
 	controller.MapAxis(3, "XLook");
 	controller.MapAxis(4, "YLook");
+
+	controller.MapButton(2, "JumpButton");
 
 	InitialiseAssets();
 }
@@ -82,62 +80,18 @@ TutorialGame::~TutorialGame()	{
 	delete world;
 }
 
+
+
 void TutorialGame::UpdateGame(float dt) {
-	if (!inSelectionMode) {
-		world->GetMainCamera().UpdateCamera(dt);
-	}
-	//if (lockedObject != nullptr) {
-	//	Vector3 objPos = lockedObject->GetPosition();
-	//	Vector3 camPos = objPos + lockedOffset;
-
-	//	Matrix4 temp = Matrix::View(camPos, objPos, Vector3(0,1,0));
-
-	//	Matrix4 modelMat = Matrix::Inverse(temp);
-
-	//	Quaternion q(modelMat);
-	//	Vector3 angles = q.ToEuler(); //nearly there now!
-
-	//	world->GetMainCamera().SetPosition(camPos);
-	//	world->GetMainCamera().SetPitch(angles.x);
-	//	world->GetMainCamera().SetYaw(angles.y);
-	//}
-
-	UpdateKeys();
-
-	/*if (useGravity) {
-		Debug::Print("(G)ravity on", Vector2(5, 95), Debug::RED);
+	if (!freeCam) {
+		world->GetMainCamera().UpdateCamera(dt, false);
+		playerController->UpdateMovement(dt);
 	}
 	else {
-		Debug::Print("(G)ravity off", Vector2(5, 95), Debug::RED);
-	}*/
-	//This year we can draw debug textures as well!
-	//Debug::DrawTex(*basicTex, Vector2(10, 10), Vector2(5, 5), Debug::MAGENTA);
+		world->GetMainCamera().UpdateCamera(dt, true);
+	}
 
-	//RayCollision closestCollision;
-	//if (Window::GetKeyboard()->KeyPressed(KeyCodes::K) && selectionObject) {
-	//	Vector3 rayPos;
-	//	Vector3 rayDir;
-
-	//	rayDir = selectionObject->GetOrientation() * Vector3(0, 0, -1);
-
-	//	rayPos = selectionObject->GetPosition();
-
-	//	Ray r = Ray(rayPos, rayDir);
-
-	//	if (world->Raycast(r, closestCollision, true, selectionObject)) {
-	//		if (objClosest) {
-	//			objClosest->GetRenderObject()->SetColour(Vector4(1, 1, 1, 1));
-	//		}
-	//		objClosest = (GameObject*)closestCollision.node;
-
-	//		objClosest->GetRenderObject()->SetColour(Vector4(1, 0, 1, 1));
-	//	}
-	//}
-
-	Debug::DrawLine(Vector3(), Vector3(0, 100, 0), Vector4(1, 0, 0, 1));
-
-	SelectObject();
-	MoveSelectedObject();
+	UpdateKeys();
 
 	// TODO: Remove the below comment and add what stepSimulation does concisely
 	/* Took a while to figure out why gravity wasn't working, I figured out after
@@ -145,24 +99,11 @@ void TutorialGame::UpdateGame(float dt) {
 		with bullet world's step simulation. Otherwise, physics interactions will not
 		occur
 	*/
+	if (bulletWorld->stepSimulation(dt, 10)) {
+		FixedUpdate();
+	};
 
-	bulletWorld->stepSimulation(dt, 10);
 	bulletWorld->debugDrawWorld();
-
-	// TODO: Remove this testing code in a different commit
-	// If the object exists, log its position after the simulation step
-	if (objectToTestBulletPhysics) {
-		btRigidBody* rigidBody = objectToTestBulletPhysics->GetPhysicsObject()->GetRigidBody();
-
-		if (rigidBody) {
-			btVector3 currentPos = rigidBody->getCenterOfMassPosition();
-			std::cout << "Current Position of Test Cube: "
-				<< currentPos.getX() << ", "
-				<< currentPos.getY() << ", "
-				<< currentPos.getZ() << std::endl;
-		}
-	}
-
 	world->UpdateWorld(dt);
 	renderer->Update(dt);
 
@@ -170,10 +111,19 @@ void TutorialGame::UpdateGame(float dt) {
 	Debug::UpdateRenderables(dt);
 }
 
+void TutorialGame::FixedUpdate() {
+	// set position to be equal to player
+	if (!freeCam) {
+		btTransform transformPlayer = player->GetPhysicsObject()->GetRigidBody()->getWorldTransform();
+		btVector3 playerPos = transformPlayer.getOrigin();
+		playerPos.setY(playerPos.getY() + 3);
+		mainCamera->SetPosition(playerPos);
+	}
+}
+
 void TutorialGame::UpdateKeys() {
 	if (Window::GetKeyboard()->KeyPressed(KeyCodes::F1)) {
 		InitWorld(); //We can reset the simulation at any time with F1
-		selectionObject = nullptr;
 	}
 
 	if (Window::GetKeyboard()->KeyPressed(KeyCodes::F2)) {
@@ -181,102 +131,13 @@ void TutorialGame::UpdateKeys() {
 	}
 
 	if (Window::GetKeyboard()->KeyPressed(KeyCodes::F3)) {
-		bulletDebug->toggle();
+	//	bulletDebug->toggle();
 	}
-
-	if (Window::GetKeyboard()->KeyPressed(KeyCodes::G)) {
-		// Bullet physics gravity will be on all the time, no toggling
-	}
-	//Running certain physics updates in a consistent order might cause some
-	//bias in the calculations - the same objects might keep 'winning' the constraint
-	//allowing the other one to stretch too much etc. Shuffling the order so that it
-	//is random every frame can help reduce such bias.
-	if (Window::GetKeyboard()->KeyPressed(KeyCodes::F9)) {
-		world->ShuffleConstraints(true);
-	}
-	if (Window::GetKeyboard()->KeyPressed(KeyCodes::F10)) {
-		world->ShuffleConstraints(false);
-	}
-
-	if (Window::GetKeyboard()->KeyPressed(KeyCodes::F7)) {
-		world->ShuffleObjects(true);
-	}
-	if (Window::GetKeyboard()->KeyPressed(KeyCodes::F8)) {
-		world->ShuffleObjects(false);
-	}
-
-	if (lockedObject) {
-		LockedObjectMovement();
-	}
-	else {
-		DebugObjectMovement();
+	if (Window::GetKeyboard()->KeyPressed(KeyCodes::F)) {
+		freeCam = !freeCam;
 	}
 }
 
-void TutorialGame::LockedObjectMovement() {
-	Matrix4 view		= world->GetMainCamera().BuildViewMatrix();
-	Matrix4 camWorld	= Matrix::Inverse(view);
-
-	Vector3 rightAxis = Vector3(camWorld.GetColumn(0)); //view is inverse of model!
-
-	//forward is more tricky -  camera forward is 'into' the screen...
-	//so we can take a guess, and use the cross of straight up, and
-	//the right axis, to hopefully get a vector that's good enough!
-
-	Vector3 fwdAxis = Vector::Cross(Vector3(0, 1, 0), rightAxis);
-	fwdAxis.y = 0.0f;
-	fwdAxis = Vector::Normalise(fwdAxis);
-
-	if (Window::GetKeyboard()->KeyDown(KeyCodes::UP)) {
-		selectionObject->GetPhysicsObject()->AddForce(fwdAxis);
-	}
-
-	if (Window::GetKeyboard()->KeyDown(KeyCodes::DOWN)) {
-		selectionObject->GetPhysicsObject()->AddForce(-fwdAxis);
-	}
-
-	if (Window::GetKeyboard()->KeyDown(KeyCodes::NEXT)) {
-		selectionObject->GetPhysicsObject()->AddForce(Vector3(0,-10,0));
-	}
-}
-
-void TutorialGame::DebugObjectMovement() {
-//If we've selected an object, we can manipulate it with some key presses
-	if (inSelectionMode && selectionObject) {
-		//Twist the selected object!
-		if (Window::GetKeyboard()->KeyDown(KeyCodes::LEFT)) {
-			selectionObject->GetPhysicsObject()->AddTorque(Vector3(-10, 0, 0));
-		}
-
-		if (Window::GetKeyboard()->KeyDown(KeyCodes::RIGHT)) {
-			selectionObject->GetPhysicsObject()->AddTorque(Vector3(10, 0, 0));
-		}
-
-		if (Window::GetKeyboard()->KeyDown(KeyCodes::NUM7)) {
-			selectionObject->GetPhysicsObject()->AddTorque(Vector3(0, 10, 0));
-		}
-
-		if (Window::GetKeyboard()->KeyDown(KeyCodes::NUM8)) {
-			selectionObject->GetPhysicsObject()->AddTorque(Vector3(0, -10, 0));
-		}
-
-		if (Window::GetKeyboard()->KeyDown(KeyCodes::RIGHT)) {
-			selectionObject->GetPhysicsObject()->AddTorque(Vector3(10, 0, 0));
-		}
-
-		if (Window::GetKeyboard()->KeyDown(KeyCodes::UP)) {
-			selectionObject->GetPhysicsObject()->AddForce(Vector3(0, 0, -10));
-		}
-
-		if (Window::GetKeyboard()->KeyDown(KeyCodes::DOWN)) {
-			selectionObject->GetPhysicsObject()->AddForce(Vector3(0, 0, 10));
-		}
-
-		if (Window::GetKeyboard()->KeyDown(KeyCodes::NUM5)) {
-			selectionObject->GetPhysicsObject()->AddForce(Vector3(0, -10, 0));
-		}
-	}
-}
 
 /* Bullet Physics world has been initialized here */
 void TutorialGame::InitBullet() {
@@ -288,8 +149,8 @@ void TutorialGame::InitBullet() {
 	bulletWorld = new btDiscreteDynamicsWorld(dispatcher, broadphase, solver, collisionConfig);
 	bulletWorld->setGravity(btVector3(0, -9.8, 0));
 
-	bulletDebug = new BulletDebug();
-	bulletWorld->setDebugDrawer(bulletDebug);
+//	bulletDebug = new BulletDebug();
+	//bulletWorld->setDebugDrawer(bulletDebug);
 }
 
 void TutorialGame::InitCamera() {
@@ -298,7 +159,6 @@ void TutorialGame::InitCamera() {
 	world->GetMainCamera().SetPitch(-15.0f);
 	world->GetMainCamera().SetYaw(315.0f);
 	world->GetMainCamera().SetPosition(Vector3(-60, 40, 60));
-	lockedObject = nullptr;
 }
 
 void TutorialGame::InitWorld() {
@@ -306,9 +166,6 @@ void TutorialGame::InitWorld() {
 	// TODO: Clear bullet
 	//physics->Clear();
 
-	//InitMixedGridWorld(15, 15, 3.5f, 3.5f);
-
-	//InitGameExamples();
 	InitDefaultFloor();
 
 	// Use this as a reference to create more cube objects
@@ -318,7 +175,18 @@ void TutorialGame::InitWorld() {
 	AddSphereToWorld(Vector3(10, 30, 0), 5.0f, 1.0f);
 
 	// Use this as a reference to create more capsule objects
-	AddCapsuleToWorld(Vector3(20, 30, 0), 3.0f, 2.0f, 1.0f);
+	AddCapsuleToWorld(Vector3(20, 15, 0), 4.0f, 2.0f, 1.0f);
+	InitPlayer();
+
+}
+
+void TutorialGame::InitPlayer() {
+
+	player = AddCapsuleToWorld(Vector3(10, 4, 20), 4.0f, 2.0f, 10.0f);
+	player->GetPhysicsObject()->GetRigidBody()->setAngularFactor(0);
+	player->GetPhysicsObject()->GetRigidBody()->setFriction(1);
+	player->GetPhysicsObject()->GetRigidBody()->setDamping(0.999, 0);
+	playerController = new PlayerController(player, controller, mainCamera, bulletWorld);
 
 }
 
@@ -472,207 +340,7 @@ GameObject* TutorialGame::AddSphereToWorld(const Vector3& position, float radius
 	return sphere;
 }
 
-// TODO: From 8503. Probably donnt need
-//GameObject* TutorialGame::AddPlayerToWorld(const Vector3& position) {
-//	float meshSize		= 1.0f;
-//	float inverseMass	= 0.5f;
-//
-//	GameObject* character = new GameObject();
-//	SphereVolume* volume  = new SphereVolume(1.0f);
-//
-//	character->SetBoundingVolume((CollisionVolume*)volume);
-//
-//	character->GetTransform()
-//		.SetScale(Vector3(meshSize, meshSize, meshSize))
-//		.SetPosition(position);
-//
-//	character->SetRenderObject(new RenderObject(&character->GetTransform(), catMesh, nullptr, basicShader));
-//	character->SetPhysicsObject(new PhysicsObject(character));
-//
-//	character->GetPhysicsObject()->SetInverseMass(inverseMass);
-//	character->GetPhysicsObject()->InitSphereInertia();
-//
-//	world->AddGameObject(character);
-//
-//	return character;
-//}
-//
-//GameObject* TutorialGame::AddEnemyToWorld(const Vector3& position) {
-//	float meshSize		= 3.0f;
-//	float inverseMass	= 0.5f;
-//
-//	GameObject* character = new GameObject();
-//
-//	AABBVolume* volume = new AABBVolume(Vector3(0.3f, 0.9f, 0.3f) * meshSize);
-//	character->SetBoundingVolume((CollisionVolume*)volume);
-//
-//	character->GetTransform()
-//		.SetScale(Vector3(meshSize, meshSize, meshSize))
-//		.SetPosition(position);
-//
-//	character->SetRenderObject(new RenderObject(&character->GetTransform(), enemyMesh, nullptr, basicShader));
-//	character->SetPhysicsObject(new PhysicsObject(character));
-//
-//	character->GetPhysicsObject()->SetInverseMass(inverseMass);
-//	character->GetPhysicsObject()->InitSphereInertia();
-//
-//	world->AddGameObject(character);
-//
-//	return character;
-//}
-//
-//GameObject* TutorialGame::AddBonusToWorld(const Vector3& position) {
-//	GameObject* apple = new GameObject();
-//
-//	SphereVolume* volume = new SphereVolume(0.5f);
-//	apple->SetBoundingVolume((CollisionVolume*)volume);
-//	apple->GetTransform()
-//		.SetScale(Vector3(2, 2, 2))
-//		.SetPosition(position);
-//
-//	apple->SetRenderObject(new RenderObject(&apple->GetTransform(), bonusMesh, nullptr, basicShader));
-//	apple->SetPhysicsObject(new PhysicsObject(apple));
-//
-//	apple->GetPhysicsObject()->SetInverseMass(1.0f);
-//	apple->GetPhysicsObject()->InitSphereInertia();
-//
-//	world->AddGameObject(apple);
-//
-//	return apple;
-//}
-
 void TutorialGame::InitDefaultFloor() {
 	AddFloorToWorld(Vector3(0, -20, 0));
 }
-
-void TutorialGame::InitGameExamples() {
-	//AddPlayerToWorld(Vector3(0, 5, 0));
-	//AddEnemyToWorld(Vector3(5, 5, 0));
-	//AddBonusToWorld(Vector3(10, 5, 0));
-}
-
-void TutorialGame::InitSphereGridWorld(int numRows, int numCols, float rowSpacing, float colSpacing, float radius) {
-	for (int x = 0; x < numCols; ++x) {
-		for (int z = 0; z < numRows; ++z) {
-			Vector3 position = Vector3(x * colSpacing, 10.0f, z * rowSpacing);
-			AddSphereToWorld(position, radius, 1.0f);
-		}
-	}
-	AddFloorToWorld(Vector3(0, -2, 0));
-}
-
-void TutorialGame::InitMixedGridWorld(int numRows, int numCols, float rowSpacing, float colSpacing) {
-	float sphereRadius = 1.0f;
-	Vector3 cubeDims = Vector3(1, 1, 1);
-
-	for (int x = 0; x < numCols; ++x) {
-		for (int z = 0; z < numRows; ++z) {
-			Vector3 position = Vector3(x * colSpacing, 10.0f, z * rowSpacing);
-
-			if (rand() % 2) {
-				AddCubeToWorld(position, cubeDims);
-			}
-			else {
-				AddSphereToWorld(position, sphereRadius);
-			}
-		}
-	}
-}
-
-void TutorialGame::InitCubeGridWorld(int numRows, int numCols, float rowSpacing, float colSpacing, const Vector3& cubeDims) {
-	for (int x = 1; x < numCols+1; ++x) {
-		for (int z = 1; z < numRows+1; ++z) {
-			Vector3 position = Vector3(x * colSpacing, 10.0f, z * rowSpacing);
-			AddCubeToWorld(position, cubeDims, 1.0f);
-		}
-	}
-}
-
-/*
-Every frame, this code will let you perform a raycast, to see if there's an object
-underneath the cursor, and if so 'select it' into a pointer, so that it can be
-manipulated later. Pressing Q will let you toggle between this behaviour and instead
-letting you move the camera around.
-
-*/
-bool TutorialGame::SelectObject() {
-	if (Window::GetKeyboard()->KeyPressed(KeyCodes::Q)) {
-		inSelectionMode = !inSelectionMode;
-		if (inSelectionMode) {
-			Window::GetWindow()->ShowOSPointer(true);
-			Window::GetWindow()->LockMouseToWindow(false);
-		}
-		else {
-			Window::GetWindow()->ShowOSPointer(false);
-			Window::GetWindow()->LockMouseToWindow(true);
-		}
-	}
-	if (inSelectionMode) {
-		Debug::Print("Press Q to change to camera mode!", Vector2(5, 85));
-
-		if (Window::GetMouse()->ButtonDown(NCL::MouseButtons::Left)) {
-			if (selectionObject) {	//set colour to deselected;
-				selectionObject->GetRenderObject()->SetColour(Vector4(1, 1, 1, 1));
-				selectionObject = nullptr;
-			}
-
-			// TODO: Do the bullet way
-			//Ray ray = CollisionDetection::BuildRayFromMouse(world->GetMainCamera());
-
-			//RayCollision closestCollision;
-			//if (world->Raycast(ray, closestCollision, true)) {
-			//	selectionObject = (GameObject*)closestCollision.node;
-
-			//	selectionObject->GetRenderObject()->SetColour(Vector4(0, 1, 0, 1));
-			//	return true;
-			//}
-			//else {
-			//	return false;
-			//}
-		}
-		if (Window::GetKeyboard()->KeyPressed(NCL::KeyCodes::L)) {
-			if (selectionObject) {
-				if (lockedObject == selectionObject) {
-					lockedObject = nullptr;
-				}
-				else {
-					lockedObject = selectionObject;
-				}
-			}
-		}
-	}
-	else {
-		Debug::Print("Press Q to change to select mode!", Vector2(5, 85));
-	}
-	return false;
-}
-
-/*
-If an object has been clicked, it can be pushed with the right mouse button, by an amount
-determined by the scroll wheel. In the first tutorial this won't do anything, as we haven't
-added linear motion into our physics system. After the second tutorial, objects will move in a straight
-line - after the third, they'll be able to twist under torque aswell.
-*/
-
-void TutorialGame::MoveSelectedObject() {
-	Debug::Print("Click Force:" + std::to_string(forceMagnitude), Vector2(5, 90));
-	forceMagnitude += Window::GetMouse()->GetWheelMovement() * 100.0f;
-
-	if (!selectionObject) {
-		return;//we haven't selected anything!
-	}
-	//Push the selected object!
-	if (Window::GetMouse()->ButtonPressed(NCL::MouseButtons::Right)) {
-		// TODO: Bullet
-		//Ray ray = CollisionDetection::BuildRayFromMouse(world->GetMainCamera());
-
-		//RayCollision closestCollision;
-		//if (world->Raycast(ray, closestCollision, true)) {
-		//	if (closestCollision.node == selectionObject) {
-		//		selectionObject->GetPhysicsObject()->AddForceAtPosition(ray.GetDirection() * forceMagnitude, closestCollision.collidedAt);
-		//	}
-		//}
-	}
-}
-
 

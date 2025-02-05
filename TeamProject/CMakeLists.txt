@@ -12,6 +12,8 @@ set(SOURCES
     StateGameObject.h
     TutorialGame.cpp
     TutorialGame.h
+    PlayerController.cpp
+    PlayerController.h
 )
 
 add_executable(${PROJECT_NAME} ${SOURCES})

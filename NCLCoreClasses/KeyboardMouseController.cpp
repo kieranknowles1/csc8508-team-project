@@ -57,5 +57,8 @@ bool	KeyboardMouseController::GetButton(uint32_t button)  const {
 	if (button == RightMouseButton) {
 		return mouse.ButtonDown(NCL::MouseButtons::Right);
 	}
+	if (button == Jump){
+		return keyboard.KeyDown(NCL::KeyCodes::SPACE);
+	}
 	return 0.0f;
 }
