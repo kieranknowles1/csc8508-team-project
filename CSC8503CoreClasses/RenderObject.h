@@ -7,13 +7,13 @@ namespace NCL {
 	using namespace NCL::Rendering;
 
 	namespace CSC8503 {
-		class Transform;
+		class GameObject;
 		using namespace Maths;
 
 		class RenderObject
 		{
 		public:
-			RenderObject(Transform* parentTransform, Mesh* mesh, Texture* tex, Shader* shader);
+			RenderObject(GameObject* parent, Mesh* mesh, Texture* tex, Shader* shader);
 			~RenderObject();
 
 			void SetDefaultTexture(Texture* t) {
@@ -28,10 +28,6 @@ namespace NCL {
 				return mesh;
 			}
 
-			Transform*		GetTransform() const {
-				return transform;
-			}
-
 			Shader*		GetShader() const {
 				return shader;
 			}
@@ -44,11 +40,15 @@ namespace NCL {
 				return colour;
 			}
 
+			GameObject* getParent() const {
+				return parent;
+			}
+
 		protected:
+			GameObject* parent;
 			Mesh*		mesh;
 			Texture*	texture;
 			Shader*		shader;
-			Transform*	transform;
 			Vector4		colour;
 		};
 	}

@@ -4,11 +4,11 @@
 using namespace NCL::CSC8503;
 using namespace NCL;
 
-RenderObject::RenderObject(Transform* parentTransform, Mesh* mesh, Texture* tex, Shader* shader) {
+RenderObject::RenderObject(GameObject* parent, Mesh* mesh, Texture* tex, Shader* shader) {
 	if (!tex) {
 		bool a = true;
 	}
-	this->transform	= parentTransform;
+	this->parent	= parent;
 	this->mesh		= mesh;
 	this->texture	= tex;
 	this->shader	= shader;

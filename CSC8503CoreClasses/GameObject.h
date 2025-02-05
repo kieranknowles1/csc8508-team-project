@@ -2,6 +2,7 @@
 #include "Transform.h"
 
 #include "PhysicsObject.h"
+#include "btBulletDynamicsCommon.h";
 
 using std::vector;
 
@@ -17,10 +18,6 @@ namespace NCL::CSC8503 {
 
 		bool IsActive() const {
 			return isActive;
-		}
-
-		Transform& GetTransform() {
-			return transform;
 		}
 
 		RenderObject* GetRenderObject() const {
@@ -58,10 +55,7 @@ namespace NCL::CSC8503 {
 		}
 
 		virtual void Update(float dt) {
-			// TODO: We should only have one transform owned by bullet
-			if (physicsObject) {
-				physicsObject->UpdateFromBullet();
-			}
+			
 		}
 
 		void SetWorldID(int newID) {
@@ -72,9 +66,36 @@ namespace NCL::CSC8503 {
 			return worldID;
 		}
 
-	protected:
-		Transform			transform;
+		btTransform GetTransform() const {
+			return physicsObject->GetRigidBody()->getWorldTransform();
+		}
 
+		void setInitialPosition(const Vector3& position) {
+			initialPosition = position;
+			hasSetInitialPosition = true;
+		}
+
+		void setInitialRotation(const Quaternion& rotation) {
+			initialRotation = rotation;
+			hasSetInitialRotation = true;
+		}
+
+		Vector3 getInitialPosition() const {
+			return initialPosition;
+		}
+		Quaternion getInitialRotation() const {
+			return initialRotation;
+		}
+
+		Vector3 getRenderScale() const {
+			return renderScale;
+		}
+
+		void setRenderScale(const Vector3& scale) {
+			renderScale = scale;
+		}
+		
+	protected:
 		PhysicsObject*		physicsObject;
 		RenderObject*		renderObject;
 		NetworkObject*		networkObject;
@@ -82,6 +103,12 @@ namespace NCL::CSC8503 {
 		bool		isActive;
 		int			worldID;
 		std::string	name;
+
+		Vector3 renderScale; // Only affects rendering, not physics
+		Vector3 initialPosition;
+		Quaternion initialRotation;
+		bool hasSetInitialPosition;
+		bool hasSetInitialRotation;
 	};
 }
 

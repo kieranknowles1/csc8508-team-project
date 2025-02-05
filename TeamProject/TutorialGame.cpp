@@ -22,7 +22,7 @@ TutorialGame::TutorialGame() : controller(*Window::GetWindow()->GetKeyboard(), *
 	renderer	= new GameTechVulkanRenderer(*world);
 	renderer->Init();
 	renderer->InitStructures();
-#else 
+#else
 	renderer = new GameTechRenderer(*world);
 #endif
 
@@ -44,7 +44,7 @@ TutorialGame::TutorialGame() : controller(*Window::GetWindow()->GetKeyboard(), *
 
 /*
 
-Each of the little demo scenarios used in the game uses the same 2 meshes, 
+Each of the little demo scenarios used in the game uses the same 2 meshes,
 and the same texture and shader. There's no need to ever load in anything else
 for this module, even in the coursework, but you can add it if you like!
 
@@ -86,21 +86,21 @@ void TutorialGame::UpdateGame(float dt) {
 	if (!inSelectionMode) {
 		world->GetMainCamera().UpdateCamera(dt);
 	}
-	if (lockedObject != nullptr) {
-		Vector3 objPos = lockedObject->GetTransform().GetPosition();
-		Vector3 camPos = objPos + lockedOffset;
+	//if (lockedObject != nullptr) {
+	//	Vector3 objPos = lockedObject->GetPosition();
+	//	Vector3 camPos = objPos + lockedOffset;
 
-		Matrix4 temp = Matrix::View(camPos, objPos, Vector3(0,1,0));
+	//	Matrix4 temp = Matrix::View(camPos, objPos, Vector3(0,1,0));
 
-		Matrix4 modelMat = Matrix::Inverse(temp);
+	//	Matrix4 modelMat = Matrix::Inverse(temp);
 
-		Quaternion q(modelMat);
-		Vector3 angles = q.ToEuler(); //nearly there now!
+	//	Quaternion q(modelMat);
+	//	Vector3 angles = q.ToEuler(); //nearly there now!
 
-		world->GetMainCamera().SetPosition(camPos);
-		world->GetMainCamera().SetPitch(angles.x);
-		world->GetMainCamera().SetYaw(angles.y);
-	}
+	//	world->GetMainCamera().SetPosition(camPos);
+	//	world->GetMainCamera().SetPitch(angles.x);
+	//	world->GetMainCamera().SetYaw(angles.y);
+	//}
 
 	UpdateKeys();
 
@@ -113,41 +113,43 @@ void TutorialGame::UpdateGame(float dt) {
 	//This year we can draw debug textures as well!
 	//Debug::DrawTex(*basicTex, Vector2(10, 10), Vector2(5, 5), Debug::MAGENTA);
 
-	RayCollision closestCollision;
-	if (Window::GetKeyboard()->KeyPressed(KeyCodes::K) && selectionObject) {
-		Vector3 rayPos;
-		Vector3 rayDir;
+	//RayCollision closestCollision;
+	//if (Window::GetKeyboard()->KeyPressed(KeyCodes::K) && selectionObject) {
+	//	Vector3 rayPos;
+	//	Vector3 rayDir;
 
-		rayDir = selectionObject->GetTransform().GetOrientation() * Vector3(0, 0, -1);
+	//	rayDir = selectionObject->GetOrientation() * Vector3(0, 0, -1);
 
-		rayPos = selectionObject->GetTransform().GetPosition();
+	//	rayPos = selectionObject->GetPosition();
 
-		Ray r = Ray(rayPos, rayDir);
+	//	Ray r = Ray(rayPos, rayDir);
 
-		if (world->Raycast(r, closestCollision, true, selectionObject)) {
-			if (objClosest) {
-				objClosest->GetRenderObject()->SetColour(Vector4(1, 1, 1, 1));
-			}
-			objClosest = (GameObject*)closestCollision.node;
+	//	if (world->Raycast(r, closestCollision, true, selectionObject)) {
+	//		if (objClosest) {
+	//			objClosest->GetRenderObject()->SetColour(Vector4(1, 1, 1, 1));
+	//		}
+	//		objClosest = (GameObject*)closestCollision.node;
 
-			objClosest->GetRenderObject()->SetColour(Vector4(1, 0, 1, 1));
-		}
-	}
+	//		objClosest->GetRenderObject()->SetColour(Vector4(1, 0, 1, 1));
+	//	}
+	//}
 
 	Debug::DrawLine(Vector3(), Vector3(0, 100, 0), Vector4(1, 0, 0, 1));
 
 	SelectObject();
 	MoveSelectedObject();
 
-	/* Took a while to figure out why gravity wasn't working, I figured out after 
+	// TODO: Remove the below comment and add what stepSimulation does concisely
+	/* Took a while to figure out why gravity wasn't working, I figured out after
 	    reading the doc for the nth time that I forgot to update the world each frame
 		with bullet world's step simulation. Otherwise, physics interactions will not
-		occur 
+		occur
 	*/
 
 	bulletWorld->stepSimulation(dt, 10);
 	bulletWorld->debugDrawWorld();
 
+	// TODO: Remove this testing code in a different commit
 	// If the object exists, log its position after the simulation step
 	if (objectToTestBulletPhysics) {
 		btRigidBody* rigidBody = objectToTestBulletPhysics->GetPhysicsObject()->GetRigidBody();
@@ -325,24 +327,28 @@ GameObject* TutorialGame::AddCubeToWorld(const Vector3& position, Vector3 dimens
 	GameObject* cube = new GameObject();
 
 	// Setting the transform properties for the cube
-	cube->GetTransform()
-		.SetPosition(position)
-		.SetScale(dimensions);
+	cube->setInitialPosition(position);
+	cube->setRenderScale(dimensions);
 
-	// Setting render object
-	cube->SetRenderObject(new RenderObject(&cube->GetTransform(), cubeMesh, basicTex, basicShader));
-
-	// Setting the physics object for the cube
-	cube->SetPhysicsObject(new PhysicsObject(cube));
+	// TODO : Set the orientation of the cube
+	//cube->SetOrientation(rotation);
 
 	// Creating Bullet collision shape
+	// Note: The scale of the cube is set when creating the collision shape, When the collision shapes are created,
+	// so the size of the collision shape acts as the scale of the object
 	btCollisionShape* shape = new btBoxShape(btVector3(dimensions.x / 2.0f, dimensions.y / 2.0f, dimensions.z / 2.0f));
 
 	// The object is penetrating the floor a bit, so I reduced the bullet collison margin to avoid sinking in the floor
 	shape->setMargin(0.01f);
 
+	// Setting the physics object for the cube
+	cube->SetPhysicsObject(new PhysicsObject(cube));
+
 	// Initialize Bullet physics for the cube
 	cube->GetPhysicsObject()->InitBulletPhysics(bulletWorld, shape, inverseMass);
+
+	// Setting render object
+	cube->SetRenderObject(new RenderObject(cube, cubeMesh, basicTex, basicShader));
 
 	world->AddGameObject(cube);
 
@@ -351,20 +357,22 @@ GameObject* TutorialGame::AddCubeToWorld(const Vector3& position, Vector3 dimens
 
 GameObject* TutorialGame::AddCapsuleToWorld(const Vector3& position, float height, float radius, float inverseMass) {
 	GameObject* capsule = new GameObject();
-	
+
 	// Setting the transform properties for the capsule
-	capsule->GetTransform()
-		.SetPosition(position)
-		.SetScale(Vector3(radius * 2, height, radius * 2)); // Radius needs to be scaled to match the top and bottom caps of the capsule
+	capsule->setInitialPosition(position);
+	capsule->setRenderScale(Vector3(radius * 2, halfHeight * 2, radius * 2));
 
-	// Setting the render object for the capsule
-	capsule->SetRenderObject(new RenderObject(&capsule->GetTransform(), capsuleMesh, basicTex, basicShader));
-
-	// Setting the physics object for the capsule
-	capsule->SetPhysicsObject(new PhysicsObject(capsule));
+	// TODO: Set the orientation of the capsule
+	//capsule->SetOrientation(rotation);
 
 	// Creating a Bullet collision shape for the capsule
 	btCollisionShape* shape = new btCapsuleShape(radius, height);
+
+	// Setting the render object for the capsule
+	capsule->SetRenderObject(new RenderObject(capsule, capsuleMesh, basicTex, basicShader));
+
+	// Setting the physics object for the capsule
+	capsule->SetPhysicsObject(new PhysicsObject(capsule));
 
 	// Initializing the physics object for the capsule
 	capsule->GetPhysicsObject()->InitBulletPhysics(bulletWorld, shape, inverseMass);
@@ -378,15 +386,13 @@ GameObject* TutorialGame::AddInfinitePlaneToWorld(const Vector3& position, const
 	GameObject* plane = new GameObject();
 
 	// Set the transform properties for the plane
-	plane->GetTransform()
-		.SetPosition(position)
-		.SetScale(Vector3(1, 1, 1)); // Scale does not affect Bullet's infinite plane
+	plane->setInitialPosition(position);
 
 	// Create Bullet collision shape for an infinite plane
 	btCollisionShape* shape = new btStaticPlaneShape(btVector3(normal.x, normal.y, normal.z), planeConstant);
 
 	// Set the render object
-	plane->SetRenderObject(new RenderObject(&plane->GetTransform(), planeMesh, basicTex, basicShader));
+	plane->SetRenderObject(new RenderObject(plane, planeMesh, basicTex, basicShader));
 
 	// Set the physics object
 	plane->SetPhysicsObject(new PhysicsObject(plane));
@@ -414,18 +420,17 @@ GameObject* TutorialGame::AddFloorToWorld(const Vector3& position) {
 	Vector3 floorSize = Vector3(200, 2, 200);
 
 	// Setting the transform properties for the floor
-	floor->GetTransform()
-		.SetPosition(position)
-		.SetScale(floorSize);
+	floor->setInitialPosition(position);
+	floor->setRenderScale(floorSize);
+
+	// Creating a bullet collision shape
+	btCollisionShape* shape = new btBoxShape(btVector3(floorSize.x / 2.0f, floorSize.y / 2.0f, floorSize.z / 2.0f));
 
 	// Setting the render object for the floor
-	floor->SetRenderObject(new RenderObject(&floor->GetTransform(), cubeMesh, basicTex, basicShader));
+	floor->SetRenderObject(new RenderObject(floor, cubeMesh, basicTex, basicShader));
 
 	// Setting the physics object for the floor
 	floor->SetPhysicsObject(new PhysicsObject(floor));
-
-	// Creating a bullet collision shape
-	btCollisionShape* shape = new btBoxShape(btVector3(floorSize.x / 2.0f, floorSize.y / 2.0f, floorSize.z/ 2.0f));
 
 	// Setting the collision margin for the floor
 	shape->setMargin(0.01f);
@@ -446,12 +451,11 @@ GameObject* TutorialGame::AddSphereToWorld(const Vector3& position, float radius
 	Vector3 sphereSize = Vector3(radius, radius, radius);
 
 	// Setting the transform properties for the sphere
-	sphere->GetTransform()
-		.SetPosition(position)
-		.SetScale(sphereSize);
+	sphere->setInitialPosition(position);
+	sphere->setRenderScale(sphereSize);
 
 	// Setting the render object for the sphere
-	sphere->SetRenderObject(new RenderObject(&sphere->GetTransform(), sphereMesh, basicTex, basicShader));
+	sphere->SetRenderObject(new RenderObject(sphere, sphereMesh, basicTex, basicShader));
 	sphere->SetPhysicsObject(new PhysicsObject(sphere));
 
 	// Creating a Bullet collision shape for the sphere
@@ -586,9 +590,9 @@ void TutorialGame::InitCubeGridWorld(int numRows, int numCols, float rowSpacing,
 
 /*
 Every frame, this code will let you perform a raycast, to see if there's an object
-underneath the cursor, and if so 'select it' into a pointer, so that it can be 
+underneath the cursor, and if so 'select it' into a pointer, so that it can be
 manipulated later. Pressing Q will let you toggle between this behaviour and instead
-letting you move the camera around. 
+letting you move the camera around.
 
 */
 bool TutorialGame::SelectObject() {

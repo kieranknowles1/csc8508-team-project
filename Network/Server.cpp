@@ -1,3 +1,4 @@
+#include "Network.hpp"
 #include "Server.hpp"
 
 

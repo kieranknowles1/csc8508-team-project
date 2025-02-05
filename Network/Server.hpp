@@ -7,15 +7,9 @@
 #include <NetworkBase.h>
 
 
-#ifdef NETWORK_TEST
-#include <iostream>
 
-void DebugOut(const std::string& message) {
-	std::cerr << "[DEBUG]: ";
-	std::cerr << message << std::endl;
-}
 
-#endif
+
 
 
 template <typename Packet>
@@ -61,5 +55,7 @@ private:
 
 	std::thread* m_thread = nullptr;
 	std::mutex state_mutex;
+
+
 };
 
