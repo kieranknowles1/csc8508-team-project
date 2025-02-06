@@ -34,7 +34,7 @@ namespace NCL {
 
 			void InitCamera();
 			void UpdateKeys();
-
+			void ThirdPersonControls();
 			void InitWorld();
 
 			Turret* AddTurretToWorld();
@@ -106,6 +106,8 @@ namespace NCL {
 			GameObject* player;
 			PlayerController* playerController;
 			bool freeCam = false;
+			bool thirdPerson = false;
+			Vector4 playerColour = Vector4(1, 0.8, 1, 1);
 
 			//fixed update 
 			float accumulator = 0.0f;

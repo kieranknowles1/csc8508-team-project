@@ -35,7 +35,9 @@ TutorialGame::TutorialGame() : controller(*Window::GetWindow()->GetKeyboard(), *
 	controller.MapAxis(3, "XLook");
 	controller.MapAxis(4, "YLook");
 
-	controller.MapButton(2, "JumpButton");
+	controller.MapButton(2, "Jump");
+	controller.MapButton(3, "Sprint");
+	controller.MapButton(4, "Crouch");
 
 	InitialiseAssets();
 }
@@ -99,35 +101,34 @@ static bool BulletRaycast(btDynamicsWorld* world, const btVector3& start, const 
 }
 
 void TutorialGame::UpdateGame(float dt) {
-	if (!freeCam) {
-		world->GetMainCamera().UpdateCamera(dt, false);
-		playerController->UpdateMovement(dt);
+	// Press F for freeCam, press G for thirdPerson
+	if (freeCam) {
+		//freeCam Movement
+		world->GetMainCamera().UpdateCamera(dt, true);
+		player->GetRenderObject()->SetColour(Vector4(1, 0.8, 1, 1));
 	}
 	else {
-		world->GetMainCamera().UpdateCamera(dt, true);
+		//player Movement
+		world->GetMainCamera().UpdateCamera(dt, false);
+		playerController->UpdateMovement(dt);
+		if (thirdPerson) {
+			ThirdPersonControls();
+		}
 	}
-
-	UpdateKeys();
+	player->GetRenderObject()->SetColour((thirdPerson || freeCam)?playerColour:Vector4());
 
 	// Update the physics simulation by delta time, aiming for 60hz with up to 10 substeps
 	int steps = bulletWorld->stepSimulation(dt, MaxStepsPerFrame, 1.0f / PhysicsFrequency);
 	if (steps >= MaxStepsPerFrame) {
 		std::cerr << "Warning: Physics MaxStepsPerFrame reached, simulation slowed down" << std::endl;
 	}
-
-	// set position to be equal to player
-	if (!freeCam) {
-		btTransform transformPlayer = player->GetPhysicsObject()->GetRigidBody()->getWorldTransform();
-		btVector3 playerPos = transformPlayer.getOrigin();
-		playerPos.setY(playerPos.getY() + 3);
-		mainCamera->SetPosition(playerPos);
-	}
-
+	
 	bulletWorld->debugDrawWorld();
 	if (testTurret) {
 		testTurret->Update(dt);
 	}
 
+	UpdateKeys();
 	world->UpdateWorld(dt);
 	world->OperateOnContents([&](GameObject* obj) {
 		obj->GetPhysicsObject()->CheckCollisions(bulletWorld);
@@ -153,6 +154,37 @@ void TutorialGame::UpdateKeys() {
 	if (Window::GetKeyboard()->KeyPressed(KeyCodes::F)) {
 		freeCam = !freeCam;
 	}
+	if (Window::GetKeyboard()->KeyPressed(KeyCodes::G)) {
+		thirdPerson = !thirdPerson;
+		playerController->SetThirdPerson(thirdPerson);
+	}
+}
+
+void TutorialGame::ThirdPersonControls() {
+	btTransform transformPlayer = player->GetPhysicsObject()->GetRigidBody()->getWorldTransform();
+	btQuaternion playerRotation = transformPlayer.getRotation();
+
+	// Extract yaw from playerRotation
+	btMatrix3x3 rotationMatrix(playerRotation);
+	btVector3 forward = rotationMatrix * btVector3(0, 0, -1);
+
+	// Zero out the Y component to ignore pitch/roll
+	forward.setY(0);
+	forward.normalize(); // Ensure it's a unit vector
+
+	// Camera offset (up 10, back 30)
+	btVector3 cameraOffset(0, 10, 30);
+	btVector3 cameraPosition = transformPlayer.getOrigin() - (forward * cameraOffset.z()) + btVector3(0, cameraOffset.y(), 0);
+
+	mainCamera->SetPosition(cameraPosition);
+
+	// Compute yaw correctly from forward vector
+	float playerYaw = Maths::RadiansToDegrees(atan2(forward.x(), forward.z())) + 180.0f;
+	mainCamera->SetYaw(playerYaw);
+	mainCamera->SetPitch(-15);
+
+	player->GetRenderObject()->SetColour(Vector4(1, 0.8, 1, 1));
+
 }
 
 void TutorialGame::DestroyBullet() {
@@ -195,25 +227,33 @@ void TutorialGame::InitWorld() {
 
 	// Use this as a reference to create more cube objects
 	AddCubeToWorld(Vector3(0, 30, 0), Vector3(5, 5, 5), 1.0f);
+	AddCubeToWorld(Vector3(50, 30, 0), Vector3(10, 10, 10), 5.0f);
+	AddCubeToWorld(Vector3(20, 30, 50), Vector3(7, 7, 7), 4.0f);
+	AddCubeToWorld(Vector3(120, 30, -20), Vector3(5, 5, 5), 1.0f);
 
 	// Use this as a reference to create more sphere objects
-	AddSphereToWorld(Vector3(10, 30, 0), 5.0f, 1.0f);
+	AddSphereToWorld(Vector3(10, 30, 0), 5.0f, 4.0f);
+	AddSphereToWorld(Vector3(-30, 30, 0), 7.0f, 8.0f);
+	AddSphereToWorld(Vector3(10, 30, -40), 9.0f, 16.0f);
 
 	// Use this as a reference to create more capsule objects
-	AddCapsuleToWorld(Vector3(20, 15, 0), 4.0f, 2.0f, 1.0f);
-	InitPlayer();
+	AddCapsuleToWorld(Vector3(20, 15, 0), 4.0f, 2.0f, 2.0f);
+	AddCapsuleToWorld(Vector3(70, 15, -20), 8.0f, 4.0f, 4.0f);
+	AddCapsuleToWorld(Vector3(-20, 15, 12), 6.0f, 5.0f, 8.0f);
 
+	AddTurretToWorld();
+	InitPlayer();
 }
 
 void TutorialGame::InitPlayer() {
 
-	player = AddCapsuleToWorld(Vector3(10, 4, 20), 4.0f, 2.0f, 10.0f);
+	player = AddCapsuleToWorld(Vector3(10, 50, 20), 4.0f, 2.0f, 10.0f);
 	player->GetPhysicsObject()->GetRigidBody()->setAngularFactor(0);
 	player->GetPhysicsObject()->GetRigidBody()->setFriction(1);
 	player->GetPhysicsObject()->GetRigidBody()->setDamping(0.999, 0);
 	playerController = new PlayerController(player, controller, mainCamera, bulletWorld);
+	player->GetRenderObject()->SetColour(playerColour);
 
-	AddTurretToWorld();
 }
 
 Turret* TutorialGame::AddTurretToWorld() {
@@ -267,7 +307,7 @@ GameObject* TutorialGame::AddCubeToWorld(const Vector3& position, Vector3 dimens
 
 	// Initialize Bullet physics for the cube
 	// WTF: Setting shape to nullptr causes camera stutter
-	cube->GetPhysicsObject()->InitBulletPhysics(bulletWorld, shape, inverseMass,false);
+	cube->GetPhysicsObject()->InitBulletPhysics(bulletWorld, shape, inverseMass);
 
 	// Setting render object
 	cube->SetRenderObject(new RenderObject(cube, cubeMesh, basicTex, basicShader));
@@ -339,7 +379,7 @@ A single function to add a large immoveable cube to the bottom of our world
 GameObject* TutorialGame::AddFloorToWorld(const Vector3& position) {
 	GameObject* floor = new GameObject();
 
-	Vector3 floorSize = Vector3(200, 2, 200);
+	Vector3 floorSize = Vector3(500, 2, 500);
 
 	// Setting the transform properties for the floor
 	floor->setInitialPosition(position);
