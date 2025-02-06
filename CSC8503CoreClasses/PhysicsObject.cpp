@@ -24,7 +24,7 @@ PhysicsObject::~PhysicsObject()	{
 }
 
 /* Bullet Physics Implementation start here */
-void PhysicsObject::InitBulletPhysics(btDynamicsWorld* world, btCollisionShape* shape, float mass) {
+void PhysicsObject::InitBulletPhysics(btDynamicsWorld* world, btCollisionShape* shape, float mass, bool collide) {
 	collisionShape = shape;
 	btTransform startTransform;
 	startTransform.setIdentity();
@@ -40,7 +40,7 @@ void PhysicsObject::InitBulletPhysics(btDynamicsWorld* world, btCollisionShape* 
 	motionState = new btDefaultMotionState(startTransform);
 
 	btVector3 localInertia(0, 0, 0);
-	if (mass > 0.0f) {
+	if (mass > 0.0f && shape) {
 		shape->calculateLocalInertia(mass, localInertia);
 	}
 
@@ -52,7 +52,10 @@ void PhysicsObject::InitBulletPhysics(btDynamicsWorld* world, btCollisionShape* 
 //	rigidBody->setUserPointer(parent);
 	// SetActivationState is used to prevent the object properties from being deactivated due to inactivity
 	rigidBody->setActivationState(DISABLE_DEACTIVATION);
-	world->addRigidBody(rigidBody);
+	if (collide) {
+		world->addRigidBody(rigidBody);
+
+	}
 }
 
 void PhysicsObject::AddForce(const Vector3& force) {
