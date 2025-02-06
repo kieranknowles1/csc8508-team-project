@@ -14,7 +14,7 @@ namespace NCL::CSC8503 {
 	class GameObject	{
 	public:
 		GameObject(const std::string& name = "");
-		~GameObject();
+		virtual ~GameObject();
 
 		bool IsActive() const {
 			return isActive;
@@ -109,4 +109,3 @@ namespace NCL::CSC8503 {
 		bool hasSetInitialRotation;
 	};
 }
-
