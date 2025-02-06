@@ -64,7 +64,7 @@ bool	KeyboardMouseController::GetButton(uint32_t button)  const {
 		return keyboard.KeyDown(NCL::KeyCodes::SHIFT);
 	}
 	if (button == Crouch) {
-		return keyboard.KeyDown(NCL::KeyCodes::CONTROL);
+		return std::max(keyboard.KeyDown(NCL::KeyCodes::CONTROL), (keyboard.KeyDown(NCL::KeyCodes::C)));
 	}
 	return 0.0f;
 }
