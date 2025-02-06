@@ -63,6 +63,8 @@
           # Usage: `nix develop [.#name=default]`
           default = inputs'.nixcfg.devShells.cmake.override (_old: {
             libraries = with pkgs; [
+              valgrind
+
               SDL2
               libGL
               bullet
