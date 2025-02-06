@@ -89,14 +89,15 @@ namespace NCL {
 
 
 			/* bullet physics stuff here */
-			btDiscreteDynamicsWorld* bulletWorld;
-			btBroadphaseInterface* broadphase;
-			btDefaultCollisionConfiguration* collisionConfig;
-			btCollisionDispatcher* dispatcher;
-			btSequentialImpulseConstraintSolver* solver;
+			btDiscreteDynamicsWorld* bulletWorld = nullptr;
+			btBroadphaseInterface* broadphase = nullptr;
+			btDefaultCollisionConfiguration* collisionConfig = nullptr;
+			btCollisionDispatcher* dispatcher = nullptr;
+			btSequentialImpulseConstraintSolver* solver = nullptr;
 
-			BulletDebug* bulletDebug;
+			BulletDebug* bulletDebug = nullptr;
 
+			void DestroyBullet();
 			void InitBullet(); // Initialises the Bullet physics world
 
 			//Player things
