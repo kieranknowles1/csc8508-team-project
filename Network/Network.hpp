@@ -64,6 +64,11 @@ public:
 		return m_host != nullptr;
 	}
 
+	/**
+	 * @brief Get an event from enet_host_service.
+	 * @param waitTime	How long to wait for an event in ms
+	 * @return The event from enet_host_service. Returns empty event if failed.
+	 */
 	ENetEvent GetEvent(float waitTime) {
 		ENetEvent event;
 		enet_host_service(m_host, &event, waitTime);

@@ -94,9 +94,11 @@ void Server::RemoveConnection(ENetEvent& event) {
 		if (event.peer == connections[i]) {
 			m_numConnections--;
 
-			if (i != m_numConnections) {
+			// Filling the gap if one was created.
+			if (i < m_numConnections) {
 				connections[i] = connections[m_numConnections];
 			}
+			connections[m_numConnections] = nullptr;
 			return;
 		}
 	}

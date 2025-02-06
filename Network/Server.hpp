@@ -8,6 +8,7 @@
 #include <./enet/enet.h>
 
 #include "Network.hpp"
+#include "Packet.hpp"
 
 
 enum class ServerState {
