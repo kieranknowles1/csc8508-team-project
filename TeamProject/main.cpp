@@ -35,5 +35,6 @@ int main(int argc, char** argv) {
 
 		g->UpdateGame(dt);
 	}
+	delete g;
 	delete window;
 }
