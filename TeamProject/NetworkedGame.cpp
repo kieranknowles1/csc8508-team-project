@@ -1,6 +1,6 @@
 #include "NetworkedGame.h"
 
-#include "math.h"
+#include "cmath"
 
 #include "NetworkPlayer.h"
 #include "NetworkObject.h"
@@ -113,8 +113,8 @@ void NetworkedGame::BroadcastSnapshot(bool deltaFrame) {
 		//TODO - you'll need some way of determining
 		//when a player has sent the server an acknowledgement
 		//and store the lastID somewhere. A map between player
-		//and an int could work, or it could be part of a 
-		//NetworkPlayer struct. 
+		//and an int could work, or it could be part of a
+		//NetworkPlayer struct.
 		int playerState = 0;
 		GamePacket* newPacket = nullptr;
 		if (o->WritePacket(&newPacket, deltaFrame, playerState)) {
@@ -130,8 +130,8 @@ void NetworkedGame::UpdateMinimumState() {
 	int maxID = 0; //we could use this to see if a player is lagging behind?
 
 	for (auto i : stateIDs) {
-		minID = min(minID, i.second);
-		maxID = max(maxID, i.second);
+		minID = std::min(minID, i.second);
+		maxID = std::max(maxID, i.second);
 	}
 	//every client has acknowledged reaching at least state minID
 	//so we can get rid of any old states!
@@ -157,7 +157,7 @@ void NetworkedGame::StartLevel() {
 }
 
 void NetworkedGame::ReceivePacket(int type, GamePacket* payload, int source) {
-	
+
 }
 
 void NetworkedGame::OnPlayerCollision(NetworkPlayer* a, NetworkPlayer* b) {

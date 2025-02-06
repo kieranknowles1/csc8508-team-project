@@ -87,25 +87,27 @@ set(Source_Files
 source_group("Source Files" FILES ${Source_Files})
 
 set(enet_Files
-    #"./enet/callbacks.h"
     "./enet/callbacks.c"
-    "./enet/list.h"
-    "./enet/list.c"
-    "./enet/protocol.h"
-    "./enet/protocol.c"
-    "./enet/win32.h"
-    "./enet/win32.c"
-
+    # "./enet/callbacks.h"
+    "./enet/compress.c"
     "./enet/enet.h"
+    "./enet/host.c"
+    "./enet/list.c"
+    "./enet/list.h"
+    "./enet/packet.c"
+    "./enet/peer.c"
+    "./enet/protocol.c"
+    "./enet/protocol.h"
     "./enet/time.h"
     "./enet/types.h"
     "./enet/utility.h"
-
-    "./enet/compress.c"
-    "./enet/host.c"
-    "./enet/packet.c"
-    "./enet/peer.c"
 )
+if(WIN32)
+  list(APPEND enet_Files "./enet/win32.h" "./enet/win32.c")
+else()
+  list(APPEND enet_Files "./enet/unix.h" "./enet/unix.c")
+endif()
+
 source_group("eNet" FILES ${enet_Files})
 
 set(ALL_FILES

@@ -18,7 +18,7 @@ Matrix4 biasMatrix = Matrix::Translation(Vector3(0.5f, 0.5f, 0.5f)) * Matrix::Sc
 GameTechRenderer::GameTechRenderer(GameWorld& world) : OGLRenderer(*Window::GetWindow()), gameWorld(world)	{
 	glEnable(GL_DEPTH_TEST);
 
-	debugShader  = new OGLShader("debug.vert", "debug.frag");
+	debugShader  = new OGLShader("Debug.vert", "Debug.frag");
 	shadowShader = new OGLShader("shadow.vert", "shadow.frag");
 
 	glGenTextures(1, &shadowTex);
@@ -26,10 +26,10 @@ GameTechRenderer::GameTechRenderer(GameWorld& world) : OGLRenderer(*Window::GetW
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	
+
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT,
 			     SHADOWSIZE, SHADOWSIZE, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
-	
+
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_MODE, GL_COMPARE_R_TO_TEXTURE);
 	glBindTexture(GL_TEXTURE_2D, 0);
 
@@ -84,12 +84,12 @@ GameTechRenderer::~GameTechRenderer()	{
 
 void GameTechRenderer::LoadSkybox() {
 	std::string filenames[6] = {
-		"/Cubemap/skyrender0004.png",
-		"/Cubemap/skyrender0001.png",
-		"/Cubemap/skyrender0003.png",
-		"/Cubemap/skyrender0006.png",
-		"/Cubemap/skyrender0002.png",
-		"/Cubemap/skyrender0005.png"
+		"Cubemap/skyrender0004.png",
+		"Cubemap/skyrender0001.png",
+		"Cubemap/skyrender0003.png",
+		"Cubemap/skyrender0006.png",
+		"Cubemap/skyrender0002.png",
+		"Cubemap/skyrender0005.png"
 	};
 
 	uint32_t width[6]	 = { 0 };
@@ -295,8 +295,8 @@ void GameTechRenderer::RenderCamera() {
 		Matrix4 modelMatrix;
 		i->getParent()->GetTransform().getOpenGLMatrix((btScalar*)&modelMatrix);
 		modelMatrix = modelMatrix * Matrix::Scale(i->getParent()->getRenderScale());
-		glUniformMatrix4fv(modelLocation, 1, false, (float*)&modelMatrix);			
-		
+		glUniformMatrix4fv(modelLocation, 1, false, (float*)&modelMatrix);
+
 		Matrix4 fullShadowMat = shadowMatrix * modelMatrix;
 		glUniformMatrix4fv(shadowLocation, 1, false, (float*)&fullShadowMat);
 
@@ -331,7 +331,7 @@ void GameTechRenderer::NewRenderLines() {
 
 	Matrix4 viewMatrix = gameWorld.GetMainCamera().BuildViewMatrix();
 	Matrix4 projMatrix = gameWorld.GetMainCamera().BuildProjectionMatrix(hostWindow.GetScreenAspect());
-	
+
 	Matrix4 viewProj  = projMatrix * viewMatrix;
 
 	UseShader(*debugShader);
@@ -349,7 +349,7 @@ void GameTechRenderer::NewRenderLines() {
 
 	glBindBuffer(GL_ARRAY_BUFFER, lineVertVBO);
 	glBufferSubData(GL_ARRAY_BUFFER, 0, lines.size() * sizeof(Debug::DebugLineEntry), lines.data());
-	
+
 
 	glBindVertexArray(lineVAO);
 	glDrawArrays(GL_LINES, 0, (GLsizei)frameLineCount);
@@ -371,7 +371,7 @@ void GameTechRenderer::NewRenderText() {
 		glBindTexture(GL_TEXTURE_2D, t->GetObjectID());
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-		glBindTexture(GL_TEXTURE_2D, 0);	
+		glBindTexture(GL_TEXTURE_2D, 0);
 		BindTextureToShader(*t, "mainTex", 0);
 	}
 
@@ -436,10 +436,10 @@ void GameTechRenderer::NewRenderTextures() {
 
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	
-	for (const auto& tex : texEntries) {	
+
+	for (const auto& tex : texEntries) {
 		OGLTexture* t = (OGLTexture*)tex.t;
-		glBindTexture(GL_TEXTURE_2D, t->GetObjectID());	
+		glBindTexture(GL_TEXTURE_2D, t->GetObjectID());
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 		BindTextureToShader(*t, "mainTex", 0);
@@ -456,7 +456,7 @@ void GameTechRenderer::NewRenderTextures() {
 
 	glUniform1i(useColourSlot, 0);
 }
- 
+
 Texture* GameTechRenderer::LoadTexture(const std::string& name) {
 	return OGLTexture::TextureFromFile(name).release();
 }
