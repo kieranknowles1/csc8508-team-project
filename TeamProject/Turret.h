@@ -1,6 +1,5 @@
 #pragma once
 #include "GameObject.h"
-#include "PhysicsSystem.h"
 #include "Quaternion.h"
 
 namespace NCL {

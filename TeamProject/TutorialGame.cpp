@@ -107,52 +107,6 @@ void TutorialGame::UpdateGame(float dt) {
 
 	UpdateKeys();
 
-	// TODO: Remove the below comment and add what stepSimulation does concisely
-	/* Took a while to figure out why gravity wasn't working, I figured out after
-	/*if (useGravity) {
-		Debug::Print("(G)ravity on", Vector2(5, 95), Debug::RED);
-	}
-	else {
-		Debug::Print("(G)ravity off", Vector2(5, 95), Debug::RED);
-	}*/
-	//This year we can draw debug textures as well!
-	//Debug::DrawTex(*basicTex, Vector2(10, 10), Vector2(5, 5), Debug::MAGENTA);
-
-	RayCollision closestCollision;
-	if (Window::GetKeyboard()->KeyPressed(KeyCodes::K) && selectionObject) {
-		Vector3 rayPos;
-		Vector3 rayDir;
-
-		rayDir = selectionObject->GetTransform().GetOrientation() * Vector3(0, 0, -1);
-
-		rayPos = selectionObject->GetTransform().GetPosition();
-
-		Ray r = Ray(rayPos, rayDir);
-
-		if (world->Raycast(r, closestCollision, true, selectionObject)) {
-			if (objClosest) {
-				objClosest->GetRenderObject()->SetColour(Vector4(1, 1, 1, 1));
-			}
-			objClosest = (GameObject*)closestCollision.node;
-
-			objClosest->GetRenderObject()->SetColour(Vector4(1, 0, 1, 1));
-		}
-	}
-
-	/*Debug::DrawLine(Vector3(), Vector3(0, 100, 0), Vector4(1, 0, 0, 1));
-	btCollisionWorld::ClosestRayResultCallback rayResult(btVector3(0, 0, 0), btVector3(0, 100, 0));
-	if (BulletRaycast(bulletWorld, btVector3(0, 0, 0), btVector3(0, 100, 0), rayResult)) {
-		btVector3 hitPoint = rayResult.m_hitPointWorld;
-		std::cout << "Ray hit at: " << hitPoint.x() << ", " << hitPoint.y() << ", " << hitPoint.z() << std::endl;
-	}
-	else {
-		std::cout << "No hit detected.\n";
-	}*/
-
-	
-	SelectObject();
-	MoveSelectedObject();
-
 	/* Took a while to figure out why gravity wasn't working, I figured out after 
 	    reading the doc for the nth time that I forgot to update the world each frame
 		with bullet world's step simulation. Otherwise, physics interactions will not
@@ -209,7 +163,7 @@ void TutorialGame::UpdateKeys() {
 	}
 
 	if (Window::GetKeyboard()->KeyPressed(KeyCodes::F3)) {
-	//	bulletDebug->toggle();
+		bulletDebug->toggle();
 	}
 	if (Window::GetKeyboard()->KeyPressed(KeyCodes::F)) {
 		freeCam = !freeCam;
@@ -227,8 +181,8 @@ void TutorialGame::InitBullet() {
 	bulletWorld = new btDiscreteDynamicsWorld(dispatcher, broadphase, solver, collisionConfig);
 	bulletWorld->setGravity(btVector3(0, -9.8, 0));
 
-//	bulletDebug = new BulletDebug();
-	//bulletWorld->setDebugDrawer(bulletDebug);
+	bulletDebug = new BulletDebug();
+	bulletWorld->setDebugDrawer(bulletDebug);
 }
 
 void TutorialGame::InitCamera() {
@@ -266,8 +220,6 @@ void TutorialGame::InitPlayer() {
 	player->GetPhysicsObject()->GetRigidBody()->setDamping(0.999, 0);
 	playerController = new PlayerController(player, controller, mainCamera, bulletWorld);
 
-	// Testing the bullet physics
-	AddObjectToTestBulletPhysics();
 	AddTurretToWorld();
 }
 
@@ -275,35 +227,19 @@ Turret* TutorialGame::AddTurretToWorld() {
 	Turret* turret = new Turret();
 
 	Vector3 dimensions = Vector3(5, 5, 5);
+	turret->setInitialPosition(btVector3(5, 5, 5));
+	turret->setRenderScale(dimensions);
 
-	// Testing the bullet physics
-	AddObjectToTestBulletPhysics();
-	AddTurretToWorld();
-}
-
-Turret* TutorialGame::AddTurretToWorld() {
-	Turret* turret = new Turret();
-
-	Vector3 dimensions = Vector3(5, 5, 5);
-
-	turret->GetTransform()
-		.SetPosition(Vector3(5, 5, 5))
-		.SetScale(dimensions);
-
-	turret->SetRenderObject(new RenderObject(&turret->GetTransform(), kittenMesh, basicTex, basicShader));
+	turret->SetRenderObject(new RenderObject(turret, kittenMesh, basicTex, basicShader));
 
 	btCollisionShape* shape = new btBoxShape(btVector3(dimensions.x / 2.0f, dimensions.y / 2.0f, dimensions.z / 2.0f));
 
 	shape->setMargin(0.01f);
 
-	PhysicsObject* physicsObject = new PhysicsObject(&turret->GetTransform(), turret->GetBoundingVolume());
-
+	PhysicsObject* physicsObject = new PhysicsObject(turret);
 	physicsObject->InitBulletPhysics(bulletWorld, shape, 1.0f);
 
 	turret->SetPhysicsObject(physicsObject);
-
-	turret->GetPhysicsObject()->SetInverseMass(1.0f);
-	turret->GetPhysicsObject()->InitCubeInertia();
 
 	turret->GetRenderObject()->SetColour(Vector4(1, 0, 0, 1));
 
