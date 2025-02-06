@@ -49,7 +49,7 @@ void PhysicsObject::InitBulletPhysics(btDynamicsWorld* world, btCollisionShape* 
 
 	// Setting the object's properties
 	rigidBody->setMassProps(mass, localInertia);
-//	rigidBody->setUserPointer(parent);
+	rigidBody->setUserPointer(parent);
 	// SetActivationState is used to prevent the object properties from being deactivated due to inactivity
 	rigidBody->setActivationState(DISABLE_DEACTIVATION);
 	if (collide) {

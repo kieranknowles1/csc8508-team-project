@@ -7,7 +7,6 @@
 
 #include <btBulletDynamicsCommon.h>
 #include <btBulletCollisionCommon.h>
-#include <BulletCollision/NarrowPhaseCollision/btRaycastCallback.h>
 
 
 namespace NCL {
