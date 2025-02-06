@@ -28,12 +28,10 @@ Turret::Turret(Quaternion q) {
 
 	stateMachine->AddTransition(new StateTransition(rotateLeft, rotateRight, [&]()->bool {
 		return rotateTime >= 1.0f;
-		std::cout << "To rotate right" << std::endl;
 		}));
 
 	stateMachine->AddTransition(new StateTransition(rotateRight, rotateLeft, [&]()->bool {
 		return rotateTime <= 0.0f;
-		std::cout << "To rotate left" << std::endl;
 		}));
 }
 
@@ -49,7 +47,6 @@ void Turret::Update(float dt) {
 void Turret::RotateLeft(float dt) {
 	rotateTime += rotateSpeed * dt;
 	rotateTime = std::clamp(rotateTime, 0.0f, 1.0f);
-	std::cout << "left " << rotateTime << std::endl;
 
 	btTransform trans = GetTransform();
 	btQuaternion negative(yNegative.x, yNegative.y, yNegative.z, yNegative.w);
@@ -62,7 +59,6 @@ void Turret::RotateLeft(float dt) {
 void Turret::RotateRight(float dt) {
 	rotateTime -= rotateSpeed * dt;
 	rotateTime = std::clamp(rotateTime, 0.0f, 1.0f);
-	std::cout << "right " << rotateTime << std::endl;
 
 	btTransform trans = GetTransform();
 	btQuaternion negative(yNegative.x, yNegative.y, yNegative.z, yNegative.w);

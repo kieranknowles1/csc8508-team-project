@@ -44,14 +44,12 @@ namespace NCL::CSC8503 {
 			return name;
 		}
 
-		virtual void OnCollisionBegin(GameObject* otherObject) {
-			// TODO: OnCollisionEnter call from physics object
-			//std::cout << "OnCollisionBegin event occured!\n";
+		virtual void OnCollisionEnter(GameObject* otherObject) {
+			std::cout << "OnCollisionBegin event occured! " << this->GetWorldID() << " " << otherObject->GetWorldID() << std::endl;
 		}
 
-		virtual void OnCollisionEnd(GameObject* otherObject) {
-			// TODO: OnCollisionEnd call from physics object
-			//std::cout << "OnCollisionEnd event occured!\n";
+		virtual void OnCollisionExit(GameObject* otherObject) {
+			std::cout << "OnCollisionEnd event occured!\n";
 		}
 
 		virtual void Update(float dt) {
