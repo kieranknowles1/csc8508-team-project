@@ -89,6 +89,8 @@ TutorialGame::~TutorialGame()	{
 
 	delete renderer;
 	delete world;
+
+	DestroyBullet();
 }
 
 static bool BulletRaycast(btDynamicsWorld* world, const btVector3& start, const btVector3& end, btCollisionWorld::ClosestRayResultCallback& resultCallback) {
@@ -127,9 +129,6 @@ void TutorialGame::UpdateGame(float dt) {
 	}
 
 	world->UpdateWorld(dt);
-	world->OperateOnContents([&](GameObject* o) {
-		o->GetPhysicsObject()->CheckCollisions(bulletWorld);
-	});
 	renderer->Update(dt);
 
 	renderer->Render();
@@ -153,6 +152,14 @@ void TutorialGame::UpdateKeys() {
 	}
 }
 
+void TutorialGame::DestroyBullet() {
+	delete bulletWorld;
+	delete bulletDebug;
+	delete solver;
+	delete dispatcher;
+	delete collisionConfig;
+	delete broadphase;
+}
 
 /* Bullet Physics world has been initialized here */
 void TutorialGame::InitBullet() {
@@ -177,9 +184,9 @@ void TutorialGame::InitCamera() {
 }
 
 void TutorialGame::InitWorld() {
+	DestroyBullet();
 	world->ClearAndErase();
-	// TODO: Clear bullet
-	//physics->Clear();
+	InitBullet();
 
 	InitDefaultFloor();
 
