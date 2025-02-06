@@ -107,43 +107,12 @@ void TutorialGame::UpdateGame(float dt) {
 
 	UpdateKeys();
 
-	/* Took a while to figure out why gravity wasn't working, I figured out after 
-	    reading the doc for the nth time that I forgot to update the world each frame
-		with bullet world's step simulation. Otherwise, physics interactions will not
-		occur
-	*/
-	if (bulletWorld->stepSimulation(dt, 10)) {
-		FixedUpdate();
-	};
-
-	bulletWorld->debugDrawWorld();
-	if (testTurret) {
-		testTurret->Update(dt);
+	// Update the physics simulation by delta time, aiming for 60hz with up to 10 substeps
+	int steps = bulletWorld->stepSimulation(dt, MaxStepsPerFrame, 1.0f / PhysicsFrequency);
+	if (steps >= MaxStepsPerFrame) {
+		std::cerr << "Warning: Physics MaxStepsPerFrame reached, simulation slowed down" << std::endl;
 	}
 
-	bulletWorld->stepSimulation(dt, 10);
-
-	// If the object exists, log its position after the simulation step
-	if (objectToTestBulletPhysics) {
-		btRigidBody* rigidBody = objectToTestBulletPhysics->GetPhysicsObject()->GetRigidBody();
-
-		if (rigidBody) {
-			btVector3 currentPos = rigidBody->getCenterOfMassPosition();
-			std::cout << "Current Position of Test Cube: "
-				<< currentPos.getX() << ", "
-				<< currentPos.getY() << ", "
-				<< currentPos.getZ() << std::endl;
-		}
-	}
-
-	world->UpdateWorld(dt);
-	renderer->Update(dt);
-
-	renderer->Render();
-	Debug::UpdateRenderables(dt);
-}
-
-void TutorialGame::FixedUpdate() {
 	// set position to be equal to player
 	if (!freeCam) {
 		btTransform transformPlayer = player->GetPhysicsObject()->GetRigidBody()->getWorldTransform();
@@ -151,6 +120,17 @@ void TutorialGame::FixedUpdate() {
 		playerPos.setY(playerPos.getY() + 3);
 		mainCamera->SetPosition(playerPos);
 	}
+
+	bulletWorld->debugDrawWorld();
+	if (testTurret) {
+		testTurret->Update(dt);
+	}
+
+	world->UpdateWorld(dt);
+	renderer->Update(dt);
+
+	renderer->Render();
+	Debug::UpdateRenderables(dt);
 }
 
 void TutorialGame::UpdateKeys() {

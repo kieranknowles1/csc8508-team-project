@@ -18,6 +18,12 @@ namespace NCL {
 
 		class TutorialGame {
 		public:
+			// Physics update frequency, in hertz
+			const static constexpr float PhysicsFrequency = 60.0f;
+			// Max steps per frame if physics is lagging
+			const static constexpr int MaxStepsPerFrame = 10;
+
+
 			TutorialGame();
 			~TutorialGame();
 
@@ -92,7 +98,6 @@ namespace NCL {
 			BulletDebug* bulletDebug;
 
 			void InitBullet(); // Initialises the Bullet physics world
-			GameObject* objectToTestBulletPhysics = nullptr;
 
 			//Player things
 			void InitPlayer();
@@ -104,7 +109,6 @@ namespace NCL {
 			//fixed update 
 			float accumulator = 0.0f;
 			float fixedDeltaTime = 1.0f / 60.0f;
-			void FixedUpdate();
 			
 			Turret* testTurret = nullptr;
 		};
