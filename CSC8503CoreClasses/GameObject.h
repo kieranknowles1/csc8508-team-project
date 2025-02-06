@@ -2,7 +2,7 @@
 #include "Transform.h"
 
 #include "PhysicsObject.h"
-#include "btBulletDynamicsCommon.h";
+#include "btBulletDynamicsCommon.h"
 
 using std::vector;
 
@@ -55,7 +55,7 @@ namespace NCL::CSC8503 {
 		}
 
 		virtual void Update(float dt) {
-			
+
 		}
 
 		void SetWorldID(int newID) {
@@ -94,7 +94,7 @@ namespace NCL::CSC8503 {
 		void setRenderScale(const Vector3& scale) {
 			renderScale = scale;
 		}
-		
+
 	protected:
 		PhysicsObject*		physicsObject;
 		RenderObject*		renderObject;

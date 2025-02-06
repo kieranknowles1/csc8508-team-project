@@ -45,22 +45,29 @@ void Turret::Update(float dt) {
 	stateMachine->Update(dt);
 }
 
+// TODO: This could be one function
 void Turret::RotateLeft(float dt) {
 	rotateTime += rotateSpeed * dt;
 	rotateTime = std::clamp(rotateTime, 0.0f, 1.0f);
 	std::cout << "left " << rotateTime << std::endl;
-	transform.SetOrientation(
-		Quaternion::Slerp(yNegative, yPositive, rotateTime)
-	);
+
+	btTransform trans = GetTransform();
+	btQuaternion negative(yNegative.x, yNegative.y, yNegative.z, yNegative.w);
+	btQuaternion positive(yPositive.x, yPositive.y, yPositive.z, yPositive.w);
+	
+	trans.setRotation(negative.slerp(positive, rotateTime));
+	GetPhysicsObject()->GetRigidBody()->setWorldTransform(trans);
 }
 
 void Turret::RotateRight(float dt) {
 	rotateTime -= rotateSpeed * dt;
 	rotateTime = std::clamp(rotateTime, 0.0f, 1.0f);
 	std::cout << "right " << rotateTime << std::endl;
-	transform.SetOrientation(
-		Quaternion::Slerp(yNegative, yPositive, rotateTime)
 
-	);
+	btTransform trans = GetTransform();
+	btQuaternion negative(yNegative.x, yNegative.y, yNegative.z, yNegative.w);
+	btQuaternion positive(yPositive.x, yPositive.y, yPositive.z, yPositive.w);
 
+	trans.setRotation(negative.slerp(positive, rotateTime));
+	GetPhysicsObject()->GetRigidBody()->setWorldTransform(trans);
 }
