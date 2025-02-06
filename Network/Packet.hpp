@@ -28,7 +28,7 @@ namespace Packet {
 		 * @param event The ENetEvent containing the packet to convert.
 		 * @return A PacketBase variant of the ENetPacket
 		 */
-		static PacketBase FromENetEvent(ENetEvent* event);
+		static PacketBase FromENetPacket(ENetPacket* packet);
 
 		/**
 		 * @brief Creates an ENetPacket from the data.

@@ -35,16 +35,12 @@ void Server::Start() {
 
 	m_thread = new std::thread(&Server::Run, this);
 
-#ifdef NETWORK_TEST
-	if (m_state == ServerState::RUNNING) DebugOut("Server Started Successfully");
-#endif
-
-
 }
 
 
 void Server::Stop() {
-
+	std::lock_guard<std::mutex> lock(m_stateMutex);
+	m_state = ServerState::STOPPED;
 }
 
 
@@ -65,17 +61,16 @@ void Server::Run() {
 void Server::Update() {
 	ENetEvent event = GetEvent(EVENT_WAIT);
 
-	switch (event.type) {
-	case ENET_EVENT_TYPE_CONNECT:
+	if (event.type == ENET_EVENT_TYPE_CONNECT) {
 		AttemptConnection(event);
-		break;
-	case ENET_EVENT_TYPE_DISCONNECT:
+	}
+	else if (event.type == ENET_EVENT_TYPE_DISCONNECT) {
 		RemoveConnection(event);
-		break;
-	case ENET_EVENT_TYPE_RECEIVE:
-		break;
-	default:
-		return;
+	}
+	else if (event.type == ENET_EVENT_TYPE_RECEIVE) {
+		Packet::PacketBase packet = Packet::PacketBase::FromENetPacket(event.packet);
+		enet_packet_destroy(event.packet);
+		Handle(packet);
 	}
 }
 

@@ -1,17 +1,17 @@
 #pragma once
 
 #include <./enet/enet.h>
-#include <./enet/time.h>
+//#include <./enet/time.h>
 
-#ifdef NETWORK_TEST
-#include <iostream>
-
-void DebugOut(const std::string& message) {
-	std::cerr << "[DEBUG]: ";
-	std::cerr << message << std::endl;
-}
-
-#endif
+//#ifdef NETWORK_TEST
+//#include <iostream>
+//
+//void DebugOut(const std::string& message) {
+//	std::cerr << "[DEBUG]: ";
+//	std::cerr << message << std::endl;
+//}
+//
+//#endif
 
 
 const unsigned int MAX_CLIENTS = 8;
