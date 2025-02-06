@@ -72,7 +72,6 @@ set(Header_Files
     "GameObject.h"
     "GameWorld.h"
     "RenderObject.h"
-    "Transform.h"
 )
 source_group("Header Files" FILES ${Header_Files})
 
@@ -81,7 +80,6 @@ set(Source_Files
     "GameObject.cpp"
     "GameWorld.cpp"
     "RenderObject.cpp"
-    "Transform.cpp"
 )
 source_group("Source Files" FILES ${Source_Files})
 
@@ -163,7 +161,6 @@ target_precompile_headers(${PROJECT_NAME} PRIVATE
     <iostream>
     <set>
     "../NCLCoreClasses/Vector.h"
-    "../NCLCoreClasses/Quaternion.h"
     "../NCLCoreClasses/Plane.h"
     "../NCLCoreClasses/Matrix.h"
 	"../NCLCoreClasses/GameTimer.h"

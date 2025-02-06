@@ -1,15 +1,14 @@
 #include "PhysicsObject.h"
 #include "GameObject.h"
-#include "Transform.h"
 
 #include <btBulletDynamicsCommon.h>
 
 using namespace NCL;
 using namespace CSC8503;
 
-PhysicsObject::PhysicsObject(GameObject* parent) 
+PhysicsObject::PhysicsObject(GameObject* parent)
 	: parent(parent), rigidBody(nullptr), motionState(nullptr), collisionShape(nullptr) {
-	
+
 }
 
 PhysicsObject::~PhysicsObject()	{
@@ -30,11 +29,10 @@ void PhysicsObject::InitBulletPhysics(btDynamicsWorld* world, btCollisionShape* 
 	startTransform.setIdentity();
 
 	Vector3 initialPosition = parent->getInitialPosition();
-	Quaternion initialOrientation = parent->getInitialRotation();
 
 	// Setting the starting position of the object using the NCL framework's transform
 	startTransform.setOrigin(btVector3(initialPosition.x, initialPosition.y, initialPosition.z));
-	startTransform.setRotation(btQuaternion(initialOrientation.x, initialOrientation.y, initialOrientation.z));
+	startTransform.setRotation(parent->getInitialRotation());
 
 	// MotionState has been used to retrieve and apply Bullet's physics transformations to the NCL object
 	motionState = new btDefaultMotionState(startTransform);
@@ -49,7 +47,7 @@ void PhysicsObject::InitBulletPhysics(btDynamicsWorld* world, btCollisionShape* 
 
 	// Setting the object's properties
 	rigidBody->setMassProps(mass, localInertia);
-//	rigidBody->setUserPointer(parent);
+	rigidBody->setUserPointer(parent);
 	// SetActivationState is used to prevent the object properties from being deactivated due to inactivity
 	rigidBody->setActivationState(DISABLE_DEACTIVATION);
 	world->addRigidBody(rigidBody);

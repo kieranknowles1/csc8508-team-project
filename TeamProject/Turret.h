@@ -1,26 +1,25 @@
 #pragma once
 #include "GameObject.h"
-#include "Quaternion.h"
+
+#include <LinearMath/btQuaternion.h>
 
 namespace NCL {
 	namespace CSC8503 {
 		class StateMachine;
 		class Turret : public GameObject {
 		public:
-			Turret(Quaternion q = Quaternion());
+			Turret(btQuaternion q = btQuaternion());
 			~Turret();
 
 			virtual void Update(float dt);
-			void setInitialRotation(Quaternion q);
 
 		protected:
 			void RotateLeft(float dt);
 			void RotateRight(float dt);
 
 			StateMachine* stateMachine;
-			Quaternion initialRotation;
-			Quaternion yPositive;
-			Quaternion yNegative;
+			btQuaternion yPositive;
+			btQuaternion yNegative;
 			float rotateTime;
 			float rotateSpeed;
 		};

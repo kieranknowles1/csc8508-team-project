@@ -7,7 +7,7 @@
 using namespace NCL;
 using namespace CSC8503;
 
-Turret::Turret(Quaternion q) {
+Turret::Turret(btQuaternion q) {
 	initialRotation = q;
 	stateMachine = new StateMachine();
 	rotateTime = 0.5;
@@ -23,8 +23,8 @@ Turret::Turret(Quaternion q) {
 	stateMachine->AddState(rotateLeft);
 	stateMachine->AddState(rotateRight);
 
-	yPositive = Quaternion::AxisAngleToQuaterion(Vector3(0, 1, 0), 45.0f);
-	yNegative = Quaternion::AxisAngleToQuaterion(Vector3(0, 1, 0), -45.0f);
+	yPositive = btQuaternion(btVector3(0, 1, 0), 45.0f);
+	yNegative = btQuaternion(btVector3(0, 1, 0), -45.0f);
 
 	stateMachine->AddTransition(new StateTransition(rotateLeft, rotateRight, [&]()->bool {
 		return rotateTime >= 1.0f;
@@ -52,10 +52,8 @@ void Turret::RotateLeft(float dt) {
 	std::cout << "left " << rotateTime << std::endl;
 
 	btTransform trans = GetTransform();
-	btQuaternion negative(yNegative.x, yNegative.y, yNegative.z, yNegative.w);
-	btQuaternion positive(yPositive.x, yPositive.y, yPositive.z, yPositive.w);
 	
-	trans.setRotation(negative.slerp(positive, rotateTime));
+	trans.setRotation(yNegative.slerp(yPositive, rotateTime));
 	GetPhysicsObject()->GetRigidBody()->setWorldTransform(trans);
 }
 
@@ -65,9 +63,6 @@ void Turret::RotateRight(float dt) {
 	std::cout << "right " << rotateTime << std::endl;
 
 	btTransform trans = GetTransform();
-	btQuaternion negative(yNegative.x, yNegative.y, yNegative.z, yNegative.w);
-	btQuaternion positive(yPositive.x, yPositive.y, yPositive.z, yPositive.w);
-
-	trans.setRotation(negative.slerp(positive, rotateTime));
+	trans.setRotation(yNegative.slerp(yPositive, rotateTime));
 	GetPhysicsObject()->GetRigidBody()->setWorldTransform(trans);
 }

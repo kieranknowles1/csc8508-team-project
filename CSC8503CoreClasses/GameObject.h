@@ -1,10 +1,7 @@
 #pragma once
-#include "Transform.h"
 
 #include "PhysicsObject.h"
 #include "btBulletDynamicsCommon.h"
-
-using std::vector;
 
 namespace NCL::CSC8503 {
 	class NetworkObject;
@@ -72,18 +69,16 @@ namespace NCL::CSC8503 {
 
 		void setInitialPosition(const Vector3& position) {
 			initialPosition = position;
-			hasSetInitialPosition = true;
 		}
 
-		void setInitialRotation(const Quaternion& rotation) {
+		void setInitialRotation(const btQuaternion& rotation) {
 			initialRotation = rotation;
-			hasSetInitialRotation = true;
 		}
 
 		Vector3 getInitialPosition() const {
 			return initialPosition;
 		}
-		Quaternion getInitialRotation() const {
+		btQuaternion getInitialRotation() const {
 			return initialRotation;
 		}
 
@@ -104,11 +99,9 @@ namespace NCL::CSC8503 {
 		int			worldID;
 		std::string	name;
 
-		Vector3 renderScale; // Only affects rendering, not physics
-		Vector3 initialPosition;
-		Quaternion initialRotation;
-		bool hasSetInitialPosition;
-		bool hasSetInitialRotation;
+		Vector3 renderScale = Vector3(1, 1, 1); // Only affects rendering, not physics
+		Vector3 initialPosition = Vector3();
+		btQuaternion initialRotation = btQuaternion(0, 0, 0);
 	};
 }
 
