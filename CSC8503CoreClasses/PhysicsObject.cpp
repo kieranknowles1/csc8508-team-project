@@ -2,6 +2,8 @@
 #include "GameObject.h"
 #include "Transform.h"
 
+#include "CustomCollisionCallback.h"
+
 #include <btBulletDynamicsCommon.h>
 
 using namespace NCL;
@@ -86,6 +88,38 @@ void PhysicsObject::ApplyLinearImpulse(const Vector3& impulse) {
 	if (rigidBody) {
 		rigidBody->applyCentralImpulse(btVector3(impulse.x, impulse.y, impulse.z));
 	}
+}
+
+void PhysicsObject::CheckCollisions(btDynamicsWorld* world)
+{
+	if (!rigidBody || !world) {
+		return;
+	}
+
+	// Collect a list of all objects we are currently colliding with
+	// Send out events for new collisions and ended collisions
+	CustomCollisionCallback callback(parent);
+	world->contactTest(rigidBody, callback);
+
+	// New collisions
+	for (auto obj : callback.activeCollisions) {
+		if (!activeCollisions.count(obj)) {
+			activeCollisions.insert(obj);
+			parent->OnCollisionEnter(obj);
+		}
+	}
+
+	// Ended collisions
+	for (auto obj : activeCollisions) {
+		if (!callback.activeCollisions.count(obj)) {
+			parent->OnCollisionExit(obj);
+		}
+	}
+
+	// Can't erase from a set while iterating over it
+	std::erase_if(activeCollisions, [&](GameObject* obj) {
+		return !callback.activeCollisions.count(obj);
+	});
 }
 
 void PhysicsObject::ClearForces() {

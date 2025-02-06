@@ -8,6 +8,7 @@ using namespace NCL::Maths;
 namespace NCL {
 	namespace CSC8503 {
 		class GameObject;
+		class CustomCollisionCallback;
 
 		class PhysicsObject	{
 		public:
@@ -29,6 +30,9 @@ namespace NCL {
 				return motionState;
 			}
 
+			// Checks the object's currently in collision
+			void CheckCollisions(btDynamicsWorld* world);
+
 			void ClearForces();
 
 		protected:
@@ -38,6 +42,8 @@ namespace NCL {
 			btRigidBody* rigidBody;
 			btMotionState* motionState;
 			btCollisionShape* collisionShape;
+
+			std::set<GameObject*> activeCollisions;
 		};
 	}
 }
