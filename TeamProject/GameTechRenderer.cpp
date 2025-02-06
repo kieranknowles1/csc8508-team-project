@@ -80,6 +80,14 @@ GameTechRenderer::GameTechRenderer(GameWorld& world) : OGLRenderer(*Window::GetW
 }
 
 GameTechRenderer::~GameTechRenderer()	{
+	delete debugShader;
+	delete shadowShader;
+
+	delete skyboxShader;
+	delete skyboxMesh;
+
+	delete debugTexMesh;
+
 	glDeleteTextures(1, &shadowTex);
 	glDeleteFramebuffers(1, &shadowFBO);
 }
