@@ -43,7 +43,7 @@ ENetPacket* PacketBase::ToENetPacket() {
 	memcpy(packetData + offset, data.get(), sizeof(char) * size);
 	offset += sizeof(char) * size;
 
-	ENetPacketFlag flags = ((type & 1) == 1) ? ENET_PACKET_FLAG_RELIABLE : ENET_PACKET_FLAG_UNRELIABLE_FRAGMENT;
+	ENetPacketFlag flags = (channel == 0) ? ENET_PACKET_FLAG_RELIABLE : ENET_PACKET_FLAG_UNRELIABLE_FRAGMENT;
 	ENetPacket* packet = enet_packet_create(packetData, offset, flags);
 	return packet;
 }
