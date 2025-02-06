@@ -247,7 +247,7 @@ void TutorialGame::InitWorld() {
 
 void TutorialGame::InitPlayer() {
 
-	player = AddCapsuleToWorld(Vector3(10, 50, 20), 4.0f, 2.0f, 10.0f);
+	player = AddCapsuleToWorld(Vector3(10, 200, 20), 4.0f, 2.0f, 10.0f);
 	player->GetPhysicsObject()->GetRigidBody()->setAngularFactor(0);
 	player->GetPhysicsObject()->GetRigidBody()->setFriction(1);
 	player->GetPhysicsObject()->GetRigidBody()->setDamping(0.999, 0);
