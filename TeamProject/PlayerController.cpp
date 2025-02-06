@@ -5,23 +5,51 @@ using namespace NCL;
 using namespace CSC8503;
 
 void PlayerController::UpdateMovement(float dt) {
-    float camRotation = camera->GetYaw(); // Get yaw in degrees
-    float yawRad = Maths::DegreesToRadians(camRotation); // Convert to radians
 
+    // set position to be equal to player
+    btTransform transformPlayerMotion;
+    player->GetPhysicsObject()->GetMotionState()->getWorldTransform(transformPlayerMotion);
+    btVector3 playerPos = transformPlayerMotion.getOrigin();
+    playerPos.setY(playerPos.getY() + 3);
+    camera->SetPosition(playerPos);
+
+
+    // Update yaw based on controller input
+    yaw -= controller->GetNamedAxis("XLook");
+    if (yaw < 0) {
+        yaw += 360.0f;
+    }
+    if (yaw > 360.0f) {
+        yaw -= 360.0f;
+    }
+    camera->SetYaw(yaw);
 
     bool diag = (controller->GetNamedAxis("Sidestep") != 0 && controller->GetNamedAxis("Forward") != 0);
     float moveScale = diag ? 0.5f : 1.0f;
 
-    Vector3 forward = Vector3(sin(yawRad), 0.0f, cos(yawRad));
-    Vector3 right = Vector3(cos(yawRad), 0.0f, -sin(yawRad));
+    btQuaternion playerRotation(btVector3(0, 1, 0), Maths::DegreesToRadians(yaw));
+    btTransform transformPlayer = player->GetPhysicsObject()->GetRigidBody()->getWorldTransform();
+    transformPlayer.setRotation(playerRotation);
+    player->GetPhysicsObject()->GetRigidBody()->setWorldTransform(transformPlayer);
 
-    Vector3 movement = ((right * controller->GetNamedAxis("Sidestep") * strafeMulti * playerSpeed) + (forward * -controller->GetNamedAxis("Forward")) * playerSpeed) * moveScale;
-    movement.y = -1000.0f * (0.5f + inAirCount); // arteficial gravity
+    btMatrix3x3 rotationMatrix(playerRotation);
+    btVector3 forward = rotationMatrix * btVector3(0, 0, -1); 
+    btVector3 right = rotationMatrix * btVector3(1, 0, 0);   
+    Vector3 forwardVector(forward.x(), forward.y(), forward.z());
+    Vector3 rightVector(right.x(), right.y(), right.z());
+
+    bool sprinting = controller->GetNamedButton("Sprint");
+    float moveMulti = playerSpeed * moveScale * (sprinting?sprintMulti:1);
+    float forwardMovement = controller->GetNamedAxis("Forward");
+    if (forwardMovement <= 0) { forwardMovement *= backwardsMulti; }
+    Vector3 movement = ((rightVector * controller->GetNamedAxis("Sidestep") * strafeMulti * moveMulti) + (forwardVector * forwardMovement * moveMulti));
+
+    movement.y = -gravityScale * (0.5f + inAirCount); // arteficial gravity
 
     btVector3 rotatedMovement(movement.x, movement.y, movement.z);
 
     //jumps allow for held input up to maxJumpTime
-    bool jumpPressed = controller->GetNamedButton("JumpButton");
+    bool jumpPressed = controller->GetNamedButton("Jump");
     if (!inAir && jumpPressed) {
         spaceCount += dt;
         rotatedMovement.setY(rotatedMovement.getY() + (jumpHeight));
@@ -33,8 +61,7 @@ void PlayerController::UpdateMovement(float dt) {
         inAir = true;
     }
 
-    //Get player and just below player positions as btVector3
-    btTransform transformPlayer = player->GetPhysicsObject()->GetRigidBody()->getWorldTransform();
+
     btVector3 btPlayerPos = transformPlayer.getOrigin();
     btVector3 btBelowPlayerPos = btPlayerPos;
     btBelowPlayerPos.setY(btBelowPlayerPos.getY() - 4.2);
@@ -63,6 +90,5 @@ void PlayerController::UpdateMovement(float dt) {
         }
         inAirCount += dt;
     }
-
     player->GetPhysicsObject()->GetRigidBody()->applyCentralImpulse(rotatedMovement*dt);
 }

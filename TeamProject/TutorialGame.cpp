@@ -35,7 +35,9 @@ TutorialGame::TutorialGame() : controller(*Window::GetWindow()->GetKeyboard(), *
 	controller.MapAxis(3, "XLook");
 	controller.MapAxis(4, "YLook");
 
-	controller.MapButton(2, "JumpButton");
+	controller.MapButton(2, "Jump");
+	controller.MapButton(3, "Sprint");
+	controller.MapButton(4, "Crouch");
 
 	InitialiseAssets();
 }
@@ -111,14 +113,6 @@ void TutorialGame::UpdateGame(float dt) {
 	int steps = bulletWorld->stepSimulation(dt, MaxStepsPerFrame, 1.0f / PhysicsFrequency);
 	if (steps >= MaxStepsPerFrame) {
 		std::cerr << "Warning: Physics MaxStepsPerFrame reached, simulation slowed down" << std::endl;
-	}
-
-	// set position to be equal to player
-	if (!freeCam) {
-		btTransform transformPlayer = player->GetPhysicsObject()->GetRigidBody()->getWorldTransform();
-		btVector3 playerPos = transformPlayer.getOrigin();
-		playerPos.setY(playerPos.getY() + 3);
-		mainCamera->SetPosition(playerPos);
 	}
 
 	bulletWorld->debugDrawWorld();
@@ -199,7 +193,7 @@ void TutorialGame::InitPlayer() {
 	player->GetPhysicsObject()->GetRigidBody()->setFriction(1);
 	player->GetPhysicsObject()->GetRigidBody()->setDamping(0.999, 0);
 	playerController = new PlayerController(player, controller, mainCamera, bulletWorld);
-
+	player->GetRenderObject()->SetColour(Vector4(1, 1, 1, 0));
 	AddTurretToWorld();
 }
 

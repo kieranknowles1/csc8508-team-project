@@ -16,6 +16,8 @@ namespace NCL {
 		const uint32_t LeftMouseButton	= 0;
 		const uint32_t RightMouseButton = 1;
 		const uint32_t Jump = 2;
+		const uint32_t Sprint = 3;
+		const uint32_t Crouch = 4;
 
 		const uint32_t XAxis = 0;		
 		const uint32_t YAxis = 1;

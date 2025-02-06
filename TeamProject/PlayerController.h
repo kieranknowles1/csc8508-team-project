@@ -20,14 +20,16 @@ namespace NCL {
 				bulletWorld = bulletWorldIn;
 			}
 			~PlayerController();
-
 			void UpdateMovement(float dt);
 
 		private:
 			float playerSpeed = 6000.0f;
-			float strafeMulti = 0.6f;
-			float jumpHeight = 3000.0f;
+			float jumpHeight = 4000.0f;
 			float maxJumpTime = 0.2f;
+			float gravityScale = 1500.0f;
+			float strafeMulti = 0.6f;
+			float backwardsMulti = 0.55f;
+			float sprintMulti = 2.0f;
 
 
 			bool inAir = false;
@@ -37,6 +39,7 @@ namespace NCL {
 			GameObject* player;
 			const Controller* controller = nullptr;
 			Camera* camera = nullptr;
+			float yaw = 0;
 		};
 	};
 }
