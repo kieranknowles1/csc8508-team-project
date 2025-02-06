@@ -25,9 +25,9 @@ namespace NCL {
 			void UpdateMovement(float dt);
 
 		private:
-			float playerSpeed = 6.0f;
+			float playerSpeed = 6000.0f;
 			float strafeMulti = 0.6f;
-			float jumpHeight = 3.0f;
+			float jumpHeight = 3000.0f;
 			float maxJumpTime = 0.2f;
 
 
