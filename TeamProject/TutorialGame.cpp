@@ -73,6 +73,8 @@ void TutorialGame::InitialiseAssets() {
 }
 
 TutorialGame::~TutorialGame()	{
+	// TODO: Should we use a proper resource manager or smart pointers?
+	delete planeMesh;
 	delete cubeMesh;
 	delete sphereMesh;
 	delete catMesh;
