@@ -273,7 +273,8 @@ GameObject* TutorialGame::AddCubeToWorld(const Vector3& position, Vector3 dimens
 	cube->SetPhysicsObject(new PhysicsObject(cube));
 
 	// Initialize Bullet physics for the cube
-	cube->GetPhysicsObject()->InitBulletPhysics(bulletWorld, shape, inverseMass);
+	// WTF: Setting shape to nullptr causes camera stutter
+	cube->GetPhysicsObject()->InitBulletPhysics(bulletWorld, shape, inverseMass,false);
 
 	// Setting render object
 	cube->SetRenderObject(new RenderObject(cube, cubeMesh, basicTex, basicShader));

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <btBulletDynamicsCommon.h>
+#include "Maths.h"
 
 using namespace NCL::Maths;
 
@@ -14,7 +15,7 @@ namespace NCL {
 			~PhysicsObject();
 
 			// Add Bullet-specific methods
-			void InitBulletPhysics(btDynamicsWorld* world, btCollisionShape* shape, float mass);
+			void InitBulletPhysics(btDynamicsWorld* world, btCollisionShape* shape, float mass, bool collide=true);
 			btRigidBody* GetRigidBody() { return rigidBody; }
 
 			void ApplyAngularImpulse(const Vector3& force);
