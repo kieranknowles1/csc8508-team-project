@@ -62,4 +62,5 @@ void PlayerController::UpdateMovement(float dt) {
     }
 
     player->GetPhysicsObject()->GetRigidBody()->applyCentralImpulse(rotatedMovement*dt);
+    player->GetPhysicsObject()->GetRigidBody()->activate();
 }

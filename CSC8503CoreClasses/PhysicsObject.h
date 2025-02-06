@@ -8,6 +8,9 @@ namespace NCL {
 	namespace CSC8503 {
 		class GameObject;
 
+		// Wrapper to apply Bullet physics to an object. Holds the transform therefore is required for all objects
+		// NOTE: Bullet deactivates rigid bodies after inactivity, when applying forces they must be manually be activated
+		// using GetRigidBody()->activate()
 		class PhysicsObject	{
 		public:
 			PhysicsObject(GameObject* parent);
