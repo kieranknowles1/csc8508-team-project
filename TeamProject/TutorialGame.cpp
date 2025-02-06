@@ -129,6 +129,9 @@ void TutorialGame::UpdateGame(float dt) {
 	}
 
 	world->UpdateWorld(dt);
+	world->OperateOnContents([&](GameObject* obj) {
+		obj->GetPhysicsObject()->CheckCollisions(bulletWorld);
+	});
 	renderer->Update(dt);
 
 	renderer->Render();
