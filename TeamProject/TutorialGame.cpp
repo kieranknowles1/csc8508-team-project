@@ -81,6 +81,7 @@ TutorialGame::~TutorialGame()	{
 	delete kittenMesh;
 	delete enemyMesh;
 	delete bonusMesh;
+	delete capsuleMesh;
 
 	delete maxMesh;
 	delete maleguardMesh;
@@ -91,6 +92,8 @@ TutorialGame::~TutorialGame()	{
 
 	delete renderer;
 	delete world;
+
+	delete playerController;
 
 	DestroyBullet();
 }

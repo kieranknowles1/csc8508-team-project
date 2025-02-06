@@ -19,7 +19,7 @@ namespace NCL {
 				camera = cam;
 				bulletWorld = bulletWorldIn;
 			}
-			~PlayerController();
+			~PlayerController() {};
 
 			void UpdateMovement(float dt);
 
