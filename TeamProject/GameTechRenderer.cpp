@@ -7,6 +7,8 @@
 
 #include "Debug.h"
 
+#include <NCLCoreClasses/stb/stb_image.h>
+
 using namespace NCL;
 using namespace Rendering;
 using namespace CSC8503;
@@ -113,6 +115,7 @@ void GameTechRenderer::LoadSkybox() {
 
 	for (int i = 0; i < 6; ++i) {
 		glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB, width[i], height[i], 0, type, GL_UNSIGNED_BYTE, texData[i]);
+		stbi_image_free(texData[i]);
 	}
 
 	glTexParameterf(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
