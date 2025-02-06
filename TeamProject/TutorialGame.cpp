@@ -237,7 +237,7 @@ Turret* TutorialGame::AddTurretToWorld() {
 	shape->setMargin(0.01f);
 
 	PhysicsObject* physicsObject = new PhysicsObject(turret);
-	physicsObject->InitBulletPhysics(bulletWorld, shape, 1.0f);
+	physicsObject->InitBulletPhysics(bulletWorld, shape, 0);
 
 	turret->SetPhysicsObject(physicsObject);
 
@@ -401,6 +401,6 @@ GameObject* TutorialGame::AddSphereToWorld(const Vector3& position, float radius
 }
 
 void TutorialGame::InitDefaultFloor() {
-	AddFloorToWorld(Vector3(0, -20, 0));
+	AddFloorToWorld(Vector3(0, 0, 0));
 }
 

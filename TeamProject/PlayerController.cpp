@@ -16,7 +16,7 @@ void PlayerController::UpdateMovement(float dt) {
     Vector3 right = Vector3(cos(yawRad), 0.0f, -sin(yawRad));
 
     Vector3 movement = ((right * controller->GetNamedAxis("Sidestep") * strafeMulti * playerSpeed) + (forward * -controller->GetNamedAxis("Forward")) * playerSpeed) * moveScale;
-    movement.y = -1.5f * (0.5f + inAirCount); // arteficial gravity
+    movement.y = -1000.0f * (0.5f + inAirCount); // arteficial gravity
 
     btVector3 rotatedMovement(movement.x, movement.y, movement.z);
 
@@ -61,5 +61,5 @@ void PlayerController::UpdateMovement(float dt) {
         inAirCount += dt;
     }
 
-    player->GetPhysicsObject()->GetRigidBody()->applyCentralImpulse(rotatedMovement);
+    player->GetPhysicsObject()->GetRigidBody()->applyCentralImpulse(rotatedMovement*dt);
 }
