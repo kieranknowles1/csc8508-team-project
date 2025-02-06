@@ -46,8 +46,11 @@ void PlayerController::UpdateMovement(float dt) {
     bulletWorld->rayTest(btPlayerPos, btBelowPlayerPos, callback);
 
     if (callback.hasHit()) {
+
         btVector3 hitPoint = callback.m_hitPointWorld; // option to use hit point in world position
         const btRigidBody* hitBody = btRigidBody::upcast(callback.m_collisionObject); // cast collision into rigid body type
+        const GameObject* hitObj = static_cast<GameObject*>(hitBody->getUserPointer()); // cast to find GameObject*
+
         if (hitBody) { // found an object, have it's rigid body
             inAir = false;
             spaceCount = 0;

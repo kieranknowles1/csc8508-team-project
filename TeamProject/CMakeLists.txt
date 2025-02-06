@@ -16,6 +16,8 @@ set(SOURCES
     PlayerController.h
     Turret.H
     Turret.cpp
+	BWHelperFunctions.h
+	BWHelperFunctions.cpp
 )
 
 add_executable(${PROJECT_NAME} ${SOURCES})
