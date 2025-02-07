@@ -215,8 +215,6 @@ namespace NCL::Rendering {
 			assetID = newID;
 		}
 
-		int numChunks;
-
 	protected:
 		virtual bool ValidateMeshData();
 

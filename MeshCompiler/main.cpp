@@ -21,8 +21,9 @@ static void write(std::ofstream& fs, T data) {
 }
 
 template <typename T>
-static void writeOptionalChunk(std::ofstream& fs, MshLoader::GeometryChunkTypes type, const std::vector<T>& data, int expectedSize) {
+static void writeOptionalChunk(int& chunksWritten, std::ofstream& fs, MshLoader::GeometryChunkTypes type, const std::vector<T>& data, int expectedSize) {
 	if (data.empty()) return;
+	chunksWritten++;
 
 	checkSize(expectedSize, data.size());
 
@@ -40,8 +41,9 @@ static void writeStrings(std::ofstream& fs, const std::vector<std::string>& data
 }
 
 // Returns number of names written
-static int writeOptionalJointNames(std::ofstream& fs, const std::vector<std::string>& data) {
+static int writeOptionalJointNames(int& chunksWritten, std::ofstream& fs, const std::vector<std::string>& data) {
 	if (data.empty()) return 0;
+	chunksWritten++;
 	
 	write(fs, MshLoader::GeometryChunkTypes::JointNames);
 	write(fs, data.size());
@@ -51,8 +53,9 @@ static int writeOptionalJointNames(std::ofstream& fs, const std::vector<std::str
 	return data.size();
 }
 
-static void writeOptionalJointParents(std::ofstream& fs, const std::vector<int>& data, int expectedSize) {
+static void writeOptionalJointParents(int& chunksWritten, std::ofstream& fs, const std::vector<int>& data, int expectedSize) {
 	if (data.empty()) return;
+	chunksWritten++;
 	checkSize(expectedSize, data.size());
 
 	write(fs, MshLoader::GeometryChunkTypes::JointParents);
@@ -63,8 +66,9 @@ static void writeOptionalJointParents(std::ofstream& fs, const std::vector<int>&
 	}
 }
 
-static void writeOptionalRigPose(std::ofstream& fs, MshLoader::GeometryChunkTypes type, const std::vector<Matrix4>& data) {
+static void writeOptionalRigPose(int& chunksWritten, std::ofstream& fs, MshLoader::GeometryChunkTypes type, const std::vector<Matrix4>& data) {
 	if (data.empty()) return;
+	chunksWritten++;
 
 	write(fs, type);
 	write(fs, data.size());
@@ -74,10 +78,12 @@ static void writeOptionalRigPose(std::ofstream& fs, MshLoader::GeometryChunkType
 	}
 }
 
-static void writeOptionalSubMeshNames(std::ofstream& fs, const std::vector<std::string>& data, int expectedCount) {
+static void writeOptionalSubMeshNames(int& chunksWritten, std::ofstream& fs, const std::vector<std::string>& data, int expectedCount) {
 	if (data.empty()) return;
+	chunksWritten++;
 	checkSize(expectedCount, data.size());
 
+	write(fs, MshLoader::GeometryChunkTypes::SubMeshNames);
 	writeStrings(fs, data);
 }
 
@@ -87,7 +93,7 @@ static void writeOptionalSubMeshNames(std::ofstream& fs, const std::vector<std::
 
 static void convert(std::string_view source, std::string_view target) {
 	Mesh mesh;
-	bool ok = MshLoader::LoadMesh(std::string(source), mesh);
+	bool ok = MshLoader::LoadTextMesh(std::string(source), mesh);
 	if (!ok) {
 		throw std::runtime_error("Failed to load mesh");
 	}
@@ -98,23 +104,28 @@ static void convert(std::string_view source, std::string_view target) {
 	write(fs, mesh.GetSubMeshCount());
 	write(fs, mesh.GetVertexCount());
 	write(fs, mesh.GetIndexCount());
-	write(fs, mesh.numChunks);
+	auto chunkCountOff = fs.tellp();
+	write(fs, 0); // Will be filled later
 
-	writeOptionalChunk(fs, MshLoader::GeometryChunkTypes::VPositions, mesh.GetPositionData(), mesh.GetVertexCount());
-	writeOptionalChunk(fs, MshLoader::GeometryChunkTypes::VColors, mesh.GetColourData(), mesh.GetVertexCount());
-	writeOptionalChunk(fs, MshLoader::GeometryChunkTypes::VNormals, mesh.GetNormalData(), mesh.GetVertexCount());
-	writeOptionalChunk(fs, MshLoader::GeometryChunkTypes::VTangents, mesh.GetTangentData(), mesh.GetVertexCount());
-	writeOptionalChunk(fs, MshLoader::GeometryChunkTypes::VTex0, mesh.GetTextureCoordData(), mesh.GetVertexCount());
-	writeOptionalChunk(fs, MshLoader::GeometryChunkTypes::Indices, mesh.GetIndexData(), mesh.GetIndexCount());
-	writeOptionalChunk(fs, MshLoader::GeometryChunkTypes::VWeightValues, mesh.GetSkinWeightData(), mesh.GetVertexCount());
-	int jointNameCount = writeOptionalJointNames(fs, mesh.GetJointNames());
-	writeOptionalJointParents(fs, mesh.GetJointParents(), jointNameCount);
+	int chunksWritten = 0;
+	writeOptionalChunk(chunksWritten, fs, MshLoader::GeometryChunkTypes::VPositions, mesh.GetPositionData(), mesh.GetVertexCount());
+	writeOptionalChunk(chunksWritten, fs, MshLoader::GeometryChunkTypes::VColors, mesh.GetColourData(), mesh.GetVertexCount());
+	writeOptionalChunk(chunksWritten, fs, MshLoader::GeometryChunkTypes::VNormals, mesh.GetNormalData(), mesh.GetVertexCount());
+	writeOptionalChunk(chunksWritten, fs, MshLoader::GeometryChunkTypes::VTangents, mesh.GetTangentData(), mesh.GetVertexCount());
+	writeOptionalChunk(chunksWritten, fs, MshLoader::GeometryChunkTypes::VTex0, mesh.GetTextureCoordData(), mesh.GetVertexCount());
+	writeOptionalChunk(chunksWritten, fs, MshLoader::GeometryChunkTypes::Indices, mesh.GetIndexData(), mesh.GetIndexCount());
+	writeOptionalChunk(chunksWritten, fs, MshLoader::GeometryChunkTypes::VWeightValues, mesh.GetSkinWeightData(), mesh.GetVertexCount());
+	int jointNameCount = writeOptionalJointNames(chunksWritten, fs, mesh.GetJointNames());
+	writeOptionalJointParents(chunksWritten, fs, mesh.GetJointParents(), jointNameCount);
 
-	writeOptionalRigPose(fs, MshLoader::GeometryChunkTypes::BindPose, mesh.GetBindPose());
-	writeOptionalRigPose(fs, MshLoader::GeometryChunkTypes::BindPoseInv, mesh.GetInverseBindPose());
+	writeOptionalRigPose(chunksWritten, fs, MshLoader::GeometryChunkTypes::BindPose, mesh.GetBindPose());
+	writeOptionalRigPose(chunksWritten, fs, MshLoader::GeometryChunkTypes::BindPoseInv, mesh.GetInverseBindPose());
 
-	writeOptionalChunk(fs, MshLoader::GeometryChunkTypes::SubMeshes, mesh.GetSubMeshes(), mesh.GetSubMeshCount());
-	writeOptionalSubMeshNames(fs, mesh.GetSubMeshNames(), mesh.GetSubMeshCount());
+	writeOptionalChunk(chunksWritten, fs, MshLoader::GeometryChunkTypes::SubMeshes, mesh.GetSubMeshes(), mesh.GetSubMeshCount());
+	writeOptionalSubMeshNames(chunksWritten, fs, mesh.GetSubMeshNames(), mesh.GetSubMeshCount());
+
+	fs.seekp(chunkCountOff);
+	write(fs, chunksWritten);
 }
 
 int main(int argc, char** argv) {
