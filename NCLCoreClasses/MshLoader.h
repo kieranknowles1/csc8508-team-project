@@ -7,6 +7,8 @@ Comments and queries to: richard-gordon.davison AT ncl.ac.uk
 https://research.ncl.ac.uk/game/
 */
 #pragma once
+#include <vector>
+
 #include "Vector.h"
 #include "Matrix.h"
 
@@ -17,25 +19,6 @@ namespace NCL::Rendering {
 
 	class MshLoader	{
 
-	enum class GeometryChunkTypes {
-		VPositions = 1 << 0,
-		VNormals = 1 << 1,
-		VTangents = 1 << 2,
-		VColors = 1 << 3,
-		VTex0 = 1 << 4,
-		VTex1 = 1 << 5,
-		VWeightValues = 1 << 6,
-		VWeightIndices = 1 << 7,
-		Indices = 1 << 8,
-		JointNames = 1 << 9,
-		JointParents = 1 << 10,
-		BindPose = 1 << 11,
-		BindPoseInv = 1 << 12,
-		Material = 1 << 13,
-		SubMeshes = 1 << 14,
-		SubMeshNames = 1 << 15
-	};
-
 	enum class GeometryChunkData {
 		dFloat, //Just float data
 		dShort, //Translate from -32k to 32k to a float
@@ -43,6 +26,25 @@ namespace NCL::Rendering {
 	};
 
 	public:
+		enum class GeometryChunkTypes {
+			VPositions = 1 << 0,
+			VNormals = 1 << 1,
+			VTangents = 1 << 2,
+			VColors = 1 << 3,
+			VTex0 = 1 << 4,
+			VTex1 = 1 << 5,
+			VWeightValues = 1 << 6,
+			VWeightIndices = 1 << 7,
+			Indices = 1 << 8,
+			JointNames = 1 << 9,
+			JointParents = 1 << 10,
+			BindPose = 1 << 11,
+			BindPoseInv = 1 << 12,
+			Material = 1 << 13,
+			SubMeshes = 1 << 14,
+			SubMeshNames = 1 << 15
+		};
+
 		static bool LoadMesh(const std::string& filename, Mesh& destinationMesh);
 
 	protected:

@@ -7,6 +7,10 @@ Comments and queries to: richard-gordon.davison AT ncl.ac.uk
 https://research.ncl.ac.uk/game/
 */
 #pragma once
+
+#include <vector>
+
+#include <cassert>
 #include <cstdint>
 #include "Vector.h"
 #include "Matrix.h"
@@ -54,11 +58,12 @@ namespace NCL::Rendering {
 	struct SubMesh {
 		int start = 0;
 		int count = 0;
-		int base  = 0;
+		//int base  = 0;
 	};
 
 	class Mesh	{
 	public:		
+		Mesh();
 		virtual ~Mesh();
 
 		GeometryPrimitive::Type GetPrimitiveType() const {
@@ -129,9 +134,11 @@ namespace NCL::Rendering {
 			return &subMeshes[i];
 		}
 
+		const std::vector<SubMesh>& GetSubMeshes() const { return subMeshes; }
+
 		void AddSubMesh(int startIndex, int indexCount, int baseVertex, const std::string& newName = "") {
 			SubMesh m;
-			m.base = baseVertex;
+			//m.base = baseVertex;
 			m.count = indexCount;
 			m.start = startIndex;
 
@@ -196,7 +203,9 @@ namespace NCL::Rendering {
 
 		void SetDebugName(const std::string& debugName);
 
-		virtual void UploadToGPU(Rendering::RendererBase* renderer = nullptr) = 0;
+		virtual void UploadToGPU(Rendering::RendererBase* renderer = nullptr) {
+			assert(false && "UploadToGPU not implemented");
+		}
 
 		uint32_t GetAssetID() const {
 			return assetID;
@@ -206,9 +215,9 @@ namespace NCL::Rendering {
 			assetID = newID;
 		}
 
-	protected:
-		Mesh();
+		int numChunks;
 
+	protected:
 		virtual bool ValidateMeshData();
 
 		GeometryPrimitive::Type		primType;

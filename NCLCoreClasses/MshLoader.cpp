@@ -44,6 +44,7 @@ bool MshLoader::LoadMesh(const std::string& filename, Mesh& destinationMesh) {
 	file >> numVertices;
 	file >> numIndices;
 	file >> numChunks;
+	destinationMesh.numChunks = numChunks;
 
 	for (int i = 0; i < numChunks; ++i) {
 		int chunkType = (int)GeometryChunkTypes::VPositions;
