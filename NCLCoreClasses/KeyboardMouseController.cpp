@@ -60,5 +60,11 @@ bool	KeyboardMouseController::GetButton(uint32_t button)  const {
 	if (button == Jump){
 		return keyboard.KeyDown(NCL::KeyCodes::SPACE);
 	}
+	if (button == Sprint) {
+		return keyboard.KeyDown(NCL::KeyCodes::SHIFT);
+	}
+	if (button == Crouch) {
+		return std::max(keyboard.KeyDown(NCL::KeyCodes::CONTROL), (keyboard.KeyDown(NCL::KeyCodes::C)));
+	}
 	return 0.0f;
 }
