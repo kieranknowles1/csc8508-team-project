@@ -17,6 +17,11 @@
 const unsigned int MAX_CLIENTS = 8;
 const float EVENT_WAIT = 1000; // ms
 
+namespace ConsoleTextColor {
+	inline const char* GREEN = "\x1b[32m";
+	inline const char* YELLOW = "\x1b[33m";
+	inline const char* DEFAULT = "\x1b[0m";
+};
 
 /**
  * @brief Channel enum class.

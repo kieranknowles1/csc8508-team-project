@@ -12,6 +12,7 @@ namespace Packet {
 	typedef unsigned short uint16_t;
 
 	const Type NONE = 0;
+	const Type DISCOVER = 1;
 	const unsigned short MAX_PACKET_SIZE = USHRT_MAX;
 
 	/**

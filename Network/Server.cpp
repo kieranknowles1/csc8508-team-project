@@ -1,10 +1,10 @@
-#include "Network.hpp"
 #include "Server.hpp"
+
+#include <iostream>
 
 
 Server::~Server() {
 	if (m_thread != nullptr) {
-		m_thread->join();
 		delete m_thread;
 	}
 }
@@ -39,8 +39,11 @@ void Server::Start() {
 
 
 void Server::Stop() {
-	std::lock_guard<std::mutex> lock(m_stateMutex);
+	m_stateMutex.lock();
 	m_state = ServerState::STOPPED;
+	m_stateMutex.unlock();
+
+	if (m_thread != nullptr) m_thread->join();
 }
 
 
@@ -62,13 +65,21 @@ void Server::Update() {
 	ENetEvent event = GetEvent(EVENT_WAIT);
 
 	if (event.type == ENET_EVENT_TYPE_CONNECT) {
+		std::cout << ConsoleTextColor::YELLOW << "[Server] Client attempted connection.\n";
 		AttemptConnection(event);
 	}
 	else if (event.type == ENET_EVENT_TYPE_DISCONNECT) {
+		std::cout << ConsoleTextColor::YELLOW << "[Server] A client disconnected.\n";
 		RemoveConnection(event);
 	}
 	else if (event.type == ENET_EVENT_TYPE_RECEIVE) {
 		Packet::PacketBase packet = Packet::PacketBase::FromENetPacket(event.packet);
+		std::cout << ConsoleTextColor::YELLOW << "[Server] Packet received.\n";
+
+		if (packet.type == Packet::DISCOVER) {
+			std::cout << ConsoleTextColor::YELLOW << "[Server] Received Discover Packet.\n";
+		}
+
 		enet_packet_destroy(event.packet);
 		Handle(packet);
 	}
@@ -77,9 +88,11 @@ void Server::Update() {
 
 void Server::AttemptConnection(ENetEvent& event) {
 	if (!allowConnections || m_numConnections >= MAX_CLIENTS) {
+		std::cout << ConsoleTextColor::YELLOW << "[Server] Client rejected.\n";
 		enet_peer_reset(event.peer);
 		return;
 	}
+	std::cout << ConsoleTextColor::YELLOW << "[Server] Client connection successful.\n";
 	connections[m_numConnections++] = event.peer;
 }
 

@@ -53,6 +53,6 @@ private:
 
 	ENetPeer* connections[MAX_CLIENTS];
 	bool allowConnections = true;
-	uint32_t m_numConnections;
+	uint32_t m_numConnections = 0;
 };
 

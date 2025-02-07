@@ -1,4 +1,3 @@
-#include "Network.hpp"
 #include "Packet.hpp"
 
 using namespace Packet;
