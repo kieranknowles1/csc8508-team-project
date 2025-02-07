@@ -13,8 +13,9 @@ namespace NCL {
 	namespace CSC8503 {
 		class PlayerController {
 		public:
-			PlayerController(GameObject* playerIn, const Controller& c, Camera* cam, btDiscreteDynamicsWorld* bulletWorldIn) {
+			PlayerController(GameObject* playerIn, GameObject* gunIn, const Controller& c, Camera* cam, btDiscreteDynamicsWorld* bulletWorldIn) {
 				player = playerIn;
+				gun = gunIn;
 				controller = &c;
 				camera = cam;
 				bulletWorld = bulletWorldIn;
@@ -26,6 +27,7 @@ namespace NCL {
 				thirdPerson = thirdPersonIn;
 			};
 		private:
+			//Player Movement Variables
 			float playerSpeed = 6000.0f;
 			float jumpHeight = 4000.0f;
 			float maxJumpTime = 0.2f;
@@ -45,12 +47,16 @@ namespace NCL {
 			float slidingCameraHeight = 0.0f;
 			float slidingCameraBackwards = 2.5f;
 
+			//Gun Variables
+			btVector3 cameraOffset = btVector3(1.3, -0.7, -1.2);
+
 			bool thirdPerson = false;
 			bool inAir = false;
 			float spaceCount = 0;
 			float inAirCount = 0;
 			btDiscreteDynamicsWorld* bulletWorld;
 			GameObject* player;
+			GameObject* gun;
 			const Controller* controller = nullptr;
 			Camera* camera = nullptr;
 			float yaw = 0;
@@ -71,10 +77,13 @@ namespace NCL {
 			btRigidBody* rb;
 			btTransform transformPlayer;
 			btVector3 btPlayerPos;
+			btTransform transformGun;
+			btVector3 btGunPos;
 
 			void HandleCrouching(float dt);
 			void HandleSliding(float dt);
 			void CheckFloor(float dt);
+			void SetGunTransform();
 
 		};
 	};

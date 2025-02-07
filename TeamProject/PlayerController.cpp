@@ -8,6 +8,7 @@ void PlayerController::UpdateMovement(float dt) {
     transformPlayer = rb->getWorldTransform();
     btPlayerPos = transformPlayer.getOrigin();
 
+
     //camera yaw
     yaw = fmod(yaw - controller->GetNamedAxis("XLook") + 360.0f, 360.0f);
     if (!thirdPerson) camera->SetYaw(yaw);
@@ -26,9 +27,12 @@ void PlayerController::UpdateMovement(float dt) {
     HandleCrouching(dt);
     btTransform transformPlayerMotion;
     player->GetPhysicsObject()->GetMotionState()->getWorldTransform(transformPlayerMotion);
-    btVector3 playerPos = transformPlayerMotion.getOrigin();
-    playerPos.setY(playerPos.getY() + (isCrouching ? std::lerp(cameraHeight, crouchHeight, std::min(currentCrouchingTimer / crouchingTime, 1.0f)) : std::lerp(crouchHeight, cameraHeight, std::min(currentStandingTimer / crouchingTime, 1.0f))));
-    if (!slideTransition && !thirdPerson) camera->SetPosition(playerPos);
+    btVector3 playerCamPos = transformPlayerMotion.getOrigin();
+    playerCamPos.setY(playerCamPos.getY() + (isCrouching ? std::lerp(cameraHeight, crouchHeight, std::min(currentCrouchingTimer / crouchingTime, 1.0f)) : std::lerp(crouchHeight, cameraHeight, std::min(currentStandingTimer / crouchingTime, 1.0f))));
+    if (!slideTransition && !thirdPerson) {
+        camera->SetPosition(playerCamPos);
+        SetGunTransform();
+    }
 
     //finds player forward and right vectors
     btMatrix3x3 rotationMatrix(playerRotation);
@@ -81,6 +85,27 @@ void PlayerController::CheckFloor(float dt) {
         }
         inAirCount += dt;
     }
+}
+
+
+//attaches gun to the camera position/rotation
+void PlayerController::SetGunTransform() {
+    float pitchRadians = Maths::DegreesToRadians(camera->GetPitch());
+    float yawRadians = Maths::DegreesToRadians(camera->GetYaw());
+
+    btQuaternion yawQuat(btVector3(0, 1, 0), yawRadians);
+    btQuaternion pitchQuat(btVector3(1, 0, 0), pitchRadians);
+    btQuaternion gunRotation = yawQuat * pitchQuat; // Yaw first, then pitch
+
+    btMatrix3x3 rotationMatrixCam(gunRotation);
+    btVector3 adjustedOffset = rotationMatrixCam * cameraOffset; // Apply rotation to the offset
+
+    transformGun = gun->GetPhysicsObject()->GetRigidBody()->getWorldTransform();
+    btGunPos = camera->GetPosition() + adjustedOffset; // Offset from camera position
+    transformGun.setOrigin(btGunPos);
+    transformGun.setRotation(gunRotation);
+
+    gun->GetPhysicsObject()->GetRigidBody()->setWorldTransform(transformGun);
 }
 
 
@@ -152,7 +177,10 @@ void PlayerController::HandleSliding(float dt) {
 
         playerPos -= forward * std::lerp(isSliding ? 0 : slidingCameraBackwards, isSliding ? slidingCameraBackwards : 0, slideFactor);
         playerPos.setY(playerPos.getY() + std::lerp(isSliding ? cameraHeight : slidingCameraHeight, isSliding ? slidingCameraHeight : cameraHeight, slideFactor));
-        if (!thirdPerson) camera->SetPosition(playerPos);
+        if (!thirdPerson) {
+            camera->SetPosition(playerPos);
+            SetGunTransform();
+        }
 
         btVector3 gravity(0, (- gravityScale * (0.5f + inAirCount))* slidingDampening, 0);
         rb->applyCentralImpulse(gravity * dt);

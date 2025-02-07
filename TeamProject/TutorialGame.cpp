@@ -28,6 +28,7 @@ TutorialGame::TutorialGame() : controller(*Window::GetWindow()->GetKeyboard(), *
 
 	world->GetMainCamera().SetController(controller);
 	mainCamera = &world->GetMainCamera();
+	mainCamera->SetFieldOfVision(90);
 	controller.MapAxis(0, "Sidestep");
 	controller.MapAxis(1, "UpDown");
 	controller.MapAxis(2, "Forward");
@@ -251,7 +252,8 @@ void TutorialGame::InitPlayer() {
 	player->GetPhysicsObject()->GetRigidBody()->setAngularFactor(0);
 	player->GetPhysicsObject()->GetRigidBody()->setFriction(1);
 	player->GetPhysicsObject()->GetRigidBody()->setDamping(0.999, 0);
-	playerController = new PlayerController(player, controller, mainCamera, bulletWorld);
+	gun = AddCubeToWorld(Vector3(10, 2, 20), Vector3(0.6, 0.6, 1.6), 0, false);
+	playerController = new PlayerController(player, gun, controller, mainCamera, bulletWorld);
 	player->GetRenderObject()->SetColour(playerColour);
 
 }
@@ -284,7 +286,7 @@ Turret* TutorialGame::AddTurretToWorld() {
 }
 
 /* Adding an object to test the bullet physics */
-GameObject* TutorialGame::AddCubeToWorld(const Vector3& position, Vector3 dimensions, float inverseMass) {
+GameObject* TutorialGame::AddCubeToWorld(const Vector3& position, Vector3 dimensions, float inverseMass,bool hasCollision) {
 	GameObject* cube = new GameObject();
 
 	// Setting the transform properties for the cube
@@ -307,7 +309,7 @@ GameObject* TutorialGame::AddCubeToWorld(const Vector3& position, Vector3 dimens
 
 	// Initialize Bullet physics for the cube
 	// WTF: Setting shape to nullptr causes camera stutter
-	cube->GetPhysicsObject()->InitBulletPhysics(bulletWorld, shape, inverseMass);
+	cube->GetPhysicsObject()->InitBulletPhysics(bulletWorld, shape, inverseMass, hasCollision);
 
 	// Setting render object
 	cube->SetRenderObject(new RenderObject(cube, cubeMesh, basicTex, basicShader));
