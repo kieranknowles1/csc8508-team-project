@@ -36,6 +36,9 @@ TutorialGame::TutorialGame() : controller(*Window::GetWindow()->GetKeyboard(), *
 	controller.MapAxis(3, "XLook");
 	controller.MapAxis(4, "YLook");
 
+
+	controller.MapButton(0, "LeftMouseButton");
+	controller.MapButton(1, "RightMouseButton");
 	controller.MapButton(2, "Jump");
 	controller.MapButton(3, "Sprint");
 	controller.MapButton(4, "Crouch");
@@ -253,7 +256,7 @@ void TutorialGame::InitPlayer() {
 	player->GetPhysicsObject()->GetRigidBody()->setFriction(1);
 	player->GetPhysicsObject()->GetRigidBody()->setDamping(0.999, 0);
 	gun = AddCubeToWorld(Vector3(10, 2, 20), Vector3(0.6, 0.6, 1.6), 0, false);
-	playerController = new PlayerController(player, gun, controller, mainCamera, bulletWorld);
+	playerController = new PlayerController(player, gun, controller, mainCamera, bulletWorld,world,renderer);
 	player->GetRenderObject()->SetColour(playerColour);
 
 }

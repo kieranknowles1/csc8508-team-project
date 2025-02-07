@@ -1,9 +1,19 @@
 #pragma once
+#include "GameTechRenderer.h"
+#ifdef USEVULKAN
+#include "GameTechVulkanRenderer.h"
+#endif
 #include "Vector.h"
 #include "Matrix.h"
 #include "Camera.h"
 #include "Controller.h"
 #include "GameObject.h"
+#include "StateGameObject.h"
+#include "GameWorld.h"
+#include "PhysicsObject.h"
+#include "RenderObject.h"
+#include "TextureLoader.h"
+#include "BulletDebug.h"
 
 #include <btBulletDynamicsCommon.h>
 #include <btBulletCollisionCommon.h>
@@ -13,13 +23,15 @@ namespace NCL {
 	namespace CSC8503 {
 		class PlayerController {
 		public:
-			PlayerController(GameObject* playerIn, GameObject* gunIn, const Controller& c, Camera* cam, btDiscreteDynamicsWorld* bulletWorldIn) {
+			PlayerController(GameObject* playerIn, GameObject* gunIn, const Controller& c, Camera* cam, btDiscreteDynamicsWorld* bulletWorldIn, GameWorld* worldIn ,GameTechRenderer* rendererIn) {
 				player = playerIn;
 				gun = gunIn;
 				controller = &c;
 				camera = cam;
 				bulletWorld = bulletWorldIn;
-				rb = player->GetPhysicsObject()->GetRigidBody();
+				world = worldIn;
+			//	renderer = rendererIn;
+				Initialise();
 			}
 			~PlayerController();
 			void UpdateMovement(float dt);
@@ -48,7 +60,11 @@ namespace NCL {
 			float slidingCameraBackwards = 2.5f;
 
 			//Gun Variables
-			btVector3 cameraOffset = btVector3(1.3, -0.7, -1.2);
+			float shotCooldown = 0.25f;
+			float bulletSpeed = 150.0f;
+			btVector3 gunCameraOffset = btVector3(1.3, -0.7, -1.2);
+			btVector3 bulletCameraOffset = btVector3(1.0, -0.5, -3.0);
+		
 
 			bool thirdPerson = false;
 			bool inAir = false;
@@ -79,12 +95,41 @@ namespace NCL {
 			btVector3 btPlayerPos;
 			btTransform transformGun;
 			btVector3 btGunPos;
+			Mesh* sphereMesh = nullptr;
+			Texture* basicTex = nullptr;
+			Shader* basicShader = nullptr;
+			GameWorld* world;
+			GameTechRenderer* renderer;
+			float shotTimer = 0;
 
+			void Initialise();
 			void HandleCrouching(float dt);
 			void HandleSliding(float dt);
 			void CheckFloor(float dt);
 			void SetGunTransform();
+			void ShootBullet();
 
 		};
 	};
 }
+
+
+using namespace NCL::CSC8503;
+// Bullet class derived from GameObject
+class Bullet : public GameObject {
+public:
+	void OnCollisionEnter(GameObject* otherObject) override {
+		if (otherObject == player) return;
+		otherObject->GetRenderObject()->SetColour(this->GetRenderObject()->GetColour());
+		btTransform worldTransform;
+		worldTransform.setOrigin(btVector3(0, -100, 0));
+		this->GetPhysicsObject()->GetRigidBody()->setWorldTransform(worldTransform);
+		this->GetRenderObject()->SetColour(Vector4(1, 1, 1, 0));
+	}
+	void SetPlayer(GameObject* playerIn) {
+		player = playerIn;
+	}
+private:
+	GameObject* player;
+
+};
