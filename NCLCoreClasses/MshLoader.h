@@ -45,7 +45,10 @@ namespace NCL::Rendering {
 			SubMeshNames = 1 << 15
 		};
 
+		// Load a mesh, prefering the binary version if available
 		static bool LoadMesh(const std::string& filename, Mesh& destinationMesh);
+		static bool LoadBinaryMesh(const std::string& filename, Mesh& destinationMesh);
+		static bool LoadTextMesh(const std::string& filename, Mesh& destinationMesh);
 
 	protected:
 		static void* ReadVertexData(GeometryChunkData dataType, GeometryChunkTypes chunkType, int numVertices);
