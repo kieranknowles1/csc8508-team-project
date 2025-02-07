@@ -50,7 +50,9 @@ OGLRenderer::OGLRenderer(Window& w) : RendererBase(w)	{
 }
 
 OGLRenderer::~OGLRenderer()	{
-#ifdef _WIN32
+#if defined(CSC_USE_SDL2)
+  SDL_GL_DeleteContext(glContext);
+#elif defined(_WIN32)
 	DestroyWithWin32();
 #endif
 }

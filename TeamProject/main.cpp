@@ -36,5 +36,6 @@ int main(int argc, char** argv) {
 		g->UpdateGame(dt);
 	}
 	delete g;
+	// Deleting game destroys the GL context, which should be done before destroying the window
 	delete window;
 }
