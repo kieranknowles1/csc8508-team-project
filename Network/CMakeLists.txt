@@ -1,9 +1,11 @@
 set(SOURCES
-	Server.cpp
-	Server.hpp
 	Client.cpp
 	Client.hpp
 	Network.hpp
+	Packet.cpp
+	Packet.hpp
+	Server.cpp
+	Server.hpp
 )
 
 set(TEST_SOURCES
@@ -46,3 +48,9 @@ target_link_libraries(NetworkTest PUBLIC
 	NetworkTestLib
 )
 assign_folder(NetworkTest "Network/Test")
+
+# Enet Linking.
+if(MSVC)
+    target_link_libraries(NetworkLib PUBLIC "Winmm.lib")
+    target_link_libraries(NetworkTestLib PUBLIC "Winmm.lib")
+endif()
