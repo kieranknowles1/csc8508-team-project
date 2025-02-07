@@ -20,7 +20,21 @@ set(SOURCES
 	BWHelperFunctions.cpp
 )
 
+set(COMPILED_MESHES
+    Plane.msh
+    cube.msh
+    sphere.msh
+    ORIGAMI_Chat.msh
+    Kitten.msh
+    Keeper.msh
+    19463_Kitten_Head_v1.msh
+    /Max/Rig_Maximilian.msh
+    /MaleGuard/Male_Guard.msh
+    /FemaleGuard/Female_Guard.msh
+)
+
 add_executable(${PROJECT_NAME} ${SOURCES})
+add_dependencies(${PROJECT_NAME} MeshCompiler)
 
 set_target_properties(${PROJECT_NAME} PROPERTIES
     VS_GLOBAL_KEYWORD "Win32Proj"
@@ -92,3 +106,17 @@ target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR})
 set_target_properties(${PROJECT_NAME} PROPERTIES
     VS_DEBUGGER_WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
 )
+
+foreach(file ${COMPILED_MESHES})
+    set(out "${CMAKE_SOURCE_DIR}/Assets/Meshes/${file}b")
+    add_custom_command(
+        OUTPUT ${out}
+        COMMAND MeshCompiler ${file} ${out}
+        DEPENDS "${CMAKE_SOURCE_DIR}/Assets/Meshes/${file}" MeshCompiler
+        COMMENT "Compiling mesh ${file}"
+        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+    )
+    list(APPEND PROCESSED_MESHES ${out})
+endforeach()
+add_custom_target(ProcessMeshes ALL DEPENDS ${PROCESSED_MESHES})
+add_dependencies(${PROJECT_NAME} ProcessMeshes)
