@@ -1,8 +1,16 @@
 #include "PlayerController.h"
 
 
+
 using namespace NCL;
 using namespace CSC8503;
+
+void PlayerController::Initialise() {
+    rb = player->GetPhysicsObject()->GetRigidBody();
+    sphereMesh = renderer->LoadMesh("sphere.msh");
+    basicTex = renderer->LoadTexture("checkerboard.png");
+    basicShader = renderer->LoadShader("scene.vert", "scene.frag");
+}
 
 void PlayerController::UpdateMovement(float dt) {
     transformPlayer = rb->getWorldTransform();
@@ -11,6 +19,14 @@ void PlayerController::UpdateMovement(float dt) {
     //camera yaw
     yaw = fmod(yaw - controller->GetNamedAxis("XLook") + 360.0f, 360.0f);
     if (!thirdPerson) camera->SetYaw(yaw);
+
+    if (controller->GetNamedButton("LeftMouseButton") && shotTimer >= shotCooldown) {
+        ShootBullet();
+        shotTimer = 0.0f;
+    }
+    else {
+        shotTimer += dt;
+    }
 
     //sliding/floor detection
     HandleSliding(dt);
@@ -26,9 +42,12 @@ void PlayerController::UpdateMovement(float dt) {
     HandleCrouching(dt);
     btTransform transformPlayerMotion;
     player->GetPhysicsObject()->GetMotionState()->getWorldTransform(transformPlayerMotion);
-    btVector3 playerPos = transformPlayerMotion.getOrigin();
-    playerPos.setY(playerPos.getY() + (isCrouching ? std::lerp(cameraHeight, crouchHeight, std::min(currentCrouchingTimer / crouchingTime, 1.0f)) : std::lerp(crouchHeight, cameraHeight, std::min(currentStandingTimer / crouchingTime, 1.0f))));
-    if (!slideTransition && !thirdPerson) camera->SetPosition(playerPos);
+    btVector3 playerCamPos = transformPlayerMotion.getOrigin();
+    playerCamPos.setY(playerCamPos.getY() + (isCrouching ? std::lerp(cameraHeight, crouchHeight, btMin(currentCrouchingTimer / crouchingTime, 1.0f)) : std::lerp(crouchHeight, cameraHeight, btMin(currentStandingTimer / crouchingTime, 1.0f))));
+    if (!slideTransition && !thirdPerson) {
+        camera->SetPosition(playerCamPos);
+        SetGunTransform();
+    }
 
     //finds player forward and right vectors
     btMatrix3x3 rotationMatrix(playerRotation);
@@ -84,6 +103,62 @@ void PlayerController::CheckFloor(float dt) {
 }
 
 
+//attaches gun to the camera position/rotation
+void PlayerController::SetGunTransform() {
+    float pitchRadians = Maths::DegreesToRadians(camera->GetPitch());
+    float yawRadians = Maths::DegreesToRadians(camera->GetYaw());
+    btQuaternion yawQuat(btVector3(0, 1, 0), yawRadians);
+    btQuaternion pitchQuat(btVector3(1, 0, 0), pitchRadians);
+    btQuaternion gunRotation = yawQuat * pitchQuat; // Yaw first, then pitch
+
+    btMatrix3x3 rotationMatrixCam(gunRotation);
+    btVector3 adjustedOffset = rotationMatrixCam * gunCameraOffset; // Apply rotation to the offset
+
+    transformGun = gun->GetPhysicsObject()->GetRigidBody()->getWorldTransform();
+    btGunPos = camera->GetPosition() + adjustedOffset; // Offset from camera position
+    transformGun.setOrigin(btGunPos);
+    transformGun.setRotation(gunRotation);
+
+    gun->GetPhysicsObject()->GetRigidBody()->setWorldTransform(transformGun);
+}
+
+void PlayerController::ShootBullet() {
+    // Convert camera pitch & yaw to radians
+    float pitchRadians = Maths::DegreesToRadians(camera->GetPitch());
+    float yawRadians = Maths::DegreesToRadians(camera->GetYaw());
+    btQuaternion yawQuat(btVector3(0, 1, 0), yawRadians);
+    btQuaternion pitchQuat(btVector3(1, 0, 0), pitchRadians);
+    btQuaternion bulletRotation = yawQuat * pitchQuat;
+
+    // Compute forward direction based on camera rotation
+    btMatrix3x3 rotationMatrix(bulletRotation);
+    btVector3 adjustedOffset = rotationMatrix * bulletCameraOffset;
+    btVector3 forwardDir = rotationMatrix * btVector3(0, 0, -1); 
+    btVector3 right = rotationMatrix * btVector3(1, 0, 0);
+    btVector3 bulletPos = camera->GetPosition() + adjustedOffset;
+
+    //regular spawn in
+    Bullet* bullet = new Bullet();
+    bullet->SetPlayer(player);
+    Vector3 bulletSize(1, 1, 1);
+    bullet->setInitialPosition(bulletPos);
+    bullet->setRenderScale(bulletSize);
+    bullet->SetRenderObject(new RenderObject(bullet, sphereMesh, basicTex, basicShader));
+    bullet->SetPhysicsObject(new PhysicsObject(bullet));
+    bullet->GetRenderObject()->SetColour(Vector4(1, 0, 0, 1));
+    btCollisionShape* shape = new btSphereShape(1);
+    shape->setMargin(0.01f);
+    bullet->GetPhysicsObject()->InitBulletPhysics(bulletWorld, shape, 1.0f);
+    world->AddGameObject(bullet);
+
+    //add forward impulse
+    btVector3 bulletVelocity = forwardDir * bulletSpeed;
+    bullet->GetPhysicsObject()->GetRigidBody()->applyCentralImpulse(bulletVelocity);
+}
+
+
+
+
 //transitions states between standing and crouching
 void PlayerController::HandleCrouching(float dt) {
     bool crouching = controller->GetNamedButton("Crouch");
@@ -92,13 +167,13 @@ void PlayerController::HandleCrouching(float dt) {
     if (crouching) {
         isCrouching = true;
         currentStandingTimer = 0;
-        currentCrouchingTimer = std::min(currentCrouchingTimer + dt, crouchingTime);
+        currentCrouchingTimer = btMin(currentCrouchingTimer + dt, crouchingTime);
         currentHeight = std::lerp(standingHeight, crouchingHeight, currentCrouchingTimer / crouchingTime);
     }
     else {
         isCrouching = false;
         currentCrouchingTimer = 0;
-        currentStandingTimer = std::min(currentStandingTimer + dt, crouchingTime);
+        currentStandingTimer = btMin(currentStandingTimer + dt, crouchingTime);
         currentHeight = std::lerp(crouchingHeight, standingHeight, currentStandingTimer / crouchingTime);
     }
 
@@ -127,16 +202,16 @@ void PlayerController::HandleSliding(float dt) {
     if (isSliding) {
         rb->setDamping(slidingDampening, 1);
         currentStandingSlideTimer = 0;
-        currentSlidingTimer = std::min(currentSlidingTimer + dt, slidingTime);
+        currentSlidingTimer = btMin(currentSlidingTimer + dt, slidingTime);
     }
     else {
         rb->setDamping(normalDampening, 1);
         currentSlidingTimer = 0;
-        currentStandingSlideTimer = std::min(currentStandingSlideTimer + dt, slidingTime);
+        currentStandingSlideTimer = btMin(currentStandingSlideTimer + dt, slidingTime);
     }
 
     if (slideTransition || isSliding) {
-        float slideFactor = isSliding ? std::min(currentSlidingTimer / slidingTime, 1.0f) : std::min(currentStandingSlideTimer / slidingTime, 1.0f);
+        float slideFactor = isSliding ? btMin(currentSlidingTimer / slidingTime, 1.0f) : btMin(currentStandingSlideTimer / slidingTime, 1.0f);
 
         btQuaternion playerRotation(btVector3(0, 1, 0), Maths::DegreesToRadians(yaw));
         btQuaternion playerRotationX(btVector3(1, 0, 0),Maths::DegreesToRadians(std::lerp(isSliding ? 0 : slidingAngle, isSliding ? slidingAngle : 0, slideFactor)));
@@ -152,7 +227,10 @@ void PlayerController::HandleSliding(float dt) {
 
         playerPos -= forward * std::lerp(isSliding ? 0 : slidingCameraBackwards, isSliding ? slidingCameraBackwards : 0, slideFactor);
         playerPos.setY(playerPos.getY() + std::lerp(isSliding ? cameraHeight : slidingCameraHeight, isSliding ? slidingCameraHeight : cameraHeight, slideFactor));
-        if (!thirdPerson) camera->SetPosition(playerPos);
+        if (!thirdPerson) {
+            camera->SetPosition(playerPos);
+            SetGunTransform();
+        }
 
         btVector3 gravity(0, (- gravityScale * (0.5f + inAirCount))* slidingDampening, 0);
         rb->applyCentralImpulse(gravity * dt);
