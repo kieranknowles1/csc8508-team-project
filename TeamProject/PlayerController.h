@@ -33,7 +33,9 @@ namespace NCL {
 			//	renderer = rendererIn;
 				Initialise();
 			}
-			~PlayerController();
+			~PlayerController() {};
+
+
 			void UpdateMovement(float dt);
 			void SetThirdPerson(bool thirdPersonIn) {
 				thirdPerson = thirdPersonIn;
@@ -133,3 +135,4 @@ private:
 	GameObject* player;
 
 };
+
