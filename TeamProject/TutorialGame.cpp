@@ -75,6 +75,7 @@ void TutorialGame::InitialiseAssets() {
 }
 
 TutorialGame::~TutorialGame()	{
+	DestroyBullet();
 	// TODO: Should we use a proper resource manager or smart pointers?
 	delete planeMesh;
 	delete cubeMesh;
@@ -96,8 +97,6 @@ TutorialGame::~TutorialGame()	{
 	delete world;
 
 	delete playerController;
-
-	DestroyBullet();
 }
 
 static bool BulletRaycast(btDynamicsWorld* world, const btVector3& start, const btVector3& end, btCollisionWorld::ClosestRayResultCallback& resultCallback) {
@@ -193,6 +192,12 @@ void TutorialGame::ThirdPersonControls() {
 }
 
 void TutorialGame::DestroyBullet() {
+	world->OperateOnContents([&](GameObject* obj) {
+		if (obj->GetPhysicsObject()) {
+			obj->GetPhysicsObject()->removeFromBullet(bulletWorld);
+		}
+	});
+
 	delete bulletWorld;
 	delete bulletDebug;
 	delete solver;

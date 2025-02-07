@@ -68,6 +68,16 @@ void PhysicsObject::InitBulletPhysics(btDynamicsWorld* world, btCollisionShape* 
 	}
 }
 
+void NCL::CSC8503::PhysicsObject::removeFromBullet(btDynamicsWorld* world)
+{
+	if (rigidBody) {
+		world->removeRigidBody(rigidBody);
+#ifndef NDEBUG
+		hasBullet = false;
+#endif
+	}
+}
+
 void PhysicsObject::AddForce(const Vector3& force) {
 	if (rigidBody) {
 		rigidBody->applyCentralForce(btVector3(force.x, force.y, force.z));

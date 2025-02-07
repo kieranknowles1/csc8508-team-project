@@ -17,6 +17,7 @@ namespace NCL {
 
 			// Add Bullet-specific methods
 			void InitBulletPhysics(btDynamicsWorld* world, btCollisionShape* shape, float mass, bool collide=true);
+			void removeFromBullet(btDynamicsWorld* world);
 			btRigidBody* GetRigidBody() { return rigidBody; }
 
 			void ApplyAngularImpulse(const Vector3& force);
