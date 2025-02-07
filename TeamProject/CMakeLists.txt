@@ -21,6 +21,7 @@ set(SOURCES
 )
 
 set(COMPILED_MESHES
+    capsule.msh
     Plane.msh
     cube.msh
     sphere.msh

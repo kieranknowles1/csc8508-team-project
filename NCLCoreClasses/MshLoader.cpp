@@ -18,6 +18,7 @@ bool MshLoader::LoadMesh(const std::string& filename, Mesh& destinationMesh) {
 		return LoadBinaryMesh(binFile, destinationMesh);
 	}
 	else {
+		std::cout << filename << " is being loaded from text. Consider adding to COMPILED_MESHES" << std::endl;
 		return LoadTextMesh(filename, destinationMesh);
 	}
 }
@@ -31,11 +32,8 @@ template <typename T>
 std::vector<T> readVector(std::ifstream& fs, int size) {
 	static_assert(std::is_trivially_copyable<T>::value);
 	std::vector<T> out;
-	for (int i = 0; i < size; i++) {
-		T value;
-		read(fs, value);
-		out.push_back(value);
-	}
+	out.resize(size);
+	fs.read((char*)out.data(), size * sizeof(T));
 	return out;
 }
 
@@ -112,6 +110,9 @@ bool NCL::Rendering::MshLoader::LoadBinaryMesh(const std::string& filename, Mesh
 			auto uv = readVector<Vector2>(fs, numVertexes);
 			destinationMesh.SetVertexTextureCoords(uv);
 			break;
+		} case GeometryChunkTypes::VWeightValues: {
+			auto weights = readVector<Vector4>(fs, numVertexes);
+			destinationMesh.SetVertexSkinWeights(weights);
 		} case GeometryChunkTypes::Indices: {
 			auto indexes = readVector<unsigned int>(fs, numIndexes);
 			destinationMesh.SetVertexIndices(indexes);
