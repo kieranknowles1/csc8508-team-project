@@ -21,7 +21,7 @@ namespace NCL {
 
 			void ApplyAngularImpulse(const Vector3& force);
 			void ApplyLinearImpulse(const Vector3& force);
-			
+
 			void AddForce(const Vector3& force);
 			void AddForceAtPosition(const Vector3& force, const Vector3& position);
 			void AddTorque(const Vector3& torque);
@@ -44,6 +44,10 @@ namespace NCL {
 			btCollisionShape* collisionShape;
 
 			std::set<GameObject*> activeCollisions;
+
+#ifndef NDEBUG
+			bool hasBullet = false;
+#endif
 		};
 	}
 }

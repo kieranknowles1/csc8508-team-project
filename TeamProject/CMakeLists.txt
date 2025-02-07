@@ -3,7 +3,7 @@ set(SOURCES
     BulletDebug.h
     GameTechRenderer.cpp
     GameTechRenderer.h
-    Main.cpp
+    main.cpp
     NetworkedGame.cpp
     NetworkedGame.h
     NetworkPlayer.cpp
@@ -14,7 +14,7 @@ set(SOURCES
     TutorialGame.h
     PlayerController.cpp
     PlayerController.h
-    Turret.H
+    Turret.h
     Turret.cpp
 	BWHelperFunctions.h
 	BWHelperFunctions.cpp

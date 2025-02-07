@@ -8,7 +8,7 @@ namespace NCL {
 		class Turret : public GameObject {
 		public:
 			Turret(Quaternion q = Quaternion());
-			~Turret();
+			~Turret() override;
 
 			virtual void Update(float dt);
 			void setInitialRotation(Quaternion q);

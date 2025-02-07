@@ -20,7 +20,9 @@ namespace NCL {
 				bulletWorld = bulletWorldIn;
 				rb = player->GetPhysicsObject()->GetRigidBody();
 			}
-			~PlayerController();
+			~PlayerController() {};
+
+
 			void UpdateMovement(float dt);
 			void SetThirdPerson(bool thirdPersonIn) {
 				thirdPerson = thirdPersonIn;

@@ -51,14 +51,14 @@ for this module, even in the coursework, but you can add it if you like!
 */
 void TutorialGame::InitialiseAssets() {
 	planeMesh = renderer->LoadMesh("Plane.msh");
-	cubeMesh	= renderer->LoadMesh("cube.msh");
-	sphereMesh	= renderer->LoadMesh("sphere.msh");
+	cubeMesh	= renderer->LoadMesh("Cube.msh");
+	sphereMesh	= renderer->LoadMesh("Sphere.msh");
 	catMesh		= renderer->LoadMesh("ORIGAMI_Chat.msh");
 	kittenMesh	= renderer->LoadMesh("Kitten.msh");
 
 	enemyMesh	= renderer->LoadMesh("Keeper.msh");
 	bonusMesh	= renderer->LoadMesh("19463_Kitten_Head_v1.msh");
-	capsuleMesh = renderer->LoadMesh("capsule.msh");
+	capsuleMesh = renderer->LoadMesh("Capsule.msh");
 
 	//EG Assets:
 
@@ -75,12 +75,15 @@ void TutorialGame::InitialiseAssets() {
 }
 
 TutorialGame::~TutorialGame()	{
+	// TODO: Should we use a proper resource manager or smart pointers?
+	delete planeMesh;
 	delete cubeMesh;
 	delete sphereMesh;
 	delete catMesh;
 	delete kittenMesh;
 	delete enemyMesh;
 	delete bonusMesh;
+	delete capsuleMesh;
 
 	delete maxMesh;
 	delete maleguardMesh;
@@ -91,6 +94,8 @@ TutorialGame::~TutorialGame()	{
 
 	delete renderer;
 	delete world;
+
+	delete playerController;
 
 	DestroyBullet();
 }
@@ -437,4 +442,3 @@ GameObject* TutorialGame::AddSphereToWorld(const Vector3& position, float radius
 void TutorialGame::InitDefaultFloor() {
 	AddFloorToWorld(Vector3(0, 0, 0));
 }
-

@@ -9,9 +9,9 @@
 using namespace NCL;
 using namespace CSC8503;
 
-PhysicsObject::PhysicsObject(GameObject* parent) 
+PhysicsObject::PhysicsObject(GameObject* parent)
 	: parent(parent), rigidBody(nullptr), motionState(nullptr), collisionShape(nullptr) {
-	
+
 }
 
 PhysicsObject::~PhysicsObject()	{
@@ -23,6 +23,12 @@ PhysicsObject::~PhysicsObject()	{
 	if (collisionShape) {
 		delete collisionShape;
 	}
+
+#ifndef NDEBUG
+	if (hasBullet) {
+		std::cerr << "WARN: PhysicsObject was not removed from Bullet world, this will cause use-after-free" << std::endl;
+	}
+#endif
 }
 
 /* Bullet Physics Implementation start here */
@@ -56,7 +62,9 @@ void PhysicsObject::InitBulletPhysics(btDynamicsWorld* world, btCollisionShape* 
 	rigidBody->setActivationState(DISABLE_DEACTIVATION);
 	if (collide) {
 		world->addRigidBody(rigidBody);
-
+#ifndef NDEBUG
+		hasBullet = true;
+#endif
 	}
 }
 
