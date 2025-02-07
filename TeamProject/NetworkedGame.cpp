@@ -2,6 +2,15 @@
 
 #include "cmath"
 
+// MSVC declares these as macros, which take priority over std::min/max and
+// breaks either Linux or Windows builds :(
+#ifdef min
+#undef min
+#endif
+#ifdef max
+#undef max
+#endif
+
 #include "NetworkPlayer.h"
 #include "NetworkObject.h"
 #include "GameServer.h"
