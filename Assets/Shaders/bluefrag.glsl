@@ -1,7 +1,9 @@
 #version 330 core
-#include "include/vertex.glh"
 
-in Vertex IN;
+in Vertex {
+    vec4 color;
+    vec3 worldPos;
+    }IN;
 
 out vec4 fragColor;
 

@@ -67,6 +67,9 @@ void TutorialGame::InitialiseAssets() {
 
 	basicTex	= renderer->LoadTexture("checkerboard.png");
 	basicShader = renderer->LoadShader("scene.vert", "scene.frag");
+	//Added Shaders:
+	orangeShader = renderer->LoadShader("flatvert.glsl", "orangefrag.glsl");
+	blueShader = renderer->LoadShader("flatVert.glsl", "bluefrag.glsl");
 
 	InitCamera();
 	InitWorld();
@@ -86,6 +89,8 @@ TutorialGame::~TutorialGame()	{
 
 	delete basicTex;
 	delete basicShader;
+	delete orangeShader;
+	delete blueShader;
 
 	delete renderer;
 	delete world;
