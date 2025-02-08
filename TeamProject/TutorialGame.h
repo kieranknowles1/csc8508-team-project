@@ -18,10 +18,8 @@ namespace NCL {
 
 		class TutorialGame {
 		public:
-			// Physics update frequency, in hertz
-			const static constexpr float PhysicsFrequency = 60.0f;
-			// Max steps per frame if physics is lagging
-			const static constexpr int MaxStepsPerFrame = 10;
+			// Min physics update frequency, in hertz
+			const static constexpr float MinPhysicsFrequency = 60.0f;
 
 
 			TutorialGame();
@@ -78,7 +76,7 @@ namespace NCL {
 			Mesh* maleguardMesh = nullptr;
 			Mesh* femaleguardMesh = nullptr;
 
-			//Coursework Additional functionality	
+			//Coursework Additional functionality
 			GameObject* lockedObject	= nullptr;
 			Vector3 lockedOffset		= Vector3(0, 14, 20);
 			void LockCameraToObject(GameObject* o) {
@@ -110,10 +108,10 @@ namespace NCL {
 			bool thirdPerson = false;
 			Vector4 playerColour = Vector4(1, 0.8, 1, 1);
 
-			//fixed update 
+			//fixed update
 			float accumulator = 0.0f;
 			float fixedDeltaTime = 1.0f / 60.0f;
-			
+
 			Turret* testTurret = nullptr;
 		};
 	}
