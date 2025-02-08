@@ -42,7 +42,7 @@ namespace NCL {
 			};
 		private:
 			//Player Movement Variables
-			float playerSpeed = 1000.0f;
+			float playerSpeed = 2050.0f;
 			float jumpVelocity = 1.0f;
 			float maxJumpTime = 0.2f;
 			float gravityScale = 10.0f;
@@ -50,7 +50,7 @@ namespace NCL {
 			float diagonalMulti = 0.6f;
 			float strafeMulti = 0.65f;
 			float backwardsMulti = 0.55f;
-			float sprintMulti = 2.0f;
+			float sprintMulti = 1.8f;
 			float crouchingTime = 0.3f;
 			float crouchMulti = 0.4f;
 			float crouchHeight = 0.0f;
