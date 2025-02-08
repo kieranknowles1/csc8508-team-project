@@ -3,6 +3,7 @@
 
 #include "Server.hpp"
 #include "Packet.hpp"
+#include "Client.hpp"
 
 int main(int argc, char** argv) {
 	Server server;
@@ -27,44 +28,17 @@ int main(int argc, char** argv) {
 	
 	server.Start();
 
-	ENetAddress clientAddress = { ENET_HOST_ANY, 12346 };
 	ENetAddress serverAddress = { 0, 12345 };
 	enet_address_set_host(&serverAddress, "192.168.0.15");
 
-	ENetHost* clientHost = enet_host_create(&clientAddress, 1, 2, 0, 0);
+	Client client;
+	client.ConnectTo(serverAddress);
 
-	ENetPeer* serverConn = enet_host_connect(clientHost, &serverAddress, 2, 0);
-
-	// Wait for server response.
-	ENetEvent event;
-	bool connected = false;
-	while (enet_host_service(clientHost, &event, 1000) && !connected) {
-		if (event.type == ENET_EVENT_TYPE_CONNECT) {
-			std::cout << ConsoleTextColor::GREEN << "[Client] Server found!\n";
-			connected = true;
-			continue;
-		}
-		std::cout << ConsoleTextColor::GREEN << "[Client] No response from server. Trying again.\n";
+	while (client.GetState() == ConnectionState::DISCONNECTED) {
+		std::cout << ConsoleTextColor::DEFAULT << "Waiting...\n";
 	}
+	std::cout << ConsoleTextColor::GREEN << "[Client] Connected to server.\n";
 
-	char hostName[16];
-	enet_address_get_host_ip(&serverConn->address, hostName, 16);
-	std::cout << ConsoleTextColor::GREEN << "[Client] Connected to " << hostName << ":" << serverConn->address.port << std::endl;
-
-	const char* discoverData = "DISCOVER";
-
-	// Create sample packet.
-	Packet::PacketBase hello;
-	hello.type = Packet::DISCOVER;
-	hello.size = strlen(discoverData) + 1;
-	hello.channel = 0;
-	hello.data = std::make_shared<char[]>(strlen(discoverData) + 1);
-	memcpy(hello.data.get(), discoverData, hello.size);
-
-	ENetPacket* discoverPacket = hello.ToENetPacket();
-
-	enet_peer_send(serverConn, 0, discoverPacket);
-	enet_host_flush(clientHost);
 
 
 	server.Stop();
