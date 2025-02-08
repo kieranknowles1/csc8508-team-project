@@ -7,7 +7,7 @@ using namespace CSC8503;
 
 void PlayerController::Initialise() {
     rb = player->GetPhysicsObject()->GetRigidBody();
-    sphereMesh = renderer->LoadMesh("sphere.msh");
+    sphereMesh = renderer->LoadMesh("Sphere.msh");
     basicTex = renderer->LoadTexture("checkerboard.png");
     basicShader = renderer->LoadShader("scene.vert", "scene.frag");
 }
@@ -94,7 +94,7 @@ void PlayerController::CheckFloor(float dt) {
         spaceCount = 0;
         inAirCount = 0;
     }
-    else { 
+    else {
         if (!jumpPressed) {
             inAir = true;
         }
@@ -133,7 +133,7 @@ void PlayerController::ShootBullet() {
     // Compute forward direction based on camera rotation
     btMatrix3x3 rotationMatrix(bulletRotation);
     btVector3 adjustedOffset = rotationMatrix * bulletCameraOffset;
-    btVector3 forwardDir = rotationMatrix * btVector3(0, 0, -1); 
+    btVector3 forwardDir = rotationMatrix * btVector3(0, 0, -1);
     btVector3 right = rotationMatrix * btVector3(1, 0, 0);
     btVector3 bulletPos = camera->GetPosition() + adjustedOffset;
 
