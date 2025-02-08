@@ -126,7 +126,7 @@ void TutorialGame::UpdateGame(float dt) {
 	player->GetRenderObject()->SetColour((thirdPerson || freeCam)?playerColour:Vector4());
 
 	// Update the physics simulation by delta time, aiming for 60hz with up to 10 substeps
-	int steps = bulletWorld->stepSimulation(dt, MaxStepsPerFrame, 1.0f / PhysicsFrequency);
+	int steps = bulletWorld->stepSimulation(dt, 10, 1.0f / PhysicsFrequency);
 	if (steps >= MaxStepsPerFrame) {
 		std::cerr << "Warning: Physics MaxStepsPerFrame reached, simulation slowed down" << std::endl;
 	}
@@ -260,11 +260,11 @@ void TutorialGame::InitWorld() {
 }
 
 void TutorialGame::InitPlayer() {
-
-	player = AddCapsuleToWorld(Vector3(10, 200, 20), 4.0f, 2.0f, 10.0f);
+	// Used generic human dimensions.
+	player = AddCapsuleToWorld(Vector3(10, 200, 20), 1.8f, 0.4f, 50.0f);
 	player->GetPhysicsObject()->GetRigidBody()->setAngularFactor(0);
 	player->GetPhysicsObject()->GetRigidBody()->setFriction(1);
-	player->GetPhysicsObject()->GetRigidBody()->setDamping(0.999, 0);
+	player->GetPhysicsObject()->GetRigidBody()->setDamping(0, 0);
 	gun = AddCubeToWorld(Vector3(10, 2, 20), Vector3(0.6, 0.6, 1.6), 0, false);
 	playerController = new PlayerController(player, gun, controller, mainCamera, bulletWorld,world,renderer);
 	player->GetRenderObject()->SetColour(playerColour);

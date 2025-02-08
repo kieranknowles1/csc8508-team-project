@@ -42,10 +42,10 @@ namespace NCL {
 			};
 		private:
 			//Player Movement Variables
-			float playerSpeed = 6000.0f;
-			float jumpHeight = 4000.0f;
+			float playerSpeed = 1000.0f;
+			float jumpVelocity = 1.0f;
 			float maxJumpTime = 0.2f;
-			float gravityScale = 2000.0f;
+			float gravityScale = 10.0f;
 			float cameraHeight = 3.0f;
 			float diagonalMulti = 0.6f;
 			float strafeMulti = 0.65f;
@@ -55,15 +55,15 @@ namespace NCL {
 			float crouchMulti = 0.4f;
 			float crouchHeight = 0.0f;
 			float slidingTime = 0.25f;
-			float slidingDampening = 0.45f;
-			float normalDampening = 0.999f;
+			float slidingDampening = 0.05f;
+			float normalDampening = 0.01f;
 			float slidingAngle = 70.0f;
 			float slidingCameraHeight = 0.0f;
 			float slidingCameraBackwards = 2.5f;
 
 			//Gun Variables
 			float shotCooldown = 0.25f;
-			float bulletSpeed = 150.0f;
+			float bulletSpeed = 300.0f;
 			btVector3 gunCameraOffset = btVector3(1.3, -0.7, -1.2);
 			btVector3 bulletCameraOffset = btVector3(1.0, -0.5, -3.0);
 		

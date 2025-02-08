@@ -62,21 +62,26 @@ void PlayerController::UpdateMovement(float dt) {
     float moveMulti = playerSpeed * moveScale * (sprinting ? sprintMulti : 1) * (isCrouching ? crouchMulti : 1);
     forwardMovement *= (forwardMovement <= 0) ? backwardsMulti : 1;
     Vector3 movement = (right * controller->GetNamedAxis("Sidestep") * strafeMulti * moveMulti) +(forward * forwardMovement * moveMulti);
+    movement = movement * dt * 10.0f;
 
+    movement.y = rb->getLinearVelocity().getY();
     //gravity is handled here manually, dampening is too high for gravity to work in bullet
-    movement.y = -gravityScale * (0.5f + inAirCount);
+   /* movement.y = -gravityScale * (0.5f + inAirCount);*/
+    //rb->
 
     // jump input
     if (!inAir && controller->GetNamedButton("Jump")) {
         spaceCount += dt;
-        movement.y += jumpHeight;
+        movement.y += jumpVelocity;
         if (spaceCount > maxJumpTime) inAir = true;
     }
     else if (!controller->GetNamedButton("Jump") && spaceCount > 0) {
         inAir = true;
     }
 
-    rb->applyCentralImpulse(btVector3(movement.x, movement.y, movement.z) * dt);
+    rb->setLinearVelocity(btVector3(movement.x, movement.y, movement.z));
+    //rb->applyCentralForce(btVector3(movement.x, movement.y, movement.z) * dt);
+    //rb->applyCentralImpulse(btVector3(movement.x, movement.y, movement.z) * dt);
 }
 
 
