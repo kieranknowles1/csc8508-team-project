@@ -154,8 +154,9 @@ void PlayerController::ShootBullet() {
     world->AddGameObject(bullet);
 
     //add forward impulse
+    btVector3 playerVelocity = rb->getLinearVelocity();
     btVector3 bulletVelocity = forwardDir * bulletSpeed;
-    bullet->GetPhysicsObject()->GetRigidBody()->applyCentralImpulse(bulletVelocity);
+    bullet->GetPhysicsObject()->GetRigidBody()->applyCentralImpulse(playerVelocity+bulletVelocity);
 }
 
 
