@@ -83,6 +83,7 @@ void PlayerController::UpdateMovement(float dt) {
     }
     movement.setY(movement.getY() + rb->getLinearVelocity().getY());
     rb->setLinearVelocity(movement);
+    rb->activate();
 }
 
 
@@ -129,7 +130,7 @@ void PlayerController::ShootBullet() {
     btQuaternion yawQuat(btVector3(0, 1, 0), yawRadians);
     btQuaternion pitchQuat(btVector3(1, 0, 0), pitchRadians);
     btQuaternion bulletRotation = yawQuat * pitchQuat;
-
+  
     // Compute rotation matrix
     btMatrix3x3 rotationMatrix(bulletRotation);
     btVector3 adjustedOffset = rotationMatrix * bulletCameraOffset;
@@ -158,6 +159,7 @@ void PlayerController::ShootBullet() {
 
     // Apply impulse
     bullet->GetPhysicsObject()->GetRigidBody()->applyCentralImpulse(bulletVelocity);
+    bullet->GetPhysicsObject()->GetRigidBody()->activate();
 }
 
 
@@ -236,5 +238,6 @@ void PlayerController::HandleSliding(float dt) {
         btVector3 pastMovement = rb->getLinearVelocity();
         pastMovement.setY(pastMovement.getY() - (gravityScale * dt * speed * (inAir?1:10)));
         rb->setLinearVelocity(pastMovement);
+        rb->activate();
     }
 }

@@ -55,9 +55,8 @@ void PhysicsObject::InitBulletPhysics(btDynamicsWorld* world, btCollisionShape* 
 
 	// Setting the object's properties
 	rigidBody->setMassProps(mass, localInertia);
-	rigidBody->setUserPointer(parent);
-	// SetActivationState is used to prevent the object properties from being deactivated due to inactivity
-	rigidBody->setActivationState(DISABLE_DEACTIVATION);
+  rigidBody->setUserPointer(parent);
+  
 	if (collide) {
 		world->addRigidBody(rigidBody);
 #ifndef NDEBUG
@@ -65,6 +64,8 @@ void PhysicsObject::InitBulletPhysics(btDynamicsWorld* world, btCollisionShape* 
 #endif
 	}
 }
+
+
 
 void NCL::CSC8503::PhysicsObject::removeFromBullet(btDynamicsWorld* world)
 {
@@ -74,6 +75,7 @@ void NCL::CSC8503::PhysicsObject::removeFromBullet(btDynamicsWorld* world)
 		hasBullet = false;
 #endif
 	}
+
 }
 
 void PhysicsObject::AddForce(const Vector3& force) {
