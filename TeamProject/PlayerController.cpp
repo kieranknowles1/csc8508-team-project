@@ -187,10 +187,10 @@ void PlayerController::HandleCrouching(float dt) {
         Vector3 currentScale = player->getRenderScale();
         currentScale.y = currentHeight;
         player->setRenderScale(currentScale);
-        btCollisionShape* shape = new btCapsuleShape(radius, currentHeight);
-        btCollisionShape* oldShape = player->GetPhysicsObject()->GetRigidBody()->getCollisionShape();
-        player->GetPhysicsObject()->GetRigidBody()->setCollisionShape(shape);
-        delete(oldShape);
+
+        // Adjust the local scaling of the collision shape
+        btCollisionShape* currentShape = player->GetPhysicsObject()->GetRigidBody()->getCollisionShape();
+        currentShape->setLocalScaling(btVector3(1, currentHeight / standingHeight, 1));
     }
 }
 
