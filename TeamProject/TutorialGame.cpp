@@ -108,6 +108,19 @@ static bool BulletRaycast(btDynamicsWorld* world, const btVector3& start, const 
 }
 
 void TutorialGame::UpdateGame(float dt) {
+	// DO NOT TOUCH
+	int substeps = std::floor(dt / PHYSICS_PERIOD);
+	int steps = bulletWorld->stepSimulation(dt , substeps, PHYSICS_PERIOD);
+	bulletWorld->debugDrawWorld();
+	if (testTurret) {
+		testTurret->Update(dt);
+	}
+	UpdateKeys();
+	world->UpdateWorld(dt);
+	world->OperateOnContents([&](GameObject* obj) {
+		obj->GetPhysicsObject()->CheckCollisions(bulletWorld);
+	});
+
 	// Press F for freeCam, press G for thirdPerson
 	if (freeCam) {
 		//freeCam Movement
@@ -122,25 +135,9 @@ void TutorialGame::UpdateGame(float dt) {
 			ThirdPersonControls();
 		}
 	}
-	player->GetRenderObject()->SetColour((thirdPerson || freeCam)?playerColour:Vector4());
+	player->GetRenderObject()->SetColour((thirdPerson || freeCam) ? playerColour : Vector4());
 
-	// DO NOT TOUCH
-	int substeps = std::floor(dt / PHYSICS_PERIOD);
-	int steps = bulletWorld->stepSimulation(dt , substeps, PHYSICS_PERIOD);
-
-
-	bulletWorld->debugDrawWorld();
-	if (testTurret) {
-		testTurret->Update(dt);
-	}
-
-	UpdateKeys();
-	world->UpdateWorld(dt);
-	world->OperateOnContents([&](GameObject* obj) {
-		obj->GetPhysicsObject()->CheckCollisions(bulletWorld);
-	});
 	renderer->Update(dt);
-
 	renderer->Render();
 	Debug::UpdateRenderables(dt);
 }
