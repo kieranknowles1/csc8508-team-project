@@ -132,31 +132,34 @@ void PlayerController::ShootBullet() {
     btQuaternion pitchQuat(btVector3(1, 0, 0), pitchRadians);
     btQuaternion bulletRotation = yawQuat * pitchQuat;
 
-    // Compute forward direction based on camera rotation
+    // Compute rotation matrix
     btMatrix3x3 rotationMatrix(bulletRotation);
     btVector3 adjustedOffset = rotationMatrix * bulletCameraOffset;
-    btVector3 forwardDir = rotationMatrix * btVector3(0, 0, -1); 
-    btVector3 right = rotationMatrix * btVector3(1, 0, 0);
+    btVector3 forwardDir = rotationMatrix * btVector3(0, 0, -1);
+    btVector3 rightDir = rotationMatrix * btVector3(1, 0, 0);
     btVector3 bulletPos = camera->GetPosition() + adjustedOffset;
 
-    //regular spawn in
     Bullet* bullet = new Bullet();
-    bullet->SetPlayer(player);
+    bullet->Initialise(player,bulletWorld);
     Vector3 bulletSize(1, 1, 1);
     bullet->setInitialPosition(bulletPos);
     bullet->setRenderScale(bulletSize);
     bullet->SetRenderObject(new RenderObject(bullet, sphereMesh, basicTex, basicShader));
     bullet->SetPhysicsObject(new PhysicsObject(bullet));
-    bullet->GetRenderObject()->SetColour(Vector4(1, 0, 0, 1));
+    bullet->GetRenderObject()->SetColour(Vector4(rand() % 2, rand() % 2, rand() % 2, 1));
     btCollisionShape* shape = new btSphereShape(1);
     shape->setMargin(0.01f);
     bullet->GetPhysicsObject()->InitBulletPhysics(bulletWorld, shape, 1.0f);
     world->AddGameObject(bullet);
 
-    //add forward impulse
     btVector3 playerVelocity = rb->getLinearVelocity();
-    btVector3 bulletVelocity = forwardDir * bulletSpeed;
-    bullet->GetPhysicsObject()->GetRigidBody()->applyCentralImpulse(playerVelocity+bulletVelocity);
+    float forwardSpeed = forwardDir.dot(playerVelocity);
+    float rightSpeed = rightDir.dot(playerVelocity);
+    btVector3 adjustedPlayerVelocity = (forwardDir * forwardSpeed) + (rightDir * rightSpeed * playerVelocityStrafeInherit);
+    btVector3 bulletVelocity = adjustedPlayerVelocity + (forwardDir * bulletSpeed);
+
+    // Apply impulse
+    bullet->GetPhysicsObject()->GetRigidBody()->applyCentralImpulse(bulletVelocity);
 }
 
 
