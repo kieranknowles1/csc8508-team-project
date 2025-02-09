@@ -39,8 +39,6 @@ int main(int argc, char** argv) {
 	}
 	std::cout << ConsoleTextColor::GREEN << "[Client] Connected to server.\n";
 
-
-
 	server.Stop();
 
 	std::cout << ConsoleTextColor::DEFAULT;
