@@ -30,7 +30,6 @@ void PlayerController::UpdateMovement(float dt) {
 
     //sliding/floor detection
     HandleSliding(dt);
-    CheckFloor(dt);
     if (isSliding) return;
 
     //player rotation
@@ -49,6 +48,25 @@ void PlayerController::UpdateMovement(float dt) {
         SetGunTransform();
     }
 
+    // jump input
+    if (!inAir && controller->GetNamedButton("Jump")) {
+        rb->setDamping(jumpDampening, 1);
+        rb->applyCentralImpulse(btVector3(0, jumpHeight, 0));
+        inAir = true;
+        inAirCount = 0.2f;
+        std::cout << "JUMP";
+    }
+    else {
+        inAirCount = btMax(0.0f, inAirCount - dt);
+    }
+    CheckFloor(dt);
+    if (inAir) {
+        rb->setDamping(jumpDampening, 1);
+    }
+    else {
+        rb->setDamping(floorDampening, 1);
+    }
+
     //finds player forward and right vectors
     btMatrix3x3 rotationMatrix(playerRotation);
     btVector3 forward = rotationMatrix * btVector3(0, 0, -1);
@@ -59,22 +77,12 @@ void PlayerController::UpdateMovement(float dt) {
     float moveScale = diag ? diagonalMulti : 1.0f;
     bool sprinting = controller->GetNamedButton("Sprint");
     float forwardMovement = controller->GetNamedAxis("Forward");
-    float moveMulti = playerSpeed * moveScale * (sprinting ? sprintMulti : 1) * (isCrouching ? crouchMulti : 1);
+    float moveMulti = playerSpeed * moveScale * (sprinting ? sprintMulti : 1) * (isCrouching ? crouchMulti : 1) * (inAir ? airMulti : 1) ;
     forwardMovement *= (forwardMovement <= 0) ? backwardsMulti : 1;
     Vector3 movement = (right * controller->GetNamedAxis("Sidestep") * strafeMulti * moveMulti) +(forward * forwardMovement * moveMulti);
-
+ 
     //gravity is handled here manually, dampening is too high for gravity to work in bullet
-    movement.y = -gravityScale * (0.5f + inAirCount);
-
-    // jump input
-    if (!inAir && controller->GetNamedButton("Jump")) {
-        spaceCount += dt;
-        movement.y += jumpHeight;
-        if (spaceCount > maxJumpTime) inAir = true;
-    }
-    else if (!controller->GetNamedButton("Jump") && spaceCount > 0) {
-        inAir = true;
-    }
+    movement.y = -gravityScale;
 
     rb->applyCentralImpulse(btVector3(movement.x, movement.y, movement.z) * dt);
 }
@@ -83,22 +91,16 @@ void PlayerController::UpdateMovement(float dt) {
 
 //uses ray to detect if the player is standing on an object
 void PlayerController::CheckFloor(float dt) {
-    bool jumpPressed = controller->GetNamedButton("Jump");
     btVector3 btBelowPlayerPos = btPlayerPos;
-    btBelowPlayerPos.setY(btBelowPlayerPos.getY() - 4.2);
+    btBelowPlayerPos.setY(btBelowPlayerPos.getY() - 4.0);
     btCollisionWorld::ClosestRayResultCallback callback(btPlayerPos, btBelowPlayerPos);
     bulletWorld->rayTest(btPlayerPos, btBelowPlayerPos, callback);
 
-    if (callback.hasHit()) {
+    if (callback.hasHit() && inAirCount <= 0) {
         inAir = false;
-        spaceCount = 0;
-        inAirCount = 0;
     }
     else { 
-        if (!jumpPressed) {
-            inAir = true;
-        }
-        inAirCount += dt;
+        inAir = true;
     }
 }
 
@@ -152,8 +154,9 @@ void PlayerController::ShootBullet() {
     world->AddGameObject(bullet);
 
     //add forward impulse
+    btVector3 playerVelocity = rb->getLinearVelocity();
     btVector3 bulletVelocity = forwardDir * bulletSpeed;
-    bullet->GetPhysicsObject()->GetRigidBody()->applyCentralImpulse(bulletVelocity);
+    bullet->GetPhysicsObject()->GetRigidBody()->applyCentralImpulse(playerVelocity+bulletVelocity);
 }
 
 
@@ -182,7 +185,9 @@ void PlayerController::HandleCrouching(float dt) {
         currentScale.y = currentHeight;
         player->setRenderScale(currentScale);
         btCollisionShape* shape = new btCapsuleShape(radius, currentHeight);
+        btCollisionShape* oldShape = player->GetPhysicsObject()->GetRigidBody()->getCollisionShape();
         player->GetPhysicsObject()->GetRigidBody()->setCollisionShape(shape);
+        delete(oldShape);
     }
 }
 
@@ -205,7 +210,7 @@ void PlayerController::HandleSliding(float dt) {
         currentSlidingTimer = btMin(currentSlidingTimer + dt, slidingTime);
     }
     else {
-        rb->setDamping(normalDampening, 1);
+ //       rb->setDamping(normalDampening, 1);
         currentSlidingTimer = 0;
         currentStandingSlideTimer = btMin(currentStandingSlideTimer + dt, slidingTime);
     }
@@ -232,7 +237,7 @@ void PlayerController::HandleSliding(float dt) {
             SetGunTransform();
         }
 
-        btVector3 gravity(0, (- gravityScale * (0.5f + inAirCount))* slidingDampening, 0);
+        btVector3 gravity(0, -gravityScale, 0);
         rb->applyCentralImpulse(gravity * dt);
     }
 }
