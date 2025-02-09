@@ -1,6 +1,8 @@
 #include "Network.hpp"
 #include "Packet.hpp"
 
+#include <cstring> // memcpy
+
 using namespace Packet;
 
 PacketBase PacketBase::FromENetPacket(ENetPacket* packet) {

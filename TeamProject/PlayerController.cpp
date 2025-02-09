@@ -5,7 +5,7 @@ using namespace CSC8503;
 
 void PlayerController::Initialise() {
     rb = player->GetPhysicsObject()->GetRigidBody();
-    sphereMesh = renderer->LoadMesh("sphere.msh");
+    sphereMesh = renderer->LoadMesh("Sphere.msh");
     basicTex = renderer->LoadTexture("checkerboard.png");
     basicShader = renderer->LoadShader("scene.vert", "scene.frag");
 }
@@ -63,7 +63,7 @@ void PlayerController::UpdateMovement(float dt) {
     btVector3 movement = (right * controller->GetNamedAxis("Sidestep") * strafeMulti * moveMulti) +(forward * forwardMovement * moveMulti);
     movement.setY(movement.getY() - gravityScale);
     movement = movement * dt * speed;
-    
+
 
     // jump input
     if (!inAir && controller->GetNamedButton("Jump")) {
@@ -98,7 +98,7 @@ void PlayerController::CheckFloor(float dt) {
     if (callback.hasHit() && inAirCount <= 0) {
         inAir = false;
     }
-    else { 
+    else {
         inAir = true;
     }
 }
