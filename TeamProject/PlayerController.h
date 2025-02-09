@@ -43,11 +43,12 @@ namespace NCL {
 		private:
 			//Player Movement Variables
 			float playerSpeed = 6000.0f;
-			float jumpHeight = 700.0f;
+			float speed = 18.0f;
+			float jumpHeight = 200.0f;
 			float maxJumpTime = 0.0f;
-			float gravityScale = 1000.0f;
+			float gravityScale = 20.0f;
 			float cameraHeight = 3.0f;
-			float airMulti = 0.1f;
+			float airMulti = 0.04f;
 			float diagonalMulti = 0.6f;
 			float strafeMulti = 0.65f;
 			float backwardsMulti = 0.55f;
@@ -58,7 +59,8 @@ namespace NCL {
 			float slidingTime = 0.25f;
 			float jumpDampening = 0.2f;
 			float slidingDampening = 0.2f;
-			float floorDampening = 0.999f;
+			float slidingFriction = 0.25f;
+			float floorDampening = 0.2f;
 			float slidingAngle = 75.0f;
 			float slidingCameraHeight = 0.0f;
 			float slidingCameraBackwards = 2.5f;
@@ -89,7 +91,7 @@ namespace NCL {
 			float currentCrouchingTimer=0;
 			float currentStandingTimer=10.0f;
 			bool isCrouching;
-			bool isSliding;
+			bool isSliding = false;
 			bool slideTransition = false;
 			float currentAngle;
 			float crouchingAngle = 2.0f;

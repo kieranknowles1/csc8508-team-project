@@ -1,7 +1,5 @@
 #include "PlayerController.h"
 
-
-
 using namespace NCL;
 using namespace CSC8503;
 
@@ -48,24 +46,7 @@ void PlayerController::UpdateMovement(float dt) {
         SetGunTransform();
     }
 
-    // jump input
-    if (!inAir && controller->GetNamedButton("Jump")) {
-        rb->setDamping(jumpDampening, 1);
-        rb->applyCentralImpulse(btVector3(0, jumpHeight, 0));
-        inAir = true;
-        inAirCount = 0.2f;
-        std::cout << "JUMP";
-    }
-    else {
-        inAirCount = btMax(0.0f, inAirCount - dt);
-    }
-    CheckFloor(dt);
-    if (inAir) {
-        rb->setDamping(jumpDampening, 1);
-    }
-    else {
-        rb->setDamping(floorDampening, 1);
-    }
+
 
     //finds player forward and right vectors
     btMatrix3x3 rotationMatrix(playerRotation);
@@ -79,12 +60,29 @@ void PlayerController::UpdateMovement(float dt) {
     float forwardMovement = controller->GetNamedAxis("Forward");
     float moveMulti = playerSpeed * moveScale * (sprinting ? sprintMulti : 1) * (isCrouching ? crouchMulti : 1) * (inAir ? airMulti : 1) ;
     forwardMovement *= (forwardMovement <= 0) ? backwardsMulti : 1;
-    Vector3 movement = (right * controller->GetNamedAxis("Sidestep") * strafeMulti * moveMulti) +(forward * forwardMovement * moveMulti);
- 
-    //gravity is handled here manually, dampening is too high for gravity to work in bullet
-    movement.y = -gravityScale;
+    btVector3 movement = (right * controller->GetNamedAxis("Sidestep") * strafeMulti * moveMulti) +(forward * forwardMovement * moveMulti);
+    movement.setY(movement.getY() - gravityScale);
+    movement = movement * dt * speed;
+    
 
-    rb->applyCentralImpulse(btVector3(movement.x, movement.y, movement.z) * dt);
+    // jump input
+    if (!inAir && controller->GetNamedButton("Jump")) {
+        rb->setDamping(jumpDampening, 1);
+        movement.setY(movement.getY() + jumpHeight);
+        inAir = true;
+        inAirCount = 0.2f;
+        std::cout << "JUMP";
+    }
+    else {
+        inAirCount = btMax(0.0f, inAirCount - dt);
+    }
+    CheckFloor(dt);
+    if (inAir) {
+        movement.setX(rb->getLinearVelocity().getX() + (movement.getX() * airMulti));
+        movement.setZ(rb->getLinearVelocity().getZ() + (movement.getZ() * airMulti));
+    }
+    movement.setY(movement.getY() + rb->getLinearVelocity().getY());
+    rb->setLinearVelocity(movement);
 }
 
 
@@ -92,7 +90,7 @@ void PlayerController::UpdateMovement(float dt) {
 //uses ray to detect if the player is standing on an object
 void PlayerController::CheckFloor(float dt) {
     btVector3 btBelowPlayerPos = btPlayerPos;
-    btBelowPlayerPos.setY(btBelowPlayerPos.getY() - 4.0);
+    btBelowPlayerPos.setY(btBelowPlayerPos.getY() - 4.0f);
     btCollisionWorld::ClosestRayResultCallback callback(btPlayerPos, btBelowPlayerPos);
     bulletWorld->rayTest(btPlayerPos, btBelowPlayerPos, callback);
 
@@ -163,8 +161,6 @@ void PlayerController::ShootBullet() {
 }
 
 
-
-
 //transitions states between standing and crouching
 void PlayerController::HandleCrouching(float dt) {
     bool crouching = controller->GetNamedButton("Crouch");
@@ -207,12 +203,10 @@ void PlayerController::HandleSliding(float dt) {
     isSliding = slidingCondition;
 
     if (isSliding) {
-        rb->setDamping(slidingDampening, 1);
         currentStandingSlideTimer = 0;
         currentSlidingTimer = btMin(currentSlidingTimer + dt, slidingTime);
     }
     else {
- //       rb->setDamping(normalDampening, 1);
         currentSlidingTimer = 0;
         currentStandingSlideTimer = btMin(currentStandingSlideTimer + dt, slidingTime);
     }
@@ -238,8 +232,9 @@ void PlayerController::HandleSliding(float dt) {
             camera->SetPosition(playerPos);
             SetGunTransform();
         }
-
-        btVector3 gravity(0, -gravityScale, 0);
-        rb->applyCentralImpulse(gravity * dt);
+        CheckFloor(dt);
+        btVector3 pastMovement = rb->getLinearVelocity();
+        pastMovement.setY(pastMovement.getY() - (gravityScale * dt * speed * (inAir?1:10)));
+        rb->setLinearVelocity(pastMovement);
     }
 }
