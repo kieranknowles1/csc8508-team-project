@@ -185,12 +185,11 @@ void PlayerController::HandleCrouching(float dt) {
 
     if (crouchTransition) {
         Vector3 currentScale = player->getRenderScale();
-        currentScale.y = currentHeight;
+        currentScale.y = (currentHeight+2)*0.7;
         player->setRenderScale(currentScale);
-        btCollisionShape* shape = new btCapsuleShape(radius, currentHeight);
-        btCollisionShape* oldShape = player->GetPhysicsObject()->GetRigidBody()->getCollisionShape();
-        player->GetPhysicsObject()->GetRigidBody()->setCollisionShape(shape);
-        delete(oldShape);
+
+        btCollisionShape* shape = player->GetPhysicsObject()->GetRigidBody()->getCollisionShape();
+        shape->setLocalScaling(btVector3(1, currentHeight/standingHeight, 1));
     }
 }
 
