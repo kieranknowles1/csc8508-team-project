@@ -12,6 +12,7 @@ namespace NCL::UnixCode {
     class SDLWindow : public Window {
 public:
     SDLWindow(const WindowInitialisation& init);
+    ~SDLWindow() override;
 
     void LockMouseToWindow(bool lock) override;
     void ShowOSPointer(bool show) override;

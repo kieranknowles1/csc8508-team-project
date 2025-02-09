@@ -17,7 +17,7 @@ namespace NCL::Rendering {
 	public:
 		friend class OGLRenderer;
 		OGLMesh();
-		~OGLMesh();
+		~OGLMesh() override;
 
 		void RecalculateNormals();
 

@@ -18,6 +18,10 @@ namespace NCL {
 
 		class TutorialGame {
 		public:
+			// Physics update frequency, in hertz
+			const static constexpr float PHYSICS_PERIOD = 1.0f / 60.0f;
+
+
 			TutorialGame();
 			~TutorialGame();
 
@@ -28,16 +32,14 @@ namespace NCL {
 
 			void InitCamera();
 			void UpdateKeys();
-
+			void ThirdPersonControls();
 			void InitWorld();
 
 			Turret* AddTurretToWorld();
 
-			void InitDefaultFloor();
-
-			GameObject* AddFloorToWorld(const Vector3& position);
+			GameObject* AddFloorToWorld(const Vector3& position, const Vector3& size, const Vector3& rotation);
 			GameObject* AddSphereToWorld(const Vector3& position, float radius, float inverseMass = 10.0f);
-			GameObject* AddCubeToWorld(const Vector3& position, Vector3 dimensions, float inverseMass = 10.0f);
+			GameObject* AddCubeToWorld(const Vector3& position, Vector3 dimensions, float inverseMass = 10.0f,bool hasCollision = true);
 			GameObject* AddCapsuleToWorld(const Vector3& position, float halfHeight, float radius, float inverseMass = 10.0f);
 
 			GameObject* AddInfinitePlaneToWorld(const Vector3& position, const Vector3& normal, float planeConstant);
@@ -83,28 +85,30 @@ namespace NCL {
 
 
 			/* bullet physics stuff here */
-			btDiscreteDynamicsWorld* bulletWorld;
-			btBroadphaseInterface* broadphase;
-			btDefaultCollisionConfiguration* collisionConfig;
-			btCollisionDispatcher* dispatcher;
-			btSequentialImpulseConstraintSolver* solver;
+			btDiscreteDynamicsWorld* bulletWorld = nullptr;
+			btBroadphaseInterface* broadphase = nullptr;
+			btDefaultCollisionConfiguration* collisionConfig = nullptr;
+			btCollisionDispatcher* dispatcher = nullptr;
+			btSequentialImpulseConstraintSolver* solver = nullptr;
 
-			BulletDebug* bulletDebug;
+			BulletDebug* bulletDebug = nullptr;
 
+			void DestroyBullet();
 			void InitBullet(); // Initialises the Bullet physics world
-			GameObject* objectToTestBulletPhysics = nullptr;
 
 			//Player things
 			void InitPlayer();
 			PerspectiveCamera* mainCamera;
 			GameObject* player;
+			GameObject* gun;
 			PlayerController* playerController;
 			bool freeCam = false;
+			bool thirdPerson = false;
+			Vector4 playerColour = Vector4(1, 0.8, 1, 1);
 
 			//fixed update 
 			float accumulator = 0.0f;
 			float fixedDeltaTime = 1.0f / 60.0f;
-			void FixedUpdate();
 			
 			Turret* testTurret = nullptr;
 		};

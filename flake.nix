@@ -62,7 +62,14 @@
           # Wrapper that sets the magic DEVSHELL variable, and preserves the user's default shell
           # Usage: `nix develop [.#name=default]`
           default = inputs'.nixcfg.devShells.cmake.override (_old: {
-            libraries = with pkgs; [SDL2 libGL];
+            libraries = with pkgs; [
+              valgrind
+
+              SDL2
+              libGL
+              bullet
+              enet
+            ];
           });
         };
       };
