@@ -125,14 +125,11 @@ void TutorialGame::UpdateGame(float dt) {
 	}
 	player->GetRenderObject()->SetColour((thirdPerson || freeCam)?playerColour:Vector4());
 
-	// Update the physics simulation by delta time, aiming for 60hz with up to 10 substeps
-
+	// DO NOT TOUCH
 	int substeps = std::floor(dt / PHYSICS_PERIOD);
-
 	int steps = bulletWorld->stepSimulation(dt , substeps, PHYSICS_PERIOD);
-	if (steps >= MaxStepsPerFrame) {
-		//std::cerr << "Warning: Physics MaxStepsPerFrame reached, simulation slowed down" << std::endl;
-	}
+
+
 	bulletWorld->debugDrawWorld();
 	if (testTurret) {
 		testTurret->Update(dt);
