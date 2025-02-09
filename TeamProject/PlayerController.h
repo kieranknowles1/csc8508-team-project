@@ -43,10 +43,12 @@ namespace NCL {
 		private:
 			//Player Movement Variables
 			float playerSpeed = 6000.0f;
-			float jumpHeight = 4000.0f;
-			float maxJumpTime = 0.2f;
-			float gravityScale = 2000.0f;
+			float speed = 18.0f;
+			float jumpHeight = 200.0f;
+			float maxJumpTime = 0.0f;
+			float gravityScale = 20.0f;
 			float cameraHeight = 3.0f;
+			float airMulti = 0.04f;
 			float diagonalMulti = 0.6f;
 			float strafeMulti = 0.65f;
 			float backwardsMulti = 0.55f;
@@ -55,9 +57,11 @@ namespace NCL {
 			float crouchMulti = 0.4f;
 			float crouchHeight = 0.0f;
 			float slidingTime = 0.25f;
-			float slidingDampening = 0.45f;
-			float normalDampening = 0.999f;
-			float slidingAngle = 70.0f;
+			float jumpDampening = 0.2f;
+			float slidingDampening = 0.2f;
+			float slidingFriction = 0.25f;
+			float floorDampening = 0.2f;
+			float slidingAngle = 75.0f;
 			float slidingCameraHeight = 0.0f;
 			float slidingCameraBackwards = 2.5f;
 
@@ -66,6 +70,7 @@ namespace NCL {
 			float bulletSpeed = 150.0f;
 			btVector3 gunCameraOffset = btVector3(1.3, -0.7, -1.2);
 			btVector3 bulletCameraOffset = btVector3(1.0, -0.5, -3.0);
+			float playerVelocityStrafeInherit = 0.2f;
 		
 
 			bool thirdPerson = false;
@@ -86,7 +91,7 @@ namespace NCL {
 			float currentCrouchingTimer=0;
 			float currentStandingTimer=10.0f;
 			bool isCrouching;
-			bool isSliding;
+			bool isSliding = false;
 			bool slideTransition = false;
 			float currentAngle;
 			float crouchingAngle = 2.0f;
@@ -125,14 +130,17 @@ public:
 		otherObject->GetRenderObject()->SetColour(this->GetRenderObject()->GetColour());
 		btTransform worldTransform;
 		worldTransform.setOrigin(btVector3(0, -100, 0));
+		this->GetPhysicsObject()->removeFromBullet(bulletWorld);
 		this->GetPhysicsObject()->GetRigidBody()->setWorldTransform(worldTransform);
 		this->GetRenderObject()->SetColour(Vector4(1, 1, 1, 0));
 	}
-	void SetPlayer(GameObject* playerIn) {
+	void Initialise(GameObject* playerIn, btDiscreteDynamicsWorld* bulletWorldIn) {
 		player = playerIn;
+		bulletWorld = bulletWorldIn;
 	}
+
 private:
 	GameObject* player;
-
+	btDiscreteDynamicsWorld* bulletWorld;
 };
 

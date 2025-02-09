@@ -45,11 +45,11 @@ namespace NCL::CSC8503 {
 		}
 
 		virtual void OnCollisionEnter(GameObject* otherObject) {
-			std::cout << "OnCollisionBegin event occured! " << this->GetWorldID() << " " << otherObject->GetWorldID() << std::endl;
+			//std::cout << "OnCollisionBegin event occured! " << this->GetWorldID() << " " << otherObject->GetWorldID() << std::endl;
 		}
 
 		virtual void OnCollisionExit(GameObject* otherObject) {
-			std::cout << "OnCollisionEnd event occured!\n";
+		//	std::cout << "OnCollisionEnd event occured!\n";
 		}
 
 		virtual void Update(float dt) {

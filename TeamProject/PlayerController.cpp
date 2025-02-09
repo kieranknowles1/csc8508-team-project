@@ -1,7 +1,5 @@
 #include "PlayerController.h"
 
-
-
 using namespace NCL;
 using namespace CSC8503;
 
@@ -30,7 +28,6 @@ void PlayerController::UpdateMovement(float dt) {
 
     //sliding/floor detection
     HandleSliding(dt);
-    CheckFloor(dt);
     if (isSliding) return;
 
     //player rotation
@@ -49,6 +46,8 @@ void PlayerController::UpdateMovement(float dt) {
         SetGunTransform();
     }
 
+
+
     //finds player forward and right vectors
     btMatrix3x3 rotationMatrix(playerRotation);
     btVector3 forward = rotationMatrix * btVector3(0, 0, -1);
@@ -59,46 +58,47 @@ void PlayerController::UpdateMovement(float dt) {
     float moveScale = diag ? diagonalMulti : 1.0f;
     bool sprinting = controller->GetNamedButton("Sprint");
     float forwardMovement = controller->GetNamedAxis("Forward");
-    float moveMulti = playerSpeed * moveScale * (sprinting ? sprintMulti : 1) * (isCrouching ? crouchMulti : 1);
+    float moveMulti = playerSpeed * moveScale * (sprinting ? sprintMulti : 1) * (isCrouching ? crouchMulti : 1) * (inAir ? airMulti : 1) ;
     forwardMovement *= (forwardMovement <= 0) ? backwardsMulti : 1;
-    Vector3 movement = (right * controller->GetNamedAxis("Sidestep") * strafeMulti * moveMulti) +(forward * forwardMovement * moveMulti);
+    btVector3 movement = (right * controller->GetNamedAxis("Sidestep") * strafeMulti * moveMulti) +(forward * forwardMovement * moveMulti);
+    movement.setY(movement.getY() - gravityScale);
+    movement = movement * dt * speed;
 
-    //gravity is handled here manually, dampening is too high for gravity to work in bullet
-    movement.y = -gravityScale * (0.5f + inAirCount);
 
     // jump input
     if (!inAir && controller->GetNamedButton("Jump")) {
-        spaceCount += dt;
-        movement.y += jumpHeight;
-        if (spaceCount > maxJumpTime) inAir = true;
-    }
-    else if (!controller->GetNamedButton("Jump") && spaceCount > 0) {
+        rb->setDamping(jumpDampening, 1);
+        movement.setY(movement.getY() + jumpHeight);
         inAir = true;
+        inAirCount = 0.2f;
+        std::cout << "JUMP";
     }
-
-    rb->applyCentralImpulse(btVector3(movement.x, movement.y, movement.z) * dt);
+    else {
+        inAirCount = btMax(0.0f, inAirCount - dt);
+    }
+    CheckFloor(dt);
+    if (inAir) {
+        movement.setX(rb->getLinearVelocity().getX() + (movement.getX() * airMulti));
+        movement.setZ(rb->getLinearVelocity().getZ() + (movement.getZ() * airMulti));
+    }
+    movement.setY(movement.getY() + rb->getLinearVelocity().getY());
+    rb->setLinearVelocity(movement);
 }
 
 
 
 //uses ray to detect if the player is standing on an object
 void PlayerController::CheckFloor(float dt) {
-    bool jumpPressed = controller->GetNamedButton("Jump");
     btVector3 btBelowPlayerPos = btPlayerPos;
-    btBelowPlayerPos.setY(btBelowPlayerPos.getY() - 4.2);
+    btBelowPlayerPos.setY(btBelowPlayerPos.getY() - 4.0f);
     btCollisionWorld::ClosestRayResultCallback callback(btPlayerPos, btBelowPlayerPos);
     bulletWorld->rayTest(btPlayerPos, btBelowPlayerPos, callback);
 
-    if (callback.hasHit()) {
+    if (callback.hasHit() && inAirCount <= 0) {
         inAir = false;
-        spaceCount = 0;
-        inAirCount = 0;
     }
     else {
-        if (!jumpPressed) {
-            inAir = true;
-        }
-        inAirCount += dt;
+        inAir = true;
     }
 }
 
@@ -130,33 +130,35 @@ void PlayerController::ShootBullet() {
     btQuaternion pitchQuat(btVector3(1, 0, 0), pitchRadians);
     btQuaternion bulletRotation = yawQuat * pitchQuat;
 
-    // Compute forward direction based on camera rotation
+    // Compute rotation matrix
     btMatrix3x3 rotationMatrix(bulletRotation);
     btVector3 adjustedOffset = rotationMatrix * bulletCameraOffset;
     btVector3 forwardDir = rotationMatrix * btVector3(0, 0, -1);
-    btVector3 right = rotationMatrix * btVector3(1, 0, 0);
+    btVector3 rightDir = rotationMatrix * btVector3(1, 0, 0);
     btVector3 bulletPos = camera->GetPosition() + adjustedOffset;
 
-    //regular spawn in
     Bullet* bullet = new Bullet();
-    bullet->SetPlayer(player);
+    bullet->Initialise(player,bulletWorld);
     Vector3 bulletSize(1, 1, 1);
     bullet->setInitialPosition(bulletPos);
     bullet->setRenderScale(bulletSize);
     bullet->SetRenderObject(new RenderObject(bullet, sphereMesh, basicTex, basicShader));
     bullet->SetPhysicsObject(new PhysicsObject(bullet));
-    bullet->GetRenderObject()->SetColour(Vector4(1, 0, 0, 1));
+    bullet->GetRenderObject()->SetColour(Vector4(rand() % 2, rand() % 2, rand() % 2, 1));
     btCollisionShape* shape = new btSphereShape(1);
     shape->setMargin(0.01f);
     bullet->GetPhysicsObject()->InitBulletPhysics(bulletWorld, shape, 1.0f);
     world->AddGameObject(bullet);
 
-    //add forward impulse
-    btVector3 bulletVelocity = forwardDir * bulletSpeed;
+    btVector3 playerVelocity = rb->getLinearVelocity();
+    float forwardSpeed = forwardDir.dot(playerVelocity);
+    float rightSpeed = rightDir.dot(playerVelocity);
+    btVector3 adjustedPlayerVelocity = (forwardDir * forwardSpeed) + (rightDir * rightSpeed * playerVelocityStrafeInherit);
+    btVector3 bulletVelocity = adjustedPlayerVelocity + (forwardDir * bulletSpeed);
+
+    // Apply impulse
     bullet->GetPhysicsObject()->GetRigidBody()->applyCentralImpulse(bulletVelocity);
 }
-
-
 
 
 //transitions states between standing and crouching
@@ -179,10 +181,11 @@ void PlayerController::HandleCrouching(float dt) {
 
     if (crouchTransition) {
         Vector3 currentScale = player->getRenderScale();
-        currentScale.y = currentHeight;
+        currentScale.y = (currentHeight+2)*0.7;
         player->setRenderScale(currentScale);
-        btCollisionShape* shape = new btCapsuleShape(radius, currentHeight);
-        player->GetPhysicsObject()->GetRigidBody()->setCollisionShape(shape);
+
+        btCollisionShape* shape = player->GetPhysicsObject()->GetRigidBody()->getCollisionShape();
+        shape->setLocalScaling(btVector3(1, currentHeight/standingHeight, 1));
     }
 }
 
@@ -200,12 +203,10 @@ void PlayerController::HandleSliding(float dt) {
     isSliding = slidingCondition;
 
     if (isSliding) {
-        rb->setDamping(slidingDampening, 1);
         currentStandingSlideTimer = 0;
         currentSlidingTimer = btMin(currentSlidingTimer + dt, slidingTime);
     }
     else {
-        rb->setDamping(normalDampening, 1);
         currentSlidingTimer = 0;
         currentStandingSlideTimer = btMin(currentStandingSlideTimer + dt, slidingTime);
     }
@@ -231,8 +232,9 @@ void PlayerController::HandleSliding(float dt) {
             camera->SetPosition(playerPos);
             SetGunTransform();
         }
-
-        btVector3 gravity(0, (- gravityScale * (0.5f + inAirCount))* slidingDampening, 0);
-        rb->applyCentralImpulse(gravity * dt);
+        CheckFloor(dt);
+        btVector3 pastMovement = rb->getLinearVelocity();
+        pastMovement.setY(pastMovement.getY() - (gravityScale * dt * speed * (inAir?1:10)));
+        rb->setLinearVelocity(pastMovement);
     }
 }

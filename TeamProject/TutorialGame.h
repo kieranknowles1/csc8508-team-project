@@ -19,9 +19,7 @@ namespace NCL {
 		class TutorialGame {
 		public:
 			// Physics update frequency, in hertz
-			const static constexpr float PhysicsFrequency = 60.0f;
-			// Max steps per frame if physics is lagging
-			const static constexpr int MaxStepsPerFrame = 10;
+			const static constexpr float PHYSICS_PERIOD = 1.0f / 60.0f;
 
 
 			TutorialGame();
@@ -39,9 +37,7 @@ namespace NCL {
 
 			Turret* AddTurretToWorld();
 
-			void InitDefaultFloor();
-
-			GameObject* AddFloorToWorld(const Vector3& position);
+			GameObject* AddFloorToWorld(const Vector3& position, const Vector3& size, const Vector3& rotation);
 			GameObject* AddSphereToWorld(const Vector3& position, float radius, float inverseMass = 10.0f);
 			GameObject* AddCubeToWorld(const Vector3& position, Vector3 dimensions, float inverseMass = 10.0f,bool hasCollision = true);
 			GameObject* AddCapsuleToWorld(const Vector3& position, float halfHeight, float radius, float inverseMass = 10.0f);

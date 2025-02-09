@@ -20,6 +20,7 @@ if (MSVC)
 endif()
 
 add_subdirectory(NCLCoreClasses)
+add_subdirectory(MeshCompiler)
 add_subdirectory(CSC8503CoreClasses)
 add_subdirectory(OpenGLRendering)
 add_subdirectory(Network)
