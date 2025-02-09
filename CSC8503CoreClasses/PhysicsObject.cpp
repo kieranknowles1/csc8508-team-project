@@ -10,7 +10,7 @@ using namespace NCL;
 using namespace CSC8503;
 
 PhysicsObject::PhysicsObject(GameObject* parent)
-	: parent(parent), rigidBody(nullptr), motionState(nullptr), collisionShape(nullptr) {
+	: parent(parent), rigidBody(nullptr), motionState(nullptr) {
 
 }
 
@@ -18,10 +18,8 @@ PhysicsObject::~PhysicsObject()	{
 	// Clean up Bullet physics components
 	if (rigidBody) {
 		delete rigidBody->getMotionState();
+		delete rigidBody->getCollisionShape();
 		delete rigidBody;
-	}
-	if (collisionShape) {
-		delete collisionShape;
 	}
 
 #ifndef NDEBUG
@@ -33,7 +31,7 @@ PhysicsObject::~PhysicsObject()	{
 
 /* Bullet Physics Implementation start here */
 void PhysicsObject::InitBulletPhysics(btDynamicsWorld* world, btCollisionShape* shape, float mass, bool collide) {
-	collisionShape = shape;
+
 	btTransform startTransform;
 	startTransform.setIdentity();
 
