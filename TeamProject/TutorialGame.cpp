@@ -128,9 +128,8 @@ void TutorialGame::UpdateGame(float dt) {
 	// Update the physics simulation by delta time, aiming for 60hz with up to 10 substeps
 	int steps = bulletWorld->stepSimulation(dt, MaxStepsPerFrame, 1.0f / PhysicsFrequency);
 	if (steps >= MaxStepsPerFrame) {
-		std::cerr << "Warning: Physics MaxStepsPerFrame reached, simulation slowed down" << std::endl;
+		//std::cerr << "Warning: Physics MaxStepsPerFrame reached, simulation slowed down" << std::endl;
 	}
-	
 	bulletWorld->debugDrawWorld();
 	if (testTurret) {
 		testTurret->Update(dt);
@@ -245,6 +244,8 @@ void TutorialGame::InitWorld() {
 	AddCubeToWorld(Vector3(20, 30, 50), Vector3(7, 7, 7), 4.0f);
 	AddCubeToWorld(Vector3(120, 30, -20), Vector3(5, 5, 5), 1.0f);
 
+	AddCubeToWorld(Vector3(100, 8, 100), Vector3(30, 2,30), 0.0f);
+
 	// Use this as a reference to create more sphere objects
 	AddSphereToWorld(Vector3(10, 30, 0), 5.0f, 4.0f);
 	AddSphereToWorld(Vector3(-30, 30, 0), 7.0f, 8.0f);
@@ -260,8 +261,7 @@ void TutorialGame::InitWorld() {
 }
 
 void TutorialGame::InitPlayer() {
-
-	player = AddCapsuleToWorld(Vector3(10, 200, 20), 4.0f, 2.0f, 10.0f);
+	player = AddCapsuleToWorld(Vector3(10, 400, 20), 4.0f, 2.0f, 10.0f);
 	player->GetPhysicsObject()->GetRigidBody()->setAngularFactor(0);
 	player->GetPhysicsObject()->GetRigidBody()->setFriction(1);
 	player->GetPhysicsObject()->GetRigidBody()->setDamping(0.999, 0);

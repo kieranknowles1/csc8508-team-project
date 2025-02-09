@@ -42,7 +42,6 @@ namespace NCL {
 			// bullet stuff
 			btRigidBody* rigidBody;
 			btMotionState* motionState;
-			btCollisionShape* collisionShape;
 
 			std::set<GameObject*> activeCollisions;
 

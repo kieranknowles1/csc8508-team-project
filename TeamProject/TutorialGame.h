@@ -21,7 +21,7 @@ namespace NCL {
 			// Physics update frequency, in hertz
 			const static constexpr float PhysicsFrequency = 60.0f;
 			// Max steps per frame if physics is lagging
-			const static constexpr int MaxStepsPerFrame = 10;
+			const static constexpr int MaxStepsPerFrame = 0;
 
 
 			TutorialGame();
