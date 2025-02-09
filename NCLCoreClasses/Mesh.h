@@ -9,6 +9,7 @@ https://research.ncl.ac.uk/game/
 #pragma once
 
 #include <vector>
+#include <memory>
 
 #include <cassert>
 #include <cstdint>
@@ -17,7 +18,7 @@ https://research.ncl.ac.uk/game/
 
 namespace NCL::Rendering {
 	class RendererBase;
-	
+
 	using namespace NCL::Maths;
 
 	namespace GeometryPrimitive {
@@ -42,8 +43,8 @@ namespace NCL::Rendering {
 			JointWeights,
 			JointIndices,
 			MAX_ATTRIBUTES
-		};	
-		
+		};
+
 		const std::string Names[VertexAttribute::MAX_ATTRIBUTES] = {
 			std::string("Positions"),
 			std::string("Colours"),
@@ -62,7 +63,7 @@ namespace NCL::Rendering {
 	};
 
 	class Mesh	{
-	public:		
+	public:
 		Mesh();
 		virtual ~Mesh();
 
@@ -231,7 +232,7 @@ namespace NCL::Rendering {
 		std::vector<SubMesh>		subMeshes;
 		std::vector<std::string>	subMeshNames;
 
-		std::vector<Vector4>		skinWeights;	//Allows us to have 4 weight skinning 
+		std::vector<Vector4>		skinWeights;	//Allows us to have 4 weight skinning
 		std::vector<Vector4i>		skinIndices;
 		std::vector<std::string>	jointNames;
 		std::vector<int>			jointParents;

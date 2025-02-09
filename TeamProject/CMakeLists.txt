@@ -21,10 +21,10 @@ set(SOURCES
 )
 
 set(COMPILED_MESHES
-    capsule.msh
+    Capsule.msh
     Plane.msh
-    cube.msh
-    sphere.msh
+    Cube.msh
+    Sphere.msh
     ORIGAMI_Chat.msh
     Kitten.msh
     Keeper.msh
