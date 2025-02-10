@@ -47,7 +47,6 @@ namespace NCL {
 			float gravityScale = 0.0f;
 			float cameraHeight = 3.0f;
 			float airMulti = 0.04f;
-			float diagonalMulti = 0.6f;
 			float strafeMulti = 0.65f;
 			float backwardsMulti = 0.55f;
 			float sprintMulti = 2.0f;
@@ -69,7 +68,7 @@ namespace NCL {
 			btVector3 gunCameraOffset = btVector3(1.3, -0.7, -1.2);
 			btVector3 bulletCameraOffset = btVector3(1.0, -0.5, -3.0);
 			float playerVelocityStrafeInherit = 0.2f;
-		
+
 
 			bool thirdPerson = false;
 			bool inAir = false;
@@ -106,6 +105,9 @@ namespace NCL {
 			GameWorld* world;
 			GameTechRenderer* renderer;
 			float shotTimer = 0;
+
+			// Get directional movemnt, clamped to have a magnitude of 1
+			Vector2 getDirectionalInput() const;
 
 			void Initialise();
 			void HandleCrouching(float dt);

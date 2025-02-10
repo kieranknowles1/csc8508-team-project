@@ -28,19 +28,6 @@ TutorialGame::TutorialGame() : controller(*Window::GetWindow()->GetKeyboard(), *
 
 	world->GetMainCamera().SetController(controller);
 	mainCamera = &world->GetMainCamera();
-	controller.MapAxis(0, "Sidestep");
-	controller.MapAxis(1, "UpDown");
-	controller.MapAxis(2, "Forward");
-
-	controller.MapAxis(3, "XLook");
-	controller.MapAxis(4, "YLook");
-
-
-	controller.MapButton(0, "LeftMouseButton");
-	controller.MapButton(1, "RightMouseButton");
-	controller.MapButton(2, "Jump");
-	controller.MapButton(3, "Sprint");
-	controller.MapButton(4, "Crouch");
 
 	InitialiseAssets();
 }

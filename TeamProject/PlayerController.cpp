@@ -3,6 +3,13 @@
 using namespace NCL;
 using namespace CSC8503;
 
+Vector2 PlayerController::getDirectionalInput() const
+{
+    Vector2 raw(controller->GetAnalogue(Controller::AnalogueControl::MoveSidestep), controller->GetAnalogue(Controller::AnalogueControl::MoveForward));
+    float magnitude = Vector::Length(raw);
+    return magnitude <= 1.0f ? raw : raw / magnitude;
+}
+
 void PlayerController::Initialise() {
     rb = player->GetPhysicsObject()->GetRigidBody();
     sphereMesh = renderer->LoadMesh("Sphere.msh");
@@ -15,10 +22,10 @@ void PlayerController::UpdateMovement(float dt) {
     btPlayerPos = transformPlayer.getOrigin();
 
     //camera yaw
-    yaw = fmod(yaw - controller->GetNamedAxis("XLook") + 360.0f, 360.0f);
+    yaw = fmod(yaw - controller->GetAnalogue(Controller::AnalogueControl::LookX) + 360.0f, 360.0f);
     if (!thirdPerson) camera->SetYaw(yaw);
 
-    if (controller->GetNamedButton("LeftMouseButton") && shotTimer >= shotCooldown) {
+    if (controller->GetDigital(Controller::DigitalControl::Fire) && shotTimer >= shotCooldown) {
         ShootBullet();
         shotTimer = 0.0f;
     }
@@ -54,18 +61,17 @@ void PlayerController::UpdateMovement(float dt) {
     btVector3 right = rotationMatrix * btVector3(1, 0, 0);
 
     //movement based on all the multipliers combined
-    bool diag = controller->GetNamedAxis("Sidestep") && controller->GetNamedAxis("Forward");
-    float moveScale = diag ? diagonalMulti : 1.0f;
-    bool sprinting = controller->GetNamedButton("Sprint");
-    float forwardMovement = controller->GetNamedAxis("Forward");
-    float moveMulti = playerSpeed * moveScale * (sprinting ? sprintMulti : 1) * (isCrouching ? crouchMulti : 1) * (inAir ? airMulti : 1) ;
+    Vector2 directionalInput = getDirectionalInput();
+    bool sprinting = controller->GetDigital(Controller::DigitalControl::Sprint);
+    float forwardMovement = directionalInput.y;
+    float moveMulti = playerSpeed * (sprinting ? sprintMulti : 1) * (isCrouching ? crouchMulti : 1) * (inAir ? airMulti : 1) ;
     forwardMovement *= (forwardMovement <= 0) ? backwardsMulti : 1;
-    btVector3 movement = (right * controller->GetNamedAxis("Sidestep") * strafeMulti * moveMulti) +(forward * forwardMovement * moveMulti);
+    btVector3 movement = (right * directionalInput.x * strafeMulti * moveMulti) +(forward * forwardMovement * moveMulti);
     movement.setY(movement.getY() - gravityScale);
 
 
     // jump input
-    if (!inAir && controller->GetNamedButton("Jump")) {
+    if (!inAir && controller->GetDigital(Controller::DigitalControl::Jump)) {
         rb->setDamping(jumpDampening, 1);
         movement.setY(movement.getY() + jumpHeight);
         inAir = true;
@@ -129,7 +135,7 @@ void PlayerController::ShootBullet() {
     btQuaternion yawQuat(btVector3(0, 1, 0), yawRadians);
     btQuaternion pitchQuat(btVector3(1, 0, 0), pitchRadians);
     btQuaternion bulletRotation = yawQuat * pitchQuat;
-  
+
     // Compute rotation matrix
     btMatrix3x3 rotationMatrix(bulletRotation);
     btVector3 adjustedOffset = rotationMatrix * bulletCameraOffset;
@@ -164,7 +170,7 @@ void PlayerController::ShootBullet() {
 
 //transitions states between standing and crouching
 void PlayerController::HandleCrouching(float dt) {
-    bool crouching = controller->GetNamedButton("Crouch");
+    bool crouching = controller->GetDigital(Controller::DigitalControl::Crouch);
     crouchTransition = crouching ? (currentCrouchingTimer < crouchingTime) : (currentStandingTimer < crouchingTime);
 
     if (crouching) {
@@ -193,8 +199,8 @@ void PlayerController::HandleCrouching(float dt) {
 
 //transitions states between standing and sliding, also handles physics for while sliding
 void PlayerController::HandleSliding(float dt) {
-    bool crouching = controller->GetNamedButton("Crouch");
-    bool sprinting = controller->GetNamedButton("Sprint");
+    bool crouching = controller->GetDigital(Controller::DigitalControl::Crouch);
+    bool sprinting = controller->GetDigital(Controller::DigitalControl::Sprint);
     bool slidingCondition = crouching && sprinting && !isCrouching;
 
     slideTransition = slidingCondition
