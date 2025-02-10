@@ -11,6 +11,7 @@ uniform vec4	lightColour;
 uniform vec3	cameraPos;
 
 uniform bool hasTexture;
+uniform bool isFlat;
 
 in Vertex
 {
@@ -19,12 +20,17 @@ in Vertex
 	vec4 shadowProj;
 	vec3 normal;
 	vec3 worldPos;
+	int setFlat;
 } IN;
 
 out vec4 fragColor;
 
 void main(void)
 {
+	if(isFlat){
+		fragColor = IN.colour;
+		return;
+	}
 	float shadow = 1.0; // New !
 	
 	if( IN . shadowProj . w > 0.0) { // New !

@@ -10,9 +10,10 @@ layout(location = 1) in vec4 colour;
 layout(location = 2) in vec2 texCoord;
 layout(location = 3) in vec3 normal;
 
-uniform vec4 		objectColour = vec4(1,1,1,1);
+uniform vec4 objectColour;
 
 uniform bool hasVertexColours = false;
+uniform bool isFlat = false;
 
 out Vertex
 {
@@ -21,6 +22,7 @@ out Vertex
 	vec4 shadowProj;
 	vec3 normal;
 	vec3 worldPos;
+	int setFlat;
 } OUT;
 
 void main(void)
@@ -35,8 +37,10 @@ void main(void)
 	OUT.texCoord	= texCoord;
 	OUT.colour		= objectColour;
 
-	if(hasVertexColours) {
-		OUT.colour		= objectColour * colour;
+	if(isFlat) {
+		OUT.setFlat = 1;
+	}else{
+		OUT.setFlat = 0;
 	}
 	gl_Position		= mvp * vec4(position, 1.0);
 }

@@ -55,7 +55,8 @@ void PhysicsObject::InitBulletPhysics(btDynamicsWorld* world, btCollisionShape* 
 
 	// Setting the object's properties
 	rigidBody->setMassProps(mass, localInertia);
-  rigidBody->setUserPointer(parent);
+	rigidBody->setUserPointer(parent);
+	rigidBody->setActivationState(DISABLE_DEACTIVATION);
   
 	if (collide) {
 		world->addRigidBody(rigidBody);

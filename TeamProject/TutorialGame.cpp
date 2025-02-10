@@ -111,9 +111,16 @@ static bool BulletRaycast(btDynamicsWorld* world, const btVector3& start, const 
 }
 
 void TutorialGame::UpdateGame(float dt) {
-	// DO NOT TOUCH
-	int substeps = std::floor(dt / PHYSICS_PERIOD);
-	int steps = bulletWorld->stepSimulation(dt , substeps, PHYSICS_PERIOD);
+	// Old
+	//int substeps = std::floor(dt / PHYSICS_PERIOD);
+	//int steps = bulletWorld->stepSimulation(dt , substeps, PHYSICS_PERIOD);
+
+	//New
+	int substeps = 0;
+	float maxDt = btMax(PHYSICS_PERIOD, dt);
+	int steps = bulletWorld->stepSimulation(maxDt, substeps, PHYSICS_PERIOD);
+
+
 	bulletWorld->debugDrawWorld();
 	if (testTurret) {
 		testTurret->Update(dt);
@@ -138,7 +145,10 @@ void TutorialGame::UpdateGame(float dt) {
 			ThirdPersonControls();
 		}
 	}
-	player->GetRenderObject()->SetColour((thirdPerson || freeCam) ? playerColour : Vector4());
+	if (!thirdPerson && !freeCam) {
+	//	player->GetRenderObject()->SetColour(Vector4());
+	}
+
 
 	renderer->Update(dt);
 	renderer->Render();
@@ -189,7 +199,6 @@ void TutorialGame::ThirdPersonControls() {
 	mainCamera->SetYaw(playerYaw);
 	mainCamera->SetPitch(-15);
 
-	player->GetRenderObject()->SetColour(Vector4(1, 0.8, 1, 1));
 
 }
 
@@ -280,7 +289,7 @@ void TutorialGame::InitPlayer() {
 
 	player->GetPhysicsObject()->GetRigidBody()->setAngularFactor(0);
 	player->GetPhysicsObject()->GetRigidBody()->setFriction(0.0f);
-	player->GetPhysicsObject()->GetRigidBody()->setDamping(0.4, 0);
+	player->GetPhysicsObject()->GetRigidBody()->setDamping(0.0, 0);
 	gun = AddCubeToWorld(Vector3(10, 2, 20), Vector3(0.6, 0.6, 1.6), 0, false);
 	playerController = new PlayerController(player, gun, controller, mainCamera, bulletWorld,world,renderer);
 	player->GetRenderObject()->SetColour(playerColour);

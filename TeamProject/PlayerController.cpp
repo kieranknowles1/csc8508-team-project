@@ -7,7 +7,7 @@ void PlayerController::Initialise() {
     rb = player->GetPhysicsObject()->GetRigidBody();
     sphereMesh = renderer->LoadMesh("Sphere.msh");
     basicTex = renderer->LoadTexture("checkerboard.png");
-    basicShader = renderer->LoadShader("scene.vert", "scene.frag");
+    basicShader = renderer->LoadShader("flatvert.glsl", "flatfrag.glsl");
 }
 
 void PlayerController::UpdateMovement(float dt) {
@@ -62,7 +62,6 @@ void PlayerController::UpdateMovement(float dt) {
     forwardMovement *= (forwardMovement <= 0) ? backwardsMulti : 1;
     btVector3 movement = (right * controller->GetNamedAxis("Sidestep") * strafeMulti * moveMulti) +(forward * forwardMovement * moveMulti);
     movement.setY(movement.getY() - gravityScale);
-    movement = movement * dt * speed;
 
 
     // jump input
@@ -236,7 +235,7 @@ void PlayerController::HandleSliding(float dt) {
         }
         CheckFloor(dt);
         btVector3 pastMovement = rb->getLinearVelocity();
-        pastMovement.setY(pastMovement.getY() - (gravityScale * dt * speed * (inAir?1:10)));
+        pastMovement.setY(pastMovement.getY() - (gravityScale * (inAir?1:10)));
         rb->setLinearVelocity(pastMovement);
         rb->activate();
     }

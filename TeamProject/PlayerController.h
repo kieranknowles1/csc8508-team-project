@@ -42,11 +42,9 @@ namespace NCL {
 			};
 		private:
 			//Player Movement Variables
-			float playerSpeed = 6000.0f;
-			float speed = 18.0f;
-			float jumpHeight = 200.0f;
-			float maxJumpTime = 0.0f;
-			float gravityScale = 20.0f;
+			float playerSpeed = 70.0f;
+			float jumpHeight = 100.0f;
+			float gravityScale = 0.0f;
 			float cameraHeight = 3.0f;
 			float airMulti = 0.04f;
 			float diagonalMulti = 0.6f;
@@ -128,6 +126,9 @@ public:
 	void OnCollisionEnter(GameObject* otherObject) override {
 		if (otherObject == player) return;
 		otherObject->GetRenderObject()->SetColour(this->GetRenderObject()->GetColour());
+		otherObject->GetRenderObject()->SetIsFlat(true);
+		player->GetRenderObject()->SetColour(this->GetRenderObject()->GetColour());
+		player->GetRenderObject()->SetIsFlat(true);
 		btTransform worldTransform;
 		worldTransform.setOrigin(btVector3(0, -100, 0));
 		this->GetPhysicsObject()->removeFromBullet(bulletWorld);
