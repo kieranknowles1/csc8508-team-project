@@ -44,7 +44,7 @@ namespace NCL {
 			//Player Movement Variables
 			float playerSpeed = 50.0f;
 			float jumpHeight = 90.0f;
-			float gravityScale = 0.0f;
+			float gravityScale = 100.0f;
 			float cameraHeight = 3.0f;
 			float airMulti = 0.04f;
 			float strafeMulti = 0.65f;

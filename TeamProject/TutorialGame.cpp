@@ -15,7 +15,7 @@ using namespace CSC8503;
 
 TutorialGame::TutorialGame() : controller(*Window::GetWindow()->GetKeyboard(), *Window::GetWindow()->GetMouse()) {
 	/* Initializing the Bullet Physics World here as it should be done before Initialize the NCL framework's PhysicsSystem */
-	InitBullet();
+	//InitBullet(); //bullet is initialised in initialiseAssets already
 
 	world		= new GameWorld();
 #ifdef USEVULKAN
@@ -104,11 +104,10 @@ void TutorialGame::UpdateGame(float dt) {
 	//int substeps = std::floor(dt / PHYSICS_PERIOD);
 	//int steps = bulletWorld->stepSimulation(dt , substeps, PHYSICS_PERIOD);
 
-	//New
+	////New
 	int substeps = 0;
-	float maxDt = btMax(PHYSICS_PERIOD, dt);
+	float maxDt = btMin(PHYSICS_PERIOD, dt);
 	int steps = bulletWorld->stepSimulation(maxDt, substeps, PHYSICS_PERIOD);
-
 
 	bulletWorld->debugDrawWorld();
 	if (testTurret) {
@@ -214,8 +213,7 @@ void TutorialGame::InitBullet() {
 	solver = new btSequentialImpulseConstraintSolver();
 
 	bulletWorld = new btDiscreteDynamicsWorld(dispatcher, broadphase, solver, collisionConfig);
-	bulletWorld->setGravity(btVector3(0, -9.8, 0));
-
+	bulletWorld->setGravity(btVector3(0, -30.0f, 0));
 	bulletDebug = new BulletDebug();
 	bulletWorld->setDebugDrawer(bulletDebug);
 }
