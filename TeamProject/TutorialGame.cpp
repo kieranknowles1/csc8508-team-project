@@ -71,7 +71,9 @@ void TutorialGame::InitialiseAssets() {
 	femaleguardMesh = renderer->LoadMesh("/FemaleGuard/Female_Guard.msh");
 
 	basicTex	= renderer->LoadTexture("checkerboard.png");
+	std::cout << basicShader << std::endl;
 	basicShader = renderer->LoadShader("scene.vert", "scene.frag");
+	std::cout << basicShader << std::endl;
 	//Added Shaders:
 	flatShader = renderer->LoadShader("flatvert.glsl", "flatfrag.glsl"); 
 
