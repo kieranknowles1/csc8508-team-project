@@ -34,10 +34,27 @@ int main(int argc, char** argv) {
 	Client client;
 	client.ConnectTo(serverAddress);
 
-	while (client.GetState() == ConnectionState::DISCONNECTED) {
+	const char* hello = "HELLO";
+
+	Packet::PacketBase discover;
+	discover.type = Packet::DISCOVER;
+	discover.size = strlen(hello) + 1;
+	discover.channel = 0;
+	discover.data = std::make_shared<char[]>(discover.size);
+	memcpy(discover.data.get(), hello, discover.size);
+
+
+	while (client.GetState() != ConnectionState::CONNECTED) {
 		std::cout << ConsoleTextColor::DEFAULT << "Waiting...\n";
 	}
 	std::cout << ConsoleTextColor::GREEN << "[Client] Connected to server.\n";
+
+
+	client.SendPacket(discover);
+
+	std::this_thread::sleep_for(std::chrono::seconds(2));
+
+	if (server.something) { std::cout << "SOMETHING\n"; }
 
 	server.Stop();
 

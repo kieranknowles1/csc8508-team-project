@@ -2,6 +2,7 @@
 
 #include <thread>
 #include <chrono>
+#include <iostream>
 
 Client::Client() {
 	CreateHost(nullptr, MAX_CLIENTS, 2, 0, 0);
@@ -14,7 +15,7 @@ Client::~Client() {
 
 void Client::ConnectTo(ENetAddress& address) {
 	ENetAddress destination;
-	enet_address_set_host(&destination, "127.0.0.1");
+	enet_address_set_host(&destination, "192.168.0.15");
 	destination.port = 12345;
 
 	m_server = enet_host_connect(m_host, &destination, 2, 0);

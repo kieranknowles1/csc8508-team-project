@@ -51,6 +51,7 @@ void Server::Run() {
 	bool running = true;
 
 	while (running) {
+
 		Update();
 
 		// Update running.
@@ -65,14 +66,17 @@ void Server::Update() {
 	ENetEvent event = GetEvent(EVENT_WAIT);
 
 	if (event.type == ENET_EVENT_TYPE_CONNECT) {
+		something = true;
 		std::cout << ConsoleTextColor::YELLOW << "[Server] Client attempted connection.\n";
 		AttemptConnection(event);
 	}
 	else if (event.type == ENET_EVENT_TYPE_DISCONNECT) {
+		something = true;
 		std::cout << ConsoleTextColor::YELLOW << "[Server] A client disconnected.\n";
 		RemoveConnection(event);
 	}
 	else if (event.type == ENET_EVENT_TYPE_RECEIVE) {
+		something = true;
 		Packet::PacketBase packet = Packet::PacketBase::FromENetPacket(event.packet);
 		std::cout << ConsoleTextColor::YELLOW << "[Server] Packet received.\n";
 
