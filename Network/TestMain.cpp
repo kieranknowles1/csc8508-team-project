@@ -51,6 +51,7 @@ int main(int argc, char** argv) {
 
 
 	client.SendPacket(discover);
+	client.Flush();
 
 	std::this_thread::sleep_for(std::chrono::seconds(2));
 

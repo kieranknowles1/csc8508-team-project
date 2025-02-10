@@ -47,6 +47,12 @@ public:
 	 */
 	void SendPacket(Packet::PacketBase packet);
 
+
+	/**
+	 * @brief Sends all packets not currently sent. Lazy execution.
+	 */
+	void Flush() { enet_host_flush(m_host); }
+
 private:
 	/**
 	 * @brief Waits for a response from the server.

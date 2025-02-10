@@ -13,11 +13,7 @@ Client::~Client() {
 }
 
 
-void Client::ConnectTo(ENetAddress& address) {
-	ENetAddress destination;
-	enet_address_set_host(&destination, "192.168.0.15");
-	destination.port = 12345;
-
+void Client::ConnectTo(ENetAddress& destination) {
 	m_server = enet_host_connect(m_host, &destination, 2, 0);
 	if (m_server == nullptr) {
 		return;
