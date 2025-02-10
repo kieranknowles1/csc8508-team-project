@@ -10,6 +10,7 @@ namespace NCL::CSC8503 {
 	public:
 		BWHelperFunctions(btDiscreteDynamicsWorld* world);
 		pair<btVector3, GameObject*> Raycast(const btVector3& start, const btVector3& end);
+		vector<pair<btVector3, GameObject*>> RaycastAll(const btVector3& start, const btVector3& end);
 	private:
 		btDiscreteDynamicsWorld* world;
 	};
