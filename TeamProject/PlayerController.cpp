@@ -15,7 +15,7 @@ void PlayerController::UpdateMovement(float dt) {
     btPlayerPos = transformPlayer.getOrigin();
 
     //camera yaw
-    yaw = fmod(yaw - controller->GetNamedAxis("XLook") + 360.0f, 360.0f);
+    yaw = fmod(yaw - controller->GetAnalogue(Controller::AnalogueControl::LookX) + 360.0f, 360.0f);
     if (!thirdPerson) camera->SetYaw(yaw);
 
     if (controller->GetNamedButton("LeftMouseButton") && shotTimer >= shotCooldown) {
@@ -54,13 +54,15 @@ void PlayerController::UpdateMovement(float dt) {
     btVector3 right = rotationMatrix * btVector3(1, 0, 0);
 
     //movement based on all the multipliers combined
-    bool diag = controller->GetNamedAxis("Sidestep") && controller->GetNamedAxis("Forward");
+    // FIXME: On controller, this will slow us down if moving even slightly sideways
+    // Instead, could we clamp the total magnitude of the direction vector to 1.0f?
+    bool diag = controller->GetAnalogue(Controller::AnalogueControl::MoveSidestep) && controller->GetAnalogue(Controller::AnalogueControl::MoveForward);
     float moveScale = diag ? diagonalMulti : 1.0f;
     bool sprinting = controller->GetNamedButton("Sprint");
-    float forwardMovement = controller->GetNamedAxis("Forward");
+    float forwardMovement = controller->GetAnalogue(Controller::AnalogueControl::MoveForward);
     float moveMulti = playerSpeed * moveScale * (sprinting ? sprintMulti : 1) * (isCrouching ? crouchMulti : 1) * (inAir ? airMulti : 1) ;
     forwardMovement *= (forwardMovement <= 0) ? backwardsMulti : 1;
-    btVector3 movement = (right * controller->GetNamedAxis("Sidestep") * strafeMulti * moveMulti) +(forward * forwardMovement * moveMulti);
+    btVector3 movement = (right * controller->GetAnalogue(Controller::AnalogueControl::MoveSidestep) * strafeMulti * moveMulti) +(forward * forwardMovement * moveMulti);
     movement.setY(movement.getY() - gravityScale);
     movement = movement * dt * speed;
 
@@ -130,7 +132,7 @@ void PlayerController::ShootBullet() {
     btQuaternion yawQuat(btVector3(0, 1, 0), yawRadians);
     btQuaternion pitchQuat(btVector3(1, 0, 0), pitchRadians);
     btQuaternion bulletRotation = yawQuat * pitchQuat;
-  
+
     // Compute rotation matrix
     btMatrix3x3 rotationMatrix(bulletRotation);
     btVector3 adjustedOffset = rotationMatrix * bulletCameraOffset;

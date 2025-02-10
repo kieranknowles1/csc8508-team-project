@@ -7,43 +7,23 @@ Comments and queries to: richard-gordon.davison AT ncl.ac.uk
 https://research.ncl.ac.uk/game/
 */
 #include "KeyboardMouseController.h"
+
+#include <assert.h>
+
 #include "Mouse.h"
 #include "Keyboard.h"
 
-using namespace NCL;
-float	KeyboardMouseController::GetAxis(uint32_t axis) const {
-	if (axis == XAxis) {
-		if (keyboard.KeyDown(NCL::KeyCodes::A)) {
-			return -1.0f;
-		}
-		if (keyboard.KeyDown(NCL::KeyCodes::D)) {
-			return 1.0f;
-		}
-	}
-	else if (axis == ZAxis) {
-		if (keyboard.KeyDown(NCL::KeyCodes::W)) {
-			return 1.0f;
-		}
-		if (keyboard.KeyDown(NCL::KeyCodes::S)) {
-			return -1.0f;
-		}
-	}
-	else if (axis == YAxis) {
-		if (keyboard.KeyDown(NCL::KeyCodes::SHIFT)) {
-			return -1.0f;
-		}
-		if (keyboard.KeyDown(NCL::KeyCodes::SPACE)) {
-			return 1.0f;
-		}
-	}
-	else if (axis == XAxisMouse) {
-		return mouse.GetRelativePosition().x;
-	}
-	else if (axis == YAxisMouse) {
-		return mouse.GetRelativePosition().y;
-	}
 
-	return 0.0f;
+using namespace NCL;
+float	KeyboardMouseController::GetAnalogue(AnalogueControl axis) const {
+	switch (axis) {
+	case AnalogueControl::MoveForward: return getAxis(KeyCodes::W, KeyCodes::S);
+	case AnalogueControl::MoveSidestep: return getAxis(KeyCodes::D, KeyCodes::A);
+	case AnalogueControl::MoveUpDown: return getAxis(KeyCodes::SPACE, KeyCodes::SHIFT);
+	case AnalogueControl::LookX: return mouse.GetRelativePosition().x;
+	case AnalogueControl::LookY: return mouse.GetRelativePosition().y;
+	default: assert(false && "Unknown axis");
+	}
 }
 
 float	KeyboardMouseController::GetButtonAnalogue(uint32_t button) const {
@@ -67,4 +47,11 @@ bool	KeyboardMouseController::GetButton(uint32_t button)  const {
 		return std::max(keyboard.KeyDown(NCL::KeyCodes::CONTROL), (keyboard.KeyDown(NCL::KeyCodes::C)));
 	}
 	return 0.0f;
+}
+
+float KeyboardMouseController::getAxis(KeyCodes::Type positive, KeyCodes::Type negative) const
+{
+	if (keyboard.KeyDown(positive)) return 1.0f;
+
+	return keyboard.KeyDown(negative) ? -1.0f : 0.0f;
 }

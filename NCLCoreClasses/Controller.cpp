@@ -8,10 +8,6 @@ https://research.ncl.ac.uk/game/
 */
 #include "Controller.h"
 
-void Controller::MapAxis(uint32_t axis, const std::string& name)  {
-	axisMappings.insert({name, axis});
-}
-
 void Controller::MapButton(uint32_t axis, const std::string& name) {
 	buttonMappings.insert({ name, axis });
 }
@@ -20,13 +16,6 @@ void Controller::MapButtonAnalogue(uint32_t axis, const std::string& name) {
 	analogueMappings.insert({ name, axis });
 }
 
-float	Controller::GetNamedAxis(const std::string& axis) const {
-	auto a = axisMappings.find(axis);
-	if (a != axisMappings.end()) {
-		return GetAxis(a->second);
-	}
-	return 0.0f;
-}
 
 float	Controller::GetNamedButtonAnalogue(const std::string& button) const {
 	auto a = analogueMappings.find(button);
