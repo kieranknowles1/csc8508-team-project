@@ -47,6 +47,7 @@ void Client::AwaitServerResponse() {
 				m_state = ConnectionState::CONNECTED;
 				connected = true;
 			}
+			enet_packet_destroy(event.packet);
 		}
 
 		now = std::chrono::high_resolution_clock::now();
@@ -56,6 +57,12 @@ void Client::AwaitServerResponse() {
 			timedout = true;
 		}
 	}
+}
+
+
+void Client::SendPacket(Packet::PacketBase packet) {
+	ENetPacket* enetPacket = packet.ToENetPacket();
+	enet_peer_send(m_server, packet.channel, enetPacket);
 }
 
 

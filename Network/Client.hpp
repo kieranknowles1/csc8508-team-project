@@ -2,6 +2,7 @@
 
 #include <mutex>
 
+#include "Packet.hpp"
 #include "Network.hpp"
 
 
@@ -39,6 +40,12 @@ public:
 		std::lock_guard<std::mutex> lock(m_connectionMutex);
 		return m_state;
 	}
+
+	/**
+	 * @brief Sends the packet to the server.
+	 * @param packet The packet to be transmitted.
+	 */
+	void SendPacket(Packet::PacketBase packet);
 
 private:
 	/**
