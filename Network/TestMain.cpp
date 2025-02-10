@@ -29,7 +29,7 @@ int main(int argc, char** argv) {
 	server.Start();
 
 	ENetAddress serverAddress = { 0, 12345 };
-	enet_address_set_host(&serverAddress, "192.168.0.15");
+	enet_address_set_host(&serverAddress, "10.70.33.113");
 
 	Client client;
 	client.ConnectTo(serverAddress);
@@ -53,9 +53,7 @@ int main(int argc, char** argv) {
 	client.QueuePacket(discover);
 	client.Flush();
 
-	std::this_thread::sleep_for(std::chrono::seconds(2));
-
-	if (server.something) { std::cout << "SOMETHING\n"; }
+	std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 
 	server.Stop();
 

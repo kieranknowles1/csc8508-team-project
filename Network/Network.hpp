@@ -15,7 +15,7 @@
 
 
 const unsigned int MAX_CLIENTS = 8;
-const float EVENT_WAIT = 100; // ms
+const float EVENT_WAIT = 1000; // ms
 
 namespace ConsoleTextColor {
 	inline const char* GREEN = "\x1b[32m";

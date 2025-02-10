@@ -51,7 +51,6 @@ void Server::Run() {
 	bool running = true;
 
 	while (running) {
-
 		Update();
 
 		// Update running.
@@ -66,24 +65,13 @@ void Server::Update() {
 	ENetEvent event = GetEvent(EVENT_WAIT);
 
 	if (event.type == ENET_EVENT_TYPE_CONNECT) {
-		something = true;
-		std::cout << ConsoleTextColor::YELLOW << "[Server] Client attempted connection.\n";
 		AttemptConnection(event);
 	}
 	else if (event.type == ENET_EVENT_TYPE_DISCONNECT) {
-		something = true;
-		std::cout << ConsoleTextColor::YELLOW << "[Server] A client disconnected.\n";
 		RemoveConnection(event);
 	}
 	else if (event.type == ENET_EVENT_TYPE_RECEIVE) {
-		something = true;
 		Packet::PacketBase packet = Packet::PacketBase::FromENetPacket(event.packet);
-		std::cout << ConsoleTextColor::YELLOW << "[Server] Packet received.\n";
-
-		if (packet.type == Packet::DISCOVER) {
-			std::cout << ConsoleTextColor::YELLOW << "[Server] Received Discover Packet.\n";
-		}
-
 		enet_packet_destroy(event.packet);
 		Handle(packet);
 	}
@@ -92,11 +80,9 @@ void Server::Update() {
 
 void Server::AttemptConnection(ENetEvent& event) {
 	if (!allowConnections || m_numConnections >= MAX_CLIENTS) {
-		std::cout << ConsoleTextColor::YELLOW << "[Server] Client rejected.\n";
 		enet_peer_reset(event.peer);
 		return;
 	}
-	std::cout << ConsoleTextColor::YELLOW << "[Server] Client connection successful.\n";
 	connections[m_numConnections++] = event.peer;
 }
 

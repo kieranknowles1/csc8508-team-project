@@ -32,10 +32,6 @@ public:
 	std::string GetHostname() const { return m_hostName; }
 	uint32_t GetPort() const { return m_port; }
 
-
-	bool something = false;
-
-
 protected:
 	void Run();
 	void Update();
