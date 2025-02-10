@@ -53,8 +53,6 @@ void PlayerController::UpdateMovement(float dt) {
         SetGunTransform();
     }
 
-
-
     //finds player forward and right vectors
     btMatrix3x3 rotationMatrix(playerRotation);
     btVector3 forward = rotationMatrix * btVector3(0, 0, -1);
@@ -67,7 +65,7 @@ void PlayerController::UpdateMovement(float dt) {
     float moveMulti = playerSpeed * (sprinting ? sprintMulti : 1) * (isCrouching ? crouchMulti : 1) * (inAir ? airMulti : 1) ;
     forwardMovement *= (forwardMovement <= 0) ? backwardsMulti : 1;
     btVector3 movement = (right * directionalInput.x * strafeMulti * moveMulti) +(forward * forwardMovement * moveMulti);
-    movement.setY(movement.getY() - gravityScale);
+    movement.setY(movement.getY() - (gravityScale*dt));
 
 
     // jump input
@@ -241,7 +239,7 @@ void PlayerController::HandleSliding(float dt) {
         }
         CheckFloor(dt);
         btVector3 pastMovement = rb->getLinearVelocity();
-        pastMovement.setY(pastMovement.getY() - (gravityScale * (inAir?1:10)));
+        pastMovement.setY(pastMovement.getY() - ((gravityScale*dt) * (inAir?1:10)));
         rb->setLinearVelocity(pastMovement);
         rb->activate();
     }
