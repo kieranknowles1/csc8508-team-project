@@ -3,6 +3,13 @@
 using namespace NCL;
 using namespace CSC8503;
 
+Vector2 PlayerController::getDirectionalInput() const
+{
+    Vector2 raw(controller->GetAnalogue(Controller::AnalogueControl::MoveSidestep), controller->GetAnalogue(Controller::AnalogueControl::MoveForward));
+    float magnitude = Vector::Length(raw);
+    return magnitude <= 1.0f ? raw : raw / magnitude;
+}
+
 void PlayerController::Initialise() {
     rb = player->GetPhysicsObject()->GetRigidBody();
     sphereMesh = renderer->LoadMesh("Sphere.msh");
@@ -54,15 +61,12 @@ void PlayerController::UpdateMovement(float dt) {
     btVector3 right = rotationMatrix * btVector3(1, 0, 0);
 
     //movement based on all the multipliers combined
-    // FIXME: On controller, this will slow us down if moving even slightly sideways
-    // Instead, could we clamp the total magnitude of the direction vector to 1.0f?
-    bool diag = controller->GetAnalogue(Controller::AnalogueControl::MoveSidestep) && controller->GetAnalogue(Controller::AnalogueControl::MoveForward);
-    float moveScale = diag ? diagonalMulti : 1.0f;
+    Vector2 directionalInput = getDirectionalInput();
     bool sprinting = controller->GetDigital(Controller::DigitalControl::Sprint);
-    float forwardMovement = controller->GetAnalogue(Controller::AnalogueControl::MoveForward);
-    float moveMulti = playerSpeed * moveScale * (sprinting ? sprintMulti : 1) * (isCrouching ? crouchMulti : 1) * (inAir ? airMulti : 1) ;
+    float forwardMovement = directionalInput.y;
+    float moveMulti = playerSpeed * (sprinting ? sprintMulti : 1) * (isCrouching ? crouchMulti : 1) * (inAir ? airMulti : 1) ;
     forwardMovement *= (forwardMovement <= 0) ? backwardsMulti : 1;
-    btVector3 movement = (right * controller->GetAnalogue(Controller::AnalogueControl::MoveSidestep) * strafeMulti * moveMulti) +(forward * forwardMovement * moveMulti);
+    btVector3 movement = (right * directionalInput.x * strafeMulti * moveMulti) +(forward * forwardMovement * moveMulti);
     movement.setY(movement.getY() - gravityScale);
     movement = movement * dt * speed;
 
