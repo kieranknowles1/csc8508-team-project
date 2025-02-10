@@ -67,7 +67,6 @@ void PlayerController::UpdateMovement(float dt) {
     btVector3 movement = (right * directionalInput.x * strafeMulti * moveMulti) +(forward * forwardMovement * moveMulti);
     movement.setY(movement.getY() - (gravityScale*dt));
 
-
     // jump input
     if (!inAir && controller->GetDigital(Controller::DigitalControl::Jump)) {
         rb->setDamping(jumpDampening, 1);
@@ -141,18 +140,18 @@ void PlayerController::ShootBullet() {
     btVector3 rightDir = rotationMatrix * btVector3(1, 0, 0);
     btVector3 bulletPos = camera->GetPosition() + adjustedOffset;
 
-    Bullet* bullet = new Bullet();
-    bullet->Initialise(player,bulletWorld);
+    Paintball* paintball = new Paintball();
+    paintball->Initialise(player,bulletWorld);
     Vector3 bulletSize(1, 1, 1);
-    bullet->setInitialPosition(bulletPos);
-    bullet->setRenderScale(bulletSize);
-    bullet->SetRenderObject(new RenderObject(bullet, sphereMesh, basicTex, basicShader));
-    bullet->SetPhysicsObject(new PhysicsObject(bullet));
-    bullet->GetRenderObject()->SetColour(Vector4(rand() % 2, rand() % 2, rand() % 2, 1));
+    paintball->setInitialPosition(bulletPos);
+    paintball->setRenderScale(bulletSize);
+    paintball->SetRenderObject(new RenderObject(paintball, sphereMesh, basicTex, basicShader));
+    paintball->SetPhysicsObject(new PhysicsObject(paintball));
+    paintball->GetRenderObject()->SetColour(Vector4(rand() % 2, rand() % 2, rand() % 2, 1));
     btCollisionShape* shape = new btSphereShape(1);
     shape->setMargin(0.01f);
-    bullet->GetPhysicsObject()->InitBulletPhysics(bulletWorld, shape, 1.0f);
-    world->AddGameObject(bullet);
+    paintball->GetPhysicsObject()->InitBulletPhysics(bulletWorld, shape, 1.0f);
+    world->AddGameObject(paintball);
 
     btVector3 playerVelocity = rb->getLinearVelocity();
     float forwardSpeed = forwardDir.dot(playerVelocity);
@@ -161,8 +160,8 @@ void PlayerController::ShootBullet() {
     btVector3 bulletVelocity = adjustedPlayerVelocity + (forwardDir * bulletSpeed);
 
     // Apply impulse
-    bullet->GetPhysicsObject()->GetRigidBody()->applyCentralImpulse(bulletVelocity);
-    bullet->GetPhysicsObject()->GetRigidBody()->activate();
+    paintball->GetPhysicsObject()->GetRigidBody()->applyCentralImpulse(bulletVelocity);
+    paintball->GetPhysicsObject()->GetRigidBody()->activate();
 }
 
 

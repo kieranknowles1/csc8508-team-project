@@ -122,8 +122,8 @@ namespace NCL {
 
 
 using namespace NCL::CSC8503;
-// Bullet class derived from GameObject
-class Bullet : public GameObject {
+// Paintball class derived from GameObject
+class Paintball : public GameObject {
 public:
 	void OnCollisionEnter(GameObject* otherObject) override {
 		if (otherObject == player) return;
