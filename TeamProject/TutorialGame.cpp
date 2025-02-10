@@ -187,7 +187,6 @@ void TutorialGame::ThirdPersonControls() {
 	mainCamera->SetYaw(playerYaw);
 	mainCamera->SetPitch(-15);
 
-
 }
 
 void TutorialGame::DestroyBullet() {
@@ -232,21 +231,20 @@ void TutorialGame::InitWorld() {
 	world->ClearAndErase();
 	InitBullet();
 
-	AddCubeToWorld(Vector3(0, 0, 0), Vector3(500, 2, 500), 0);
+	//floors
+	AddFloorToWorld(Vector3(0, 0, 0), Vector3(500, 2, 500), Vector3(0, 0, 0), true)->SetName("Floor1");
+	AddFloorToWorld(Vector3(498.5, -21.75, 0), Vector3(500, 2, 500), Vector3(0, 0, -5),true)->SetName("Floor2");
+	AddFloorToWorld(Vector3(996, -43.6, 0), Vector3(500, 2, 500), Vector3(0, 0, 0),true)->SetName("Floor3");
 
-	//floor and walls
-	AddFloorToWorld(Vector3(498, -22, 0), Vector3(500, 2, 500), Vector3(0, 0, -5));
-	AddFloorToWorld(Vector3(996, -44, 0), Vector3(500, 2, 500), Vector3(0, 0, 0));
-	AddFloorToWorld(Vector3(1245, 206, 0), Vector3(2, 500, 500), Vector3(0, 0, 0));
-	AddFloorToWorld(Vector3(996, 206, 249), Vector3(500, 500, 2), Vector3(0, 0, 0));
-	AddFloorToWorld(Vector3(996, 206, -249), Vector3(500, 500, 2), Vector3(0, 0, 0));
-	AddFloorToWorld(Vector3(498, 206, 249), Vector3(500, 500, 2), Vector3(0, 0, 0));
-	AddFloorToWorld(Vector3(498, 206, -249), Vector3(500, 500, 2), Vector3(0, 0, 0));
-	AddFloorToWorld(Vector3(-2, 206, 249), Vector3(500, 500, 2), Vector3(0, 0, 0));
-	AddFloorToWorld(Vector3(-2, 206, -249), Vector3(500, 500, 2), Vector3(0, 0, 0));
-	AddFloorToWorld(Vector3(-248, 206, 0), Vector3(2, 500, 500), Vector3(0, 0, 0));
-
-
+	//walls
+	AddFloorToWorld(Vector3(1245, 206, 0), Vector3(2, 500, 500), Vector3(0, 0, 0),false);
+	AddFloorToWorld(Vector3(996, 206, 249), Vector3(500, 500, 2), Vector3(0, 0, 0), false);
+	AddFloorToWorld(Vector3(996, 206, -249), Vector3(500, 500, 2), Vector3(0, 0, 0), false);
+	AddFloorToWorld(Vector3(498, 206, 249), Vector3(500, 500, 2), Vector3(0, 0, 0), false);
+	AddFloorToWorld(Vector3(498, 206, -249), Vector3(500, 500, 2), Vector3(0, 0, 0), false);
+	AddFloorToWorld(Vector3(-2, 206, 249), Vector3(500, 500, 2), Vector3(0, 0, 0), false);
+	AddFloorToWorld(Vector3(-2, 206, -249), Vector3(500, 500, 2), Vector3(0, 0, 0), false);
+	AddFloorToWorld(Vector3(-248, 206, 0), Vector3(2, 500, 500), Vector3(0, 0, 0), false);
 
 	// Use this as a reference to create more cube objects
 	AddCubeToWorld(Vector3(0, 30, 0), Vector3(5, 5, 5), 1.0f);
@@ -272,7 +270,7 @@ void TutorialGame::InitWorld() {
 
 void TutorialGame::InitPlayer() {
 
-	player = AddCapsuleToWorld(Vector3(10, 5, 20), 4.0f, 2.0f, 10.0f);
+	player = AddPlayerCapsuleToWorld(Vector3(10, 5, 20), 4.0f, 2.0f, 10.0f);
 
 	player->GetPhysicsObject()->GetRigidBody()->setAngularFactor(0);
 	player->GetPhysicsObject()->GetRigidBody()->setFriction(0.0f);
@@ -344,6 +342,32 @@ GameObject* TutorialGame::AddCubeToWorld(const Vector3& position, Vector3 dimens
 	return cube;
 }
 
+PlayerObject* TutorialGame::AddPlayerCapsuleToWorld(const Vector3& position, float height, float radius, float inverseMass) {
+	PlayerObject* capsule = new PlayerObject();
+
+	// Setting the transform properties for the capsule
+	capsule->setInitialPosition(position);
+	capsule->setRenderScale(Vector3(radius * 2, height, radius * 2));
+
+	// TODO: Set the orientation of the capsule
+	//capsule->SetOrientation(rotation);
+
+	// Creating a Bullet collision shape for the capsule
+	btCollisionShape* shape = new btCapsuleShape(radius, height);
+
+	// Setting the render object for the capsule
+	capsule->SetRenderObject(new RenderObject(capsule, capsuleMesh, basicTex, basicShader));
+	// Setting the physics object for the capsule
+	capsule->SetPhysicsObject(new PhysicsObject(capsule));
+
+	// Initializing the physics object for the capsule
+	capsule->GetPhysicsObject()->InitBulletPhysics(bulletWorld, shape, inverseMass);
+
+	world->AddGameObject(capsule);
+
+	return capsule;
+}
+
 GameObject* TutorialGame::AddCapsuleToWorld(const Vector3& position, float height, float radius, float inverseMass) {
 	GameObject* capsule = new GameObject();
 
@@ -402,7 +426,7 @@ GameObject* TutorialGame::AddInfinitePlaneToWorld(const Vector3& position, const
 A single function to add a large immoveable cube to the bottom of our world
 
 */
-GameObject* TutorialGame::AddFloorToWorld(const Vector3& position, const Vector3& size, const Vector3& rotation) {
+GameObject* TutorialGame::AddFloorToWorld(const Vector3& position, const Vector3& size, const Vector3& rotation, bool isFloor) {
 	GameObject* floor1 = AddCubeToWorld(position, size, 0);
 	btVector3 eulerRotation = rotation;
 	float pitchRadians = Maths::DegreesToRadians(eulerRotation.x());
@@ -413,7 +437,7 @@ GameObject* TutorialGame::AddFloorToWorld(const Vector3& position, const Vector3
 	btTransform transform = floor1->GetPhysicsObject()->GetRigidBody()->getWorldTransform();
 	transform.setRotation(rotationQuat);
 	floor1->GetPhysicsObject()->GetRigidBody()->setWorldTransform(transform);
-
+	floor1->setIsFloor(isFloor);
 	return floor1;
 }
 

@@ -14,6 +14,7 @@
 #include "RenderObject.h"
 #include "TextureLoader.h"
 #include "BulletDebug.h"
+#include "PlayerObject.h"
 
 #include <btBulletDynamicsCommon.h>
 #include <btBulletCollisionCommon.h>
@@ -23,26 +24,23 @@ namespace NCL {
 	namespace CSC8503 {
 		class PlayerController {
 		public:
-			PlayerController(GameObject* playerIn, GameObject* gunIn, const Controller& c, Camera* cam, btDiscreteDynamicsWorld* bulletWorldIn, GameWorld* worldIn ,GameTechRenderer* rendererIn) {
+			PlayerController(PlayerObject* playerIn, GameObject* gunIn, const Controller& c, Camera* cam, btDiscreteDynamicsWorld* bulletWorldIn, GameWorld* worldIn ,GameTechRenderer* rendererIn) {
 				player = playerIn;
 				gun = gunIn;
 				controller = &c;
 				camera = cam;
 				bulletWorld = bulletWorldIn;
 				world = worldIn;
-			//	renderer = rendererIn;
 				Initialise();
 			}
 			~PlayerController() {};
-
-
 			void UpdateMovement(float dt);
 			void SetThirdPerson(bool thirdPersonIn) {
 				thirdPerson = thirdPersonIn;
 			};
 		private:
 			//Player Movement Variables
-			float playerSpeed = 50.0f;
+			float playerSpeed = 60.0f;
 			float jumpHeight = 90.0f;
 			float gravityScale = 100.0f;
 			float cameraHeight = 3.0f;
@@ -71,11 +69,10 @@ namespace NCL {
 
 
 			bool thirdPerson = false;
-			bool inAir = false;
 			float spaceCount = 0;
 			float inAirCount = 0;
 			btDiscreteDynamicsWorld* bulletWorld;
-			GameObject* player;
+			PlayerObject* player;
 			GameObject* gun;
 			const Controller* controller = nullptr;
 			Camera* camera = nullptr;
@@ -105,14 +102,14 @@ namespace NCL {
 			GameWorld* world;
 			GameTechRenderer* renderer;
 			float shotTimer = 0;
+			bool collision = false;
 
 			// Get directional movemnt, clamped to have a magnitude of 1
 			Vector2 getDirectionalInput() const;
-
 			void Initialise();
 			void HandleCrouching(float dt);
 			void HandleSliding(float dt);
-			void CheckFloor(float dt);
+			//void CheckFloor(float dt);
 			void SetGunTransform();
 			void ShootBullet();
 
@@ -146,4 +143,7 @@ private:
 	GameObject* player;
 	btDiscreteDynamicsWorld* bulletWorld;
 };
+
+
+
 
