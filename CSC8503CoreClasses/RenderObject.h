@@ -37,11 +37,19 @@ namespace NCL {
 			}
 
 			Vector4 GetColour() const {
-				return colour;
+				return  colour;
 			}
 
 			GameObject* getParent() const {
 				return parent;
+			}
+
+			bool GetIsFlat() const{
+				return isFlat;
+			}
+
+			void SetIsFlat(bool isFlatIn) {
+				isFlat = isFlatIn;
 			}
 
 		protected:
@@ -49,7 +57,8 @@ namespace NCL {
 			Mesh*		mesh;
 			Texture*	texture;
 			Shader*		shader;
-			Vector4		colour;
+			Vector4		colour = Vector4(1, 1, 0, 0.99);
+			bool isFlat = false;
 		};
 	}
 }
