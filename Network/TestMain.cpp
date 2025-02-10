@@ -50,7 +50,7 @@ int main(int argc, char** argv) {
 	std::cout << ConsoleTextColor::GREEN << "[Client] Connected to server.\n";
 
 
-	client.SendPacket(discover);
+	client.QueuePacket(discover);
 	client.Flush();
 
 	std::this_thread::sleep_for(std::chrono::seconds(2));
