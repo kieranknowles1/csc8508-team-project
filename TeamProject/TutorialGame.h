@@ -62,6 +62,8 @@ namespace NCL {
 
 			Texture* basicTex = nullptr;
 			Shader* basicShader = nullptr;
+			//Added Shaders:
+			Shader* flatShader = nullptr;
 
 			//Coursework Meshes
 			Mesh*	catMesh		= nullptr;

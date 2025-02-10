@@ -72,6 +72,8 @@ void TutorialGame::InitialiseAssets() {
 
 	basicTex	= renderer->LoadTexture("checkerboard.png");
 	basicShader = renderer->LoadShader("scene.vert", "scene.frag");
+	//Added Shaders:
+	flatShader = renderer->LoadShader("flatvert.glsl", "flatfrag.glsl"); 
 
 	InitCamera();
 	InitWorld();
@@ -95,6 +97,7 @@ TutorialGame::~TutorialGame()	{
 
 	delete basicTex;
 	delete basicShader;
+	delete flatShader;
 
 	delete renderer;
 	delete world;
@@ -360,7 +363,6 @@ GameObject* TutorialGame::AddCapsuleToWorld(const Vector3& position, float heigh
 
 	// Setting the render object for the capsule
 	capsule->SetRenderObject(new RenderObject(capsule, capsuleMesh, basicTex, basicShader));
-
 	// Setting the physics object for the capsule
 	capsule->SetPhysicsObject(new PhysicsObject(capsule));
 
