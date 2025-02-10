@@ -22,7 +22,6 @@ out Vertex
 	vec4 shadowProj;
 	vec3 normal;
 	vec3 worldPos;
-	int setFlat;
 } OUT;
 
 void main(void)
@@ -36,11 +35,5 @@ void main(void)
 	
 	OUT.texCoord	= texCoord;
 	OUT.colour		= objectColour;
-
-	if(isFlat) {
-		OUT.setFlat = 1;
-	}else{
-		OUT.setFlat = 0;
-	}
 	gl_Position		= mvp * vec4(position, 1.0);
 }

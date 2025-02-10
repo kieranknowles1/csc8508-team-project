@@ -20,7 +20,6 @@ in Vertex
 	vec4 shadowProj;
 	vec3 normal;
 	vec3 worldPos;
-	int setFlat;
 } IN;
 
 out vec4 fragColor;
