@@ -15,11 +15,6 @@ namespace NCL {
 	class Mouse;
 
 	class KeyboardMouseController : public Controller {
-		const uint32_t LeftMouseButton	= 0;
-		const uint32_t RightMouseButton = 1;
-		const uint32_t Jump = 2;
-		const uint32_t Sprint = 3;
-		const uint32_t Crouch = 4;
 	public:
 		KeyboardMouseController(const Keyboard& k, const Mouse& m) : keyboard(k), mouse(m) {
 		}
@@ -28,9 +23,7 @@ namespace NCL {
 		}
 
 		float	GetAnalogue(AnalogueControl axis) const override;
-
-		float	GetButtonAnalogue(uint32_t button) const override;
-		bool	GetButton(uint32_t button) const override;
+		bool GetDigital(DigitalControl control) const override;
 
 	protected:
 		const Keyboard&		keyboard;

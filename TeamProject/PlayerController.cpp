@@ -18,7 +18,7 @@ void PlayerController::UpdateMovement(float dt) {
     yaw = fmod(yaw - controller->GetAnalogue(Controller::AnalogueControl::LookX) + 360.0f, 360.0f);
     if (!thirdPerson) camera->SetYaw(yaw);
 
-    if (controller->GetNamedButton("LeftMouseButton") && shotTimer >= shotCooldown) {
+    if (controller->GetDigital(Controller::DigitalControl::Fire) && shotTimer >= shotCooldown) {
         ShootBullet();
         shotTimer = 0.0f;
     }
@@ -58,7 +58,7 @@ void PlayerController::UpdateMovement(float dt) {
     // Instead, could we clamp the total magnitude of the direction vector to 1.0f?
     bool diag = controller->GetAnalogue(Controller::AnalogueControl::MoveSidestep) && controller->GetAnalogue(Controller::AnalogueControl::MoveForward);
     float moveScale = diag ? diagonalMulti : 1.0f;
-    bool sprinting = controller->GetNamedButton("Sprint");
+    bool sprinting = controller->GetDigital(Controller::DigitalControl::Sprint);
     float forwardMovement = controller->GetAnalogue(Controller::AnalogueControl::MoveForward);
     float moveMulti = playerSpeed * moveScale * (sprinting ? sprintMulti : 1) * (isCrouching ? crouchMulti : 1) * (inAir ? airMulti : 1) ;
     forwardMovement *= (forwardMovement <= 0) ? backwardsMulti : 1;
@@ -68,7 +68,7 @@ void PlayerController::UpdateMovement(float dt) {
 
 
     // jump input
-    if (!inAir && controller->GetNamedButton("Jump")) {
+    if (!inAir && controller->GetDigital(Controller::DigitalControl::Jump)) {
         rb->setDamping(jumpDampening, 1);
         movement.setY(movement.getY() + jumpHeight);
         inAir = true;
@@ -167,7 +167,7 @@ void PlayerController::ShootBullet() {
 
 //transitions states between standing and crouching
 void PlayerController::HandleCrouching(float dt) {
-    bool crouching = controller->GetNamedButton("Crouch");
+    bool crouching = controller->GetDigital(Controller::DigitalControl::Crouch);
     crouchTransition = crouching ? (currentCrouchingTimer < crouchingTime) : (currentStandingTimer < crouchingTime);
 
     if (crouching) {
@@ -196,8 +196,8 @@ void PlayerController::HandleCrouching(float dt) {
 
 //transitions states between standing and sliding, also handles physics for while sliding
 void PlayerController::HandleSliding(float dt) {
-    bool crouching = controller->GetNamedButton("Crouch");
-    bool sprinting = controller->GetNamedButton("Sprint");
+    bool crouching = controller->GetDigital(Controller::DigitalControl::Crouch);
+    bool sprinting = controller->GetDigital(Controller::DigitalControl::Sprint);
     bool slidingCondition = crouching && sprinting && !isCrouching;
 
     slideTransition = slidingCondition

@@ -10,10 +10,6 @@ https://research.ncl.ac.uk/game/
 
 class Controller	{
 public:
-	enum class DigitalControl {
-
-	};
-
 	// Between a range:
 	// 0..1: Triggers
 	// -1..1: Stick
@@ -29,6 +25,15 @@ public:
 		LookY,
 	};
 
+	// 0 or 1, a keyboard or controller button that is pressed
+	// or a trigger moved beyond a threshold
+	enum class DigitalControl {
+		Fire,
+		Jump,
+		Sprint,
+		Crouch,
+	};
+
 	Controller() {
 
 	}
@@ -37,20 +42,7 @@ public:
 	}
 
 	virtual float	GetAnalogue(AnalogueControl axis) const = 0;
-
-	virtual float	GetButtonAnalogue(uint32_t button) const = 0;
-	virtual bool	GetButton(uint32_t button) const = 0;
-
-	virtual float	GetNamedButtonAnalogue(const std::string& button) const;
-	virtual bool	GetNamedButton(const std::string& button) const;
-
-	void MapButton(uint32_t axis, const std::string& name);
-	void MapButtonAnalogue(uint32_t axis, const std::string& name);
+	virtual bool GetDigital(DigitalControl control) const = 0;
 
 	virtual void Update(float dt = 0.0f) {};
-
-protected:
-
-	std::map<std::string, uint32_t> buttonMappings;
-	std::map<std::string, uint32_t> analogueMappings;
 };
