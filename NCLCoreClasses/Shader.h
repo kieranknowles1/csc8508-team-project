@@ -8,6 +8,9 @@ https://research.ncl.ac.uk/game/
 */
 #pragma once
 
+#include <string>
+#include "Matrix.h"
+
 namespace NCL::Rendering {
 	namespace ShaderStages {
 		enum Type : uint32_t {
@@ -34,6 +37,8 @@ namespace NCL::Rendering {
 		virtual unsigned int GetProgramID() const = 0;
 
 		virtual void ReloadShader() = 0;
+
+		virtual void setUniform(const char*, const Maths::Matrix4& value) = 0;
 	protected:
 		std::string		shaderFiles[ShaderStages::MAX_SIZE];
 	};

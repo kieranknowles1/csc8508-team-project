@@ -33,7 +33,15 @@ namespace NCL::Rendering {
 
 		static bool Preprocessor(std::string& shaderFile);
 
+		void setUniform(const char* name, const Maths::Matrix4& value) {
+			glUniformMatrix4fv(getUniformLocation(name), 1, false, (float*)&value);
+		}
+
 	protected:
+		int getUniformLocation(const char* name) {
+			return glGetUniformLocation(GetProgramID(), name);
+		}
+
 		void	DeleteIDs();
 
 		GLuint	programID;

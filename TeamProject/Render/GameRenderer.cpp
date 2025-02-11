@@ -179,7 +179,6 @@ void GameRenderer::renderShadowMap(const ObjectList& objects) {
 	glCullFace(GL_FRONT);
 
 	backend->useShader(shadowShader);
-	int mvpLocation = glGetUniformLocation(shadowShader->GetProgramID(), "mvpMatrix");
 
 	Matrix4 shadowViewMatrix = Matrix::View(lightPosition, Vector3(0, 0, 0), Vector3(0,1,0));
 	Matrix4 shadowProjMatrix = Matrix::Perspective(100.0f, 500.0f, 1.0f, 45.0f);
@@ -194,7 +193,7 @@ void GameRenderer::renderShadowMap(const ObjectList& objects) {
 		i->getParent()->GetTransform().getOpenGLMatrix((btScalar*)&modelMatrix);
 		modelMatrix = modelMatrix * Matrix::Scale(i->getParent()->getRenderScale());
 		Matrix4 mvpMatrix	= mvMatrix * modelMatrix;
-		glUniformMatrix4fv(mvpLocation, 1, false, (float*)&mvpMatrix);
+		shadowShader->setUniform("mvpMatrix", mvpMatrix);
 		backend->bindMesh(i->GetMesh());
 		size_t layerCount = (*i).GetMesh()->GetSubMeshCount();
 		for (size_t i = 0; i < layerCount; ++i) {
@@ -220,12 +219,10 @@ void GameRenderer::renderSkybox(Camera& camera) {
 
 	backend->useShader(skyboxShader);
 
-	int projLocation = glGetUniformLocation(skyboxShader->GetProgramID(), "projMatrix");
-	int viewLocation = glGetUniformLocation(skyboxShader->GetProgramID(), "viewMatrix");
 	int texLocation  = glGetUniformLocation(skyboxShader->GetProgramID(), "cubeTex");
 
-	glUniformMatrix4fv(projLocation, 1, false, (float*)&projMatrix);
-	glUniformMatrix4fv(viewLocation, 1, false, (float*)&viewMatrix);
+	skyboxShader->setUniform("projMatrix", projMatrix);
+	skyboxShader->setUniform("viewMatrix", viewMatrix);
 
 	glUniform1i(texLocation, 0);
 	glActiveTexture(GL_TEXTURE0);
@@ -271,11 +268,10 @@ void GameRenderer::renderCamera(Camera& camera, const ObjectList& objects) {
 			backend->bindTextureToShader(i->GetDefaultTexture(), "mainTex", 0);
 		}
 
+		// TODO: Callback when shader changes to configure it
 		if (activeShader != shader) {
-			projLocation	= glGetUniformLocation(shader->GetProgramID(), "projMatrix");
-			viewLocation	= glGetUniformLocation(shader->GetProgramID(), "viewMatrix");
-			modelLocation	= glGetUniformLocation(shader->GetProgramID(), "modelMatrix");
-			shadowLocation  = glGetUniformLocation(shader->GetProgramID(), "shadowMatrix");
+			shader->setUniform("projMatrix", projMatrix);
+			shader->setUniform("viewMatrix", viewMatrix);
 			colourLocation  = glGetUniformLocation(shader->GetProgramID(), "objectColour");
 			hasVColLocation = glGetUniformLocation(shader->GetProgramID(), "hasVertexColours");
 			hasTexLocation  = glGetUniformLocation(shader->GetProgramID(), "hasTexture");
@@ -289,9 +285,6 @@ void GameRenderer::renderCamera(Camera& camera, const ObjectList& objects) {
 
 			Vector3 camPos = camera.GetPosition();
 			glUniform3fv(cameraLocation, 1, &camPos.x);
-
-			glUniformMatrix4fv(projLocation, 1, false, (float*)&projMatrix);
-			glUniformMatrix4fv(viewLocation, 1, false, (float*)&viewMatrix);
 
 			glUniform3fv(lightPosLocation	, 1, (float*)&lightPosition);
 			glUniform4fv(lightColourLocation, 1, (float*)&lightColour);
@@ -307,10 +300,10 @@ void GameRenderer::renderCamera(Camera& camera, const ObjectList& objects) {
 		Matrix4 modelMatrix;
 		i->getParent()->GetTransform().getOpenGLMatrix((btScalar*)&modelMatrix);
 		modelMatrix = modelMatrix * Matrix::Scale(i->getParent()->getRenderScale());
-		glUniformMatrix4fv(modelLocation, 1, false, (float*)&modelMatrix);
+		shader->setUniform("modelMatrix", modelMatrix);
 
 		Matrix4 fullShadowMat = shadowMatrix * modelMatrix;
-		glUniformMatrix4fv(shadowLocation, 1, false, (float*)&fullShadowMat);
+		shader->setUniform("shadowMatrix", fullShadowMat);
 
 		Vector4 colour = i->GetColour();
 		glUniform4fv(colourLocation, 1, &colour.x);
@@ -340,11 +333,10 @@ void GameRenderer::NewRenderLines(Camera& camera) {
 	Matrix4 viewProj  = projMatrix * viewMatrix;
 
 	backend->useShader(debugShader);
-	int matSlot = glGetUniformLocation(debugShader->GetProgramID(), "viewProjMatrix");
 	GLuint texSlot = glGetUniformLocation(debugShader->GetProgramID(), "useTexture");
 	glUniform1i(texSlot, 0);
 
-	glUniformMatrix4fv(matSlot, 1, false, (float*)viewProj.array);
+	debugShader->setUniform("viewProjMatrix", viewProj);
 
 	debugLineData.clear();
 
@@ -382,8 +374,7 @@ void GameRenderer::NewRenderText() {
 
 	Matrix4 proj = Matrix::Orthographic(0.0f, 100.0f, 100.0f, 0.0f, -1.0f, 1.0f);
 
-	int matSlot = glGetUniformLocation(debugShader->GetProgramID(), "viewProjMatrix");
-	glUniformMatrix4fv(matSlot, 1, false, (float*)proj.array);
+	debugShader->setUniform("viewProjMatrix", proj);
 
 	GLuint texSlot = glGetUniformLocation(debugShader->GetProgramID(), "useTexture");
 	glUniform1i(texSlot, 1);
@@ -424,9 +415,6 @@ void GameRenderer::NewRenderTextures() {
 
 	Matrix4 proj = Matrix::Orthographic(0.0f, 100.0f, 100.0f, 0.0f, -1.0f, 1.0f);
 
-	int matSlot = glGetUniformLocation(debugShader->GetProgramID(), "viewProjMatrix");
-	glUniformMatrix4fv(matSlot, 1, false, (float*)proj.array);
-
 	GLuint texSlot = glGetUniformLocation(debugShader->GetProgramID(), "useTexture");
 	glUniform1i(texSlot, 2);
 
@@ -452,7 +440,7 @@ void GameRenderer::NewRenderTextures() {
 		Matrix4 transform = Matrix::Translation(Vector3(tex.position.x, tex.position.y, 0)) * Matrix::Scale(Vector3(tex.scale.x, tex.scale.y, 1.0f));
 		Matrix4 finalMatrix = proj * transform;
 
-		glUniformMatrix4fv(matSlot, 1, false, (float*)finalMatrix.array);
+		debugShader->setUniform("viewProjMatrix", finalMatrix);
 
 		glUniform4f(colourSlot, tex.colour.x, tex.colour.y, tex.colour.z, tex.colour.w);
 
