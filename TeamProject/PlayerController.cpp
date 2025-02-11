@@ -35,7 +35,8 @@ void PlayerController::UpdateMovement(float dt) {
 
     //sliding/floor detection
     HandleSliding(dt);
-    if (isSliding) return;
+    HandleCrouching(dt);
+    if ((isSliding||slideTransition) && !isCrouching) return;
 
     //player rotation
     btQuaternion playerRotation(btVector3(0, 1, 0), Maths::DegreesToRadians(yaw));
@@ -43,7 +44,7 @@ void PlayerController::UpdateMovement(float dt) {
     rb->setWorldTransform(transformPlayer);
 
     //camera follows player, lowers if crouching
-    HandleCrouching(dt);
+
     btTransform transformPlayerMotion;
     player->GetPhysicsObject()->GetMotionState()->getWorldTransform(transformPlayerMotion);
     btVector3 playerCamPos = transformPlayerMotion.getOrigin();
@@ -148,7 +149,10 @@ void PlayerController::ShootBullet() {
 
 //transitions states between standing and crouching
 void PlayerController::HandleCrouching(float dt) {
-    if (crouching && !controller->GetDigital(Controller::DigitalControl::Crouch)) {
+    if (isSliding) {
+        return;
+    }
+    if ((crouching && !controller->GetDigital(Controller::DigitalControl::Crouch)) || slideTransition) {
         crouching = CheckCeling();
     }
     else {
@@ -217,7 +221,7 @@ void PlayerController::HandleSliding(float dt) {
         currentStandingSlideTimer = btMin(currentStandingSlideTimer + dt, slidingTime);
     }
 
-    if (slideTransition || isSliding) {
+    if ((slideTransition || isSliding) && !isCrouching) {
         float slideFactor = isSliding ? btMin(currentSlidingTimer / slidingTime, 1.0f) : btMin(currentStandingSlideTimer / slidingTime, 1.0f);
 
         btQuaternion playerRotation(btVector3(0, 1, 0), Maths::DegreesToRadians(yaw));
