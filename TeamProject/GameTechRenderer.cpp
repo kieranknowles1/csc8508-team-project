@@ -272,6 +272,11 @@ void GameTechRenderer::RenderCamera() {
 			BindTextureToShader(*(OGLTexture*)(*i).GetDefaultTexture(), "mainTex", 0);
 		}
 
+		//normal map capabilities added:
+		if ((*i).GetNormalMap()) {
+			BindTextureToShader(*(OGLTexture*)(*i).GetNormalMap(), "normalTex", 2); //need a shader that utilises normal maps, has a uniform sampler2D called "normalTex" in texture unit 2
+		}
+
 		if (activeShader != shader) {
 			projLocation	= glGetUniformLocation(shader->GetProgramID(), "projMatrix");
 			viewLocation	= glGetUniformLocation(shader->GetProgramID(), "viewMatrix");
