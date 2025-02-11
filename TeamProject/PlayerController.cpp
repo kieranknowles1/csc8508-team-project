@@ -93,8 +93,10 @@ void PlayerController::UpdateMovement(float dt) {
 
 //uses ray to detect if the player is standing on an object
 void PlayerController::CheckFloor(float dt) {
-    btVector3 btBelowPlayerPos = btPlayerPos;
-    btBelowPlayerPos.setY(btBelowPlayerPos.getY() - 4.0f);
+    // Height from mid point to bottom
+    float realHeight = (currentHeight / 2.0f) + radius;
+    // Add some small amount to account for float inaccuracy
+    btVector3 btBelowPlayerPos = btPlayerPos - btVector3(0, realHeight * 1.05f, 0);
     btCollisionWorld::ClosestRayResultCallback callback(btPlayerPos, btBelowPlayerPos);
     bulletWorld->rayTest(btPlayerPos, btBelowPlayerPos, callback);
 
