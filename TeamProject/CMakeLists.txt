@@ -1,8 +1,6 @@
 set(SOURCES
     BulletDebug.cpp
     BulletDebug.h
-    GameTechRenderer.cpp
-    GameTechRenderer.h
     main.cpp
     NetworkedGame.cpp
     NetworkedGame.h
@@ -19,7 +17,14 @@ set(SOURCES
     Turret.cpp
 	BWHelperFunctions.h
 	BWHelperFunctions.cpp
+    Render/GameRenderer.h
+    Render/GameRenderer.cpp
+    Render/RenderBackend.h
+    Render/OpenGlBackend.h
 )
+
+# Automatically group files based on their directory structure
+source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${SOURCES})
 
 set(COMPILED_MESHES
     Capsule.msh

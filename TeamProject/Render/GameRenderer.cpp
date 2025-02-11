@@ -1,4 +1,4 @@
-#include "GameTechRenderer.h"
+#include "GameRenderer.h"
 #include "GameObject.h"
 #include "RenderObject.h"
 #include "Camera.h"
@@ -9,15 +9,11 @@
 
 #include <NCLCoreClasses/stb/stb_image.h>
 
-using namespace NCL;
-using namespace Rendering;
-using namespace CSC8503;
-
-#define SHADOWSIZE 4096
+namespace NCL::CSC8503::Render {
 
 Matrix4 biasMatrix = Matrix::Translation(Vector3(0.5f, 0.5f, 0.5f)) * Matrix::Scale(Vector3(0.5f, 0.5f, 0.5f));
 
-GameTechRenderer::GameTechRenderer(GameWorld& world) : OGLRenderer(*Window::GetWindow()), gameWorld(world)	{
+GameRenderer::GameRenderer(std::unique_ptr<RenderBackend> backend) : OGLRenderer(*Window::GetWindow()), gameWorld(world)	{
 	glEnable(GL_DEPTH_TEST);
 
 	debugShader  = new OGLShader("Debug.vert", "Debug.frag");
@@ -79,7 +75,7 @@ GameTechRenderer::GameTechRenderer(GameWorld& world) : OGLRenderer(*Window::GetW
 	SetDebugLineBufferSizes(1000);
 }
 
-GameTechRenderer::~GameTechRenderer()	{
+GameRenderer::~GameRenderer()	{
 	delete debugShader;
 	delete shadowShader;
 
@@ -92,7 +88,7 @@ GameTechRenderer::~GameTechRenderer()	{
 	glDeleteFramebuffers(1, &shadowFBO);
 }
 
-void GameTechRenderer::LoadSkybox() {
+void GameRenderer::LoadSkybox() {
 	std::string filenames[6] = {
 		"Cubemap/skyrender0004.png",
 		"Cubemap/skyrender0001.png",
@@ -133,7 +129,7 @@ void GameTechRenderer::LoadSkybox() {
 	glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
 }
 
-void GameTechRenderer::RenderFrame() {
+void GameRenderer::RenderFrame() {
 	glEnable(GL_CULL_FACE);
 	glClearColor(1, 1, 1, 1);
 	BuildObjectList();
@@ -153,7 +149,7 @@ void GameTechRenderer::RenderFrame() {
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 }
 
-void GameTechRenderer::BuildObjectList() {
+void GameRenderer::BuildObjectList() {
 	activeObjects.clear();
 
 	gameWorld.OperateOnContents(
@@ -168,11 +164,11 @@ void GameTechRenderer::BuildObjectList() {
 	);
 }
 
-void GameTechRenderer::SortObjectList() {
+void GameRenderer::SortObjectList() {
 
 }
 
-void GameTechRenderer::RenderShadowMap() {
+void GameRenderer::RenderShadowMap() {
 	glBindFramebuffer(GL_FRAMEBUFFER, shadowFBO);
 	glClear(GL_DEPTH_BUFFER_BIT);
 	glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
@@ -211,7 +207,7 @@ void GameTechRenderer::RenderShadowMap() {
 	glCullFace(GL_BACK);
 }
 
-void GameTechRenderer::RenderSkybox() {
+void GameRenderer::RenderSkybox() {
 	glDisable(GL_CULL_FACE);
 	glDisable(GL_BLEND);
 	glDisable(GL_DEPTH_TEST);
@@ -240,7 +236,7 @@ void GameTechRenderer::RenderSkybox() {
 	glEnable(GL_DEPTH_TEST);
 }
 
-void GameTechRenderer::RenderCamera() {
+void GameRenderer::RenderCamera() {
 	Matrix4 viewMatrix = gameWorld.GetMainCamera().BuildViewMatrix();
 	Matrix4 projMatrix = gameWorld.GetMainCamera().BuildProjectionMatrix(hostWindow.GetScreenAspect());
 
@@ -320,7 +316,7 @@ void GameTechRenderer::RenderCamera() {
 
 		glUniform1i(hasTexLocation, (OGLTexture*)(*i).GetDefaultTexture() ? 1:0);
 		glUniform1i(hasFlatLocation, i->GetIsFlat());
-	
+
 		BindMesh((OGLMesh&)*(*i).GetMesh());
 		size_t layerCount = (*i).GetMesh()->GetSubMeshCount();
 		for (size_t i = 0; i < layerCount; ++i) {
@@ -329,7 +325,7 @@ void GameTechRenderer::RenderCamera() {
 	}
 }
 
-Mesh* GameTechRenderer::LoadMesh(const std::string& name) {
+Mesh* GameRenderer::LoadMesh(const std::string& name) {
 	OGLMesh* mesh = new OGLMesh();
 	MshLoader::LoadMesh(name, *mesh);
 	mesh->SetPrimitiveType(GeometryPrimitive::Triangles);
@@ -337,7 +333,7 @@ Mesh* GameTechRenderer::LoadMesh(const std::string& name) {
 	return mesh;
 }
 
-void GameTechRenderer::NewRenderLines() {
+void GameRenderer::NewRenderLines() {
 	const std::vector<Debug::DebugLineEntry>& lines = Debug::GetDebugLines();
 	if (lines.empty()) {
 		return;
@@ -370,7 +366,7 @@ void GameTechRenderer::NewRenderLines() {
 	glBindVertexArray(0);
 }
 
-void GameTechRenderer::NewRenderText() {
+void GameRenderer::NewRenderText() {
 	const std::vector<Debug::DebugStringEntry>& strings = Debug::GetDebugStrings();
 	if (strings.empty()) {
 		return;
@@ -424,7 +420,7 @@ void GameTechRenderer::NewRenderText() {
 	glBindVertexArray(0);
 }
 
-void GameTechRenderer::NewRenderTextures() {
+void GameRenderer::NewRenderTextures() {
 	const std::vector<Debug::DebugTexEntry>& texEntries = Debug::GetDebugTex();
 	if (texEntries.empty()) {
 		return;
@@ -471,15 +467,15 @@ void GameTechRenderer::NewRenderTextures() {
 	glUniform1i(useColourSlot, 0);
 }
 
-Texture* GameTechRenderer::LoadTexture(const std::string& name) {
+Texture* GameRenderer::LoadTexture(const std::string& name) {
 	return OGLTexture::TextureFromFile(name).release();
 }
 
-Shader* GameTechRenderer::LoadShader(const std::string& vertex, const std::string& fragment) {
+Shader* GameRenderer::LoadShader(const std::string& vertex, const std::string& fragment) {
 	return new OGLShader(vertex, fragment);
 }
 
-void GameTechRenderer::SetDebugStringBufferSizes(size_t newVertCount) {
+void GameRenderer::SetDebugStringBufferSizes(size_t newVertCount) {
 	if (newVertCount > textCount) {
 		textCount = newVertCount;
 
@@ -518,7 +514,7 @@ void GameTechRenderer::SetDebugStringBufferSizes(size_t newVertCount) {
 	}
 }
 
-void GameTechRenderer::SetDebugLineBufferSizes(size_t newVertCount) {
+void GameRenderer::SetDebugLineBufferSizes(size_t newVertCount) {
 	if (newVertCount > lineCount) {
 		lineCount = newVertCount;
 
@@ -544,4 +540,6 @@ void GameTechRenderer::SetDebugLineBufferSizes(size_t newVertCount) {
 
 		glBindVertexArray(0);
 	}
+}
+
 }

@@ -1,10 +1,7 @@
 #include "../NCLCoreClasses/KeyboardMouseController.h"
 
 #pragma once
-#include "GameTechRenderer.h"
-#ifdef USEVULKAN
-#include "GameTechVulkanRenderer.h"
-#endif
+#include "Render/GameRenderer.h"
 
 #include "StateGameObject.h"
 #include "PlayerController.h"
@@ -23,7 +20,7 @@ namespace NCL {
 			const static constexpr float PHYSICS_PERIOD = 1.0f / 60.0f;
 
 
-			TutorialGame();
+			TutorialGame(Render::GameRenderer* renderer);
 			~TutorialGame();
 
 			virtual void UpdateGame(float dt);
@@ -50,7 +47,7 @@ namespace NCL {
 #ifdef USEVULKAN
 			GameTechVulkanRenderer* renderer;
 #else
-			GameTechRenderer* renderer;
+			Render::GameRenderer* renderer;
 #endif
 			GameWorld* world;
 

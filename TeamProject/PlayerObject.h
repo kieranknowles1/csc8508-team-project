@@ -1,8 +1,5 @@
 #pragma once
-#include "GameTechRenderer.h"
-#ifdef USEVULKAN
-#include "GameTechVulkanRenderer.h"
-#endif
+
 #include "Vector.h"
 #include "Matrix.h"
 #include "Camera.h"

@@ -8,23 +8,20 @@
 #include "BulletDebug.h"
 
 #include <CSC8503CoreClasses/Debug.h>
-
+#include <NCLCoreClasses/Window.h>
 
 using namespace NCL;
 using namespace CSC8503;
 
-TutorialGame::TutorialGame() : controller(*Window::GetWindow()->GetKeyboard(), *Window::GetWindow()->GetMouse()) {
+TutorialGame::TutorialGame(Render::GameRenderer* renderer)
+	: controller(*Window::GetWindow()->GetKeyboard()
+	, *Window::GetWindow()->GetMouse())
+{
+	this->renderer = renderer;
 	/* Initializing the Bullet Physics World here as it should be done before Initialize the NCL framework's PhysicsSystem */
 	//InitBullet(); //bullet is initialised in initialiseAssets already
 
 	world		= new GameWorld();
-#ifdef USEVULKAN
-	renderer	= new GameTechVulkanRenderer(*world);
-	renderer->Init();
-	renderer->InitStructures();
-#else
-	renderer = new GameTechRenderer(*world);
-#endif
 
 	world->GetMainCamera().SetController(controller);
 	mainCamera = &world->GetMainCamera();
@@ -40,29 +37,28 @@ for this module, even in the coursework, but you can add it if you like!
 
 */
 void TutorialGame::InitialiseAssets() {
-	planeMesh = renderer->LoadMesh("Plane.msh");
-	cubeMesh	= renderer->LoadMesh("Cube.msh");
-	sphereMesh	= renderer->LoadMesh("Sphere.msh");
-	catMesh		= renderer->LoadMesh("ORIGAMI_Chat.msh");
-	kittenMesh	= renderer->LoadMesh("Kitten.msh");
+	auto backend = renderer->getBackend();
+	planeMesh = backend->loadMesh("Plane.msh");
+	cubeMesh = backend->loadMesh("Cube.msh");
+	sphereMesh = backend->loadMesh("Sphere.msh");
+	catMesh = backend->loadMesh("ORIGAMI_Chat.msh");
+	kittenMesh = backend->loadMesh("Kitten.msh");
 
-	enemyMesh	= renderer->LoadMesh("Keeper.msh");
-	bonusMesh	= renderer->LoadMesh("19463_Kitten_Head_v1.msh");
-	capsuleMesh = renderer->LoadMesh("Capsule.msh");
+	enemyMesh = backend->loadMesh("Keeper.msh");
+	bonusMesh = backend->loadMesh("19463_Kitten_Head_v1.msh");
+	capsuleMesh = backend->loadMesh("Capsule.msh");
 
 	//EG Assets:
 
 	//EG character meshes:
-	maxMesh = renderer->LoadMesh("/Max/Rig_Maximilian.msh");
-	maleguardMesh = renderer->LoadMesh("/MaleGuard/Male_Guard.msh");
-	femaleguardMesh = renderer->LoadMesh("/FemaleGuard/Female_Guard.msh");
+	maxMesh = backend->loadMesh("/Max/Rig_Maximilian.msh");
+	maleguardMesh = backend->loadMesh("/MaleGuard/Male_Guard.msh");
+	femaleguardMesh = backend->loadMesh("/FemaleGuard/Female_Guard.msh");
 
-	basicTex	= renderer->LoadTexture("checkerboard.png");
-	std::cout << basicShader << std::endl;
-	basicShader = renderer->LoadShader("scene.vert", "scene.frag");
-	std::cout << basicShader << std::endl;
+	basicTex	= backend->loadTexture("checkerboard.png");
+	basicShader = backend->loadShader("scene.vert", "scene.frag");
 	//Added Shaders:
-	flatShader = renderer->LoadShader("flatvert.glsl", "flatfrag.glsl"); 
+	flatShader = backend->loadShader("flatvert.glsl", "flatfrag.glsl");
 
 	InitCamera();
 	InitWorld();
@@ -144,9 +140,8 @@ void TutorialGame::UpdateGame(float dt) {
 		player->GetRenderObject()->SetColour(colour);
 	}
 
+	renderer->drawWorld(world);
 
-	renderer->Update(dt);
-	renderer->Render();
 	Debug::UpdateRenderables(dt);
 }
 
@@ -283,7 +278,7 @@ void TutorialGame::InitPlayer() {
 	player->GetPhysicsObject()->GetRigidBody()->setFriction(0.0f);
 	player->GetPhysicsObject()->GetRigidBody()->setDamping(0.0, 0);
 	gun = AddCubeToWorld(Vector3(10, 2, 20), Vector3(0.6, 0.6, 1.6), 0, false);
-	playerController = new PlayerController(player, gun, controller, mainCamera, bulletWorld,world,renderer);
+	playerController = new PlayerController(player, gun, controller, mainCamera, bulletWorld,world);
 	player->GetRenderObject()->SetColour(playerColour);
 
 }

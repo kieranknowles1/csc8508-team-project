@@ -1,8 +1,5 @@
 #pragma once
-#include "GameTechRenderer.h"
-#ifdef USEVULKAN
-#include "GameTechVulkanRenderer.h"
-#endif
+
 #include "Vector.h"
 #include "Matrix.h"
 #include "Camera.h"
@@ -24,7 +21,7 @@ namespace NCL {
 	namespace CSC8503 {
 		class PlayerController {
 		public:
-			PlayerController(PlayerObject* playerIn, GameObject* gunIn, const Controller& c, Camera* cam, btDiscreteDynamicsWorld* bulletWorldIn, GameWorld* worldIn ,GameTechRenderer* rendererIn) {
+			PlayerController(PlayerObject* playerIn, GameObject* gunIn, const Controller& c, Camera* cam, btDiscreteDynamicsWorld* bulletWorldIn, GameWorld* worldIn) {
 				player = playerIn;
 				gun = gunIn;
 				controller = &c;
@@ -100,7 +97,6 @@ namespace NCL {
 			Texture* basicTex = nullptr;
 			Shader* basicShader = nullptr;
 			GameWorld* world;
-			GameTechRenderer* renderer;
 			float shotTimer = 0;
 			bool collision = false;
 			bool crouching = false;
