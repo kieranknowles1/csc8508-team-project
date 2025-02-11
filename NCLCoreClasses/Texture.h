@@ -15,26 +15,19 @@ namespace NCL::Rendering {
 	using UniqueTexture = std::unique_ptr<class Texture>;
 	using SharedTexture = std::shared_ptr<class Texture>;
 
-	class Texture	{
+	class Texture {
 	public:
 		virtual ~Texture();
 
+		virtual unsigned int GetObjectID() const = 0;
+
 		Vector2ui GetDimensions() const {
 			return dimensions;
-		}
-
-		uint32_t GetAssetID() const {
-			return assetID;
-		}
-
-		void SetAssetID(uint32_t newID) {
-			assetID = newID;
 		}
 
 	protected:
 		Texture();
 
 		Vector2ui		dimensions;
-		uint32_t		assetID;
 	};
 }

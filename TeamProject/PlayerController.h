@@ -35,7 +35,7 @@ namespace NCL {
 			void SetThirdPerson(bool thirdPersonIn) {
 				thirdPerson = thirdPersonIn;
 			};
-		private:
+		//private:
 			//Player Movement Variables
 			float playerSpeed = 60.0f;
 			float jumpHeight = 90.0f;
@@ -93,6 +93,8 @@ namespace NCL {
 			btVector3 btPlayerPos;
 			btTransform transformGun;
 			btVector3 btGunPos;
+			// FIXME: PlayerController shouldn't be relying on Renderer
+			// Use a resource manager class to avoid duplication of loads
 			Mesh* sphereMesh = nullptr;
 			Texture* basicTex = nullptr;
 			Shader* basicShader = nullptr;

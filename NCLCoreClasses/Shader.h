@@ -27,23 +27,14 @@ namespace NCL::Rendering {
 
 	class Shader	{
 	public:
-		Shader() {
-			assetID = 0;
-		}
+		Shader() {}
 		Shader(const std::string& vertex, const std::string& fragment, const std::string& geometry = "", const std::string& domain = "", const std::string& hull = "");
 		virtual ~Shader();
 
-		uint32_t GetAssetID() const {
-			return assetID;
-		}
-
-		void SetAssetID(uint32_t newID) {
-			assetID = newID;
-		}
+		virtual unsigned int GetProgramID() const = 0;
 
 		virtual void ReloadShader() = 0;
 	protected:
 		std::string		shaderFiles[ShaderStages::MAX_SIZE];
-		uint32_t		assetID;
 	};
 }

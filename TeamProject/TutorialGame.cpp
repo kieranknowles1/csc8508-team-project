@@ -84,7 +84,6 @@ TutorialGame::~TutorialGame()	{
 	delete basicShader;
 	delete flatShader;
 
-	delete renderer;
 	delete world;
 
 	delete playerController;
@@ -279,6 +278,9 @@ void TutorialGame::InitPlayer() {
 	player->GetPhysicsObject()->GetRigidBody()->setDamping(0.0, 0);
 	gun = AddCubeToWorld(Vector3(10, 2, 20), Vector3(0.6, 0.6, 1.6), 0, false);
 	playerController = new PlayerController(player, gun, controller, mainCamera, bulletWorld,world);
+	playerController->sphereMesh = sphereMesh;
+	playerController->basicTex = basicTex;
+	playerController->basicShader = basicShader;
 	player->GetRenderObject()->SetColour(playerColour);
 
 }

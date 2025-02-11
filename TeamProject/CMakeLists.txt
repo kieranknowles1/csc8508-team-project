@@ -17,6 +17,7 @@ set(SOURCES
     Render/GameRenderer.cpp
     Render/RenderBackend.h
     Render/OpenGlBackend.h
+    Render/OpenGlBackend.cpp
 )
 
 # Automatically group files based on their directory structure

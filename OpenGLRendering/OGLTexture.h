@@ -31,7 +31,7 @@ namespace NCL::Rendering {
 			const std::string& zPosFile,
 			const std::string& zNegFile);
 
-		GLuint GetObjectID() const	{
+		GLuint GetObjectID() const override {
 			return texID;
 		}
 	protected:

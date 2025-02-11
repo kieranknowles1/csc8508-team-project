@@ -12,9 +12,6 @@ Vector2 PlayerController::getDirectionalInput() const
 
 void PlayerController::Initialise() {
     rb = player->GetPhysicsObject()->GetRigidBody();
-    sphereMesh = renderer->LoadMesh("Sphere.msh");
-    basicTex = renderer->LoadTexture("checkerboard.png");
-    basicShader = renderer->LoadShader("flatvert.glsl", "flatfrag.glsl");
 }
 
 void PlayerController::UpdateMovement(float dt) {

@@ -24,7 +24,7 @@ namespace NCL::Rendering {
 			return programValid == GL_TRUE;
 		}
 
-		int GetProgramID() const {
+		unsigned int GetProgramID() const override {
 			return programID;
 		}
 

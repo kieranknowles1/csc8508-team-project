@@ -4,20 +4,38 @@
 
 #include "RenderBackend.h"
 
+#include <CSC8503CoreClasses/RenderObject.h>
+
+// TODO: Move these to the OpenGL backend
+#include <OpenGLRendering/OGLShader.h>
+#include <OpenGLRendering/OGLMesh.h>
+
+namespace NCL {
+    class Window;
+}
+
 namespace NCL::CSC8503 {
     class GameWorld;
 }
 
 namespace NCL::CSC8503::Render {
+    struct RendererOptions {
+        unsigned int shadowSize = 2048;
+    };
+
     class GameRenderer {
     public:
-        GameRenderer(std::unique_ptr<RenderBackend> backend);
+        GameRenderer(Window* window, std::unique_ptr<RenderBackend> backend, const RendererOptions& options = RendererOptions());
         ~GameRenderer();
 
-        RenderBackend* getBackend() { return backend; }
+        RenderBackend* getBackend() { return backend.get(); }
 
         void drawWorld(const GameWorld* world);
     private:
+        Window* window;
+        GameWorld* gameWorld; // TODO: Remove
+
+        RendererOptions options;
         std::unique_ptr<RenderBackend> backend;
 
         void NewRenderLines();
@@ -26,9 +44,7 @@ namespace NCL::CSC8503::Render {
 
         void RenderFrame();
 
-        OGLShader*		defaultShader;
-
-        GameWorld&	gameWorld;
+        Rendering::Shader* defaultShader;
 
         void BuildObjectList();
         void SortObjectList();
@@ -43,14 +59,14 @@ namespace NCL::CSC8503::Render {
 
         std::vector<const RenderObject*> activeObjects;
 
-        OGLShader*  debugShader;
-        OGLShader*  skyboxShader;
-        OGLMesh*	skyboxMesh;
-        OGLMesh*	debugTexMesh;
+        Shader*  debugShader;
+        Shader*  skyboxShader;
+        Mesh*	skyboxMesh;
+        Mesh*	debugTexMesh;
         GLuint		skyboxTex;
 
         //shadow mapping things
-        OGLShader*	shadowShader;
+        Shader*	shadowShader;
         GLuint		shadowTex;
         GLuint		shadowFBO;
         Matrix4     shadowMatrix;
