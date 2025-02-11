@@ -13,9 +13,6 @@ enum class ConnectionState {
 };
 
 
-inline const float RESPONSE_WAIT_TIME = 10000; // 10s
-
-
 class Client : public Network {
 public:
 	Client();
@@ -53,16 +50,13 @@ public:
 	 */
 	void Flush() { enet_host_flush(m_host); }
 
-private:
+
 	/**
-	 * @brief Waits for a response from the server.
-	 * 
-	 * Waits until @see RESPONSE_WAIT_TIME is exceeded.
-	 * 
-	 * If response is received, state is changed to CONNECTED.
-	 * If timed out, state is changed to DISCONNECTED.
+	 * @brief Receive an incoming packet.
 	 */
-	void AwaitServerResponse();
+	void Update();
+
+private:
 
 	std::mutex m_connectionMutex;
 	ConnectionState m_state;

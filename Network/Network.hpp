@@ -80,6 +80,7 @@ public:
 		return event;
 	}
 
+
 protected:
 	ENetHost* m_host = nullptr;
 
