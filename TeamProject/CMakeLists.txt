@@ -14,6 +14,7 @@ set(SOURCES
     TutorialGame.h
     PlayerController.cpp
     PlayerController.h
+    PlayerObject.h
     Turret.h
     Turret.cpp
 	BWHelperFunctions.h

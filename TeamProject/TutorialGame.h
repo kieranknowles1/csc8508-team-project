@@ -8,6 +8,7 @@
 
 #include "StateGameObject.h"
 #include "PlayerController.h"
+#include "PlayerObject.h"
 #include "Turret.h"
 
 #include <btBulletDynamicsCommon.h>
@@ -37,9 +38,10 @@ namespace NCL {
 
 			Turret* AddTurretToWorld();
 
-			GameObject* AddFloorToWorld(const Vector3& position, const Vector3& size, const Vector3& rotation);
+			GameObject* AddFloorToWorld(const Vector3& position, const Vector3& size, const Vector3& rotation, bool isFloor);
 			GameObject* AddSphereToWorld(const Vector3& position, float radius, float inverseMass = 10.0f);
 			GameObject* AddCubeToWorld(const Vector3& position, Vector3 dimensions, float inverseMass = 10.0f,bool hasCollision = true);
+			PlayerObject* AddPlayerCapsuleToWorld(const Vector3& position, float halfHeight, float radius, float inverseMass = 10.0f);
 			GameObject* AddCapsuleToWorld(const Vector3& position, float halfHeight, float radius, float inverseMass = 10.0f);
 
 			GameObject* AddInfinitePlaneToWorld(const Vector3& position, const Vector3& normal, float planeConstant);
@@ -101,7 +103,7 @@ namespace NCL {
 			//Player things
 			void InitPlayer();
 			PerspectiveCamera* mainCamera;
-			GameObject* player;
+			PlayerObject* player;
 			GameObject* gun;
 			PlayerController* playerController;
 			bool freeCam = false;

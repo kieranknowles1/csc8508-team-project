@@ -62,49 +62,42 @@ void PlayerController::UpdateMovement(float dt) {
     Vector2 directionalInput = getDirectionalInput();
     bool sprinting = controller->GetDigital(Controller::DigitalControl::Sprint);
     float forwardMovement = directionalInput.y;
-    float moveMulti = playerSpeed * (sprinting ? sprintMulti : 1) * (isCrouching ? crouchMulti : 1) * (inAir ? airMulti : 1) ;
+    float moveMulti = playerSpeed * (sprinting ? sprintMulti : 1) * (isCrouching ? crouchMulti : 1) * (player->getCollided()==0 ? airMulti : 1) ;
     forwardMovement *= (forwardMovement <= 0) ? backwardsMulti : 1;
     btVector3 movement = (right * directionalInput.x * strafeMulti * moveMulti) +(forward * forwardMovement * moveMulti);
     movement.setY(movement.getY() - (gravityScale*dt));
 
-
     // jump input
-    if (!inAir && controller->GetDigital(Controller::DigitalControl::Jump)) {
-        rb->setDamping(jumpDampening, 1);
-        movement.setY(movement.getY() + jumpHeight);
-        inAir = true;
-        inAirCount = 0.2f;
-        std::cout << "JUMP";
+    if (controller->GetDigital(Controller::DigitalControl::Jump) && player->getCollided()) {
+        movement.setY(jumpHeight);
+        player->setCollided(0);
     }
     else {
-        inAirCount = btMax(0.0f, inAirCount - dt);
+        movement.setY(movement.getY() + rb->getLinearVelocity().getY());
     }
-    CheckFloor(dt);
-    if (inAir) {
+    if (player->getCollided()==0) {
         movement.setX(rb->getLinearVelocity().getX() + (movement.getX() * airMulti));
         movement.setZ(rb->getLinearVelocity().getZ() + (movement.getZ() * airMulti));
     }
-    movement.setY(movement.getY() + rb->getLinearVelocity().getY());
+    //CheckFloor(dt);
     rb->setLinearVelocity(movement);
     rb->activate();
 }
 
-
-
 //uses ray to detect if the player is standing on an object
-void PlayerController::CheckFloor(float dt) {
-    btVector3 btBelowPlayerPos = btPlayerPos;
-    btBelowPlayerPos.setY(btBelowPlayerPos.getY() - 4.0f);
-    btCollisionWorld::ClosestRayResultCallback callback(btPlayerPos, btBelowPlayerPos);
-    bulletWorld->rayTest(btPlayerPos, btBelowPlayerPos, callback);
-
-    if (callback.hasHit() && inAirCount <= 0) {
-        inAir = false;
-    }
-    else {
-        inAir = true;
-    }
-}
+//void PlayerController::CheckFloor(float dt) {
+//    btVector3 btBelowPlayerPos = btPlayerPos;
+//    btBelowPlayerPos.setY(btBelowPlayerPos.getY() - 10.0f);
+//    btCollisionWorld::ClosestRayResultCallback callback(btPlayerPos, btBelowPlayerPos);
+//    bulletWorld->rayTest(btPlayerPos, btBelowPlayerPos, callback);
+//
+//    if (callback.hasHit() && inAirCount <= 0 && player->getCollided()) {
+//        inAir = false;
+//    }
+//    else if(!callback.hasHit()){
+//        inAir = true;
+//    }
+//}
 
 
 //attaches gun to the camera position/rotation
@@ -141,18 +134,18 @@ void PlayerController::ShootBullet() {
     btVector3 rightDir = rotationMatrix * btVector3(1, 0, 0);
     btVector3 bulletPos = camera->GetPosition() + adjustedOffset;
 
-    Bullet* bullet = new Bullet();
-    bullet->Initialise(player,bulletWorld);
+    Paintball* paintball = new Paintball();
+    paintball->Initialise(player,bulletWorld);
     Vector3 bulletSize(1, 1, 1);
-    bullet->setInitialPosition(bulletPos);
-    bullet->setRenderScale(bulletSize);
-    bullet->SetRenderObject(new RenderObject(bullet, sphereMesh, basicTex, basicShader));
-    bullet->SetPhysicsObject(new PhysicsObject(bullet));
-    bullet->GetRenderObject()->SetColour(Vector4(rand() % 2, rand() % 2, rand() % 2, 1));
+    paintball->setInitialPosition(bulletPos);
+    paintball->setRenderScale(bulletSize);
+    paintball->SetRenderObject(new RenderObject(paintball, sphereMesh, basicTex, basicShader));
+    paintball->SetPhysicsObject(new PhysicsObject(paintball));
+    paintball->GetRenderObject()->SetColour(Vector4(rand() % 2, rand() % 2, rand() % 2, 1));
     btCollisionShape* shape = new btSphereShape(1);
     shape->setMargin(0.01f);
-    bullet->GetPhysicsObject()->InitBulletPhysics(bulletWorld, shape, 1.0f);
-    world->AddGameObject(bullet);
+    paintball->GetPhysicsObject()->InitBulletPhysics(bulletWorld, shape, 1.0f);
+    world->AddGameObject(paintball);
 
     btVector3 playerVelocity = rb->getLinearVelocity();
     float forwardSpeed = forwardDir.dot(playerVelocity);
@@ -161,8 +154,8 @@ void PlayerController::ShootBullet() {
     btVector3 bulletVelocity = adjustedPlayerVelocity + (forwardDir * bulletSpeed);
 
     // Apply impulse
-    bullet->GetPhysicsObject()->GetRigidBody()->applyCentralImpulse(bulletVelocity);
-    bullet->GetPhysicsObject()->GetRigidBody()->activate();
+    paintball->GetPhysicsObject()->GetRigidBody()->applyCentralImpulse(bulletVelocity);
+    paintball->GetPhysicsObject()->GetRigidBody()->activate();
 }
 
 
@@ -237,9 +230,9 @@ void PlayerController::HandleSliding(float dt) {
             camera->SetPosition(playerPos);
             SetGunTransform();
         }
-        CheckFloor(dt);
+        //CheckFloor(dt);
         btVector3 pastMovement = rb->getLinearVelocity();
-        pastMovement.setY(pastMovement.getY() - ((gravityScale*dt) * (inAir?1:10)));
+        pastMovement.setY(pastMovement.getY() - ((gravityScale*dt) * (player->getCollided() == 0 ? 1 : 100)));
         rb->setLinearVelocity(pastMovement);
         rb->activate();
     }
