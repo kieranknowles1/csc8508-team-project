@@ -59,14 +59,14 @@ void LevelImporter::LoadLevel(int level) {
     int count = 0;
     for (const auto& obj : objects) {
         count++;
-        std::cout << "Object " << count << std::endl;
+        /*std::cout << "Object " << count << std::endl;
         std::cout << "Mesh: " << obj->meshName << ", Texture: " << obj->mainTextureName
             << ", Normal Texture: " << obj->normalTextureName << std::endl;
         std::cout << "Position: (" << obj->position.x() << ", " << obj->position.y() << ", " << obj->position.z() << ")"
             << " Rotation: (" << obj->rotation.x() << ", " << obj->rotation.y() << ", " << obj->rotation.z() << ", " << obj->rotation.w() << ")"
             << " Scale: (" << obj->scale.x() << ", " << obj->scale.y() << ", " << obj->scale.z() << ")\n"
             << "Collider Position: (" << obj->colliderPosition.x() << ", " << obj->colliderPosition.y() << ", " << obj->colliderPosition.z() << ")"
-            << " Collider Scale: (" << obj->colliderScale.x() << ", " << obj->colliderScale.y() << ", " << obj->colliderScale.z() << ")\n\n";
+            << " Collider Scale: (" << obj->colliderScale.x() << ", " << obj->colliderScale.y() << ", " << obj->colliderScale.z() << ")\n\n";*/
             AddObjectToWorld(obj);
     }
 }
@@ -85,7 +85,7 @@ void LevelImporter::AddObjectToWorld(ObjectData* data) {
     }
     else if (data->meshName == "corridor_walls_and_floor:Corridor_Floor_Basic") {
         selectedMesh = floorSection;
-        selectedTex = basicTex;
+        selectedTex = nullptr;
     }
     else {
         std::cerr << "NO MESH FOUND FOR LEVEL OBJECT" << std::endl;
@@ -107,14 +107,10 @@ void LevelImporter::AddObjectToWorld(ObjectData* data) {
     float rollRadians = Maths::DegreesToRadians(eulerRotation.z());
     btQuaternion rotationQuat;
     rotationQuat.setEulerZYX(rollRadians, yawRadians, pitchRadians);
-
     cube->setInitialRotation(Quaternion(rotationQuat.getX(), rotationQuat.getY(), rotationQuat.getZ(), rotationQuat.getW()));
-
-
     cube->setRenderScale(data->scale* scale);
 
     
-
     btCollisionShape* shape;
     if (selectedMesh == wallSection) {
         shape = new btBoxShape(btVector3(data->colliderScale.getX() / 2.0f, data->colliderScale.getZ() / 2.0f, data->colliderScale.getY() / 2.0f)* scale);
