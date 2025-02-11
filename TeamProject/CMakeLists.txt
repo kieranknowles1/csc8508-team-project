@@ -2,10 +2,6 @@ set(SOURCES
     BulletDebug.cpp
     BulletDebug.h
     main.cpp
-    NetworkedGame.cpp
-    NetworkedGame.h
-    NetworkPlayer.cpp
-    NetworkPlayer.h
     StateGameObject.cpp
     StateGameObject.h
     TutorialGame.cpp
