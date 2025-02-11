@@ -178,7 +178,7 @@ void GameRenderer::renderShadowMap(const ObjectList& objects) {
 
 	glCullFace(GL_FRONT);
 
-	backend->useShader(shadowShader);
+	backend->setActiveShader(shadowShader);
 
 	Matrix4 shadowViewMatrix = Matrix::View(lightPosition, Vector3(0, 0, 0), Vector3(0,1,0));
 	Matrix4 shadowProjMatrix = Matrix::Perspective(100.0f, 500.0f, 1.0f, 45.0f);
@@ -194,7 +194,7 @@ void GameRenderer::renderShadowMap(const ObjectList& objects) {
 		modelMatrix = modelMatrix * Matrix::Scale(i->getParent()->getRenderScale());
 		Matrix4 mvpMatrix	= mvMatrix * modelMatrix;
 		shadowShader->setUniform("mvpMatrix", mvpMatrix);
-		backend->bindMesh(i->GetMesh());
+		backend->setActiveMesh(i->GetMesh());
 		size_t layerCount = (*i).GetMesh()->GetSubMeshCount();
 		for (size_t i = 0; i < layerCount; ++i) {
 			backend->drawBoundMesh(i);
@@ -217,7 +217,7 @@ void GameRenderer::renderSkybox(Camera& camera) {
 	Matrix4 viewMatrix = camera.BuildViewMatrix();
 	Matrix4 projMatrix = camera.BuildProjectionMatrix(window->GetScreenAspect());
 
-	backend->useShader(skyboxShader);
+	backend->setActiveShader(skyboxShader);
 
 	int texLocation  = glGetUniformLocation(skyboxShader->GetProgramID(), "cubeTex");
 
@@ -228,7 +228,7 @@ void GameRenderer::renderSkybox(Camera& camera) {
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_CUBE_MAP, skyboxTex);
 
-	backend->bindMesh(skyboxMesh);
+	backend->setActiveMesh(skyboxMesh);
 	backend->drawBoundMesh();
 
 	glEnable(GL_CULL_FACE);
@@ -240,7 +240,6 @@ void GameRenderer::renderCamera(Camera& camera, const ObjectList& objects) {
 	Matrix4 viewMatrix = camera.BuildViewMatrix();
 	Matrix4 projMatrix = camera.BuildProjectionMatrix(window->GetScreenAspect());
 
-	OGLShader* activeShader = nullptr;
 	int projLocation	= 0;
 	int viewLocation	= 0;
 	int modelLocation	= 0;
@@ -262,22 +261,15 @@ void GameRenderer::renderCamera(Camera& camera, const ObjectList& objects) {
 
 	for (const auto&i : objects) {
 		OGLShader* shader = (OGLShader*)(*i).GetShader();
-		backend->useShader(shader);
-
-		if (i->GetDefaultTexture()) {
-			backend->bindTextureToShader(i->GetDefaultTexture(), "mainTex", 0);
-		}
-
-		// TODO: Callback when shader changes to configure it
-		if (activeShader != shader) {
+		backend->setActiveShader(shader, [&] {
 			shader->setUniform("projMatrix", projMatrix);
 			shader->setUniform("viewMatrix", viewMatrix);
-			colourLocation  = glGetUniformLocation(shader->GetProgramID(), "objectColour");
+			colourLocation = glGetUniformLocation(shader->GetProgramID(), "objectColour");
 			hasVColLocation = glGetUniformLocation(shader->GetProgramID(), "hasVertexColours");
-			hasTexLocation  = glGetUniformLocation(shader->GetProgramID(), "hasTexture");
-			hasFlatLocation =  glGetUniformLocation(shader->GetProgramID(), "isFlat");
+			hasTexLocation = glGetUniformLocation(shader->GetProgramID(), "hasTexture");
+			hasFlatLocation = glGetUniformLocation(shader->GetProgramID(), "isFlat");
 
-			lightPosLocation	= glGetUniformLocation(shader->GetProgramID(), "lightPos");
+			lightPosLocation = glGetUniformLocation(shader->GetProgramID(), "lightPos");
 			lightColourLocation = glGetUniformLocation(shader->GetProgramID(), "lightColour");
 			lightRadiusLocation = glGetUniformLocation(shader->GetProgramID(), "lightRadius");
 
@@ -286,14 +278,16 @@ void GameRenderer::renderCamera(Camera& camera, const ObjectList& objects) {
 			Vector3 camPos = camera.GetPosition();
 			glUniform3fv(cameraLocation, 1, &camPos.x);
 
-			glUniform3fv(lightPosLocation	, 1, (float*)&lightPosition);
+			glUniform3fv(lightPosLocation, 1, (float*)&lightPosition);
 			glUniform4fv(lightColourLocation, 1, (float*)&lightColour);
-			glUniform1f(lightRadiusLocation , lightRadius);
+			glUniform1f(lightRadiusLocation, lightRadius);
 
 			int shadowTexLocation = glGetUniformLocation(shader->GetProgramID(), "shadowTex");
 			glUniform1i(shadowTexLocation, 1);
+		});
 
-			activeShader = shader;
+		if (i->GetDefaultTexture()) {
+			backend->bindTextureToShader(i->GetDefaultTexture(), "mainTex", 0);
 		}
 
 		//Matrix4 modelMatrix = (*i).GetTransform()->GetMatrix();
@@ -313,7 +307,7 @@ void GameRenderer::renderCamera(Camera& camera, const ObjectList& objects) {
 		glUniform1i(hasTexLocation, i->GetDefaultTexture() ? 1:0);
 		glUniform1i(hasFlatLocation, i->GetIsFlat());
 
-		backend->bindMesh(i->GetMesh());
+		backend->setActiveMesh(i->GetMesh());
 		size_t layerCount = i->GetMesh()->GetSubMeshCount();
 		for (size_t i = 0; i < layerCount; ++i) {
 			backend->drawBoundMesh(i);
@@ -332,7 +326,7 @@ void GameRenderer::NewRenderLines(Camera& camera) {
 
 	Matrix4 viewProj  = projMatrix * viewMatrix;
 
-	backend->useShader(debugShader);
+	backend->setActiveShader(debugShader);
 	GLuint texSlot = glGetUniformLocation(debugShader->GetProgramID(), "useTexture");
 	glUniform1i(texSlot, 0);
 
@@ -359,7 +353,7 @@ void GameRenderer::NewRenderText() {
 		return;
 	}
 
-	backend->useShader(debugShader);
+	backend->setActiveShader(debugShader);
 
 	const Texture* t = Debug::GetDebugFont()->GetTexture();
 
@@ -411,7 +405,7 @@ void GameRenderer::NewRenderTextures() {
 	if (texEntries.empty()) {
 		return;
 	}
-	backend->useShader(debugShader);
+	backend->setActiveShader(debugShader);
 
 	Matrix4 proj = Matrix::Orthographic(0.0f, 100.0f, 100.0f, 0.0f, -1.0f, 1.0f);
 
@@ -423,7 +417,7 @@ void GameRenderer::NewRenderTextures() {
 
 	GLuint colourSlot = glGetUniformLocation(debugShader->GetProgramID(), "texColour");
 
-	backend->bindMesh(debugTexMesh);
+	backend->setActiveMesh(debugTexMesh);
 
 	glActiveTexture(GL_TEXTURE0);
 
