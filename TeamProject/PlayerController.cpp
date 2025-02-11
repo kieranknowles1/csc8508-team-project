@@ -84,20 +84,7 @@ void PlayerController::UpdateMovement(float dt) {
     rb->activate();
 }
 
-//uses ray to detect if the player is standing on an object
-//void PlayerController::CheckFloor(float dt) {
-//    btVector3 btBelowPlayerPos = btPlayerPos;
-//    btBelowPlayerPos.setY(btBelowPlayerPos.getY() - 10.0f);
-//    btCollisionWorld::ClosestRayResultCallback callback(btPlayerPos, btBelowPlayerPos);
-//    bulletWorld->rayTest(btPlayerPos, btBelowPlayerPos, callback);
-//
-//    if (callback.hasHit() && inAirCount <= 0 && player->getCollided()) {
-//        inAir = false;
-//    }
-//    else if(!callback.hasHit()){
-//        inAir = true;
-//    }
-//}
+
 
 
 //attaches gun to the camera position/rotation
@@ -161,7 +148,13 @@ void PlayerController::ShootBullet() {
 
 //transitions states between standing and crouching
 void PlayerController::HandleCrouching(float dt) {
-    bool crouching = controller->GetDigital(Controller::DigitalControl::Crouch);
+    if (crouching && !controller->GetDigital(Controller::DigitalControl::Crouch)) {
+        crouching = CheckCeling();
+    }
+    else {
+        crouching = controller->GetDigital(Controller::DigitalControl::Crouch);
+    }
+   
     crouchTransition = crouching ? (currentCrouchingTimer < crouchingTime) : (currentStandingTimer < crouchingTime);
 
     if (crouching) {
@@ -184,6 +177,21 @@ void PlayerController::HandleCrouching(float dt) {
 
         btCollisionShape* shape = player->GetPhysicsObject()->GetRigidBody()->getCollisionShape();
         shape->setLocalScaling(btVector3(1, currentHeight/standingHeight, 1));
+    }
+}
+
+
+//uses ray to detect if the player is blocked from standing
+bool PlayerController::CheckCeling() {
+    btVector3 btBelowPlayerPos = btPlayerPos;
+    btBelowPlayerPos.setY(btBelowPlayerPos.getY() + 4.1f);
+    btCollisionWorld::ClosestRayResultCallback callback(btPlayerPos, btBelowPlayerPos);
+    bulletWorld->rayTest(btPlayerPos, btBelowPlayerPos, callback);
+    if (callback.hasHit()) {
+        return true;
+    }
+    else {
+        return false;
     }
 }
 
