@@ -232,7 +232,7 @@ void PlayerController::HandleSliding(float dt) {
         }
         //CheckFloor(dt);
         btVector3 pastMovement = rb->getLinearVelocity();
-        pastMovement.setY(pastMovement.getY() - ((gravityScale*dt) * (player->getCollided() == 0 ? 1 : 100)));
+        pastMovement.setY(pastMovement.getY() - ((gravityScale*dt) * (player->getCollided() == 0 ? 1 : 10)));
         rb->setLinearVelocity(pastMovement);
         rb->activate();
     }
