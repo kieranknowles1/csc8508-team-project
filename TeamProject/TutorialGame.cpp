@@ -29,7 +29,9 @@ TutorialGame::TutorialGame() : controller(*Window::GetWindow()->GetKeyboard(), *
 	world->GetMainCamera().SetController(controller);
 	mainCamera = &world->GetMainCamera();
 
+	loadFromLevel = true;
 	InitialiseAssets();
+
 }
 
 /*
@@ -57,10 +59,12 @@ void TutorialGame::InitialiseAssets() {
 	maleguardMesh = renderer->LoadMesh("/MaleGuard/Male_Guard.msh");
 	femaleguardMesh = renderer->LoadMesh("/FemaleGuard/Female_Guard.msh");
 
+	//EG level meshes:
+	wallSection = renderer->LoadMesh("Corridor_Meshes/corridor_Wall_Straight_Mid_end_L.msh");
+	floorSection = renderer->LoadMesh("Corridor_Meshes/Corridor_Floor_Basic.msh");
+
 	basicTex	= renderer->LoadTexture("checkerboard.png");
-	std::cout << basicShader << std::endl;
 	basicShader = renderer->LoadShader("scene.vert", "scene.frag");
-	std::cout << basicShader << std::endl;
 	//Added Shaders:
 	flatShader = renderer->LoadShader("flatvert.glsl", "flatfrag.glsl"); 
 
@@ -174,22 +178,13 @@ void TutorialGame::UpdateKeys() {
 void TutorialGame::ThirdPersonControls() {
 	btTransform transformPlayer = player->GetPhysicsObject()->GetRigidBody()->getWorldTransform();
 	btQuaternion playerRotation = transformPlayer.getRotation();
-
-	// Extract yaw from playerRotation
 	btMatrix3x3 rotationMatrix(playerRotation);
 	btVector3 forward = rotationMatrix * btVector3(0, 0, -1);
-
-	// Zero out the Y component to ignore pitch/roll
 	forward.setY(0);
-	forward.normalize(); // Ensure it's a unit vector
-
-	// Camera offset (up 10, back 30)
+	forward.normalize(); 
 	btVector3 cameraOffset(0, 10, 30);
 	btVector3 cameraPosition = transformPlayer.getOrigin() - (forward * cameraOffset.z()) + btVector3(0, cameraOffset.y(), 0);
-
 	mainCamera->SetPosition(cameraPosition);
-
-	// Compute yaw correctly from forward vector
 	float playerYaw = Maths::RadiansToDegrees(atan2(forward.x(), forward.z())) + 180.0f;
 	mainCamera->SetYaw(playerYaw);
 	mainCamera->SetPitch(-15);
@@ -238,6 +233,13 @@ void TutorialGame::InitWorld() {
 	world->ClearAndErase();
 	InitBullet();
 
+	InitPlayer();
+
+	if (loadFromLevel) {
+		levelImporter = new LevelImporter(renderer, world, bulletWorld);
+		levelImporter->LoadLevel(1);
+		return;
+	}
 	//floors
 	AddFloorToWorld(Vector3(0, 0, 0), Vector3(500, 2, 500), Vector3(0, 0, 0), true)->SetName("Floor1");
 	AddFloorToWorld(Vector3(498.5, -21.75, 0), Vector3(500, 2, 500), Vector3(0, 0, -5),true)->SetName("Floor2");
@@ -272,13 +274,15 @@ void TutorialGame::InitWorld() {
 	AddCapsuleToWorld(Vector3(-20, 15, 12), 6.0f, 5.0f, 8.0f);
 
 	AddTurretToWorld();
-	InitPlayer();
+
 }
 
 void TutorialGame::InitPlayer() {
-
-	player = AddPlayerCapsuleToWorld(Vector3(10, 5, 20), 4.0f, 2.0f, 10.0f);
-
+	if (loadFromLevel) {
+		player = AddPlayerCapsuleToWorld(Vector3(0, 10, 30), 4.0f, 2.0f, 10.0f);
+	}else {
+		player = AddPlayerCapsuleToWorld(Vector3(10, 5, 20), 4.0f, 2.0f, 10.0f);
+	}
 	player->GetPhysicsObject()->GetRigidBody()->setAngularFactor(0);
 	player->GetPhysicsObject()->GetRigidBody()->setFriction(0.0f);
 	player->GetPhysicsObject()->GetRigidBody()->setDamping(0.0, 0);
@@ -330,7 +334,6 @@ GameObject* TutorialGame::AddCubeToWorld(const Vector3& position, Vector3 dimens
 	// Note: The scale of the cube is set when creating the collision shape, When the collision shapes are created,
 	// so the size of the collision shape acts as the scale of the object
 	btCollisionShape* shape = new btBoxShape(btVector3(dimensions.x / 2.0f, dimensions.y / 2.0f, dimensions.z / 2.0f));
-
 	// The object is penetrating the floor a bit, so I reduced the bullet collison margin to avoid sinking in the floor
 	shape->setMargin(0.01f);
 

@@ -6,6 +6,7 @@
 #include "GameTechVulkanRenderer.h"
 #endif
 
+#include "LevelImporter.h"
 #include "StateGameObject.h"
 #include "PlayerController.h"
 #include "PlayerObject.h"
@@ -63,6 +64,7 @@ namespace NCL {
 			Mesh* sphereMesh = nullptr;
 
 			Texture* basicTex = nullptr;
+	
 			Shader* basicShader = nullptr;
 			//Added Shaders:
 			Shader* flatShader = nullptr;
@@ -77,6 +79,10 @@ namespace NCL {
 			Mesh* maxMesh = nullptr;
 			Mesh* maleguardMesh = nullptr;
 			Mesh* femaleguardMesh = nullptr;
+
+			//EG Level Mehses:
+			Mesh* wallSection = nullptr;
+			Mesh* floorSection = nullptr;
 
 			//Coursework Additional functionality	
 			GameObject* lockedObject	= nullptr;
@@ -113,8 +119,13 @@ namespace NCL {
 			//fixed update 
 			float accumulator = 0.0f;
 			float fixedDeltaTime = 1.0f / 60.0f;
-			
+
+			//AI
 			Turret* testTurret = nullptr;
+
+			//Level import
+			LevelImporter* levelImporter;
+			bool loadFromLevel;
 		};
 	}
 }
