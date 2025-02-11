@@ -266,8 +266,8 @@ void TutorialGame::InitWorld() {
 	AddCapsuleToWorld(Vector3(70, 15, -20), 8.0f, 4.0f, 4.0f);
 	AddCapsuleToWorld(Vector3(-20, 15, 12), 6.0f, 5.0f, 8.0f);
 
-	AddTurretToWorld();
 	InitPlayer();
+	AddTurretToWorld();
 }
 
 void TutorialGame::InitPlayer() {
@@ -284,7 +284,7 @@ void TutorialGame::InitPlayer() {
 }
 
 Turret* TutorialGame::AddTurretToWorld() {
-	Turret* turret = new Turret();
+	Turret* turret = new Turret(player);
 
 	Vector3 dimensions = Vector3(5, 5, 5);
 	turret->setInitialPosition(btVector3(5, 5, 5));
