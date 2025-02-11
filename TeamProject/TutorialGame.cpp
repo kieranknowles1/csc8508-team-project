@@ -123,7 +123,6 @@ void TutorialGame::UpdateGame(float dt) {
 	if (freeCam) {
 		//freeCam Movement
 		world->GetMainCamera().UpdateCamera(dt, true);
-		player->GetRenderObject()->SetColour(Vector4(1, 0.8, 1, 1));
 	}
 	else {
 		//player Movement
@@ -133,8 +132,16 @@ void TutorialGame::UpdateGame(float dt) {
 			ThirdPersonControls();
 		}
 	}
+	//player invisable in first person
 	if (!thirdPerson && !freeCam) {
-	//	player->GetRenderObject()->SetColour(Vector4());
+		Vector4 colour = player->GetRenderObject()->GetColour();
+		colour.w = 0;
+		player->GetRenderObject()->SetColour(colour);
+	}
+	else {
+		Vector4 colour = player->GetRenderObject()->GetColour();
+		colour.w = 1;
+		player->GetRenderObject()->SetColour(colour);
 	}
 
 
