@@ -103,13 +103,14 @@ namespace NCL {
 			GameTechRenderer* renderer;
 			float shotTimer = 0;
 			bool collision = false;
+			bool crouching = false;
 
 			// Get directional movemnt, clamped to have a magnitude of 1
 			Vector2 getDirectionalInput() const;
 			void Initialise();
 			void HandleCrouching(float dt);
 			void HandleSliding(float dt);
-			//void CheckFloor(float dt);
+			bool CheckCeling();
 			void SetGunTransform();
 			void ShootBullet();
 
