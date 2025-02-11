@@ -40,7 +40,7 @@ void PhysicsObject::InitBulletPhysics(btDynamicsWorld* world, btCollisionShape* 
 
 	// Setting the starting position of the object using the NCL framework's transform
 	startTransform.setOrigin(btVector3(initialPosition.x, initialPosition.y, initialPosition.z));
-	startTransform.setRotation(btQuaternion(initialOrientation.x, initialOrientation.y, initialOrientation.z));
+	startTransform.setRotation(btQuaternion(initialOrientation.x, initialOrientation.y, initialOrientation.z, initialOrientation.w));
 
 	// MotionState has been used to retrieve and apply Bullet's physics transformations to the NCL object
 	motionState = new btDefaultMotionState(startTransform);

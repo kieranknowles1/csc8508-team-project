@@ -11,8 +11,10 @@ endif()
 
 if(MSVC)
     find_package(Bullet CONFIG REQUIRED)
+    find_package(nlohmann_json CONFIG REQUIRED)
 else()
     find_package(Bullet REQUIRED)
+    find_package(nlohmann_json REQUIRED)
 endif()
 
 if (MSVC)

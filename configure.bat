@@ -11,6 +11,7 @@ IF NOT EXIST "../vcpkg" (
 )
 
 ..\vcpkg\vcpkg.exe install bullet3:x64-windows
+..\vcpkg\vcpkg.exe install nlohmann-json:x64-windows
 ..\vcpkg\vcpkg.exe integrate install
 
 mkdir build

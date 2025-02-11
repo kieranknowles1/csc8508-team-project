@@ -19,6 +19,8 @@ set(SOURCES
     Turret.cpp
 	BWHelperFunctions.h
 	BWHelperFunctions.cpp
+    LevelImporter.cpp
+    LevelImporter.h
 )
 
 set(COMPILED_MESHES
@@ -103,6 +105,7 @@ target_link_libraries(${PROJECT_NAME} CSC8503CoreClasses)
 target_link_libraries(${PROJECT_NAME} OpenGLRendering)
 target_link_libraries(${PROJECT_NAME} NetworkLib)
 target_link_libraries(${PROJECT_NAME} ${BULLET_LIBRARIES})
+target_link_libraries(${PROJECT_NAME} nlohmann_json::nlohmann_json)
 
 target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR})
 set_target_properties(${PROJECT_NAME} PROPERTIES
