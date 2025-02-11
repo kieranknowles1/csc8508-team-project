@@ -13,7 +13,7 @@ namespace NCL {
 		class RenderObject
 		{
 		public:
-			RenderObject(GameObject* parent, Mesh* mesh, Texture* tex, Shader* shader);
+			RenderObject(GameObject* parent, Mesh* mesh, Texture* tex, Shader* shader, Texture* normal = nullptr); 
 			~RenderObject();
 
 			void SetDefaultTexture(Texture* t) {
@@ -52,6 +52,14 @@ namespace NCL {
 				isFlat = isFlatIn;
 			}
 
+			void SetNormal(Texture* n) {
+				normalMap = n; 
+			}
+
+			Texture* GetNormalMap() const {
+				return normalMap;
+			}
+
 		protected:
 			GameObject* parent;
 			Mesh*		mesh;
@@ -59,6 +67,8 @@ namespace NCL {
 			Shader*		shader;
 			Vector4		colour = Vector4(1, 1, 0, 0.99);
 			bool isFlat = false;
+			//additional normal map option:
+			Texture* normalMap;
 		};
 	}
 }
