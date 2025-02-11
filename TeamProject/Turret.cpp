@@ -3,12 +3,13 @@
 #include "StateMachine.h"
 #include "State.h"
 #include "PhysicsObject.h"
+#include <numbers>
 
 using namespace NCL;
 using namespace CSC8503;
 
-Turret::Turret(Quaternion q) {
-	initialRotation = q;
+Turret::Turret(GameObject* p, Quaternion q) 
+	: player(p), initialRotation(q) {
 	stateMachine = new StateMachine();
 	rotateTime = 0.5;
 	rotateSpeed = 0.5;
@@ -40,7 +41,26 @@ Turret::~Turret() {
 }
 
 void Turret::Update(float dt) {
+	trans = GetTransform();
+
 	stateMachine->Update(dt);
+
+	if (!player) { std::cout << "Player is nullptr to turret" << std::endl; return; }
+
+	btVector3 turretForward = trans.getBasis() * btVector3(0, 0, 1);
+
+	btVector3 toPlayer = player->GetTransform().getOrigin() - trans.getOrigin();
+	toPlayer.normalize();
+
+	float dotProduct = turretForward.dot(toPlayer);
+
+	float angleRadians = acos(dotProduct);
+	float angleDegrees = angleRadians * (180.0f / std::numbers::pi);
+
+	if (angleDegrees <= 10.0f) {
+		std::cout << "Player can be shot by turret " << angleDegrees << std::endl;
+	}
+
 }
 
 // TODO: This could be one function
@@ -48,7 +68,6 @@ void Turret::RotateLeft(float dt) {
 	rotateTime += rotateSpeed * dt;
 	rotateTime = std::clamp(rotateTime, 0.0f, 1.0f);
 
-	btTransform trans = GetTransform();
 	btQuaternion negative(yNegative.x, yNegative.y, yNegative.z, yNegative.w);
 	btQuaternion positive(yPositive.x, yPositive.y, yPositive.z, yPositive.w);
 	
@@ -60,7 +79,6 @@ void Turret::RotateRight(float dt) {
 	rotateTime -= rotateSpeed * dt;
 	rotateTime = std::clamp(rotateTime, 0.0f, 1.0f);
 
-	btTransform trans = GetTransform();
 	btQuaternion negative(yNegative.x, yNegative.y, yNegative.z, yNegative.w);
 	btQuaternion positive(yPositive.x, yPositive.y, yPositive.z, yPositive.w);
 
