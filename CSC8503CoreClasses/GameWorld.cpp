@@ -62,6 +62,13 @@ void GameWorld::OperateOnContents(GameObjectFunc f) {
 	}
 }
 
+void NCL::CSC8503::GameWorld::OperateOnContents(ConstGameObjectFunc f) const
+{
+	for (const GameObject* g : gameObjects) {
+		f(g);
+	}
+}
+
 void GameWorld::UpdateWorld(float dt) {
 	auto rng = std::default_random_engine{};
 

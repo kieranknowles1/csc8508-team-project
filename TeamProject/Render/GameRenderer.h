@@ -11,6 +11,7 @@
 #include <OpenGLRendering/OGLMesh.h>
 
 namespace NCL {
+    class Camera;
     class Window;
 }
 
@@ -30,34 +31,39 @@ namespace NCL::CSC8503::Render {
 
         RenderBackend* getBackend() { return backend.get(); }
 
-        void drawWorld(const GameWorld* world);
+        void drawWorld(GameWorld* world);
     private:
         Window* window;
-        GameWorld* gameWorld; // TODO: Remove
 
         RendererOptions options;
         std::unique_ptr<RenderBackend> backend;
 
-        void NewRenderLines();
+        // Data that doesn't persist between frames, but the buffers
+        // for which are kept to save on allocation
+        using ObjectList = std::vector<const RenderObject*>;
+        struct ScratchSpace {
+            void clear() {
+                renderObjects.clear();
+            }
+            ObjectList renderObjects;
+        };
+        ScratchSpace scratch;
+
+        void NewRenderLines(Camera& camera);
         void NewRenderText();
         void NewRenderTextures();
 
-        void RenderFrame();
-
         Rendering::Shader* defaultShader;
 
-        void BuildObjectList();
-        void SortObjectList();
-        void RenderShadowMap();
-        void RenderCamera();
-        void RenderSkybox();
+        void buildObjectList(const GameWorld* world, ObjectList& out) const;
+        void renderShadowMap(const ObjectList& objects);
+        void renderCamera(Camera& camera, const ObjectList& objects);
+        void renderSkybox(Camera& camera);
 
         void LoadSkybox();
 
         void SetDebugStringBufferSizes(size_t newVertCount);
         void SetDebugLineBufferSizes(size_t newVertCount);
-
-        std::vector<const RenderObject*> activeObjects;
 
         Shader*  debugShader;
         Shader*  skyboxShader;

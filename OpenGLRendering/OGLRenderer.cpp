@@ -63,7 +63,7 @@ void OGLRenderer::OnWindowResize(int w, int h)	 {
 	glViewport(0, 0, windowSize.x, windowSize.y);
 }
 
-void OGLRenderer::BeginFrame()		{
+void OGLRenderer::BeginFrame() {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
 	glBindVertexArray(0);

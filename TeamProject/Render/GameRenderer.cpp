@@ -96,11 +96,28 @@ GameRenderer::~GameRenderer()	{
 	glDeleteFramebuffers(1, &shadowFBO);
 }
 
-void GameRenderer::drawWorld(const GameWorld* world)
+void GameRenderer::drawWorld(GameWorld* world)
 {
 	backend->beginFrame();
-	this->gameWorld = (GameWorld*)world;
-	RenderFrame();
+	scratch.clear();
+	buildObjectList(world, scratch.renderObjects);
+	
+	glEnable(GL_CULL_FACE);
+	glClearColor(1, 1, 1, 1);
+	renderShadowMap(scratch.renderObjects);
+	renderSkybox(world->GetMainCamera());
+	renderCamera(world->GetMainCamera(), scratch.renderObjects);
+	glDisable(GL_CULL_FACE); //Todo - text indices are going the wrong way...
+	glDisable(GL_BLEND);
+	glDisable(GL_DEPTH_TEST);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	NewRenderLines(world->GetMainCamera());
+	NewRenderTextures();
+	NewRenderText();
+	glDisable(GL_BLEND);
+	glEnable(GL_DEPTH_TEST);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
 	backend->swapBuffers();
 }
 
@@ -145,46 +162,15 @@ void GameRenderer::LoadSkybox() {
 	glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
 }
 
-void GameRenderer::RenderFrame() {
-	glEnable(GL_CULL_FACE);
-	glClearColor(1, 1, 1, 1);
-	BuildObjectList();
-	SortObjectList();
-	RenderShadowMap();
-	RenderSkybox();
-	RenderCamera();
-	glDisable(GL_CULL_FACE); //Todo - text indices are going the wrong way...
-	glDisable(GL_BLEND);
-	glDisable(GL_DEPTH_TEST);
-	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-	NewRenderLines();
-	NewRenderTextures();
-	NewRenderText();
-	glDisable(GL_BLEND);
-	glEnable(GL_DEPTH_TEST);
-	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-}
-
-void GameRenderer::BuildObjectList() {
-	activeObjects.clear();
-
-	gameWorld->OperateOnContents(
-		[&](GameObject* o) {
-			if (o->IsActive()) {
-				const RenderObject* g = o->GetRenderObject();
-				if (g) {
-					activeObjects.emplace_back(g);
-				}
-			}
+void GameRenderer::buildObjectList(const GameWorld* world, ObjectList& out) const {
+	world->OperateOnContents([&](const GameObject* obj) {
+		if (obj->IsActive() && obj->GetRenderObject()) {
+			out.emplace_back(obj->GetRenderObject());
 		}
-	);
+	});
 }
 
-void GameRenderer::SortObjectList() {
-
-}
-
-void GameRenderer::RenderShadowMap() {
+void GameRenderer::renderShadowMap(const ObjectList& objects) {
 	glBindFramebuffer(GL_FRAMEBUFFER, shadowFBO);
 	glClear(GL_DEPTH_BUFFER_BIT);
 	glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
@@ -202,7 +188,7 @@ void GameRenderer::RenderShadowMap() {
 
 	shadowMatrix = biasMatrix * mvMatrix; //we'll use this one later on
 
-	for (const auto&i : activeObjects) {
+	for (const auto&i : objects) {
 		//Matrix4 modelMatrix = (*i).getParent()->GetTransform().getOpenGLMatrix ()->GetMatrix();
 		Matrix4 modelMatrix;
 		i->getParent()->GetTransform().getOpenGLMatrix((btScalar*)&modelMatrix);
@@ -224,13 +210,13 @@ void GameRenderer::RenderShadowMap() {
 	glCullFace(GL_BACK);
 }
 
-void GameRenderer::RenderSkybox() {
+void GameRenderer::renderSkybox(Camera& camera) {
 	glDisable(GL_CULL_FACE);
 	glDisable(GL_BLEND);
 	glDisable(GL_DEPTH_TEST);
 
-	Matrix4 viewMatrix = gameWorld->GetMainCamera().BuildViewMatrix();
-	Matrix4 projMatrix = gameWorld->GetMainCamera().BuildProjectionMatrix(window->GetScreenAspect());
+	Matrix4 viewMatrix = camera.BuildViewMatrix();
+	Matrix4 projMatrix = camera.BuildProjectionMatrix(window->GetScreenAspect());
 
 	backend->useShader(skyboxShader);
 
@@ -253,9 +239,9 @@ void GameRenderer::RenderSkybox() {
 	glEnable(GL_DEPTH_TEST);
 }
 
-void GameRenderer::RenderCamera() {
-	Matrix4 viewMatrix = gameWorld->GetMainCamera().BuildViewMatrix();
-	Matrix4 projMatrix = gameWorld->GetMainCamera().BuildProjectionMatrix(window->GetScreenAspect());
+void GameRenderer::renderCamera(Camera& camera, const ObjectList& objects) {
+	Matrix4 viewMatrix = camera.BuildViewMatrix();
+	Matrix4 projMatrix = camera.BuildProjectionMatrix(window->GetScreenAspect());
 
 	OGLShader* activeShader = nullptr;
 	int projLocation	= 0;
@@ -277,7 +263,7 @@ void GameRenderer::RenderCamera() {
 	glActiveTexture(GL_TEXTURE0 + 1);
 	glBindTexture(GL_TEXTURE_2D, shadowTex);
 
-	for (const auto&i : activeObjects) {
+	for (const auto&i : objects) {
 		OGLShader* shader = (OGLShader*)(*i).GetShader();
 		backend->useShader(shader);
 
@@ -301,7 +287,7 @@ void GameRenderer::RenderCamera() {
 
 			cameraLocation = glGetUniformLocation(shader->GetProgramID(), "cameraPos");
 
-			Vector3 camPos = gameWorld->GetMainCamera().GetPosition();
+			Vector3 camPos = camera.GetPosition();
 			glUniform3fv(cameraLocation, 1, &camPos.x);
 
 			glUniformMatrix4fv(projLocation, 1, false, (float*)&projMatrix);
@@ -342,14 +328,14 @@ void GameRenderer::RenderCamera() {
 	}
 }
 
-void GameRenderer::NewRenderLines() {
+void GameRenderer::NewRenderLines(Camera& camera) {
 	const std::vector<Debug::DebugLineEntry>& lines = Debug::GetDebugLines();
 	if (lines.empty()) {
 		return;
 	}
 
-	Matrix4 viewMatrix = gameWorld->GetMainCamera().BuildViewMatrix();
-	Matrix4 projMatrix = gameWorld->GetMainCamera().BuildProjectionMatrix(window->GetScreenAspect());
+	Matrix4 viewMatrix = camera.BuildViewMatrix();
+	Matrix4 projMatrix = camera.BuildProjectionMatrix(window->GetScreenAspect());
 
 	Matrix4 viewProj  = projMatrix * viewMatrix;
 

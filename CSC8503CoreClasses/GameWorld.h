@@ -11,6 +11,7 @@ namespace NCL {
 		class Constraint;
 
 		typedef std::function<void(GameObject*)> GameObjectFunc;
+		typedef std::function<void(const GameObject*)> ConstGameObjectFunc;
 		typedef std::vector<GameObject*>::const_iterator GameObjectIterator;
 
 		class GameWorld	{
@@ -44,6 +45,7 @@ namespace NCL {
 			virtual void UpdateWorld(float dt);
 
 			void OperateOnContents(GameObjectFunc f);
+			void OperateOnContents(ConstGameObjectFunc f) const;
 
 			void GetObjectIterators(
 				GameObjectIterator& first,
