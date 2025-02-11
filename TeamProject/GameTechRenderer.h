@@ -59,6 +59,10 @@ namespace NCL {
 			float		lightRadius;
 			Vector3		lightPosition;
 
+			//Post processing additions:
+			GLuint hdrcolourTex;
+			GLuint hdrFBO;
+
 			//Debug data storage things
 			std::vector<Vector3> debugLineData;
 

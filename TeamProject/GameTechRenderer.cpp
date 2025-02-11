@@ -77,6 +77,28 @@ GameTechRenderer::GameTechRenderer(GameWorld& world) : OGLRenderer(*Window::GetW
 
 	SetDebugStringBufferSizes(10000);
 	SetDebugLineBufferSizes(1000);
+
+	//Set up FBOs for post processing:
+	//First set up HDR rendering for effective bloom post processing
+	//For HDR rendering set up a floating point texture in a framebuffer
+	//not sure if depth-stencil texture attachment needed or if colour is fine
+	//remember to define the textures and FBOs in header. First textures:
+	glGenTextures(1, &hdrcolourTex);
+	glBindTexture(GL_TEXTURE_2D, hdrcolourTex);
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);//are these two lines needed?
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST); 
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST); //maybe GL_Linear instead of nearest
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, windowSize.x, windowSize.y, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL); //floating point texture. Currently not sure if windowSize is what should be using for width and height
+	//Then generate FBO:
+	glGenFramebuffers(1, &hdrFBO);
+	//attach generated texture to hdrFBO:
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, hdrFBO, 0);
+	//check FBO attachment success:
+	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE || !hdrFBO) {
+		return;
+	}
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
 GameTechRenderer::~GameTechRenderer()	{
@@ -90,6 +112,9 @@ GameTechRenderer::~GameTechRenderer()	{
 
 	glDeleteTextures(1, &shadowTex);
 	glDeleteFramebuffers(1, &shadowFBO);
+	//added for post processing:
+	glDeleteTextures(1, &hdrcolourTex);
+	glDeleteFramebuffers(1, &hdrFBO);
 }
 
 void GameTechRenderer::LoadSkybox() {
