@@ -1,65 +1,251 @@
 #include "PlayerController.h"
 
-
 using namespace NCL;
 using namespace CSC8503;
 
+Vector2 PlayerController::getDirectionalInput() const
+{
+    Vector2 raw(controller->GetAnalogue(Controller::AnalogueControl::MoveSidestep), controller->GetAnalogue(Controller::AnalogueControl::MoveForward));
+    float magnitude = Vector::Length(raw);
+    return magnitude <= 1.0f ? raw : raw / magnitude;
+}
+
+void PlayerController::Initialise() {
+    rb = player->GetPhysicsObject()->GetRigidBody();
+    sphereMesh = renderer->LoadMesh("Sphere.msh");
+    basicTex = renderer->LoadTexture("checkerboard.png");
+    basicShader = renderer->LoadShader("flatvert.glsl", "flatfrag.glsl");
+}
+
 void PlayerController::UpdateMovement(float dt) {
-    float camRotation = camera->GetYaw(); // Get yaw in degrees
-    float yawRad = Maths::DegreesToRadians(camRotation); // Convert to radians
+    transformPlayer = rb->getWorldTransform();
+    btPlayerPos = transformPlayer.getOrigin();
 
+    //camera yaw
+    yaw = fmod(yaw - controller->GetAnalogue(Controller::AnalogueControl::LookX) + 360.0f, 360.0f);
+    if (!thirdPerson) camera->SetYaw(yaw);
 
-    bool diag = (controller->GetNamedAxis("Sidestep") != 0 && controller->GetNamedAxis("Forward") != 0);
-    float moveScale = diag ? 0.5f : 1.0f;
-
-    Vector3 forward = Vector3(sin(yawRad), 0.0f, cos(yawRad));
-    Vector3 right = Vector3(cos(yawRad), 0.0f, -sin(yawRad));
-
-    Vector3 movement = ((right * controller->GetNamedAxis("Sidestep") * strafeMulti * playerSpeed) + (forward * -controller->GetNamedAxis("Forward")) * playerSpeed) * moveScale;
-    movement.y = -1.5f * (0.5f + inAirCount); // arteficial gravity
-
-    btVector3 rotatedMovement(movement.x, movement.y, movement.z);
-
-    //jumps allow for held input up to maxJumpTime
-    bool jumpPressed = controller->GetNamedButton("JumpButton");
-    if (!inAir && jumpPressed) {
-        spaceCount += dt;
-        rotatedMovement.setY(rotatedMovement.getY() + (jumpHeight));
-        if (spaceCount > maxJumpTime) {
-            inAir = true;
-        }
+    if (controller->GetDigital(Controller::DigitalControl::Fire) && shotTimer >= shotCooldown) {
+        ShootBullet();
+        shotTimer = 0.0f;
     }
-    else if (!jumpPressed && spaceCount > 0) {
-        inAir = true;
+    else {
+        shotTimer += dt;
     }
 
-    //Get player and just below player positions as btVector3
-    btTransform transformPlayer = player->GetPhysicsObject()->GetRigidBody()->getWorldTransform();
-    btVector3 btPlayerPos = transformPlayer.getOrigin();
+    //sliding/floor detection
+    HandleSliding(dt);
+    HandleCrouching(dt);
+    if ((isSliding||slideTransition) && !isCrouching) return;
+
+    //player rotation
+    btQuaternion playerRotation(btVector3(0, 1, 0), Maths::DegreesToRadians(yaw));
+    transformPlayer.setRotation(playerRotation);
+    rb->setWorldTransform(transformPlayer);
+
+    //camera follows player, lowers if crouching
+
+    btTransform transformPlayerMotion;
+    player->GetPhysicsObject()->GetMotionState()->getWorldTransform(transformPlayerMotion);
+    btVector3 playerCamPos = transformPlayerMotion.getOrigin();
+    playerCamPos.setY(playerCamPos.getY() + (isCrouching ? std::lerp(cameraHeight, crouchHeight, btMin(currentCrouchingTimer / crouchingTime, 1.0f)) : std::lerp(crouchHeight, cameraHeight, btMin(currentStandingTimer / crouchingTime, 1.0f))));
+    if (!slideTransition && !thirdPerson) {
+        camera->SetPosition(playerCamPos);
+        SetGunTransform();
+    }
+
+    //finds player forward and right vectors
+    btMatrix3x3 rotationMatrix(playerRotation);
+    btVector3 forward = rotationMatrix * btVector3(0, 0, -1);
+    btVector3 right = rotationMatrix * btVector3(1, 0, 0);
+
+    //movement based on all the multipliers combined
+    Vector2 directionalInput = getDirectionalInput();
+    bool sprinting = controller->GetDigital(Controller::DigitalControl::Sprint);
+    float forwardMovement = directionalInput.y;
+    float moveMulti = playerSpeed * (sprinting ? sprintMulti : 1) * (isCrouching ? crouchMulti : 1) * (player->getCollided()==0 ? airMulti : 1) ;
+    forwardMovement *= (forwardMovement <= 0) ? backwardsMulti : 1;
+    btVector3 movement = (right * directionalInput.x * strafeMulti * moveMulti) +(forward * forwardMovement * moveMulti);
+    movement.setY(movement.getY() - (gravityScale*dt));
+
+    // jump input
+    if (controller->GetDigital(Controller::DigitalControl::Jump) && player->getCollided()) {
+        movement.setY(jumpHeight);
+        player->setCollided(0);
+    }
+    else {
+        movement.setY(movement.getY() + rb->getLinearVelocity().getY());
+    }
+    if (player->getCollided()==0) {
+        movement.setX(rb->getLinearVelocity().getX() + (movement.getX() * airMulti));
+        movement.setZ(rb->getLinearVelocity().getZ() + (movement.getZ() * airMulti));
+    }
+    //CheckFloor(dt);
+    rb->setLinearVelocity(movement);
+    rb->activate();
+}
+
+
+
+
+//attaches gun to the camera position/rotation
+void PlayerController::SetGunTransform() {
+    float pitchRadians = Maths::DegreesToRadians(camera->GetPitch());
+    float yawRadians = Maths::DegreesToRadians(camera->GetYaw());
+    btQuaternion yawQuat(btVector3(0, 1, 0), yawRadians);
+    btQuaternion pitchQuat(btVector3(1, 0, 0), pitchRadians);
+    btQuaternion gunRotation = yawQuat * pitchQuat; // Yaw first, then pitch
+
+    btMatrix3x3 rotationMatrixCam(gunRotation);
+    btVector3 adjustedOffset = rotationMatrixCam * gunCameraOffset; // Apply rotation to the offset
+
+    transformGun = gun->GetPhysicsObject()->GetRigidBody()->getWorldTransform();
+    btGunPos = camera->GetPosition() + adjustedOffset; // Offset from camera position
+    transformGun.setOrigin(btGunPos);
+    transformGun.setRotation(gunRotation);
+
+    gun->GetPhysicsObject()->GetRigidBody()->setWorldTransform(transformGun);
+}
+
+void PlayerController::ShootBullet() {
+    // Convert camera pitch & yaw to radians
+    float pitchRadians = Maths::DegreesToRadians(camera->GetPitch());
+    float yawRadians = Maths::DegreesToRadians(camera->GetYaw());
+    btQuaternion yawQuat(btVector3(0, 1, 0), yawRadians);
+    btQuaternion pitchQuat(btVector3(1, 0, 0), pitchRadians);
+    btQuaternion bulletRotation = yawQuat * pitchQuat;
+
+    // Compute rotation matrix
+    btMatrix3x3 rotationMatrix(bulletRotation);
+    btVector3 adjustedOffset = rotationMatrix * bulletCameraOffset;
+    btVector3 forwardDir = rotationMatrix * btVector3(0, 0, -1);
+    btVector3 rightDir = rotationMatrix * btVector3(1, 0, 0);
+    btVector3 bulletPos = camera->GetPosition() + adjustedOffset;
+
+    Paintball* paintball = new Paintball();
+    paintball->Initialise(player,bulletWorld);
+    Vector3 bulletSize(1, 1, 1);
+    paintball->setInitialPosition(bulletPos);
+    paintball->setRenderScale(bulletSize);
+    paintball->SetRenderObject(new RenderObject(paintball, sphereMesh, basicTex, basicShader));
+    paintball->SetPhysicsObject(new PhysicsObject(paintball));
+    paintball->GetRenderObject()->SetColour(Vector4(rand() % 2, rand() % 2, rand() % 2, 1));
+    btCollisionShape* shape = new btSphereShape(1);
+    shape->setMargin(0.01f);
+    paintball->GetPhysicsObject()->InitBulletPhysics(bulletWorld, shape, 1.0f);
+    world->AddGameObject(paintball);
+
+    btVector3 playerVelocity = rb->getLinearVelocity();
+    float forwardSpeed = forwardDir.dot(playerVelocity);
+    float rightSpeed = rightDir.dot(playerVelocity);
+    btVector3 adjustedPlayerVelocity = (forwardDir * forwardSpeed) + (rightDir * rightSpeed * playerVelocityStrafeInherit);
+    btVector3 bulletVelocity = adjustedPlayerVelocity + (forwardDir * bulletSpeed);
+
+    // Apply impulse
+    paintball->GetPhysicsObject()->GetRigidBody()->applyCentralImpulse(bulletVelocity);
+    paintball->GetPhysicsObject()->GetRigidBody()->activate();
+}
+
+
+//transitions states between standing and crouching
+void PlayerController::HandleCrouching(float dt) {
+    if (isSliding) {
+        return;
+    }
+    if ((crouching && !controller->GetDigital(Controller::DigitalControl::Crouch)) || slideTransition) {
+        crouching = CheckCeling();
+    }
+    else {
+        crouching = controller->GetDigital(Controller::DigitalControl::Crouch);
+    }
+   
+    crouchTransition = crouching ? (currentCrouchingTimer < crouchingTime) : (currentStandingTimer < crouchingTime);
+
+    if (crouching) {
+        isCrouching = true;
+        currentStandingTimer = 0;
+        currentCrouchingTimer = btMin(currentCrouchingTimer + dt, crouchingTime);
+        currentHeight = std::lerp(standingHeight, crouchingHeight, currentCrouchingTimer / crouchingTime);
+    }
+    else {
+        isCrouching = false;
+        currentCrouchingTimer = 0;
+        currentStandingTimer = btMin(currentStandingTimer + dt, crouchingTime);
+        currentHeight = std::lerp(crouchingHeight, standingHeight, currentStandingTimer / crouchingTime);
+    }
+
+    if (crouchTransition) {
+        Vector3 currentScale = player->getRenderScale();
+        currentScale.y = (currentHeight+2)*0.7;
+        player->setRenderScale(currentScale);
+
+        btCollisionShape* shape = player->GetPhysicsObject()->GetRigidBody()->getCollisionShape();
+        shape->setLocalScaling(btVector3(1, currentHeight/standingHeight, 1));
+    }
+}
+
+
+//uses ray to detect if the player is blocked from standing
+bool PlayerController::CheckCeling() {
     btVector3 btBelowPlayerPos = btPlayerPos;
-    btBelowPlayerPos.setY(btBelowPlayerPos.getY() - 4.2);
-
-    //create a callback, can use closest result or all results
+    btBelowPlayerPos.setY(btBelowPlayerPos.getY() + 4.1f);
     btCollisionWorld::ClosestRayResultCallback callback(btPlayerPos, btBelowPlayerPos);
-
-    //send ray
     bulletWorld->rayTest(btPlayerPos, btBelowPlayerPos, callback);
-
     if (callback.hasHit()) {
-        btVector3 hitPoint = callback.m_hitPointWorld; // option to use hit point in world position
-        const btRigidBody* hitBody = btRigidBody::upcast(callback.m_collisionObject); // cast collision into rigid body type
-        if (hitBody) { // found an object, have it's rigid body
-            inAir = false;
-            spaceCount = 0;
-            inAirCount = 0;
-        }
+        return true;
     }
-    else { // did not find
-        if (!jumpPressed) {
-            inAir = true;
-        }
-        inAirCount += dt;
+    else {
+        return false;
+    }
+}
+
+
+//transitions states between standing and sliding, also handles physics for while sliding
+void PlayerController::HandleSliding(float dt) {
+    bool crouching = controller->GetDigital(Controller::DigitalControl::Crouch);
+    bool sprinting = controller->GetDigital(Controller::DigitalControl::Sprint);
+    bool slidingCondition = crouching && sprinting && !isCrouching;
+
+    slideTransition = slidingCondition
+        ? (currentSlidingTimer < slidingTime)
+        : (currentStandingSlideTimer < slidingTime);
+
+    isSliding = slidingCondition;
+
+    if (isSliding) {
+        currentStandingSlideTimer = 0;
+        currentSlidingTimer = btMin(currentSlidingTimer + dt, slidingTime);
+    }
+    else {
+        currentSlidingTimer = 0;
+        currentStandingSlideTimer = btMin(currentStandingSlideTimer + dt, slidingTime);
     }
 
-    player->GetPhysicsObject()->GetRigidBody()->applyCentralImpulse(rotatedMovement);
+    if ((slideTransition || isSliding) && !isCrouching) {
+        float slideFactor = isSliding ? btMin(currentSlidingTimer / slidingTime, 1.0f) : btMin(currentStandingSlideTimer / slidingTime, 1.0f);
+
+        btQuaternion playerRotation(btVector3(0, 1, 0), Maths::DegreesToRadians(yaw));
+        btQuaternion playerRotationX(btVector3(1, 0, 0),Maths::DegreesToRadians(std::lerp(isSliding ? 0 : slidingAngle, isSliding ? slidingAngle : 0, slideFactor)));
+
+        transformPlayer.setRotation(playerRotation * playerRotationX);
+        player->GetPhysicsObject()->GetRigidBody()->setWorldTransform(transformPlayer);
+
+        btMatrix3x3 rotationMatrix(playerRotation);
+        btVector3 forward = rotationMatrix * btVector3(0, 0, -1);
+        btTransform transformPlayerMotion;
+        player->GetPhysicsObject()->GetMotionState()->getWorldTransform(transformPlayerMotion);
+        btVector3 playerPos = transformPlayerMotion.getOrigin();
+
+        playerPos -= forward * std::lerp(isSliding ? 0 : slidingCameraBackwards, isSliding ? slidingCameraBackwards : 0, slideFactor);
+        playerPos.setY(playerPos.getY() + std::lerp(isSliding ? cameraHeight : slidingCameraHeight, isSliding ? slidingCameraHeight : cameraHeight, slideFactor));
+        if (!thirdPerson) {
+            camera->SetPosition(playerPos);
+            SetGunTransform();
+        }
+        //CheckFloor(dt);
+        btVector3 pastMovement = rb->getLinearVelocity();
+        pastMovement.setY(pastMovement.getY() - ((gravityScale*dt) * (player->getCollided() == 0 ? 1 : 10)));
+        rb->setLinearVelocity(pastMovement);
+        rb->activate();
+    }
 }

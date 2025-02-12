@@ -13,6 +13,129 @@ using namespace Rendering;
 using namespace Maths;
 
 bool MshLoader::LoadMesh(const std::string& filename, Mesh& destinationMesh) {
+	auto binFile(Assets::MESHDIR + filename + "b");
+	if (std::filesystem::exists(binFile)) {
+		return LoadBinaryMesh(binFile, destinationMesh);
+	}
+	else {
+		std::cout << filename << " is being loaded from text. Consider adding to COMPILED_MESHES" << std::endl;
+		return LoadTextMesh(filename, destinationMesh);
+	}
+}
+
+template <typename T>
+void read(std::ifstream& fs, T& out) {
+	fs.read((char*)&out, sizeof(T));
+}
+
+template <typename T>
+std::vector<T> readVector(std::ifstream& fs, int size) {
+	static_assert(std::is_trivially_copyable<T>::value);
+	std::vector<T> out;
+	out.resize(size);
+	fs.read((char*)out.data(), size * sizeof(T));
+	return out;
+}
+
+std::vector<std::string> readStrings(std::ifstream& fs, int size) {
+	std::vector<std::string> out;
+	for (int i = 0; i < size; i++) {
+		std::string value;
+		char ch;
+		while (true) {
+			ch = fs.get();
+			if (ch != '\0') {
+				value += ch;
+			}
+			else {
+				break;
+			}
+
+			if (value.length() > 1024) {
+				throw std::runtime_error("Unreasonably long string");
+			}
+		}
+	}
+	return out;
+}
+
+bool NCL::Rendering::MshLoader::LoadBinaryMesh(const std::string& filename, Mesh& destinationMesh)
+{
+	std::ifstream fs(filename, std::ifstream::binary);
+	if (!fs.is_open()) {
+		std::cerr << __FUNCTION__ << "Could not open mesh " << filename << std::endl;
+		return false;
+	}
+
+	char magic[4];
+	fs.read(magic, 4);
+	if (magic[0] != 'M' || magic[1] != 'S' || magic[2] != 'H' || magic[3] != 'B') {
+		std::cerr << "Invalid file type" << std::endl;
+		return false;
+	}
+
+	uint32_t version;
+	fs.read((char*)&version, sizeof(version));
+	if (version != 1) {
+		std::cout << __FUNCTION__ << " Mesh file has incompatible version!\n";
+	}
+
+	size_t numMeshes;
+	size_t numVertexes;
+	size_t numIndexes;
+	int numChunks;
+	read(fs, numMeshes);
+	read(fs, numVertexes);
+	read(fs, numIndexes);
+	read(fs, numChunks);
+
+	for (int i = 0; i < numChunks; i++) {
+		GeometryChunkTypes type;
+		read(fs, type);
+
+		switch (type) {
+		case GeometryChunkTypes::VPositions: {
+			auto vpos = readVector<Vector3>(fs, numVertexes);
+			destinationMesh.SetVertexPositions(vpos);
+			break;
+		} case GeometryChunkTypes::VNormals: {
+			auto vnorm = readVector<Vector3>(fs, numVertexes);
+			destinationMesh.SetVertexNormals(vnorm);
+			break;
+		} case GeometryChunkTypes::VTangents: {
+			auto vtan = readVector<Vector4>(fs, numVertexes);
+			destinationMesh.SetVertexTangents(vtan);
+			break;
+		} case GeometryChunkTypes::VTex0: {
+			auto uv = readVector<Vector2>(fs, numVertexes);
+			destinationMesh.SetVertexTextureCoords(uv);
+			break;
+		} case GeometryChunkTypes::VWeightValues: {
+			auto weights = readVector<Vector4>(fs, numVertexes);
+			destinationMesh.SetVertexSkinWeights(weights);
+		} case GeometryChunkTypes::Indices: {
+			auto indexes = readVector<unsigned int>(fs, numIndexes);
+			destinationMesh.SetVertexIndices(indexes);
+			break;
+		} case GeometryChunkTypes::SubMeshes: {
+			auto meshes = readVector<SubMesh>(fs, numMeshes);
+			destinationMesh.SetSubMeshes(meshes);
+			break;
+		} case GeometryChunkTypes::SubMeshNames: {
+			auto names = readStrings(fs, numMeshes);
+			destinationMesh.SetSubMeshNames(names);
+			break;
+		} default: {
+			std::cerr << __FUNCTION__ << " Unknown chunk type " << (int)type << " at offset 0x" << std::hex << fs.tellg() << std::dec << " in " << filename << std::endl;
+			return false; // Chunks do not store their length, so we can't recover from an unknown type
+		}
+		}
+	}
+
+	return true;
+}
+
+bool MshLoader::LoadTextMesh(const std::string& filename, Mesh& destinationMesh) {
 	std::ifstream file(Assets::MESHDIR + filename);
 	if (!file.is_open()) {
 		std::cerr << __FUNCTION__ << "Could not open mesh " << filename << std::endl;

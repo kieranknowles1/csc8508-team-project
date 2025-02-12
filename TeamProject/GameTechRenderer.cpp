@@ -7,6 +7,8 @@
 
 #include "Debug.h"
 
+#include <NCLCoreClasses/stb/stb_image.h>
+
 using namespace NCL;
 using namespace Rendering;
 using namespace CSC8503;
@@ -18,7 +20,7 @@ Matrix4 biasMatrix = Matrix::Translation(Vector3(0.5f, 0.5f, 0.5f)) * Matrix::Sc
 GameTechRenderer::GameTechRenderer(GameWorld& world) : OGLRenderer(*Window::GetWindow()), gameWorld(world)	{
 	glEnable(GL_DEPTH_TEST);
 
-	debugShader  = new OGLShader("debug.vert", "debug.frag");
+	debugShader  = new OGLShader("Debug.vert", "Debug.frag");
 	shadowShader = new OGLShader("shadow.vert", "shadow.frag");
 
 	glGenTextures(1, &shadowTex);
@@ -26,10 +28,10 @@ GameTechRenderer::GameTechRenderer(GameWorld& world) : OGLRenderer(*Window::GetW
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	
+
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT,
 			     SHADOWSIZE, SHADOWSIZE, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
-	
+
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_MODE, GL_COMPARE_R_TO_TEXTURE);
 	glBindTexture(GL_TEXTURE_2D, 0);
 
@@ -43,7 +45,7 @@ GameTechRenderer::GameTechRenderer(GameWorld& world) : OGLRenderer(*Window::GetW
 
 	//Set up the light properties
 	lightColour = Vector4(0.8f, 0.8f, 0.5f, 1.0f);
-	lightRadius = 1000.0f;
+	lightRadius = 1000.0f; 
 	lightPosition = Vector3(-200.0f, 60.0f, -200.0f);
 
 	//Skybox!
@@ -75,21 +77,33 @@ GameTechRenderer::GameTechRenderer(GameWorld& world) : OGLRenderer(*Window::GetW
 
 	SetDebugStringBufferSizes(10000);
 	SetDebugLineBufferSizes(1000);
+
+	InitCrosshair(); //This line Ameya added for crosshair
 }
 
 GameTechRenderer::~GameTechRenderer()	{
+	delete debugShader;
+	delete shadowShader;
+
+	delete skyboxShader;
+	delete skyboxMesh;
+
+	delete debugTexMesh;
+
+	delete crosshairShader; //This line Ameya added for crosshair
+
 	glDeleteTextures(1, &shadowTex);
 	glDeleteFramebuffers(1, &shadowFBO);
 }
 
 void GameTechRenderer::LoadSkybox() {
 	std::string filenames[6] = {
-		"/Cubemap/skyrender0004.png",
-		"/Cubemap/skyrender0001.png",
-		"/Cubemap/skyrender0003.png",
-		"/Cubemap/skyrender0006.png",
-		"/Cubemap/skyrender0002.png",
-		"/Cubemap/skyrender0005.png"
+		"Cubemap/skyrender0004.png",
+		"Cubemap/skyrender0001.png",
+		"Cubemap/skyrender0003.png",
+		"Cubemap/skyrender0006.png",
+		"Cubemap/skyrender0002.png",
+		"Cubemap/skyrender0005.png"
 	};
 
 	uint32_t width[6]	 = { 0 };
@@ -113,6 +127,7 @@ void GameTechRenderer::LoadSkybox() {
 
 	for (int i = 0; i < 6; ++i) {
 		glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB, width[i], height[i], 0, type, GL_UNSIGNED_BYTE, texData[i]);
+		stbi_image_free(texData[i]);
 	}
 
 	glTexParameterf(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
@@ -140,6 +155,7 @@ void GameTechRenderer::RenderFrame() {
 	glDisable(GL_BLEND);
 	glEnable(GL_DEPTH_TEST);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	RenderCrosshair(); //This line Ameya added for crosshair
 }
 
 void GameTechRenderer::BuildObjectList() {
@@ -241,6 +257,7 @@ void GameTechRenderer::RenderCamera() {
 	int hasVColLocation = 0;
 	int hasTexLocation  = 0;
 	int shadowLocation  = 0;
+	int hasFlatLocation = 0;
 
 	int lightPosLocation	= 0;
 	int lightColourLocation = 0;
@@ -260,6 +277,11 @@ void GameTechRenderer::RenderCamera() {
 			BindTextureToShader(*(OGLTexture*)(*i).GetDefaultTexture(), "mainTex", 0);
 		}
 
+		//normal map capabilities added:
+		if ((*i).GetNormalMap()) {
+			BindTextureToShader(*(OGLTexture*)(*i).GetNormalMap(), "normalTex", 2); //need a shader that utilises normal maps, has a uniform sampler2D called "normalTex" in texture unit 2
+		}
+
 		if (activeShader != shader) {
 			projLocation	= glGetUniformLocation(shader->GetProgramID(), "projMatrix");
 			viewLocation	= glGetUniformLocation(shader->GetProgramID(), "viewMatrix");
@@ -268,6 +290,7 @@ void GameTechRenderer::RenderCamera() {
 			colourLocation  = glGetUniformLocation(shader->GetProgramID(), "objectColour");
 			hasVColLocation = glGetUniformLocation(shader->GetProgramID(), "hasVertexColours");
 			hasTexLocation  = glGetUniformLocation(shader->GetProgramID(), "hasTexture");
+			hasFlatLocation =  glGetUniformLocation(shader->GetProgramID(), "isFlat");
 
 			lightPosLocation	= glGetUniformLocation(shader->GetProgramID(), "lightPos");
 			lightColourLocation = glGetUniformLocation(shader->GetProgramID(), "lightColour");
@@ -295,8 +318,8 @@ void GameTechRenderer::RenderCamera() {
 		Matrix4 modelMatrix;
 		i->getParent()->GetTransform().getOpenGLMatrix((btScalar*)&modelMatrix);
 		modelMatrix = modelMatrix * Matrix::Scale(i->getParent()->getRenderScale());
-		glUniformMatrix4fv(modelLocation, 1, false, (float*)&modelMatrix);			
-		
+		glUniformMatrix4fv(modelLocation, 1, false, (float*)&modelMatrix);
+
 		Matrix4 fullShadowMat = shadowMatrix * modelMatrix;
 		glUniformMatrix4fv(shadowLocation, 1, false, (float*)&fullShadowMat);
 
@@ -306,7 +329,8 @@ void GameTechRenderer::RenderCamera() {
 		glUniform1i(hasVColLocation, !(*i).GetMesh()->GetColourData().empty());
 
 		glUniform1i(hasTexLocation, (OGLTexture*)(*i).GetDefaultTexture() ? 1:0);
-
+		glUniform1i(hasFlatLocation, i->GetIsFlat());
+	
 		BindMesh((OGLMesh&)*(*i).GetMesh());
 		size_t layerCount = (*i).GetMesh()->GetSubMeshCount();
 		for (size_t i = 0; i < layerCount; ++i) {
@@ -331,7 +355,7 @@ void GameTechRenderer::NewRenderLines() {
 
 	Matrix4 viewMatrix = gameWorld.GetMainCamera().BuildViewMatrix();
 	Matrix4 projMatrix = gameWorld.GetMainCamera().BuildProjectionMatrix(hostWindow.GetScreenAspect());
-	
+
 	Matrix4 viewProj  = projMatrix * viewMatrix;
 
 	UseShader(*debugShader);
@@ -349,7 +373,7 @@ void GameTechRenderer::NewRenderLines() {
 
 	glBindBuffer(GL_ARRAY_BUFFER, lineVertVBO);
 	glBufferSubData(GL_ARRAY_BUFFER, 0, lines.size() * sizeof(Debug::DebugLineEntry), lines.data());
-	
+
 
 	glBindVertexArray(lineVAO);
 	glDrawArrays(GL_LINES, 0, (GLsizei)frameLineCount);
@@ -371,7 +395,7 @@ void GameTechRenderer::NewRenderText() {
 		glBindTexture(GL_TEXTURE_2D, t->GetObjectID());
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-		glBindTexture(GL_TEXTURE_2D, 0);	
+		glBindTexture(GL_TEXTURE_2D, 0);
 		BindTextureToShader(*t, "mainTex", 0);
 	}
 
@@ -436,10 +460,10 @@ void GameTechRenderer::NewRenderTextures() {
 
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	
-	for (const auto& tex : texEntries) {	
+
+	for (const auto& tex : texEntries) {
 		OGLTexture* t = (OGLTexture*)tex.t;
-		glBindTexture(GL_TEXTURE_2D, t->GetObjectID());	
+		glBindTexture(GL_TEXTURE_2D, t->GetObjectID());
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 		BindTextureToShader(*t, "mainTex", 0);
@@ -456,7 +480,7 @@ void GameTechRenderer::NewRenderTextures() {
 
 	glUniform1i(useColourSlot, 0);
 }
- 
+
 Texture* GameTechRenderer::LoadTexture(const std::string& name) {
 	return OGLTexture::TextureFromFile(name).release();
 }
@@ -530,4 +554,66 @@ void GameTechRenderer::SetDebugLineBufferSizes(size_t newVertCount) {
 
 		glBindVertexArray(0);
 	}
+}
+
+void GameTechRenderer::InitCrosshair() {
+	float gap = 0.010f; // Space in NDC
+	float crosshairSize = 0.02f; // Line length
+	float horizontalCrosshairSize = 0.012f;
+	float thickness = 0.002f; // Vertical line thickness
+	float horizontalThickness = 0.003f; // Horizontal line thickness
+
+	float vertices[] = {
+		// Horizontal top quad
+		-horizontalCrosshairSize - gap,  horizontalThickness, 0.0f,  -gap,  horizontalThickness, 0.0f,
+		-horizontalCrosshairSize - gap, -horizontalThickness, 0.0f,  -gap, -horizontalThickness, 0.0f,
+
+		 gap,  horizontalThickness, 0.0f,  horizontalCrosshairSize + gap,  horizontalThickness, 0.0f,
+		 gap, -horizontalThickness, 0.0f,  horizontalCrosshairSize + gap, -horizontalThickness, 0.0f,
+
+		 // Vertical left quad
+		 -thickness, -crosshairSize - gap, 0.0f,  thickness, -crosshairSize - gap, 0.0f,
+		 -thickness, -gap, 0.0f,  thickness, -gap, 0.0f,
+
+		 -thickness,  gap, 0.0f,  thickness,  gap, 0.0f,
+		 -thickness, crosshairSize + gap, 0.0f,  thickness, crosshairSize + gap, 0.0f
+	};
+
+	unsigned int indices[] = {
+		0, 1, 2,  2, 3, 1,  // Left horizontal quad
+		4, 5, 6,  6, 7, 5,  // Right horizontal quad
+		8, 9, 10, 10, 11, 9, // Bottom vertical quad
+		12, 13, 14, 14, 15, 13 // Top vertical quad
+	};
+
+	glGenVertexArrays(1, &crosshairVAO);
+	glGenBuffers(1, &crosshairVBO);
+	glGenBuffers(1, &crosshairEBO);
+
+	glBindVertexArray(crosshairVAO);
+	glBindBuffer(GL_ARRAY_BUFFER, crosshairVBO);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, crosshairEBO);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
+
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+	glEnableVertexAttribArray(0);
+
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	glBindVertexArray(0);
+
+	crosshairShader = new OGLShader("crosshair.vert", "crosshair.frag");
+}
+
+void GameTechRenderer::RenderCrosshair() {
+	glDisable(GL_DEPTH_TEST);
+	glUseProgram(crosshairShader->GetProgramID());
+
+	glBindVertexArray(crosshairVAO);
+	glDrawElements(GL_TRIANGLES, 24, GL_UNSIGNED_INT, 0); // Drawing quads as triangles
+	glBindVertexArray(0);
+
+	glUseProgram(0);
+	glEnable(GL_DEPTH_TEST);
 }

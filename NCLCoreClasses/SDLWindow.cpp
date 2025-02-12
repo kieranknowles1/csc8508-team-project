@@ -27,6 +27,11 @@ namespace NCL::UnixCode {
         mouse = sdlMouse;
     }
 
+    SDLWindow::~SDLWindow() {
+        SDL_DestroyWindow(sdlWindow);
+        SDL_Quit();
+    }
+
     void SDLWindow::LockMouseToWindow(bool lock)
     {
         SDL_SetRelativeMouseMode(lock ? SDL_TRUE : SDL_FALSE);

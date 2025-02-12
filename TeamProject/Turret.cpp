@@ -3,12 +3,13 @@
 #include "StateMachine.h"
 #include "State.h"
 #include "PhysicsObject.h"
+#include <numbers>
 
 using namespace NCL;
 using namespace CSC8503;
 
-Turret::Turret(btQuaternion q) {
-	initialRotation = q;
+Turret::Turret(GameObject* p, Quaternion q)
+	: player(p), initialRotation(q) {
 	stateMachine = new StateMachine();
 	rotateTime = 0.5;
 	rotateSpeed = 0.5;
@@ -28,12 +29,10 @@ Turret::Turret(btQuaternion q) {
 
 	stateMachine->AddTransition(new StateTransition(rotateLeft, rotateRight, [&]()->bool {
 		return rotateTime >= 1.0f;
-		std::cout << "To rotate right" << std::endl;
 		}));
 
 	stateMachine->AddTransition(new StateTransition(rotateRight, rotateLeft, [&]()->bool {
 		return rotateTime <= 0.0f;
-		std::cout << "To rotate left" << std::endl;
 		}));
 }
 
@@ -42,17 +41,36 @@ Turret::~Turret() {
 }
 
 void Turret::Update(float dt) {
+	trans = GetTransform();
+
 	stateMachine->Update(dt);
+
+	if (!player) { std::cout << "Player is nullptr to turret" << std::endl; return; }
+
+	btVector3 turretForward = trans.getBasis() * btVector3(0, 0, 1);
+
+	btVector3 toPlayer = player->GetTransform().getOrigin() - trans.getOrigin();
+	toPlayer.normalize();
+
+	float dotProduct = turretForward.dot(toPlayer);
+
+	float angleRadians = acos(dotProduct);
+	float angleDegrees = angleRadians * (180.0f / std::numbers::pi);
+
+	if (angleDegrees <= 10.0f) {
+		std::cout << "Player can be shot by turret " << angleDegrees << std::endl;
+	}
+
 }
 
 // TODO: This could be one function
 void Turret::RotateLeft(float dt) {
 	rotateTime += rotateSpeed * dt;
 	rotateTime = std::clamp(rotateTime, 0.0f, 1.0f);
-	std::cout << "left " << rotateTime << std::endl;
 
-	btTransform trans = GetTransform();
-	
+	btQuaternion negative(yNegative.x, yNegative.y, yNegative.z, yNegative.w);
+	btQuaternion positive(yPositive.x, yPositive.y, yPositive.z, yPositive.w);
+
 	trans.setRotation(yNegative.slerp(yPositive, rotateTime));
 	GetPhysicsObject()->GetRigidBody()->setWorldTransform(trans);
 }
@@ -60,9 +78,10 @@ void Turret::RotateLeft(float dt) {
 void Turret::RotateRight(float dt) {
 	rotateTime -= rotateSpeed * dt;
 	rotateTime = std::clamp(rotateTime, 0.0f, 1.0f);
-	std::cout << "right " << rotateTime << std::endl;
 
-	btTransform trans = GetTransform();
-	trans.setRotation(yNegative.slerp(yPositive, rotateTime));
+	btQuaternion negative(yNegative.x, yNegative.y, yNegative.z, yNegative.w);
+	btQuaternion positive(yPositive.x, yPositive.y, yPositive.z, yPositive.w);
+
+	trans.setRotation(negative.slerp(positive, rotateTime));
 	GetPhysicsObject()->GetRigidBody()->setWorldTransform(trans);
 }

@@ -7,13 +7,18 @@ Comments and queries to: richard-gordon.davison AT ncl.ac.uk
 https://research.ncl.ac.uk/game/
 */
 #pragma once
+
+#include <vector>
+#include <memory>
+
+#include <cassert>
 #include <cstdint>
 #include "Vector.h"
 #include "Matrix.h"
 
 namespace NCL::Rendering {
 	class RendererBase;
-	
+
 	using namespace NCL::Maths;
 
 	namespace GeometryPrimitive {
@@ -38,8 +43,8 @@ namespace NCL::Rendering {
 			JointWeights,
 			JointIndices,
 			MAX_ATTRIBUTES
-		};	
-		
+		};
+
 		const std::string Names[VertexAttribute::MAX_ATTRIBUTES] = {
 			std::string("Positions"),
 			std::string("Colours"),
@@ -54,11 +59,12 @@ namespace NCL::Rendering {
 	struct SubMesh {
 		int start = 0;
 		int count = 0;
-		int base  = 0;
+		//int base  = 0;
 	};
 
 	class Mesh	{
-	public:		
+	public:
+		Mesh();
 		virtual ~Mesh();
 
 		GeometryPrimitive::Type GetPrimitiveType() const {
@@ -129,9 +135,11 @@ namespace NCL::Rendering {
 			return &subMeshes[i];
 		}
 
+		const std::vector<SubMesh>& GetSubMeshes() const { return subMeshes; }
+
 		void AddSubMesh(int startIndex, int indexCount, int baseVertex, const std::string& newName = "") {
 			SubMesh m;
-			m.base = baseVertex;
+			//m.base = baseVertex;
 			m.count = indexCount;
 			m.start = startIndex;
 
@@ -196,7 +204,9 @@ namespace NCL::Rendering {
 
 		void SetDebugName(const std::string& debugName);
 
-		virtual void UploadToGPU(Rendering::RendererBase* renderer = nullptr) = 0;
+		virtual void UploadToGPU(Rendering::RendererBase* renderer = nullptr) {
+			assert(false && "UploadToGPU not implemented");
+		}
 
 		uint32_t GetAssetID() const {
 			return assetID;
@@ -207,8 +217,6 @@ namespace NCL::Rendering {
 		}
 
 	protected:
-		Mesh();
-
 		virtual bool ValidateMeshData();
 
 		GeometryPrimitive::Type		primType;
@@ -224,7 +232,7 @@ namespace NCL::Rendering {
 		std::vector<SubMesh>		subMeshes;
 		std::vector<std::string>	subMeshNames;
 
-		std::vector<Vector4>		skinWeights;	//Allows us to have 4 weight skinning 
+		std::vector<Vector4>		skinWeights;	//Allows us to have 4 weight skinning
 		std::vector<Vector4i>		skinIndices;
 		std::vector<std::string>	jointNames;
 		std::vector<int>			jointParents;

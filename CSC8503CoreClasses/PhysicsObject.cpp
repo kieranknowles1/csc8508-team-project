@@ -1,13 +1,15 @@
 #include "PhysicsObject.h"
 #include "GameObject.h"
 
+#include "CustomCollisionCallback.h"
+
 #include <btBulletDynamicsCommon.h>
 
 using namespace NCL;
 using namespace CSC8503;
 
 PhysicsObject::PhysicsObject(GameObject* parent)
-	: parent(parent), rigidBody(nullptr), motionState(nullptr), collisionShape(nullptr) {
+	: parent(parent), rigidBody(nullptr), motionState(nullptr) {
 
 }
 
@@ -15,16 +17,20 @@ PhysicsObject::~PhysicsObject()	{
 	// Clean up Bullet physics components
 	if (rigidBody) {
 		delete rigidBody->getMotionState();
+		delete rigidBody->getCollisionShape();
 		delete rigidBody;
 	}
-	if (collisionShape) {
-		delete collisionShape;
+
+#ifndef NDEBUG
+	if (hasBullet) {
+		std::cerr << "WARN: PhysicsObject was not removed from Bullet world, this will cause use-after-free" << std::endl;
 	}
+#endif
 }
 
 /* Bullet Physics Implementation start here */
-void PhysicsObject::InitBulletPhysics(btDynamicsWorld* world, btCollisionShape* shape, float mass) {
-	collisionShape = shape;
+void PhysicsObject::InitBulletPhysics(btDynamicsWorld* world, btCollisionShape* shape, float mass, bool collide) {
+
 	btTransform startTransform;
 	startTransform.setIdentity();
 
@@ -32,13 +38,13 @@ void PhysicsObject::InitBulletPhysics(btDynamicsWorld* world, btCollisionShape* 
 
 	// Setting the starting position of the object using the NCL framework's transform
 	startTransform.setOrigin(btVector3(initialPosition.x, initialPosition.y, initialPosition.z));
-	startTransform.setRotation(parent->getInitialRotation());
+	startTransform.setRotation(btQuaternion(initialOrientation.x, initialOrientation.y, initialOrientation.z, initialOrientation.w));
 
 	// MotionState has been used to retrieve and apply Bullet's physics transformations to the NCL object
 	motionState = new btDefaultMotionState(startTransform);
 
 	btVector3 localInertia(0, 0, 0);
-	if (mass > 0.0f) {
+	if (mass > 0.0f && shape) {
 		shape->calculateLocalInertia(mass, localInertia);
 	}
 
@@ -48,9 +54,63 @@ void PhysicsObject::InitBulletPhysics(btDynamicsWorld* world, btCollisionShape* 
 	// Setting the object's properties
 	rigidBody->setMassProps(mass, localInertia);
 	rigidBody->setUserPointer(parent);
-	// SetActivationState is used to prevent the object properties from being deactivated due to inactivity
 	rigidBody->setActivationState(DISABLE_DEACTIVATION);
-	world->addRigidBody(rigidBody);
+
+	if (collide) {
+		world->addRigidBody(rigidBody);
+#ifndef NDEBUG
+		hasBullet = true;
+#endif
+	}
+}
+
+void PhysicsObject::InitBulletPhysics(btDynamicsWorld* world, btCompoundShape* compoundShape, float mass, bool collide)
+{
+	btTransform startTransform;
+	startTransform.setIdentity();
+
+	Vector3 initialPosition = parent->getInitialPosition();
+	Quaternion initialOrientation = parent->getInitialRotation();
+
+	// Setting the starting position of the object using the NCL framework's transform
+	startTransform.setOrigin(btVector3(initialPosition.x, initialPosition.y, initialPosition.z));
+	startTransform.setRotation(btQuaternion(initialOrientation.x, initialOrientation.y, initialOrientation.z, initialOrientation.w));
+
+	// MotionState has been used to retrieve and apply Bullet's physics transformations to the NCL object
+	motionState = new btDefaultMotionState(startTransform);
+
+	btVector3 localInertia(0, 0, 0);
+	if (mass > 0.0f && compoundShape) {
+		compoundShape->calculateLocalInertia(mass, localInertia);
+	}
+
+	btRigidBody::btRigidBodyConstructionInfo rbInfo(mass, motionState, compoundShape, localInertia);
+	rigidBody = new btRigidBody(rbInfo);
+
+	// Setting the object's properties
+	rigidBody->setMassProps(mass, localInertia);
+	rigidBody->setUserPointer(parent);
+	rigidBody->setActivationState(DISABLE_DEACTIVATION);
+
+	if (collide) {
+		world->addRigidBody(rigidBody);
+#ifndef NDEBUG
+		hasBullet = true;
+#endif
+	}
+}
+
+
+
+void NCL::CSC8503::PhysicsObject::removeFromBullet(btDynamicsWorld* world)
+{
+	if (rigidBody) {
+		world->removeRigidBody(rigidBody);
+#ifndef NDEBUG
+		hasBullet = false;
+#endif
+	}
+
 }
 
 void PhysicsObject::AddForce(const Vector3& force) {
@@ -81,6 +141,38 @@ void PhysicsObject::ApplyLinearImpulse(const Vector3& impulse) {
 	if (rigidBody) {
 		rigidBody->applyCentralImpulse(btVector3(impulse.x, impulse.y, impulse.z));
 	}
+}
+
+void PhysicsObject::CheckCollisions(btDynamicsWorld* world)
+{
+	if (!rigidBody || !world) {
+		return;
+	}
+
+	// Collect a list of all objects we are currently colliding with
+	// Send out events for new collisions and ended collisions
+	CustomCollisionCallback callback(parent);
+	world->contactTest(rigidBody, callback);
+
+	// New collisions
+	for (auto obj : callback.activeCollisions) {
+		if (!activeCollisions.count(obj)) {
+			activeCollisions.insert(obj);
+			parent->OnCollisionEnter(obj);
+		}
+	}
+
+	// Ended collisions
+	for (auto obj : activeCollisions) {
+		if (!callback.activeCollisions.count(obj)) {
+			parent->OnCollisionExit(obj);
+		}
+	}
+
+	// Can't erase from a set while iterating over it
+	std::erase_if(activeCollisions, [&](GameObject* obj) {
+		return !callback.activeCollisions.count(obj);
+	});
 }
 
 void PhysicsObject::ClearForces() {

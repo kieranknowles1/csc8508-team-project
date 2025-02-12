@@ -11,7 +11,7 @@ namespace NCL::CSC8503 {
 	class GameObject	{
 	public:
 		GameObject(const std::string& name = "");
-		~GameObject();
+		virtual ~GameObject();
 
 		bool IsActive() const {
 			return isActive;
@@ -41,14 +41,16 @@ namespace NCL::CSC8503 {
 			return name;
 		}
 
-		virtual void OnCollisionBegin(GameObject* otherObject) {
-			// TODO: OnCollisionEnter call from physics object
-			//std::cout << "OnCollisionBegin event occured!\n";
+		void SetName( const std::string& nameIn)  {
+			name = nameIn;
 		}
 
-		virtual void OnCollisionEnd(GameObject* otherObject) {
-			// TODO: OnCollisionEnd call from physics object
-			//std::cout << "OnCollisionEnd event occured!\n";
+		virtual void OnCollisionEnter(GameObject* otherObject) {
+			//std::cout << "OnCollisionBegin event occured! " << this->GetWorldID() << " " << otherObject->GetWorldID() << std::endl;
+		}
+
+		virtual void OnCollisionExit(GameObject* otherObject) {
+		//	std::cout << "OnCollisionEnd event occured!\n";
 		}
 
 		virtual void Update(float dt) {
@@ -89,6 +91,12 @@ namespace NCL::CSC8503 {
 		void setRenderScale(const Vector3& scale) {
 			renderScale = scale;
 		}
+		void setIsFloor(bool floorIn) {
+			floor = floorIn;
+		}
+		bool getIsFloor() {
+			return floor;
+		}
 
 	protected:
 		PhysicsObject*		physicsObject;
@@ -96,6 +104,7 @@ namespace NCL::CSC8503 {
 		NetworkObject*		networkObject;
 
 		bool		isActive;
+		bool floor = false;
 		int			worldID;
 		std::string	name;
 
@@ -104,4 +113,3 @@ namespace NCL::CSC8503 {
 		btQuaternion initialRotation = btQuaternion(0, 0, 0);
 	};
 }
-

@@ -14,6 +14,7 @@ GameWorld::GameWorld()	{
 }
 
 GameWorld::~GameWorld()	{
+	ClearAndErase();
 }
 
 void GameWorld::Clear() {
@@ -95,8 +96,8 @@ bool GameWorld::Raycast(Ray& r, RayCollision& closestCollision, bool closestObje
 	//	}
 	//	RayCollision thisCollision;
 	//	if (CollisionDetection::RayIntersection(r, *i, thisCollision)) {
-	//			
-	//		if (!closestObject) {	
+	//
+	//		if (!closestObject) {
 	//			closestCollision		= collision;
 	//			closestCollision.node = i;
 	//			return true;

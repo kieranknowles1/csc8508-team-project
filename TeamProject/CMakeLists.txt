@@ -3,7 +3,7 @@ set(SOURCES
     BulletDebug.h
     GameTechRenderer.cpp
     GameTechRenderer.h
-    Main.cpp
+    main.cpp
     NetworkedGame.cpp
     NetworkedGame.h
     NetworkPlayer.cpp
@@ -14,11 +14,31 @@ set(SOURCES
     TutorialGame.h
     PlayerController.cpp
     PlayerController.h
-    Turret.H
+    PlayerObject.h
+    Turret.h
     Turret.cpp
+	BWHelperFunctions.h
+	BWHelperFunctions.cpp
+    LevelImporter.cpp
+    LevelImporter.h
+)
+
+set(COMPILED_MESHES
+    Capsule.msh
+    Plane.msh
+    Cube.msh
+    Sphere.msh
+    ORIGAMI_Chat.msh
+    Kitten.msh
+    Keeper.msh
+    19463_Kitten_Head_v1.msh
+    /Max/Rig_Maximilian.msh
+    /MaleGuard/Male_Guard.msh
+    /FemaleGuard/Female_Guard.msh
 )
 
 add_executable(${PROJECT_NAME} ${SOURCES})
+add_dependencies(${PROJECT_NAME} MeshCompiler)
 
 set_target_properties(${PROJECT_NAME} PROPERTIES
     VS_GLOBAL_KEYWORD "Win32Proj"
@@ -84,8 +104,23 @@ target_link_libraries(${PROJECT_NAME} CSC8503CoreClasses)
 target_link_libraries(${PROJECT_NAME} OpenGLRendering)
 target_link_libraries(${PROJECT_NAME} NetworkLib)
 target_link_libraries(${PROJECT_NAME} ${BULLET_LIBRARIES})
+target_link_libraries(${PROJECT_NAME} nlohmann_json::nlohmann_json)
 
 target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR})
 set_target_properties(${PROJECT_NAME} PROPERTIES
     VS_DEBUGGER_WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
 )
+
+foreach(file ${COMPILED_MESHES})
+    set(out "${CMAKE_SOURCE_DIR}/Assets/Meshes/${file}b")
+    add_custom_command(
+        OUTPUT ${out}
+        COMMAND MeshCompiler ${file} ${out}
+        DEPENDS "${CMAKE_SOURCE_DIR}/Assets/Meshes/${file}" MeshCompiler
+        COMMENT "Compiling mesh ${file}"
+        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+    )
+    list(APPEND PROCESSED_MESHES ${out})
+endforeach()
+add_custom_target(ProcessMeshes ALL DEPENDS ${PROCESSED_MESHES})
+add_dependencies(${PROJECT_NAME} ProcessMeshes)
