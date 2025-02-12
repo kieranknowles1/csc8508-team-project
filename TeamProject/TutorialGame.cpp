@@ -32,6 +32,7 @@ TutorialGame::TutorialGame() : controller(*Window::GetWindow()->GetKeyboard(), *
 	loadFromLevel = true;
 	InitialiseAssets();
 
+	resourceManager = std::make_unique<ResourceManager>();
 }
 
 /*

@@ -6,6 +6,8 @@
 #include "GameTechVulkanRenderer.h"
 #endif
 
+#include "ResourceManager.h"
+
 #include "LevelImporter.h"
 #include "StateGameObject.h"
 #include "PlayerController.h"
@@ -47,6 +49,7 @@ namespace NCL {
 
 			GameObject* AddInfinitePlaneToWorld(const Vector3& position, const Vector3& normal, float planeConstant);
 
+			std::unique_ptr<ResourceManager> resourceManager;
 
 #ifdef USEVULKAN
 			GameTechVulkanRenderer* renderer;

@@ -25,8 +25,19 @@ namespace NCL::Rendering {
 		};
 	};
 
-	class Shader	{
+	class Shader {
 	public:
+		struct Key {
+			std::string vertex;
+			std::string fragment;
+			Key(std::string_view vertex, std::string_view fragment) : vertex(vertex), fragment(fragment) {}
+
+			inline friend std::ostream& operator<<(std::ostream& o, const Shader::Key& v) {
+				o << "Vertex(" << v.vertex << ") Fragment(" << v.fragment << ")";
+				return o;
+			}
+		};
+
 		Shader() {
 			assetID = 0;
 		}
