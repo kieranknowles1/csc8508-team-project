@@ -10,7 +10,11 @@
 #include "Texture.h"
 #include "Shader.h"
 
+// TODO: Single place to specify renderer type, or an abstract base class
+#include "GameTechRenderer.h"
+
 namespace NCL::CSC8503 {
+    class ResourceManager;
 
     // A map of resources, where the key is used to load the resource
     // `K` is the type of the key, which must be comparable
@@ -21,6 +25,8 @@ namespace NCL::CSC8503 {
     class ResourceMap
     {
     public:
+        ResourceMap(ResourceManager* owner) : owner(owner) {}
+
         std::shared_ptr<V> get(const K& key)
         {
             auto it = resources.find(key);
@@ -30,7 +36,7 @@ namespace NCL::CSC8503 {
 
             if (ptr == nullptr)
             {
-                auto resource = std::make_shared<V>(key);
+                auto resource = load(key);
                 resources.emplace(key, resource);
                 return resource;
             }
@@ -48,7 +54,11 @@ namespace NCL::CSC8503 {
                 }
             }
         }
+
     private:
+        ResourceManager* owner;
+        std::shared_ptr<V> load(const K& key);
+
         // The resource manager is expected to last for the lifetime of the program,
         // so we use weak pointers to allow resources to be deleted when no longer needed
         // and reloaded when they are needed again
@@ -64,17 +74,21 @@ namespace NCL::CSC8503 {
     class ResourceManager
     {
     public:
-        ResourceManager();
+        ResourceManager(GameTechRenderer* renderer);
+        GameTechRenderer* getRenderer() { return renderer; }
 
-        ResourceMap<std::string, Rendering::Texture>& getTextures() { return textures; }
+        //ResourceMap<std::string, Rendering::Texture>& getTextures() { return textures; }
         //ResourceMap<std::string, Rendering::Texture>& getCubeMaps() { return cubeMaps; }
-        ResourceMap<Rendering::Shader::Key, Rendering::Shader>& getShaders() { return shaders; }
+        //ResourceMap<Rendering::Shader::Key, Rendering::Shader>& getShaders() { return shaders; }
         ResourceMap<std::string, Rendering::Mesh>& getMeshes() { return meshes; }
     protected:
-        ResourceMap<std::string, Rendering::Texture> textures;
+        //ResourceMap<std::string, Rendering::Texture> textures;
         //ResourceMap<std::string, Rendering::Texture> cubeMaps;
-        ResourceMap<Rendering::Shader::Key, Rendering::Shader> shaders;
+        //ResourceMap<Rendering::Shader::Key, Rendering::Shader> shaders;
         ResourceMap<std::string, Rendering::Mesh> meshes;
+
+        // Needed to upload platform-specific data to GPU
+        GameTechRenderer* renderer;
     };
 
 }
