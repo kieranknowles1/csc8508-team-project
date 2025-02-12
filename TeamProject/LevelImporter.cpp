@@ -9,10 +9,6 @@ LevelImporter::LevelImporter(ResourceManager* resourceManager, GameTechRenderer*
     this->resourceManager = resourceManager;
     world = worldIn;
     bulletWorld = bulletWorldIn;
-
-    basicTex = renderer->LoadTexture("checkerboard.png");
-    basicShader = renderer->LoadShader("scene.vert", "scene.frag");
-    wallTex = renderer->LoadTexture("Corridor_Textures/corridor_wall_c.tga");
 }
 
 LevelImporter::~LevelImporter() {
@@ -94,7 +90,7 @@ void LevelImporter::AddObjectToWorld(ObjectData* data) {
     cube->setInitialRotation(Quaternion(rotationQuat.getX(), rotationQuat.getY(), rotationQuat.getZ(), rotationQuat.getW()));
     cube->setRenderScale(data->scale* scale);
 
-    
+
     btCollisionShape* shape;
     if (data->meshName == "corridor_walls_and_floor/corridor_Wall_Straight_Mid_end_L") {
         shape = new btBoxShape(btVector3(data->colliderScale.getX() / 2.0f, data->colliderScale.getZ() / 2.0f, data->colliderScale.getY() / 2.0f)* scale);
@@ -102,18 +98,18 @@ void LevelImporter::AddObjectToWorld(ObjectData* data) {
     else {
         shape = new btBoxShape(btVector3(data->colliderScale.getX() / 2.0f, data->colliderScale.getY() / 2.0f, data->colliderScale.getZ() / 2.0f)* scale);
     }
-   
+
     // The object is penetrating the floor a bit, so I reduced the bullet collision margin to avoid sinking in the floor
     shape->setMargin(0.01f);
     // Setting the physics object for the cube
     cube->SetPhysicsObject(new PhysicsObject(cube));
     cube->GetPhysicsObject()->InitBulletPhysics(bulletWorld, shape, 0, true);
     // Setting render object
-    
+
     // TODO: Use null instead of magic
     // TODO: Include extensions
     auto texture = data->mainTextureName == "No Texture" ? nullptr : resourceManager->getTextures().get(data->mainTextureName + ".tga");
-    cube->SetRenderObject(new RenderObject(cube, resourceManager->getMeshes().get(data->meshName + ".msh"), texture, basicShader));
+    cube->SetRenderObject(new RenderObject(cube, resourceManager->getMeshes().get(data->meshName + ".msh"), texture, resourceManager->getShaders().get(Shader::Default)));
     world->AddGameObject(cube);
 
     cube->setIsFloor(true);

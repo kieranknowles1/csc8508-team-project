@@ -12,7 +12,6 @@ Vector2 PlayerController::getDirectionalInput() const
 
 void PlayerController::Initialise() {
     rb = player->GetPhysicsObject()->GetRigidBody();
-    basicShader = renderer->LoadShader("flatvert.glsl", "flatfrag.glsl");
 }
 
 void PlayerController::UpdateMovement(float dt) {
@@ -125,7 +124,12 @@ void PlayerController::ShootBullet() {
     Vector3 bulletSize(1, 1, 1);
     paintball->setInitialPosition(bulletPos);
     paintball->setRenderScale(bulletSize);
-    paintball->SetRenderObject(new RenderObject(paintball, resourceManager->getMeshes().get("Sphere.msh"), resourceManager->getTextures().get("checkerboard.png"), basicShader));
+    paintball->SetRenderObject(new RenderObject(
+        paintball,
+        resourceManager->getMeshes().get("Sphere.msh"),
+        resourceManager->getTextures().get("checkerboard.png"),
+        resourceManager->getShaders().get(Shader::Default)
+    ));
     paintball->SetPhysicsObject(new PhysicsObject(paintball));
     paintball->GetRenderObject()->SetColour(Vector4(rand() % 2, rand() % 2, rand() % 2, 1));
     btCollisionShape* shape = new btSphereShape(1);
@@ -156,7 +160,7 @@ void PlayerController::HandleCrouching(float dt) {
     else {
         crouching = controller->GetDigital(Controller::DigitalControl::Crouch);
     }
-   
+
     crouchTransition = crouching ? (currentCrouchingTimer < crouchingTime) : (currentStandingTimer < crouchingTime);
 
     if (crouching) {

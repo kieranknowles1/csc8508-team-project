@@ -4,7 +4,7 @@
 using namespace NCL::CSC8503;
 using namespace NCL;
 
-RenderObject::RenderObject(GameObject* parent, std::shared_ptr<Mesh> mesh, std::shared_ptr<Texture> tex, Shader* shader, Texture* normal) {
+RenderObject::RenderObject(GameObject* parent, std::shared_ptr<Mesh> mesh, std::shared_ptr<Texture> tex, std::shared_ptr<Shader> shader, Texture* normal) {
 	this->parent	= parent;
 	this->mesh		= mesh;
 	this->texture	= tex;

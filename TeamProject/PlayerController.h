@@ -10,7 +10,6 @@
 #include "GameWorld.h"
 #include "PhysicsObject.h"
 #include "RenderObject.h"
-#include "TextureLoader.h"
 #include "BulletDebug.h"
 #include "PlayerObject.h"
 
@@ -96,9 +95,7 @@ namespace NCL {
 			btTransform transformGun;
 			btVector3 btGunPos;
 			ResourceManager* resourceManager;
-			Shader* basicShader = nullptr;
 			GameWorld* world;
-			GameTechRenderer* renderer;
 			float shotTimer = 0;
 			bool collision = false;
 			bool crouching = false;

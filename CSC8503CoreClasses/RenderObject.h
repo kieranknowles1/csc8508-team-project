@@ -13,7 +13,7 @@ namespace NCL {
 		class RenderObject
 		{
 		public:
-			RenderObject(GameObject* parent, std::shared_ptr<Mesh> mesh, std::shared_ptr<Texture> tex, Shader* shader, Texture* normal = nullptr); 
+			RenderObject(GameObject* parent, std::shared_ptr<Mesh> mesh, std::shared_ptr<Texture> tex, std::shared_ptr<Shader> shader, Texture* normal = nullptr);
 			~RenderObject();
 
 			void SetDefaultTexture(std::shared_ptr<Texture> t) {
@@ -28,8 +28,8 @@ namespace NCL {
 				return mesh.get();
 			}
 
-			Shader*		GetShader() const {
-				return shader;
+			Shader*	GetShader() const {
+				return shader.get();
 			}
 
 			void SetColour(const Vector4& c) {
@@ -53,7 +53,7 @@ namespace NCL {
 			}
 
 			void SetNormal(Texture* n) {
-				normalMap = n; 
+				normalMap = n;
 			}
 
 			Texture* GetNormalMap() const {
@@ -64,7 +64,7 @@ namespace NCL {
 			GameObject* parent;
 			std::shared_ptr<Mesh> mesh;
 			std::shared_ptr<Texture> texture;
-			Shader*		shader;
+			std::shared_ptr<Shader> shader;
 			Vector4		colour = Vector4(1, 1, 0, 0.99);
 			bool isFlat = false;
 			//additional normal map option:

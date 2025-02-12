@@ -82,11 +82,7 @@ private:
     ResourceManager* resourceManager;
     GameWorld* world;
     btDiscreteDynamicsWorld* bulletWorld;
-    std::vector<ObjectData* > objects;
-
-    Texture* basicTex = nullptr;
-    Texture* wallTex = nullptr;
-    Shader* basicShader = nullptr;
+    std::vector<ObjectData*> objects;
 
     float scale = 10.0;
 

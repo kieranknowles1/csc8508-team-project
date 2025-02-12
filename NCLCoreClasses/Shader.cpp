@@ -16,3 +16,5 @@ Shader::Shader(const string& vertex, const string& fragment, const string& geome
 Shader::~Shader()
 {
 }
+
+const Shader::Key Shader::Default = Shader::Key("scene.vert", "scene.frag");

@@ -36,7 +36,17 @@ namespace NCL::Rendering {
 				o << "Vertex(" << v.vertex << ") Fragment(" << v.fragment << ")";
 				return o;
 			}
+
+			bool operator==(const Key& rhs) const {
+				return vertex == rhs.vertex && fragment == rhs.fragment;
+			}
+			bool operator<(const Key& rhs) const {
+				if (vertex < rhs.vertex) return true;
+				return fragment < rhs.fragment;
+			}
 		};
+
+		const static Key Default;
 
 		Shader() {
 			assetID = 0;

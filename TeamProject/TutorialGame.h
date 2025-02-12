@@ -61,12 +61,9 @@ namespace NCL {
 			KeyboardMouseController controller;
 
 			std::shared_ptr<Texture> defaultTexture;
-	
-			Shader* basicShader = nullptr;
-			//Added Shaders:
-			Shader* flatShader = nullptr;
+			std::shared_ptr<Shader> defaultShader;
 
-			//Coursework Additional functionality	
+			//Coursework Additional functionality
 			GameObject* lockedObject	= nullptr;
 			Vector3 lockedOffset		= Vector3(0, 14, 20);
 			void LockCameraToObject(GameObject* o) {
@@ -98,7 +95,7 @@ namespace NCL {
 			bool thirdPerson = false;
 			Vector4 playerColour = Vector4(1, 0.8, 1, 1);
 
-			//fixed update 
+			//fixed update
 			float accumulator = 0.0f;
 			float fixedDeltaTime = 1.0f / 60.0f;
 
