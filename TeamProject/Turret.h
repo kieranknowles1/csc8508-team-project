@@ -8,10 +8,10 @@ namespace NCL {
 		class StateMachine;
 		class Turret : public GameObject {
 		public:
-			Turret(GameObject* p, Quaternion q = Quaternion());
+			Turret(GameObject* p, btQuaternion q = btQuaternion());
 			~Turret() override;
 
-			virtual void Update(float dt);
+			void Update(float dt) override;
 
 		protected:
 			void RotateLeft(float dt);

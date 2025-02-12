@@ -112,10 +112,10 @@ void LevelImporter::AddObjectToWorld(ObjectData* data) {
     float rollRadians = Maths::DegreesToRadians(eulerRotation.z());
     btQuaternion rotationQuat;
     rotationQuat.setEulerZYX(rollRadians, yawRadians, pitchRadians);
-    cube->setInitialRotation(Quaternion(rotationQuat.getX(), rotationQuat.getY(), rotationQuat.getZ(), rotationQuat.getW()));
+    cube->setInitialRotation(rotationQuat);
     cube->setRenderScale(data->scale* scale);
 
-    
+
     btCollisionShape* boxShape;
     if (selectedMesh == wallSection) {
         boxShape = new btBoxShape(btVector3(data->colliderScale.getX() / 2.0f, data->colliderScale.getZ() / 2.0f, data->colliderScale.getY() / 2.0f)* scale);
@@ -123,7 +123,7 @@ void LevelImporter::AddObjectToWorld(ObjectData* data) {
     else {
         boxShape = new btBoxShape(btVector3(data->colliderScale.getX() / 2.0f, data->colliderScale.getY() / 2.0f, data->colliderScale.getZ() / 2.0f)* scale);
     }
-   
+
     // The object is penetrating the floor a bit, so I reduced the bullet collision margin to avoid sinking in the floor
     boxShape->setMargin(0.01f);
 
@@ -144,7 +144,7 @@ void LevelImporter::AddObjectToWorld(ObjectData* data) {
     // Setting the physics object for the cube
     cube->SetPhysicsObject(new PhysicsObject(cube));
     cube->GetPhysicsObject()->InitBulletPhysics(bulletWorld, compoundShape, 0, true);
-    
+
     cube->SetRenderObject(new RenderObject(cube, selectedMesh, selectedTex, basicShader));
     world->AddGameObject(cube);
 

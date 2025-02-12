@@ -8,8 +8,9 @@
 using namespace NCL;
 using namespace CSC8503;
 
-Turret::Turret(GameObject* p, Quaternion q)
-	: player(p), initialRotation(q) {
+Turret::Turret(GameObject* p, btQuaternion q)
+	: player(p) {
+	initialRotation = q;
 	stateMachine = new StateMachine();
 	rotateTime = 0.5;
 	rotateSpeed = 0.5;
@@ -68,9 +69,6 @@ void Turret::RotateLeft(float dt) {
 	rotateTime += rotateSpeed * dt;
 	rotateTime = std::clamp(rotateTime, 0.0f, 1.0f);
 
-	btQuaternion negative(yNegative.x, yNegative.y, yNegative.z, yNegative.w);
-	btQuaternion positive(yPositive.x, yPositive.y, yPositive.z, yPositive.w);
-
 	trans.setRotation(yNegative.slerp(yPositive, rotateTime));
 	GetPhysicsObject()->GetRigidBody()->setWorldTransform(trans);
 }
@@ -79,9 +77,6 @@ void Turret::RotateRight(float dt) {
 	rotateTime -= rotateSpeed * dt;
 	rotateTime = std::clamp(rotateTime, 0.0f, 1.0f);
 
-	btQuaternion negative(yNegative.x, yNegative.y, yNegative.z, yNegative.w);
-	btQuaternion positive(yPositive.x, yPositive.y, yPositive.z, yPositive.w);
-
-	trans.setRotation(negative.slerp(positive, rotateTime));
+	trans.setRotation(yNegative.slerp(yPositive, rotateTime));
 	GetPhysicsObject()->GetRigidBody()->setWorldTransform(trans);
 }

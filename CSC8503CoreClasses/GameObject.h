@@ -77,7 +77,7 @@ namespace NCL::CSC8503 {
 			initialRotation = rotation;
 		}
 
-		Vector3 getInitialPosition() const {
+		btVector3 getInitialPosition() const {
 			return initialPosition;
 		}
 		btQuaternion getInitialRotation() const {
@@ -109,7 +109,7 @@ namespace NCL::CSC8503 {
 		std::string	name;
 
 		Vector3 renderScale = Vector3(1, 1, 1); // Only affects rendering, not physics
-		Vector3 initialPosition = Vector3();
+		btVector3 initialPosition;
 		btQuaternion initialRotation = btQuaternion(0, 0, 0);
 	};
 }

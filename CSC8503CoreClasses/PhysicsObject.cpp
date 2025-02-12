@@ -34,11 +34,9 @@ void PhysicsObject::InitBulletPhysics(btDynamicsWorld* world, btCollisionShape* 
 	btTransform startTransform;
 	startTransform.setIdentity();
 
-	Vector3 initialPosition = parent->getInitialPosition();
-
 	// Setting the starting position of the object using the NCL framework's transform
-	startTransform.setOrigin(btVector3(initialPosition.x, initialPosition.y, initialPosition.z));
-	startTransform.setRotation(btQuaternion(initialOrientation.x, initialOrientation.y, initialOrientation.z, initialOrientation.w));
+	startTransform.setOrigin(parent->getInitialPosition());
+	startTransform.setRotation(parent->getInitialRotation());
 
 	// MotionState has been used to retrieve and apply Bullet's physics transformations to the NCL object
 	motionState = new btDefaultMotionState(startTransform);
@@ -63,44 +61,6 @@ void PhysicsObject::InitBulletPhysics(btDynamicsWorld* world, btCollisionShape* 
 #endif
 	}
 }
-
-void PhysicsObject::InitBulletPhysics(btDynamicsWorld* world, btCompoundShape* compoundShape, float mass, bool collide)
-{
-	btTransform startTransform;
-	startTransform.setIdentity();
-
-	Vector3 initialPosition = parent->getInitialPosition();
-	Quaternion initialOrientation = parent->getInitialRotation();
-
-	// Setting the starting position of the object using the NCL framework's transform
-	startTransform.setOrigin(btVector3(initialPosition.x, initialPosition.y, initialPosition.z));
-	startTransform.setRotation(btQuaternion(initialOrientation.x, initialOrientation.y, initialOrientation.z, initialOrientation.w));
-
-	// MotionState has been used to retrieve and apply Bullet's physics transformations to the NCL object
-	motionState = new btDefaultMotionState(startTransform);
-
-	btVector3 localInertia(0, 0, 0);
-	if (mass > 0.0f && compoundShape) {
-		compoundShape->calculateLocalInertia(mass, localInertia);
-	}
-
-	btRigidBody::btRigidBodyConstructionInfo rbInfo(mass, motionState, compoundShape, localInertia);
-	rigidBody = new btRigidBody(rbInfo);
-
-	// Setting the object's properties
-	rigidBody->setMassProps(mass, localInertia);
-	rigidBody->setUserPointer(parent);
-	rigidBody->setActivationState(DISABLE_DEACTIVATION);
-
-	if (collide) {
-		world->addRigidBody(rigidBody);
-#ifndef NDEBUG
-		hasBullet = true;
-#endif
-	}
-}
-
-
 
 void NCL::CSC8503::PhysicsObject::removeFromBullet(btDynamicsWorld* world)
 {

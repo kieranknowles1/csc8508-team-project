@@ -1,7 +1,6 @@
 #pragma once
 
 #include "GameObject.h"
-#include "Quaternion.h"
 #include "Assets.h"
 #include <fstream>
 #include <btBulletDynamicsCommon.h>
