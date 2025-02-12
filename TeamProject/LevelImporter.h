@@ -9,10 +9,6 @@
 #include <iostream>
 #include <vector>
 #include <string>
-#ifdef USEVULKAN
-#include "GameTechVulkanRenderer.h"
-
-#endif
 #include "Vector.h"
 #include "Matrix.h"
 #include "Camera.h"
@@ -24,6 +20,7 @@
 #include "TextureLoader.h"
 #include "BulletDebug.h"
 #include "PlayerObject.h"
+#include "ResourceManager.h"
 
 using json = nlohmann::json;
 
@@ -59,6 +56,11 @@ public:
         j.at("colliderPosition").get_to(obj.colliderPosition);
         j.at("colliderScale").get_to(obj.colliderScale);
         j.at("meshName").get_to(obj.meshName);
+        // TODO: This should be done during export
+        auto colon = obj.meshName.find(":");
+        if (colon != std::string::npos) {
+            obj.meshName.replace(colon, 1, "/");
+        }
         j.at("mainTextureName").get_to(obj.mainTextureName);
         j.at("normalTextureName").get_to(obj.normalTextureName);
     }
@@ -69,7 +71,7 @@ using namespace CSC8503;
 
 class LevelImporter {
 public:
-    LevelImporter(GameTechRenderer* rendererIn, GameWorld* worldIn, btDiscreteDynamicsWorld* bulletWorldIn);
+    LevelImporter(ResourceManager* resourceManager, GameTechRenderer* renderer, GameWorld* worldIn, btDiscreteDynamicsWorld* bulletWorldIn);
     ~LevelImporter();
 
     void LoadLevel(int level);
@@ -77,17 +79,14 @@ public:
     void ClearObjects();
 
 private:
-    GameTechRenderer* renderer;
+    ResourceManager* resourceManager;
     GameWorld* world;
     btDiscreteDynamicsWorld* bulletWorld;
     std::vector<ObjectData* > objects;
 
-    Mesh* cubeMesh = nullptr;
     Texture* basicTex = nullptr;
     Texture* wallTex = nullptr;
     Shader* basicShader = nullptr;
-    Mesh* wallSection = nullptr;
-    Mesh* floorSection = nullptr;
 
     float scale = 10.0;
 

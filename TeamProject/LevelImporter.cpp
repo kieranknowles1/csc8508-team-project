@@ -5,16 +5,13 @@ using namespace CSC8503;
 
 using json = nlohmann::json;
 
-LevelImporter::LevelImporter(GameTechRenderer* rendererIn, GameWorld* worldIn, btDiscreteDynamicsWorld* bulletWorldIn) {
-    renderer = rendererIn;
+LevelImporter::LevelImporter(ResourceManager* resourceManager, GameTechRenderer* renderer, GameWorld* worldIn, btDiscreteDynamicsWorld* bulletWorldIn) {
+    this->resourceManager = resourceManager;
     world = worldIn;
     bulletWorld = bulletWorldIn;
 
-    cubeMesh = renderer->LoadMesh("Cube.msh");
     basicTex = renderer->LoadTexture("checkerboard.png");
     basicShader = renderer->LoadShader("scene.vert", "scene.frag");
-    wallSection = renderer->LoadMesh("Corridor_Meshes/corridor_Wall_Straight_Mid_end_L.msh");
-    floorSection = renderer->LoadMesh("Corridor_Meshes/Corridor_Floor_Basic.msh");
     wallTex = renderer->LoadTexture("Corridor_Textures/corridor_wall_c.tga");
 }
 
@@ -79,12 +76,10 @@ void LevelImporter::AddObjectToWorld(ObjectData* data) {
 
     Mesh* selectedMesh = nullptr;
     Texture* selectedTex = basicTex;
-    if (data->meshName == "corridor_walls_and_floor:corridor_Wall_Straight_Mid_end_L") {
-        selectedMesh = wallSection;
+    if (data->meshName == "corridor_walls_and_floor/corridor_Wall_Straight_Mid_end_L") {
         selectedTex = wallTex;
     }
-    else if (data->meshName == "corridor_walls_and_floor:Corridor_Floor_Basic") {
-        selectedMesh = floorSection;
+    else if (data->meshName == "corridor_walls_and_floor/Corridor_Floor_Basic") {
         selectedTex = nullptr;
     }
     else {
@@ -93,7 +88,7 @@ void LevelImporter::AddObjectToWorld(ObjectData* data) {
     }
 
     btVector3 eulerRotation = btVector3(data->rotation.getX(), data->rotation.getY(), data->rotation.getZ());
-    if (selectedMesh == wallSection) {
+    if (data->meshName == "corridor_walls_and_floor/corridor_Wall_Straight_Mid_end_L") {
         eulerRotation.setX(eulerRotation.getX() - 90);
         cube->setInitialPosition(data->position* scale);
     }
@@ -112,7 +107,7 @@ void LevelImporter::AddObjectToWorld(ObjectData* data) {
 
     
     btCollisionShape* shape;
-    if (selectedMesh == wallSection) {
+    if (data->meshName == "corridor_walls_and_floor/corridor_Wall_Straight_Mid_end_L") {
         shape = new btBoxShape(btVector3(data->colliderScale.getX() / 2.0f, data->colliderScale.getZ() / 2.0f, data->colliderScale.getY() / 2.0f)* scale);
     }
     else {
@@ -126,7 +121,7 @@ void LevelImporter::AddObjectToWorld(ObjectData* data) {
     cube->GetPhysicsObject()->InitBulletPhysics(bulletWorld, shape, 0, true);
     // Setting render object
     
-    cube->SetRenderObject(new RenderObject(cube, selectedMesh, selectedTex, basicShader));
+    cube->SetRenderObject(new RenderObject(cube, resourceManager->getMeshes().get(data->meshName + ".msh"), selectedTex, basicShader));
     world->AddGameObject(cube);
 
     cube->setIsFloor(true);

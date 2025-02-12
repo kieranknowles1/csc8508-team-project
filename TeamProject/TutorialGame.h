@@ -60,32 +60,11 @@ namespace NCL {
 
 			KeyboardMouseController controller;
 
-
-			Mesh* planeMesh = nullptr;
-			Mesh* capsuleMesh = nullptr;
-			Mesh* cubeMesh = nullptr;
-			Mesh* sphereMesh = nullptr;
-
 			Texture* basicTex = nullptr;
 	
 			Shader* basicShader = nullptr;
 			//Added Shaders:
 			Shader* flatShader = nullptr;
-
-			//Coursework Meshes
-			Mesh*	catMesh		= nullptr;
-			Mesh*	kittenMesh	= nullptr;
-			Mesh*	enemyMesh	= nullptr;
-			Mesh*	bonusMesh	= nullptr;
-
-			//EG Meshes:
-			Mesh* maxMesh = nullptr;
-			Mesh* maleguardMesh = nullptr;
-			Mesh* femaleguardMesh = nullptr;
-
-			//EG Level Mehses:
-			Mesh* wallSection = nullptr;
-			Mesh* floorSection = nullptr;
 
 			//Coursework Additional functionality	
 			GameObject* lockedObject	= nullptr;

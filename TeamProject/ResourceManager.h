@@ -37,7 +37,7 @@ namespace NCL::CSC8503 {
             if (ptr == nullptr)
             {
                 auto resource = load(key);
-                resources.emplace(key, resource);
+                resources[key] = resource;
                 return resource;
             }
 

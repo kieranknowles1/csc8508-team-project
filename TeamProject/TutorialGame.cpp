@@ -30,9 +30,8 @@ TutorialGame::TutorialGame() : controller(*Window::GetWindow()->GetKeyboard(), *
 	mainCamera = &world->GetMainCamera();
 
 	loadFromLevel = true;
+	resourceManager = std::make_unique<ResourceManager>(renderer);
 	InitialiseAssets();
-
-	resourceManager = std::make_unique<ResourceManager>();
 }
 
 /*
@@ -43,27 +42,6 @@ for this module, even in the coursework, but you can add it if you like!
 
 */
 void TutorialGame::InitialiseAssets() {
-	planeMesh = renderer->LoadMesh("Plane.msh");
-	cubeMesh	= renderer->LoadMesh("Cube.msh");
-	sphereMesh	= renderer->LoadMesh("Sphere.msh");
-	catMesh		= renderer->LoadMesh("ORIGAMI_Chat.msh");
-	kittenMesh	= renderer->LoadMesh("Kitten.msh");
-
-	enemyMesh	= renderer->LoadMesh("Keeper.msh");
-	bonusMesh	= renderer->LoadMesh("19463_Kitten_Head_v1.msh");
-	capsuleMesh = renderer->LoadMesh("Capsule.msh");
-
-	//EG Assets:
-
-	//EG character meshes:
-	maxMesh = renderer->LoadMesh("/Max/Rig_Maximilian.msh");
-	maleguardMesh = renderer->LoadMesh("/MaleGuard/Male_Guard.msh");
-	femaleguardMesh = renderer->LoadMesh("/FemaleGuard/Female_Guard.msh");
-
-	//EG level meshes:
-	wallSection = renderer->LoadMesh("Corridor_Meshes/corridor_Wall_Straight_Mid_end_L.msh");
-	floorSection = renderer->LoadMesh("Corridor_Meshes/Corridor_Floor_Basic.msh");
-
 	basicTex	= renderer->LoadTexture("checkerboard.png");
 	basicShader = renderer->LoadShader("scene.vert", "scene.frag");
 	//Added Shaders:
@@ -76,18 +54,6 @@ void TutorialGame::InitialiseAssets() {
 TutorialGame::~TutorialGame()	{
 	DestroyBullet();
 	// TODO: Should we use a proper resource manager or smart pointers?
-	delete planeMesh;
-	delete cubeMesh;
-	delete sphereMesh;
-	delete catMesh;
-	delete kittenMesh;
-	delete enemyMesh;
-	delete bonusMesh;
-	delete capsuleMesh;
-
-	delete maxMesh;
-	delete maleguardMesh;
-	delete femaleguardMesh;
 
 	delete basicTex;
 	delete basicShader;
@@ -237,7 +203,7 @@ void TutorialGame::InitWorld() {
 	InitPlayer();
 
 	if (loadFromLevel) {
-		levelImporter = new LevelImporter(renderer, world, bulletWorld);
+		levelImporter = new LevelImporter(resourceManager.get(), renderer, world, bulletWorld);
 		levelImporter->LoadLevel(1);
 		return;
 	}
@@ -287,7 +253,7 @@ void TutorialGame::InitPlayer() {
 	player->GetPhysicsObject()->GetRigidBody()->setFriction(0.0f);
 	player->GetPhysicsObject()->GetRigidBody()->setDamping(0.0, 0);
 	gun = AddCubeToWorld(Vector3(10, 2, 20), Vector3(0.6, 0.6, 1.6), 0, false);
-	playerController = new PlayerController(player, gun, controller, mainCamera, bulletWorld,world,renderer);
+	playerController = new PlayerController(player, gun, controller, mainCamera, bulletWorld, world, resourceManager.get());
 	player->GetRenderObject()->SetColour(playerColour);
 
 }
@@ -299,7 +265,7 @@ Turret* TutorialGame::AddTurretToWorld() {
 	turret->setInitialPosition(btVector3(5, 5, 5));
 	turret->setRenderScale(dimensions);
 
-	turret->SetRenderObject(new RenderObject(turret, kittenMesh, basicTex, basicShader));
+	turret->SetRenderObject(new RenderObject(turret, resourceManager->getMeshes().get("Kitten.msh"), basicTex, basicShader));
 
 	btCollisionShape* shape = new btBoxShape(btVector3(dimensions.x / 2.0f, dimensions.y / 2.0f, dimensions.z / 2.0f));
 
@@ -345,7 +311,7 @@ GameObject* TutorialGame::AddCubeToWorld(const Vector3& position, Vector3 dimens
 	cube->GetPhysicsObject()->InitBulletPhysics(bulletWorld, shape, inverseMass, hasCollision);
 
 	// Setting render object
-	cube->SetRenderObject(new RenderObject(cube, cubeMesh, basicTex, basicShader));
+	cube->SetRenderObject(new RenderObject(cube, resourceManager->getMeshes().get("Cube.msh"), basicTex, basicShader));
 
 	world->AddGameObject(cube);
 
@@ -366,7 +332,7 @@ PlayerObject* TutorialGame::AddPlayerCapsuleToWorld(const Vector3& position, flo
 	btCollisionShape* shape = new btCapsuleShape(radius, height);
 
 	// Setting the render object for the capsule
-	capsule->SetRenderObject(new RenderObject(capsule, capsuleMesh, basicTex, basicShader));
+	capsule->SetRenderObject(new RenderObject(capsule, resourceManager->getMeshes().get("Capsule.msh"), basicTex, basicShader));
 	// Setting the physics object for the capsule
 	capsule->SetPhysicsObject(new PhysicsObject(capsule));
 
@@ -392,7 +358,7 @@ GameObject* TutorialGame::AddCapsuleToWorld(const Vector3& position, float heigh
 	btCollisionShape* shape = new btCapsuleShape(radius, height);
 
 	// Setting the render object for the capsule
-	capsule->SetRenderObject(new RenderObject(capsule, capsuleMesh, basicTex, basicShader));
+	capsule->SetRenderObject(new RenderObject(capsule, resourceManager->getMeshes().get("Capsule.msh"), basicTex, basicShader));
 	// Setting the physics object for the capsule
 	capsule->SetPhysicsObject(new PhysicsObject(capsule));
 
@@ -414,7 +380,7 @@ GameObject* TutorialGame::AddInfinitePlaneToWorld(const Vector3& position, const
 	btCollisionShape* shape = new btStaticPlaneShape(btVector3(normal.x, normal.y, normal.z), planeConstant);
 
 	// Set the render object
-	plane->SetRenderObject(new RenderObject(plane, planeMesh, basicTex, basicShader));
+	plane->SetRenderObject(new RenderObject(plane, resourceManager->getMeshes().get("Plane.msh"), basicTex, basicShader));
 
 	// Set the physics object
 	plane->SetPhysicsObject(new PhysicsObject(plane));
@@ -462,7 +428,7 @@ GameObject* TutorialGame::AddSphereToWorld(const Vector3& position, float radius
 	sphere->setRenderScale(sphereSize);
 
 	// Setting the render object for the sphere
-	sphere->SetRenderObject(new RenderObject(sphere, sphereMesh, basicTex, basicShader));
+	sphere->SetRenderObject(new RenderObject(sphere, resourceManager->getMeshes().get("Sphere.msh"), basicTex, basicShader));
 	sphere->SetPhysicsObject(new PhysicsObject(sphere));
 
 	// Creating a Bullet collision shape for the sphere

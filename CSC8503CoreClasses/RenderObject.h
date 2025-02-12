@@ -13,7 +13,7 @@ namespace NCL {
 		class RenderObject
 		{
 		public:
-			RenderObject(GameObject* parent, Mesh* mesh, Texture* tex, Shader* shader, Texture* normal = nullptr); 
+			RenderObject(GameObject* parent, std::shared_ptr<Mesh> mesh, Texture* tex, Shader* shader, Texture* normal = nullptr); 
 			~RenderObject();
 
 			void SetDefaultTexture(Texture* t) {
@@ -24,8 +24,8 @@ namespace NCL {
 				return texture;
 			}
 
-			Mesh*	GetMesh() const {
-				return mesh;
+			Mesh* GetMesh() const {
+				return mesh.get();
 			}
 
 			Shader*		GetShader() const {
@@ -62,7 +62,7 @@ namespace NCL {
 
 		protected:
 			GameObject* parent;
-			Mesh*		mesh;
+			std::shared_ptr<Mesh> mesh;
 			Texture*	texture;
 			Shader*		shader;
 			Vector4		colour = Vector4(1, 1, 0, 0.99);
