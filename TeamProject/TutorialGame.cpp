@@ -109,6 +109,7 @@ void TutorialGame::UpdateGame(float dt) {
 	}
 
 
+	resourceManager->update(dt);
 	renderer->Update(dt);
 	renderer->Render();
 	Debug::UpdateRenderables(dt);

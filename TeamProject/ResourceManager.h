@@ -29,42 +29,41 @@ namespace NCL::CSC8503 {
         std::shared_ptr<V> get(const K& key)
         {
             auto it = resources.find(key);
-            // Attempting to lock an expired weak pointer will return a nullptr
-            // We don't use expired() here, as it would introduce a TOCTOU
-            std::shared_ptr<V> ptr = it != resources.end() ? it->second.lock() : nullptr;
-
-            if (ptr == nullptr)
+            if (it == resources.end())
             {
                 auto resource = load(key);
                 resources[key] = resource;
                 return resource;
             }
 
-            return ptr;
+            return it->second;
+        }
+
+        void collectGarbage() {
+            std::erase_if(resources, [](const auto& item) {
+                // Remove anything where the only reference is our own
+                return item.second.use_count() <= 1;
+            });
         }
 
         ~ResourceMap() {
+            // This should delete everything
+            collectGarbage();
             for (auto& ptr : resources) {
-                if (!ptr.second.expired()) {
-                    // A resource not being deleted means that either we have a memory leak, or the resource manager wasn't destroyed last
-                    // The CPP standard specifies that members are destroyed in reverse order of declaration, and the resource manager is needed
-                    // for anything that uses it, so should be declared first
-                    std::cerr << "Resource " << ptr.first << " not deleted before ResourceManager destruction" << std::endl;
-                }
+                // A resource not being deleted means that either we have a memory leak, or the resource manager wasn't destroyed last
+                // The CPP standard specifies that members are destroyed in reverse order of declaration, and the resource manager is needed
+                // for anything that uses it, so should be declared first
+                std::cerr << "Resource " << ptr.first << " still had " << ptr.second.use_count() << " references at ResourceManager destruction" << std::endl;
             }
         }
 
     private:
         ResourceManager* owner;
         std::shared_ptr<V> load(const K& key);
-
-        // The resource manager is expected to last for the lifetime of the program,
-        // so we use weak pointers to allow resources to be deleted when no longer needed
-        // and reloaded when they are needed again
-        // A more advanced implementation might cache resources that might be needed again
-        // or allow for them to be loaded asynchronously (OpenGL makes this difficult, as
-        // we'd have to queue operations for the main thread)
-        std::map<K, std::weak_ptr<V>> resources;
+        // Keep a strong reference and periodically check the use count
+        // in order to keep resources that are frequently added/removed to the scene
+        // from being loaded/unloaded constantly
+        std::map<K, std::shared_ptr<V>> resources;
     };
 
     // Class to keep a cache of loaded resources, and to load them if not already
@@ -74,6 +73,12 @@ namespace NCL::CSC8503 {
     {
     public:
         ResourceManager(GameTechRenderer* renderer);
+
+        void update(float dt);
+        // Free any resources that are not in active use
+        // Called automatically every gcFrequency seconds
+        void collectGarbage();
+
         GameTechRenderer* getRenderer() { return renderer; }
 
         //ResourceMap<std::string, Rendering::Texture>& getCubeMaps() { return cubeMaps; }
@@ -88,6 +93,8 @@ namespace NCL::CSC8503 {
 
         // Needed to upload platform-specific data to GPU
         GameTechRenderer* renderer;
-    };
 
+        float gcFrequency = 30.0f;
+        float timeSinceGc;
+    };
 }

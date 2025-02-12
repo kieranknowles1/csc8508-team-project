@@ -62,6 +62,9 @@ void LevelImporter::LoadLevel(int level) {
             << " Collider Scale: (" << obj->colliderScale.x() << ", " << obj->colliderScale.y() << ", " << obj->colliderScale.z() << ")\n\n";*/
             AddObjectToWorld(obj);
     }
+
+    // Immediately free anything not needed by the new scene that was loaded for the old one
+    resourceManager->collectGarbage();
 }
 
 void LevelImporter::AddObjectToWorld(ObjectData* data) {
