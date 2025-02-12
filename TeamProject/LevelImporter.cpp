@@ -119,7 +119,7 @@ void LevelImporter::AddObjectToWorld(ObjectData* data) {
 
     // Setting the physics object for the cube
     cube->SetPhysicsObject(new PhysicsObject(cube));
-    cube->GetPhysicsObject()->InitBulletPhysics(bulletWorld, boxShape, 0, true);
+    cube->GetPhysicsObject()->InitBulletPhysics(bulletWorld, compoundShape, 0, true);
     // Setting render object
 
     // TODO: Use null instead of magic
