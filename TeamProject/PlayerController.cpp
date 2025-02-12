@@ -12,7 +12,6 @@ Vector2 PlayerController::getDirectionalInput() const
 
 void PlayerController::Initialise() {
     rb = player->GetPhysicsObject()->GetRigidBody();
-    basicTex = renderer->LoadTexture("checkerboard.png");
     basicShader = renderer->LoadShader("flatvert.glsl", "flatfrag.glsl");
 }
 
@@ -126,7 +125,7 @@ void PlayerController::ShootBullet() {
     Vector3 bulletSize(1, 1, 1);
     paintball->setInitialPosition(bulletPos);
     paintball->setRenderScale(bulletSize);
-    paintball->SetRenderObject(new RenderObject(paintball, resourceManager->getMeshes().get("Sphere.msh"), basicTex, basicShader));
+    paintball->SetRenderObject(new RenderObject(paintball, resourceManager->getMeshes().get("Sphere.msh"), resourceManager->getTextures().get("checkerboard.png"), basicShader));
     paintball->SetPhysicsObject(new PhysicsObject(paintball));
     paintball->GetRenderObject()->SetColour(Vector4(rand() % 2, rand() % 2, rand() % 2, 1));
     btCollisionShape* shape = new btSphereShape(1);

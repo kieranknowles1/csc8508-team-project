@@ -13,15 +13,15 @@ namespace NCL {
 		class RenderObject
 		{
 		public:
-			RenderObject(GameObject* parent, std::shared_ptr<Mesh> mesh, Texture* tex, Shader* shader, Texture* normal = nullptr); 
+			RenderObject(GameObject* parent, std::shared_ptr<Mesh> mesh, std::shared_ptr<Texture> tex, Shader* shader, Texture* normal = nullptr); 
 			~RenderObject();
 
-			void SetDefaultTexture(Texture* t) {
+			void SetDefaultTexture(std::shared_ptr<Texture> t) {
 				texture = t;
 			}
 
 			Texture* GetDefaultTexture() const {
-				return texture;
+				return texture.get();
 			}
 
 			Mesh* GetMesh() const {
@@ -63,7 +63,7 @@ namespace NCL {
 		protected:
 			GameObject* parent;
 			std::shared_ptr<Mesh> mesh;
-			Texture*	texture;
+			std::shared_ptr<Texture> texture;
 			Shader*		shader;
 			Vector4		colour = Vector4(1, 1, 0, 0.99);
 			bool isFlat = false;

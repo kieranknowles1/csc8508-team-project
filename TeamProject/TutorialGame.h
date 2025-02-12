@@ -60,7 +60,7 @@ namespace NCL {
 
 			KeyboardMouseController controller;
 
-			Texture* basicTex = nullptr;
+			std::shared_ptr<Texture> defaultTexture;
 	
 			Shader* basicShader = nullptr;
 			//Added Shaders:

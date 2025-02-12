@@ -96,7 +96,6 @@ namespace NCL {
 			btTransform transformGun;
 			btVector3 btGunPos;
 			ResourceManager* resourceManager;
-			Texture* basicTex = nullptr;
 			Shader* basicShader = nullptr;
 			GameWorld* world;
 			GameTechRenderer* renderer;

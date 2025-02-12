@@ -75,17 +75,6 @@ void LevelImporter::AddObjectToWorld(ObjectData* data) {
 
 
     Mesh* selectedMesh = nullptr;
-    Texture* selectedTex = basicTex;
-    if (data->meshName == "corridor_walls_and_floor/corridor_Wall_Straight_Mid_end_L") {
-        selectedTex = wallTex;
-    }
-    else if (data->meshName == "corridor_walls_and_floor/Corridor_Floor_Basic") {
-        selectedTex = nullptr;
-    }
-    else {
-        std::cerr << "NO MESH FOUND FOR LEVEL OBJECT" << std::endl;
-        return;
-    }
 
     btVector3 eulerRotation = btVector3(data->rotation.getX(), data->rotation.getY(), data->rotation.getZ());
     if (data->meshName == "corridor_walls_and_floor/corridor_Wall_Straight_Mid_end_L") {
@@ -121,7 +110,10 @@ void LevelImporter::AddObjectToWorld(ObjectData* data) {
     cube->GetPhysicsObject()->InitBulletPhysics(bulletWorld, shape, 0, true);
     // Setting render object
     
-    cube->SetRenderObject(new RenderObject(cube, resourceManager->getMeshes().get(data->meshName + ".msh"), selectedTex, basicShader));
+    // TODO: Use null instead of magic
+    // TODO: Include extensions
+    auto texture = data->mainTextureName == "No Texture" ? nullptr : resourceManager->getTextures().get(data->mainTextureName + ".tga");
+    cube->SetRenderObject(new RenderObject(cube, resourceManager->getMeshes().get(data->meshName + ".msh"), texture, basicShader));
     world->AddGameObject(cube);
 
     cube->setIsFloor(true);
