@@ -14,6 +14,7 @@ uniform vec3	cameraPos;
 uniform bool hasTexture;
 uniform bool isFlat;
 uniform bool hasNormalmap = false; //added for normal maps
+uniform bool lightAttenuates = false; //added to optionally account for attenuation
 
 in Vertex
 {
@@ -65,12 +66,19 @@ void main(void)
 	if(hasTexture) {
 	 albedo *= texture(mainTex, IN.texCoord);
 	}
+
+	float attenuation = 1.0f; //default attenuation value 
+
+	if(lightAttenuates) { //added to optionally account for attenuation
+	    float distance = length(lightPos - IN.worldPos);
+		attenuation = 1.0f - clamp(distance/lightRadius, 0.0, 1.0); 
+	}
 	
 	albedo.rgb = pow(albedo.rgb, vec3(2.2));
 	
 	fragColor.rgb = albedo.rgb * 0.05f; //ambient
 	
-	fragColor.rgb += albedo.rgb * lightColour.rgb * lambert * shadow; //diffuse light
+	fragColor.rgb += albedo.rgb * lightColour.rgb * lambert * shadow * attenuation; //diffuse light
 	
 	fragColor.rgb += lightColour.rgb * sFactor * shadow; //specular light
 	
