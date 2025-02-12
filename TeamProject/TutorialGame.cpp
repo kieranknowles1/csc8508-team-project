@@ -188,7 +188,6 @@ void TutorialGame::ThirdPersonControls() {
 	float playerYaw = Maths::RadiansToDegrees(atan2(forward.x(), forward.z())) + 180.0f;
 	mainCamera->SetYaw(playerYaw);
 	mainCamera->SetPitch(-15);
-
 }
 
 void TutorialGame::DestroyBullet() {
@@ -240,6 +239,7 @@ void TutorialGame::InitWorld() {
 		levelImporter->LoadLevel(1);
 		return;
 	}
+
 	//floors
 	AddFloorToWorld(Vector3(0, 0, 0), Vector3(500, 2, 500), Vector3(0, 0, 0), true)->SetName("Floor1");
 	AddFloorToWorld(Vector3(498.5, -21.75, 0), Vector3(500, 2, 500), Vector3(0, 0, -5),true)->SetName("Floor2");

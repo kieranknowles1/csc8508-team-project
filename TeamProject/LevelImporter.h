@@ -85,6 +85,7 @@ private:
     Mesh* cubeMesh = nullptr;
     Texture* basicTex = nullptr;
     Texture* wallTex = nullptr;
+    Texture* wallNormal = nullptr;
     Shader* basicShader = nullptr;
     Mesh* wallSection = nullptr;
     Mesh* floorSection = nullptr;
