@@ -16,6 +16,7 @@ LevelImporter::LevelImporter(GameTechRenderer* rendererIn, GameWorld* worldIn, b
     wallSection = renderer->LoadMesh("Corridor_Meshes/corridor_Wall_Straight_Mid_end_L.msh");
     floorSection = renderer->LoadMesh("Corridor_Meshes/Corridor_Floor_Basic.msh");
     wallTex = renderer->LoadTexture("Corridor_Textures/corridor_wall_c.tga");
+    wallNormal = renderer->LoadTexture("Corridor_Textures/Corridor_Walls_Redux_Normal.tga");
 }
 
 LevelImporter::~LevelImporter() {
@@ -76,7 +77,8 @@ void LevelImporter::AddObjectToWorld(ObjectData* data) {
 
     // Initializing variables for meshes and textures
     Mesh* selectedMesh = nullptr;
-    Texture* selectedTex = basicTex;
+    Texture* selectedTex = nullptr;
+    Texture* selectedNormal = nullptr;
     bool isFloor = false;
 
 	// This mesh names have been used to identify the objects in the level
@@ -84,10 +86,12 @@ void LevelImporter::AddObjectToWorld(ObjectData* data) {
     if (data->meshName == "corridor_walls_and_floor:corridor_Wall_Straight_Mid_end_L") {
         selectedMesh = wallSection;
         selectedTex = wallTex;
+        selectedNormal = wallNormal;
     }
     else if (data->meshName == "corridor_walls_and_floor:Corridor_Floor_Basic") {
         selectedMesh = floorSection;
-        selectedTex = basicTex;
+        selectedTex = nullptr;
+
 		isFloor = true;
     }
     else {
@@ -131,22 +135,23 @@ void LevelImporter::AddObjectToWorld(ObjectData* data) {
     btTransform colliderOffset;
 	colliderOffset.setIdentity();
 
-    // Check if it's a floor or not and apply the offset to the collider upward to align it with the mesh
-    if (!isFloor) {
-        colliderOffset.setOrigin(btVector3(0, (data->colliderPosition.getY() / 2.0f * scale) + 27, data->colliderScale.getZ() - 10.5));
-    }
-    else {
-        colliderOffset.setOrigin(btVector3(0, data->colliderPosition.getY(), 0));  // No offset for floor
-    }
+
+    colliderOffset.setOrigin(btVector3(data->colliderPosition.getX(), -data->colliderPosition.getY() * 6, data->colliderPosition.getZ()) * (scale / 2));
+
+    //if (!isFloor) {
+    //    colliderOffset.setOrigin(btVector3(0, (data->colliderPosition.getY() / 2.0f * scale) + 27, data->colliderScale.getZ() - 10.5));
+    //}
+    //else {
+    //    colliderOffset.setOrigin(btVector3(0, data->colliderPosition.getY(), 0));  // No offset for floor
+    //}
+
 
 	compoundShape->addChildShape(colliderOffset, boxShape);
-
     // Setting the physics object for the cube
     cube->SetPhysicsObject(new PhysicsObject(cube));
     cube->GetPhysicsObject()->InitBulletPhysics(bulletWorld, compoundShape, 0, true);
     
-    cube->SetRenderObject(new RenderObject(cube, selectedMesh, selectedTex, basicShader));
+    cube->SetRenderObject(new RenderObject(cube, selectedMesh, selectedTex, basicShader, selectedNormal));
     world->AddGameObject(cube);
-
     cube->setIsFloor(true);
 }

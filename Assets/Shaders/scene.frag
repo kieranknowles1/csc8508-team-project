@@ -13,7 +13,7 @@ uniform vec3	cameraPos;
 
 uniform bool hasTexture;
 uniform bool isFlat;
-uniform bool hasNormalmap = false; //added for normal maps
+uniform bool hasNormalMap; //added for normal maps
 uniform bool lightAttenuates = false; //added to optionally account for attenuation
 
 in Vertex
@@ -45,7 +45,7 @@ void main(void)
 	vec3 mapnormal; //added
 	vec3 NORMAL = IN.normal; //added
 
-    if(hasNormalmap) { //normal map additions
+    if(hasNormalMap) { //normal map additions
 	    mat3 TBN = mat3 (normalize(IN.tangent), normalize(IN.binormal), normalize(IN.normal));
 		mapnormal = texture(normalTex, IN.texCoord).rgb;
 		mapnormal = normalize(TBN * normalize(mapnormal * 2.0 - 1.0)); 
