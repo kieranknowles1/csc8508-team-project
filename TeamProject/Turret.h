@@ -7,11 +7,10 @@ namespace NCL {
 		class StateMachine;
 		class Turret : public GameObject {
 		public:
-			Turret(Quaternion q = Quaternion());
+			Turret(GameObject* p, Quaternion q = Quaternion());
 			~Turret() override;
 
 			virtual void Update(float dt);
-			void setInitialRotation(Quaternion q);
 
 		protected:
 			void RotateLeft(float dt);
@@ -23,6 +22,9 @@ namespace NCL {
 			Quaternion yNegative;
 			float rotateTime;
 			float rotateSpeed;
+
+			GameObject* player;
+			btTransform trans;
 		};
 	}
 }

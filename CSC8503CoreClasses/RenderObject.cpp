@@ -4,7 +4,7 @@
 using namespace NCL::CSC8503;
 using namespace NCL;
 
-RenderObject::RenderObject(GameObject* parent, Mesh* mesh, Texture* tex, Shader* shader) {
+RenderObject::RenderObject(GameObject* parent, Mesh* mesh, Texture* tex, Shader* shader, Texture* normal) {
 	if (!tex) {
 		bool a = true;
 	}
@@ -13,6 +13,7 @@ RenderObject::RenderObject(GameObject* parent, Mesh* mesh, Texture* tex, Shader*
 	this->texture	= tex;
 	this->shader	= shader;
 	this->colour	= Vector4(1.0f, 1.0f, 1.0f, 1.0f);
+	this->normalMap = normal;
 }
 
 RenderObject::~RenderObject() {

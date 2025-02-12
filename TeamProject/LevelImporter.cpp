@@ -59,14 +59,14 @@ void LevelImporter::LoadLevel(int level) {
     int count = 0;
     for (const auto& obj : objects) {
         count++;
-        std::cout << "Object " << count << std::endl;
+        /*std::cout << "Object " << count << std::endl;
         std::cout << "Mesh: " << obj->meshName << ", Texture: " << obj->mainTextureName
             << ", Normal Texture: " << obj->normalTextureName << std::endl;
         std::cout << "Position: (" << obj->position.x() << ", " << obj->position.y() << ", " << obj->position.z() << ")"
             << " Rotation: (" << obj->rotation.x() << ", " << obj->rotation.y() << ", " << obj->rotation.z() << ", " << obj->rotation.w() << ")"
             << " Scale: (" << obj->scale.x() << ", " << obj->scale.y() << ", " << obj->scale.z() << ")\n"
             << "Collider Position: (" << obj->colliderPosition.x() << ", " << obj->colliderPosition.y() << ", " << obj->colliderPosition.z() << ")"
-            << " Collider Scale: (" << obj->colliderScale.x() << ", " << obj->colliderScale.y() << ", " << obj->colliderScale.z() << ")\n\n";
+            << " Collider Scale: (" << obj->colliderScale.x() << ", " << obj->colliderScale.y() << ", " << obj->colliderScale.z() << ")\n\n";*/
             AddObjectToWorld(obj);
     }
 }
@@ -112,14 +112,10 @@ void LevelImporter::AddObjectToWorld(ObjectData* data) {
     float rollRadians = Maths::DegreesToRadians(eulerRotation.z());
     btQuaternion rotationQuat;
     rotationQuat.setEulerZYX(rollRadians, yawRadians, pitchRadians);
-
     cube->setInitialRotation(Quaternion(rotationQuat.getX(), rotationQuat.getY(), rotationQuat.getZ(), rotationQuat.getW()));
+    cube->setRenderScale(data->scale* scale);
 
-	// Adjusting the render scale to match the collider scale
-    Vector3 adjustedScale = data->scale * scale;
     
-	cube->setRenderScale(data->scale * scale);
-
     btCollisionShape* boxShape;
     if (selectedMesh == wallSection) {
         boxShape = new btBoxShape(btVector3(data->colliderScale.getX() / 2.0f, data->colliderScale.getZ() / 2.0f, data->colliderScale.getY() / 2.0f)* scale);
