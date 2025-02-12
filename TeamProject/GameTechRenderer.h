@@ -35,6 +35,8 @@ namespace NCL {
 			void RenderShadowMap();
 			void RenderCamera(); 
 			void RenderSkybox();
+			void InitCrosshair(); //InitCrosshair and RenderCrosshair Ameya added for crosshair
+			void RenderCrosshair();
 
 			void LoadSkybox();
 
@@ -48,6 +50,11 @@ namespace NCL {
 			OGLMesh*	skyboxMesh;
 			OGLMesh*	debugTexMesh;
 			GLuint		skyboxTex;
+
+			GLuint crosshairVAO;
+			GLuint crosshairVBO;
+			GLuint crosshairEBO;
+			OGLShader* crosshairShader; //This line Ameya added for crosshair
 
 			//shadow mapping things
 			OGLShader*	shadowShader;

@@ -67,21 +67,22 @@ void LevelImporter::LoadLevel(int level) {
 void LevelImporter::AddObjectToWorld(ObjectData* data) {
     GameObject* cube = new GameObject();
 
-    // Setting the transform properties for the cube
-
-
+    // Initializing variables for meshes and textures
     Mesh* selectedMesh = nullptr;
+    bool isFloor = data->meshName == "corridor_walls_and_floor/Corridor_Floor_Basic";
+
+	// If not a floor, apply an offset to move the floor up/down
+    Vector3 position = data->position * scale;
+    if (!isFloor) {
+        position.y -= 8.0f;
+    }
+	cube->setInitialPosition(position);
 
     btVector3 eulerRotation = btVector3(data->rotation.getX(), data->rotation.getY(), data->rotation.getZ());
     if (data->meshName == "corridor_walls_and_floor/corridor_Wall_Straight_Mid_end_L") {
         eulerRotation.setX(eulerRotation.getX() - 90);
-        cube->setInitialPosition(data->position* scale);
     }
-    else {
-        btVector3 pos = data->position;
-        pos.setY(pos.getY() + (0.75));
-        cube->setInitialPosition(pos* scale);
-    }
+
     float pitchRadians = Maths::DegreesToRadians(eulerRotation.x());
     float yawRadians = Maths::DegreesToRadians(eulerRotation.y());
     float rollRadians = Maths::DegreesToRadians(eulerRotation.z());
@@ -91,19 +92,34 @@ void LevelImporter::AddObjectToWorld(ObjectData* data) {
     cube->setRenderScale(data->scale* scale);
 
 
-    btCollisionShape* shape;
+    btCollisionShape* boxShape;
     if (data->meshName == "corridor_walls_and_floor/corridor_Wall_Straight_Mid_end_L") {
-        shape = new btBoxShape(btVector3(data->colliderScale.getX() / 2.0f, data->colliderScale.getZ() / 2.0f, data->colliderScale.getY() / 2.0f)* scale);
+        boxShape = new btBoxShape(btVector3(data->colliderScale.getX() / 2.0f, data->colliderScale.getZ() / 2.0f, data->colliderScale.getY() / 2.0f)* scale);
     }
     else {
-        shape = new btBoxShape(btVector3(data->colliderScale.getX() / 2.0f, data->colliderScale.getY() / 2.0f, data->colliderScale.getZ() / 2.0f)* scale);
+        boxShape = new btBoxShape(btVector3(data->colliderScale.getX() / 2.0f, data->colliderScale.getY() / 2.0f, data->colliderScale.getZ() / 2.0f)* scale);
     }
 
     // The object is penetrating the floor a bit, so I reduced the bullet collision margin to avoid sinking in the floor
-    shape->setMargin(0.01f);
+    boxShape->setMargin(0.01f);
+
+	btCompoundShape* compoundShape = new btCompoundShape();
+    btTransform colliderOffset;
+	colliderOffset.setIdentity();
+
+    // Check if it's a floor or not and apply the offset to the collider upward to align it with the mesh
+    if (!isFloor) {
+        colliderOffset.setOrigin(btVector3(0, (data->colliderPosition.getY() / 2.0f * scale) + 27, data->colliderScale.getZ() - 10.5));
+    }
+    else {
+        colliderOffset.setOrigin(btVector3(0, data->colliderPosition.getY(), 0));  // No offset for floor
+    }
+
+	compoundShape->addChildShape(colliderOffset, boxShape);
+
     // Setting the physics object for the cube
     cube->SetPhysicsObject(new PhysicsObject(cube));
-    cube->GetPhysicsObject()->InitBulletPhysics(bulletWorld, shape, 0, true);
+    cube->GetPhysicsObject()->InitBulletPhysics(bulletWorld, boxShape, 0, true);
     // Setting render object
 
     // TODO: Use null instead of magic
