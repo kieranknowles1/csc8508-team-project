@@ -3,6 +3,8 @@
 #include <filesystem>
 #include <iostream>
 
+#include "GameTechRenderer.h"
+
 namespace NCL::CSC8503 {
 
 ResourceManager::ResourceManager(GameTechRenderer* renderer)

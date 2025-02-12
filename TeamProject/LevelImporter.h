@@ -71,7 +71,7 @@ using namespace CSC8503;
 
 class LevelImporter {
 public:
-    LevelImporter(ResourceManager* resourceManager, GameTechRenderer* renderer, GameWorld* worldIn, btDiscreteDynamicsWorld* bulletWorldIn);
+    LevelImporter(ResourceManager* resourceManager, GameWorld* worldIn, btDiscreteDynamicsWorld* bulletWorldIn);
     ~LevelImporter();
 
     void LoadLevel(int level);

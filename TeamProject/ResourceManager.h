@@ -10,10 +10,9 @@
 #include "Texture.h"
 #include "Shader.h"
 
-// TODO: Single place to specify renderer type, or an abstract base class
-#include "GameTechRenderer.h"
-
 namespace NCL::CSC8503 {
+    class GameTechRenderer;
+
     class ResourceManager;
 
     // A map of resources, where the key is used to load the resource

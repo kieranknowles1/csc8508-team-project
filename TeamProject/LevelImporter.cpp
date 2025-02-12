@@ -5,7 +5,7 @@ using namespace CSC8503;
 
 using json = nlohmann::json;
 
-LevelImporter::LevelImporter(ResourceManager* resourceManager, GameTechRenderer* renderer, GameWorld* worldIn, btDiscreteDynamicsWorld* bulletWorldIn) {
+LevelImporter::LevelImporter(ResourceManager* resourceManager, GameWorld* worldIn, btDiscreteDynamicsWorld* bulletWorldIn) {
     this->resourceManager = resourceManager;
     world = worldIn;
     bulletWorld = bulletWorldIn;
