@@ -17,3 +17,4 @@ When adding a new file to the project:
 ## Controls
 
 - `F3`: Toggle Bullet debug draw
+- `F4`: Toggle showing time usage

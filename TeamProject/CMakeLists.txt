@@ -23,6 +23,8 @@ set(SOURCES
     LevelImporter.h
     ResourceManager.h
     ResourceManager.cpp
+    Profiler.h
+    Profiler.cpp
 )
 
 file(GLOB_RECURSE COMPILED_MESHES "${CMAKE_SOURCE_DIR}/Assets/Meshes/*.msh")
