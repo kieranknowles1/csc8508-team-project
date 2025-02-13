@@ -99,44 +99,20 @@ void LevelImporter::AddObjectToWorld(ObjectData* data) {
 
     // Initializing variables for meshes and textures
     Mesh* selectedMesh = nullptr;
+    // TODO: Don't hard code this
     bool isFloor = data->meshName == "corridor_walls_and_floor/Corridor_Floor_Basic";
-
-	// If not a floor, apply an offset to move the floor up/down
-    Vector3 position = data->position * scale;
-    if (!isFloor) {
-        position.y -= 8.0f;
-    }
-	cube->setInitialPosition(position);
+	cube->setInitialPosition(data->position * scale);
 
     cube->setInitialRotation(data->rotation);
     cube->setRenderScale(data->scale* scale);
 
-
-    btCollisionShape* boxShape;
-    if (data->meshName == "corridor_walls_and_floor/corridor_Wall_Straight_Mid_end_L") {
-        boxShape = new btBoxShape(btVector3(data->colliderScale.getX() / 2.0f, data->colliderScale.getZ() / 2.0f, data->colliderScale.getY() / 2.0f)* scale);
-    }
-    else {
-        boxShape = new btBoxShape(btVector3(data->colliderScale.getX() / 2.0f, data->colliderScale.getY() / 2.0f, data->colliderScale.getZ() / 2.0f)* scale);
-    }
-
-    // The object is penetrating the floor a bit, so I reduced the bullet collision margin to avoid sinking in the floor
-    boxShape->setMargin(0.01f);
+    // Divide by 2 for half-size
+    btCollisionShape* boxShape = new btBoxShape(data->colliderScale * scale / 2.0f);
 
 	btCompoundShape* compoundShape = new btCompoundShape();
     btTransform colliderOffset;
 	colliderOffset.setIdentity();
-
-
-    colliderOffset.setOrigin(btVector3(data->colliderPosition.getX(), -data->colliderPosition.getY() * 6, data->colliderPosition.getZ()) * (scale / 2));
-
-    //if (!isFloor) {
-    //    colliderOffset.setOrigin(btVector3(0, (data->colliderPosition.getY() / 2.0f * scale) + 27, data->colliderScale.getZ() - 10.5));
-    //}
-    //else {
-    //    colliderOffset.setOrigin(btVector3(0, data->colliderPosition.getY(), 0));  // No offset for floor
-    //}
-
+    colliderOffset.setOrigin(data->colliderPosition * scale);
 
 	compoundShape->addChildShape(colliderOffset, boxShape);
     // Setting the physics object for the cube
@@ -144,10 +120,17 @@ void LevelImporter::AddObjectToWorld(ObjectData* data) {
     cube->GetPhysicsObject()->InitBulletPhysics(bulletWorld, compoundShape, 0, true);
     // Setting render object
 
-    // TODO: Include extensions
-    auto texture = data->mainTextureName.empty() ? nullptr : resourceManager->getTextures().get(data->mainTextureName + ".tga");
-    auto normalTexture = data->normalTextureName.empty() ? nullptr : resourceManager->getTextures().get(data->normalTextureName + ".tga");
-    cube->SetRenderObject(new RenderObject(cube, resourceManager->getMeshes().get(data->meshName + ".msh"), texture, resourceManager->getShaders().get(Shader::Default), normalTexture));
+    // TODO: Include file extensions
+    auto optionalTexture = [&](const std::string& tex) {
+        return tex.empty() ? nullptr : resourceManager->getTextures().get(tex + ".tga");
+    };
+    cube->SetRenderObject(new RenderObject(
+        cube,
+        resourceManager->getMeshes().get(data->meshName + ".msh"),
+        optionalTexture(data->mainTextureName),
+        resourceManager->getShaders().get(Shader::Default),
+        optionalTexture(data->normalTextureName)
+    ));
     world->AddGameObject(cube);
     cube->setIsFloor(true);
 }
