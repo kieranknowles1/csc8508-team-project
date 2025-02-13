@@ -107,22 +107,26 @@ void LevelImporter::AddObjectToWorld(ObjectData* data) {
     cube->setRenderScale(data->scale* scale);
 
     // Divide by 2 for half-size
-    btCollisionShape* boxShape = new btBoxShape(data->colliderScale * scale / 2.0f);
+    btCompoundShape* compoundShape = nullptr;
+    bool hasCollision = (data->colliderScale != btVector3());
+    if (hasCollision) {
+        btCollisionShape* boxShape = new btBoxShape(data->colliderScale * scale / 2.0f);
 
-	btCompoundShape* compoundShape = new btCompoundShape();
-    btTransform colliderOffset;
-	colliderOffset.setIdentity();
-    colliderOffset.setOrigin(data->colliderPosition * scale);
+        compoundShape = new btCompoundShape();
+        btTransform colliderOffset;
+        colliderOffset.setIdentity();
+        colliderOffset.setOrigin(data->colliderPosition * scale);
 
-	compoundShape->addChildShape(colliderOffset, boxShape);
-    // Setting the physics object for the cube
-    cube->SetPhysicsObject(new PhysicsObject(cube));
-    cube->GetPhysicsObject()->InitBulletPhysics(bulletWorld, compoundShape, 0, true);
+        compoundShape->addChildShape(colliderOffset, boxShape);
+        // Setting the physics object for the cube
+        cube->SetPhysicsObject(new PhysicsObject(cube));
+    }
+    cube->GetPhysicsObject()->InitBulletPhysics(bulletWorld, compoundShape, 0, hasCollision);
     // Setting render object
 
     // TODO: Include file extensions
     auto optionalTexture = [&](const std::string& tex) {
-        return tex.empty() ? nullptr : resourceManager->getTextures().get(tex + ".tga");
+        return tex.empty() ? resourceManager->getTextures().get("checkerboard.png") : resourceManager->getTextures().get(tex + ".tga");
     };
     cube->SetRenderObject(new RenderObject(
         cube,
