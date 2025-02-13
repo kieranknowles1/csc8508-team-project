@@ -18,8 +18,9 @@ bool MshLoader::LoadMesh(const std::string& filename, Mesh& destinationMesh) {
 		return LoadBinaryMesh(binFile, destinationMesh);
 	}
 	else {
+		auto path(Assets::MESHDIR + filename);
 		std::cout << filename << " is being loaded from text. Consider adding to COMPILED_MESHES" << std::endl;
-		return LoadTextMesh(filename, destinationMesh);
+		return LoadTextMesh(path, destinationMesh);
 	}
 }
 
@@ -136,7 +137,7 @@ bool NCL::Rendering::MshLoader::LoadBinaryMesh(const std::string& filename, Mesh
 }
 
 bool MshLoader::LoadTextMesh(const std::string& filename, Mesh& destinationMesh) {
-	std::ifstream file(Assets::MESHDIR + filename);
+	std::ifstream file(filename);
 	if (!file.is_open()) {
 		std::cerr << __FUNCTION__ << "Could not open mesh " << filename << std::endl;
 	}
