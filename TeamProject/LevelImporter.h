@@ -59,6 +59,6 @@ private:
     btDiscreteDynamicsWorld* bulletWorld;
     std::vector<ObjectData*> objects;
 
-    float scale = 10.0;
+    float scale = 20.0;
 
 };
