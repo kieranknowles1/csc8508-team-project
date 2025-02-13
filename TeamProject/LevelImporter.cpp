@@ -106,24 +106,22 @@ void LevelImporter::AddObjectToWorld(ObjectData* data) {
     cube->setInitialRotation(data->rotation);
     cube->setRenderScale(data->scale* scale);
 
+
     // Divide by 2 for half-size
-    btCompoundShape* compoundShape = nullptr;
-    bool hasCollision = (data->colliderScale != btVector3());
+    btCompoundShape* compoundShape = new btCompoundShape();
+    bool hasCollision = (data->colliderScale != btVector3(0,0,0));
     if (hasCollision) {
         btCollisionShape* boxShape = new btBoxShape(data->colliderScale * scale / 2.0f);
-
-        compoundShape = new btCompoundShape();
         btTransform colliderOffset;
         colliderOffset.setIdentity();
         colliderOffset.setOrigin(data->colliderPosition * scale);
-
         compoundShape->addChildShape(colliderOffset, boxShape);
-        // Setting the physics object for the cube
-        cube->SetPhysicsObject(new PhysicsObject(cube));
     }
+    cube->SetPhysicsObject(new PhysicsObject(cube));
     cube->GetPhysicsObject()->InitBulletPhysics(bulletWorld, compoundShape, 0, hasCollision);
-    // Setting render object
 
+
+    // Setting render object
     // TODO: Include file extensions
     auto optionalTexture = [&](const std::string& tex) {
         return tex.empty() ? resourceManager->getTextures().get("checkerboard.png") : resourceManager->getTextures().get(tex + ".tga");
