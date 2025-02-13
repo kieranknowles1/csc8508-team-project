@@ -5,6 +5,36 @@ using namespace CSC8503;
 
 using json = nlohmann::json;
 
+// Custom from_json functions for btVector3 and btQuaternion
+inline void from_json(const json& j, btVector3& vec) {
+    vec.setX(j.at("x").get<float>());
+    vec.setY(j.at("y").get<float>());
+    vec.setZ(j.at("z").get<float>());
+}
+
+inline void from_json(const json& j, btQuaternion& quat) {
+    quat.setX(j.at("x").get<float>());
+    quat.setY(j.at("y").get<float>());
+    quat.setZ(j.at("z").get<float>());
+    quat.setW(j.at("w").get<float>());
+}
+
+void from_json(const json& j, ObjectData& obj) {
+    j.at("position").get_to(obj.position);
+    j.at("rotation").get_to(obj.rotation);
+    j.at("scale").get_to(obj.scale);
+    j.at("colliderPosition").get_to(obj.colliderPosition);
+    j.at("colliderScale").get_to(obj.colliderScale);
+    j.at("meshName").get_to(obj.meshName);
+    // TODO: This should be done during export
+    auto colon = obj.meshName.find(":");
+    if (colon != std::string::npos) {
+        obj.meshName.replace(colon, 1, "/");
+    }
+    j.at("mainTextureName").get_to(obj.mainTextureName);
+    j.at("normalTextureName").get_to(obj.normalTextureName);
+}
+
 LevelImporter::LevelImporter(ResourceManager* resourceManager, GameWorld* worldIn, btDiscreteDynamicsWorld* bulletWorldIn) {
     this->resourceManager = resourceManager;
     world = worldIn;
@@ -78,17 +108,7 @@ void LevelImporter::AddObjectToWorld(ObjectData* data) {
     }
 	cube->setInitialPosition(position);
 
-    btVector3 eulerRotation = btVector3(data->rotation.getX(), data->rotation.getY(), data->rotation.getZ());
-    if (data->meshName == "corridor_walls_and_floor/corridor_Wall_Straight_Mid_end_L") {
-        eulerRotation.setX(eulerRotation.getX() - 90);
-    }
-
-    float pitchRadians = Maths::DegreesToRadians(eulerRotation.x());
-    float yawRadians = Maths::DegreesToRadians(eulerRotation.y());
-    float rollRadians = Maths::DegreesToRadians(eulerRotation.z());
-    btQuaternion rotationQuat;
-    rotationQuat.setEulerZYX(rollRadians, yawRadians, pitchRadians);
-    cube->setInitialRotation(rotationQuat);
+    cube->setInitialRotation(data->rotation);
     cube->setRenderScale(data->scale* scale);
 
 
@@ -124,10 +144,9 @@ void LevelImporter::AddObjectToWorld(ObjectData* data) {
     cube->GetPhysicsObject()->InitBulletPhysics(bulletWorld, compoundShape, 0, true);
     // Setting render object
 
-    // TODO: Use null instead of magic
     // TODO: Include extensions
-    auto texture = data->mainTextureName == "No Texture" ? nullptr : resourceManager->getTextures().get(data->mainTextureName + ".tga");
-    auto normalTexture = data->normalTextureName == "No Normal Texture" ? nullptr : resourceManager->getTextures().get(data->normalTextureName + ".tga");
+    auto texture = data->mainTextureName.empty() ? nullptr : resourceManager->getTextures().get(data->mainTextureName + ".tga");
+    auto normalTexture = data->normalTextureName.empty() ? nullptr : resourceManager->getTextures().get(data->normalTextureName + ".tga");
     cube->SetRenderObject(new RenderObject(cube, resourceManager->getMeshes().get(data->meshName + ".msh"), texture, resourceManager->getShaders().get(Shader::Default), normalTexture));
     world->AddGameObject(cube);
     cube->setIsFloor(true);
