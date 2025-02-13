@@ -13,23 +13,23 @@ namespace NCL {
 		class RenderObject
 		{
 		public:
-			RenderObject(GameObject* parent, Mesh* mesh, Texture* tex, Shader* shader, Texture* normal = nullptr); 
+			RenderObject(GameObject* parent, std::shared_ptr<Mesh> mesh, std::shared_ptr<Texture> tex, std::shared_ptr<Shader> shader, std::shared_ptr<Texture> normal = nullptr);
 			~RenderObject();
 
-			void SetDefaultTexture(Texture* t) {
+			void SetDefaultTexture(std::shared_ptr<Texture> t) {
 				texture = t;
 			}
 
 			Texture* GetDefaultTexture() const {
-				return texture;
+				return texture.get();
 			}
 
-			Mesh*	GetMesh() const {
-				return mesh;
+			Mesh* GetMesh() const {
+				return mesh.get();
 			}
 
-			Shader*		GetShader() const {
-				return shader;
+			Shader*	GetShader() const {
+				return shader.get();
 			}
 
 			void SetColour(const Vector4& c) {
@@ -48,27 +48,31 @@ namespace NCL {
 				return isFlat;
 			}
 
+			bool GetHasNormal() const {
+				return normalMap != nullptr;
+			}
+
 			void SetIsFlat(bool isFlatIn) {
 				isFlat = isFlatIn;
 			}
 
-			void SetNormal(Texture* n) {
-				normalMap = n; 
+			void SetNormal(std::shared_ptr<Texture> n) {
+				normalMap = n;
 			}
 
 			Texture* GetNormalMap() const {
-				return normalMap;
+				return normalMap.get();
 			}
 
 		protected:
 			GameObject* parent;
-			Mesh*		mesh;
-			Texture*	texture;
-			Shader*		shader;
+			std::shared_ptr<Mesh> mesh;
+			std::shared_ptr<Texture> texture;
+			std::shared_ptr<Shader> shader;
 			Vector4		colour = Vector4(1, 1, 0, 0.99);
 			bool isFlat = false;
 			//additional normal map option:
-			Texture* normalMap;
+			std::shared_ptr<Texture> normalMap;
 		};
 	}
 }

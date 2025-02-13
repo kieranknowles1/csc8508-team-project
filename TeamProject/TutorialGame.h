@@ -6,6 +6,8 @@
 #include "GameTechVulkanRenderer.h"
 #endif
 
+#include "ResourceManager.h"
+
 #include "LevelImporter.h"
 #include "StateGameObject.h"
 #include "PlayerController.h"
@@ -47,6 +49,7 @@ namespace NCL {
 
 			GameObject* AddInfinitePlaneToWorld(const Vector3& position, const Vector3& normal, float planeConstant);
 
+			std::unique_ptr<ResourceManager> resourceManager;
 
 #ifdef USEVULKAN
 			GameTechVulkanRenderer* renderer;
@@ -57,34 +60,10 @@ namespace NCL {
 
 			KeyboardMouseController controller;
 
+			std::shared_ptr<Texture> defaultTexture;
+			std::shared_ptr<Shader> defaultShader;
 
-			Mesh* planeMesh = nullptr;
-			Mesh* capsuleMesh = nullptr;
-			Mesh* cubeMesh = nullptr;
-			Mesh* sphereMesh = nullptr;
-
-			Texture* basicTex = nullptr;
-	
-			Shader* basicShader = nullptr;
-			//Added Shaders:
-			Shader* flatShader = nullptr;
-
-			//Coursework Meshes
-			Mesh*	catMesh		= nullptr;
-			Mesh*	kittenMesh	= nullptr;
-			Mesh*	enemyMesh	= nullptr;
-			Mesh*	bonusMesh	= nullptr;
-
-			//EG Meshes:
-			Mesh* maxMesh = nullptr;
-			Mesh* maleguardMesh = nullptr;
-			Mesh* femaleguardMesh = nullptr;
-
-			//EG Level Mehses:
-			Mesh* wallSection = nullptr;
-			Mesh* floorSection = nullptr;
-
-			//Coursework Additional functionality	
+			//Coursework Additional functionality
 			GameObject* lockedObject	= nullptr;
 			Vector3 lockedOffset		= Vector3(0, 14, 20);
 			void LockCameraToObject(GameObject* o) {
@@ -116,7 +95,7 @@ namespace NCL {
 			bool thirdPerson = false;
 			Vector4 playerColour = Vector4(1, 0.8, 1, 1);
 
-			//fixed update 
+			//fixed update
 			float accumulator = 0.0f;
 			float fixedDeltaTime = 1.0f / 60.0f;
 
