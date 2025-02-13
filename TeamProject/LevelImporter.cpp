@@ -107,16 +107,18 @@ void LevelImporter::AddObjectToWorld(ObjectData* data) {
     btTransform colliderOffset;
 	colliderOffset.setIdentity();
 
-    // Check if it's a floor or not and apply the offset to the collider upward to align it with the mesh
-    if (!isFloor) {
-        colliderOffset.setOrigin(btVector3(0, (data->colliderPosition.getY() / 2.0f * scale) + 27, data->colliderScale.getZ() - 10.5));
-    }
-    else {
-        colliderOffset.setOrigin(btVector3(0, data->colliderPosition.getY(), 0));  // No offset for floor
-    }
+
+    colliderOffset.setOrigin(btVector3(data->colliderPosition.getX(), -data->colliderPosition.getY() * 6, data->colliderPosition.getZ()) * (scale / 2));
+
+    //if (!isFloor) {
+    //    colliderOffset.setOrigin(btVector3(0, (data->colliderPosition.getY() / 2.0f * scale) + 27, data->colliderScale.getZ() - 10.5));
+    //}
+    //else {
+    //    colliderOffset.setOrigin(btVector3(0, data->colliderPosition.getY(), 0));  // No offset for floor
+    //}
+
 
 	compoundShape->addChildShape(colliderOffset, boxShape);
-
     // Setting the physics object for the cube
     cube->SetPhysicsObject(new PhysicsObject(cube));
     cube->GetPhysicsObject()->InitBulletPhysics(bulletWorld, compoundShape, 0, true);
@@ -127,6 +129,5 @@ void LevelImporter::AddObjectToWorld(ObjectData* data) {
     auto texture = data->mainTextureName == "No Texture" ? nullptr : resourceManager->getTextures().get(data->mainTextureName + ".tga");
     cube->SetRenderObject(new RenderObject(cube, resourceManager->getMeshes().get(data->meshName + ".msh"), texture, resourceManager->getShaders().get(Shader::Default)));
     world->AddGameObject(cube);
-
     cube->setIsFloor(true);
 }

@@ -258,6 +258,7 @@ void GameTechRenderer::RenderCamera() {
 	int hasTexLocation  = 0;
 	int shadowLocation  = 0;
 	int hasFlatLocation = 0;
+	int hasNormalLocation = 0;
 
 	int lightPosLocation	= 0;
 	int lightColourLocation = 0;
@@ -291,6 +292,7 @@ void GameTechRenderer::RenderCamera() {
 			hasVColLocation = glGetUniformLocation(shader->GetProgramID(), "hasVertexColours");
 			hasTexLocation  = glGetUniformLocation(shader->GetProgramID(), "hasTexture");
 			hasFlatLocation =  glGetUniformLocation(shader->GetProgramID(), "isFlat");
+			hasNormalLocation = glGetUniformLocation(shader->GetProgramID(), "hasNormalMap");
 
 			lightPosLocation	= glGetUniformLocation(shader->GetProgramID(), "lightPos");
 			lightColourLocation = glGetUniformLocation(shader->GetProgramID(), "lightColour");
@@ -330,6 +332,7 @@ void GameTechRenderer::RenderCamera() {
 
 		glUniform1i(hasTexLocation, (OGLTexture*)(*i).GetDefaultTexture() ? 1:0);
 		glUniform1i(hasFlatLocation, i->GetIsFlat());
+		glUniform1i(hasNormalLocation, i->GetHasNormal());
 	
 		BindMesh((OGLMesh&)*(*i).GetMesh());
 		size_t layerCount = (*i).GetMesh()->GetSubMeshCount();

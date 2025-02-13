@@ -48,6 +48,10 @@ namespace NCL {
 				return isFlat;
 			}
 
+			bool GetHasNormal() const {
+				return normalMap != nullptr;
+			}
+
 			void SetIsFlat(bool isFlatIn) {
 				isFlat = isFlatIn;
 			}
