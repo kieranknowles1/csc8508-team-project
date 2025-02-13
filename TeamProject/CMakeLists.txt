@@ -21,6 +21,8 @@ set(SOURCES
 	BWHelperFunctions.cpp
     LevelImporter.cpp
     LevelImporter.h
+    ResourceManager.h
+    ResourceManager.cpp
 )
 
 set(COMPILED_MESHES

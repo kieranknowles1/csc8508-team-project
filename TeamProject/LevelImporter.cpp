@@ -5,18 +5,10 @@ using namespace CSC8503;
 
 using json = nlohmann::json;
 
-LevelImporter::LevelImporter(GameTechRenderer* rendererIn, GameWorld* worldIn, btDiscreteDynamicsWorld* bulletWorldIn) {
-    renderer = rendererIn;
+LevelImporter::LevelImporter(ResourceManager* resourceManager, GameWorld* worldIn, btDiscreteDynamicsWorld* bulletWorldIn) {
+    this->resourceManager = resourceManager;
     world = worldIn;
     bulletWorld = bulletWorldIn;
-
-    cubeMesh = renderer->LoadMesh("Cube.msh");
-    basicTex = renderer->LoadTexture("checkerboard.png");
-    basicShader = renderer->LoadShader("scene.vert", "scene.frag");
-    wallSection = renderer->LoadMesh("Corridor_Meshes/corridor_Wall_Straight_Mid_end_L.msh");
-    floorSection = renderer->LoadMesh("Corridor_Meshes/Corridor_Floor_Basic.msh");
-    wallTex = renderer->LoadTexture("Corridor_Textures/corridor_wall_c.tga");
-    wallNormal = renderer->LoadTexture("Corridor_Textures/Corridor_Walls_Redux_Normal.tga");
 }
 
 LevelImporter::~LevelImporter() {
@@ -77,27 +69,7 @@ void LevelImporter::AddObjectToWorld(ObjectData* data) {
 
     // Initializing variables for meshes and textures
     Mesh* selectedMesh = nullptr;
-    Texture* selectedTex = nullptr;
-    Texture* selectedNormal = nullptr;
-    bool isFloor = false;
-
-	// This mesh names have been used to identify the objects in the level
-	// and set the offset for the wall only as the collider is not aligned with the mesh
-    if (data->meshName == "corridor_walls_and_floor:corridor_Wall_Straight_Mid_end_L") {
-        selectedMesh = wallSection;
-        selectedTex = wallTex;
-        selectedNormal = wallNormal;
-    }
-    else if (data->meshName == "corridor_walls_and_floor:Corridor_Floor_Basic") {
-        selectedMesh = floorSection;
-        selectedTex = nullptr;
-
-		isFloor = true;
-    }
-    else {
-        std::cerr << "NO MESH FOUND FOR LEVEL OBJECT" << std::endl;
-        return;
-    }
+    bool isFloor = data->meshName == "corridor_walls_and_floor/Corridor_Floor_Basic";
 
 	// If not a floor, apply an offset to move the floor up/down
     Vector3 position = data->position * scale;
@@ -107,7 +79,7 @@ void LevelImporter::AddObjectToWorld(ObjectData* data) {
 	cube->setInitialPosition(position);
 
     btVector3 eulerRotation = btVector3(data->rotation.getX(), data->rotation.getY(), data->rotation.getZ());
-    if (selectedMesh == wallSection) {
+    if (data->meshName == "corridor_walls_and_floor/corridor_Wall_Straight_Mid_end_L") {
         eulerRotation.setX(eulerRotation.getX() - 90);
     }
 
@@ -119,15 +91,15 @@ void LevelImporter::AddObjectToWorld(ObjectData* data) {
     cube->setInitialRotation(Quaternion(rotationQuat.getX(), rotationQuat.getY(), rotationQuat.getZ(), rotationQuat.getW()));
     cube->setRenderScale(data->scale* scale);
 
-    
+
     btCollisionShape* boxShape;
-    if (selectedMesh == wallSection) {
+    if (data->meshName == "corridor_walls_and_floor/corridor_Wall_Straight_Mid_end_L") {
         boxShape = new btBoxShape(btVector3(data->colliderScale.getX() / 2.0f, data->colliderScale.getZ() / 2.0f, data->colliderScale.getY() / 2.0f)* scale);
     }
     else {
         boxShape = new btBoxShape(btVector3(data->colliderScale.getX() / 2.0f, data->colliderScale.getY() / 2.0f, data->colliderScale.getZ() / 2.0f)* scale);
     }
-   
+
     // The object is penetrating the floor a bit, so I reduced the bullet collision margin to avoid sinking in the floor
     boxShape->setMargin(0.01f);
 
@@ -150,8 +122,13 @@ void LevelImporter::AddObjectToWorld(ObjectData* data) {
     // Setting the physics object for the cube
     cube->SetPhysicsObject(new PhysicsObject(cube));
     cube->GetPhysicsObject()->InitBulletPhysics(bulletWorld, compoundShape, 0, true);
-    
-    cube->SetRenderObject(new RenderObject(cube, selectedMesh, selectedTex, basicShader, selectedNormal));
+    // Setting render object
+
+    // TODO: Use null instead of magic
+    // TODO: Include extensions
+    auto texture = data->mainTextureName == "No Texture" ? nullptr : resourceManager->getTextures().get(data->mainTextureName + ".tga");
+    auto normalTexture = data->normalTextureName == "No Normal Texture" ? nullptr : resourceManager->getTextures().get(data->normalTextureName + ".tga");
+    cube->SetRenderObject(new RenderObject(cube, resourceManager->getMeshes().get(data->meshName + ".msh"), texture, resourceManager->getShaders().get(Shader::Default), normalTexture));
     world->AddGameObject(cube);
     cube->setIsFloor(true);
 }
