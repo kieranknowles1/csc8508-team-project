@@ -64,6 +64,8 @@ static bool BulletRaycast(btDynamicsWorld* world, const btVector3& start, const 
 }
 
 void TutorialGame::UpdateGame(float dt) {
+	profiler.beginFrame();
+	profiler.startSection("Physics");
 	// Old
 	//int substeps = std::floor(dt / PHYSICS_PERIOD);
 	//int steps = bulletWorld->stepSimulation(dt , substeps, PHYSICS_PERIOD);
@@ -73,16 +75,18 @@ void TutorialGame::UpdateGame(float dt) {
 	float maxDt = btMin(PHYSICS_PERIOD, dt);
 	int steps = bulletWorld->stepSimulation(maxDt, substeps, PHYSICS_PERIOD);
 
-	bulletWorld->debugDrawWorld();
+	profiler.startSection("Update World");
 	if (testTurret) {
 		testTurret->Update(dt);
 	}
 	UpdateKeys();
 	world->UpdateWorld(dt);
+	profiler.startSection("Check Collisions");
 	world->OperateOnContents([&](GameObject* obj) {
 		obj->GetPhysicsObject()->CheckCollisions(bulletWorld);
 	});
 
+	profiler.startSection("Update Camera");
 	// Press F for freeCam, press G for thirdPerson
 	if (freeCam) {
 		//freeCam Movement
@@ -108,8 +112,14 @@ void TutorialGame::UpdateGame(float dt) {
 		player->GetRenderObject()->SetColour(colour);
 	}
 
-
+	profiler.startSection("Prepare Render");
+	bulletWorld->debugDrawWorld();
 	renderer->Update(dt);
+
+	profiler.endFrame();
+	if (showProfiling) {
+		profiler.printTimes();
+	}
 	renderer->Render();
 	Debug::UpdateRenderables(dt);
 }
@@ -125,6 +135,9 @@ void TutorialGame::UpdateKeys() {
 
 	if (Window::GetKeyboard()->KeyPressed(KeyCodes::F3)) {
 		bulletDebug->toggle();
+	}
+	if (Window::GetKeyboard()->KeyPressed(KeyCodes::F4)) {
+		showProfiling = !showProfiling;
 	}
 	if (Window::GetKeyboard()->KeyPressed(KeyCodes::F)) {
 		freeCam = !freeCam;
