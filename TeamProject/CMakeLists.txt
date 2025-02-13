@@ -25,19 +25,7 @@ set(SOURCES
     ResourceManager.cpp
 )
 
-set(COMPILED_MESHES
-    Capsule.msh
-    Plane.msh
-    Cube.msh
-    Sphere.msh
-    ORIGAMI_Chat.msh
-    Kitten.msh
-    Keeper.msh
-    19463_Kitten_Head_v1.msh
-    /Max/Rig_Maximilian.msh
-    /MaleGuard/Male_Guard.msh
-    /FemaleGuard/Female_Guard.msh
-)
+file(GLOB_RECURSE COMPILED_MESHES "${CMAKE_SOURCE_DIR}/Assets/Meshes/*.msh")
 
 add_executable(${PROJECT_NAME} ${SOURCES})
 add_dependencies(${PROJECT_NAME} MeshCompiler)
@@ -114,13 +102,12 @@ set_target_properties(${PROJECT_NAME} PROPERTIES
 )
 
 foreach(file ${COMPILED_MESHES})
-    set(out "${CMAKE_SOURCE_DIR}/Assets/Meshes/${file}b")
+    set(out "${file}b")
     add_custom_command(
         OUTPUT ${out}
         COMMAND MeshCompiler ${file} ${out}
-        DEPENDS "${CMAKE_SOURCE_DIR}/Assets/Meshes/${file}" MeshCompiler
+        DEPENDS ${file} MeshCompiler
         COMMENT "Compiling mesh ${file}"
-        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
     )
     list(APPEND PROCESSED_MESHES ${out})
 endforeach()
