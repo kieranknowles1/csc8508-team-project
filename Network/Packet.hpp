@@ -36,6 +36,14 @@ namespace Packet {
 		 * @return A pointer to an enet packet.
 		 */
 		ENetPacket* ToENetPacket();
+
+
+		/**
+		 * @brief Virtual handle function.
+		 * 
+		 * To be implemented by each packet type.
+		 */
+		virtual void Handle() = 0;
 	};
 
 

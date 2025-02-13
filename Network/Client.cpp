@@ -8,9 +8,8 @@ Client::Client() {
 	CreateHost(nullptr, MAX_CLIENTS, 2, 0, 0);
 }
 
-Client::~Client() {
-	
-}
+
+Client::~Client() {}
 
 
 void Client::ConnectTo(ENetAddress& destination) {
@@ -21,39 +20,6 @@ void Client::ConnectTo(ENetAddress& destination) {
 
 	std::lock_guard<std::mutex> lock(m_connectionMutex);
 	m_state = ConnectionState::WAITING;
-
-	std::thread thread(&Client::AwaitServerResponse, this);
-	thread.detach(); // Should last till timeout and then terminate.
-}
-
-
-void Client::AwaitServerResponse() {
-	std::chrono::steady_clock::time_point start = std::chrono::high_resolution_clock::now();
-	std::chrono::steady_clock::time_point now;
-	std::chrono::duration<float, std::milli> duration;
-	
-	ENetEvent event;
-
-	bool connected = false;
-	bool timedout = false;
-
-	while (!connected && !timedout) {
-		if (enet_host_service(m_host, &event, 1000)) {
-			if (event.type == ENET_EVENT_TYPE_CONNECT) {
-				std::lock_guard<std::mutex> lock(m_connectionMutex);
-				m_state = ConnectionState::CONNECTED;
-				connected = true;
-			}
-			enet_packet_destroy(event.packet);
-		}
-
-		now = std::chrono::high_resolution_clock::now();
-		duration = now - start;
-
-		if (duration.count() > RESPONSE_WAIT_TIME) {
-			timedout = true;
-		}
-	}
 }
 
 
@@ -63,3 +29,30 @@ void Client::QueuePacket(Packet::PacketBase packet) {
 }
 
 
+void Client::Update() {
+	ENetEvent event;
+	bool running;
+	int response;
+
+	while (running) {
+		response = enet_host_service(m_host, &event, EVENT_WAIT);
+
+		if (response < 0) {
+			m_connectionMutex.lock();
+			enet_peer_disconnect(m_server, 0);
+			m_state = ConnectionState::DISCONNECTED;
+			m_connectionMutex.unlock();
+		}
+		else if (response > 0) {
+			if (event.type == ENET_EVENT_TYPE_RECEIVE) {
+				enet_packet_destroy(event.packet);
+			}
+		}
+
+		m_connectionMutex.lock();
+		if (m_state != ConnectionState::CONNECTED) {
+			running = false;
+		}
+		m_connectionMutex.unlock();
+	}
+}
