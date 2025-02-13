@@ -127,7 +127,8 @@ void LevelImporter::AddObjectToWorld(ObjectData* data) {
     // TODO: Use null instead of magic
     // TODO: Include extensions
     auto texture = data->mainTextureName == "No Texture" ? nullptr : resourceManager->getTextures().get(data->mainTextureName + ".tga");
-    cube->SetRenderObject(new RenderObject(cube, resourceManager->getMeshes().get(data->meshName + ".msh"), texture, resourceManager->getShaders().get(Shader::Default)));
+    auto normalTexture = data->normalTextureName == "No Normal Texture" ? nullptr : resourceManager->getTextures().get(data->normalTextureName + ".tga");
+    cube->SetRenderObject(new RenderObject(cube, resourceManager->getMeshes().get(data->meshName + ".msh"), texture, resourceManager->getShaders().get(Shader::Default), normalTexture));
     world->AddGameObject(cube);
     cube->setIsFloor(true);
 }
