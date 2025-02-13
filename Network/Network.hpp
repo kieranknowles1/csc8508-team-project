@@ -89,6 +89,14 @@ private:
 };
 
 
+class PacketBuffer {
+public:
+	PacketBuffer(int size = 128) : buffer(new Packet::PacketBase[](size))
+
+};
+
+
+
 
 
 

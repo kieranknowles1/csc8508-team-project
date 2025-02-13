@@ -45,22 +45,6 @@ namespace Packet {
 		 */
 		virtual void Handle() = 0;
 	};
-
-
-	/**
-	 * @brief Class for resolving packets.
-	 * 
-	 * Contains a single, overridable Handle function.
-	 */
-	class PacketHandler {
-	public:
-		virtual void Handle(PacketBase packet) = 0;
-	};
-
-
-
-
-
 }
 
 
