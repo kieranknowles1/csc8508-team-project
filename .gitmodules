@@ -1,0 +1,3 @@
+[submodule "fmod-cmake"]
+	path = fmod-cmake
+	url = https://github.com/tadashibashi/fmod-cmake

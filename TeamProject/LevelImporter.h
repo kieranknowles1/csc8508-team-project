@@ -23,12 +23,20 @@
 
 using json = nlohmann::json;
 
+// Custom from_json functions for btVector3 and btQuaternion
+inline void from_json(const json& j, btVector3& vec) {
+    vec.setX(j.at("x").get<float>());
+    vec.setY(j.at("y").get<float>());
+    vec.setZ(j.at("z").get<float>());
+}
+
+
 // Define the ObjectData class
 class ObjectData {
 public:
     // Object transform
     btVector3 position;
-    btQuaternion rotation;
+    btVector3 rotation;
     btVector3 scale;
 
     // Collider transform
@@ -39,6 +47,22 @@ public:
     std::string meshName;
     std::string mainTextureName;
     std::string normalTextureName;
+
+    friend void from_json(const json& j, ObjectData& obj) {
+        j.at("position").get_to(obj.position);
+        j.at("rotation").get_to(obj.rotation);
+        j.at("scale").get_to(obj.scale);
+        j.at("colliderPosition").get_to(obj.colliderPosition);
+        j.at("colliderScale").get_to(obj.colliderScale);
+        j.at("meshName").get_to(obj.meshName);
+        // TODO: This should be done during export
+        auto colon = obj.meshName.find(":");
+        if (colon != std::string::npos) {
+            obj.meshName.replace(colon, 1, "/");
+        }
+        j.at("mainTextureName").get_to(obj.mainTextureName);
+        j.at("normalTextureName").get_to(obj.normalTextureName);
+    }
 };
 
 using namespace NCL;
@@ -59,6 +83,6 @@ private:
     btDiscreteDynamicsWorld* bulletWorld;
     std::vector<ObjectData*> objects;
 
-    float scale = 20.0;
+    float scale = 10.0;
 
 };

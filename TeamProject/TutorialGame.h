@@ -13,7 +13,6 @@
 #include "PlayerController.h"
 #include "PlayerObject.h"
 #include "Turret.h"
-#include "Profiler.h"
 
 #include <btBulletDynamicsCommon.h>
 
@@ -51,8 +50,6 @@ namespace NCL {
 			GameObject* AddInfinitePlaneToWorld(const Vector3& position, const Vector3& normal, float planeConstant);
 
 			std::unique_ptr<ResourceManager> resourceManager;
-			bool showProfiling = false;
-			Profiler profiler;
 
 #ifdef USEVULKAN
 			GameTechVulkanRenderer* renderer;

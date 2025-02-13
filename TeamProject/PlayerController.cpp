@@ -1,4 +1,5 @@
 #include "PlayerController.h"
+#include "AudioEngine.h"
 
 using namespace NCL;
 using namespace CSC8503;
@@ -69,6 +70,9 @@ void PlayerController::UpdateMovement(float dt) {
     if (controller->GetDigital(Controller::DigitalControl::Jump) && player->getCollided()) {
         movement.setY(jumpHeight);
         player->setCollided(0);
+
+        //Play jump sound
+        audioEngine.PlaySounds("Assets/Audio/jump.wav", Vector3(player->GetTransform().getOrigin()), 0.0f);
     }
     else {
         movement.setY(movement.getY() + rb->getLinearVelocity().getY());

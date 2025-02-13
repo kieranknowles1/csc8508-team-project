@@ -23,13 +23,26 @@ set(SOURCES
     LevelImporter.h
     ResourceManager.h
     ResourceManager.cpp
-    Profiler.h
-    Profiler.cpp
+    AudioEngine.cpp
+    AudioEngine.h
 )
 
-file(GLOB_RECURSE COMPILED_MESHES "${CMAKE_SOURCE_DIR}/Assets/Meshes/*.msh")
+set(COMPILED_MESHES
+    Capsule.msh
+    Plane.msh
+    Cube.msh
+    Sphere.msh
+    ORIGAMI_Chat.msh
+    Kitten.msh
+    Keeper.msh
+    19463_Kitten_Head_v1.msh
+    /Max/Rig_Maximilian.msh
+    /MaleGuard/Male_Guard.msh
+    /FemaleGuard/Female_Guard.msh
+)
 
 add_executable(${PROJECT_NAME} ${SOURCES})
+fmod_copy_dlls()
 add_dependencies(${PROJECT_NAME} MeshCompiler)
 
 set_target_properties(${PROJECT_NAME} PROPERTIES
@@ -92,6 +105,8 @@ set(INCLUDE_DIRECTORIES
 target_include_directories(${PROJECT_NAME} PRIVATE ${INCLUDE_DIRECTORIES}>)
 
 target_link_libraries(${PROJECT_NAME} NCLCoreClasses)
+target_link_libraries(${PROJECT_NAME} fmod)
+target_link_libraries(${PROJECT_NAME} fmodstudio)
 target_link_libraries(${PROJECT_NAME} CSC8503CoreClasses)
 target_link_libraries(${PROJECT_NAME} OpenGLRendering)
 target_link_libraries(${PROJECT_NAME} NetworkLib)
@@ -104,12 +119,13 @@ set_target_properties(${PROJECT_NAME} PROPERTIES
 )
 
 foreach(file ${COMPILED_MESHES})
-    set(out "${file}b")
+    set(out "${CMAKE_SOURCE_DIR}/Assets/Meshes/${file}b")
     add_custom_command(
         OUTPUT ${out}
         COMMAND MeshCompiler ${file} ${out}
-        DEPENDS ${file} MeshCompiler
+        DEPENDS "${CMAKE_SOURCE_DIR}/Assets/Meshes/${file}" MeshCompiler
         COMMENT "Compiling mesh ${file}"
+        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
     )
     list(APPEND PROCESSED_MESHES ${out})
 endforeach()
