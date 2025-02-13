@@ -28,8 +28,6 @@ set(Maths
     "Plane.h"
 	"Frustum.cpp"
     "Frustum.h"
-    "Quaternion.cpp"
-    "Quaternion.h"
 
 	"Vector.h"
     "Matrix.h"

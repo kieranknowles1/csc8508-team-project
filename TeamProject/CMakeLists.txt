@@ -78,7 +78,6 @@ target_precompile_headers(${PROJECT_NAME} PRIVATE
     <sstream>
 
     "../NCLCoreClasses/Vector.h"
-    "../NCLCoreClasses/Quaternion.h"
     "../NCLCoreClasses/Plane.h"
     "../NCLCoreClasses/Matrix.h"
     "../NCLCoreClasses/GameTimer.h"

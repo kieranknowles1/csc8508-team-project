@@ -88,7 +88,7 @@ void LevelImporter::AddObjectToWorld(ObjectData* data) {
     float rollRadians = Maths::DegreesToRadians(eulerRotation.z());
     btQuaternion rotationQuat;
     rotationQuat.setEulerZYX(rollRadians, yawRadians, pitchRadians);
-    cube->setInitialRotation(Quaternion(rotationQuat.getX(), rotationQuat.getY(), rotationQuat.getZ(), rotationQuat.getW()));
+    cube->setInitialRotation(rotationQuat);
     cube->setRenderScale(data->scale* scale);
 
 
