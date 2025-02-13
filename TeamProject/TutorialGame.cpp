@@ -86,6 +86,7 @@ void TutorialGame::UpdateGame(float dt) {
 		obj->GetPhysicsObject()->CheckCollisions(bulletWorld);
 	});
 
+	profiler.startSection("Update Camera");
 	// Press F for freeCam, press G for thirdPerson
 	if (freeCam) {
 		//freeCam Movement
