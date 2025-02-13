@@ -123,6 +123,7 @@ void TutorialGame::UpdateGame(float dt) {
 	}
 
 	bulletWorld->setGravity(playerController->upDirection() * -30.0f);
+
 	profiler.startSection("Prepare Render");
 	bulletWorld->debugDrawWorld();
 	renderer->Update(dt);
@@ -227,7 +228,7 @@ void TutorialGame::InitWorld() {
 
 	if (loadFromLevel) {
 		levelImporter = new LevelImporter(resourceManager.get(), world, bulletWorld);
-		levelImporter->LoadLevel(3);
+		levelImporter->LoadLevel(4);
 		return;
 	}
 
@@ -268,7 +269,7 @@ void TutorialGame::InitWorld() {
 
 void TutorialGame::InitPlayer() {
 	if (loadFromLevel) {
-		player = AddPlayerCapsuleToWorld(Vector3(0, 10, 30), 4.0f, 2.0f, 10.0f);
+		player = AddPlayerCapsuleToWorld(Vector3(0, 100, 30), 4.0f, 2.0f, 10.0f);
 	}else {
 		player = AddPlayerCapsuleToWorld(Vector3(10, 5, 20), 4.0f, 2.0f, 10.0f);
 	}

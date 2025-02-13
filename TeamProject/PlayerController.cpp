@@ -202,7 +202,8 @@ void PlayerController::HandleCrouching(float dt) {
 //uses ray to detect if the player is blocked from standing
 bool PlayerController::CheckCeling() {
     btVector3 btBelowPlayerPos = btPlayerPos;
-    btBelowPlayerPos.setY(btBelowPlayerPos.getY() + 4.1f);
+    btBelowPlayerPos += (CalculateUpDirection() * 4.1f);
+  //  btBelowPlayerPos.setY(btBelowPlayerPos.getY() + 4.1f);
     btCollisionWorld::ClosestRayResultCallback callback(btPlayerPos, btBelowPlayerPos);
     bulletWorld->rayTest(btPlayerPos, btBelowPlayerPos, callback);
     if (callback.hasHit()) {
@@ -258,7 +259,8 @@ void PlayerController::HandleSliding(float dt) {
         }
         //CheckFloor(dt);
         btVector3 pastMovement = rb->getLinearVelocity();
-        pastMovement.setY(pastMovement.getY() - ((gravityScale*dt) * (player->getCollided() == 0 ? 1 : 10)));
+        pastMovement += CalculateUpDirection() * (-gravityScale * dt);
+    //    pastMovement.setY(pastMovement.getY() - ( * (player->getCollided() == 0 ? 1 : 10)));
         rb->setLinearVelocity(pastMovement);
         rb->activate();
     }

@@ -111,7 +111,7 @@ void LevelImporter::AddObjectToWorld(ObjectData* data) {
     btCompoundShape* compoundShape = new btCompoundShape();
     bool hasCollision = (data->colliderScale != btVector3(0,0,0));
     if (hasCollision) {
-        btCollisionShape* boxShape = new btBoxShape(data->colliderScale * scale / 2.0f);
+        btCollisionShape* boxShape = new btBoxShape(data->colliderScale * scale* data->scale / 2.0f);
         btTransform colliderOffset;
         colliderOffset.setIdentity();
         colliderOffset.setOrigin(data->colliderPosition * scale);
