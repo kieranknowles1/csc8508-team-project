@@ -36,7 +36,19 @@ namespace NCL {
 			void SetThirdPerson(bool thirdPersonIn) {
 				thirdPerson = thirdPersonIn;
 			};
+			void setWorldRotation(float worldRotationIn) {
+				worldRotation = worldRotationIn;
+			}
+			float getWorldRotation() {
+				return worldRotation;
+			}
+			Vector3 upDirection() {
+				return CalculateUpDirection();
+			}
+
 		private:
+
+			float worldRotation = 0;
 			//Player Movement Variables
 			float playerSpeed = 60.0f;
 			float jumpHeight = 90.0f;
@@ -108,6 +120,8 @@ namespace NCL {
 			bool CheckCeling();
 			void SetGunTransform();
 			void ShootBullet();
+			btVector3 CalculateUpDirection();
+			float CalculateRoll();
 
 		};
 	};

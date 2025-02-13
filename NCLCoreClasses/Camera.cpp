@@ -54,6 +54,7 @@ Matrix4 Camera::BuildViewMatrix() const {
 	//using the negative values ;). The matrix multiplication order is important!
 	return	Matrix::Rotation(-pitch, Vector3(1, 0, 0)) *
 		Matrix::Rotation(-yaw, Vector3(0, 1, 0)) *
+		Matrix::Rotation(-roll, Vector3(0, 0, 1)) *
 		Matrix::Translation(-position);
 };
 

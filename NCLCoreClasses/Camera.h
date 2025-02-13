@@ -78,6 +78,11 @@ namespace NCL {
 		//Sets pitch, in degrees
 		Camera& SetPitch(float p)	{ pitch = p; return *this; }
 
+		//Gets pitch, in degrees
+		float	GetRoll() const { return roll; }
+		//Sets pitch, in degrees
+		Camera& SetRoll(float r) { roll = r; return *this; }
+
 		float	GetSpeed() const	{ return speed; }
 		Camera& SetSpeed(float s)	{ speed = s; return *this; }
 
@@ -87,6 +92,7 @@ namespace NCL {
 
 		float	yaw;
 		float	pitch;
+		float   roll = 0;
 		Vector3 position;
 		float	speed;
 

@@ -17,6 +17,7 @@ void PlayerController::Initialise() {
 void PlayerController::UpdateMovement(float dt) {
     transformPlayer = rb->getWorldTransform();
     btPlayerPos = transformPlayer.getOrigin();
+    btVector3 upDirection = CalculateUpDirection();
 
     //camera yaw
     yaw = fmod(yaw - controller->GetAnalogue(Controller::AnalogueControl::LookX) + 360.0f, 360.0f);
@@ -34,10 +35,12 @@ void PlayerController::UpdateMovement(float dt) {
     HandleSliding(dt);
     HandleCrouching(dt);
     if ((isSliding||slideTransition) && !isCrouching) return;
-
+    float roll = CalculateRoll();
+    camera->SetRoll(roll);
     //player rotation
     btQuaternion playerRotation(btVector3(0, 1, 0), Maths::DegreesToRadians(yaw));
-    transformPlayer.setRotation(playerRotation);
+    btQuaternion playerRotation2(btVector3(0, 0, 1), Maths::DegreesToRadians(roll));
+    transformPlayer.setRotation(playerRotation2* playerRotation);
     rb->setWorldTransform(transformPlayer);
 
     //camera follows player, lowers if crouching
@@ -45,17 +48,17 @@ void PlayerController::UpdateMovement(float dt) {
     btTransform transformPlayerMotion;
     player->GetPhysicsObject()->GetMotionState()->getWorldTransform(transformPlayerMotion);
     btVector3 playerCamPos = transformPlayerMotion.getOrigin();
-    playerCamPos.setY(playerCamPos.getY() + (isCrouching ? std::lerp(cameraHeight, crouchHeight, btMin(currentCrouchingTimer / crouchingTime, 1.0f)) : std::lerp(crouchHeight, cameraHeight, btMin(currentStandingTimer / crouchingTime, 1.0f))));
+    playerCamPos += upDirection * (isCrouching ? std::lerp(cameraHeight, crouchHeight, btMin(currentCrouchingTimer / crouchingTime, 1.0f)) : std::lerp(crouchHeight, cameraHeight, btMin(currentStandingTimer / crouchingTime, 1.0f)));
     if (!slideTransition && !thirdPerson) {
         camera->SetPosition(playerCamPos);
         SetGunTransform();
     }
 
     //finds player forward and right vectors
-    btMatrix3x3 rotationMatrix(playerRotation);
+    btMatrix3x3 rotationMatrix(playerRotation2 * playerRotation);
     btVector3 forward = rotationMatrix * btVector3(0, 0, -1);
+    btVector3 up = rotationMatrix * btVector3(0, 1, 0);
     btVector3 right = rotationMatrix * btVector3(1, 0, 0);
-
     //movement based on all the multipliers combined
     Vector2 directionalInput = getDirectionalInput();
     bool sprinting = controller->GetDigital(Controller::DigitalControl::Sprint);
@@ -63,21 +66,26 @@ void PlayerController::UpdateMovement(float dt) {
     float moveMulti = playerSpeed * (sprinting ? sprintMulti : 1) * (isCrouching ? crouchMulti : 1) * (player->getCollided()==0 ? airMulti : 1) ;
     forwardMovement *= (forwardMovement <= 0) ? backwardsMulti : 1;
     btVector3 movement = (right * directionalInput.x * strafeMulti * moveMulti) +(forward * forwardMovement * moveMulti);
-    movement.setY(movement.getY() - (gravityScale*dt));
+    movement += upDirection * -(gravityScale * dt);
 
     // jump input
     if (controller->GetDigital(Controller::DigitalControl::Jump) && player->getCollided()) {
-        movement.setY(jumpHeight);
+        movement += (upDirection * jumpHeight);
+        // movement.setY(jumpHeight);
         player->setCollided(0);
     }
     else {
-        movement.setY(movement.getY() + rb->getLinearVelocity().getY());
+       
+        movement += upDirection.absolute() * rb->getLinearVelocity();
     }
-    if (player->getCollided()==0) {
-        movement.setX(rb->getLinearVelocity().getX() + (movement.getX() * airMulti));
-        movement.setZ(rb->getLinearVelocity().getZ() + (movement.getZ() * airMulti));
+
+    // Apply the movement according to the computed directions
+    if (player->getCollided() == 0) {
+       // movement += forward * rb->getLinearVelocity();
+      //  movement += right * rb->getLinearVelocity();
     }
-    //CheckFloor(dt);
+
+
     rb->setLinearVelocity(movement);
     rb->activate();
 }
@@ -89,9 +97,11 @@ void PlayerController::UpdateMovement(float dt) {
 void PlayerController::SetGunTransform() {
     float pitchRadians = Maths::DegreesToRadians(camera->GetPitch());
     float yawRadians = Maths::DegreesToRadians(camera->GetYaw());
+    float rollRadians = Maths::DegreesToRadians(camera->GetRoll());
     btQuaternion yawQuat(btVector3(0, 1, 0), yawRadians);
     btQuaternion pitchQuat(btVector3(1, 0, 0), pitchRadians);
-    btQuaternion gunRotation = yawQuat * pitchQuat; // Yaw first, then pitch
+    btQuaternion rollQuat(btVector3(0, 0, 1), rollRadians);
+    btQuaternion gunRotation = rollQuat *yawQuat * pitchQuat; // Yaw first, then pitch
 
     btMatrix3x3 rotationMatrixCam(gunRotation);
     btVector3 adjustedOffset = rotationMatrixCam * gunCameraOffset; // Apply rotation to the offset
@@ -108,9 +118,11 @@ void PlayerController::ShootBullet() {
     // Convert camera pitch & yaw to radians
     float pitchRadians = Maths::DegreesToRadians(camera->GetPitch());
     float yawRadians = Maths::DegreesToRadians(camera->GetYaw());
+    float rollRadians = Maths::DegreesToRadians(camera->GetRoll());
     btQuaternion yawQuat(btVector3(0, 1, 0), yawRadians);
     btQuaternion pitchQuat(btVector3(1, 0, 0), pitchRadians);
-    btQuaternion bulletRotation = yawQuat * pitchQuat;
+    btQuaternion rollQuat(btVector3(0, 0, 1), rollRadians);
+    btQuaternion bulletRotation = rollQuat * yawQuat * pitchQuat;
 
     // Compute rotation matrix
     btMatrix3x3 rotationMatrix(bulletRotation);
@@ -250,4 +262,47 @@ void PlayerController::HandleSliding(float dt) {
         rb->setLinearVelocity(pastMovement);
         rb->activate();
     }
+}
+
+
+btVector3 PlayerController::CalculateUpDirection() {
+    float t = fmod(worldRotation, 1.0f);
+    int index = static_cast<int>(worldRotation);
+    btVector3 directions[] = {
+        btVector3(0, 1, 0),
+        btVector3(-1, 0, 0),
+        btVector3(0, -1, 0),
+        btVector3(1, 0, 0)
+    };
+    btVector3 currentDir = directions[index % 4];
+    btVector3 nextDir = directions[(index + 1) % 4];
+
+    // Interpolate between currentDir and nextDir
+    btVector3 upDirection = currentDir.lerp(nextDir, t);
+    upDirection.normalize();
+
+    return upDirection;
+}
+
+float PlayerController::CalculateRoll() {
+    float t = fmod(worldRotation, 1.0f);
+    int index = static_cast<int>(worldRotation);
+    float rolls[] = {
+        0.0f,
+        90.0f,
+        180.0f,
+        270.0f
+    };
+    float currentRoll = rolls[index % 4];
+    float nextRoll = rolls[(index + 1) % 4];
+
+    // Handle wrap-around from 270.0f to 0.0f
+    if (currentRoll == 270.0f && nextRoll == 0.0f) {
+        nextRoll = 360.0f;
+    }
+
+    // Interpolate between currentRoll and nextRoll
+    float roll = currentRoll + t * (nextRoll - currentRoll);
+
+    return roll;
 }

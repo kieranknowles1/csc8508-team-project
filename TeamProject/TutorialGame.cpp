@@ -32,6 +32,7 @@ TutorialGame::TutorialGame() : controller(*Window::GetWindow()->GetKeyboard(), *
 	loadFromLevel = true;
 	resourceManager = std::make_unique<ResourceManager>(renderer);
 	InitialiseAssets();
+	rotateTimer = rotateTime;
 }
 
 /*
@@ -112,6 +113,16 @@ void TutorialGame::UpdateGame(float dt) {
 		player->GetRenderObject()->SetColour(colour);
 	}
 
+	if (rotateTimer < rotateTime) {
+		rotateTimer += dt;
+		playerController->setWorldRotation(std::lerp(oldRotate, targetRotate, rotateTimer / rotateTime));
+	}
+	else if (!finished) {
+		playerController->setWorldRotation(targetRotate);
+		finished = true;
+	}
+
+	bulletWorld->setGravity(playerController->upDirection() * -30.0f);
 	profiler.startSection("Prepare Render");
 	bulletWorld->debugDrawWorld();
 	renderer->Update(dt);
@@ -145,6 +156,13 @@ void TutorialGame::UpdateKeys() {
 	if (Window::GetKeyboard()->KeyPressed(KeyCodes::G)) {
 		thirdPerson = !thirdPerson;
 		playerController->SetThirdPerson(thirdPerson);
+	}
+	if (Window::GetKeyboard()->KeyPressed(KeyCodes::V)) {
+		if (rotateTimer < rotateTime) return;
+		rotateTimer = 0;
+		oldRotate = playerController->getWorldRotation();
+		targetRotate = oldRotate + 1;
+		finished = false;
 	}
 }
 
@@ -186,7 +204,7 @@ void TutorialGame::InitBullet() {
 	solver = new btSequentialImpulseConstraintSolver();
 
 	bulletWorld = new btDiscreteDynamicsWorld(dispatcher, broadphase, solver, collisionConfig);
-	bulletWorld->setGravity(btVector3(0, -30.0f, 0));
+	bulletWorld->setGravity(btVector3(00.0f, -30.0f, 0));
 	bulletDebug = new BulletDebug();
 	bulletWorld->setDebugDrawer(bulletDebug);
 }
@@ -233,7 +251,6 @@ void TutorialGame::InitWorld() {
 	AddCubeToWorld(Vector3(500, 30, 0), Vector3(10, 10, 10), 5.0f);
 	AddCubeToWorld(Vector3(20, 30, 50), Vector3(7, 7, 7), 4.0f);
 	AddCubeToWorld(Vector3(120, 30, -20), Vector3(5, 5, 5), 1.0f);
-
 	AddCubeToWorld(Vector3(100, 8, 100), Vector3(30, 2,30), 0.0f);
 
 	// Use this as a reference to create more sphere objects
