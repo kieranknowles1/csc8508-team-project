@@ -9,7 +9,11 @@ https://research.ncl.ac.uk/game/
 #pragma once
 
 namespace NCL::Assets {
+#ifdef __PROSPERO__
+	const std::string ASSETROOT("/app0/Assets/");
+#else
 	const std::string ASSETROOT("Assets/");
+#endif // __PROSPERO__
 	const std::string SHADERDIR(ASSETROOT + "Shaders/");
 	const std::string MESHDIR(ASSETROOT + "Meshes/");
 	const std::string TEXTUREDIR(ASSETROOT + "Textures/");
