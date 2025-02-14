@@ -6,7 +6,6 @@ namespace NCL {
 		class Camera;
 	namespace CSC8503 {
 		class GameObject;
-		class Constraint;
 
 		typedef std::function<void(GameObject*)> GameObjectFunc;
 		typedef std::vector<GameObject*>::const_iterator GameObjectIterator;
@@ -22,19 +21,8 @@ namespace NCL {
 			void AddGameObject(GameObject* o);
 			void RemoveGameObject(GameObject* o, bool andDelete = false);
 
-			void AddConstraint(Constraint* c);
-			void RemoveConstraint(Constraint* c, bool andDelete = false);
-
 			PerspectiveCamera& GetMainCamera()  {
 				return mainCamera;
-			}
-
-			void ShuffleConstraints(bool state) {
-				shuffleConstraints = state;
-			}
-
-			void ShuffleObjects(bool state) {
-				shuffleObjects = state;
 			}
 
 			virtual void UpdateWorld(float dt);
@@ -45,22 +33,15 @@ namespace NCL {
 				GameObjectIterator& first,
 				GameObjectIterator& last) const;
 
-			void GetConstraintIterators(
-				std::vector<Constraint*>::const_iterator& first,
-				std::vector<Constraint*>::const_iterator& last) const;
-
 			int GetWorldStateID() const {
 				return worldStateCounter;
 			}
 
 		protected:
 			std::vector<GameObject*> gameObjects;
-			std::vector<Constraint*> constraints;
 
 			PerspectiveCamera mainCamera;
 
-			bool shuffleConstraints;
-			bool shuffleObjects;
 			int		worldIDCounter;
 			int		worldStateCounter;
 		};

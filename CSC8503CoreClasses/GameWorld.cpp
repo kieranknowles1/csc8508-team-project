@@ -7,8 +7,6 @@ using namespace NCL;
 using namespace NCL::CSC8503;
 
 GameWorld::GameWorld()	{
-	shuffleConstraints	= false;
-	shuffleObjects		= false;
 	worldIDCounter		= 0;
 	worldStateCounter	= 0;
 }
@@ -19,16 +17,12 @@ GameWorld::~GameWorld()	{
 
 void GameWorld::Clear() {
 	gameObjects.clear();
-	constraints.clear();
 	worldIDCounter		= 0;
 	worldStateCounter	= 0;
 }
 
 void GameWorld::ClearAndErase() {
 	for (auto& i : gameObjects) {
-		delete i;
-	}
-	for (auto& i : constraints) {
 		delete i;
 	}
 	Clear();
@@ -68,37 +62,7 @@ void GameWorld::UpdateWorld(float dt) {
 	unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
 	std::default_random_engine e(seed);
 
-	if (shuffleObjects) {
-		std::shuffle(gameObjects.begin(), gameObjects.end(), e);
-	}
-
-	if (shuffleConstraints) {
-		std::shuffle(constraints.begin(), constraints.end(), e);
-	}
-
 	for (auto& i : gameObjects) {
 		i->Update(dt);
 	}
-}
-
-/*
-Constraint Tutorial Stuff
-*/
-
-void GameWorld::AddConstraint(Constraint* c) {
-	constraints.emplace_back(c);
-}
-
-void GameWorld::RemoveConstraint(Constraint* c, bool andDelete) {
-	constraints.erase(std::remove(constraints.begin(), constraints.end(), c), constraints.end());
-	if (andDelete) {
-		delete c;
-	}
-}
-
-void GameWorld::GetConstraintIterators(
-	std::vector<Constraint*>::const_iterator& first,
-	std::vector<Constraint*>::const_iterator& last) const {
-	first	= constraints.begin();
-	last	= constraints.end();
 }
