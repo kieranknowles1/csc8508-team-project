@@ -1,11 +1,9 @@
 #pragma once
 #include <random>
 
-#include "Ray.h"
 #include <Camera.h>
 namespace NCL {
 		class Camera;
-		using Maths::Ray;
 	namespace CSC8503 {
 		class GameObject;
 		class Constraint;
@@ -38,8 +36,6 @@ namespace NCL {
 			void ShuffleObjects(bool state) {
 				shuffleObjects = state;
 			}
-
-			bool Raycast(Ray& r, RayCollision& closestCollision, bool closestObject = false, GameObject* ignore = nullptr) const;
 
 			virtual void UpdateWorld(float dt);
 
