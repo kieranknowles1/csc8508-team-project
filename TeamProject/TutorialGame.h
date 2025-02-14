@@ -108,6 +108,13 @@ namespace NCL {
 			//Level import
 			LevelImporter* levelImporter;
 			bool loadFromLevel;
+
+			//world Rotate
+			float oldRotate;
+			float targetRotate;
+			float rotateTimer;
+			float rotateTime = 0.5f;
+			bool finished = true;
 		};
 	}
 }

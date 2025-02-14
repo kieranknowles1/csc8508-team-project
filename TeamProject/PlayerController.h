@@ -36,13 +36,31 @@ namespace NCL {
 			void SetThirdPerson(bool thirdPersonIn) {
 				thirdPerson = thirdPersonIn;
 			};
+			void setWorldRotation(float worldRotationIn) {
+				worldRotation = worldRotationIn;
+			}
+			float getWorldRotation() {
+				return worldRotation;
+			}
+			btVector3 getUpDirection() {
+				return CalculateUpDirection();
+			}
+			btVector3 getRightDirection(btVector3 up) {
+				return CalculateRightDirection(up);
+			}
+			btVector3 getForwardDirection(btVector3 up, btVector3 right) {
+				return CalculateForwardDirection(up,right);
+			}
+
 		private:
+
+			float worldRotation = 0;
 			//Player Movement Variables
 			float playerSpeed = 60.0f;
-			float jumpHeight = 90.0f;
+			float jumpHeight = 75.0f;
 			float gravityScale = 100.0f;
 			float cameraHeight = 3.0f;
-			float airMulti = 0.04f;
+			float airMulti = 0.1f;
 			float strafeMulti = 0.65f;
 			float backwardsMulti = 0.55f;
 			float sprintMulti = 2.0f;
@@ -60,21 +78,22 @@ namespace NCL {
 
 			//Gun Variables
 			float shotCooldown = 0.25f;
-			float bulletSpeed = 150.0f;
+			float bulletSpeed = 250.0f;
 			btVector3 gunCameraOffset = btVector3(1.3, -0.7, -1.2);
 			btVector3 bulletCameraOffset = btVector3(1.0, -0.5, -3.0);
-			float playerVelocityStrafeInherit = 0.2f;
+			float playerVelocityStrafeInherit = 1.0f;
 
 
 			bool thirdPerson = false;
 			float spaceCount = 0;
-			float inAirCount = 0;
+			float inAirTime = 0;
 			btDiscreteDynamicsWorld* bulletWorld;
 			PlayerObject* player;
 			GameObject* gun;
 			const Controller* controller = nullptr;
 			Camera* camera = nullptr;
 			float yaw = 0;
+			float roll = 0;
 			float radius = 2.0f;
 			bool crouchTransition = false;
 			float currentHeight;
@@ -99,8 +118,10 @@ namespace NCL {
 			float shotTimer = 0;
 			bool collision = false;
 			bool crouching = false;
+			btVector3 upDirection;
+			btVector3 rightDirection;
+			btVector3 forwardDirection;
 
-			// Get directional movemnt, clamped to have a magnitude of 1
 			Vector2 getDirectionalInput() const;
 			void Initialise();
 			void HandleCrouching(float dt);
@@ -108,6 +129,10 @@ namespace NCL {
 			bool CheckCeling();
 			void SetGunTransform();
 			void ShootBullet();
+			btVector3 CalculateUpDirection();
+			btVector3 CalculateRightDirection(btVector3 upDir);
+			btVector3 CalculateForwardDirection(btVector3 upDir, btVector3 rightDir);
+			float CalculateRoll();
 
 		};
 	};
@@ -124,11 +149,7 @@ public:
 		otherObject->GetRenderObject()->SetIsFlat(true);
 		player->GetRenderObject()->SetColour(this->GetRenderObject()->GetColour());
 		player->GetRenderObject()->SetIsFlat(true);
-		btTransform worldTransform;
-		worldTransform.setOrigin(btVector3(0, -100, 0));
 		this->GetPhysicsObject()->removeFromBullet(bulletWorld);
-		this->GetPhysicsObject()->GetRigidBody()->setWorldTransform(worldTransform);
-		this->GetRenderObject()->SetColour(Vector4(1, 1, 1, 0));
 	}
 	void Initialise(GameObject* playerIn, btDiscreteDynamicsWorld* bulletWorldIn) {
 		player = playerIn;
