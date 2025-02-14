@@ -3,3 +3,8 @@ build
 *.bak
 *.bak
 *.mshb
+
+# PS5 Texture Format
+*.gnf
+# PS5 Compiled Shader
+*.ags
