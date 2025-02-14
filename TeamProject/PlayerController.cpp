@@ -137,9 +137,10 @@ void PlayerController::ShootBullet() {
     paintball->SetRenderObject(new RenderObject(
         paintball,
         resourceManager->getMeshes().get("Sphere.msh"),
-        resourceManager->getTextures().get("checkerboard.png"),
+        nullptr,
         resourceManager->getShaders().get(Shader::Default)
     ));
+    paintball->GetRenderObject()->SetIsFlat(true);
     paintball->SetPhysicsObject(new PhysicsObject(paintball));
     paintball->GetRenderObject()->SetColour(Vector4(rand() % 2, rand() % 2, rand() % 2, 1));
     btCollisionShape* shape = new btSphereShape(1);

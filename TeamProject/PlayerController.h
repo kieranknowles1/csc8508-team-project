@@ -78,7 +78,7 @@ namespace NCL {
 
 			//Gun Variables
 			float shotCooldown = 0.25f;
-			float bulletSpeed = 250.0f;
+			float bulletSpeed = 350.0f;
 			btVector3 gunCameraOffset = btVector3(1.3, -0.7, -1.2);
 			btVector3 bulletCameraOffset = btVector3(1.0, -0.5, -3.0);
 			float playerVelocityStrafeInherit = 1.0f;

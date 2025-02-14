@@ -24,7 +24,11 @@ public:
 		}
 	}
 	void OnCollisionExit(GameObject* otherObject) override {
-		if (collided > 0) {
+		btVector3 playerPos = this->GetPhysicsObject()->GetRigidBody()->getWorldTransform().getOrigin();
+		btVector3 objPos = otherObject->GetPhysicsObject()->GetRigidBody()->getWorldTransform().getOrigin();
+		btVector3 direction = (objPos - playerPos).normalize();
+		float dotProduct = direction.dot(upDirection);
+		if (dotProduct < 0.0f && collided > 0) {
 			collided--;
 		}
 	}
