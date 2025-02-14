@@ -4,8 +4,6 @@
 #include "NetworkState.h"
 
 namespace NCL::CSC8503 {
-	class GameObject;
-
 	struct FullPacket : public GamePacket {
 		int		objectID = -1;
 		NetworkState fullState;

@@ -1,9 +1,9 @@
 #include "PS5Window.h"
 #include "../TeamProject/TutorialGame.h"
-#include "../CSC8503CoreClasses/PhysicsSystem.h"
 #include "../CSC8503CoreClasses/GameWorld.h"
 #include "../TeamProject/GameTechRendererInterface.h"
 #include "GameTechAGCRenderer.h"
+#include "Debug.h"
 
 using namespace NCL;
 using namespace PS5;
@@ -15,16 +15,13 @@ size_t sceLibcHeapSize = 256 * 1024 * 1024;
 
 int main() {
 	std::unique_ptr<PS5Window>		window	= std::make_unique<PS5Window>("Hello!", 1920, 1080);
-	std::unique_ptr<GameWorld>		world	= std::make_unique<GameWorld>();
-	std::unique_ptr<PhysicsSystem>	physics	= std::make_unique<PhysicsSystem>(*world);
+	std::unique_ptr<CSC8503::GameWorld>		world	= std::make_unique<CSC8503::GameWorld>();
 
-#ifdef USEVULKAN
-	std::unique_ptr<GameTechVulkanRenderer> renderer = std::make_unique<GameTechVulkanRenderer>(*world);
-#elif USEAGC
-	std::unique_ptr<GameTechAGCRenderer> renderer = std::make_unique<GameTechAGCRenderer>(*world);
+#ifdef USEAGC
+	std::unique_ptr<CSC8503::GameTechAGCRenderer> renderer = std::make_unique<CSC8503::GameTechAGCRenderer>(*world);
 
 	PS5Controller* c = window->GetController();
-#else 
+#else
 	GameTechRenderer* renderer = new GameTechRenderer(*world);
 #endif
 
@@ -52,7 +49,7 @@ int main() {
 	c->MapButton(0, "Up");
 	c->MapButton(2, "Down");
 
-	std::unique_ptr<TutorialGame> g = std::make_unique<TutorialGame>(*world, *renderer, *physics);
+	std::unique_ptr<CSC8503::TutorialGame> g = std::make_unique<CSC8503::TutorialGame>(*world, *renderer);
 
 	while (window->UpdateWindow()) {
 		float dt = window->GetTimer().GetTimeDeltaSeconds();

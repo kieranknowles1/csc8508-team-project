@@ -6,7 +6,6 @@
 
 namespace NCL {
 		class Camera;
-		using Maths::Ray;
 	namespace CSC8503 {
 		typedef std::function<void(GameObject*)> GameObjectFunc;
 		typedef std::vector<GameObject*>::const_iterator GameObjectIterator;
