@@ -15,12 +15,16 @@ using namespace NCL::CSC8503;
 class PlayerObject : public GameObject {
 public:
 	void OnCollisionEnter(GameObject* otherObject) override {
-		if (otherObject->getIsFloor()) {
+		btVector3 playerPos = this->GetPhysicsObject()->GetRigidBody()->getWorldTransform().getOrigin();
+		btVector3 objPos = otherObject->GetPhysicsObject()->GetRigidBody()->getWorldTransform().getOrigin();
+		btVector3 direction = (objPos - playerPos).normalize();
+		float dotProduct = direction.dot(upDirection);
+		if (dotProduct < 0.0f) {
 			collided++;
 		}
 	}
 	void OnCollisionExit(GameObject* otherObject) override {
-		if (otherObject->getIsFloor()) {
+		if (collided > 0) {
 			collided--;
 		}
 	}
@@ -30,6 +34,11 @@ public:
 	int getCollided() {
 		return collided;
 	}
+	void setUpDirection(btVector3 upDirectionIn) {
+		upDirection = upDirectionIn;
+	};
 private:
 	int collided = 0;
+	btVector3 upDirection;
+	std::list<GameObject*> collidedObjects;
 };

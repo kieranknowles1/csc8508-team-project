@@ -18,6 +18,7 @@ void PlayerController::UpdateMovement(float dt) {
     transformPlayer = rb->getWorldTransform();
     btPlayerPos = transformPlayer.getOrigin();
     upDirection = CalculateUpDirection();
+    player->setUpDirection(upDirection);
     rightDirection = CalculateRightDirection(upDirection);
     forwardDirection = CalculateForwardDirection(upDirection, rightDirection);
 
@@ -64,27 +65,30 @@ void PlayerController::UpdateMovement(float dt) {
     Vector2 directionalInput = getDirectionalInput();
     bool sprinting = controller->GetDigital(Controller::DigitalControl::Sprint);
     float forwardMovement = directionalInput.y;
-    float moveMulti = playerSpeed * (sprinting ? sprintMulti : 1) * (isCrouching ? crouchMulti : 1) * (player->getCollided()==0 ? airMulti : 1) ;
+    float moveMulti = playerSpeed * (sprinting ? sprintMulti : 1) * (isCrouching ? crouchMulti : 1) * (player->getCollided() <= 0 ? airMulti : 1);
     forwardMovement *= (forwardMovement <= 0) ? backwardsMulti : 1;
     btVector3 movement = (right * directionalInput.x * strafeMulti * moveMulti) +(forward * forwardMovement * moveMulti);
-    if (player->getCollided() == 0) {
+    if (inAirTime > 0) {
+        player->setCollided(0);
+        inAirTime -= dt;
+    }
+    if (player->getCollided() <= 0) {
         movement *= airMulti;
         movement += rb->getLinearVelocity();
     }
+   // std::cout << player->getCollided() << std::endl;
     movement += upDirection * -(gravityScale * dt);
 
     // jump input
     if (controller->GetDigital(Controller::DigitalControl::Jump) && player->getCollided()) {
         movement += (upDirection * jumpHeight);
-        // movement.setY(jumpHeight);
         player->setCollided(0);
+        inAirTime = 0.2f;
     }
 
     rb->setLinearVelocity(movement);
     rb->activate();
 }
-
-
 
 
 //attaches gun to the camera position/rotation

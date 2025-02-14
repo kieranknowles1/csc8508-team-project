@@ -57,10 +57,10 @@ namespace NCL {
 			float worldRotation = 0;
 			//Player Movement Variables
 			float playerSpeed = 60.0f;
-			float jumpHeight = 90.0f;
+			float jumpHeight = 75.0f;
 			float gravityScale = 100.0f;
 			float cameraHeight = 3.0f;
-			float airMulti = 0.04f;
+			float airMulti = 0.1f;
 			float strafeMulti = 0.65f;
 			float backwardsMulti = 0.55f;
 			float sprintMulti = 2.0f;
@@ -86,7 +86,7 @@ namespace NCL {
 
 			bool thirdPerson = false;
 			float spaceCount = 0;
-			float inAirCount = 0;
+			float inAirTime = 0;
 			btDiscreteDynamicsWorld* bulletWorld;
 			PlayerObject* player;
 			GameObject* gun;
