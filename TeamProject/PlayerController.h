@@ -118,7 +118,7 @@ using namespace NCL::CSC8503;
 // Paintball class derived from GameObject
 class Paintball : public GameObject {
 public:
-	void OnCollisionEnter(GameObject* otherObject) override {
+	void OnCollisionEnter(GameObject* otherObject, const btVector3& contactPointA, const btVector3& contactPointB) override {
 		if (otherObject == player) return;
 		otherObject->GetRenderObject()->SetColour(this->GetRenderObject()->GetColour());
 		otherObject->GetRenderObject()->SetIsFlat(true);

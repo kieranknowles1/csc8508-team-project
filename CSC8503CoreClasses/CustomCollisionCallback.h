@@ -7,6 +7,8 @@ namespace NCL {
 	namespace CSC8503 {
 		class CustomCollisionCallback : public btCollisionWorld::ContactResultCallback {
 		public:
+			btVector3 contactPointA;
+			btVector3 contactPointB;
 			std::set<GameObject*> activeCollisions;
 
 			CustomCollisionCallback(GameObject* parentObject) : parent(parentObject) {}
@@ -27,11 +29,18 @@ namespace NCL {
 					And, this method is more robust as it works for two-way collision handling, in case we need it.
 				*/
 				// Check if the parent object is involved in the collision
-				if (obj0 == parent) {
-					activeCollisions.insert(obj1);
-				}
-				else if (obj1 == parent) {
-					activeCollisions.insert(obj0);
+				if (obj0 == parent || obj1 == parent) {
+					// Get the contact points
+					contactPointA = cp.getPositionWorldOnA();
+					contactPointB = cp.getPositionWorldOnB();
+
+					// Print the contact points for debugging
+					std::cout << "Contact Point A: " << contactPointA.getX() << " " << contactPointA.getY() << " " << contactPointA.getZ() << std::endl;
+					std::cout << "Contact Point B: " << contactPointB.getX() << " " << contactPointB.getY() << " " << contactPointB.getZ() << std::endl;
+				
+					// Add the object to the active collisions set
+					GameObject* otherObject = (obj0 == parent) ? obj1 : obj0;
+					activeCollisions.insert(otherObject);
 				}
 
 				return 0;
