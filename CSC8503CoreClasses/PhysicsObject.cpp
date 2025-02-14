@@ -118,7 +118,7 @@ void PhysicsObject::CheckCollisions(btDynamicsWorld* world)
 	for (auto obj : callback.activeCollisions) {
 		if (!activeCollisions.count(obj)) {
 			activeCollisions.insert(obj);
-			parent->OnCollisionEnter(obj);
+			parent->OnCollisionEnter(obj, callback.contactPointA, callback.contactPointB);
 		}
 	}
 
