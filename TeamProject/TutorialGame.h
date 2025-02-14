@@ -2,9 +2,6 @@
 
 #pragma once
 #include "GameTechRenderer.h"
-#ifdef USEVULKAN
-#include "GameTechVulkanRenderer.h"
-#endif
 
 #include "ResourceManager.h"
 
@@ -53,11 +50,7 @@ namespace NCL {
 			bool showProfiling = false;
 			Profiler profiler;
 
-#ifdef USEVULKAN
-			GameTechVulkanRenderer* renderer;
-#else
 			GameTechRenderer* renderer;
-#endif
 			GameWorld* world;
 
 			KeyboardMouseController controller;

@@ -17,13 +17,7 @@ TutorialGame::TutorialGame() : controller(*Window::GetWindow()->GetKeyboard(), *
 	//InitBullet(); //bullet is initialised in initialiseAssets already
 
 	world		= new GameWorld();
-#ifdef USEVULKAN
-	renderer	= new GameTechVulkanRenderer(*world);
-	renderer->Init();
-	renderer->InitStructures();
-#else
 	renderer = new GameTechRenderer(*world);
-#endif
 
 	world->GetMainCamera().SetController(controller);
 	mainCamera = &world->GetMainCamera();
