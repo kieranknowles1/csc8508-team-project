@@ -242,7 +242,7 @@ void TutorialGame::InitWorld() {
 
 	if (loadFromLevel) {
 		levelImporter = new LevelImporter(resourceManager.get(), world, bulletWorld);
-		levelImporter->LoadLevel(4);
+		levelImporter->LoadLevel(6);
 		return;
 	}
 

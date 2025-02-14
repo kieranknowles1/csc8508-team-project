@@ -92,6 +92,7 @@ void LevelImporter::LoadLevel(int level) {
             << " Collider Scale: (" << obj->colliderScale.x() << ", " << obj->colliderScale.y() << ", " << obj->colliderScale.z() << ")\n\n";*/
             AddObjectToWorld(obj);
     }
+    std::cout << "Loaded level " << level << "; Contained " << count << " GameObjects" << std::endl;
 }
 
 void LevelImporter::AddObjectToWorld(ObjectData* data) {

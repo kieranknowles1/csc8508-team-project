@@ -78,7 +78,7 @@ namespace NCL {
 
 			//Gun Variables
 			float shotCooldown = 0.25f;
-			float bulletSpeed = 150.0f;
+			float bulletSpeed = 250.0f;
 			btVector3 gunCameraOffset = btVector3(1.3, -0.7, -1.2);
 			btVector3 bulletCameraOffset = btVector3(1.0, -0.5, -3.0);
 			float playerVelocityStrafeInherit = 1.0f;
@@ -149,11 +149,7 @@ public:
 		otherObject->GetRenderObject()->SetIsFlat(true);
 		player->GetRenderObject()->SetColour(this->GetRenderObject()->GetColour());
 		player->GetRenderObject()->SetIsFlat(true);
-		btTransform worldTransform;
-		worldTransform.setOrigin(btVector3(0, -100, 0));
 		this->GetPhysicsObject()->removeFromBullet(bulletWorld);
-		this->GetPhysicsObject()->GetRigidBody()->setWorldTransform(worldTransform);
-		this->GetRenderObject()->SetColour(Vector4(1, 1, 1, 0));
 	}
 	void Initialise(GameObject* playerIn, btDiscreteDynamicsWorld* bulletWorldIn) {
 		player = playerIn;
