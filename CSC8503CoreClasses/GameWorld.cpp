@@ -5,8 +5,6 @@
 namespace NCL::CSC8503 {
 
 GameWorld::GameWorld()	{
-	shuffleConstraints	= false;
-	shuffleObjects		= false;
 	worldIDCounter		= 0;
 	worldStateCounter	= 0;
 }
