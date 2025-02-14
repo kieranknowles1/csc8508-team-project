@@ -24,31 +24,6 @@ int main() {
 #else
 	GameTechRenderer* renderer = new GameTechRenderer(*world);
 #endif
-
-	c->MapAxis(0, "LeftX");
-	c->MapAxis(1, "LeftY");
-
-	c->MapAxis(2, "RightX");
-	c->MapAxis(3, "RightY");
-
-	c->MapAxis(4, "DX");
-	c->MapAxis(5, "DY");
-
-	c->MapButton(0, "Triangle");
-	c->MapButton(1, "Circle");
-	c->MapButton(2, "Cross");
-	c->MapButton(3, "Square");
-
-	//These are the axis/button aliases the inbuilt camera class reads from:
-	c->MapAxis(0, "XLook");
-	c->MapAxis(1, "YLook");
-
-	c->MapAxis(2, "Sidestep");
-	c->MapAxis(3, "Forward");
-
-	c->MapButton(0, "Up");
-	c->MapButton(2, "Down");
-
 	std::unique_ptr<CSC8503::TutorialGame> g = std::make_unique<CSC8503::TutorialGame>(*world, *renderer);
 
 	while (window->UpdateWindow()) {
