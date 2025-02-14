@@ -9,7 +9,6 @@
 #include "ResourceManager.h"
 
 #include "LevelImporter.h"
-#include "StateGameObject.h"
 #include "PlayerController.h"
 #include "PlayerObject.h"
 #include "Turret.h"

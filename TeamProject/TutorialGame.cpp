@@ -4,7 +4,6 @@
 #include "RenderObject.h"
 #include "TextureLoader.h"
 
-#include "StateGameObject.h"
 #include "BulletDebug.h"
 
 #include <CSC8503CoreClasses/Debug.h>

@@ -4,8 +4,6 @@ set(SOURCES
     GameTechRenderer.cpp
     GameTechRenderer.h
     main.cpp
-    StateGameObject.cpp
-    StateGameObject.h
     TutorialGame.cpp
     TutorialGame.h
     PlayerController.cpp
