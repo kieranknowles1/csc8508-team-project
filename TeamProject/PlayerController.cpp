@@ -3,12 +3,12 @@
 using namespace NCL;
 using namespace CSC8503;
 
-Vector2 PlayerController::getDirectionalInput() const
-{
-    Vector2 raw(controller->GetAnalogue(Controller::AnalogueControl::MoveSidestep), controller->GetAnalogue(Controller::AnalogueControl::MoveForward));
-    float magnitude = Vector::Length(raw);
-    return magnitude <= 1.0f ? raw : raw / magnitude;
+// Helper function to print btVector3
+std::ostream& operator<<(std::ostream& os, const btVector3& vec) {
+    os << "(" << vec.getX() << ", " << vec.getY() << ", " << vec.getZ() << ")";
+    return os;
 }
+
 
 void PlayerController::Initialise() {
     rb = player->GetPhysicsObject()->GetRigidBody();
@@ -17,7 +17,9 @@ void PlayerController::Initialise() {
 void PlayerController::UpdateMovement(float dt) {
     transformPlayer = rb->getWorldTransform();
     btPlayerPos = transformPlayer.getOrigin();
-    btVector3 upDirection = CalculateUpDirection();
+    upDirection = CalculateUpDirection();
+    rightDirection = CalculateRightDirection(upDirection);
+    forwardDirection = CalculateForwardDirection(upDirection, rightDirection);
 
     //camera yaw
     yaw = fmod(yaw - controller->GetAnalogue(Controller::AnalogueControl::LookX) + 360.0f, 360.0f);
@@ -30,13 +32,13 @@ void PlayerController::UpdateMovement(float dt) {
     else {
         shotTimer += dt;
     }
-
+    roll = CalculateRoll();
+    camera->SetRoll(roll);
     //sliding/floor detection
     HandleSliding(dt);
     HandleCrouching(dt);
     if ((isSliding||slideTransition) && !isCrouching) return;
-    float roll = CalculateRoll();
-    camera->SetRoll(roll);
+
     //player rotation
     btQuaternion playerRotation(btVector3(0, 1, 0), Maths::DegreesToRadians(yaw));
     btQuaternion playerRotation2(btVector3(0, 0, 1), Maths::DegreesToRadians(roll));
@@ -44,7 +46,6 @@ void PlayerController::UpdateMovement(float dt) {
     rb->setWorldTransform(transformPlayer);
 
     //camera follows player, lowers if crouching
-
     btTransform transformPlayerMotion;
     player->GetPhysicsObject()->GetMotionState()->getWorldTransform(transformPlayerMotion);
     btVector3 playerCamPos = transformPlayerMotion.getOrigin();
@@ -66,6 +67,10 @@ void PlayerController::UpdateMovement(float dt) {
     float moveMulti = playerSpeed * (sprinting ? sprintMulti : 1) * (isCrouching ? crouchMulti : 1) * (player->getCollided()==0 ? airMulti : 1) ;
     forwardMovement *= (forwardMovement <= 0) ? backwardsMulti : 1;
     btVector3 movement = (right * directionalInput.x * strafeMulti * moveMulti) +(forward * forwardMovement * moveMulti);
+    if (player->getCollided() == 0) {
+        movement *= airMulti;
+        movement += rb->getLinearVelocity();
+    }
     movement += upDirection * -(gravityScale * dt);
 
     // jump input
@@ -74,17 +79,6 @@ void PlayerController::UpdateMovement(float dt) {
         // movement.setY(jumpHeight);
         player->setCollided(0);
     }
-    else {
-       
-        movement += upDirection.absolute() * rb->getLinearVelocity();
-    }
-
-    // Apply the movement according to the computed directions
-    if (player->getCollided() == 0) {
-       // movement += forward * rb->getLinearVelocity();
-      //  movement += right * rb->getLinearVelocity();
-    }
-
 
     rb->setLinearVelocity(movement);
     rb->activate();
@@ -202,8 +196,7 @@ void PlayerController::HandleCrouching(float dt) {
 //uses ray to detect if the player is blocked from standing
 bool PlayerController::CheckCeling() {
     btVector3 btBelowPlayerPos = btPlayerPos;
-    btBelowPlayerPos += (CalculateUpDirection() * 4.1f);
-  //  btBelowPlayerPos.setY(btBelowPlayerPos.getY() + 4.1f);
+    btBelowPlayerPos += (upDirection * 4.1f);
     btCollisionWorld::ClosestRayResultCallback callback(btPlayerPos, btBelowPlayerPos);
     bulletWorld->rayTest(btPlayerPos, btBelowPlayerPos, callback);
     if (callback.hasHit()) {
@@ -239,27 +232,30 @@ void PlayerController::HandleSliding(float dt) {
     if ((slideTransition || isSliding) && !isCrouching) {
         float slideFactor = isSliding ? btMin(currentSlidingTimer / slidingTime, 1.0f) : btMin(currentStandingSlideTimer / slidingTime, 1.0f);
 
-        btQuaternion playerRotation(btVector3(0, 1, 0), Maths::DegreesToRadians(yaw));
-        btQuaternion playerRotationX(btVector3(1, 0, 0),Maths::DegreesToRadians(std::lerp(isSliding ? 0 : slidingAngle, isSliding ? slidingAngle : 0, slideFactor)));
-
-        transformPlayer.setRotation(playerRotation * playerRotationX);
-        player->GetPhysicsObject()->GetRigidBody()->setWorldTransform(transformPlayer);
-
-        btMatrix3x3 rotationMatrix(playerRotation);
+        btQuaternion playerRotation1(btVector3(0, 1, 0), Maths::DegreesToRadians(yaw));
+        btQuaternion playerRotation2(btVector3(0, 0, 1), Maths::DegreesToRadians(roll));
+        //finds player forward and right vectors
+        btMatrix3x3 rotationMatrix(playerRotation2 * playerRotation1);
         btVector3 forward = rotationMatrix * btVector3(0, 0, -1);
+        btVector3 right = rotationMatrix * btVector3(1, 0, 0);
+        btQuaternion playerRotationX(right, Maths::DegreesToRadians(std::lerp(isSliding ? 0 : slidingAngle, isSliding ? slidingAngle : 0, slideFactor)));
+
+        btQuaternion playerRotation = playerRotationX* playerRotation2 * playerRotation1;
+        transformPlayer.setRotation(playerRotation);
+        player->GetPhysicsObject()->GetRigidBody()->setWorldTransform(transformPlayer);
         btTransform transformPlayerMotion;
         player->GetPhysicsObject()->GetMotionState()->getWorldTransform(transformPlayerMotion);
         btVector3 playerPos = transformPlayerMotion.getOrigin();
 
         playerPos -= forward * std::lerp(isSliding ? 0 : slidingCameraBackwards, isSliding ? slidingCameraBackwards : 0, slideFactor);
-        playerPos.setY(playerPos.getY() + std::lerp(isSliding ? cameraHeight : slidingCameraHeight, isSliding ? slidingCameraHeight : cameraHeight, slideFactor));
+        playerPos += upDirection * std::lerp(isSliding ? cameraHeight : slidingCameraHeight, isSliding ? slidingCameraHeight : cameraHeight, slideFactor);
         if (!thirdPerson) {
             camera->SetPosition(playerPos);
             SetGunTransform();
         }
         //CheckFloor(dt);
         btVector3 pastMovement = rb->getLinearVelocity();
-        pastMovement += CalculateUpDirection() * (-gravityScale * dt);
+        pastMovement += upDirection * -(gravityScale * dt);
     //    pastMovement.setY(pastMovement.getY() - ( * (player->getCollided() == 0 ? 1 : 10)));
         rb->setLinearVelocity(pastMovement);
         rb->activate();
@@ -280,11 +276,27 @@ btVector3 PlayerController::CalculateUpDirection() {
     btVector3 nextDir = directions[(index + 1) % 4];
 
     // Interpolate between currentDir and nextDir
-    btVector3 upDirection = currentDir.lerp(nextDir, t);
-    upDirection.normalize();
-
-    return upDirection;
+    btVector3 upDir = currentDir.lerp(nextDir, t);
+    upDir.normalize();
+    return upDir;
 }
+
+btVector3 PlayerController::CalculateRightDirection(btVector3 upDir) {
+    btVector3 forward = btVector3(0, 0, 1);
+    if (fabs(upDir.dot(forward)) > 0.9) { 
+        forward = btVector3(0, 1, 0);
+    }
+    btVector3 rightDirection = upDir.cross(forward);
+    rightDirection.normalize();
+    return rightDirection;
+}
+
+btVector3 PlayerController::CalculateForwardDirection(btVector3 upDir,btVector3 rightDir) {
+    btVector3 forwardDirection = rightDir.cross(upDir);
+    forwardDirection.normalize();
+    return forwardDirection;
+}
+
 
 float PlayerController::CalculateRoll() {
     float t = fmod(worldRotation, 1.0f);
@@ -307,4 +319,11 @@ float PlayerController::CalculateRoll() {
     float roll = currentRoll + t * (nextRoll - currentRoll);
 
     return roll;
+}
+
+Vector2 PlayerController::getDirectionalInput() const
+{
+    Vector2 raw(controller->GetAnalogue(Controller::AnalogueControl::MoveSidestep), controller->GetAnalogue(Controller::AnalogueControl::MoveForward));
+    float magnitude = Vector::Length(raw);
+    return magnitude <= 1.0f ? raw : raw / magnitude;
 }

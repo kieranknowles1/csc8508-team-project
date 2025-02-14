@@ -42,8 +42,14 @@ namespace NCL {
 			float getWorldRotation() {
 				return worldRotation;
 			}
-			Vector3 upDirection() {
+			btVector3 getUpDirection() {
 				return CalculateUpDirection();
+			}
+			btVector3 getRightDirection(btVector3 up) {
+				return CalculateRightDirection(up);
+			}
+			btVector3 getForwardDirection(btVector3 up, btVector3 right) {
+				return CalculateForwardDirection(up,right);
 			}
 
 		private:
@@ -75,7 +81,7 @@ namespace NCL {
 			float bulletSpeed = 150.0f;
 			btVector3 gunCameraOffset = btVector3(1.3, -0.7, -1.2);
 			btVector3 bulletCameraOffset = btVector3(1.0, -0.5, -3.0);
-			float playerVelocityStrafeInherit = 0.2f;
+			float playerVelocityStrafeInherit = 1.0f;
 
 
 			bool thirdPerson = false;
@@ -87,6 +93,7 @@ namespace NCL {
 			const Controller* controller = nullptr;
 			Camera* camera = nullptr;
 			float yaw = 0;
+			float roll = 0;
 			float radius = 2.0f;
 			bool crouchTransition = false;
 			float currentHeight;
@@ -111,8 +118,10 @@ namespace NCL {
 			float shotTimer = 0;
 			bool collision = false;
 			bool crouching = false;
+			btVector3 upDirection;
+			btVector3 rightDirection;
+			btVector3 forwardDirection;
 
-			// Get directional movemnt, clamped to have a magnitude of 1
 			Vector2 getDirectionalInput() const;
 			void Initialise();
 			void HandleCrouching(float dt);
@@ -121,6 +130,8 @@ namespace NCL {
 			void SetGunTransform();
 			void ShootBullet();
 			btVector3 CalculateUpDirection();
+			btVector3 CalculateRightDirection(btVector3 upDir);
+			btVector3 CalculateForwardDirection(btVector3 upDir, btVector3 rightDir);
 			float CalculateRoll();
 
 		};

@@ -122,7 +122,7 @@ void TutorialGame::UpdateGame(float dt) {
 		finished = true;
 	}
 
-	bulletWorld->setGravity(playerController->upDirection() * -30.0f);
+	bulletWorld->setGravity(playerController->getUpDirection() * -30.0f);
 
 	profiler.startSection("Prepare Render");
 	bulletWorld->debugDrawWorld();
@@ -169,18 +169,32 @@ void TutorialGame::UpdateKeys() {
 
 void TutorialGame::ThirdPersonControls() {
 	btTransform transformPlayer = player->GetPhysicsObject()->GetRigidBody()->getWorldTransform();
+	btVector3 up = playerController->getUpDirection();
+	btVector3 right = playerController->getRightDirection(up);
+	btVector3 forw = playerController->getForwardDirection(up, right);
 	btQuaternion playerRotation = transformPlayer.getRotation();
 	btMatrix3x3 rotationMatrix(playerRotation);
+	btVector3 r = rotationMatrix * btVector3(1, 0, 0);
 	btVector3 forward = rotationMatrix * btVector3(0, 0, -1);
-	forward.setY(0);
+	forward = (forward * right.absolute()) + (forward * forw.absolute());
 	forward.normalize();
-	btVector3 cameraOffset(0, 10, 30);
-	btVector3 cameraPosition = transformPlayer.getOrigin() - (forward * cameraOffset.z()) + btVector3(0, cameraOffset.y(), 0);
+	float camHeight = 10.0f;
+	float camDist = 30.0f;
+	btVector3 cameraOffset = (-forward * camDist) + (up * camHeight);
+
+	btVector3 cameraPosition = transformPlayer.getOrigin() + cameraOffset;
 	mainCamera->SetPosition(cameraPosition);
-	float playerYaw = Maths::RadiansToDegrees(atan2(forward.x(), forward.z())) + 180.0f;
+
+	float forwardProjX = forw.dot(forward);
+	float rightProjX = right.dot(forward);
+	float playerYaw = Maths::RadiansToDegrees(atan2(rightProjX, forwardProjX))+180;
+
 	mainCamera->SetYaw(playerYaw);
-	mainCamera->SetPitch(-15);
+	mainCamera->SetPitch(-15.0f);
 }
+
+
+
 
 void TutorialGame::DestroyBullet() {
 	world->OperateOnContents([&](GameObject* obj) {
