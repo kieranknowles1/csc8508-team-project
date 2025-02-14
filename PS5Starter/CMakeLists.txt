@@ -129,7 +129,6 @@ add_custom_target(
 set(PROJECT_DEPENDENCIES
     NCLCoreClasses
     PS5Core
-    # GLTFLoader
     CSC8503
     CSC8503CoreClasses
 )
