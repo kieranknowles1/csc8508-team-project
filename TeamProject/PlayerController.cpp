@@ -151,7 +151,7 @@ void PlayerController::ShootBullet() {
     btVector3 playerVelocity = rb->getLinearVelocity();
     float forwardSpeed = forwardDir.dot(playerVelocity);
     float rightSpeed = rightDir.dot(playerVelocity);
-    btVector3 adjustedPlayerVelocity = (forwardDir * forwardSpeed) + (rightDir * rightSpeed * playerVelocityStrafeInherit);
+    btVector3 adjustedPlayerVelocity = (forwardDir * forwardSpeed) + (rightDirection * rightSpeed * playerVelocityStrafeInherit);
     btVector3 bulletVelocity = adjustedPlayerVelocity + (forwardDir * bulletSpeed);
 
     // Apply impulse
