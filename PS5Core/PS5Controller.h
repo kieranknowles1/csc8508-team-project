@@ -14,21 +14,19 @@ namespace NCL::PS5 {
 	public:
 		PS5Controller(SceUserServiceUserId id);
 		virtual ~PS5Controller(void);
+
+		float GetAnalogue(AnalogueControl axis) const override;
+		bool GetDigital(DigitalControl control) const override;
 	
 		void	Update(float dt)		override;
-		float	GetAxis(uint32_t axis)	const override;
-		float	GetButtonAnalogue(uint32_t button) const override;
-		bool	GetButton(uint32_t button) const override;
 
-	protected:
 	private:
-		static const int AXIS_COUNT = 8;
-		static const int BUTTON_COUNT = 16;
+		// Amount the trigger must be pulled
+		float fireThreshold = 128.0f;
+		bool digitalDown(ScePadButtonDataOffset button) const;
 
+		ScePadData data;
 		uint32_t padHandle;
 		ScePadControllerInformation padInfo;
-
-		float	axes[AXIS_COUNT];
-		float	buttons[BUTTON_COUNT];
 	};
 }
