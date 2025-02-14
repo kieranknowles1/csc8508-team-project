@@ -1,7 +1,6 @@
 #pragma once
 #include <random>
 
-#include "Ray.h"
 #include "Camera.h"
 #include "GameObject.h"
 
