@@ -21,7 +21,6 @@ void Camera::UpdateCamera(float dt, bool movement) {
 	pitch = std::min(pitch, 90.0f);
 	pitch = std::max(pitch, -90.0f);
 
-
 	if (movement) {
 		yaw -= activeController->GetAnalogue(Controller::AnalogueControl::LookX);
 		if (yaw < 0) {
@@ -52,7 +51,7 @@ straight to the shader...it's already an 'inverse camera' matrix.
 Matrix4 Camera::BuildViewMatrix() const {
 	//Why do a complicated matrix inversion, when we can just generate the matrix
 	//using the negative values ;). The matrix multiplication order is important!
-	return	Matrix::Rotation(-pitch, Vector3(1, 0, 0)) *
+	return	Matrix::Rotation(-pitch-pitchOffset, Vector3(1, 0, 0)) *
 		Matrix::Rotation(-yaw, Vector3(0, 1, 0)) *
 		Matrix::Rotation(-roll, Vector3(0, 0, 1)) *
 		Matrix::Translation(-position);

@@ -42,6 +42,10 @@ namespace NCL {
 			return farPlane;
 		}
 
+		void setPitchOffset(float p) {
+			pitchOffset = p;
+		}
+
 		Camera& SetNearPlane(float val) {
 			nearPlane = val;
 			return *this;
@@ -92,6 +96,7 @@ namespace NCL {
 
 		float	yaw;
 		float	pitch;
+		float pitchOffset = 0;
 		float   roll = 0;
 		Vector3 position;
 		float	speed;

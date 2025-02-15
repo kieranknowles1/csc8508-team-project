@@ -20,6 +20,7 @@ public:
         btVector3 direction = (contactPointA - playerPos).normalize();
         float dotProduct = direction.dot(upDirection);
         if (dotProduct < 0.0f) {
+          
             collidedObjects.push_back(otherObject);
             collided++;
         }

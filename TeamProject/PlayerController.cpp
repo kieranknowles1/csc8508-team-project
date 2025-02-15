@@ -18,13 +18,34 @@ void PlayerController::UpdateMovement(float dt) {
     transformPlayer = rb->getWorldTransform();
     btPlayerPos = transformPlayer.getOrigin();
     upDirection = CalculateUpDirection();
-    player->setUpDirection(upDirection);
     rightDirection = CalculateRightDirection(upDirection);
     forwardDirection = CalculateForwardDirection(upDirection, rightDirection);
+    player->setUpDirection(upDirection);
 
-    //camera yaw
+
+    roll = CalculateRoll();
     yaw = fmod(yaw - controller->GetAnalogue(Controller::AnalogueControl::LookX) + 360.0f, 360.0f);
-    if (!thirdPerson) camera->SetYaw(yaw);
+    float pitch = CalculatePitch();
+    camera->setPitchOffset(pitch);
+
+    if (pitch == 0.0f) {
+        if (!thirdPerson) camera->SetYaw(yaw);
+    }
+    else {
+        float temp = roll;
+        if (pitch > 0) {
+            roll = yaw;
+            yaw = roll;
+        }
+        else{
+            roll = -yaw;
+            yaw = -roll;
+         }
+     
+    }
+
+    camera->SetRoll(roll);
+
 
     if (controller->GetDigital(Controller::DigitalControl::Fire) && shotTimer >= shotCooldown) {
         ShootBullet();
@@ -33,8 +54,6 @@ void PlayerController::UpdateMovement(float dt) {
     else {
         shotTimer += dt;
     }
-    roll = CalculateRoll();
-    camera->SetRoll(roll);
     //sliding/floor detection
     HandleSliding(dt);
     HandleCrouching(dt);
@@ -43,7 +62,8 @@ void PlayerController::UpdateMovement(float dt) {
     //player rotation
     btQuaternion playerRotation(btVector3(0, 1, 0), Maths::DegreesToRadians(yaw));
     btQuaternion playerRotation2(btVector3(0, 0, 1), Maths::DegreesToRadians(roll));
-    transformPlayer.setRotation(playerRotation2* playerRotation);
+    btQuaternion playerRotation3(btVector3(1, 0, 0), Maths::DegreesToRadians(pitch));
+    transformPlayer.setRotation(playerRotation2 * playerRotation3 * playerRotation);
     rb->setWorldTransform(transformPlayer);
 
     //camera follows player, lowers if crouching
@@ -57,7 +77,7 @@ void PlayerController::UpdateMovement(float dt) {
     }
 
     //finds player forward and right vectors
-    btMatrix3x3 rotationMatrix(playerRotation2 * playerRotation);
+    btMatrix3x3 rotationMatrix(playerRotation2 * playerRotation3 * playerRotation);
     btVector3 forward = rotationMatrix * btVector3(0, 0, -1);
     btVector3 up = rotationMatrix * btVector3(0, 1, 0);
     btVector3 right = rotationMatrix * btVector3(1, 0, 0);
@@ -310,15 +330,17 @@ void PlayerController::HandleSliding(float dt) {
 
 btVector3 PlayerController::CalculateUpDirection() {
     float t = fmod(worldRotation, 1.0f);
-    int index = static_cast<int>(worldRotation);
+    int index = floor(worldRotation);
     btVector3 directions[] = {
         btVector3(0, 1, 0),
         btVector3(-1, 0, 0),
         btVector3(0, -1, 0),
-        btVector3(1, 0, 0)
+        btVector3(1, 0, 0),
+        btVector3(0, 0, 1),
+        btVector3(0, 0, -1)
     };
-    btVector3 currentDir = directions[index % 4];
-    btVector3 nextDir = directions[(index + 1) % 4];
+    btVector3 currentDir = directions[index % 6];
+    btVector3 nextDir = directions[(index + 1) % 6];
 
     // Interpolate between currentDir and nextDir
     btVector3 upDir = currentDir.lerp(nextDir, t);
@@ -328,13 +350,17 @@ btVector3 PlayerController::CalculateUpDirection() {
 
 btVector3 PlayerController::CalculateRightDirection(btVector3 upDir) {
     btVector3 forward = btVector3(0, 0, 1);
-    if (fabs(upDir.dot(forward)) > 0.9) { 
+    upDir.normalize();
+    float dotProduct = upDir.dot(forward);
+    if (fabs(dotProduct) > 0.9999f) { // If almost collinear
         forward = btVector3(0, 1, 0);
     }
     btVector3 rightDirection = upDir.cross(forward);
     rightDirection.normalize();
+
     return rightDirection;
 }
+
 
 btVector3 PlayerController::CalculateForwardDirection(btVector3 upDir,btVector3 rightDir) {
     btVector3 forwardDirection = rightDir.cross(upDir);
@@ -345,15 +371,17 @@ btVector3 PlayerController::CalculateForwardDirection(btVector3 upDir,btVector3 
 
 float PlayerController::CalculateRoll() {
     float t = fmod(worldRotation, 1.0f);
-    int index = static_cast<int>(worldRotation);
+    int index = floor(worldRotation);
     float rolls[] = {
         0.0f,
         90.0f,
         180.0f,
-        270.0f
+        270.0f,
+        0.0f,
+        0.0f
     };
-    float currentRoll = rolls[index % 4];
-    float nextRoll = rolls[(index + 1) % 4];
+    float currentRoll = rolls[index % 6];
+    float nextRoll = rolls[(index + 1) % 6];
 
     // Handle wrap-around from 270.0f to 0.0f
     if (currentRoll == 270.0f && nextRoll == 0.0f) {
@@ -365,6 +393,26 @@ float PlayerController::CalculateRoll() {
 
     return roll;
 }
+
+float PlayerController::CalculatePitch() {
+    float t = fmod(worldRotation, 1.0f);
+    int index = floor(worldRotation);
+    float pitches[] = {
+        0.0f,
+        0.0f,
+        0.0f,
+        0.0f,
+        90.0f,
+        -90.0f
+   };
+    float currentPitch = pitches[index % 6];
+    float nextPitch = pitches[(index + 1) % 6];
+    // Interpolate between currentRoll and nextRoll
+    float pitch = currentPitch + t * (nextPitch - currentPitch);
+
+    return pitch;
+}
+
 
 Vector2 PlayerController::getDirectionalInput() const
 {

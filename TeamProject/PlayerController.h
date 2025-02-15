@@ -133,6 +133,7 @@ namespace NCL {
 			btVector3 CalculateRightDirection(btVector3 upDir);
 			btVector3 CalculateForwardDirection(btVector3 upDir, btVector3 rightDir);
 			float CalculateRoll();
+			float CalculatePitch();
 
 		};
 	};
