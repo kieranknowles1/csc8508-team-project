@@ -65,6 +65,7 @@ set(Physics
     "PhysicsObject.cpp"
     "PhysicsObject.h"
     "CustomCollisionCallback.h"
+    "CollisionInfo.h"
 )
 source_group("Physics" FILES ${Physics})
 

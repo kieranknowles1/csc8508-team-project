@@ -9,23 +9,24 @@
 
 #include <btBulletDynamicsCommon.h>
 #include <btBulletCollisionCommon.h>
+#include "CustomCollisionCallback.h"
 
 using namespace NCL::CSC8503;
 // Paintball class derived from GameObject
 class PlayerObject : public GameObject {
 public:
-	void OnCollisionEnter(GameObject* otherObject, const btVector3& contactPointA, const btVector3& contactPointB) override {
+	void OnCollisionEnter(const CollisionInfo& collisionInfo) override {
 		btVector3 playerPos = this->GetPhysicsObject()->GetRigidBody()->getWorldTransform().getOrigin();
-		btVector3 objPos = otherObject->GetPhysicsObject()->GetRigidBody()->getWorldTransform().getOrigin();
+		btVector3 objPos = collisionInfo.otherObject->GetPhysicsObject()->GetRigidBody()->getWorldTransform().getOrigin();
 		btVector3 direction = (objPos - playerPos).normalize();
 		float dotProduct = direction.dot(upDirection);
 		if (dotProduct < 0.0f) {
 			collided++;
 		}
 	}
-	void OnCollisionExit(GameObject* otherObject) override {
+	void OnCollisionExit(const CollisionInfo& collisionInfo) override {
 		btVector3 playerPos = this->GetPhysicsObject()->GetRigidBody()->getWorldTransform().getOrigin();
-		btVector3 objPos = otherObject->GetPhysicsObject()->GetRigidBody()->getWorldTransform().getOrigin();
+		btVector3 objPos = collisionInfo.otherObject->GetPhysicsObject()->GetRigidBody()->getWorldTransform().getOrigin();
 		btVector3 direction = (objPos - playerPos).normalize();
 		float dotProduct = direction.dot(upDirection);
 		if (dotProduct < 0.0f && collided > 0) {
