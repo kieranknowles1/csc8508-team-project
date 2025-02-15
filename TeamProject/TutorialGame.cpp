@@ -4,7 +4,6 @@
 #include "RenderObject.h"
 #include "TextureLoader.h"
 
-#include "StateGameObject.h"
 #include "BulletDebug.h"
 
 #include <CSC8503CoreClasses/Debug.h>
@@ -18,13 +17,7 @@ TutorialGame::TutorialGame() : controller(*Window::GetWindow()->GetKeyboard(), *
 	//InitBullet(); //bullet is initialised in initialiseAssets already
 
 	world		= new GameWorld();
-#ifdef USEVULKAN
-	renderer	= new GameTechVulkanRenderer(*world);
-	renderer->Init();
-	renderer->InitStructures();
-#else
 	renderer = new GameTechRenderer(*world);
-#endif
 
 	world->GetMainCamera().SetController(controller);
 	mainCamera = &world->GetMainCamera();
@@ -32,6 +25,7 @@ TutorialGame::TutorialGame() : controller(*Window::GetWindow()->GetKeyboard(), *
 	loadFromLevel = true;
 	resourceManager = std::make_unique<ResourceManager>(renderer);
 	InitialiseAssets();
+	rotateTimer = rotateTime;
 }
 
 /*
@@ -112,6 +106,17 @@ void TutorialGame::UpdateGame(float dt) {
 		player->GetRenderObject()->SetColour(colour);
 	}
 
+	if (rotateTimer < rotateTime) {
+		rotateTimer += dt;
+		playerController->setWorldRotation(std::lerp(oldRotate, targetRotate, rotateTimer / rotateTime));
+	}
+	else if (!finished) {
+		playerController->setWorldRotation(targetRotate);
+		finished = true;
+	}
+
+	bulletWorld->setGravity(playerController->getUpDirection() * -30.0f);
+
 	profiler.startSection("Prepare Render");
 	bulletWorld->debugDrawWorld();
 	renderer->Update(dt);
@@ -146,22 +151,43 @@ void TutorialGame::UpdateKeys() {
 		thirdPerson = !thirdPerson;
 		playerController->SetThirdPerson(thirdPerson);
 	}
+	if (Window::GetKeyboard()->KeyPressed(KeyCodes::V)) {
+		if (rotateTimer < rotateTime) return;
+		rotateTimer = 0;
+		oldRotate = playerController->getWorldRotation();
+		targetRotate = oldRotate + 1;
+		finished = false;
+	}
 }
 
 void TutorialGame::ThirdPersonControls() {
 	btTransform transformPlayer = player->GetPhysicsObject()->GetRigidBody()->getWorldTransform();
+	btVector3 up = playerController->getUpDirection();
+	btVector3 right = playerController->getRightDirection(up);
+	btVector3 forw = playerController->getForwardDirection(up, right);
 	btQuaternion playerRotation = transformPlayer.getRotation();
 	btMatrix3x3 rotationMatrix(playerRotation);
+	btVector3 r = rotationMatrix * btVector3(1, 0, 0);
 	btVector3 forward = rotationMatrix * btVector3(0, 0, -1);
-	forward.setY(0);
+	forward = (forward * right.absolute()) + (forward * forw.absolute());
 	forward.normalize();
-	btVector3 cameraOffset(0, 10, 30);
-	btVector3 cameraPosition = transformPlayer.getOrigin() - (forward * cameraOffset.z()) + btVector3(0, cameraOffset.y(), 0);
+	float camHeight = 10.0f;
+	float camDist = 30.0f;
+	btVector3 cameraOffset = (-forward * camDist) + (up * camHeight);
+
+	btVector3 cameraPosition = transformPlayer.getOrigin() + cameraOffset;
 	mainCamera->SetPosition(cameraPosition);
-	float playerYaw = Maths::RadiansToDegrees(atan2(forward.x(), forward.z())) + 180.0f;
+
+	float forwardProjX = forw.dot(forward);
+	float rightProjX = right.dot(forward);
+	float playerYaw = Maths::RadiansToDegrees(atan2(rightProjX, forwardProjX))+180;
+
 	mainCamera->SetYaw(playerYaw);
-	mainCamera->SetPitch(-15);
+	mainCamera->SetPitch(-15.0f);
 }
+
+
+
 
 void TutorialGame::DestroyBullet() {
 	world->OperateOnContents([&](GameObject* obj) {
@@ -186,7 +212,7 @@ void TutorialGame::InitBullet() {
 	solver = new btSequentialImpulseConstraintSolver();
 
 	bulletWorld = new btDiscreteDynamicsWorld(dispatcher, broadphase, solver, collisionConfig);
-	bulletWorld->setGravity(btVector3(0, -30.0f, 0));
+	bulletWorld->setGravity(btVector3(00.0f, -30.0f, 0));
 	bulletDebug = new BulletDebug();
 	bulletWorld->setDebugDrawer(bulletDebug);
 }
@@ -209,7 +235,7 @@ void TutorialGame::InitWorld() {
 
 	if (loadFromLevel) {
 		levelImporter = new LevelImporter(resourceManager.get(), world, bulletWorld);
-		levelImporter->LoadLevel(3);
+		levelImporter->LoadLevel(6);
 		return;
 	}
 
@@ -233,7 +259,6 @@ void TutorialGame::InitWorld() {
 	AddCubeToWorld(Vector3(500, 30, 0), Vector3(10, 10, 10), 5.0f);
 	AddCubeToWorld(Vector3(20, 30, 50), Vector3(7, 7, 7), 4.0f);
 	AddCubeToWorld(Vector3(120, 30, -20), Vector3(5, 5, 5), 1.0f);
-
 	AddCubeToWorld(Vector3(100, 8, 100), Vector3(30, 2,30), 0.0f);
 
 	// Use this as a reference to create more sphere objects
@@ -251,7 +276,7 @@ void TutorialGame::InitWorld() {
 
 void TutorialGame::InitPlayer() {
 	if (loadFromLevel) {
-		player = AddPlayerCapsuleToWorld(Vector3(0, 10, 30), 4.0f, 2.0f, 10.0f);
+		player = AddPlayerCapsuleToWorld(Vector3(0, 100, 30), 4.0f, 2.0f, 10.0f);
 	}else {
 		player = AddPlayerCapsuleToWorld(Vector3(10, 5, 20), 4.0f, 2.0f, 10.0f);
 	}

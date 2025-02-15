@@ -45,7 +45,7 @@ namespace NCL::CSC8503 {
 			name = nameIn;
 		}
 
-		virtual void OnCollisionEnter(GameObject* otherObject) {
+		virtual void OnCollisionEnter(GameObject* otherObject, const btVector3& contactPointA, const btVector3& contactPointB) {
 			//std::cout << "OnCollisionBegin event occured! " << this->GetWorldID() << " " << otherObject->GetWorldID() << std::endl;
 		}
 
