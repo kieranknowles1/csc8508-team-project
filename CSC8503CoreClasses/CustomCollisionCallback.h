@@ -35,8 +35,8 @@ namespace NCL {
 					contactPointB = cp.getPositionWorldOnB();
 
 					// Print the contact points for debugging
-					std::cout << "Contact Point A: " << contactPointA.getX() << " " << contactPointA.getY() << " " << contactPointA.getZ() << std::endl;
-					std::cout << "Contact Point B: " << contactPointB.getX() << " " << contactPointB.getY() << " " << contactPointB.getZ() << std::endl;
+					//std::cout << "Contact Point A: " << contactPointA.getX() << " " << contactPointA.getY() << " " << contactPointA.getZ() << std::endl;
+					//std::cout << "Contact Point B: " << contactPointB.getX() << " " << contactPointB.getY() << " " << contactPointB.getZ() << std::endl;
 				
 					// Add the object to the active collisions set
 					GameObject* otherObject = (obj0 == parent) ? obj1 : obj0;
