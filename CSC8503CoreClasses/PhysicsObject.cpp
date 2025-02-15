@@ -114,48 +114,35 @@ void PhysicsObject::CheckCollisions(btDynamicsWorld* world)
 	CustomCollisionCallback callback(parent);
 	world->contactTest(rigidBody, callback);
 
-	// Store objects while colliding, to check for ended collisions later
-	std::set<GameObject*> currentCollisions;
+	std::set<GameObject*> newCollisions;
 
-	// Loop through all active collisions this frame
-	for (const auto& collision : callback.activeCollisions) {
-		currentCollisions.insert(collision.otherObject);
-
-		// Check if this is a new collision or it existed in the previous frame
-		if (!activeCollisions.count(collision.otherObject)) {
-			// New collision (Not existed in the previous frame)
-			activeCollisions.insert(collision.otherObject);
-			parent->OnCollisionEnter(collision);
+	// New or ongoing collisions
+	for (auto obj : callback.activeCollisions) {
+		if (activeCollisions.count(obj)) {
+			// Collision already existed, so it's an ongoing collision
+			parent->OnCollisionStay(obj);
 		}
 		else {
-			// Persistent collision (Existed in the previous frame)
-			parent->OnCollisionStay(collision);
+			activeCollisions.insert(obj);
+			parent->OnCollisionEnter(obj, callback.contactPointA, callback.contactPointB);
 		}
 	}
 
-	// Handle ended collisions
-	for (auto it = activeCollisions.begin(); it != activeCollisions.end();) {
-		// Storing the pointer to the object in a temporary variable
-		// just so that I can understand my own code :)
-		GameObject* obj = *it;
-		if (!currentCollisions.count(obj)) {
-			// Find the corresponding collision info
-			CollisionInfo collisionInfo;
-			collisionInfo.otherObject = obj;
-
-			// Call the OnCollisionExit method of the parent object
-			parent->OnCollisionExit(collisionInfo);
-			it = activeCollisions.erase(it);
-		}
-		else {
-			++it;
+	// Ended collisions
+	for (auto obj : activeCollisions) {
+		if (!callback.activeCollisions.count(obj)) {
+			parent->OnCollisionExit(obj);
 		}
 	}
 
-	// Remove objects that are no longer colliding
-	std::erase_if(activeCollisions, [&](GameObject* obj) {
-		return callback.activeCollisions.find(obj) == callback.activeCollisions.end();
-	});
+	//// Can't erase from a set while iterating over it
+	//std::erase_if(activeCollisions, [&](GameObject* obj) {
+	//	return !callback.activeCollisions.count(obj);
+	//});
+
+	// Update activeCollisions for the next frame, directly reflects the current state of
+	// collisions without incremental updates.
+	activeCollisions = callback.activeCollisions;
 }
 
 void PhysicsObject::ClearForces() {

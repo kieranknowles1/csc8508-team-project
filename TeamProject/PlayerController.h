@@ -11,7 +11,6 @@
 #include "RenderObject.h"
 #include "BulletDebug.h"
 #include "PlayerObject.h"
-#include "CustomCollisionCallback.h"
 
 #include <btBulletDynamicsCommon.h>
 #include <btBulletCollisionCommon.h>
@@ -144,10 +143,10 @@ using namespace NCL::CSC8503;
 // Paintball class derived from GameObject
 class Paintball : public GameObject {
 public:
-	void OnCollisionEnter(const CollisionInfo& collisionInfo) override {
-		if (collisionInfo.otherObject == player) return;
-		collisionInfo.otherObject->GetRenderObject()->SetColour(this->GetRenderObject()->GetColour());
-		collisionInfo.otherObject->GetRenderObject()->SetIsFlat(true);
+	void OnCollisionEnter(GameObject* otherObject, const btVector3& contactPointA, const btVector3& contactPointB) override {
+		if (otherObject == player) return;
+		otherObject->GetRenderObject()->SetColour(this->GetRenderObject()->GetColour());
+		otherObject->GetRenderObject()->SetIsFlat(true);
 		player->GetRenderObject()->SetColour(this->GetRenderObject()->GetColour());
 		player->GetRenderObject()->SetIsFlat(true);
 		this->GetPhysicsObject()->removeFromBullet(bulletWorld);
