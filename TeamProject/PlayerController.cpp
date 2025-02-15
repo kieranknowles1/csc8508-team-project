@@ -73,15 +73,19 @@ void PlayerController::UpdateMovement(float dt) {
         inAirTime -= dt;
     }
     if (player->getCollided() <= 0) {
+       // std::cout << "IN AIR" << std::endl;
         movement *= airMulti;
         movement += rb->getLinearVelocity();
+    }
+    else {
+       // std::cout << "ON FLOOR" << std::endl;
     }
    // std::cout << player->getCollided() << std::endl;
     movement += upDirection * -(gravityScale * dt);
 
     // jump input
     if (controller->GetDigital(Controller::DigitalControl::Jump) && player->getCollided()) {
-        movement += (upDirection * jumpHeight);
+        movement += (FindFloorNormal() * jumpHeight);
         player->setCollided(0);
         inAirTime = 0.2f;
     }
@@ -210,6 +214,21 @@ bool PlayerController::CheckCeling() {
     else {
         return false;
     }
+}
+
+// finds surface normal of floor below
+btVector3 PlayerController::FindFloorNormal() {
+    btVector3 btBelowPlayerPos = btPlayerPos;
+    btBelowPlayerPos -= (upDirection * 10);
+    btCollisionWorld::ClosestRayResultCallback callback(btPlayerPos, btBelowPlayerPos);
+    bulletWorld->rayTest(btPlayerPos, btBelowPlayerPos, callback);
+    if (callback.hasHit()) {
+        return callback.m_hitNormalWorld;
+    }
+    else {
+        return btVector3();
+    }
+
 }
 
 

@@ -126,6 +126,7 @@ namespace NCL {
 			void HandleCrouching(float dt);
 			void HandleSliding(float dt);
 			bool CheckCeling();
+			btVector3 FindFloorNormal();
 			void SetGunTransform();
 			void ShootBullet();
 			btVector3 CalculateUpDirection();
