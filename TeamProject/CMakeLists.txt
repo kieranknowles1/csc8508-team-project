@@ -23,8 +23,15 @@ set(SOURCES
     LevelImporter.h
     ResourceManager.h
     ResourceManager.cpp
+<<<<<<< Updated upstream
     AudioEngine.cpp
     AudioEngine.h
+=======
+    Profiler.h
+    Profiler.cpp
+	AudioEngine.cpp
+	AudioEngine.h
+>>>>>>> Stashed changes
 )
 
 set(COMPILED_MESHES

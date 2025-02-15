@@ -70,6 +70,15 @@ void PlayerController::UpdateMovement(float dt) {
     if (controller->GetDigital(Controller::DigitalControl::Jump) && player->getCollided()) {
         movement.setY(jumpHeight);
         player->setCollided(0);
+<<<<<<< Updated upstream
+=======
+        inAirTime = 0.2f;
+
+        audioEngine.PlaySounds("Assets/Audio/jump.wav", NCL::Maths::Vector3(player->GetTransform().getOrigin()), 0.0f); //Currently, this line generates a sound at the center of the map,
+                                                                                                                        //Because that is what getOrigin() returns, what is the function
+                                                                                                                        //The current position of the player?
+    }
+>>>>>>> Stashed changes
 
         //Play jump sound
         audioEngine.PlaySounds("Assets/Audio/jump.wav", Vector3(player->GetTransform().getOrigin()), 0.0f);

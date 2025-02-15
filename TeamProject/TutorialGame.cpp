@@ -52,6 +52,7 @@ void TutorialGame::InitialiseAssets() {
 
 TutorialGame::~TutorialGame()	{
 	DestroyBullet();
+	audioEngine.Shutdown();
 
 	delete renderer;
 	delete world;
@@ -192,8 +193,13 @@ void TutorialGame::InitWorld() {
 	DestroyBullet();
 	world->ClearAndErase();
 	InitBullet();
+<<<<<<< Updated upstream
 	audioEngine.Init();
 
+=======
+	
+	audioEngine.Init();
+>>>>>>> Stashed changes
 	InitPlayer();
 
 	if (loadFromLevel) {
