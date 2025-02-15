@@ -4,7 +4,6 @@
 #include "RenderObject.h"
 #include "TextureLoader.h"
 
-#include "StateGameObject.h"
 #include "BulletDebug.h"
 
 #include <CSC8503CoreClasses/Debug.h>
@@ -18,13 +17,7 @@ TutorialGame::TutorialGame() : controller(*Window::GetWindow()->GetKeyboard(), *
 	//InitBullet(); //bullet is initialised in initialiseAssets already
 
 	world		= new GameWorld();
-#ifdef USEVULKAN
-	renderer	= new GameTechVulkanRenderer(*world);
-	renderer->Init();
-	renderer->InitStructures();
-#else
 	renderer = new GameTechRenderer(*world);
-#endif
 
 	world->GetMainCamera().SetController(controller);
 	mainCamera = &world->GetMainCamera();

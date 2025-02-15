@@ -11,7 +11,6 @@ namespace NCL::UnixCode {
             initData.windowTitle.c_str(),
             initData.windowPositionX, initData.windowPositionY,
             initData.width, initData.height,
-            // TODO: Vulkan support
             SDL_WINDOW_OPENGL | fullScreenFlag
         );
 

@@ -6,7 +6,6 @@
 #include "Camera.h"
 #include "Controller.h"
 #include "GameObject.h"
-#include "StateGameObject.h"
 #include "GameWorld.h"
 #include "PhysicsObject.h"
 #include "RenderObject.h"
