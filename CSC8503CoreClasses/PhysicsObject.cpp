@@ -114,9 +114,15 @@ void PhysicsObject::CheckCollisions(btDynamicsWorld* world)
 	CustomCollisionCallback callback(parent);
 	world->contactTest(rigidBody, callback);
 
-	// New collisions
+	std::set<GameObject*> newCollisions;
+
+	// New or ongoing collisions
 	for (auto obj : callback.activeCollisions) {
-		if (!activeCollisions.count(obj)) {
+		if (activeCollisions.count(obj)) {
+			// Collision already existed, so it's an ongoing collision
+			parent->OnCollisionStay(obj);
+		}
+		else {
 			activeCollisions.insert(obj);
 			parent->OnCollisionEnter(obj, callback.contactPointA, callback.contactPointB);
 		}
@@ -129,10 +135,14 @@ void PhysicsObject::CheckCollisions(btDynamicsWorld* world)
 		}
 	}
 
-	// Can't erase from a set while iterating over it
-	std::erase_if(activeCollisions, [&](GameObject* obj) {
-		return !callback.activeCollisions.count(obj);
-	});
+	//// Can't erase from a set while iterating over it
+	//std::erase_if(activeCollisions, [&](GameObject* obj) {
+	//	return !callback.activeCollisions.count(obj);
+	//});
+
+	// Update activeCollisions for the next frame, directly reflects the current state of
+	// collisions without incremental updates.
+	activeCollisions = callback.activeCollisions;
 }
 
 void PhysicsObject::ClearForces() {
