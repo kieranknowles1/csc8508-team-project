@@ -2,16 +2,13 @@
 
 #include "GameObject.h"
 #include "btBulletDynamicsCommon.h"
-#include "CustomCollisionCallback.h"
-#include <unordered_set>
+#include "CollisionInfo.h"
 
 namespace NCL {
 	namespace CSC8503 {
 		class CustomCollisionCallback : public btCollisionWorld::ContactResultCallback {
 		public:
-			// Using an unordered set to store the active collisions
-			// This set just stores detailed per-frame collision information and is temporary
-			std::unordered_set<CollisionInfo> activeCollisions;
+			std::set<CollisionInfo, std::less<>> activeCollisions;
 
 			CustomCollisionCallback(GameObject* parentObject) : parent(parentObject) {}
 
@@ -19,7 +16,7 @@ namespace NCL {
 			btScalar addSingleResult(btManifoldPoint& cp,
 				const btCollisionObjectWrapper* colObj0Wrap, int partId0, int index0,
 				const btCollisionObjectWrapper* colObj1Wrap, int partId1, int index1) override {
-				
+
 				GameObject* obj0 = (GameObject*)colObj0Wrap->getCollisionObject()->getUserPointer();
 				GameObject* obj1 = (GameObject*)colObj1Wrap->getCollisionObject()->getUserPointer();
 
@@ -40,9 +37,9 @@ namespace NCL {
 					// Print the contact points for debugging
 					//std::cout << "Contact Point A: " << contactPointA.getX() << " " << contactPointA.getY() << " " << contactPointA.getZ() << std::endl;
 					//std::cout << "Contact Point B: " << contactPointB.getX() << " " << contactPointB.getY() << " " << contactPointB.getZ() << std::endl;
-				
+
 					// Add the object's collision info to the active collisions set
-					
+
 					activeCollisions.insert(collisionInfo);
 				}
 

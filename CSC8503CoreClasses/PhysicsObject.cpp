@@ -154,13 +154,8 @@ void PhysicsObject::CheckCollisions(btDynamicsWorld* world)
 
 	// Remove objects that are no longer colliding
 	std::erase_if(activeCollisions, [&](GameObject* obj) {
-		for (const auto& collision : callback.activeCollisions) {
-			if (collision.otherObject == obj) {
-				return false; // Still colliding, don't remove
-			}
-		}
-		return true; // No longer colliding, remove
-		});
+		return callback.activeCollisions.find(obj) == callback.activeCollisions.end();
+	});
 }
 
 void PhysicsObject::ClearForces() {
