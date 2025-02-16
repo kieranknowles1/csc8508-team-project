@@ -17,7 +17,17 @@ PhysicsObject::~PhysicsObject()	{
 	// Clean up Bullet physics components
 	if (rigidBody) {
 		delete rigidBody->getMotionState();
+
+		// If we are a compound shape, then we also own all of our child shapes
+		auto compoundShape = dynamic_cast<btCompoundShape*>(rigidBody->getCollisionShape());
+		if (compoundShape) {
+			int numChildren = compoundShape->getNumChildShapes();
+			for (int i = 0; i < numChildren; i++) {
+				delete compoundShape->getChildShape(i);
+			}
+		}
 		delete rigidBody->getCollisionShape();
+
 		delete rigidBody;
 	}
 
