@@ -64,6 +64,22 @@ namespace NCL {
 				return normalMap.get();
 			}
 
+			bool GetTexRepeating() const {
+				return texRepeating;
+			}
+
+			void SetTexRepeating(bool tr) {
+				texRepeating = tr;
+			}
+
+			float GetTexScaleMultiplier() const {
+				return texScaleMultiplier;
+			}
+
+			void SetTexScaleMultiplier(float f) { //in case an individual object's texture scale needs to be modified
+				texScaleMultiplier = f;
+			}
+
 		protected:
 			GameObject* parent;
 			std::shared_ptr<Mesh> mesh;
@@ -71,6 +87,8 @@ namespace NCL {
 			std::shared_ptr<Shader> shader;
 			Vector4		colour = Vector4(1, 1, 0, 0.99);
 			bool isFlat = false;
+			bool texRepeating = false; // added to allow repeating textures per object
+			float texScaleMultiplier = 0.1f; //unless set to something else, all scaled textures will be scaled with this and their renderScale
 			//additional normal map option:
 			std::shared_ptr<Texture> normalMap;
 		};
