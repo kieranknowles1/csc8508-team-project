@@ -36,6 +36,10 @@ namespace NCL {
 			void ThirdPersonControls();
 			void InitWorld();
 
+
+			void UpdatePlayer(float dt);
+
+
 			Turret* AddTurretToWorld();
 
 			GameObject* AddFloorToWorld(const Vector3& position, const Vector3& size, const Vector3& rotation, bool isFloor);
