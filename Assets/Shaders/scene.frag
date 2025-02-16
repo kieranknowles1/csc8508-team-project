@@ -47,7 +47,7 @@ void main(void)
 
     if(hasNormalMap) { //normal map additions
 	    mat3 TBN = mat3 (normalize(IN.tangent), normalize(IN.binormal), normalize(IN.normal));
-		mapnormal = texture(normalTex, IN.texCoord).rgb;
+		mapnormal = texture(normalTex, IN.texCoord).rgb; 
 		mapnormal = normalize(TBN * normalize(mapnormal * 2.0 - 1.0)); 
 		NORMAL = mapnormal;
 		}
@@ -64,7 +64,7 @@ void main(void)
 	vec4 albedo = IN.colour;
 	
 	if(hasTexture) {
-	 albedo *= texture(mainTex, IN.texCoord);
+	 albedo *= texture(mainTex, IN.texCoord); 
 	}
 
 	float attenuation = 1.0f; //default attenuation value 
