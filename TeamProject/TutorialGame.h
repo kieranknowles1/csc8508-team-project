@@ -102,7 +102,7 @@ namespace NCL {
 			Turret* testTurret = nullptr;
 
 			//Level import
-			LevelImporter* levelImporter;
+			std::unique_ptr<LevelImporter> levelImporter;
 			bool loadFromLevel;
 
 			//world Rotate

@@ -76,7 +76,7 @@ void TutorialGame::UpdateGame(float dt) {
 	UpdateKeys();
 	world->UpdateWorld(dt);
 	profiler.startSection("Check Collisions");
-	
+
 	UpdatePlayer(dt);
 
 	// Checking for collisions using Bullet's collision detection system
@@ -267,7 +267,7 @@ void TutorialGame::InitWorld() {
 	InitPlayer();
 
 	if (loadFromLevel) {
-		levelImporter = new LevelImporter(resourceManager.get(), world, bulletWorld);
+		levelImporter = std::make_unique<LevelImporter>(resourceManager.get(), world, bulletWorld);
 		levelImporter->LoadLevel(6);
 		return;
 	}
@@ -316,7 +316,7 @@ void TutorialGame::InitPlayer() {
 	player->GetPhysicsObject()->GetRigidBody()->setAngularFactor(0);
 	player->GetPhysicsObject()->GetRigidBody()->setFriction(0.0f);
 	player->GetPhysicsObject()->GetRigidBody()->setDamping(0.0, 0);
-	gun = AddCubeToWorld(Vector3(10, 2, 20), Vector3(0.6, 0.6, 1.6), 0, false); 
+	gun = AddCubeToWorld(Vector3(10, 2, 20), Vector3(0.6, 0.6, 1.6), 0, false);
 	playerController = new PlayerController(player, gun, controller, mainCamera, bulletWorld, world, resourceManager.get());
 	player->GetRenderObject()->SetColour(playerColour);
 
