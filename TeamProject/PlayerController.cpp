@@ -61,27 +61,52 @@ void PlayerController::UpdateMovement(float dt) {
     btVector3 forward = rotationMatrix * btVector3(0, 0, -1);
     btVector3 up = rotationMatrix * btVector3(0, 1, 0);
     btVector3 right = rotationMatrix * btVector3(1, 0, 0);
+
+    //if on ground, movement based on floor angle
+    if (player->getCollided() > 0) {
+        btVector3 groundNormal = FindFloorNormal();
+        if (groundNormal != btVector3(0, 0, 0)) {
+            float cosAngleThreshold = cos(btRadians(60.0f));
+            float dotProduct = groundNormal.dot(upDirection.absolute());
+            if (dotProduct >= cosAngleThreshold) {
+                btVector3 slopeForward = forward - (forward.dot(groundNormal)) * groundNormal;
+                slopeForward.normalize();
+                btVector3 slopeRight = right - (right.dot(groundNormal)) * groundNormal;
+                slopeRight.normalize();
+                if (slopeForward.length2() > SIMD_EPSILON && slopeRight.length2() > SIMD_EPSILON) {
+                    forward = slopeForward;
+                    right = slopeRight;
+                }
+            }
+        }
+    }
+
     //movement based on all the multipliers combined
     Vector2 directionalInput = getDirectionalInput();
     bool sprinting = controller->GetDigital(Controller::DigitalControl::Sprint);
     float forwardMovement = directionalInput.y;
     float moveMulti = playerSpeed * (sprinting ? sprintMulti : 1) * (isCrouching ? crouchMulti : 1) * (player->getCollided() <= 0 ? airMulti : 1);
     forwardMovement *= (forwardMovement <= 0) ? backwardsMulti : 1;
-    btVector3 movement = (right * directionalInput.x * strafeMulti * moveMulti) +(forward * forwardMovement * moveMulti);
+    btVector3 movement = (right * directionalInput.x * strafeMulti * moveMulti ) +(forward * forwardMovement * moveMulti);
+
     if (inAirTime > 0) {
         player->setCollided(0);
         inAirTime -= dt;
     }
     if (player->getCollided() <= 0) {
+       // std::cout << "IN AIR" << std::endl;
         movement *= airMulti;
         movement += rb->getLinearVelocity();
+    }
+    else {
+       // std::cout << "ON FLOOR" << std::endl;
     }
    // std::cout << player->getCollided() << std::endl;
     movement += upDirection * -(gravityScale * dt);
 
     // jump input
     if (controller->GetDigital(Controller::DigitalControl::Jump) && player->getCollided()) {
-        movement += (upDirection * jumpHeight);
+        movement += (FindFloorNormal() * jumpHeight);
         player->setCollided(0);
         inAirTime = 0.2f;
     }
@@ -210,6 +235,21 @@ bool PlayerController::CheckCeling() {
     else {
         return false;
     }
+}
+
+// finds surface normal of floor below
+btVector3 PlayerController::FindFloorNormal() {
+    btVector3 btBelowPlayerPos = btPlayerPos;
+    btBelowPlayerPos -= (upDirection * 8);
+    btCollisionWorld::ClosestRayResultCallback callback(btPlayerPos, btBelowPlayerPos);
+    bulletWorld->rayTest(btPlayerPos, btBelowPlayerPos, callback);
+    if (callback.hasHit()) {
+        return callback.m_hitNormalWorld;
+    }
+    else {
+        return btVector3();
+    }
+
 }
 
 

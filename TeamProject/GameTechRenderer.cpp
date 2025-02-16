@@ -150,7 +150,7 @@ void GameTechRenderer::RenderFrame() {
 	glDisable(GL_DEPTH_TEST);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	NewRenderLines();
-	NewRenderTextures();
+	NewRenderTextures(); 
 	NewRenderText();
 	glDisable(GL_BLEND);
 	glEnable(GL_DEPTH_TEST);
@@ -259,6 +259,7 @@ void GameTechRenderer::RenderCamera() {
 	int shadowLocation  = 0;
 	int hasFlatLocation = 0;
 	int hasNormalLocation = 0;
+	int texRepeatingLocation = 0; 
 
 	int lightPosLocation	= 0;
 	int lightColourLocation = 0;
@@ -274,8 +275,17 @@ void GameTechRenderer::RenderCamera() {
 		OGLShader* shader = (OGLShader*)(*i).GetShader();
 		UseShader(*shader);
 
-		if ((*i).GetDefaultTexture()) {
+		if ((*i).GetDefaultTexture()) { 
 			BindTextureToShader(*(OGLTexture*)(*i).GetDefaultTexture(), "mainTex", 0);
+			//figure out scale of object:
+			float multiplier = (*i).GetTexScaleMultiplier();   
+			float scaleX = (*i).getParent()->getRenderScale().x*multiplier;
+			float scaleY = (*i).getParent()->getRenderScale().y*multiplier;
+			float scaleZ = (*i).getParent()->getRenderScale().z*multiplier; 
+			glUniform1f(glGetUniformLocation(shader->GetProgramID(), "texScaleX"), scaleX);
+			glUniform1f(glGetUniformLocation(shader->GetProgramID(), "texScaleY"), scaleY);
+			glUniform1f(glGetUniformLocation(shader->GetProgramID(), "texScaleZ"), scaleZ);
+			
 		}
 
 		//normal map capabilities added:
@@ -293,6 +303,7 @@ void GameTechRenderer::RenderCamera() {
 			hasTexLocation  = glGetUniformLocation(shader->GetProgramID(), "hasTexture");
 			hasFlatLocation =  glGetUniformLocation(shader->GetProgramID(), "isFlat");
 			hasNormalLocation = glGetUniformLocation(shader->GetProgramID(), "hasNormalMap");
+			texRepeatingLocation = glGetUniformLocation(shader->GetProgramID(), "texRepeating");
 
 			lightPosLocation	= glGetUniformLocation(shader->GetProgramID(), "lightPos");
 			lightColourLocation = glGetUniformLocation(shader->GetProgramID(), "lightColour");
@@ -333,6 +344,7 @@ void GameTechRenderer::RenderCamera() {
 		glUniform1i(hasTexLocation, (OGLTexture*)(*i).GetDefaultTexture() ? 1:0);
 		glUniform1i(hasFlatLocation, i->GetIsFlat());
 		glUniform1i(hasNormalLocation, i->GetHasNormal());
+		glUniform1i(texRepeatingLocation, i->GetTexRepeating());
 	
 		BindMesh((OGLMesh&)*(*i).GetMesh());
 		size_t layerCount = (*i).GetMesh()->GetSubMeshCount();

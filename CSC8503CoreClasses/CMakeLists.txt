@@ -41,12 +41,6 @@ set(AI_Pathfinding
 )
 source_group("AI\\Pathfinding" FILES ${AI_Pathfinding})
 
-
-set(Collision_Detection
-    "Ray.h"
-)
-source_group("Collision Detection" FILES ${Collision_Detection})
-
 set(Networking
     "GameClient.h"
     "GameClient.cpp"
@@ -117,7 +111,6 @@ set(ALL_FILES
     ${AI_Pushdown_Automata}
     ${AI_State_Machine}
     ${AI_Pathfinding}
-    ${Collision_Detection}
     ${Networking}
     ${Physics}
     ${enet_Files}

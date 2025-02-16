@@ -6,7 +6,6 @@
 #include "Camera.h"
 #include "Controller.h"
 #include "GameObject.h"
-#include "StateGameObject.h"
 #include "GameWorld.h"
 #include "PhysicsObject.h"
 #include "RenderObject.h"
@@ -128,6 +127,7 @@ namespace NCL {
 			void HandleCrouching(float dt);
 			void HandleSliding(float dt);
 			bool CheckCeling();
+			btVector3 FindFloorNormal();
 			void SetGunTransform();
 			void ShootBullet();
 			btVector3 CalculateUpDirection();

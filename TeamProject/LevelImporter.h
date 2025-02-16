@@ -12,7 +12,6 @@
 #include "Matrix.h"
 #include "Camera.h"
 #include "Controller.h"
-#include "StateGameObject.h"
 #include "GameWorld.h"
 #include "PhysicsObject.h"
 #include "RenderObject.h"

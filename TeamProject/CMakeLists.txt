@@ -4,12 +4,6 @@ set(SOURCES
     GameTechRenderer.cpp
     GameTechRenderer.h
     main.cpp
-    NetworkedGame.cpp
-    NetworkedGame.h
-    NetworkPlayer.cpp
-    NetworkPlayer.h
-    StateGameObject.cpp
-    StateGameObject.h
     TutorialGame.cpp
     TutorialGame.h
     PlayerController.cpp

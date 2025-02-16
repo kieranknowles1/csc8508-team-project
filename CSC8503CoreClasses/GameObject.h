@@ -58,6 +58,10 @@ namespace NCL::CSC8503 {
 			//std::cout << "OnCollisionStay event occured!\n";
 		}
 
+		virtual void OnCollisionStay(GameObject* otherObject) {
+			//std::cout << "OnCollisionStay: " << this->GetWorldID() << " is still colliding with " << otherObject->GetWorldID() << std::endl;
+		}
+
 		virtual void Update(float dt) {
 
 		}
