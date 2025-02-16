@@ -61,6 +61,14 @@ namespace NCL {
 			return *this;
 		}
 
+		void setRotation(Vector3 rotationIn) {
+			rotation = rotationIn;
+		}
+		void setRotationAmount(float rotateAmountIn) {
+			rotateAmount = rotateAmountIn;
+		}
+
+
 		//Builds a view matrix for the current camera variables, suitable for sending straight
 		//to a vertex shader (i.e it's already an 'inverse camera matrix').
 		Matrix4 BuildViewMatrix() const;
@@ -102,6 +110,8 @@ namespace NCL {
 		float	speed;
 
 		const Controller* activeController = nullptr;
+		Vector3 rotation = Vector3(0,0,0);
+		float rotateAmount = 0.0f;
 	};
 
 	class OrhographicCamera : public Camera {

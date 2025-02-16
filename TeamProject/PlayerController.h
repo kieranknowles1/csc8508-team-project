@@ -41,14 +41,21 @@ namespace NCL {
 			float getWorldRotation() {
 				return worldRotation;
 			}
+
+			void CalculateDirections() {
+				upDirection = CalculateUpDirection();
+				rightDirection = CalculateRightDirection(upDirection);
+				forwardDirection = CalculateForwardDirection(upDirection, rightDirection);
+				player->setUpDirection(upDirection);
+			}
 			btVector3 getUpDirection() {
-				return CalculateUpDirection();
+				return upDirection;
 			}
-			btVector3 getRightDirection(btVector3 up) {
-				return CalculateRightDirection(up);
+			btVector3 getRightDirection() {
+				return rightDirection;
 			}
-			btVector3 getForwardDirection(btVector3 up, btVector3 right) {
-				return CalculateForwardDirection(up,right);
+			btVector3 getForwardDirection() {
+				return forwardDirection;
 			}
 
 		private:

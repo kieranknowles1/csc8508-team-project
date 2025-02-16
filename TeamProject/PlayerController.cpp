@@ -17,35 +17,32 @@ void PlayerController::Initialise() {
 void PlayerController::UpdateMovement(float dt) {
     transformPlayer = rb->getWorldTransform();
     btPlayerPos = transformPlayer.getOrigin();
-    upDirection = CalculateUpDirection();
-    rightDirection = CalculateRightDirection(upDirection);
-    forwardDirection = CalculateForwardDirection(upDirection, rightDirection);
-    player->setUpDirection(upDirection);
 
 
     roll = CalculateRoll();
-    yaw = fmod(yaw - controller->GetAnalogue(Controller::AnalogueControl::LookX) + 360.0f, 360.0f);
     float pitch = CalculatePitch();
-    camera->setPitchOffset(pitch);
 
-    if (pitch == 0.0f) {
-        if (!thirdPerson) camera->SetYaw(yaw);
+    if (pitch < 0) {
+        yaw = fmod(yaw + controller->GetAnalogue(Controller::AnalogueControl::LookX) + 360.0f, 360.0f);
     }
     else {
-        float temp = roll;
-        if (pitch > 0) {
-            roll = yaw;
-            yaw = roll;
-        }
-        else{
-            roll = -yaw;
-            yaw = -roll;
-         }
-     
+        yaw = fmod(yaw - controller->GetAnalogue(Controller::AnalogueControl::LookX) + 360.0f, 360.0f);
+    }
+    
+
+   // camera->setPitchOffset(pitch);
+
+    if (worldRotation <= 3.5) {
+        if (!thirdPerson) camera->SetYaw(yaw);
+        camera->SetRoll(roll);
+   }
+    else {
+        camera->setRotation(rightDirection);
+        camera->setRotationAmount(90);
+        camera->SetRoll(yaw);
     }
 
-    camera->SetRoll(roll);
-
+ 
 
     if (controller->GetDigital(Controller::DigitalControl::Fire) && shotTimer >= shotCooldown) {
         ShootBullet();
@@ -54,6 +51,7 @@ void PlayerController::UpdateMovement(float dt) {
     else {
         shotTimer += dt;
     }
+
     //sliding/floor detection
     HandleSliding(dt);
     HandleCrouching(dt);
@@ -78,7 +76,7 @@ void PlayerController::UpdateMovement(float dt) {
 
     //finds player forward and right vectors
     btMatrix3x3 rotationMatrix(playerRotation2 * playerRotation3 * playerRotation);
-    btVector3 forward = rotationMatrix * btVector3(0, 0, -1);
+    btVector3 forward = rotationMatrix * -forwardDirection;
     btVector3 up = rotationMatrix * btVector3(0, 1, 0);
     btVector3 right = rotationMatrix * btVector3(1, 0, 0);
 

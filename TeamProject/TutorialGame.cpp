@@ -81,6 +81,19 @@ void TutorialGame::UpdateGame(float dt) {
 	});
 
 	profiler.startSection("Update Camera");
+
+	//Updirection Calculations, must be ran before player/camera updates
+	if (rotateTimer < rotateTime) {
+		rotateTimer += dt;
+		playerController->setWorldRotation(std::lerp(oldRotate, targetRotate, rotateTimer / rotateTime));
+	}
+	else if (!finished) {
+		playerController->setWorldRotation(targetRotate);
+		finished = true;
+	}
+	playerController->CalculateDirections();
+
+
 	// Press F for freeCam, press G for thirdPerson
 	if (freeCam) {
 		//freeCam Movement
@@ -106,14 +119,7 @@ void TutorialGame::UpdateGame(float dt) {
 		player->GetRenderObject()->SetColour(colour);
 	}
 
-	if (rotateTimer < rotateTime) {
-		rotateTimer += dt;
-		playerController->setWorldRotation(std::lerp(oldRotate, targetRotate, rotateTimer / rotateTime));
-	}
-	else if (!finished) {
-		playerController->setWorldRotation(targetRotate);
-		finished = true;
-	}
+
 
 	bulletWorld->setGravity(playerController->getUpDirection() * -30.0f);
 
@@ -163,8 +169,8 @@ void TutorialGame::UpdateKeys() {
 void TutorialGame::ThirdPersonControls() {
 	btTransform transformPlayer = player->GetPhysicsObject()->GetRigidBody()->getWorldTransform();
 	btVector3 up = playerController->getUpDirection();
-	btVector3 right = playerController->getRightDirection(up);
-	btVector3 forw = playerController->getForwardDirection(up, right);
+	btVector3 right = playerController->getRightDirection();
+	btVector3 forw = playerController->getForwardDirection();
 	btQuaternion playerRotation = transformPlayer.getRotation();
 	btMatrix3x3 rotationMatrix(playerRotation);
 	btVector3 r = rotationMatrix * btVector3(1, 0, 0);
