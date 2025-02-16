@@ -283,7 +283,7 @@ void TutorialGame::InitPlayer() {
 	player->GetPhysicsObject()->GetRigidBody()->setAngularFactor(0);
 	player->GetPhysicsObject()->GetRigidBody()->setFriction(0.0f);
 	player->GetPhysicsObject()->GetRigidBody()->setDamping(0.0, 0);
-	gun = AddCubeToWorld(Vector3(10, 2, 20), Vector3(0.6, 0.6, 1.6), 0, false);
+	gun = AddCubeToWorld(Vector3(10, 2, 20), Vector3(0.6, 0.6, 1.6), 0, false); 
 	playerController = new PlayerController(player, gun, controller, mainCamera, bulletWorld, world, resourceManager.get());
 	player->GetRenderObject()->SetColour(playerColour);
 
@@ -343,6 +343,7 @@ GameObject* TutorialGame::AddCubeToWorld(const Vector3& position, Vector3 dimens
 
 	// Setting render object
 	cube->SetRenderObject(new RenderObject(cube, resourceManager->getMeshes().get("Cube.msh"), defaultTexture, defaultShader));
+	cube->GetRenderObject()->SetTexRepeating(true); //scale texture (no stretching)
 
 	world->AddGameObject(cube);
 
@@ -412,6 +413,7 @@ GameObject* TutorialGame::AddInfinitePlaneToWorld(const Vector3& position, const
 
 	// Set the render object
 	plane->SetRenderObject(new RenderObject(plane, resourceManager->getMeshes().get("Plane.msh"), defaultTexture, defaultShader));
+	plane->GetRenderObject()->SetTexRepeating(true); //scale texture
 
 	// Set the physics object
 	plane->SetPhysicsObject(new PhysicsObject(plane));
