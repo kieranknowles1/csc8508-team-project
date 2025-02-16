@@ -3,7 +3,6 @@
 #include "PhysicsObject.h"
 #include "RenderObject.h"
 #include "TextureLoader.h"
-#include "AudioEngine.h"
 
 #include "BulletDebug.h"
 
@@ -46,8 +45,6 @@ void TutorialGame::InitialiseAssets() {
 
 TutorialGame::~TutorialGame()	{
 	DestroyBullet();
-	audioEngine.Shutdown();
-	//Get FMOD ERROR: 30 when closing the exe, doesn't interfere with gameplay
 
 	delete renderer;
 	delete world;
@@ -233,7 +230,6 @@ void TutorialGame::InitWorld() {
 	DestroyBullet();
 	world->ClearAndErase();
 	InitBullet();
-	audioEngine.Init();
 
 	InitPlayer();
 

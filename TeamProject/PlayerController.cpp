@@ -1,5 +1,4 @@
 #include "PlayerController.h"
-#include "AudioEngine.h"
 
 using namespace NCL;
 using namespace CSC8503;
@@ -110,9 +109,6 @@ void PlayerController::UpdateMovement(float dt) {
         movement += (FindFloorNormal() * jumpHeight);
         player->setCollided(0);
         inAirTime = 0.2f;
-
-        audioEngine.PlaySounds("Assets/Audio/jump.wav", NCL::Maths::Vector3(player->GetTransform().getOrigin()), 0.0f);
-        //Spatial audio is wrong, I think the vec3 being passed into this func is wrong
     }
 
     rb->setLinearVelocity(movement);
