@@ -19,6 +19,8 @@ set(SOURCES
     ResourceManager.cpp
     Profiler.h
     Profiler.cpp
+	AudioEngine.cpp
+	AudioEngine.h
 )
 
 file(GLOB_RECURSE COMPILED_MESHES "${CMAKE_SOURCE_DIR}/Assets/Meshes/*.msh")
@@ -86,6 +88,8 @@ set(INCLUDE_DIRECTORIES
 target_include_directories(${PROJECT_NAME} PRIVATE ${INCLUDE_DIRECTORIES}>)
 
 target_link_libraries(${PROJECT_NAME} NCLCoreClasses)
+target_link_libraries(${PROJECT_NAME} fmod)
+target_link_libraries(${PROJECT_NAME} fmodstudio)
 target_link_libraries(${PROJECT_NAME} CSC8503CoreClasses)
 target_link_libraries(${PROJECT_NAME} OpenGLRendering)
 target_link_libraries(${PROJECT_NAME} NetworkLib)
