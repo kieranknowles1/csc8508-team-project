@@ -77,6 +77,7 @@ namespace NCL {
 
 			BulletDebug* bulletDebug = nullptr;
 
+			void CheckCollisions();
 			void DestroyBullet();
 			void InitBullet(); // Initialises the Bullet physics world
 
