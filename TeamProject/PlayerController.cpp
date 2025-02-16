@@ -95,7 +95,7 @@ void PlayerController::UpdateMovement(float dt) {
     }
     if (player->getCollided() <= 0) {
        // std::cout << "IN AIR" << std::endl;
-        movement *= airMulti;
+        movement *= (airMulti*dt);
         movement += rb->getLinearVelocity();
     }
     else {

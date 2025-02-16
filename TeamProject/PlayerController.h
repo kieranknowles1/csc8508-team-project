@@ -60,7 +60,7 @@ namespace NCL {
 			float jumpHeight = 75.0f;
 			float gravityScale = 100.0f;
 			float cameraHeight = 3.0f;
-			float airMulti = 0.1f;
+			float airMulti = 1.0f;
 			float strafeMulti = 0.65f;
 			float backwardsMulti = 0.55f;
 			float sprintMulti = 2.0f;

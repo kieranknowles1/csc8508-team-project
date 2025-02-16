@@ -77,9 +77,16 @@ void TutorialGame::UpdateGame(float dt) {
 	world->UpdateWorld(dt);
 	profiler.startSection("Check Collisions");
 	
+	UpdatePlayer(dt);
+
 	// Checking for collisions using Bullet's collision detection system
 	// Bullet already keeps track of all the objects that are colliding with each other
 	// So, we don't need to check for collisions manually
+
+	//world->OperateOnContents([&](GameObject* obj) {
+	//	obj->GetPhysicsObject()->CheckCollisions(bulletWorld);
+	//	});
+
 	btDispatcher* dispatcher = bulletWorld->getDispatcher();
 	int numManifolds = dispatcher->getNumManifolds();
 
@@ -103,6 +110,21 @@ void TutorialGame::UpdateGame(float dt) {
 	}
 
 	profiler.startSection("Update Camera");
+
+
+	profiler.startSection("Prepare Render");
+	bulletWorld->debugDrawWorld();
+	renderer->Update(dt);
+
+	profiler.endFrame();
+	if (showProfiling) {
+		profiler.printTimes();
+	}
+	renderer->Render();
+	Debug::UpdateRenderables(dt);
+}
+
+void TutorialGame::UpdatePlayer(float dt) {
 	// Press F for freeCam, press G for thirdPerson
 	if (freeCam) {
 		//freeCam Movement
@@ -138,17 +160,6 @@ void TutorialGame::UpdateGame(float dt) {
 	}
 
 	bulletWorld->setGravity(playerController->getUpDirection() * -30.0f);
-
-	profiler.startSection("Prepare Render");
-	bulletWorld->debugDrawWorld();
-	renderer->Update(dt);
-
-	profiler.endFrame();
-	if (showProfiling) {
-		profiler.printTimes();
-	}
-	renderer->Render();
-	Debug::UpdateRenderables(dt);
 }
 
 void TutorialGame::UpdateKeys() {
