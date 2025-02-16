@@ -3,11 +3,12 @@
 using namespace NCL;
 using namespace CSC8503;
 
-// Helper function to print btVector3
+
 std::ostream& operator<<(std::ostream& os, const btVector3& vec) {
     os << "(" << vec.getX() << ", " << vec.getY() << ", " << vec.getZ() << ")";
     return os;
 }
+
 
 
 void PlayerController::Initialise() {
@@ -105,7 +106,7 @@ void PlayerController::UpdateMovement(float dt) {
     movement += upDirection * -(gravityScale * dt);
 
     // jump input
-    if (controller->GetDigital(Controller::DigitalControl::Jump) && player->getCollided()) {
+    if (controller->GetDigital(Controller::DigitalControl::Jump) && player->getCollided() > 0) {
         movement += (FindFloorNormal() * jumpHeight);
         player->setCollided(0);
         inAirTime = 0.2f;

@@ -38,6 +38,8 @@ public:
 	void setUpDirection(btVector3 upDirectionIn) {
 		upDirection = upDirectionIn;
 	};
+
+	void Initialise() {};
 private:
 	int collided = 0;
 	btVector3 upDirection;

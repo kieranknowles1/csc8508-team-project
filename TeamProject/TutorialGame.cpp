@@ -101,9 +101,9 @@ void TutorialGame::UpdateGame(float dt) {
 		player->GetRenderObject()->SetColour(colour);
 	}
 	else {
-		Vector4 colour = player->GetRenderObject()->GetColour();
-		colour.w = 1;
-		player->GetRenderObject()->SetColour(colour);
+	//	Vector4 colour = player->GetRenderObject()->GetColour();
+		//colour.w = 1;
+		//player->GetRenderObject()->SetColour(colour);
 	}
 
 	if (rotateTimer < rotateTime) {
@@ -283,8 +283,9 @@ void TutorialGame::InitPlayer() {
 	player->GetPhysicsObject()->GetRigidBody()->setAngularFactor(0);
 	player->GetPhysicsObject()->GetRigidBody()->setFriction(0.0f);
 	player->GetPhysicsObject()->GetRigidBody()->setDamping(0.0, 0);
+	player->Initialise();
 	gun = AddCubeToWorld(Vector3(10, 2, 20), Vector3(0.6, 0.6, 1.6), 0, false); 
-	playerController = new PlayerController(player, gun, controller, mainCamera, bulletWorld, world, resourceManager.get());
+	playerController = new PlayerController(player, gun, controller, mainCamera, bulletWorld, world, resourceManager.get(),bulletDebug);
 	player->GetRenderObject()->SetColour(playerColour);
 
 }

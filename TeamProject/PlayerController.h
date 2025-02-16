@@ -21,14 +21,15 @@ namespace NCL {
 	namespace CSC8503 {
 		class PlayerController {
 		public:
-			PlayerController(PlayerObject* playerIn, GameObject* gunIn, const Controller& c, Camera* cam, btDiscreteDynamicsWorld* bulletWorldIn, GameWorld* worldIn, ResourceManager* resourceManager) {
+			PlayerController(PlayerObject* playerIn, GameObject* gunIn, const Controller& c, Camera* cam, btDiscreteDynamicsWorld* bulletWorldIn, GameWorld* worldIn, ResourceManager* resourceManagerIn, BulletDebug* bulletDebugIn) {
 				player = playerIn;
 				gun = gunIn;
 				controller = &c;
 				camera = cam;
 				bulletWorld = bulletWorldIn;
 				world = worldIn;
-				this->resourceManager = resourceManager;
+				this->resourceManager = resourceManagerIn;
+				bulletDebug = bulletDebugIn;
 				Initialise();
 			}
 			~PlayerController() {};
@@ -121,6 +122,7 @@ namespace NCL {
 			btVector3 upDirection;
 			btVector3 rightDirection;
 			btVector3 forwardDirection;
+			BulletDebug* bulletDebug;
 
 			Vector2 getDirectionalInput() const;
 			void Initialise();
