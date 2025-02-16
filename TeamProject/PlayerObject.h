@@ -16,13 +16,13 @@ using namespace NCL::CSC8503;
 class PlayerObject : public GameObject {
 public:
 	void OnCollisionEnter(const CollisionInfo& collisionInfo) override {
-		if (otherObject->getIsFloor()) {
+		if (collisionInfo.otherObject->getIsFloor()) {
 			collided++;
 		}
 	}
 	void OnCollisionExit(const CollisionInfo& collisionInfo) override {
 		btVector3 playerPos = this->GetPhysicsObject()->GetRigidBody()->getWorldTransform().getOrigin();
-		btVector3 objPos = otherObject->GetPhysicsObject()->GetRigidBody()->getWorldTransform().getOrigin();
+		btVector3 objPos = collisionInfo.otherObject->GetPhysicsObject()->GetRigidBody()->getWorldTransform().getOrigin();
 		btVector3 direction = (objPos - playerPos).normalize();
 		float dotProduct = direction.dot(upDirection);
 		if (dotProduct < 0.0f && collided > 0) {
