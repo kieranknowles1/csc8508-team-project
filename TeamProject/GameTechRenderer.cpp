@@ -79,6 +79,16 @@ GameTechRenderer::GameTechRenderer(GameWorld& world) : OGLRenderer(*Window::GetW
 	SetDebugLineBufferSizes(1000);
 
 	InitCrosshair(); //This line Ameya added for crosshair
+
+	//start setting up framebuffers for post processing:
+	//first generate the texture to store the rendered scene:
+	glGenTextures(1, hdrTex);
+	glBindTexture(GL_TEXTURE_2D, hdrTex); 
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST); 
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST); 
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, world.GetWindow().width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL); //figure out width and height
 }
 
 GameTechRenderer::~GameTechRenderer()	{
