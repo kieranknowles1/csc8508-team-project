@@ -1,0 +1,49 @@
+{
+   nvidia_driver_realloc_zero
+   Memcheck:ReallocZero
+   fun:realloc
+   obj:*/libnvidia-glcore.so.550.142
+   obj:*/libGLX_nvidia.so.550.142
+   obj:*/libGLX_nvidia.so.550.142
+   obj:*/libGLX_nvidia.so.550.142
+   obj:/nix/store/h7zcxabfxa7v5xdna45y2hplj31ncf8a-glibc-2.40-36/lib/ld-linux-x86-64.so.2
+   fun:call_init
+   fun:_dl_init
+   fun:_dl_catch_exception
+   fun:dl_open_worker
+   fun:_dl_catch_exception
+   fun:_dl_open
+}
+{
+   nvidia_driver_memalign_zero
+   Memcheck:BadSize
+   fun:posix_memalign
+   obj:*/libnvidia-glcore.so.550.142
+   obj:*/libGLX_nvidia.so.550.142
+   obj:*/libGLX_nvidia.so.550.142
+   obj:*/libGLX_nvidia.so.550.142
+   obj:/nix/store/h7zcxabfxa7v5xdna45y2hplj31ncf8a-glibc-2.40-36/lib/ld-linux-x86-64.so.2
+   fun:call_init
+   fun:_dl_init
+   fun:_dl_catch_exception
+   fun:dl_open_worker
+   fun:_dl_catch_exception
+   fun:_dl_open
+}
+{
+   dbus_shold_not_be_shutdown
+   Memcheck:Leak
+   match-leak-kinds: definite
+   fun:calloc
+   fun:dbus_message_new_empty_header
+   fun:_dbus_message_loader_queue_messages
+   fun:_dbus_transport_get_dispatch_status
+   fun:_dbus_transport_queue_messages
+   fun:do_reading
+   fun:socket_do_iteration
+   fun:_dbus_transport_do_iteration
+   fun:_dbus_connection_do_iteration_unlocked
+   fun:_dbus_connection_block_pending_call
+   fun:dbus_connection_send_with_reply_and_block
+   fun:dbus_bus_register
+}
