@@ -76,9 +76,31 @@ void TutorialGame::UpdateGame(float dt) {
 	UpdateKeys();
 	world->UpdateWorld(dt);
 	profiler.startSection("Check Collisions");
-	world->OperateOnContents([&](GameObject* obj) {
-		obj->GetPhysicsObject()->CheckCollisions(bulletWorld);
-	});
+	
+	// Checking for collisions using Bullet's collision detection system
+	// Bullet already keeps track of all the objects that are colliding with each other
+	// So, we don't need to check for collisions manually
+	btDispatcher* dispatcher = bulletWorld->getDispatcher();
+	int numManifolds = dispatcher->getNumManifolds();
+
+	for (int i = 0; i < numManifolds; i++) {
+		// Get the contact manifold
+		btPersistentManifold* contactManifold = dispatcher->getManifoldByIndexInternal(i);
+
+		// Get the collision objects from the contact manifold
+		const btCollisionObject* objectA = contactManifold->getBody0();
+		const btCollisionObject* objectB = contactManifold->getBody1();
+
+		// Get the GameObjects from the collision objects
+		const GameObject* gameObjectA = static_cast<const GameObject*>(objectA->getUserPointer());
+		const GameObject* gameObjectB = static_cast<const GameObject*>(objectB->getUserPointer());
+
+		// Check if the GameObjects are valid
+		if (gameObjectA && gameObjectB) {
+			gameObjectA->GetPhysicsObject()->CheckCollisions(bulletWorld);
+			gameObjectB->GetPhysicsObject()->CheckCollisions(bulletWorld);
+		}
+	}
 
 	profiler.startSection("Update Camera");
 	// Press F for freeCam, press G for thirdPerson
