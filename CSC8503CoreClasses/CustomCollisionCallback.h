@@ -31,9 +31,6 @@ namespace NCL {
 					collisionInfo.penetrationDepth = cp.getDistance();
 					collisionInfo.relativeVelocity = obj0->GetPhysicsObject()->GetRigidBody()->getLinearVelocity() - obj1->GetPhysicsObject()->GetRigidBody()->getLinearVelocity();
 
-					// Call the OnCollisionEnter method of the parent object
-					parent->OnCollisionEnter(collisionInfo);
-
 					// Print the contact points for debugging
 					//std::cout << "Contact Point A: " << contactPointA.getX() << " " << contactPointA.getY() << " " << contactPointA.getZ() << std::endl;
 					//std::cout << "Contact Point B: " << contactPointB.getX() << " " << contactPointB.getY() << " " << contactPointB.getZ() << std::endl;
