@@ -208,6 +208,12 @@ void TutorialGame::CheckCollisions()
 	int numManifolds = dispatcher->getNumManifolds();
 
 	for (int i = 0; i < numManifolds; i++) {
+		// The UpdateGame loop may be using a faster an outdated number of manifolds
+		// So, we need to check if the index is still valid
+		if (i >= dispatcher->getNumManifolds()) {
+			break;
+		}
+
 		// Get the contact manifold
 		btPersistentManifold* contactManifold = dispatcher->getManifoldByIndexInternal(i);
 
