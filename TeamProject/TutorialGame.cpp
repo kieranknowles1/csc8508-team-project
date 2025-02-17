@@ -264,11 +264,12 @@ void TutorialGame::InitWorld() {
 	world->ClearAndErase();
 	InitBullet();
 
-	InitPlayer();
+
 
 	if (loadFromLevel) {
 		levelImporter = new LevelImporter(resourceManager.get(), world, bulletWorld);
 		levelImporter->LoadLevel(6);
+		InitPlayer();
 		return;
 	}
 
@@ -305,6 +306,8 @@ void TutorialGame::InitWorld() {
 	AddCapsuleToWorld(Vector3(-20, 15, 12), 6.0f, 5.0f, 8.0f);
 
 	AddTurretToWorld();
+	InitPlayer();
+
 }
 
 void TutorialGame::InitPlayer() {
