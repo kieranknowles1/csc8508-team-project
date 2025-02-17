@@ -92,6 +92,7 @@ void LevelImporter::LoadLevel(int level) {
             << " Collider Scale: (" << obj->colliderScale.x() << ", " << obj->colliderScale.y() << ", " << obj->colliderScale.z() << ")\n\n";*/
             AddObjectToWorld(obj);
     }
+    std::cout << "Loaded level " << level << "; Contained " << count << " GameObjects" << std::endl;
 }
 
 void LevelImporter::AddObjectToWorld(ObjectData* data) {
@@ -111,7 +112,7 @@ void LevelImporter::AddObjectToWorld(ObjectData* data) {
     btCompoundShape* compoundShape = new btCompoundShape();
     bool hasCollision = (data->colliderScale != btVector3(0,0,0));
     if (hasCollision) {
-        btCollisionShape* boxShape = new btBoxShape(data->colliderScale * scale / 2.0f);
+        btCollisionShape* boxShape = new btBoxShape(data->colliderScale * scale* data->scale / 2.0f);
         btTransform colliderOffset;
         colliderOffset.setIdentity();
         colliderOffset.setOrigin(data->colliderPosition * scale);
@@ -135,4 +136,8 @@ void LevelImporter::AddObjectToWorld(ObjectData* data) {
     ));
     world->AddGameObject(cube);
     cube->setIsFloor(true);
+    cube->GetRenderObject()->SetTexRepeating(true);//sets texture to repeat and scale
+    if (data->meshName == "Quad") {
+        cube->GetRenderObject()->SetTexScaleMultiplier(0.005f);
+    }
 }

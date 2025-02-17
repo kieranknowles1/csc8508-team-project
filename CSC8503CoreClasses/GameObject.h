@@ -2,6 +2,7 @@
 
 #include "PhysicsObject.h"
 #include "btBulletDynamicsCommon.h"
+#include "CollisionInfo.h"
 
 namespace NCL::CSC8503 {
 	class NetworkObject;
@@ -45,12 +46,20 @@ namespace NCL::CSC8503 {
 			name = nameIn;
 		}
 
-		virtual void OnCollisionEnter(GameObject* otherObject) {
-			//std::cout << "OnCollisionBegin event occured! " << this->GetWorldID() << " " << otherObject->GetWorldID() << std::endl;
+		virtual void OnCollisionEnter(const CollisionInfo& collision) {
+			//std::cout << "OnCollisionEnter event occured!\n";
 		}
 
-		virtual void OnCollisionExit(GameObject* otherObject) {
-		//	std::cout << "OnCollisionEnd event occured!\n";
+		virtual void OnCollisionExit(const CollisionInfo& collision) {
+			//std::cout << "OnCollisionEnd event occured!\n";
+		}
+
+		virtual void OnCollisionStay(const CollisionInfo& collision) {
+			//std::cout << "OnCollisionStay event occured!\n";
+		}
+
+		virtual void OnCollisionStay(GameObject* otherObject) {
+			//std::cout << "OnCollisionStay: " << this->GetWorldID() << " is still colliding with " << otherObject->GetWorldID() << std::endl;
 		}
 
 		virtual void Update(float dt) {
