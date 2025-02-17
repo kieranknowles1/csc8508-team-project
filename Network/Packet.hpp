@@ -25,9 +25,14 @@ namespace Packet {
 	 */
 	class Packet {
 	public:
-		Packet() {}
+		Packet() : m_type(0), m_channel(0), m_sequenceNum(0) {}
+		Packet(Type type, uint8_t channel, uint32_t sequenceNum) : m_type(type), m_channel(channel), m_sequenceNum(sequenceNum) {}
 
-		bool operator<(const Packet& other) const { return m_sequenceNum < other.m_sequenceNum; }
+		Type GetType() { return m_type; }
+		uint8_t GetChannel() { return m_channel; }
+		uint32_t GetSequenceNumber() { return m_sequenceNum; }
+
+		bool operator<(const Packet& other) const { return m_sequenceNum > other.m_sequenceNum; }
 
 	private:
 		Type m_type;
@@ -80,7 +85,7 @@ namespace Packet {
 		}
 
 	private:
-		Type type;
+		Type type = 0;
 	};
 
 
@@ -139,7 +144,7 @@ namespace Packet {
 			// Drop packets when buffer is full.
 			if (!IsFull()) {
 				m_packets[m_numPackets++] = item;
-				std::push_heap(m_packets.begin(), m_packets.end());
+				std::push_heap(m_packets.begin(), m_packets.begin() + m_numPackets);
 				return true;
 			}
 			return false;
@@ -153,7 +158,7 @@ namespace Packet {
 		Packet Pop() {
 			if (IsEmpty()) return Packet();
 
-			std::pop_heap(m_packets.begin(), m_packets.end());
+			std::pop_heap(m_packets.begin(), m_packets.begin() + m_numPackets);
 			return m_packets[--m_numPackets];
 		}
 
