@@ -15,20 +15,16 @@ namespace NCL::PS5 {
 		PS5Controller(SceUserServiceUserId id);
 		virtual ~PS5Controller(void);
 	
-		void	Update(float dt)		override;
-		float	GetAxis(uint32_t axis)	const override;
-		float	GetButtonAnalogue(uint32_t button) const override;
-		bool	GetButton(uint32_t button) const override;
-
-	protected:
+		void Update(float dt) override;
+		float GetAnalogue(AnalogueControl control) const override;
+		bool GetDigital(DigitalControl button) const override;
 	private:
-		static const int AXIS_COUNT = 8;
-		static const int BUTTON_COUNT = 16;
+		float fireThreshold = 127.0f;
+
+		bool buttonPressed(ScePadButtonDataOffset button) const;
 
 		uint32_t padHandle;
 		ScePadControllerInformation padInfo;
-
-		float	axes[AXIS_COUNT];
-		float	buttons[BUTTON_COUNT];
+		ScePadData data;
 	};
 }
