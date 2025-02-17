@@ -36,6 +36,7 @@ set(ALL_FILES
 # Target
 ################################################################################
 add_library(${PROJECT_NAME} STATIC ${ALL_FILES})
+target_include_directories(${PROJECT_NAME} PUBLIC ${BULLET_INCLUDE_DIRS})
 
 target_precompile_headers(${PROJECT_NAME} PRIVATE
     <memory>
@@ -48,7 +49,7 @@ target_precompile_headers(${PROJECT_NAME} PRIVATE
     <iostream>
     <string>
     <iosfwd>
-    
+
     <Matrix.h>
     <Vector.h>
     <Quaternion.h>
@@ -63,9 +64,9 @@ set_target_properties(${PROJECT_NAME} PROPERTIES
 ################################################################################
 # Compile and link options
 ################################################################################
-target_include_directories (${PROJECT_NAME} 
+target_include_directories (${PROJECT_NAME}
     PUBLIC ${CMAKE_SOURCE_DIR}/NCLCoreClasses
-)	
+)
 
 ################################################################################
 # Dependencies
