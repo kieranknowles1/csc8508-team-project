@@ -21,6 +21,8 @@ set(SOURCES
 	BWHelperFunctions.cpp
     LevelImporter.cpp
     LevelImporter.h
+	NavMesh.h
+	NavMesh.cpp
 )
 
 set(COMPILED_MESHES

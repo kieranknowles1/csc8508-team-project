@@ -2,6 +2,7 @@
 #include <NCLCoreClasses/GameTimer.h>
 
 #include "TutorialGame.h"
+#include "NavMesh.h"
 
 NCL::Window* createWindow() {
 	NCL::WindowInitialisation options = {
@@ -20,7 +21,25 @@ NCL::Window* createWindow() {
 }
 
 int main(int argc, char** argv) {
-	auto window = createWindow();
+	NavMesh navMesh;
+	if (navMesh.LoadFromFile("C:\\GitHub\\csc8508-team-project\\Assets\\Meshes\\NavMeshes\\smalltest.navmesh")) {
+		btVector3 start(40, 0, -25);
+		btVector3 end(45, 0, -30);
+		std::vector<btVector3> path = navMesh.FindPath(start, end);
+
+		if (!path.empty()) {
+			std::cout << "Path found! Points: " << path.size() << std::endl;
+			for (const auto& point : path) {
+				std::cout << "-> (" << point.x() << ", " << point.y() << ", " << point.z() << ")\n";
+			}
+		}
+		else {
+			std::cout << "No valid path!" << std::endl;
+		}
+	}
+	return 0;
+
+	/*auto window = createWindow();
 
 	window->ShowOSPointer(false);
 	window->LockMouseToWindow(true);
@@ -37,5 +56,5 @@ int main(int argc, char** argv) {
 	}
 	delete g;
 	// Deleting game destroys the GL context, which should be done before destroying the window
-	delete window;
+	delete window;*/
 }
