@@ -12,6 +12,7 @@ namespace Packet {
 	typedef uint16_t Type;
 	typedef unsigned short uint16_t;
 
+	const Type NONE = 0;
 	const uint8_t REQUIRED_CHANNEL = 0;
 
 
@@ -25,13 +26,35 @@ namespace Packet {
 	 */
 	class Packet {
 	public:
-		Packet() : m_type(0), m_channel(0), m_sequenceNum(0) {}
+		Packet() : m_type(NONE), m_channel(0), m_sequenceNum(0) {}
 		Packet(Type type, uint8_t channel, uint32_t sequenceNum) : m_type(type), m_channel(channel), m_sequenceNum(sequenceNum) {}
 
+		/**
+		 * @brief Get the type of the packet.
+		 * @return Type of the packet.
+		 */
 		Type GetType() { return m_type; }
+
+		/**
+		 * @brief Get the channel this packet uses.
+		 * @return The channel number the packet uses.
+		 */
 		uint8_t GetChannel() { return m_channel; }
+
+		/**
+		 * @brief Get the sequence number of the packet.
+		 * @return Returns the sequence number of the packet.
+		 */
 		uint32_t GetSequenceNumber() { return m_sequenceNum; }
 
+		/**
+		 * @brief Override of the < operator for heap ordering.
+		 * @param other The packet the compare to.
+		 * @return True if the sequence number is MORE THAN the others.
+		 * 
+		 * Reverse less than operator so that packets with a lower sequence
+		 * number have a higher priority.
+		 */
 		bool operator<(const Packet& other) const { return m_sequenceNum > other.m_sequenceNum; }
 
 	private:
