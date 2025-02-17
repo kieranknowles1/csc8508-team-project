@@ -37,7 +37,7 @@ protected:
 	void Update();
 	void AttemptConnection(ENetEvent& event);
 	void RemoveConnection(ENetEvent& event);
-	void Handle(Packet::PacketBase packet) {}
+	void Handle() {}
 
 	ServerState m_state = ServerState::STOPPED;
 

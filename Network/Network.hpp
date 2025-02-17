@@ -1,5 +1,8 @@
 #pragma once
 
+#include <algorithm>
+#include <array>
+
 #include <./enet/enet.h>
 //#include <./enet/time.h>
 
@@ -13,6 +16,9 @@
 //
 //#endif
 
+
+const float NETWORK_DELAY = 20; // ms
+const int BUFFER_SIZE = 256;
 
 const unsigned int MAX_CLIENTS = 8;
 const float EVENT_WAIT = 1000; // ms
@@ -88,12 +94,6 @@ private:
 	bool m_initialised = false;
 };
 
-
-class PacketBuffer {
-public:
-	PacketBuffer(int size = 128) : buffer(new Packet::PacketBase[](size))
-
-};
 
 
 

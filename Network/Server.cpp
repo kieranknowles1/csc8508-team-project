@@ -71,9 +71,7 @@ void Server::Update() {
 		RemoveConnection(event);
 	}
 	else if (event.type == ENET_EVENT_TYPE_RECEIVE) {
-		Packet::PacketBase packet = Packet::PacketBase::FromENetPacket(event.packet);
 		enet_packet_destroy(event.packet);
-		Handle(packet);
 	}
 }
 

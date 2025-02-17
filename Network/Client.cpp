@@ -23,10 +23,6 @@ void Client::ConnectTo(ENetAddress& destination) {
 }
 
 
-void Client::QueuePacket(Packet::PacketBase packet) {
-	ENetPacket* enetPacket = packet.ToENetPacket();
-	enet_peer_send(m_server, packet.channel, enetPacket);
-}
 
 
 void Client::Update() {

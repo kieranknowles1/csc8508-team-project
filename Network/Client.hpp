@@ -42,7 +42,7 @@ public:
 	 * @brief Sends the packet to the server.
 	 * @param packet The packet to be transmitted.
 	 */
-	void QueuePacket(Packet::PacketBase packet);
+	void QueuePacket() {};
 
 
 	/**
