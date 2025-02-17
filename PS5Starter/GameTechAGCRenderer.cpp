@@ -491,7 +491,7 @@ void GameTechAGCRenderer::UpdateObjectList() {
 					ObjectState state;
 					Matrix4 transMatrix;
 					g->getParent()->GetTransform().getOpenGLMatrix((float*)&transMatrix);
-					state.modelMatrix = Matrix::Scale(g->getParent()->getRenderScale()) * transMatrix;
+					state.modelMatrix = transMatrix * Matrix::Scale(g->getParent()->getRenderScale());
 
 					state.colour = g->GetColour();
 					state.index[0] = 0; //Default Texture

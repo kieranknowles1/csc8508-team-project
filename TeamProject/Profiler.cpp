@@ -2,6 +2,8 @@
 
 #include "Debug.h"
 
+#include <sstream>
+
 namespace NCL::CSC8503 {
 	void Profiler::beginFrame()
 	{

@@ -2,6 +2,7 @@
 #include "Texture.h"
 #include "Shader.h"
 #include "Mesh.h"
+#include "Buffer.h"
 
 namespace NCL {
 	using namespace NCL::Rendering;
@@ -80,8 +81,16 @@ namespace NCL {
 				texScaleMultiplier = f;
 			}
 
+			void SetGPUBuffer(Buffer* buf) {
+				buffer = buf;
+			}
+			Buffer* GetGPUBuffer() {
+				return buffer;
+			}
+
 		protected:
 			GameObject* parent;
+			Buffer* buffer;
 			std::shared_ptr<Mesh> mesh;
 			std::shared_ptr<Texture> texture;
 			std::shared_ptr<Shader> shader;

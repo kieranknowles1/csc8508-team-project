@@ -1,5 +1,7 @@
 #include "LevelImporter.h"
 
+#include <nlohmann/json.hpp>
+
 using namespace NCL;
 using namespace CSC8503;
 
@@ -64,16 +66,10 @@ void LevelImporter::LoadLevel(int level) {
 
     std::string line;
     while (std::getline(file, line)) {
-        try {
-            json j = json::parse(line);
-            ObjectData* obj = new ObjectData();
-            j.get_to(*obj);
-            objects.push_back(obj);
-        }
-        catch (const json::exception& e) {
-            std::cerr << "Error parsing JSON line: " << e.what() << std::endl;
-            std::cerr << "Line content: " << line << std::endl;
-        }
+        json j = json::parse(line);
+        ObjectData* obj = new ObjectData();
+        j.get_to(*obj);
+        objects.push_back(obj);
     }
 
     file.close();

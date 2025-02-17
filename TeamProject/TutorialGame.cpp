@@ -8,17 +8,18 @@
 
 #include <CSC8503CoreClasses/Debug.h>
 
+#include "Window.h"
 
 using namespace NCL;
 using namespace CSC8503;
 
-TutorialGame::TutorialGame() : controller(*Window::GetWindow()->GetKeyboard(), *Window::GetWindow()->GetMouse()) {
+TutorialGame::TutorialGame(GameTechRendererInterface* renderer, GameWorld* world, Controller* controller)
+	: renderer(renderer)
+	, controller(controller)
+	, world(world)
+{
 	/* Initializing the Bullet Physics World here as it should be done before Initialize the NCL framework's PhysicsSystem */
 	//InitBullet(); //bullet is initialised in initialiseAssets already
-
-	world		= new GameWorld();
-	renderer = new GameTechRenderer(*world);
-
 	world->GetMainCamera().SetController(controller);
 	mainCamera = &world->GetMainCamera();
 
@@ -45,9 +46,6 @@ void TutorialGame::InitialiseAssets() {
 
 TutorialGame::~TutorialGame()	{
 	DestroyBullet();
-
-	delete renderer;
-	delete world;
 
 	delete playerController;
 }
@@ -114,13 +112,11 @@ void TutorialGame::UpdateGame(float dt) {
 
 	profiler.startSection("Prepare Render");
 	bulletWorld->debugDrawWorld();
-	renderer->Update(dt);
 
 	profiler.endFrame();
 	if (showProfiling) {
 		profiler.printTimes();
 	}
-	renderer->Render();
 	Debug::UpdateRenderables(dt);
 }
 
@@ -140,6 +136,9 @@ void TutorialGame::UpdatePlayer(float dt) {
 	}
 	//player invisable in first person
 	if (!thirdPerson && !freeCam) {
+		// TODO: Proper invisibility
+		player->setRenderScale(Vector3(0, 0, 0));
+
 		Vector4 colour = player->GetRenderObject()->GetColour();
 		colour.w = 0;
 		player->GetRenderObject()->SetColour(colour);

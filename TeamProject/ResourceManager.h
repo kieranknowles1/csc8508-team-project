@@ -5,6 +5,8 @@
 #include <memory>
 #include <iostream>
 
+#include "GameTechRendererInterface.h"
+
 // Forward declarations won't work here, as we need the full declaration to generate templates
 #include "Mesh.h"
 #include "Texture.h"
@@ -73,21 +75,21 @@ namespace NCL::CSC8503 {
     class ResourceManager
     {
     public:
-        ResourceManager(GameTechRenderer* renderer);
-        GameTechRenderer* getRenderer() { return renderer; }
+        ResourceManager(GameTechRendererInterface* renderer);
+        GameTechRendererInterface* getRenderer() { return renderer; }
 
         //ResourceMap<std::string, Rendering::Texture>& getCubeMaps() { return cubeMaps; }
         ResourceMap<std::string, Rendering::Mesh>& getMeshes() { return meshes; }
         ResourceMap<std::string, Rendering::Texture>& getTextures() { return textures; }
         ResourceMap<Rendering::Shader::Key, Rendering::Shader>& getShaders() { return shaders; }
     protected:
+        // Needed to upload platform-specific data to GPU
+        GameTechRendererInterface* renderer;
+
         //ResourceMap<std::string, Rendering::Texture> cubeMaps;
         ResourceMap<std::string, Rendering::Mesh> meshes;
         ResourceMap<std::string, Rendering::Texture> textures;
         ResourceMap<Rendering::Shader::Key, Rendering::Shader> shaders;
-
-        // Needed to upload platform-specific data to GPU
-        GameTechRenderer* renderer;
     };
 
 }

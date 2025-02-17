@@ -50,7 +50,6 @@ target_precompile_headers(${PROJECT_NAME} PRIVATE
 
     <Matrix.h>
     <Vector.h>
-    <Quaternion.h>
 
 	<Plane.h>
 	<Frustum.h>

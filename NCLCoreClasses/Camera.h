@@ -52,8 +52,8 @@ namespace NCL {
 			return *this;
 		}
 
-		Camera& SetController(const Controller& c) {
-			activeController = &c;
+		Camera& SetController(const Controller* c) {
+			activeController = c;
 			return *this;
 		}
 

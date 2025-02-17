@@ -21,10 +21,10 @@ namespace NCL {
 	namespace CSC8503 {
 		class PlayerController {
 		public:
-			PlayerController(PlayerObject* playerIn, GameObject* gunIn, const Controller& c, Camera* cam, btDiscreteDynamicsWorld* bulletWorldIn, GameWorld* worldIn, ResourceManager* resourceManager) {
+			PlayerController(PlayerObject* playerIn, GameObject* gunIn, const Controller* c, Camera* cam, btDiscreteDynamicsWorld* bulletWorldIn, GameWorld* worldIn, ResourceManager* resourceManager) {
 				player = playerIn;
 				gun = gunIn;
-				controller = &c;
+				controller = c;
 				camera = cam;
 				bulletWorld = bulletWorldIn;
 				world = worldIn;

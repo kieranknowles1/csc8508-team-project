@@ -29,9 +29,7 @@ float ConvertAxis(uint8_t rawValue, uint8_t deadZone) {
 	return (rawValue / 128.0f) - 1.0f;
 }
 
-void	PS5Controller::Update(float dt) {
-	ScePadData data;
-
+void PS5Controller::Update(float dt) {
 	int ret = scePadReadState(padHandle, &data);
 }
 
@@ -49,7 +47,7 @@ float PS5Controller::GetAnalogue(AnalogueControl control) const
 		if (buttonPressed(SCE_PAD_BUTTON_UP)) return 1.0f;
 		return buttonPressed(SCE_PAD_BUTTON_DOWN) ? 1.0f : 0.0f;
 	case Controller::AnalogueControl::MoveForward:
-		return ConvertAxis(data.leftStick.y, padInfo.stickInfo.deadZoneLeft);
+		return -ConvertAxis(data.leftStick.y, padInfo.stickInfo.deadZoneLeft);
 	case Controller::AnalogueControl::LookX:
 		return ConvertAxis(data.rightStick.x, padInfo.stickInfo.deadZoneRight);
 	case Controller::AnalogueControl::LookY:

@@ -5,8 +5,7 @@
 
 #include <btBulletDynamicsCommon.h>
 
-using namespace NCL;
-using namespace CSC8503;
+namespace NCL::CSC8503 {
 
 PhysicsObject::PhysicsObject(GameObject* parent)
 	: parent(parent), rigidBody(nullptr), motionState(nullptr) {
@@ -162,4 +161,6 @@ void PhysicsObject::ClearForces() {
 	if (rigidBody) {
 		rigidBody->clearForces();
 	}
+}
+
 }

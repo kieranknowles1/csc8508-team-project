@@ -52,9 +52,6 @@ target_precompile_headers(${PROJECT_NAME} PRIVATE
 
     <Matrix.h>
     <Vector.h>
-    <Quaternion.h>
-
-    <Quaternion.h>
 )
 
 set_target_properties(${PROJECT_NAME} PROPERTIES

@@ -4,7 +4,6 @@
 #include "Assets.h"
 #include <fstream>
 #include <btBulletDynamicsCommon.h>
-#include <nlohmann/json.hpp>
 #include <iostream>
 #include <vector>
 #include <string>
@@ -19,8 +18,6 @@
 #include "BulletDebug.h"
 #include "PlayerObject.h"
 #include "ResourceManager.h"
-
-using json = nlohmann::json;
 
 // Define the ObjectData class
 class ObjectData {
