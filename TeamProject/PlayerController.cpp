@@ -66,9 +66,9 @@ void PlayerController::UpdateMovement(float dt) {
     if (player->getCollided() > 0) {
         btVector3 groundNormal = FindFloorNormal();
         if (groundNormal != btVector3(0, 0, 0)) {
-            float cosAngleThreshold = cos(btRadians(60.0f));
+            float cosAngleThreshold = cos(btRadians(50.0f));
             float dotProduct = groundNormal.dot(upDirection.absolute());
-            if (dotProduct >= cosAngleThreshold) {
+            if (fabs(dotProduct) >= cosAngleThreshold && fabs(dotProduct) <= 1.0f) {
                 btVector3 slopeForward = forward - (forward.dot(groundNormal)) * groundNormal;
                 slopeForward.normalize();
                 btVector3 slopeRight = right - (right.dot(groundNormal)) * groundNormal;
@@ -106,7 +106,15 @@ void PlayerController::UpdateMovement(float dt) {
 
     // jump input
     if (controller->GetDigital(Controller::DigitalControl::Jump) && player->getCollided()) {
-        movement += (FindFloorNormal() * jumpHeight);
+        btVector3 normal = FindFloorNormal();
+        float dotProduct = normal.dot(upDirection.absolute());
+        if (fabs(dotProduct <= 1)) {
+            movement += (jumpHeight * FindFloorNormal());
+        }
+        else {
+            movement += (jumpHeight * upDirection);
+
+        }
         player->setCollided(0);
         inAirTime = 0.2f;
     }
@@ -247,7 +255,7 @@ btVector3 PlayerController::FindFloorNormal() {
         return callback.m_hitNormalWorld;
     }
     else {
-        return btVector3();
+        return upDirection;
     }
 
 }
