@@ -49,9 +49,9 @@ float PS5Controller::GetAnalogue(AnalogueControl control) const
 	case Controller::AnalogueControl::MoveForward:
 		return -ConvertAxis(data.leftStick.y, padInfo.stickInfo.deadZoneLeft);
 	case Controller::AnalogueControl::LookX:
-		return ConvertAxis(data.rightStick.x, padInfo.stickInfo.deadZoneRight);
+		return ConvertAxis(data.rightStick.x, padInfo.stickInfo.deadZoneRight) * lookSensitivity;
 	case Controller::AnalogueControl::LookY:
-		return ConvertAxis(data.rightStick.y, padInfo.stickInfo.deadZoneRight);
+		return ConvertAxis(data.rightStick.y, padInfo.stickInfo.deadZoneRight) * lookSensitivity;
 	default:
 		assert(false);
 	}
