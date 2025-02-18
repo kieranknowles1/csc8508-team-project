@@ -115,6 +115,7 @@ namespace NCL {
 			float rotateTime = 0.5f;
 			bool finished = true;
 
+			NavMesh* navMesh;
 		};
 	}
 }

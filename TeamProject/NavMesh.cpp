@@ -1,6 +1,9 @@
 #include "NavMesh.h"
 #include "stdio.h"
 
+NavMesh::NavMesh(btDiscreteDynamicsWorld* bulletWorld) :
+    world(bulletWorld) {}
+
 bool NavMesh::LoadFromFile(const std::string& filename) {
     std::ifstream file(filename);
     if (!file.is_open()) {
@@ -90,7 +93,7 @@ std::vector<int> NavMesh::GetNeighbors(int triangleIndex) {
     return neighbors;
 }
 
-void NavMesh::VisualiseNavMesh(btDiscreteDynamicsWorld* world) {
+void NavMesh::VisualiseNavMesh() {
     if (!world || !world->getDebugDrawer()) {
         return; // Ensure the debug drawer is available
     }

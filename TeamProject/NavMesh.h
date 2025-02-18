@@ -21,12 +21,14 @@ struct Triangle {
 
 class NavMesh {
 public:
+    NavMesh(btDiscreteDynamicsWorld* bulletWorld);
     bool LoadFromFile(const std::string& filename);
-    void VisualiseNavMesh(btDiscreteDynamicsWorld* world);
+    void VisualiseNavMesh();
 
 //private:
     std::vector<btVector3> vertices;
     std::vector<Triangle> triangles;
+    btDiscreteDynamicsWorld* world;
 
     int GetTriangleContainingPoint(const btVector3& point);
     std::vector<int> GetNeighbors(int triangleIndex);
