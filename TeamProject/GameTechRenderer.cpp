@@ -80,15 +80,37 @@ GameTechRenderer::GameTechRenderer(GameWorld& world) : OGLRenderer(*Window::GetW
 
 	InitCrosshair(); //This line Ameya added for crosshair
 
-	//start setting up framebuffers for post processing:
-	//first generate the texture to store the rendered scene:
-	glGenTextures(1, hdrTex);
+	//Post processing additions:
+	hdrQuad = GenerateQuad(); 
+	hdrShader = new OGLShader("texturevert.glsl", "hdrfrag.glsl");
+
+ 	//start setting up framebuffers for post processing:
+	//first generate the textures to store the rendered scene:
+	glGenTextures(1, &hdrTex); //first, colour attachment
 	glBindTexture(GL_TEXTURE_2D, hdrTex); 
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST); 
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST); 
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, world.GetWindow().width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL); //figure out width and height
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, windowSize.x, windowSize.y, 0, GL_RGBA, GL_FLOAT, NULL); //currently hardcoding width and height. Floating point texture for HDR.
+
+	glGenTextures(1, &hdrDepthTex); //then, depth-stencil attachment
+	glBindTexture(GL_TEXTURE_2D, hdrDepthTex);
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH24_STENCIL8, windowSize.x, windowSize.y, 0, GL_DEPTH_STENCIL, GL_UNSIGNED_INT_24_8, NULL); //still hardcoding the width and height ||  1280, 720
+	
+	glGenFramebuffers(1, &hdrFBO);
+	glBindFramebuffer(GL_FRAMEBUFFER, hdrFBO);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, hdrTex, 0); //attach hdrTex to the FBO colour attachment 
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, hdrDepthTex, 0); //attach hdrDepthTexx to the FBO depth attachment
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_STENCIL_ATTACHMENT, GL_TEXTURE_2D, hdrDepthTex, 0);
+	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE || !hdrTex || !hdrDepthTex) { //check FBO attachment success
+		return;
+	}
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
 GameTechRenderer::~GameTechRenderer()	{
@@ -104,6 +126,12 @@ GameTechRenderer::~GameTechRenderer()	{
 
 	glDeleteTextures(1, &shadowTex);
 	glDeleteFramebuffers(1, &shadowFBO);
+
+	glDeleteTextures(1, &hdrTex);
+	glDeleteFramebuffers(1, &hdrFBO);
+	delete hdrQuad;
+	delete hdrShader;
+	
 }
 
 void GameTechRenderer::LoadSkybox() {
@@ -150,11 +178,15 @@ void GameTechRenderer::LoadSkybox() {
 void GameTechRenderer::RenderFrame() {
 	glEnable(GL_CULL_FACE);
 	glClearColor(1, 1, 1, 1);
+	//Set up to render into framebuffer
+	glBindFramebuffer(GL_FRAMEBUFFER, hdrFBO);
+	glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+	//
 	BuildObjectList();
 	SortObjectList();
 	RenderShadowMap();
 	RenderSkybox();
-	RenderCamera();
+	RenderCamera();//may need to update proj matrix before this line for post processing. Hopefully the renderCamera function sets proj matrix itself (it does)
 	glDisable(GL_CULL_FACE); //Todo - text indices are going the wrong way...
 	glDisable(GL_BLEND);
 	glDisable(GL_DEPTH_TEST);
@@ -166,6 +198,29 @@ void GameTechRenderer::RenderFrame() {
 	glEnable(GL_DEPTH_TEST);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	RenderCrosshair(); //This line Ameya added for crosshair
+	//
+	glBindFramebuffer(GL_FRAMEBUFFER, 0); //unbind hdrFBO 
+	glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT); 
+	glDisable(GL_CULL_FACE);
+	glDisable(GL_BLEND);
+	glDisable(GL_DEPTH_TEST);
+	UseShader(*hdrShader);
+	int projLocation = glGetUniformLocation(hdrShader->GetProgramID(), "projMatrix");
+	int viewLocation = glGetUniformLocation(hdrShader->GetProgramID(), "viewMatrix"); 
+	//int modelLocation = glGetUniformLocation(hdrShader->GetProgramID(), "modelMatrix");
+	//int texLocation = glGetUniformLocation(hdrShader->GetProgramID(), "hdrTex"); 
+	//Matrix4 viewMatrix = Matrix::View().ToIdentity(); 
+	Matrix4 projMatrix = Matrix::Orthographic(0.0f, 100.0f, 100.0f, 0.0f, -1.0f, 1.0f, true); //should each axis be -1 to 1? 0.0f, 100.0f, 100.0f, 0.0f, -1.0f, 1.0f
+	glUniformMatrix4fv(projLocation, 1, false, (float*)&projMatrix.array);    
+	//Matrix4 viewMatrix = gameWorld.GetMainCamera().BuildProjectionMatrix(); 
+	//glUniformMatrix4fv(viewLocation, 1, false, (float*)&viewMatrix);  
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, hdrTex); 
+	glUniform1i(glGetUniformLocation(hdrShader->GetProgramID(), "hdrTex"), 0);
+	BindMesh(*hdrQuad);
+	DrawBoundMesh(); 
+	glEnable(GL_BLEND);
+	glEnable(GL_DEPTH_TEST);
 }
 
 void GameTechRenderer::BuildObjectList() {
@@ -641,4 +696,61 @@ void GameTechRenderer::RenderCrosshair() {
 
 	glUseProgram(0);
 	glEnable(GL_DEPTH_TEST);
+}
+
+OGLMesh* GameTechRenderer::GenerateQuad() { //perhaps this should be moved to Mesh.cpp
+
+	OGLMesh* m = new OGLMesh();
+
+	m->SetPrimitiveType(GeometryPrimitive::Triangles); //already done in constructor?
+	//m->SetAssetID(); //do we need to set this? Set to 0 by default in constructor
+
+	const std::vector<Vector3> positions = {
+		Vector3(-1.0f,  1.0f, 0.0f),//TL
+		Vector3(-1.0f, -1.0f, 0.0f),//BL
+		Vector3( 1.0f,  1.0f, 0.0f),//TR
+		Vector3( 1.0f, -1.0f, 0.0f) //BR
+	};
+	m->SetVertexPositions(positions); 
+
+	const std::vector<Vector2> texCoords = {
+		Vector2(0.0f, 1.0f),
+		Vector2(0.0f, 0.0f),
+		Vector2(1.0f, 1.0f),
+		Vector2(1.0f, 0.0f)
+	};
+	m->SetVertexTextureCoords(texCoords);
+
+	const std::vector<Vector3> normals = {
+		Vector3(0.0f, 0.0f, -1.0f),
+		Vector3(0.0f, 0.0f, -1.0f),
+		Vector3(0.0f, 0.0f, -1.0f),
+		Vector3(0.0f, 0.0f, -1.0f)
+	};
+	m->SetVertexNormals(normals);
+
+	const std::vector<Vector4> tangents = {
+		Vector4(1.0f, 0.0f, 0.0f, 1.0f),
+		Vector4(1.0f, 0.0f, 0.0f, 1.0f),
+		Vector4(1.0f, 0.0f, 0.0f, 1.0f),
+		Vector4(1.0f, 0.0f, 0.0f, 1.0f)
+	};
+	m->SetVertexTangents(tangents);
+
+	/*const std::vector<Vector4> colours = {
+		Vector4(1.0f, 1.0f, 1.0f, 1.0f),
+		Vector4(1.0f, 1.0f, 1.0f, 1.0f),
+		Vector4(1.0f, 1.0f, 1.0f, 1.0f),
+		Vector4(1.0f, 1.0f, 1.0f, 1.0f)
+	};
+	m->SetVertexColours(colours);
+	*/
+	/*const std::vector<std::seed_seq::result_type> indices = {
+		0, 1, 2,  //counter clockwise winding, outward facing normals
+		2, 3, 0 
+	};
+	m->SetVertexIndices(indices);*/
+	m->SetVertexIndices({ 0,1,2,2,3,0 });
+	m->UploadToGPU();
+	return m;
 }

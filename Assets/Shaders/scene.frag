@@ -71,10 +71,10 @@ void main(void)
 
 	if(lightAttenuates) { //added to optionally account for attenuation
 	    float distance = length(lightPos - IN.worldPos);
-		attenuation = 1.0f - clamp(distance/lightRadius, 0.0, 1.0); 
+		attenuation = 1.0f - clamp(distance/(lightRadius * lightRadius), 0.0, 1.0); //Inverse square attenuation better for gamma correction 
 	}
 	
-	albedo.rgb = pow(albedo.rgb, vec3(2.2));
+	albedo.rgb = pow(albedo.rgb, vec3(2.2)); //I think this transforms textures to linear space to then be gamma corrected
 	
 	fragColor.rgb = albedo.rgb * 0.05f; //ambient
 	
@@ -82,7 +82,7 @@ void main(void)
 	
 	fragColor.rgb += lightColour.rgb * sFactor * shadow; //specular light
 	
-	fragColor.rgb = pow(fragColor.rgb, vec3(1.0 / 2.2f));
+	fragColor.rgb = pow(fragColor.rgb, vec3(1.0 / 2.2f));//GAMMA CORRECTION PROBABLY
 	
 	fragColor.a = 1;
 

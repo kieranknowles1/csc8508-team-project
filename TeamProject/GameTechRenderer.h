@@ -43,6 +43,8 @@ namespace NCL {
 			void SetDebugStringBufferSizes(size_t newVertCount);
 			void SetDebugLineBufferSizes(size_t newVertCount);
 
+			OGLMesh* GenerateQuad(); //for post processing 
+
 			std::vector<const RenderObject*> activeObjects;
 
 			OGLShader*  debugShader;
@@ -82,6 +84,14 @@ namespace NCL {
 			GLuint textColourVBO;
 			GLuint textTexVBO;
 			size_t textCount = 0;
+
+			//Post processing additions:
+			GLuint hdrTex;
+			GLuint hdrFBO;
+			GLuint hdrDepthTex;
+			OGLMesh* hdrQuad;
+			OGLShader* hdrShader;
+
 		};
 	}
 }
