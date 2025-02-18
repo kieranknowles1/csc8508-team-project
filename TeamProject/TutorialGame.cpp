@@ -73,6 +73,7 @@ void TutorialGame::UpdateGame(float dt) {
 	if (testTurret) {
 		testTurret->Update(dt);
 	}
+
 	UpdateKeys();
 	world->UpdateWorld(dt);
 	profiler.startSection("Check Collisions");

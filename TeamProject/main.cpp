@@ -2,6 +2,7 @@
 #include <NCLCoreClasses/GameTimer.h>
 
 #include "TutorialGame.h"
+#include "NavMesh.h"
 
 NCL::Window* createWindow() {
 	NCL::WindowInitialisation options = {
@@ -20,6 +21,7 @@ NCL::Window* createWindow() {
 }
 
 int main(int argc, char** argv) {
+
 	auto window = createWindow();
 
 	window->ShowOSPointer(false);
@@ -38,4 +40,6 @@ int main(int argc, char** argv) {
 	delete g;
 	// Deleting game destroys the GL context, which should be done before destroying the window
 	delete window;
+
+	return 0;
 }

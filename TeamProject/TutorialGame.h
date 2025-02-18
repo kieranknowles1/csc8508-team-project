@@ -9,7 +9,9 @@
 #include "PlayerController.h"
 #include "PlayerObject.h"
 #include "Turret.h"
+#include "NavMesh.h"
 #include "Profiler.h"
+
 
 #include <btBulletDynamicsCommon.h>
 
@@ -112,6 +114,7 @@ namespace NCL {
 			float rotateTimer;
 			float rotateTime = 0.5f;
 			bool finished = true;
+
 		};
 	}
 }

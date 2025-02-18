@@ -15,6 +15,8 @@ set(SOURCES
 	BWHelperFunctions.cpp
     LevelImporter.cpp
     LevelImporter.h
+	NavMesh.h
+	NavMesh.cpp
     ResourceManager.h
     ResourceManager.cpp
     Profiler.h
