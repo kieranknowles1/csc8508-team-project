@@ -36,25 +36,39 @@ namespace NCL {
 			void SetThirdPerson(bool thirdPersonIn) {
 				thirdPerson = thirdPersonIn;
 			};
-			void setWorldRotation(float worldRotationIn) {
-				worldRotation = worldRotationIn;
+			void setTargetWorldRotation(btVector3 worldRotationIn) {
+				if (rotationChanging) return;
+				oldWorldRotation = upDirection;
+				targetWorldRotation = worldRotationIn;
+				rotateTimer = 0.0f;
+				rotationChanging = true;
 			}
-			float getWorldRotation() {
-				return worldRotation;
+			btVector3 getOldWorldRotation() {
+				return oldWorldRotation;
 			}
 			btVector3 getUpDirection() {
-				return CalculateUpDirection();
+				return upDirection;
 			}
-			btVector3 getRightDirection(btVector3 up) {
-				return CalculateRightDirection(up);
+			btVector3 getRightDirection() {
+				return rightDirection;
 			}
-			btVector3 getForwardDirection(btVector3 up, btVector3 right) {
-				return CalculateForwardDirection(up,right);
+			btVector3 getForwardDirection() {
+				return forwardDirection;
 			}
+
+			void CalculateDirections(float dt);
+			btVector3 CalculateRightDirection(btVector3 upDir);
+			btVector3 CalculateForwardDirection(btVector3 upDir, btVector3 rightDir);
 
 		private:
 
-			float worldRotation = 0;
+			btVector3 targetWorldRotation = btVector3(0, 1, 0);
+			btVector3 oldWorldRotation = btVector3(0,1,0);
+
+			btVector3 upDirection;
+			btVector3 rightDirection;
+			btVector3 forwardDirection;
+
 			//Player Movement Variables
 			float playerSpeed = 60.0f;
 			float jumpHeight = 75.0f;
@@ -83,7 +97,11 @@ namespace NCL {
 			btVector3 bulletCameraOffset = btVector3(1.0, -0.5, -3.0);
 			float playerVelocityStrafeInherit = 0.05f;
 
+			//Rotation Variables
+			float rotateTime = 0.5f;
 
+			float rotateTimer = 0.0f;
+			bool rotationChanging = false;
 			bool thirdPerson = false;
 			float spaceCount = 0;
 			float inAirTime = 0;
@@ -118,9 +136,7 @@ namespace NCL {
 			float shotTimer = 0;
 			bool collision = false;
 			bool crouching = false;
-			btVector3 upDirection;
-			btVector3 rightDirection;
-			btVector3 forwardDirection;
+
 
 			Vector2 getDirectionalInput() const;
 			void Initialise();
@@ -130,9 +146,8 @@ namespace NCL {
 			btVector3 FindFloorNormal();
 			void SetGunTransform();
 			void ShootBullet();
-			btVector3 CalculateUpDirection();
-			btVector3 CalculateRightDirection(btVector3 upDir);
-			btVector3 CalculateForwardDirection(btVector3 upDir, btVector3 rightDir);
+			btVector3 CalculateUpDirection(float dt);
+			
 			float CalculateRoll();
 
 		};

@@ -26,7 +26,6 @@ TutorialGame::TutorialGame(GameTechRendererInterface* renderer, GameWorld* world
 	loadFromLevel = true;
 	resourceManager = std::make_unique<ResourceManager>(renderer);
 	InitialiseAssets();
-	rotateTimer = rotateTime;
 }
 
 /*
@@ -93,6 +92,8 @@ void TutorialGame::UpdateGame(float dt) {
 }
 
 void TutorialGame::UpdatePlayer(float dt) {
+
+	playerController->CalculateDirections(dt);
 	// Press F for freeCam, press G for thirdPerson
 	if (freeCam) {
 		//freeCam Movement
@@ -121,14 +122,14 @@ void TutorialGame::UpdatePlayer(float dt) {
 		player->GetRenderObject()->SetColour(colour);
 	}
 
-	if (rotateTimer < rotateTime) {
+	/*if (rotateTimer < rotateTime) {
 		rotateTimer += dt;
 		playerController->setWorldRotation(std::lerp(oldRotate, targetRotate, rotateTimer / rotateTime));
 	}
 	else if (!finished) {
 		playerController->setWorldRotation(targetRotate);
 		finished = true;
-	}
+	}*/
 
 	bulletWorld->setGravity(playerController->getUpDirection() * -30.0f);
 }
@@ -155,20 +156,23 @@ void TutorialGame::UpdateKeys() {
 		thirdPerson = !thirdPerson;
 		playerController->SetThirdPerson(thirdPerson);
 	}
-	if (Window::GetKeyboard()->KeyPressed(KeyCodes::V)) {
-		if (rotateTimer < rotateTime) return;
-		rotateTimer = 0;
-		oldRotate = playerController->getWorldRotation();
-		targetRotate = oldRotate + 1;
-		finished = false;
+	if (Window::GetKeyboard()->KeyPressed(KeyCodes::Q)) {
+		btVector3 oldRotate = playerController->getUpDirection();
+		btVector3 targetRotate = playerController->CalculateRightDirection(oldRotate);
+		playerController->setTargetWorldRotation(targetRotate);
+	}
+	if (Window::GetKeyboard()->KeyPressed(KeyCodes::E)) {
+		btVector3 oldRotate = playerController->getUpDirection();
+		btVector3 targetRotate = playerController->CalculateRightDirection(oldRotate);
+		playerController->setTargetWorldRotation(-targetRotate);
 	}
 }
 
 void TutorialGame::ThirdPersonControls() {
 	btTransform transformPlayer = player->GetPhysicsObject()->GetRigidBody()->getWorldTransform();
 	btVector3 up = playerController->getUpDirection();
-	btVector3 right = playerController->getRightDirection(up);
-	btVector3 forw = playerController->getForwardDirection(up, right);
+	btVector3 right = playerController->getRightDirection();
+	btVector3 forw = playerController->getForwardDirection();
 	btQuaternion playerRotation = transformPlayer.getRotation();
 	btMatrix3x3 rotationMatrix(playerRotation);
 	btVector3 r = rotationMatrix * btVector3(1, 0, 0);
