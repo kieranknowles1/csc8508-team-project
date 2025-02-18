@@ -10,7 +10,9 @@
 #include "PlayerController.h"
 #include "PlayerObject.h"
 #include "Turret.h"
+#include "NavMesh.h"
 #include "Profiler.h"
+
 
 #include <btBulletDynamicsCommon.h>
 
@@ -82,6 +84,7 @@ namespace NCL {
 
 			BulletDebug* bulletDebug = nullptr;
 
+			void CheckCollisions();
 			void DestroyBullet();
 			void InitBullet(); // Initialises the Bullet physics world
 
@@ -112,6 +115,7 @@ namespace NCL {
 			float rotateTimer;
 			float rotateTime = 0.5f;
 			bool finished = true;
+
 		};
 	}
 }

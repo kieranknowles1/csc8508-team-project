@@ -16,19 +16,52 @@ using namespace NCL::CSC8503;
 class PlayerObject : public GameObject {
 public:
 	void OnCollisionEnter(const CollisionInfo& collisionInfo) override {
-		if (collisionInfo.otherObject->getIsFloor()) {
-			collided++;
-		}
-	}
-	void OnCollisionExit(const CollisionInfo& collisionInfo) override {
 		btVector3 playerPos = this->GetPhysicsObject()->GetRigidBody()->getWorldTransform().getOrigin();
-		btVector3 objPos = collisionInfo.otherObject->GetPhysicsObject()->GetRigidBody()->getWorldTransform().getOrigin();
-		btVector3 direction = (objPos - playerPos).normalize();
-		float dotProduct = direction.dot(upDirection);
-		if (dotProduct < 0.0f && collided > 0) {
-			collided--;
+		btVector3 objPos = collisionInfo.contactPointA;
+		btVector3 direction = (objPos - playerPos).normalized();
+		float dot = direction.dot(-upDirection);
+		float angle = acos(dot) * (180.0f / SIMD_PI);
+		if (angle <= 30.0f) {
+			collided++;
+			collidedObjects.push_back(collisionInfo.otherObject);
 		}
 	}
+
+
+	void OnCollisionExit(const CollisionInfo& collisionInfo) override {
+		auto it = std::find(collidedObjects.begin(), collidedObjects.end(), collisionInfo.otherObject);
+		if (it != collidedObjects.end()) {
+			collidedObjects.erase(it);
+			if (collided > 0) {
+				collided--;
+			}
+		}
+	}
+
+	void OnCollisionStay(const CollisionInfo& collision) override {
+		btVector3 playerPos = this->GetPhysicsObject()->GetRigidBody()->getWorldTransform().getOrigin();
+		btVector3 objPos = collision.contactPointA;
+		btVector3 direction = (objPos - playerPos).normalized();
+		float dot = direction.dot(-upDirection);
+		float angle = acos(dot) * (180.0f / SIMD_PI);
+		auto it = std::find(collidedObjects.begin(), collidedObjects.end(), collision.otherObject);
+		if (it != collidedObjects.end()) { // contains already
+			if (angle >= 30.0f) { // now too steep for floor
+				collidedObjects.erase(it);
+				if (collided > 0) {
+					collided--;
+				}
+			}
+		}
+		else { // not counted as floor yet
+			if (angle <= 30.0f) {
+				collided++;
+				collidedObjects.push_back(collision.otherObject);
+			}
+		}
+	}
+
+
 	void setCollided(int collidedIn) {
 		collided = collidedIn;
 	}

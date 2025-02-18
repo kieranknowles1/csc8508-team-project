@@ -6,6 +6,7 @@
 
 #include "GameTechRenderer.h"
 #include "TutorialGame.h"
+#include "NavMesh.h"
 
 std::unique_ptr<NCL::Window> createWindow() {
 	NCL::WindowInitialisation options = {
@@ -24,6 +25,7 @@ std::unique_ptr<NCL::Window> createWindow() {
 }
 
 int main(int argc, char** argv) {
+
 	auto window = createWindow();
 
 	window->ShowOSPointer(false);

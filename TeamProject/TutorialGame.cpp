@@ -71,41 +71,14 @@ void TutorialGame::UpdateGame(float dt) {
 	if (testTurret) {
 		testTurret->Update(dt);
 	}
+
 	UpdateKeys();
 	world->UpdateWorld(dt);
 	profiler.startSection("Check Collisions");
+	// Check for collisions
+	CheckCollisions();
 	
 	UpdatePlayer(dt);
-
-	// Checking for collisions using Bullet's collision detection system
-	// Bullet already keeps track of all the objects that are colliding with each other
-	// So, we don't need to check for collisions manually
-
-	//world->OperateOnContents([&](GameObject* obj) {
-	//	obj->GetPhysicsObject()->CheckCollisions(bulletWorld);
-	//	});
-
-	btDispatcher* dispatcher = bulletWorld->getDispatcher();
-	int numManifolds = dispatcher->getNumManifolds();
-
-	for (int i = 0; i < numManifolds; i++) {
-		// Get the contact manifold
-		btPersistentManifold* contactManifold = dispatcher->getManifoldByIndexInternal(i);
-
-		// Get the collision objects from the contact manifold
-		const btCollisionObject* objectA = contactManifold->getBody0();
-		const btCollisionObject* objectB = contactManifold->getBody1();
-
-		// Get the GameObjects from the collision objects
-		const GameObject* gameObjectA = static_cast<const GameObject*>(objectA->getUserPointer());
-		const GameObject* gameObjectB = static_cast<const GameObject*>(objectB->getUserPointer());
-
-		// Check if the GameObjects are valid
-		if (gameObjectA && gameObjectB) {
-			gameObjectA->GetPhysicsObject()->CheckCollisions(bulletWorld);
-			gameObjectB->GetPhysicsObject()->CheckCollisions(bulletWorld);
-		}
-	}
 
 	profiler.startSection("Update Camera");
 
@@ -220,6 +193,45 @@ void TutorialGame::ThirdPersonControls() {
 
 
 
+void TutorialGame::CheckCollisions()
+{
+	// Checking for collisions using Bullet's collision detection system
+	// Bullet already keeps track of all the objects that are colliding with each other
+	// So, we don't need to check for collisions manually
+
+	//world->OperateOnContents([&](GameObject* obj) {
+	//	obj->GetPhysicsObject()->CheckCollisions(bulletWorld);
+	//	});
+
+	btDispatcher* dispatcher = bulletWorld->getDispatcher();
+	int numManifolds = dispatcher->getNumManifolds();
+
+	for (int i = 0; i < numManifolds; i++) {
+		// The UpdateGame loop may be using a faster an outdated number of manifolds
+		// So, we need to check if the index is still valid
+		if (i >= dispatcher->getNumManifolds()) {
+			break;
+		}
+
+		// Get the contact manifold
+		btPersistentManifold* contactManifold = dispatcher->getManifoldByIndexInternal(i);
+
+		// Get the collision objects from the contact manifold
+		const btCollisionObject* objectA = contactManifold->getBody0();
+		const btCollisionObject* objectB = contactManifold->getBody1();
+
+		// Get the GameObjects from the collision objects
+		const GameObject* gameObjectA = static_cast<const GameObject*>(objectA->getUserPointer());
+		const GameObject* gameObjectB = static_cast<const GameObject*>(objectB->getUserPointer());
+
+		// Check if the GameObjects are valid
+		if (gameObjectA && gameObjectB) {
+			gameObjectA->GetPhysicsObject()->CheckCollisions(bulletWorld);
+			gameObjectB->GetPhysicsObject()->CheckCollisions(bulletWorld);
+		}
+	}
+}
+
 void TutorialGame::DestroyBullet() {
 	world->OperateOnContents([&](GameObject* obj) {
 		if (obj->GetPhysicsObject()) {
@@ -262,11 +274,12 @@ void TutorialGame::InitWorld() {
 	world->ClearAndErase();
 	InitBullet();
 
-	InitPlayer();
+
 
 	if (loadFromLevel) {
 		levelImporter = new LevelImporter(resourceManager.get(), world, bulletWorld);
 		levelImporter->LoadLevel(6);
+		InitPlayer();
 		return;
 	}
 
@@ -303,6 +316,8 @@ void TutorialGame::InitWorld() {
 	AddCapsuleToWorld(Vector3(-20, 15, 12), 6.0f, 5.0f, 8.0f);
 
 	AddTurretToWorld();
+	InitPlayer();
+
 }
 
 void TutorialGame::InitPlayer() {

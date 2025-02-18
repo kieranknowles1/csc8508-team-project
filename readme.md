@@ -6,7 +6,9 @@
 
 ## Building
 
-To prepare for building on Windows, run [`configure.bat`](./configure.bat).
+To prepare for building on Windows, run
+`git submodule update --init` then [`configure.bat`](./configure.bat).
+
 This will install dependencies and run cmake.
 
 When adding a new file to the project:
