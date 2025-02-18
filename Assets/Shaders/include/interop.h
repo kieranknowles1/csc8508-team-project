@@ -32,3 +32,16 @@ using uint = uint32_t;
 #endif
 
 #endif
+
+// Setting a struct as an output in glsl causes weird errors, do this instead
+#define VERTEX { \
+    vec4 position; \
+	vec4 colour; \
+	vec2 texCoord; \
+	vec4 shadowProj; \
+	vec3 normal; \
+	vec3 worldPos; \
+	vec3 tangent; \
+	vec3 binormal; \
+}
+struct Vtx VERTEX;
