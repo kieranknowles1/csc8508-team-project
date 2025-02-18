@@ -17,10 +17,7 @@ void PlayerController::Initialise() {
 void PlayerController::UpdateMovement(float dt) {
     transformPlayer = rb->getWorldTransform();
     btPlayerPos = transformPlayer.getOrigin();
-    upDirection = CalculateUpDirection();
-    player->setUpDirection(upDirection);
-    rightDirection = CalculateRightDirection(upDirection);
-    forwardDirection = CalculateForwardDirection(upDirection, rightDirection);
+ 
 
     //camera yaw
     yaw = fmod(yaw - controller->GetAnalogue(Controller::AnalogueControl::LookX) + 360.0f, 360.0f);
@@ -315,21 +312,30 @@ void PlayerController::HandleSliding(float dt) {
     }
 }
 
+void PlayerController::CalculateDirections(float dt) {
+    upDirection = CalculateUpDirection(dt);
+    rightDirection = CalculateRightDirection(upDirection);
+    forwardDirection = CalculateForwardDirection(upDirection, rightDirection);
 
-btVector3 PlayerController::CalculateUpDirection() {
-    float t = fmod(worldRotation, 1.0f);
-    int index = static_cast<int>(worldRotation);
-    btVector3 directions[] = {
-        btVector3(0, 1, 0),
-        btVector3(-1, 0, 0),
-        btVector3(0, -1, 0),
-        btVector3(1, 0, 0)
-    };
-    btVector3 currentDir = directions[index % 4];
-    btVector3 nextDir = directions[(index + 1) % 4];
+    player->setUpDirection(upDirection);
+}
+
+btVector3 PlayerController::CalculateUpDirection(float dt) {
 
     // Interpolate between currentDir and nextDir
-    btVector3 upDir = currentDir.lerp(nextDir, t);
+    btVector3 upDir;
+    if (!rotationChanging) {
+        upDir = targetWorldRotation;
+    }else if (rotateTimer <= rotateTime && rotationChanging) {
+        rotateTimer += dt;
+        upDir = lerp(oldWorldRotation, targetWorldRotation,  rotateTimer/rotateTime);
+    }
+    else {
+        upDir = targetWorldRotation;
+        oldWorldRotation = targetWorldRotation;
+        rotationChanging = false;
+    }
+   
     upDir.normalize();
     return upDir;
 }
@@ -352,27 +358,12 @@ btVector3 PlayerController::CalculateForwardDirection(btVector3 upDir,btVector3 
 
 
 float PlayerController::CalculateRoll() {
-    float t = fmod(worldRotation, 1.0f);
-    int index = static_cast<int>(worldRotation);
-    float rolls[] = {
-        0.0f,
-        90.0f,
-        180.0f,
-        270.0f
-    };
-    float currentRoll = rolls[index % 4];
-    float nextRoll = rolls[(index + 1) % 4];
-
-    // Handle wrap-around from 270.0f to 0.0f
-    if (currentRoll == 270.0f && nextRoll == 0.0f) {
-        nextRoll = 360.0f;
-    }
-
-    // Interpolate between currentRoll and nextRoll
-    float roll = currentRoll + t * (nextRoll - currentRoll);
-
-    return roll;
+    // Calculate roll using atan2
+    float rollRadians = std::atan2(rightDirection.y(), rightDirection.x());
+    float rollDegrees = rollRadians * (180.0f / PI);
+    return rollDegrees;
 }
+
 
 Vector2 PlayerController::getDirectionalInput() const
 {

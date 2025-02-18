@@ -109,11 +109,11 @@ namespace NCL {
 			bool loadFromLevel;
 
 			//world Rotate
-			float oldRotate;
-			float targetRotate;
-			float rotateTimer;
-			float rotateTime = 0.5f;
-			bool finished = true;
+			//float oldRotate;
+			//float targetRotate;
+			//float rotateTimer;
+			//float rotateTime = 0.5f;
+			//bool finished = true;
 
 		};
 	}
