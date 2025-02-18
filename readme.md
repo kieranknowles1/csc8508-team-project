@@ -13,7 +13,7 @@ Once downloaded, Create a folder `2.02.26` inside `this-repo/fmod-cmake/fmod/` d
 
 Make two folders inside `this-repo/fmod-cmake/fmod/2.02.26/` named `include` and `lib` respectively.
 
-Run the installer and download the files to a directory of your choosing.
+Run the FMod installer and download the files to a directory of your choosing.
 
 Once installed, copy all `.h` and `.hpp` files from `Your FMod install dir/core/inc` to `this-repo/fmod-cmake/fmod/2.02.26/include`.
 
