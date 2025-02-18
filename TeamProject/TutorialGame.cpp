@@ -132,18 +132,22 @@ void TutorialGame::UpdateKeys() {
 		thirdPerson = !thirdPerson;
 		playerController->SetThirdPerson(thirdPerson);
 	}
-	if (Window::GetKeyboard()->KeyPressed(KeyCodes::Q)) {
-		playerController->rollRight();
-	}
-	if (Window::GetKeyboard()->KeyPressed(KeyCodes::E)) {
-		playerController->rollLeft();
-	}
-	if (Window::GetKeyboard()->KeyPressed(KeyCodes::R)) {
-		playerController->pitchUp();
-	}
-	if (Window::GetKeyboard()->KeyPressed(KeyCodes::F)) {
-		playerController->pitchDown();
+	float yaw =  playerController->getYaw();
+	//std::cout << yaw << std::endl;
+	if (yaw > 315 || yaw <45 ) {
+		if (Window::GetKeyboard()->KeyPressed(KeyCodes::Q)) {
+			playerController->rollRight();
+		}
+		if (Window::GetKeyboard()->KeyPressed(KeyCodes::E)) {
+			playerController->rollLeft();
+		}
+		if (Window::GetKeyboard()->KeyPressed(KeyCodes::R)) {
+			playerController->pitchUp();
+		}
+		if (Window::GetKeyboard()->KeyPressed(KeyCodes::F)) {
+			playerController->pitchDown();
 
+		}
 	}
 }
 

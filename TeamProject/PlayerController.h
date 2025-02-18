@@ -12,10 +12,8 @@
 #include "BulletDebug.h"
 #include "PlayerObject.h"
 #include "CustomCollisionCallback.h"
-
 #include <btBulletDynamicsCommon.h>
 #include <btBulletCollisionCommon.h>
-
 
 
 
@@ -61,41 +59,55 @@ namespace NCL {
 			void setRollUse(bool rollUseIn) {
 				rollUse = rollUseIn;
 			}
+			float getYaw() {
+				return yaw;
+			}
 
 			void rollRight() {
 				if (rotationChanging) return;
+
 				btVector3 forwardDirection = CalculateForwardDirection(upDirection, CalculateRightDirection(upDirection));
 				btQuaternion rollQuat(forwardDirection, Maths::DegreesToRadians(-90)); // Negative for right roll
+
 				targetWorldRotation = quatRotate(rollQuat, upDirection);
-				targetRoll =  roll - 90;
+				targetcamRotOffset = rollQuat * oldcamRotOffset; // Apply rotation correctly
+
 				rotationChanging = true;
 			}
 
 			void rollLeft() {
 				if (rotationChanging) return;
+
 				btVector3 forwardDirection = CalculateForwardDirection(upDirection, CalculateRightDirection(upDirection));
 				btQuaternion rollQuat(forwardDirection, Maths::DegreesToRadians(90)); // Positive for left roll
+
 				targetWorldRotation = quatRotate(rollQuat, upDirection);
-				targetRoll = roll + 90;
+				targetcamRotOffset = rollQuat * oldcamRotOffset; // Apply rotation correctly
+
 				rotationChanging = true;
 			}
 
 			void pitchUp() {
 				if (rotationChanging) return;
+
 				btVector3 rightDirection = CalculateRightDirection(upDirection);
-				btQuaternion pitchQuat(rightDirection, Maths::DegreesToRadians(90)); // Positive for up pitch
+				btQuaternion pitchQuat(rightDirection, Maths::DegreesToRadians(-90)); // Rotate up
+
 				targetWorldRotation = quatRotate(pitchQuat, upDirection);
-				std::cout << rightDirection.getX() << " " << rightDirection.getY() << " " << rightDirection.getZ() <<std::endl;
-				targetPitch = pitch + 90;
+				targetcamRotOffset = pitchQuat * oldcamRotOffset; // Apply rotation correctly
+
 				rotationChanging = true;
 			}
 
 			void pitchDown() {
 				if (rotationChanging) return;
+
 				btVector3 rightDirection = CalculateRightDirection(upDirection);
-				btQuaternion pitchQuat(rightDirection, Maths::DegreesToRadians(-90)); // Negative for down pitch
+				btQuaternion pitchQuat(rightDirection, Maths::DegreesToRadians(90)); // Rotate down
+
 				targetWorldRotation = quatRotate(pitchQuat, upDirection);
-				targetPitch = pitch - 90;
+				targetcamRotOffset = pitchQuat * oldcamRotOffset; // Apply rotation correctly
+
 				rotationChanging = true;
 			}
 
@@ -136,7 +148,9 @@ namespace NCL {
 			//Rotation Variables
 			float rotateTime = 0.5f;
 
-
+			btQuaternion camRotOffset = btQuaternion::getIdentity();
+			btQuaternion oldcamRotOffset = btQuaternion::getIdentity();
+			btQuaternion targetcamRotOffset = btQuaternion::getIdentity();
 			btVector3 targetWorldRotation = btVector3(0, 1, 0);
 			btVector3 oldWorldRotation = btVector3(0, 1, 0);
 			btVector3 upDirection;
@@ -155,10 +169,6 @@ namespace NCL {
 			float yaw = 0;
 			float roll = 0.0f;
 			float pitch = 0.0f;
-			float targetRoll = 0.0f;
-			float targetPitch = 0.0f;
-			float oldRoll = 0;
-			float oldPitch = 0;
 			float radius = 2.0f;
 			bool crouchTransition = false;
 			float currentHeight;

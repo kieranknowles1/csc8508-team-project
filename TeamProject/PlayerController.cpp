@@ -15,6 +15,18 @@ void PlayerController::Initialise() {
     debugDrawer = bulletWorld->getDebugDrawer();
 }
 
+btVector3 GetEulerAngles(btQuaternion quat) {
+    btMatrix3x3 rotationMatrix(quat); // Convert quaternion to a 3x3 rotation matrix
+    btScalar roll2, pitch2, yaw2;
+
+    // Extract Euler angles (Bullet uses ZYX order)
+    rotationMatrix.getEulerZYX(yaw2, pitch2, roll2);
+
+    // Convert to degrees and return as (Pitch, Yaw, Roll)
+    return btVector3(pitch2, roll2, yaw2) * (180.0f / SIMD_PI);
+}
+
+
 void PlayerController::UpdateMovement(float dt) {
     transformPlayer = rb->getWorldTransform();
     btPlayerPos = transformPlayer.getOrigin();
@@ -62,7 +74,9 @@ void PlayerController::UpdateMovement(float dt) {
     // Combine the quaternions
     btQuaternion finalRotation =  playerRotation2 * playerRotation;
     transformPlayer.setRotation(finalRotation);
-    camera->setRotation(btVector3(0,pitch, roll));
+    btVector3 rot = GetEulerAngles(camRotOffset);
+    std::cout << rot << std::endl;
+    camera->setRotation(rot);
 
     //camera follows player, lowers if crouching
     btTransform transformPlayerMotion;
@@ -350,20 +364,17 @@ btVector3 PlayerController::CalculateUpDirection(float dt) {
     btVector3 upDir;
     if (!rotationChanging) {
         upDir = targetWorldRotation;
-        roll = targetRoll;
-        pitch = targetPitch;
+        camRotOffset = targetcamRotOffset;
+
     }else if (rotateTimer <= rotateTime && rotationChanging) {
         rotateTimer += dt;
         upDir = lerp(oldWorldRotation, targetWorldRotation,  rotateTimer/rotateTime);
-        roll = std::lerp(oldRoll, targetRoll, rotateTimer / rotateTime);
-        pitch = std::lerp(oldPitch, targetPitch, rotateTimer / rotateTime);
+        camRotOffset = (oldcamRotOffset.slerp(targetcamRotOffset, rotateTimer / rotateTime));
     }
     else {
         upDir = targetWorldRotation;
-        roll = targetRoll;
-        pitch = targetPitch;
-        oldRoll = targetRoll;
-        oldPitch = targetPitch;
+        camRotOffset = targetcamRotOffset;
+        oldcamRotOffset = targetcamRotOffset;
         oldWorldRotation = targetWorldRotation;
         rotationChanging = false;
         rotateTimer = 0.0f;
