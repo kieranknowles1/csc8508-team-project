@@ -17,8 +17,11 @@
 #include <btBulletCollisionCommon.h>
 
 
+
+
 namespace NCL {
 	namespace CSC8503 {
+
 		class PlayerController {
 		public:
 			PlayerController(PlayerObject* playerIn, GameObject* gunIn, const Controller* c, Camera* cam, btDiscreteDynamicsWorld* bulletWorldIn, GameWorld* worldIn, ResourceManager* resourceManager) {
@@ -55,19 +58,52 @@ namespace NCL {
 			btVector3 getForwardDirection() {
 				return forwardDirection;
 			}
+			void setRollUse(bool rollUseIn) {
+				rollUse = rollUseIn;
+			}
+
+			void rollRight() {
+				if (rotationChanging) return;
+				btVector3 forwardDirection = CalculateForwardDirection(upDirection, CalculateRightDirection(upDirection));
+				btQuaternion rollQuat(forwardDirection, Maths::DegreesToRadians(-90)); // Negative for right roll
+				targetWorldRotation = quatRotate(rollQuat, upDirection);
+				targetRoll =  roll - 90;
+				rotationChanging = true;
+			}
+
+			void rollLeft() {
+				if (rotationChanging) return;
+				btVector3 forwardDirection = CalculateForwardDirection(upDirection, CalculateRightDirection(upDirection));
+				btQuaternion rollQuat(forwardDirection, Maths::DegreesToRadians(90)); // Positive for left roll
+				targetWorldRotation = quatRotate(rollQuat, upDirection);
+				targetRoll = roll + 90;
+				rotationChanging = true;
+			}
+
+			void pitchUp() {
+				if (rotationChanging) return;
+				btVector3 rightDirection = CalculateRightDirection(upDirection);
+				btQuaternion pitchQuat(rightDirection, Maths::DegreesToRadians(90)); // Positive for up pitch
+				targetWorldRotation = quatRotate(pitchQuat, upDirection);
+				std::cout << rightDirection.getX() << " " << rightDirection.getY() << " " << rightDirection.getZ() <<std::endl;
+				targetPitch = pitch + 90;
+				rotationChanging = true;
+			}
+
+			void pitchDown() {
+				if (rotationChanging) return;
+				btVector3 rightDirection = CalculateRightDirection(upDirection);
+				btQuaternion pitchQuat(rightDirection, Maths::DegreesToRadians(-90)); // Negative for down pitch
+				targetWorldRotation = quatRotate(pitchQuat, upDirection);
+				targetPitch = pitch - 90;
+				rotationChanging = true;
+			}
 
 			void CalculateDirections(float dt);
 			btVector3 CalculateRightDirection(btVector3 upDir);
 			btVector3 CalculateForwardDirection(btVector3 upDir, btVector3 rightDir);
 
 		private:
-
-			btVector3 targetWorldRotation = btVector3(0, 1, 0);
-			btVector3 oldWorldRotation = btVector3(0,1,0);
-
-			btVector3 upDirection;
-			btVector3 rightDirection;
-			btVector3 forwardDirection;
 
 			//Player Movement Variables
 			float playerSpeed = 60.0f;
@@ -100,6 +136,12 @@ namespace NCL {
 			//Rotation Variables
 			float rotateTime = 0.5f;
 
+
+			btVector3 targetWorldRotation = btVector3(0, 1, 0);
+			btVector3 oldWorldRotation = btVector3(0, 1, 0);
+			btVector3 upDirection;
+			btVector3 rightDirection;
+			btVector3 forwardDirection;
 			float rotateTimer = 0.0f;
 			bool rotationChanging = false;
 			bool thirdPerson = false;
@@ -111,7 +153,12 @@ namespace NCL {
 			const Controller* controller = nullptr;
 			Camera* camera = nullptr;
 			float yaw = 0;
-			float roll = 0;
+			float roll = 0.0f;
+			float pitch = 0.0f;
+			float targetRoll = 0.0f;
+			float targetPitch = 0.0f;
+			float oldRoll = 0;
+			float oldPitch = 0;
 			float radius = 2.0f;
 			bool crouchTransition = false;
 			float currentHeight;
@@ -136,6 +183,8 @@ namespace NCL {
 			float shotTimer = 0;
 			bool collision = false;
 			bool crouching = false;
+			bool rollUse = false;
+			btIDebugDraw* debugDrawer;
 
 
 			Vector2 getDirectionalInput() const;
@@ -149,6 +198,7 @@ namespace NCL {
 			btVector3 CalculateUpDirection(float dt);
 			
 			float CalculateRoll();
+			float CalculatePitch();
 
 		};
 	};
