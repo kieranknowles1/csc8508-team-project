@@ -53,7 +53,8 @@ std::vector<std::string> readStrings(std::ifstream& fs, int size) {
 			}
 
 			if (value.length() > 1024) {
-				throw std::runtime_error("Unreasonably long string");
+				std::cerr << "Unreasonably long string" << std::endl;
+				return out;
 			}
 		}
 	}

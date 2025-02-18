@@ -1,6 +1,7 @@
+# PS5 support requires a couple patches
 [submodule "ThirdParty/bullet3"]
 	path = ThirdParty/bullet3
-	url = https://github.com/bulletphysics/bullet3
+	url = https://github.com/kieranknowles1/bullet3
 [submodule "ThirdParty/nlohmann_json"]
 	path = ThirdParty/nlohmann_json
 	url = https://github.com/nlohmann/json

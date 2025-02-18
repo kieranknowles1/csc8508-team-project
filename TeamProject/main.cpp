@@ -1,10 +1,14 @@
+#include <memory>
+
 #include <NCLCoreClasses/Window.h>
 #include <NCLCoreClasses/GameTimer.h>
+#include <CSC8503CoreClasses/Debug.h>
 
+#include "GameTechRenderer.h"
 #include "TutorialGame.h"
 #include "NavMesh.h"
 
-NCL::Window* createWindow() {
+std::unique_ptr<NCL::Window> createWindow() {
 	NCL::WindowInitialisation options = {
 		.width = 1280,
 		.height = 720,
@@ -12,7 +16,7 @@ NCL::Window* createWindow() {
 		.windowTitle = "Team Project",
 	};
 
-	NCL::Window* window = NCL::Window::CreateGameWindow(options);
+	std::unique_ptr<NCL::Window> window(NCL::Window::CreateGameWindow(options));
 	if (!window || !window->HasInitialised()) {
 		throw std::runtime_error("Window failed to initialise!");
 	}
@@ -27,7 +31,11 @@ int main(int argc, char** argv) {
 	window->ShowOSPointer(false);
 	window->LockMouseToWindow(true);
 
-	auto g = new NCL::CSC8503::TutorialGame();
+	auto world = std::make_unique<GameWorld>();
+	auto renderer = std::make_unique<GameTechRenderer>(world.get());
+	auto controller = std::make_unique<KeyboardMouseController>(*window->GetKeyboard(), *window->GetMouse());
+
+	auto game = std::make_unique<NCL::CSC8503::TutorialGame>(renderer.get(), world.get(), controller.get());
 	// Clear delta time to exclude start up time
 	window->GetTimer().GetTimeDeltaSeconds();
 	while (window->UpdateWindow() && !NCL::Window::GetKeyboard()->KeyDown(NCL::KeyCodes::ESCAPE)) {
@@ -35,11 +43,9 @@ int main(int argc, char** argv) {
 
 		window->SetTitle("Gametech frame time:" + std::to_string(1000.0f * dt));
 
-		g->UpdateGame(dt);
+		game->UpdateGame(dt);
+		renderer->Update(dt);
+		renderer->Render();
+		Debug::UpdateRenderables(dt);
 	}
-	delete g;
-	// Deleting game destroys the GL context, which should be done before destroying the window
-	delete window;
-
-	return 0;
 }

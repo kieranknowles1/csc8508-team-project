@@ -1,7 +1,8 @@
+#pragma once
+
 #include "../NCLCoreClasses/KeyboardMouseController.h"
 
-#pragma once
-#include "GameTechRenderer.h"
+#include "GameTechRendererInterface.h"
 
 #include "ResourceManager.h"
 
@@ -25,7 +26,7 @@ namespace NCL {
 			const static constexpr float PHYSICS_PERIOD = 1.0f / 60.0f;
 
 
-			TutorialGame();
+			TutorialGame(GameTechRendererInterface* renderer, GameWorld* world, Controller* controller);
 			~TutorialGame();
 
 			virtual void UpdateGame(float dt);
@@ -56,10 +57,10 @@ namespace NCL {
 			bool showProfiling = false;
 			Profiler profiler;
 
-			GameTechRenderer* renderer;
+			GameTechRendererInterface* renderer;
 			GameWorld* world;
 
-			KeyboardMouseController controller;
+			Controller* controller;
 
 			std::shared_ptr<Texture> defaultTexture;
 			std::shared_ptr<Shader> defaultShader;

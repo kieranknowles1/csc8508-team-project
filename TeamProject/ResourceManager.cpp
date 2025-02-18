@@ -7,7 +7,7 @@
 
 namespace NCL::CSC8503 {
 
-ResourceManager::ResourceManager(GameTechRenderer* renderer)
+ResourceManager::ResourceManager(GameTechRendererInterface* renderer)
 	: renderer(renderer)
 	, meshes(this)
 	, textures(this)

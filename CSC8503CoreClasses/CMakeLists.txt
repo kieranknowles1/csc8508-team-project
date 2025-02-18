@@ -65,18 +65,18 @@ set(Physics
 source_group("Physics" FILES ${Physics})
 
 set(Header_Files
-    "Debug.h"
-    "GameObject.h"
-    "GameWorld.h"
-    "RenderObject.h"
+	"Debug.h"
+	"GameObject.h"
+	"GameWorld.h"
+	"RenderObject.h"
 )
 source_group("Header Files" FILES ${Header_Files})
 
 set(Source_Files
-    "Debug.cpp"
-    "GameObject.cpp"
-    "GameWorld.cpp"
-    "RenderObject.cpp"
+	"Debug.cpp"
+	"GameObject.cpp"
+	"GameWorld.cpp"
+	"RenderObject.cpp"
 )
 source_group("Source Files" FILES ${Source_Files})
 
@@ -111,10 +111,14 @@ set(ALL_FILES
     ${AI_Pushdown_Automata}
     ${AI_State_Machine}
     ${AI_Pathfinding}
-    ${Networking}
-    ${Physics}
-    ${enet_Files}
+	${Networking}
+	${Physics}
 )
+
+# TODO: Networking for PS5
+if(NOT PS5_BUILD)
+    list(APPEND ALL_FILES ${enet_Files})
+endif()
 
 set_source_files_properties(${ALL_FILES} PROPERTIES LANGUAGE CXX)
 
@@ -130,22 +134,24 @@ target_include_directories(${PROJECT_NAME} PUBLIC ${BULLET_INCLUDE_DIRS})
 # use_props(${PROJECT_NAME} "${CMAKE_CONFIGURATION_TYPES}" "${DEFAULT_CXX_PROPS}")
 set(ROOT_NAMESPACE CSC8503CoreClasses)
 
-set_target_properties(${PROJECT_NAME} PROPERTIES
-    VS_GLOBAL_KEYWORD "Win32Proj"
-)
-set_target_properties(${PROJECT_NAME} PROPERTIES
-    INTERPROCEDURAL_OPTIMIZATION_RELEASE "TRUE"
-)
-################################################################################
-# Compile definitions
-################################################################################
-target_compile_definitions(${PROJECT_NAME} PRIVATE
-    "UNICODE"
-    "_UNICODE"
-    "WIN32_LEAN_AND_MEAN"
-    "_WINSOCK_DEPRECATED_NO_WARNINGS"
-	"NOMINMAX"
-)
+if(WIN32)
+    set_target_properties(${PROJECT_NAME} PROPERTIES
+        VS_GLOBAL_KEYWORD "Win32Proj"
+    )
+    set_target_properties(${PROJECT_NAME} PROPERTIES
+        INTERPROCEDURAL_OPTIMIZATION_RELEASE "TRUE"
+    )
+    ################################################################################
+    # Compile definitions
+    ################################################################################
+    target_compile_definitions(${PROJECT_NAME} PRIVATE
+        "UNICODE"
+        "_UNICODE"
+        "WIN32_LEAN_AND_MEAN"
+        "_WINSOCK_DEPRECATED_NO_WARNINGS"
+        "NOMINMAX"
+    )
+endif()
 
 target_precompile_headers(${PROJECT_NAME} PRIVATE
     <vector>
@@ -172,14 +178,9 @@ target_precompile_headers(${PROJECT_NAME} PRIVATE
 ################################################################################
 # Dependencies
 ################################################################################
-set(ADDITIONAL_LIBRARY_DEPENDENCIES
-    "NCLCoreClasses"
-    "ws2_32.lib"
-)
 
 include_directories("../NCLCoreClasses/")
 include_directories("./")
-
-if(MSVC)
+if(WIN32)
     target_link_libraries(${PROJECT_NAME} PRIVATE "ws2_32.lib")
 endif()
