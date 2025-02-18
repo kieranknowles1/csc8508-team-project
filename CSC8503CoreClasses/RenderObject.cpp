@@ -4,10 +4,7 @@
 using namespace NCL::CSC8503;
 using namespace NCL;
 
-RenderObject::RenderObject(GameObject* parent, Mesh* mesh, Texture* tex, Shader* shader, Texture* normal) {
-	if (!tex) {
-		bool a = true;
-	}
+RenderObject::RenderObject(GameObject* parent, std::shared_ptr<Mesh> mesh, std::shared_ptr<Texture> tex, std::shared_ptr<Shader> shader, std::shared_ptr<Texture> normal) {
 	this->parent	= parent;
 	this->mesh		= mesh;
 	this->texture	= tex;

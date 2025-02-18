@@ -41,12 +41,6 @@ set(AI_Pathfinding
 )
 source_group("AI\\Pathfinding" FILES ${AI_Pathfinding})
 
-
-set(Collision_Detection
-    "Ray.h"
-)
-source_group("Collision Detection" FILES ${Collision_Detection})
-
 set(Networking
     "GameClient.h"
     "GameClient.cpp"
@@ -65,6 +59,8 @@ set(Physics
     "PhysicsObject.cpp"
     "PhysicsObject.h"
     "CustomCollisionCallback.h"
+    "CollisionInfo.cpp"
+    "CollisionInfo.h"
 )
 source_group("Physics" FILES ${Physics})
 
@@ -73,7 +69,6 @@ set(Header_Files
     "GameObject.h"
     "GameWorld.h"
     "RenderObject.h"
-    "Transform.h"
 )
 source_group("Header Files" FILES ${Header_Files})
 
@@ -82,7 +77,6 @@ set(Source_Files
     "GameObject.cpp"
     "GameWorld.cpp"
     "RenderObject.cpp"
-    "Transform.cpp"
 )
 source_group("Source Files" FILES ${Source_Files})
 
@@ -117,7 +111,6 @@ set(ALL_FILES
     ${AI_Pushdown_Automata}
     ${AI_State_Machine}
     ${AI_Pathfinding}
-    ${Collision_Detection}
     ${Networking}
     ${Physics}
     ${enet_Files}
@@ -166,7 +159,6 @@ target_precompile_headers(${PROJECT_NAME} PRIVATE
     <iostream>
     <set>
     "../NCLCoreClasses/Vector.h"
-    "../NCLCoreClasses/Quaternion.h"
     "../NCLCoreClasses/Plane.h"
     "../NCLCoreClasses/Matrix.h"
 	"../NCLCoreClasses/GameTimer.h"

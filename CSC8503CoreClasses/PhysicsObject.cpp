@@ -1,6 +1,5 @@
 #include "PhysicsObject.h"
 #include "GameObject.h"
-#include "Transform.h"
 
 #include "CustomCollisionCallback.h"
 
@@ -35,12 +34,9 @@ void PhysicsObject::InitBulletPhysics(btDynamicsWorld* world, btCollisionShape* 
 	btTransform startTransform;
 	startTransform.setIdentity();
 
-	Vector3 initialPosition = parent->getInitialPosition();
-	Quaternion initialOrientation = parent->getInitialRotation();
-
 	// Setting the starting position of the object using the NCL framework's transform
-	startTransform.setOrigin(btVector3(initialPosition.x, initialPosition.y, initialPosition.z));
-	startTransform.setRotation(btQuaternion(initialOrientation.x, initialOrientation.y, initialOrientation.z, initialOrientation.w));
+	startTransform.setOrigin(parent->getInitialPosition());
+	startTransform.setRotation(parent->getInitialRotation());
 
 	// MotionState has been used to retrieve and apply Bullet's physics transformations to the NCL object
 	motionState = new btDefaultMotionState(startTransform);
@@ -57,7 +53,7 @@ void PhysicsObject::InitBulletPhysics(btDynamicsWorld* world, btCollisionShape* 
 	rigidBody->setMassProps(mass, localInertia);
 	rigidBody->setUserPointer(parent);
 	rigidBody->setActivationState(DISABLE_DEACTIVATION);
-  
+
 	if (collide) {
 		world->addRigidBody(rigidBody);
 #ifndef NDEBUG
@@ -65,8 +61,6 @@ void PhysicsObject::InitBulletPhysics(btDynamicsWorld* world, btCollisionShape* 
 #endif
 	}
 }
-
-
 
 void NCL::CSC8503::PhysicsObject::removeFromBullet(btDynamicsWorld* world)
 {
@@ -120,24 +114,47 @@ void PhysicsObject::CheckCollisions(btDynamicsWorld* world)
 	CustomCollisionCallback callback(parent);
 	world->contactTest(rigidBody, callback);
 
-	// New collisions
-	for (auto obj : callback.activeCollisions) {
-		if (!activeCollisions.count(obj)) {
-			activeCollisions.insert(obj);
-			parent->OnCollisionEnter(obj);
+	// Store objects while colliding, to check for ended collisions later
+	std::set<GameObject*> currentCollisions;
+
+	// Loop through all active collisions this frame
+	for (const auto& collision : callback.activeCollisions) {
+		currentCollisions.insert(collision.otherObject);
+
+		// Check if this is a new collision or it existed in the previous frame
+		if (!activeCollisions.count(collision.otherObject)) {
+			// New collision (Not existed in the previous frame)
+			activeCollisions.insert(collision.otherObject);
+			parent->OnCollisionEnter(collision);
+		}
+		else {
+			// Persistent collision (Existed in the previous frame)
+			parent->OnCollisionStay(collision);
 		}
 	}
 
-	// Ended collisions
-	for (auto obj : activeCollisions) {
-		if (!callback.activeCollisions.count(obj)) {
-			parent->OnCollisionExit(obj);
+	// Handle ended collisions
+	for (auto it = activeCollisions.begin(); it != activeCollisions.end();) {
+		// Storing the pointer to the object in a temporary variable
+		// just so that I can understand my own code :)
+		GameObject* obj = *it;
+		if (!currentCollisions.count(obj)) {
+			// Find the corresponding collision info
+			CollisionInfo collisionInfo;
+			collisionInfo.otherObject = obj;
+
+			// Call the OnCollisionExit method of the parent object
+			parent->OnCollisionExit(collisionInfo);
+			it = activeCollisions.erase(it);
+		}
+		else {
+			++it;
 		}
 	}
 
-	// Can't erase from a set while iterating over it
+	// Remove objects that are no longer colliding
 	std::erase_if(activeCollisions, [&](GameObject* obj) {
-		return !callback.activeCollisions.count(obj);
+		return callback.activeCollisions.find(obj) == callback.activeCollisions.end();
 	});
 }
 

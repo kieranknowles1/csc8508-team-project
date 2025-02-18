@@ -2,16 +2,16 @@
 
 #pragma once
 #include "GameTechRenderer.h"
-#ifdef USEVULKAN
-#include "GameTechVulkanRenderer.h"
-#endif
+
+#include "ResourceManager.h"
 
 #include "LevelImporter.h"
-#include "StateGameObject.h"
 #include "PlayerController.h"
 #include "PlayerObject.h"
 #include "Turret.h"
 #include "NavMesh.h"
+#include "Profiler.h"
+
 
 #include <btBulletDynamicsCommon.h>
 
@@ -38,6 +38,10 @@ namespace NCL {
 			void ThirdPersonControls();
 			void InitWorld();
 
+
+			void UpdatePlayer(float dt);
+
+
 			Turret* AddTurretToWorld();
 
 			GameObject* AddFloorToWorld(const Vector3& position, const Vector3& size, const Vector3& rotation, bool isFloor);
@@ -48,44 +52,19 @@ namespace NCL {
 
 			GameObject* AddInfinitePlaneToWorld(const Vector3& position, const Vector3& normal, float planeConstant);
 
+			std::unique_ptr<ResourceManager> resourceManager;
+			bool showProfiling = false;
+			Profiler profiler;
 
-#ifdef USEVULKAN
-			GameTechVulkanRenderer* renderer;
-#else
 			GameTechRenderer* renderer;
-#endif
 			GameWorld* world;
 
 			KeyboardMouseController controller;
 
+			std::shared_ptr<Texture> defaultTexture;
+			std::shared_ptr<Shader> defaultShader;
 
-			Mesh* planeMesh = nullptr;
-			Mesh* capsuleMesh = nullptr;
-			Mesh* cubeMesh = nullptr;
-			Mesh* sphereMesh = nullptr;
-
-			Texture* basicTex = nullptr;
-	
-			Shader* basicShader = nullptr;
-			//Added Shaders:
-			Shader* flatShader = nullptr;
-
-			//Coursework Meshes
-			Mesh*	catMesh		= nullptr;
-			Mesh*	kittenMesh	= nullptr;
-			Mesh*	enemyMesh	= nullptr;
-			Mesh*	bonusMesh	= nullptr;
-
-			//EG Meshes:
-			Mesh* maxMesh = nullptr;
-			Mesh* maleguardMesh = nullptr;
-			Mesh* femaleguardMesh = nullptr;
-
-			//EG Level Mehses:
-			Mesh* wallSection = nullptr;
-			Mesh* floorSection = nullptr;
-
-			//Coursework Additional functionality	
+			//Coursework Additional functionality
 			GameObject* lockedObject	= nullptr;
 			Vector3 lockedOffset		= Vector3(0, 14, 20);
 			void LockCameraToObject(GameObject* o) {
@@ -104,6 +83,7 @@ namespace NCL {
 
 			BulletDebug* bulletDebug = nullptr;
 
+			void CheckCollisions();
 			void DestroyBullet();
 			void InitBullet(); // Initialises the Bullet physics world
 
@@ -117,7 +97,7 @@ namespace NCL {
 			bool thirdPerson = false;
 			Vector4 playerColour = Vector4(1, 0.8, 1, 1);
 
-			//fixed update 
+			//fixed update
 			float accumulator = 0.0f;
 			float fixedDeltaTime = 1.0f / 60.0f;
 
@@ -127,6 +107,13 @@ namespace NCL {
 			//Level import
 			LevelImporter* levelImporter;
 			bool loadFromLevel;
+
+			//world Rotate
+			float oldRotate;
+			float targetRotate;
+			float rotateTimer;
+			float rotateTime = 0.5f;
+			bool finished = true;
 
 		};
 	}

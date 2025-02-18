@@ -45,7 +45,7 @@ GameTechRenderer::GameTechRenderer(GameWorld& world) : OGLRenderer(*Window::GetW
 
 	//Set up the light properties
 	lightColour = Vector4(0.8f, 0.8f, 0.5f, 1.0f);
-	lightRadius = 1000.0f;
+	lightRadius = 1000.0f; 
 	lightPosition = Vector3(-200.0f, 60.0f, -200.0f);
 
 	//Skybox!
@@ -77,6 +77,8 @@ GameTechRenderer::GameTechRenderer(GameWorld& world) : OGLRenderer(*Window::GetW
 
 	SetDebugStringBufferSizes(10000);
 	SetDebugLineBufferSizes(1000);
+
+	InitCrosshair(); //This line Ameya added for crosshair
 }
 
 GameTechRenderer::~GameTechRenderer()	{
@@ -87,6 +89,8 @@ GameTechRenderer::~GameTechRenderer()	{
 	delete skyboxMesh;
 
 	delete debugTexMesh;
+
+	delete crosshairShader; //This line Ameya added for crosshair
 
 	glDeleteTextures(1, &shadowTex);
 	glDeleteFramebuffers(1, &shadowFBO);
@@ -146,11 +150,12 @@ void GameTechRenderer::RenderFrame() {
 	glDisable(GL_DEPTH_TEST);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	NewRenderLines();
-	NewRenderTextures();
+	NewRenderTextures(); 
 	NewRenderText();
 	glDisable(GL_BLEND);
 	glEnable(GL_DEPTH_TEST);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	RenderCrosshair(); //This line Ameya added for crosshair
 }
 
 void GameTechRenderer::BuildObjectList() {
@@ -253,6 +258,8 @@ void GameTechRenderer::RenderCamera() {
 	int hasTexLocation  = 0;
 	int shadowLocation  = 0;
 	int hasFlatLocation = 0;
+	int hasNormalLocation = 0;
+	int texRepeatingLocation = 0; 
 
 	int lightPosLocation	= 0;
 	int lightColourLocation = 0;
@@ -268,8 +275,17 @@ void GameTechRenderer::RenderCamera() {
 		OGLShader* shader = (OGLShader*)(*i).GetShader();
 		UseShader(*shader);
 
-		if ((*i).GetDefaultTexture()) {
+		if ((*i).GetDefaultTexture()) { 
 			BindTextureToShader(*(OGLTexture*)(*i).GetDefaultTexture(), "mainTex", 0);
+			//figure out scale of object:
+			float multiplier = (*i).GetTexScaleMultiplier();   
+			float scaleX = (*i).getParent()->getRenderScale().x*multiplier;
+			float scaleY = (*i).getParent()->getRenderScale().y*multiplier;
+			float scaleZ = (*i).getParent()->getRenderScale().z*multiplier; 
+			glUniform1f(glGetUniformLocation(shader->GetProgramID(), "texScaleX"), scaleX);
+			glUniform1f(glGetUniformLocation(shader->GetProgramID(), "texScaleY"), scaleY);
+			glUniform1f(glGetUniformLocation(shader->GetProgramID(), "texScaleZ"), scaleZ);
+			
 		}
 
 		//normal map capabilities added:
@@ -286,6 +302,8 @@ void GameTechRenderer::RenderCamera() {
 			hasVColLocation = glGetUniformLocation(shader->GetProgramID(), "hasVertexColours");
 			hasTexLocation  = glGetUniformLocation(shader->GetProgramID(), "hasTexture");
 			hasFlatLocation =  glGetUniformLocation(shader->GetProgramID(), "isFlat");
+			hasNormalLocation = glGetUniformLocation(shader->GetProgramID(), "hasNormalMap");
+			texRepeatingLocation = glGetUniformLocation(shader->GetProgramID(), "texRepeating");
 
 			lightPosLocation	= glGetUniformLocation(shader->GetProgramID(), "lightPos");
 			lightColourLocation = glGetUniformLocation(shader->GetProgramID(), "lightColour");
@@ -325,6 +343,8 @@ void GameTechRenderer::RenderCamera() {
 
 		glUniform1i(hasTexLocation, (OGLTexture*)(*i).GetDefaultTexture() ? 1:0);
 		glUniform1i(hasFlatLocation, i->GetIsFlat());
+		glUniform1i(hasNormalLocation, i->GetHasNormal());
+		glUniform1i(texRepeatingLocation, i->GetTexRepeating());
 	
 		BindMesh((OGLMesh&)*(*i).GetMesh());
 		size_t layerCount = (*i).GetMesh()->GetSubMeshCount();
@@ -549,4 +569,66 @@ void GameTechRenderer::SetDebugLineBufferSizes(size_t newVertCount) {
 
 		glBindVertexArray(0);
 	}
+}
+
+void GameTechRenderer::InitCrosshair() {
+	float gap = 0.010f; // Space in NDC
+	float crosshairSize = 0.02f; // Line length
+	float horizontalCrosshairSize = 0.012f;
+	float thickness = 0.002f; // Vertical line thickness
+	float horizontalThickness = 0.003f; // Horizontal line thickness
+
+	float vertices[] = {
+		// Horizontal top quad
+		-horizontalCrosshairSize - gap,  horizontalThickness, 0.0f,  -gap,  horizontalThickness, 0.0f,
+		-horizontalCrosshairSize - gap, -horizontalThickness, 0.0f,  -gap, -horizontalThickness, 0.0f,
+
+		 gap,  horizontalThickness, 0.0f,  horizontalCrosshairSize + gap,  horizontalThickness, 0.0f,
+		 gap, -horizontalThickness, 0.0f,  horizontalCrosshairSize + gap, -horizontalThickness, 0.0f,
+
+		 // Vertical left quad
+		 -thickness, -crosshairSize - gap, 0.0f,  thickness, -crosshairSize - gap, 0.0f,
+		 -thickness, -gap, 0.0f,  thickness, -gap, 0.0f,
+
+		 -thickness,  gap, 0.0f,  thickness,  gap, 0.0f,
+		 -thickness, crosshairSize + gap, 0.0f,  thickness, crosshairSize + gap, 0.0f
+	};
+
+	unsigned int indices[] = {
+		0, 1, 2,  2, 3, 1,  // Left horizontal quad
+		4, 5, 6,  6, 7, 5,  // Right horizontal quad
+		8, 9, 10, 10, 11, 9, // Bottom vertical quad
+		12, 13, 14, 14, 15, 13 // Top vertical quad
+	};
+
+	glGenVertexArrays(1, &crosshairVAO);
+	glGenBuffers(1, &crosshairVBO);
+	glGenBuffers(1, &crosshairEBO);
+
+	glBindVertexArray(crosshairVAO);
+	glBindBuffer(GL_ARRAY_BUFFER, crosshairVBO);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, crosshairEBO);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
+
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+	glEnableVertexAttribArray(0);
+
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	glBindVertexArray(0);
+
+	crosshairShader = new OGLShader("crosshair.vert", "crosshair.frag");
+}
+
+void GameTechRenderer::RenderCrosshair() {
+	glDisable(GL_DEPTH_TEST);
+	glUseProgram(crosshairShader->GetProgramID());
+
+	glBindVertexArray(crosshairVAO);
+	glDrawElements(GL_TRIANGLES, 24, GL_UNSIGNED_INT, 0); // Drawing quads as triangles
+	glBindVertexArray(0);
+
+	glUseProgram(0);
+	glEnable(GL_DEPTH_TEST);
 }

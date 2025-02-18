@@ -1,10 +1,8 @@
 #pragma once
-#include "Transform.h"
 
 #include "PhysicsObject.h"
 #include "btBulletDynamicsCommon.h"
-
-using std::vector;
+#include "CollisionInfo.h"
 
 namespace NCL::CSC8503 {
 	class NetworkObject;
@@ -48,12 +46,20 @@ namespace NCL::CSC8503 {
 			name = nameIn;
 		}
 
-		virtual void OnCollisionEnter(GameObject* otherObject) {
-			//std::cout << "OnCollisionBegin event occured! " << this->GetWorldID() << " " << otherObject->GetWorldID() << std::endl;
+		virtual void OnCollisionEnter(const CollisionInfo& collision) {
+			//std::cout << "OnCollisionEnter event occured!\n";
 		}
 
-		virtual void OnCollisionExit(GameObject* otherObject) {
-		//	std::cout << "OnCollisionEnd event occured!\n";
+		virtual void OnCollisionExit(const CollisionInfo& collision) {
+			//std::cout << "OnCollisionEnd event occured!\n";
+		}
+
+		virtual void OnCollisionStay(const CollisionInfo& collision) {
+			//std::cout << "OnCollisionStay event occured!\n";
+		}
+
+		virtual void OnCollisionStay(GameObject* otherObject) {
+			//std::cout << "OnCollisionStay: " << this->GetWorldID() << " is still colliding with " << otherObject->GetWorldID() << std::endl;
 		}
 
 		virtual void Update(float dt) {
@@ -74,18 +80,16 @@ namespace NCL::CSC8503 {
 
 		void setInitialPosition(const Vector3& position) {
 			initialPosition = position;
-			hasSetInitialPosition = true;
 		}
 
-		void setInitialRotation(const Quaternion& rotation) {
+		void setInitialRotation(const btQuaternion& rotation) {
 			initialRotation = rotation;
-			hasSetInitialRotation = true;
 		}
 
-		Vector3 getInitialPosition() const {
+		btVector3 getInitialPosition() const {
 			return initialPosition;
 		}
-		Quaternion getInitialRotation() const {
+		btQuaternion getInitialRotation() const {
 			return initialRotation;
 		}
 
@@ -113,10 +117,8 @@ namespace NCL::CSC8503 {
 		int			worldID;
 		std::string	name;
 
-		Vector3 renderScale; // Only affects rendering, not physics
-		Vector3 initialPosition;
-		Quaternion initialRotation;
-		bool hasSetInitialPosition;
-		bool hasSetInitialRotation;
+		Vector3 renderScale = Vector3(1, 1, 1); // Only affects rendering, not physics
+		btVector3 initialPosition;
+		btQuaternion initialRotation = btQuaternion(0, 0, 0);
 	};
 }

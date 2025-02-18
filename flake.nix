@@ -69,6 +69,7 @@
               libGL
               bullet
               enet
+              nlohmann_json
             ];
           });
         };
