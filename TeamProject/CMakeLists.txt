@@ -3,6 +3,7 @@ set(SOURCES
     BulletDebug.h
     GameTechRenderer.cpp
     GameTechRenderer.h
+    GameTechRendererInterface.h
     main.cpp
     TutorialGame.cpp
     TutorialGame.h
@@ -23,12 +24,13 @@ set(SOURCES
 
 file(GLOB_RECURSE COMPILED_MESHES "${CMAKE_SOURCE_DIR}/Assets/Meshes/*.msh")
 
-add_executable(${PROJECT_NAME} ${SOURCES})
-add_dependencies(${PROJECT_NAME} MeshCompiler)
+add_library(${PROJECT_NAME} STATIC ${SOURCES})
 
-set_target_properties(${PROJECT_NAME} PROPERTIES
-    VS_GLOBAL_KEYWORD "Win32Proj"
-)
+# TODO: PS5 Support
+if(NOT PS5_BUILD)
+    add_dependencies(${PROJECT_NAME} MeshCompiler)
+endif()
+
 set_target_properties(${PROJECT_NAME} PROPERTIES
     INTERPROCEDURAL_OPTIMIZATION_RELEASE "TRUE"
 )
@@ -81,21 +83,29 @@ set(INCLUDE_DIRECTORIES
 	${CMAKE_SOURCE_DIR}/CSC8503CoreClasses/
     ${CMAKE_SOURCE_DIR}/TeamProject/
     ${CMAKE_SOURCE_DIR}/Network/
+    ${CMAKE_SOURCE_DIR}
 )
 
 target_include_directories(${PROJECT_NAME} PRIVATE ${INCLUDE_DIRECTORIES}>)
 
-target_link_libraries(${PROJECT_NAME} NCLCoreClasses)
-target_link_libraries(${PROJECT_NAME} CSC8503CoreClasses)
-target_link_libraries(${PROJECT_NAME} OpenGLRendering)
-target_link_libraries(${PROJECT_NAME} NetworkLib)
-target_link_libraries(${PROJECT_NAME} ${BULLET_LIBRARIES})
-target_link_libraries(${PROJECT_NAME} nlohmann_json::nlohmann_json)
+target_link_libraries(${PROJECT_NAME} PUBLIC NCLCoreClasses)
+target_link_libraries(${PROJECT_NAME} PUBLIC CSC8503CoreClasses)
+if(NOT PS5_BUILD)
+    target_link_libraries(${PROJECT_NAME} PUBLIC OpenGLRendering)
+    # TODO: PS5 Support
+    target_link_libraries(${PROJECT_NAME} PUBLIC NetworkLib)
+endif()
+target_link_libraries(${PROJECT_NAME} PUBLIC ${BULLET_LIBRARIES})
+target_link_libraries(${PROJECT_NAME} PUBLIC nlohmann_json::nlohmann_json)
 
-target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR})
-set_target_properties(${PROJECT_NAME} PROPERTIES
-    VS_DEBUGGER_WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
-)
+target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_SOURCE_DIR})
+target_include_directories(${PROJECT_NAME} PUBLIC ${BULLET_INCLUDE_DIRS})
+
+if(WIN32)
+    set_target_properties(${PROJECT_NAME} PROPERTIES
+        VS_DEBUGGER_WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+    )
+endif()
 
 foreach(file ${COMPILED_MESHES})
     set(out "${file}b")
@@ -108,4 +118,7 @@ foreach(file ${COMPILED_MESHES})
     list(APPEND PROCESSED_MESHES ${out})
 endforeach()
 add_custom_target(ProcessMeshes ALL DEPENDS ${PROCESSED_MESHES})
-add_dependencies(${PROJECT_NAME} ProcessMeshes)
+# TODO: PS5 support
+if(NOT PS5_BUILD)
+    add_dependencies(${PROJECT_NAME} ProcessMeshes)
+endif()
