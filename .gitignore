@@ -9,3 +9,6 @@ build-ps5
 *.gnf
 # PS5 Shaders
 *.ags
+
+# Debug helper, preprocessed shaders
+*.pre

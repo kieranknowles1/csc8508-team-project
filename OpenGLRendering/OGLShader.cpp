@@ -53,6 +53,11 @@ void OGLShader::ReloadShader() {
 		if (!shaderFiles[i].empty()) {
 			if (Assets::ReadTextFile(Assets::SHADERDIR + shaderFiles[i], fileContents)) {
 				Preprocessor(fileContents);
+#ifndef NDEBUG
+				// Write out the preprocessed source to aid in debugging
+				std::ofstream preFile(Assets::SHADERDIR + shaderFiles[i] + ".pre");
+				preFile << fileContents;
+#endif
 
 				shaderIDs[i] = glCreateShader(shaderTypes[i]);
 
