@@ -1,4 +1,4 @@
-#include "ShaderConstants.psslh"
+#include "../include/constants.glh"
 #include "VertexAttributes.psslh"
 #include "Skinning.psslh"
 #include "TechObject.psslh"
@@ -9,7 +9,7 @@ struct VS_OUTPUT
 {
 	float4 Position		: S_POSITION;
 	float2 UV			: TEXCOORD0;
-	float4 Colour		: TEXCOORD1;	
+	float4 Colour		: TEXCOORD1;
 	int	texID			: TEXCOORD2;
 
 	float4 ShadowClip	: TEXCOORD2;

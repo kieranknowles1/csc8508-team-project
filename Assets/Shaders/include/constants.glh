@@ -1,0 +1,32 @@
+#include "interop.h"
+
+struct ShaderConstants
+{
+	mat4 shadowMatrix;
+	mat4 orthoMatrix;
+
+	mat4 viewProjMatrix;
+	mat4 viewMatrix;
+	mat4 projMatrix;
+
+	mat4 inverseViewProjMatrix;
+	mat4 inverseViewMatrix;
+	mat4 inverseProjMatrix;
+
+	vec3 lightPosition;
+	float  lightRadius;
+	vec4 lightColour;
+	vec3 cameraPos;
+	uint32_t shadowID;
+};
+
+#ifndef __cplusplus
+ConstantBuffer constants : register(c0)
+{
+	ShaderConstants Constants;
+}
+#endif
+
+#if USING_GL
+uniform ShaderConstants Constants;
+#endif

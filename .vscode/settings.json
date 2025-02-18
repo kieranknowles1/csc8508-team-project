@@ -2,6 +2,9 @@
     "files.associations": {
         // TODO: What should we be using for GLSL includes?
         // Do we want to also include them from C++
-        "*.glh": "glsl"
+        "*.glh": "glsl",
+
+        "*.pssl": "hlsl",
+        "*.psslh": "hlsl"
     }
 }

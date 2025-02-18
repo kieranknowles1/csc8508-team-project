@@ -1,5 +1,7 @@
+#include "../include/interop.h"
+
 struct ObjectState {
-		matrix modelMatrix;
-		float4 colour;
+		mat4 modelMatrix;
+		vec4 colour;
 		int index[4];
 };

@@ -1,4 +1,4 @@
-#include "ShaderConstants.psslh"
+#include "../include/constants.glh"
 
 struct TextState {
 	float2 pos;
@@ -12,7 +12,7 @@ struct VS_OUTPUT
 {
 	float4 Position		: S_POSITION;
 	float2 UV			: TEXCOORD0;
-	float4 Colour		: TEXCOORD1;	
+	float4 Colour		: TEXCOORD1;
 };
 
 [CxxSymbol("TestShader::gs")]

@@ -1,3 +1,0 @@
-struct Vertex {
-    vec4 color;
-};

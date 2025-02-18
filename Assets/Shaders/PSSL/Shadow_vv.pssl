@@ -1,4 +1,4 @@
-#include "ShaderConstants.psslh"
+#include "../include/constants.glh"
 #include "VertexAttributes.psslh"
 #include "Skinning.psslh"
 #include "TechObject.psslh"

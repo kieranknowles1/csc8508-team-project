@@ -1,4 +1,4 @@
-#include "ShaderConstants.psslh"
+#include "../include/constants.glh"
 
 struct LineState {
 	float4 pos;
@@ -10,7 +10,7 @@ RegularBuffer<LineState> allLines : register(t0);
 struct VS_OUTPUT
 {
 	float4 Position		: S_POSITION;
-	float4 Colour		: TEXCOORD1;	
+	float4 Colour		: TEXCOORD1;
 };
 
 [CxxSymbol("TestShader::gs")]

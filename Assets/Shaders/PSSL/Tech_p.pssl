@@ -1,4 +1,4 @@
-#include "ShaderConstants.psslh"
+#include "../include/constants.glh"
 
 struct VS_OUTPUT
 {
@@ -21,7 +21,7 @@ float4 main(VS_OUTPUT vertex) : S_TARGET_OUTPUT
 
 	float4 texSample = tex.Sample(sampler, vertex.UV) * vertex.Colour;
 
-	//Shadow mapping		
+	//Shadow mapping
 	Texture2D<float> shadowTex = Texture2D<float>(textures[Constants.shadowID]);
 
 	float3 shadowNDC		= vertex.ShadowClip.xyz / vertex.ShadowClip.w;
@@ -34,13 +34,13 @@ float4 main(VS_OUTPUT vertex) : S_TARGET_OUTPUT
 	float shadow = 1.0f;
 	float offset        = -0.001f;
 
-	if(shadowNDC.x > 0.0f && shadowNDC.x < 1.0f && 
+	if(shadowNDC.x > 0.0f && shadowNDC.x < 1.0f &&
        shadowNDC.y > 0.0f && shadowNDC.y < 1.0f &&
 	   shadowNDC.z > 0.0f && shadowNDC.z < 1.0f) {
         if(shadowSample < shadowNDC.z + offset) {
             shadow = 0.5f;
         }
-    } 
-	
-	return texSample * float4(shadow,shadow,shadow,1);  
+    }
+
+	return texSample * float4(shadow,shadow,shadow,1);
 }
