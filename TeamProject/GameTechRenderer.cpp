@@ -45,7 +45,7 @@ GameTechRenderer::GameTechRenderer(GameWorld* world) : OGLRenderer(*Window::GetW
 
 	//Set up the light properties
 	lightColour = Vector4(0.8f, 0.8f, 0.5f, 1.0f);
-	lightRadius = 1000.0f; 
+	lightRadius = 1000.0f;
 	lightPosition = Vector3(-200.0f, 60.0f, -200.0f);
 
 	//Skybox!
@@ -150,7 +150,7 @@ void GameTechRenderer::RenderFrame() {
 	glDisable(GL_DEPTH_TEST);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	NewRenderLines();
-	NewRenderTextures(); 
+	NewRenderTextures();
 	NewRenderText();
 	glDisable(GL_BLEND);
 	glEnable(GL_DEPTH_TEST);
@@ -226,8 +226,8 @@ void GameTechRenderer::RenderSkybox() {
 
 	UseShader(*skyboxShader);
 
-	int projLocation = glGetUniformLocation(skyboxShader->GetProgramID(), "projMatrix");
-	int viewLocation = glGetUniformLocation(skyboxShader->GetProgramID(), "viewMatrix");
+	int projLocation = glGetUniformLocation(skyboxShader->GetProgramID(), "Constants.projMatrix");
+	int viewLocation = glGetUniformLocation(skyboxShader->GetProgramID(), "Constants.viewMatrix");
 	int texLocation  = glGetUniformLocation(skyboxShader->GetProgramID(), "cubeTex");
 
 	glUniformMatrix4fv(projLocation, 1, false, (float*)&projMatrix);
@@ -259,7 +259,7 @@ void GameTechRenderer::RenderCamera() {
 	int shadowLocation  = 0;
 	int hasFlatLocation = 0;
 	int hasNormalLocation = 0;
-	int texRepeatingLocation = 0; 
+	int texRepeatingLocation = 0;
 
 	int lightPosLocation	= 0;
 	int lightColourLocation = 0;
@@ -275,17 +275,17 @@ void GameTechRenderer::RenderCamera() {
 		OGLShader* shader = (OGLShader*)(*i).GetShader();
 		UseShader(*shader);
 
-		if ((*i).GetDefaultTexture()) { 
+		if ((*i).GetDefaultTexture()) {
 			BindTextureToShader(*(OGLTexture*)(*i).GetDefaultTexture(), "mainTex", 0);
 			//figure out scale of object:
-			float multiplier = (*i).GetTexScaleMultiplier();   
+			float multiplier = (*i).GetTexScaleMultiplier();
 			float scaleX = (*i).getParent()->getRenderScale().x*multiplier;
 			float scaleY = (*i).getParent()->getRenderScale().y*multiplier;
-			float scaleZ = (*i).getParent()->getRenderScale().z*multiplier; 
+			float scaleZ = (*i).getParent()->getRenderScale().z*multiplier;
 			glUniform1f(glGetUniformLocation(shader->GetProgramID(), "texScaleX"), scaleX);
 			glUniform1f(glGetUniformLocation(shader->GetProgramID(), "texScaleY"), scaleY);
 			glUniform1f(glGetUniformLocation(shader->GetProgramID(), "texScaleZ"), scaleZ);
-			
+
 		}
 
 		//normal map capabilities added:
@@ -294,10 +294,10 @@ void GameTechRenderer::RenderCamera() {
 		}
 
 		if (activeShader != shader) {
-			projLocation	= glGetUniformLocation(shader->GetProgramID(), "projMatrix");
-			viewLocation	= glGetUniformLocation(shader->GetProgramID(), "viewMatrix");
+			projLocation	= glGetUniformLocation(shader->GetProgramID(), "Constants.projMatrix");
+			viewLocation	= glGetUniformLocation(shader->GetProgramID(), "Constants.viewMatrix");
 			modelLocation	= glGetUniformLocation(shader->GetProgramID(), "modelMatrix");
-			shadowLocation  = glGetUniformLocation(shader->GetProgramID(), "shadowMatrix");
+			shadowLocation  = glGetUniformLocation(shader->GetProgramID(), "Constants.shadowMatrix");
 			colourLocation  = glGetUniformLocation(shader->GetProgramID(), "objectColour");
 			hasVColLocation = glGetUniformLocation(shader->GetProgramID(), "hasVertexColours");
 			hasTexLocation  = glGetUniformLocation(shader->GetProgramID(), "hasTexture");
@@ -345,7 +345,7 @@ void GameTechRenderer::RenderCamera() {
 		glUniform1i(hasFlatLocation, i->GetIsFlat());
 		glUniform1i(hasNormalLocation, i->GetHasNormal());
 		glUniform1i(texRepeatingLocation, i->GetTexRepeating());
-	
+
 		BindMesh((OGLMesh&)*(*i).GetMesh());
 		size_t layerCount = (*i).GetMesh()->GetSubMeshCount();
 		for (size_t i = 0; i < layerCount; ++i) {

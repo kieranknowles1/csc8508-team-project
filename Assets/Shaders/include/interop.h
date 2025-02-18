@@ -10,6 +10,7 @@ using mat4 = NCL::Maths::Matrix4;
 using vec2 = NCL::Maths::Vector2;
 using vec3 = NCL::Maths::Vector3;
 using vec4 = NCL::Maths::Vector4;
+using uint = uint32_t;
 
 #define USING_GL 0
 #define USING_PS 0
@@ -23,6 +24,7 @@ using vec4 = NCL::Maths::Vector4;
 #define vec2 float2
 #define vec3 float3
 #define vec4 float4
+#define uint uint32_t
 
 #define USING_GL 0
 #define USING_PS 1

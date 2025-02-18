@@ -1,3 +1,4 @@
+#include "../include/interop.h"
 #include "../include/constants.glh"
 
 struct LineState {
