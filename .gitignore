@@ -4,6 +4,7 @@ build-ps5
 *.bak
 *.bak
 *.mshb
+fmod-cmake/fmod/2.02.26/
 
 # PS5 Textures
 *.gnf

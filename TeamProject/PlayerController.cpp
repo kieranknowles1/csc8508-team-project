@@ -1,4 +1,5 @@
 #include "PlayerController.h"
+#include "AudioEngine.h"
 
 using namespace NCL;
 using namespace CSC8503;
@@ -103,6 +104,9 @@ void PlayerController::UpdateMovement(float dt) {
 
     // jump input
     if (controller->GetDigital(Controller::DigitalControl::Jump) && player->getCollided()) {
+        audioEngine.PlaySounds("Assets/Audio/jump.wav", NCL::Maths::Vector3(player->GetTransform().getOrigin()), 0.0f);
+        //Audio is played in the wrong place, I think the vector3 being passed into the func is wrong
+        //Need to pass the player's current position
         btVector3 normal = FindFloorNormal();
         float dotProduct = normal.dot(upDirection.absolute());
         if (fabs(dotProduct <= 1)) {
