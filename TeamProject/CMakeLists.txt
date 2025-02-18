@@ -21,6 +21,8 @@ set(SOURCES
     ResourceManager.cpp
     Profiler.h
     Profiler.cpp
+	AudioEngine.h
+	AudioEngine.cpp
 )
 
 file(GLOB_RECURSE COMPILED_MESHES "${CMAKE_SOURCE_DIR}/Assets/Meshes/*.msh")
@@ -106,6 +108,8 @@ if(NOT PS5_BUILD)
 endif()
 target_link_libraries(${PROJECT_NAME} PUBLIC ${BULLET_LIBRARIES})
 target_link_libraries(${PROJECT_NAME} PUBLIC nlohmann_json::nlohmann_json)
+target_link_libraries(${PROJECT_NAME} PUBLIC fmod)
+target_link_libraries(${PROJECT_NAME} PUBLIC fmodstudio)
 
 target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_SOURCE_DIR})
 target_include_directories(${PROJECT_NAME} PUBLIC ${BULLET_INCLUDE_DIRS})
