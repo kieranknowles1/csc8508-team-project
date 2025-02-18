@@ -27,11 +27,19 @@ public:
 
 	// 0 or 1, a keyboard or controller button that is pressed
 	// or a trigger moved beyond a threshold
+	// Inputs may last either until released, or a single frame
 	enum class DigitalControl {
 		Fire,
 		Jump,
 		Sprint,
 		Crouch,
+		ThirdPerson,
+		RotateWorld,
+
+		DebugReloadWorld,
+		DebugBulletOverlay,
+		DebugShowProfiling,
+		DebugFreeCam
 	};
 
 	Controller() {

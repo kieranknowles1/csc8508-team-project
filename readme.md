@@ -2,7 +2,7 @@
 
 - [CSC8508 Team Project](#csc8508-team-project)
   - [Building](#building)
-  - [Controls](#controls)
+  - [Debug Controls](#debug-controls)
 
 ## Building
 
@@ -16,7 +16,12 @@ When adding a new file to the project:
 2. Build `CMakePredefinedTargets/ZERO_CHECK`.
 3. Reload the solution when prompted.
 
-## Controls
+## Debug Controls
 
-- `F3`: Toggle Bullet debug draw
-- `F4`: Toggle showing time usage
+On PS5, `L1` must be held for debug inputs to register.
+
+On PC/PS5:
+- `F1`/`Dpad Right`: Reload world
+- `F3`/`Dpad up`: Toggle Bullet debug draw
+- `F4`/`Dpad right`: Toggle showing time usage
+- `F`/`Dpad left`: Toggle free cam

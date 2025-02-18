@@ -134,29 +134,24 @@ void TutorialGame::UpdatePlayer(float dt) {
 }
 
 void TutorialGame::UpdateKeys() {
-	if (Window::GetKeyboard()->KeyPressed(KeyCodes::F1)) {
+	using enum Controller::DigitalControl;
+	if (controller->GetDigital(DebugReloadWorld)) {
 		InitWorld(); //We can reset the simulation at any time with F1
 	}
-
-	if (Window::GetKeyboard()->KeyPressed(KeyCodes::F2)) {
-		InitCamera(); //F2 will reset the camera to a specific default place
-	}
-
-	if (Window::GetKeyboard()->KeyPressed(KeyCodes::F3)) {
+	if (controller->GetDigital(DebugBulletOverlay)) {
 		bulletDebug->toggle();
 	}
-	if (Window::GetKeyboard()->KeyPressed(KeyCodes::F4)) {
+	if (controller->GetDigital(DebugShowProfiling)) {
 		showProfiling = !showProfiling;
 	}
-	if (Window::GetKeyboard()->KeyPressed(KeyCodes::F)) {
+	if (controller->GetDigital(DebugFreeCam)) {
 		freeCam = !freeCam;
 	}
-	if (Window::GetKeyboard()->KeyPressed(KeyCodes::G)) {
+	if (controller->GetDigital(ThirdPerson)) {
 		thirdPerson = !thirdPerson;
 		playerController->SetThirdPerson(thirdPerson);
 	}
-	if (Window::GetKeyboard()->KeyPressed(KeyCodes::V)) {
-		if (rotateTimer < rotateTime) return;
+	if (controller->GetDigital(RotateWorld) && rotateTimer >= rotateTime) {
 		rotateTimer = 0;
 		oldRotate = playerController->getWorldRotation();
 		targetRotate = oldRotate + 1;
