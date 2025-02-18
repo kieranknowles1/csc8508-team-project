@@ -117,7 +117,6 @@ void TutorialGame::UpdateGame(float dt) {
 	if (showProfiling) {
 		profiler.printTimes();
 	}
-	Debug::UpdateRenderables(dt);
 }
 
 void TutorialGame::UpdatePlayer(float dt) {

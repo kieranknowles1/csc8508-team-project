@@ -5,7 +5,6 @@ set(CMAKE_SYSTEM_VERSION 10.0 CACHE STRING "" FORCE)
 project(CSC8508)
 
 set(CMAKE_CXX_STANDARD 20)
-add_compile_options(-Wno-pragma-once-outside-header)
 
 
 option(USE_SDL2 "Use SDL2 for window creation and input" OFF)
@@ -58,9 +57,9 @@ endif()
 add_subdirectory(CSC8503CoreClasses)
 if (NOT PS5_BUILD)
     add_subdirectory(OpenGLRendering)
+else()
+    add_subdirectory(PS5Core)
+    add_subdirectory(PS5Starter)
 endif()
 add_subdirectory(Network)
 add_subdirectory(TeamProject) # Working title
-
-add_subdirectory(PS5Core)
-add_subdirectory(PS5Starter)

@@ -5,19 +5,22 @@
 #include "OGLMesh.h"
 
 #include "GameWorld.h"
+#include "GameTechRendererInterface.h"
 
 namespace NCL {
 	namespace CSC8503 {
 		class RenderObject;
 
-		class GameTechRenderer : public OGLRenderer	{
+		class GameTechRenderer
+			: public OGLRenderer
+			, public GameTechRendererInterface {
 		public:
-			GameTechRenderer(GameWorld& world);
+			GameTechRenderer(GameWorld* world);
 			~GameTechRenderer();
 
-			Mesh*		LoadMesh(const std::string& name);
-			Texture*	LoadTexture(const std::string& name);
-			Shader*		LoadShader(const std::string& vertex, const std::string& fragment);
+			Mesh* LoadMesh(const std::string& name) override;
+			Texture* LoadTexture(const std::string& name) override;
+			Shader* LoadShader(const std::string& vertex, const std::string& fragment) override;
 
 		protected:
 			void NewRenderLines();
@@ -28,7 +31,7 @@ namespace NCL {
 
 			OGLShader*		defaultShader;
 
-			GameWorld&	gameWorld;
+			GameWorld*	gameWorld;
 
 			void BuildObjectList();
 			void SortObjectList();

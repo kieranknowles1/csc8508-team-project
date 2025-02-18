@@ -4,7 +4,6 @@ set(SOURCES
     GameTechRenderer.cpp
     GameTechRenderer.h
     GameTechRendererInterface.h
-    main.cpp
     TutorialGame.cpp
     TutorialGame.h
     PlayerController.cpp
@@ -24,7 +23,15 @@ set(SOURCES
 
 file(GLOB_RECURSE COMPILED_MESHES "${CMAKE_SOURCE_DIR}/Assets/Meshes/*.msh")
 
-add_library(${PROJECT_NAME} STATIC ${SOURCES})
+if(NOT PS5_BUILD)
+    list(APPEND SOURCES main.cpp)
+    add_executable(${PROJECT_NAME} ${SOURCES})
+else()
+    # There is quite a bit of extra work for PS5 builds,
+    # so this is split into PS5Starter where we link against
+    # the main game statically
+    add_library(${PROJECT_NAME} STATIC ${SOURCES})
+endif()
 
 # TODO: PS5 Support
 if(NOT PS5_BUILD)
@@ -74,7 +81,7 @@ target_precompile_headers(${PROJECT_NAME} PRIVATE
 ################################################################################
 if(MSVC)
     # Required for enet
-    target_link_libraries(${PROJECT_NAME} "Winmm.lib")
+    target_link_libraries(${PROJECT_NAME} PUBLIC "Winmm.lib")
 endif()
 
 set(INCLUDE_DIRECTORIES
