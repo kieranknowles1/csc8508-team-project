@@ -8,9 +8,10 @@ bool NavMesh::LoadFromFile(const std::string& filename) {
         return false;
     }
 
-    int numVertices, numTriangles;
-    file >> numVertices;
-    file >> numTriangles;
+    int numVertices, numIndices;
+    file >> numVertices >> numIndices;
+
+    int numTriangles = numIndices / 3; // Convert indices to actual triangles
 
     // Load vertices
     vertices.resize(numVertices);
@@ -20,24 +21,36 @@ bool NavMesh::LoadFromFile(const std::string& filename) {
         vertices[i] = btVector3(x, y, z);
     }
 
-    // Load triangles
+    // Load triangle indices
     triangles.resize(numTriangles);
     for (int i = 0; i < numTriangles; ++i) {
         file >> triangles[i].v1 >> triangles[i].v2 >> triangles[i].v3;
+
+        // Validate indices
+        if (triangles[i].v1 < 0 || triangles[i].v1 >= numVertices ||
+            triangles[i].v2 < 0 || triangles[i].v2 >= numVertices ||
+            triangles[i].v3 < 0 || triangles[i].v3 >= numVertices) {
+            std::cerr << "ERROR: Triangle " << i << " has invalid vertex indices: ("
+                << triangles[i].v1 << ", " << triangles[i].v2 << ", " << triangles[i].v3 << ")" << std::endl;
+        }
     }
 
-    // Load neighbors
+    // Load neighbor indices
     for (int i = 0; i < numTriangles; ++i) {
         file >> triangles[i].neighbor1 >> triangles[i].neighbor2 >> triangles[i].neighbor3;
+
+        // Validate neighbors (should be -1 or a valid triangle index)
+        if ((triangles[i].neighbor1 < -1 || triangles[i].neighbor1 >= numTriangles) ||
+            (triangles[i].neighbor2 < -1 || triangles[i].neighbor2 >= numTriangles) ||
+            (triangles[i].neighbor3 < -1 || triangles[i].neighbor3 >= numTriangles)) {
+            std::cerr << "WARNING: Triangle " << i << " has invalid neighbors: ("
+                << triangles[i].neighbor1 << ", " << triangles[i].neighbor2 << ", " << triangles[i].neighbor3 << ")" << std::endl;
+        }
     }
 
-    std::cout << "Vertices: " << vertices.size() << ", Triangles: " << triangles.size() << std::endl;
-    for (const Triangle& tri : triangles) {
-        std::cout << "Triangle: " << tri.v1 << " " << tri.v2 << " " << tri.v3 << std::endl;
-    }
-
-
+    // Debug Output
     std::cout << "NavMesh Loaded: " << numVertices << " vertices, " << numTriangles << " triangles" << std::endl;
+
     return true;
 }
 
@@ -87,13 +100,6 @@ void NavMesh::VisualiseNavMesh(btDiscreteDynamicsWorld* world) {
     int i = 0;
     for (const Triangle& tri : triangles) {
         std::cout << i++ << std::endl;
-
-        if (tri.v1 < 0 || tri.v2 < 0 || tri.v3 < 0 ||
-            tri.v1 >= vertices.size() || tri.v2 >= vertices.size() || tri.v3 >= vertices.size()) {
-            std::cerr << "Skipping invalid triangle: " << i << " ("
-                << tri.v1 << ", " << tri.v2 << ", " << tri.v3 << ")" << std::endl;
-            continue;
-        }
 
         const btVector3& a = vertices[tri.v1];
         const btVector3& b = vertices[tri.v2];
