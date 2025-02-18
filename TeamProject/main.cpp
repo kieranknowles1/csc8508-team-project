@@ -21,22 +21,6 @@ NCL::Window* createWindow() {
 }
 
 int main(int argc, char** argv) {
-	/*NavMesh navMesh;
-	navMesh.LoadFromFile("C:\\GitHub\\csc8508-team-project\\Assets\\Meshes\\NavMeshes\\smalltest.navmesh");
-	btVector3 start(40, 0, -25);
-	btVector3 end(45, 0, -30);
-	int startIndex = navMesh.GetTriangleContainingPoint(start);
-	int endIndex = navMesh.GetTriangleContainingPoint(end);
-	std::cout << startIndex << " " << std::endl;
-	vector<int> startNeighbours = navMesh.GetNeighbors(startIndex);
-	for (auto i = startNeighbours.begin(); i != startNeighbours.end(); ++i) {
-		std::cout << *i << std::endl;
-	}
-	std::cout << endIndex << " " << std::endl;
-	vector<int> endNeighbours = navMesh.GetNeighbors(endIndex);
-	for (auto i = endNeighbours.begin(); i != endNeighbours.end(); ++i) {
-		std::cout << *i << std::endl;
-	}*/
 
 	auto window = createWindow();
 

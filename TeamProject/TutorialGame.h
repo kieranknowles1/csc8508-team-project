@@ -128,7 +128,6 @@ namespace NCL {
 			LevelImporter* levelImporter;
 			bool loadFromLevel;
 
-			NavMesh* navMesh;
 		};
 	}
 }
