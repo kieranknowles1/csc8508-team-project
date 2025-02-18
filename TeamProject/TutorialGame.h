@@ -11,6 +11,7 @@
 #include "PlayerController.h"
 #include "PlayerObject.h"
 #include "Turret.h"
+#include "NavMesh.h"
 
 #include <btBulletDynamicsCommon.h>
 
@@ -126,6 +127,8 @@ namespace NCL {
 			//Level import
 			LevelImporter* levelImporter;
 			bool loadFromLevel;
+
+			NavMesh* navMesh;
 		};
 	}
 }

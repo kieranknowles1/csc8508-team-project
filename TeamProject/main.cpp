@@ -21,25 +21,24 @@ NCL::Window* createWindow() {
 }
 
 int main(int argc, char** argv) {
-	NavMesh navMesh;
-	if (navMesh.LoadFromFile("C:\\GitHub\\csc8508-team-project\\Assets\\Meshes\\NavMeshes\\smalltest.navmesh")) {
-		btVector3 start(40, 0, -25);
-		btVector3 end(45, 0, -30);
-		std::vector<btVector3> path = navMesh.FindPath(start, end);
-
-		if (!path.empty()) {
-			std::cout << "Path found! Points: " << path.size() << std::endl;
-			for (const auto& point : path) {
-				std::cout << "-> (" << point.x() << ", " << point.y() << ", " << point.z() << ")\n";
-			}
-		}
-		else {
-			std::cout << "No valid path!" << std::endl;
-		}
+	/*NavMesh navMesh;
+	navMesh.LoadFromFile("C:\\GitHub\\csc8508-team-project\\Assets\\Meshes\\NavMeshes\\smalltest.navmesh");
+	btVector3 start(40, 0, -25);
+	btVector3 end(45, 0, -30);
+	int startIndex = navMesh.GetTriangleContainingPoint(start);
+	int endIndex = navMesh.GetTriangleContainingPoint(end);
+	std::cout << startIndex << " " << std::endl;
+	vector<int> startNeighbours = navMesh.GetNeighbors(startIndex);
+	for (auto i = startNeighbours.begin(); i != startNeighbours.end(); ++i) {
+		std::cout << *i << std::endl;
 	}
-	return 0;
+	std::cout << endIndex << " " << std::endl;
+	vector<int> endNeighbours = navMesh.GetNeighbors(endIndex);
+	for (auto i = endNeighbours.begin(); i != endNeighbours.end(); ++i) {
+		std::cout << *i << std::endl;
+	}*/
 
-	/*auto window = createWindow();
+	auto window = createWindow();
 
 	window->ShowOSPointer(false);
 	window->LockMouseToWindow(true);
@@ -56,5 +55,7 @@ int main(int argc, char** argv) {
 	}
 	delete g;
 	// Deleting game destroys the GL context, which should be done before destroying the window
-	delete window;*/
+	delete window;
+
+	return 0;
 }

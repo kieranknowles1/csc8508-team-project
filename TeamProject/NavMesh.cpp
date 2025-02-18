@@ -31,6 +31,12 @@ bool NavMesh::LoadFromFile(const std::string& filename) {
         file >> triangles[i].neighbor1 >> triangles[i].neighbor2 >> triangles[i].neighbor3;
     }
 
+    std::cout << "Vertices: " << vertices.size() << ", Triangles: " << triangles.size() << std::endl;
+    for (const Triangle& tri : triangles) {
+        std::cout << "Triangle: " << tri.v1 << " " << tri.v2 << " " << tri.v3 << std::endl;
+    }
+
+
     std::cout << "NavMesh Loaded: " << numVertices << " vertices, " << numTriangles << " triangles" << std::endl;
     return true;
 }
@@ -71,73 +77,31 @@ std::vector<int> NavMesh::GetNeighbors(int triangleIndex) {
     return neighbors;
 }
 
-// A* Pathfinding Algorithm
-std::vector<btVector3> NavMesh::FindPath(const btVector3& start, const btVector3& end) {
-    int startTri = GetTriangleContainingPoint(start);
-    int endTri = GetTriangleContainingPoint(end);
-
-
-    if (startTri == -1 || endTri == -1) {
-        std::cerr << "Start or End point not inside NavMesh!" << std::endl;
-        return {};
+void NavMesh::VisualiseNavMesh(btDiscreteDynamicsWorld* world) {
+    if (!world || !world->getDebugDrawer()) {
+        return; // Ensure the debug drawer is available
     }
 
-    struct Node {
-        int triIndex;
-        float gCost, hCost;
-        float TotalCost() const { return gCost + hCost; }
-    };
+    btIDebugDraw* debugDrawer = world->getDebugDrawer();
+    btVector3 color(0, 1, 0); // Green for NavMesh triangles
+    int i = 0;
+    for (const Triangle& tri : triangles) {
+        std::cout << i++ << std::endl;
 
-    struct CompareNode {
-        bool operator()(const Node& a, const Node& b) {
-            return a.TotalCost() > b.TotalCost();
-        }
-    };
-
-    std::priority_queue<Node, std::vector<Node>, CompareNode> openSet;
-    std::unordered_map<int, int> cameFrom;
-    std::unordered_map<int, float> gScore;
-    std::unordered_map<int, float> fScore;
-
-    openSet.push({ startTri, 0.0f, vertices[startTri].distance(vertices[endTri]) });
-    gScore[startTri] = 0.0f;
-    fScore[startTri] = vertices[startTri].distance(vertices[endTri]);
-
-    while (!openSet.empty()) {
-        Node current = openSet.top();
-        openSet.pop();
-
-        if (current.triIndex == endTri) {
-            return ReconstructPath(cameFrom, endTri, startTri);
+        if (tri.v1 < 0 || tri.v2 < 0 || tri.v3 < 0 ||
+            tri.v1 >= vertices.size() || tri.v2 >= vertices.size() || tri.v3 >= vertices.size()) {
+            std::cerr << "Skipping invalid triangle: " << i << " ("
+                << tri.v1 << ", " << tri.v2 << ", " << tri.v3 << ")" << std::endl;
+            continue;
         }
 
-        for (int neighbor : GetNeighbors(current.triIndex)) {
-            float tentativeG = gScore[current.triIndex] + vertices[current.triIndex].distance(vertices[neighbor]);
+        const btVector3& a = vertices[tri.v1];
+        const btVector3& b = vertices[tri.v2];
+        const btVector3& c = vertices[tri.v3];
 
-            if (!gScore.count(neighbor) || tentativeG < gScore[neighbor]) {
-                cameFrom[neighbor] = current.triIndex;
-                gScore[neighbor] = tentativeG;
-                fScore[neighbor] = tentativeG + vertices[neighbor].distance(vertices[endTri]);
-
-                openSet.push({ neighbor, gScore[neighbor], fScore[neighbor] });
-            }
-        }
+        // Draw triangle edges
+        debugDrawer->drawLine(a, b, color);
+        debugDrawer->drawLine(b, c, color);
+        debugDrawer->drawLine(c, a, color);
     }
-
-    return {}; // No path found
-}
-
-// Reconstructs path from A* search
-std::vector<btVector3> NavMesh::ReconstructPath(std::unordered_map<int, int>& cameFrom, int current, int start) {
-    std::vector<btVector3> path;
-    while (current != start) {
-        const Triangle& tri = triangles[current];
-        path.push_back(vertices[tri.v1]);
-        path.push_back(vertices[tri.v2]);
-        path.push_back(vertices[tri.v3]);
-
-        current = cameFrom[current];
-    }
-    std::reverse(path.begin(), path.end());
-    return path;
 }
