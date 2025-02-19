@@ -23,7 +23,6 @@ namespace NCL {
 
 			Mesh* LoadMesh(const std::string& name) override;
 			Texture* LoadTexture(const std::string& name) override;
-			Shader* LoadShader(const std::string& vertex, const std::string& fragment) override;
 
 		protected:
 			void NewRenderLines();

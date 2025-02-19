@@ -35,7 +35,6 @@ namespace NCL {
 
 			virtual Mesh*		LoadMesh(const std::string& name)				override;
 			virtual Texture*	LoadTexture(const std::string& name)			override;
-			virtual Shader*		LoadShader(const std::string& vertex, const std::string& fragment)	override;
 
 		protected:
 			void RenderFrame()	override;

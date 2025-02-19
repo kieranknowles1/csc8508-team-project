@@ -140,10 +140,6 @@ Texture* GameTechAGCRenderer::LoadTexture(const std::string& name) {
 	return (Texture*)t;
 }
 
-Shader* GameTechAGCRenderer::LoadShader(const std::string& vertex, const std::string& fragment) {
-	return nullptr;
-}
-
 void GameTechAGCRenderer::RenderFrame() {
 	currentFrame = &allFrames[currentFrameIndex];
 

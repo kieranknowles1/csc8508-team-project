@@ -467,10 +467,6 @@ Texture* GameTechRenderer::LoadTexture(const std::string& name) {
 	return OGLTexture::TextureFromFile(name).release();
 }
 
-Shader* GameTechRenderer::LoadShader(const std::string& vertex, const std::string& fragment) {
-	return new OGLShader(vertex, fragment);
-}
-
 void GameTechRenderer::SetDebugStringBufferSizes(size_t newVertCount) {
 	if (newVertCount > textCount) {
 		textCount = newVertCount;
