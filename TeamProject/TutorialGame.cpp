@@ -26,7 +26,6 @@ TutorialGame::TutorialGame(GameTechRendererInterface* renderer, GameWorld* world
 	loadFromLevel = true;
 	resourceManager = std::make_unique<ResourceManager>(renderer);
 	InitialiseAssets();
-	rotateTimer = rotateTime;
 }
 
 /*
@@ -77,7 +76,7 @@ void TutorialGame::UpdateGame(float dt) {
 	profiler.startSection("Check Collisions");
 	// Check for collisions
 	CheckCollisions();
-	
+
 	UpdatePlayer(dt);
 
 	profiler.startSection("Update Camera");
@@ -93,6 +92,8 @@ void TutorialGame::UpdateGame(float dt) {
 }
 
 void TutorialGame::UpdatePlayer(float dt) {
+
+	playerController->CalculateDirections(dt);
 	// Press F for freeCam, press G for thirdPerson
 	if (freeCam) {
 		//freeCam Movement
@@ -106,30 +107,6 @@ void TutorialGame::UpdatePlayer(float dt) {
 			ThirdPersonControls();
 		}
 	}
-	//player invisable in first person
-	if (!thirdPerson && !freeCam) {
-		// TODO: Proper invisibility
-		player->setRenderScale(Vector3(0, 0, 0));
-
-		Vector4 colour = player->GetRenderObject()->GetColour();
-		colour.w = 0;
-		player->GetRenderObject()->SetColour(colour);
-	}
-	else {
-		Vector4 colour = player->GetRenderObject()->GetColour();
-		colour.w = 1;
-		player->GetRenderObject()->SetColour(colour);
-	}
-
-	if (rotateTimer < rotateTime) {
-		rotateTimer += dt;
-		playerController->setWorldRotation(std::lerp(oldRotate, targetRotate, rotateTimer / rotateTime));
-	}
-	else if (!finished) {
-		playerController->setWorldRotation(targetRotate);
-		finished = true;
-	}
-
 	bulletWorld->setGravity(playerController->getUpDirection() * -30.0f);
 }
 
@@ -151,37 +128,35 @@ void TutorialGame::UpdateKeys() {
 		thirdPerson = !thirdPerson;
 		playerController->SetThirdPerson(thirdPerson);
 	}
-	if (controller->GetDigital(RotateWorld) && rotateTimer >= rotateTime) {
-		rotateTimer = 0;
-		oldRotate = playerController->getWorldRotation();
-		targetRotate = oldRotate + 1;
-		finished = false;
+
+	if (Window::GetKeyboard()->KeyPressed(KeyCodes::Q)) {
+			playerController->rollRight();
+		}
+	if (Window::GetKeyboard()->KeyPressed(KeyCodes::E)) {
+			playerController->rollLeft();
+		}
+	if (Window::GetKeyboard()->KeyPressed(KeyCodes::R)) {
+			playerController->pitchUp();
+		}
+	if (Window::GetKeyboard()->KeyPressed(KeyCodes::F)) {
+			playerController->pitchDown();
+
 	}
 }
 
 void TutorialGame::ThirdPersonControls() {
 	btTransform transformPlayer = player->GetPhysicsObject()->GetRigidBody()->getWorldTransform();
 	btVector3 up = playerController->getUpDirection();
-	btVector3 right = playerController->getRightDirection(up);
-	btVector3 forw = playerController->getForwardDirection(up, right);
 	btQuaternion playerRotation = transformPlayer.getRotation();
 	btMatrix3x3 rotationMatrix(playerRotation);
-	btVector3 r = rotationMatrix * btVector3(1, 0, 0);
-	btVector3 forward = rotationMatrix * btVector3(0, 0, -1);
-	forward = (forward * right.absolute()) + (forward * forw.absolute());
-	forward.normalize();
+	btVector3 forward = rotationMatrix * btVector3(0,0,-1);
+	btVector3 upwards = rotationMatrix * btVector3(0, 1, 0);
 	float camHeight = 10.0f;
-	float camDist = 30.0f;
-	btVector3 cameraOffset = (-forward * camDist) + (up * camHeight);
-
+	float camDist = -30.0f;
+	btVector3 cameraOffset = (forward.normalize() * camDist) + (upwards.normalize() * camHeight);
 	btVector3 cameraPosition = transformPlayer.getOrigin() + cameraOffset;
 	mainCamera->SetPosition(cameraPosition);
-
-	float forwardProjX = forw.dot(forward);
-	float rightProjX = right.dot(forward);
-	float playerYaw = Maths::RadiansToDegrees(atan2(rightProjX, forwardProjX))+180;
-
-	mainCamera->SetYaw(playerYaw);
+	mainCamera->SetYaw(playerController->getYaw());
 	mainCamera->SetPitch(-15.0f);
 }
 
@@ -324,7 +299,7 @@ void TutorialGame::InitPlayer() {
 	player->GetPhysicsObject()->GetRigidBody()->setAngularFactor(0);
 	player->GetPhysicsObject()->GetRigidBody()->setFriction(0.0f);
 	player->GetPhysicsObject()->GetRigidBody()->setDamping(0.0, 0);
-	gun = AddCubeToWorld(Vector3(10, 2, 20), Vector3(0.6, 0.6, 1.6), 0, false); 
+	gun = AddCubeToWorld(Vector3(10, 2, 20), Vector3(0.6, 0.6, 1.6), 0, false);
 	playerController = new PlayerController(player, gun, controller, mainCamera, bulletWorld, world, resourceManager.get());
 	player->GetRenderObject()->SetColour(playerColour);
 

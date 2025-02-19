@@ -52,10 +52,13 @@ straight to the shader...it's already an 'inverse camera' matrix.
 Matrix4 Camera::BuildViewMatrix() const {
 	//Why do a complicated matrix inversion, when we can just generate the matrix
 	//using the negative values ;). The matrix multiplication order is important!
-	return	Matrix::Rotation(-pitch, Vector3(1, 0, 0)) *
+	return	(Matrix::Rotation(-pitch-pitchOffset, Vector3(1, 0, 0)) *
 		Matrix::Rotation(-yaw, Vector3(0, 1, 0)) *
-		Matrix::Rotation(-roll, Vector3(0, 0, 1)) *
-		Matrix::Translation(-position);
+		Matrix::Rotation(-roll, Vector3(0, 0, 1)) * 
+		Matrix::Rotation(-rotation.y, Vector3(1, 0, 0)) *
+		Matrix::Rotation(-rotation.x, Vector3(0, 1, 0)) *
+		Matrix::Rotation(-rotation.z, Vector3(0, 0, 1)) *
+		Matrix::Translation(-position)) ;
 };
 
 Matrix4 PerspectiveCamera::BuildProjectionMatrix(float currentAspect) const {

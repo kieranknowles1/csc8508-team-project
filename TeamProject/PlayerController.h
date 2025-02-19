@@ -12,13 +12,14 @@
 #include "BulletDebug.h"
 #include "PlayerObject.h"
 #include "CustomCollisionCallback.h"
-
 #include <btBulletDynamicsCommon.h>
 #include <btBulletCollisionCommon.h>
 
 
+
 namespace NCL {
 	namespace CSC8503 {
+
 		class PlayerController {
 		public:
 			PlayerController(PlayerObject* playerIn, GameObject* gunIn, const Controller* c, Camera* cam, btDiscreteDynamicsWorld* bulletWorldIn, GameWorld* worldIn, ResourceManager* resourceManager) {
@@ -36,31 +37,62 @@ namespace NCL {
 			void SetThirdPerson(bool thirdPersonIn) {
 				thirdPerson = thirdPersonIn;
 			};
-			void setWorldRotation(float worldRotationIn) {
-				worldRotation = worldRotationIn;
+			void setTargetWorldRotation(btVector3 worldRotationIn) {
+				if (rotationChanging) return;
+				oldWorldRotation = upDirection;
+				targetWorldRotation = worldRotationIn;
+				rotateTimer = 0.0f;
+				rotationChanging = true;
 			}
-			float getWorldRotation() {
-				return worldRotation;
+			btVector3 getOldWorldRotation() {
+				return oldWorldRotation;
 			}
 			btVector3 getUpDirection() {
-				return CalculateUpDirection();
+				return upDirection;
 			}
-			btVector3 getRightDirection(btVector3 up) {
-				return CalculateRightDirection(up);
+			btVector3 getRightDirection() {
+				return rightDirection;
 			}
-			btVector3 getForwardDirection(btVector3 up, btVector3 right) {
-				return CalculateForwardDirection(up,right);
+			btVector3 getForwardDirection() {
+				return forwardDirection;
 			}
+
+			btQuaternion getCamRotOffset() {
+				return camRotOffset;
+			}
+
+			float getYaw() {
+				return yaw;
+			}
+
+			void rollRight() {
+				Rotate(false, true);
+			}
+
+			void rollLeft() {
+				Rotate(true, true);
+			}
+
+			void pitchUp() {
+				Rotate(true, false);
+			}
+
+			void pitchDown() {
+				Rotate(false, false);
+			}
+
+			void CalculateDirections(float dt);
+			btVector3 CalculateRightDirection(btVector3 upDir);
+			btVector3 CalculateForwardDirection(btVector3 upDir, btVector3 rightDir);
 
 		private:
 
-			float worldRotation = 0;
 			//Player Movement Variables
-			float playerSpeed = 60.0f;
-			float jumpHeight = 75.0f;
-			float gravityScale = 100.0f;
+			float playerSpeed = 80.0f;
+			float jumpHeight = 300.0f;
+			float gravityScale = 300.0f;
 			float cameraHeight = 3.0f;
-			float airMulti = 1.0f;
+			float airMulti = 1.2f;
 			float strafeMulti = 0.65f;
 			float backwardsMulti = 0.55f;
 			float sprintMulti = 2.0f;
@@ -83,7 +115,19 @@ namespace NCL {
 			btVector3 bulletCameraOffset = btVector3(1.0, -0.5, -3.0);
 			float playerVelocityStrafeInherit = 0.05f;
 
+			//Rotation Variables
+			float rotateTime = 0.5f;
 
+			btQuaternion camRotOffset = btQuaternion::getIdentity();
+			btQuaternion oldcamRotOffset = btQuaternion::getIdentity();
+			btQuaternion targetcamRotOffset = btQuaternion::getIdentity();
+			btVector3 targetWorldRotation = btVector3(0, 1, 0);
+			btVector3 oldWorldRotation = btVector3(0, 1, 0);
+			btVector3 upDirection;
+			btVector3 rightDirection;
+			btVector3 forwardDirection;
+			float rotateTimer = 0.0f;
+			bool rotationChanging = false;
 			bool thirdPerson = false;
 			float spaceCount = 0;
 			float inAirTime = 0;
@@ -93,7 +137,8 @@ namespace NCL {
 			const Controller* controller = nullptr;
 			Camera* camera = nullptr;
 			float yaw = 0;
-			float roll = 0;
+			float roll = 0.0f;
+			float pitch = 0.0f;
 			float radius = 2.0f;
 			bool crouchTransition = false;
 			float currentHeight;
@@ -118,9 +163,9 @@ namespace NCL {
 			float shotTimer = 0;
 			bool collision = false;
 			bool crouching = false;
-			btVector3 upDirection;
-			btVector3 rightDirection;
-			btVector3 forwardDirection;
+			bool rollUse = false;
+			btIDebugDraw* debugDrawer;
+
 
 			Vector2 getDirectionalInput() const;
 			void Initialise();
@@ -130,10 +175,11 @@ namespace NCL {
 			btVector3 FindFloorNormal();
 			void SetGunTransform();
 			void ShootBullet();
-			btVector3 CalculateUpDirection();
-			btVector3 CalculateRightDirection(btVector3 upDir);
-			btVector3 CalculateForwardDirection(btVector3 upDir, btVector3 rightDir);
-			float CalculateRoll();
+			void Rotate(bool positive, bool rolling);
+			btVector3 CalculateUpDirection(float dt);
+			btVector3 CalculateForwardFromYaw();
+			btVector3 CalculateRightFromYaw();
+		
 
 		};
 	};
