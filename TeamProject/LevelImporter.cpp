@@ -127,7 +127,6 @@ void LevelImporter::AddObjectToWorld(ObjectData* data) {
         cube,
         resourceManager->getMeshes().get(data->meshName + ".msh"),
         optionalTexture(data->mainTextureName),
-        resourceManager->getShaders().get(Shader::Default),
         optionalTexture(data->normalTextureName)
     ));
     world->AddGameObject(cube);

@@ -178,8 +178,7 @@ void PlayerController::ShootBullet() {
     paintball->SetRenderObject(new RenderObject(
         paintball,
         resourceManager->getMeshes().get("Sphere.msh"),
-        nullptr,
-        resourceManager->getShaders().get(Shader::Default)
+        nullptr
     ));
     paintball->GetRenderObject()->SetIsFlat(true);
     paintball->SetPhysicsObject(new PhysicsObject(paintball));
