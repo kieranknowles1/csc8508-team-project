@@ -34,7 +34,11 @@ public:
 		Sprint,
 		Crouch,
 		ThirdPerson,
-		RotateWorld,
+		
+		WorldRollLeft,
+		WorldRollRight,
+		WorldPitchUp,
+		WorldPitchDown,
 
 		DebugReloadWorld,
 		DebugBulletOverlay,

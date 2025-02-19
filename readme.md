@@ -18,10 +18,10 @@ When adding a new file to the project:
 
 ## Debug Controls
 
-On PS5, `L1` must be held for debug inputs to register.
+On PS5, **L1** must be held for debug inputs to register.
 
 On PC/PS5:
-- `F1`/`Dpad Right`: Reload world
-- `F3`/`Dpad up`: Toggle Bullet debug draw
-- `F4`/`Dpad right`: Toggle showing time usage
-- `F`/`Dpad left`: Toggle free cam
+- **F1/Dpad Right**: Reload world
+- **F3/Dpad up**: Toggle Bullet debug draw
+- **F4/Dpad right**: Toggle showing time usage
+- **H/Dpad left**: Toggle free cam

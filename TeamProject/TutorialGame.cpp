@@ -129,18 +129,17 @@ void TutorialGame::UpdateKeys() {
 		playerController->SetThirdPerson(thirdPerson);
 	}
 
-	if (Window::GetKeyboard()->KeyPressed(KeyCodes::Q)) {
+	if (controller->GetDigital(WorldRollRight)) {
 			playerController->rollRight();
-		}
-	if (Window::GetKeyboard()->KeyPressed(KeyCodes::E)) {
+	}
+	if (controller->GetDigital(WorldRollLeft)) {
 			playerController->rollLeft();
-		}
-	if (Window::GetKeyboard()->KeyPressed(KeyCodes::R)) {
+	}
+	if (controller->GetDigital(WorldPitchUp)) {
 			playerController->pitchUp();
-		}
-	if (Window::GetKeyboard()->KeyPressed(KeyCodes::F)) {
+	}
+	if (controller->GetDigital(WorldPitchDown)) {
 			playerController->pitchDown();
-
 	}
 }
 

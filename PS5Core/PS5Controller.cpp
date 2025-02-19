@@ -52,16 +52,16 @@ float PS5Controller::GetAnalogue(AnalogueControl control) const
 {
 	switch (control)
 	{
-	case Controller::AnalogueControl::MoveSidestep:
+	case AnalogueControl::MoveSidestep:
 		return ConvertAxis(data.leftStick.x, padInfo.stickInfo.deadZoneLeft);
-	case Controller::AnalogueControl::MoveUpDown:
+	case AnalogueControl::MoveUpDown:
 		if (buttonPressed(SCE_PAD_BUTTON_UP)) return 1.0f;
 		return buttonPressed(SCE_PAD_BUTTON_DOWN) ? -1.0f : 0.0f;
-	case Controller::AnalogueControl::MoveForward:
+	case AnalogueControl::MoveForward:
 		return -ConvertAxis(data.leftStick.y, padInfo.stickInfo.deadZoneLeft);
-	case Controller::AnalogueControl::LookX:
+	case AnalogueControl::LookX:
 		return ConvertAxis(data.rightStick.x, padInfo.stickInfo.deadZoneRight) * lookSensitivity;
-	case Controller::AnalogueControl::LookY:
+	case AnalogueControl::LookY:
 		return ConvertAxis(data.rightStick.y, padInfo.stickInfo.deadZoneRight) * lookSensitivity;
 	default:
 		assert(false);
@@ -72,26 +72,21 @@ bool PS5Controller::GetDigital(DigitalControl button) const
 {
 	switch (button)
 	{
-	case Controller::DigitalControl::Fire:
-		return data.analogButtons.r2 >= fireThreshold;
-	case Controller::DigitalControl::Jump:
-		return buttonPressed(SCE_PAD_BUTTON_CROSS);
-	case Controller::DigitalControl::Sprint:
-		return buttonPressed(SCE_PAD_BUTTON_L3);
-	case Controller::DigitalControl::Crouch:
-		return buttonPressed(SCE_PAD_BUTTON_CIRCLE);
-	case Controller::DigitalControl::DebugBulletOverlay:
-		return buttonPressed(SCE_PAD_BUTTON_UP, true, true);
-	case Controller::DigitalControl::DebugFreeCam:
-		return buttonPressed(SCE_PAD_BUTTON_LEFT, true, true);
-	case Controller::DigitalControl::DebugReloadWorld:
-		return buttonPressed(SCE_PAD_BUTTON_DOWN, true, true);
-	case Controller::DigitalControl::DebugShowProfiling:
-		return buttonPressed(SCE_PAD_BUTTON_RIGHT, true, true);
-	case Controller::DigitalControl::RotateWorld:
-		return buttonPressed(SCE_PAD_BUTTON_UP, false, true);
-	case Controller::DigitalControl::ThirdPerson:
-		return buttonPressed(SCE_PAD_BUTTON_R1, false, true);
+	case DigitalControl::Fire: return data.analogButtons.r2 >= fireThreshold;
+	case DigitalControl::Jump: return buttonPressed(SCE_PAD_BUTTON_CROSS);
+	case DigitalControl::Sprint: return buttonPressed(SCE_PAD_BUTTON_L3);
+	case DigitalControl::Crouch: return buttonPressed(SCE_PAD_BUTTON_CIRCLE);
+	case DigitalControl::ThirdPerson: return buttonPressed(SCE_PAD_BUTTON_R1, false, true);
+
+	case DigitalControl::WorldRollLeft: return buttonPressed(SCE_PAD_BUTTON_LEFT, false, true);
+	case DigitalControl::WorldRollRight: return buttonPressed(SCE_PAD_BUTTON_RIGHT, false, true);
+	case DigitalControl::WorldPitchUp: return buttonPressed(SCE_PAD_BUTTON_UP, false, true);
+	case DigitalControl::WorldPitchDown: return buttonPressed(SCE_PAD_BUTTON_DOWN, false, true);
+
+	case DigitalControl::DebugBulletOverlay: return buttonPressed(SCE_PAD_BUTTON_UP, true, true);
+	case DigitalControl::DebugFreeCam: return buttonPressed(SCE_PAD_BUTTON_LEFT, true, true);
+	case DigitalControl::DebugReloadWorld: return buttonPressed(SCE_PAD_BUTTON_DOWN, true, true);
+	case DigitalControl::DebugShowProfiling: return buttonPressed(SCE_PAD_BUTTON_RIGHT, true, true);
 	default:
 		assert(false);
 	}
