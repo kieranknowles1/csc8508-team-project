@@ -341,8 +341,13 @@ void GameTechAGCRenderer::MainRenderPass() {
 	depthControl.setDepth(sce::Agc::CxDepthStencilControl::Depth::kEnable);
 	depthControl.setDepthFunction(sce::Agc::CxDepthStencilControl::DepthFunction::kLessEqual);
 	depthControl.setDepthWrite(sce::Agc::CxDepthStencilControl::DepthWrite::kEnable);
-
 	frameContext->m_sb.setState(depthControl);
+
+	sce::Agc::CxPrimitiveSetup primitiveSetup;
+	primitiveSetup.init()
+		.setCullFace(sce::Agc::CxPrimitiveSetup::CullFace::kBack);
+	frameContext->m_sb.setState(primitiveSetup);
+
 
 	frameContext->m_bdr.getStage(sce::Agc::ShaderType::kGs)
 		.setConstantBuffers(0, 1, &currentFrame->constantBuffer)
