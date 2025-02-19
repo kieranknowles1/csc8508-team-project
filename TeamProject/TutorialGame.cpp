@@ -132,48 +132,35 @@ void TutorialGame::UpdateKeys() {
 		thirdPerson = !thirdPerson;
 		playerController->SetThirdPerson(thirdPerson);
 	}
-	float yaw =  playerController->getYaw();
-	//std::cout << yaw << std::endl;
-	if (yaw > 315 || yaw <45 ) {
-		if (Window::GetKeyboard()->KeyPressed(KeyCodes::Q)) {
+
+	if (Window::GetKeyboard()->KeyPressed(KeyCodes::Q)) {
 			playerController->rollRight();
 		}
-		if (Window::GetKeyboard()->KeyPressed(KeyCodes::E)) {
+	if (Window::GetKeyboard()->KeyPressed(KeyCodes::E)) {
 			playerController->rollLeft();
 		}
-		if (Window::GetKeyboard()->KeyPressed(KeyCodes::R)) {
+	if (Window::GetKeyboard()->KeyPressed(KeyCodes::R)) {
 			playerController->pitchUp();
 		}
-		if (Window::GetKeyboard()->KeyPressed(KeyCodes::F)) {
+	if (Window::GetKeyboard()->KeyPressed(KeyCodes::F)) {
 			playerController->pitchDown();
 
-		}
 	}
 }
 
 void TutorialGame::ThirdPersonControls() {
 	btTransform transformPlayer = player->GetPhysicsObject()->GetRigidBody()->getWorldTransform();
 	btVector3 up = playerController->getUpDirection();
-	btVector3 right = playerController->getRightDirection();
-	btVector3 forw = playerController->getForwardDirection();
 	btQuaternion playerRotation = transformPlayer.getRotation();
 	btMatrix3x3 rotationMatrix(playerRotation);
-	btVector3 r = rotationMatrix * btVector3(1, 0, 0);
-	btVector3 forward = rotationMatrix * btVector3(0, 0, -1);
-	forward = (forward * right.absolute()) + (forward * forw.absolute());
-	forward.normalize();
+	btVector3 forward = rotationMatrix * btVector3(0,0,-1);
+	btVector3 upwards = rotationMatrix * btVector3(0, 1, 0);
 	float camHeight = 10.0f;
-	float camDist = 30.0f;
-	btVector3 cameraOffset = (-forward * camDist) + (up * camHeight);
-
+	float camDist = -30.0f;
+	btVector3 cameraOffset = (forward.normalize() * camDist) + (upwards.normalize() * camHeight);
 	btVector3 cameraPosition = transformPlayer.getOrigin() + cameraOffset;
 	mainCamera->SetPosition(cameraPosition);
-
-	float forwardProjX = forw.dot(forward);
-	float rightProjX = right.dot(forward);
-	float playerYaw = Maths::RadiansToDegrees(atan2(rightProjX, forwardProjX))+180;
-
-	mainCamera->SetYaw(playerYaw);
+	mainCamera->SetYaw(playerController->getYaw());
 	mainCamera->SetPitch(-15.0f);
 }
 

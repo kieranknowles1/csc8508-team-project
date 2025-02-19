@@ -9,6 +9,12 @@ std::ostream& operator<<(std::ostream& os, const btVector3& vec) {
     return os;
 }
 
+// Helper function to print btVector3
+std::ostream& operator<<(std::ostream& os, const btQuaternion& vec) {
+    os << "(" << vec.getX() << ", " << vec.getY() << ", " << vec.getZ()  << ", "<< vec.getW() << ")";
+    return os;
+}
+
 
 void PlayerController::Initialise() {
     rb = player->GetPhysicsObject()->GetRigidBody();
@@ -16,26 +22,18 @@ void PlayerController::Initialise() {
 }
 
 btVector3 GetEulerAngles(btQuaternion quat) {
-    btMatrix3x3 rotationMatrix(quat); // Convert quaternion to a 3x3 rotation matrix
     btScalar roll2, pitch2, yaw2;
-
-    // Extract Euler angles (Bullet uses ZYX order)
-    rotationMatrix.getEulerZYX(yaw2, pitch2, roll2);
-
-    // Convert to degrees and return as (Pitch, Yaw, Roll)
+    quat.getEulerZYX(yaw2, pitch2, roll2);
     return btVector3(pitch2, roll2, yaw2) * (180.0f / SIMD_PI);
 }
+
 
 
 void PlayerController::UpdateMovement(float dt) {
     transformPlayer = rb->getWorldTransform();
     btPlayerPos = transformPlayer.getOrigin();
 
-
-    //camera yaw
-    yaw = fmod(yaw - controller->GetAnalogue(Controller::AnalogueControl::LookX) + 360.0f, 360.0f);
-
-
+   //shooting
     if (controller->GetDigital(Controller::DigitalControl::Fire) && shotTimer >= shotCooldown) {
         ShootBullet();
         shotTimer = 0.0f;
@@ -43,40 +41,26 @@ void PlayerController::UpdateMovement(float dt) {
     else {
         shotTimer += dt;
     }
-   // roll = CalculateRoll();
- //   pitch = CalculatePitch();
-   // camera->setPitchOffset(pitch);
-    /*if (pitch != 0) {
-        camera->SetYaw(0);
-        if (pitch > 0) {
-            camera->SetRoll(yaw);
-        }
-        else {
-            camera->SetRoll(-yaw);
-        }
 
-    }
-    else {*/
-       // camera->SetRoll(roll);
-        if (!thirdPerson) camera->SetYaw(yaw);
-   // }
+    // yaw is fully local
+    yaw = fmod(yaw - controller->GetAnalogue(Controller::AnalogueControl::LookX) + 360.0f, 360.0f);
+    if (!thirdPerson) camera->SetYaw(yaw);
+
+    //camera offset for rotation
+    btVector3 rot = GetEulerAngles(camRotOffset);
+    camera->setRotation(rot);
+
+
     //sliding/floor detection
     HandleSliding(dt);
     HandleCrouching(dt);
     if ((isSliding||slideTransition) && !isCrouching) return;
 
     //player rotation
-// Convert Euler angles (yaw, pitch, roll) to quaternions
-    btQuaternion playerRotation = btQuaternion(btVector3(0, 1, 0), Maths::DegreesToRadians(yaw));
-    btQuaternion playerRotation2 = btQuaternion(btVector3(0, 0, 1), Maths::DegreesToRadians(roll));
-   // btQuaternion playerRotation3 = btQuaternion(btVector3(1, 0, 0), Maths::DegreesToRadians(pitch));
-
-    // Combine the quaternions
-    btQuaternion finalRotation =  playerRotation2 * playerRotation;
+    btQuaternion playerYaw = btQuaternion(btVector3(0, 1, 0), Maths::DegreesToRadians(yaw));
+    btQuaternion finalRotation = camRotOffset * playerYaw;
     transformPlayer.setRotation(finalRotation);
-    btVector3 rot = GetEulerAngles(camRotOffset);
-    std::cout << rot << std::endl;
-    camera->setRotation(rot);
+    rb->setWorldTransform(transformPlayer);
 
     //camera follows player, lowers if crouching
     btTransform transformPlayerMotion;
@@ -89,7 +73,7 @@ void PlayerController::UpdateMovement(float dt) {
     }
 
     //finds player forward and right vectors
-    btMatrix3x3 rotationMatrix(playerRotation2 * playerRotation);
+    btMatrix3x3 rotationMatrix(finalRotation);
     btVector3 forward = rotationMatrix * btVector3(0, 0, -1);
     btVector3 up = rotationMatrix * btVector3(0, 1, 0);
     btVector3 right = rotationMatrix * btVector3(1, 0, 0);
@@ -126,14 +110,10 @@ void PlayerController::UpdateMovement(float dt) {
         inAirTime -= dt;
     }
     if (player->getCollided() <= 0) {
-       // std::cout << "IN AIR" << std::endl;
         movement *= (airMulti*dt);
         movement += rb->getLinearVelocity();
     }
-    else {
-       // std::cout << "ON FLOOR" << std::endl;
-    }
-   // std::cout << player->getCollided() << std::endl;
+
     movement += upDirection * -(gravityScale * dt);
 
     // jump input
@@ -160,11 +140,9 @@ void PlayerController::UpdateMovement(float dt) {
 void PlayerController::SetGunTransform() {
     float pitchRadians = Maths::DegreesToRadians(camera->GetPitch());
     float yawRadians = Maths::DegreesToRadians(camera->GetYaw());
-    float rollRadians = Maths::DegreesToRadians(camera->GetRoll());
     btQuaternion yawQuat(btVector3(0, 1, 0), yawRadians);
     btQuaternion pitchQuat(btVector3(1, 0, 0), pitchRadians);
-    btQuaternion rollQuat(btVector3(0, 0, 1), rollRadians);
-    btQuaternion gunRotation = rollQuat *yawQuat * pitchQuat; // Yaw first, then pitch
+    btQuaternion gunRotation = camRotOffset * yawQuat * pitchQuat; // Yaw first, then pitch
 
     btMatrix3x3 rotationMatrixCam(gunRotation);
     btVector3 adjustedOffset = rotationMatrixCam * gunCameraOffset; // Apply rotation to the offset
@@ -180,12 +158,10 @@ void PlayerController::SetGunTransform() {
 void PlayerController::ShootBullet() {
     // Convert camera pitch & yaw to radians
     float pitchRadians = Maths::DegreesToRadians(camera->GetPitch());
-    float yawRadians = Maths::DegreesToRadians(camera->GetYaw());
-    float rollRadians = Maths::DegreesToRadians(camera->GetRoll());
+    float yawRadians = Maths::DegreesToRadians(yaw);
     btQuaternion yawQuat(btVector3(0, 1, 0), yawRadians);
     btQuaternion pitchQuat(btVector3(1, 0, 0), pitchRadians);
-    btQuaternion rollQuat(btVector3(0, 0, 1), rollRadians);
-    btQuaternion bulletRotation = rollQuat * yawQuat * pitchQuat;
+    btQuaternion bulletRotation = camRotOffset * yawQuat * pitchQuat;
 
     // Compute rotation matrix
     btMatrix3x3 rotationMatrix(bulletRotation);
@@ -318,14 +294,14 @@ void PlayerController::HandleSliding(float dt) {
         float slideFactor = isSliding ? btMin(currentSlidingTimer / slidingTime, 1.0f) : btMin(currentStandingSlideTimer / slidingTime, 1.0f);
 
         btQuaternion playerRotation1(btVector3(0, 1, 0), Maths::DegreesToRadians(yaw));
-        btQuaternion playerRotation2(btVector3(0, 0, 1), Maths::DegreesToRadians(roll));
+
         //finds player forward and right vectors
-        btMatrix3x3 rotationMatrix(playerRotation2 * playerRotation1);
+        btMatrix3x3 rotationMatrix(camRotOffset * playerRotation1);
         btVector3 forward = rotationMatrix * btVector3(0, 0, -1);
         btVector3 right = rotationMatrix * btVector3(1, 0, 0);
         btQuaternion playerRotationX(right, Maths::DegreesToRadians(std::lerp(isSliding ? 0 : slidingAngle, isSliding ? slidingAngle : 0, slideFactor)));
 
-        btQuaternion playerRotation = playerRotationX* playerRotation2 * playerRotation1;
+        btQuaternion playerRotation = playerRotationX* camRotOffset * playerRotation1;
         transformPlayer.setRotation(playerRotation);
         player->GetPhysicsObject()->GetRigidBody()->setWorldTransform(transformPlayer);
         btTransform transformPlayerMotion;
@@ -341,26 +317,31 @@ void PlayerController::HandleSliding(float dt) {
         //CheckFloor(dt);
         btVector3 pastMovement = rb->getLinearVelocity();
         pastMovement += upDirection * -(gravityScale * dt);
-    //    pastMovement.setY(pastMovement.getY() - ( * (player->getCollided() == 0 ? 1 : 10)));
         rb->setLinearVelocity(pastMovement);
         rb->activate();
     }
+}
+
+
+// world rotate things
+void PlayerController::Rotate(bool positive, bool rolling) {
+    if (rotationChanging) return;
+    btVector3 rightDirections = (rolling ? CalculateForwardFromYaw() : CalculateRightFromYaw());
+    btQuaternion pitchQuat(rightDirections, Maths::DegreesToRadians(positive ? 90 : -90));
+    targetWorldRotation = quatRotate(pitchQuat, upDirection);
+    targetcamRotOffset = pitchQuat * oldcamRotOffset; // Apply rotation correctly
+    rotationChanging = true;
 }
 
 void PlayerController::CalculateDirections(float dt) {
     upDirection = CalculateUpDirection(dt);
     rightDirection = CalculateRightDirection(upDirection);
     forwardDirection = CalculateForwardDirection(upDirection, rightDirection);
-    debugDrawer->drawLine(btPlayerPos, btPlayerPos + (upDirection * 5), btVector4(1, 0, 0, 1));
-    debugDrawer->drawLine(btPlayerPos, btPlayerPos + (rightDirection * 5), btVector4(0, 1, 0, 1));
-    debugDrawer->drawLine(btPlayerPos, btPlayerPos + (forwardDirection * 5), btVector4(0, 0, 1, 1));
-
     player->setUpDirection(upDirection);
 }
 
 btVector3 PlayerController::CalculateUpDirection(float dt) {
 
-    // Interpolate between currentDir and nextDir
     btVector3 upDir;
     if (!rotationChanging) {
         upDir = targetWorldRotation;
@@ -379,19 +360,18 @@ btVector3 PlayerController::CalculateUpDirection(float dt) {
         rotationChanging = false;
         rotateTimer = 0.0f;
     }
-
-   
     upDir.normalize();
     return upDir;
 }
 
 btVector3 PlayerController::CalculateRightDirection(btVector3 upDir) {
     btVector3 forward = btVector3(0, 0, 1);
-    if (fabs(upDir.dot(forward)) > 0.9) { 
+    if (fabs(upDir.dot(forward)) > 0.999f) { 
         forward = btVector3(0, 1, 0);
     }
     btVector3 rightDirection = upDir.cross(forward);
     rightDirection.normalize();
+  //  std::cout << rightDirection << std::endl;
     return rightDirection;
 }
 
@@ -401,22 +381,55 @@ btVector3 PlayerController::CalculateForwardDirection(btVector3 upDir,btVector3 
     return forwardDirection;
 }
 
-
-float PlayerController::CalculateRoll() {
-    // Calculate roll using atan2
-    float rollRadians = std::atan2(rightDirection.y(), rightDirection.x());
-    float rollDegrees = rollRadians * (180.0f / PI);
-    return rollDegrees;
+btVector3 PlayerController::CalculateForwardFromYaw() {
+    int snappedYaw = static_cast<int>((yaw + 45) / 90) * 90 % 360;
+    btVector3 forwd = btVector3(0, 0, 0);
+    switch (snappedYaw) {
+    case 0: {
+        forwd = btVector3(0, 0, 1);
+        break;
+    }
+    case 90: {
+        forwd = btVector3(1, 0, 0);
+        break;
+    }
+    case 180: {
+        forwd = btVector3(0, 0, -1);
+        break;
+    }
+    case 270: {
+        forwd = btVector3(-1, 0, 0);
+        break;
+    }
+    }
+    btVector3 baseForward = quatRotate(oldcamRotOffset, forwd);
+    return baseForward;
 }
 
-float PlayerController::CalculatePitch() {
-
-    float pitchRadiansZ = std::atan(upDirection.z());
-    float pitchDegreesZ = pitchRadiansZ * (360.0f / PI);
-    return pitchDegreesZ;
-
+btVector3 PlayerController::CalculateRightFromYaw() {
+    int snappedYaw = static_cast<int>((yaw + 45) / 90) * 90 % 360;
+    btVector3 right = btVector3(0, 0, 0);
+    switch (snappedYaw) {
+    case 0: {
+        right = btVector3(1, 0, 0);
+        break;
+    }
+    case 90: {
+        right = btVector3(0, 0, -1);
+        break;
+    }
+    case 180: {
+        right = btVector3(-1, 0, 0);
+        break;
+    }
+    case 270: {
+        right = btVector3(0, 0, 1);
+        break;
+    }
+    }
+    btVector3 baseForward = quatRotate(oldcamRotOffset, right);
+    return baseForward;
 }
-
 
 Vector2 PlayerController::getDirectionalInput() const
 {

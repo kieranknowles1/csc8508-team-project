@@ -56,59 +56,29 @@ namespace NCL {
 			btVector3 getForwardDirection() {
 				return forwardDirection;
 			}
-			void setRollUse(bool rollUseIn) {
-				rollUse = rollUseIn;
+
+			btQuaternion getCamRotOffset() {
+				return camRotOffset;
 			}
+
 			float getYaw() {
 				return yaw;
 			}
 
 			void rollRight() {
-				if (rotationChanging) return;
-
-				btVector3 forwardDirection = CalculateForwardDirection(upDirection, CalculateRightDirection(upDirection));
-				btQuaternion rollQuat(forwardDirection, Maths::DegreesToRadians(-90)); // Negative for right roll
-
-				targetWorldRotation = quatRotate(rollQuat, upDirection);
-				targetcamRotOffset = rollQuat * oldcamRotOffset; // Apply rotation correctly
-
-				rotationChanging = true;
+				Rotate(false, true);
 			}
 
 			void rollLeft() {
-				if (rotationChanging) return;
-
-				btVector3 forwardDirection = CalculateForwardDirection(upDirection, CalculateRightDirection(upDirection));
-				btQuaternion rollQuat(forwardDirection, Maths::DegreesToRadians(90)); // Positive for left roll
-
-				targetWorldRotation = quatRotate(rollQuat, upDirection);
-				targetcamRotOffset = rollQuat * oldcamRotOffset; // Apply rotation correctly
-
-				rotationChanging = true;
+				Rotate(true, true);
 			}
 
 			void pitchUp() {
-				if (rotationChanging) return;
-
-				btVector3 rightDirection = CalculateRightDirection(upDirection);
-				btQuaternion pitchQuat(rightDirection, Maths::DegreesToRadians(-90)); // Rotate up
-
-				targetWorldRotation = quatRotate(pitchQuat, upDirection);
-				targetcamRotOffset = pitchQuat * oldcamRotOffset; // Apply rotation correctly
-
-				rotationChanging = true;
+				Rotate(true, false);
 			}
 
 			void pitchDown() {
-				if (rotationChanging) return;
-
-				btVector3 rightDirection = CalculateRightDirection(upDirection);
-				btQuaternion pitchQuat(rightDirection, Maths::DegreesToRadians(90)); // Rotate down
-
-				targetWorldRotation = quatRotate(pitchQuat, upDirection);
-				targetcamRotOffset = pitchQuat * oldcamRotOffset; // Apply rotation correctly
-
-				rotationChanging = true;
+				Rotate(false, false);
 			}
 
 			void CalculateDirections(float dt);
@@ -118,11 +88,11 @@ namespace NCL {
 		private:
 
 			//Player Movement Variables
-			float playerSpeed = 60.0f;
-			float jumpHeight = 75.0f;
-			float gravityScale = 100.0f;
+			float playerSpeed = 80.0f;
+			float jumpHeight = 300.0f;
+			float gravityScale = 300.0f;
 			float cameraHeight = 3.0f;
-			float airMulti = 1.0f;
+			float airMulti = 1.2f;
 			float strafeMulti = 0.65f;
 			float backwardsMulti = 0.55f;
 			float sprintMulti = 2.0f;
@@ -205,10 +175,11 @@ namespace NCL {
 			btVector3 FindFloorNormal();
 			void SetGunTransform();
 			void ShootBullet();
+			void Rotate(bool positive, bool rolling);
 			btVector3 CalculateUpDirection(float dt);
-			
-			float CalculateRoll();
-			float CalculatePitch();
+			btVector3 CalculateForwardFromYaw();
+			btVector3 CalculateRightFromYaw();
+		
 
 		};
 	};
