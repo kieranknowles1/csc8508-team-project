@@ -107,30 +107,6 @@ void TutorialGame::UpdatePlayer(float dt) {
 			ThirdPersonControls();
 		}
 	}
-	//player invisable in first person
-	if (!thirdPerson && !freeCam) {
-		// TODO: Proper invisibility
-		player->setRenderScale(Vector3(0, 0, 0));
-
-		Vector4 colour = player->GetRenderObject()->GetColour();
-		colour.w = 0;
-		player->GetRenderObject()->SetColour(colour);
-	}
-	else {
-		Vector4 colour = player->GetRenderObject()->GetColour();
-		colour.w = 1;
-		player->GetRenderObject()->SetColour(colour);
-	}
-
-	/*if (rotateTimer < rotateTime) {
-		rotateTimer += dt;
-		playerController->setWorldRotation(std::lerp(oldRotate, targetRotate, rotateTimer / rotateTime));
-	}
-	else if (!finished) {
-		playerController->setWorldRotation(targetRotate);
-		finished = true;
-	}*/
-
 	bulletWorld->setGravity(playerController->getUpDirection() * -30.0f);
 }
 
@@ -149,48 +125,42 @@ void TutorialGame::UpdateKeys() {
 	if (Window::GetKeyboard()->KeyPressed(KeyCodes::F4)) {
 		showProfiling = !showProfiling;
 	}
-	if (Window::GetKeyboard()->KeyPressed(KeyCodes::F)) {
+	if (Window::GetKeyboard()->KeyPressed(KeyCodes::H)) {
 		freeCam = !freeCam;
 	}
 	if (Window::GetKeyboard()->KeyPressed(KeyCodes::G)) {
 		thirdPerson = !thirdPerson;
 		playerController->SetThirdPerson(thirdPerson);
 	}
+
 	if (Window::GetKeyboard()->KeyPressed(KeyCodes::Q)) {
-		btVector3 oldRotate = playerController->getUpDirection();
-		btVector3 targetRotate = playerController->CalculateRightDirection(oldRotate);
-		playerController->setTargetWorldRotation(targetRotate);
-	}
+			playerController->rollRight();
+		}
 	if (Window::GetKeyboard()->KeyPressed(KeyCodes::E)) {
-		btVector3 oldRotate = playerController->getUpDirection();
-		btVector3 targetRotate = playerController->CalculateRightDirection(oldRotate);
-		playerController->setTargetWorldRotation(-targetRotate);
+			playerController->rollLeft();
+		}
+	if (Window::GetKeyboard()->KeyPressed(KeyCodes::R)) {
+			playerController->pitchUp();
+		}
+	if (Window::GetKeyboard()->KeyPressed(KeyCodes::F)) {
+			playerController->pitchDown();
+
 	}
 }
 
 void TutorialGame::ThirdPersonControls() {
 	btTransform transformPlayer = player->GetPhysicsObject()->GetRigidBody()->getWorldTransform();
 	btVector3 up = playerController->getUpDirection();
-	btVector3 right = playerController->getRightDirection();
-	btVector3 forw = playerController->getForwardDirection();
 	btQuaternion playerRotation = transformPlayer.getRotation();
 	btMatrix3x3 rotationMatrix(playerRotation);
-	btVector3 r = rotationMatrix * btVector3(1, 0, 0);
-	btVector3 forward = rotationMatrix * btVector3(0, 0, -1);
-	forward = (forward * right.absolute()) + (forward * forw.absolute());
-	forward.normalize();
+	btVector3 forward = rotationMatrix * btVector3(0,0,-1);
+	btVector3 upwards = rotationMatrix * btVector3(0, 1, 0);
 	float camHeight = 10.0f;
-	float camDist = 30.0f;
-	btVector3 cameraOffset = (-forward * camDist) + (up * camHeight);
-
+	float camDist = -30.0f;
+	btVector3 cameraOffset = (forward.normalize() * camDist) + (upwards.normalize() * camHeight);
 	btVector3 cameraPosition = transformPlayer.getOrigin() + cameraOffset;
 	mainCamera->SetPosition(cameraPosition);
-
-	float forwardProjX = forw.dot(forward);
-	float rightProjX = right.dot(forward);
-	float playerYaw = Maths::RadiansToDegrees(atan2(rightProjX, forwardProjX))+180;
-
-	mainCamera->SetYaw(playerYaw);
+	mainCamera->SetYaw(playerController->getYaw());
 	mainCamera->SetPitch(-15.0f);
 }
 

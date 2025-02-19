@@ -12,13 +12,14 @@
 #include "BulletDebug.h"
 #include "PlayerObject.h"
 #include "CustomCollisionCallback.h"
-
 #include <btBulletDynamicsCommon.h>
 #include <btBulletCollisionCommon.h>
 
 
+
 namespace NCL {
 	namespace CSC8503 {
+
 		class PlayerController {
 		public:
 			PlayerController(PlayerObject* playerIn, GameObject* gunIn, const Controller* c, Camera* cam, btDiscreteDynamicsWorld* bulletWorldIn, GameWorld* worldIn, ResourceManager* resourceManager) {
@@ -56,25 +57,42 @@ namespace NCL {
 				return forwardDirection;
 			}
 
+			btQuaternion getCamRotOffset() {
+				return camRotOffset;
+			}
+
+			float getYaw() {
+				return yaw;
+			}
+
+			void rollRight() {
+				Rotate(false, true);
+			}
+
+			void rollLeft() {
+				Rotate(true, true);
+			}
+
+			void pitchUp() {
+				Rotate(true, false);
+			}
+
+			void pitchDown() {
+				Rotate(false, false);
+			}
+
 			void CalculateDirections(float dt);
 			btVector3 CalculateRightDirection(btVector3 upDir);
 			btVector3 CalculateForwardDirection(btVector3 upDir, btVector3 rightDir);
 
 		private:
 
-			btVector3 targetWorldRotation = btVector3(0, 1, 0);
-			btVector3 oldWorldRotation = btVector3(0,1,0);
-
-			btVector3 upDirection;
-			btVector3 rightDirection;
-			btVector3 forwardDirection;
-
 			//Player Movement Variables
-			float playerSpeed = 60.0f;
-			float jumpHeight = 75.0f;
-			float gravityScale = 100.0f;
+			float playerSpeed = 80.0f;
+			float jumpHeight = 300.0f;
+			float gravityScale = 300.0f;
 			float cameraHeight = 3.0f;
-			float airMulti = 1.0f;
+			float airMulti = 1.2f;
 			float strafeMulti = 0.65f;
 			float backwardsMulti = 0.55f;
 			float sprintMulti = 2.0f;
@@ -100,6 +118,14 @@ namespace NCL {
 			//Rotation Variables
 			float rotateTime = 0.5f;
 
+			btQuaternion camRotOffset = btQuaternion::getIdentity();
+			btQuaternion oldcamRotOffset = btQuaternion::getIdentity();
+			btQuaternion targetcamRotOffset = btQuaternion::getIdentity();
+			btVector3 targetWorldRotation = btVector3(0, 1, 0);
+			btVector3 oldWorldRotation = btVector3(0, 1, 0);
+			btVector3 upDirection;
+			btVector3 rightDirection;
+			btVector3 forwardDirection;
 			float rotateTimer = 0.0f;
 			bool rotationChanging = false;
 			bool thirdPerson = false;
@@ -111,7 +137,8 @@ namespace NCL {
 			const Controller* controller = nullptr;
 			Camera* camera = nullptr;
 			float yaw = 0;
-			float roll = 0;
+			float roll = 0.0f;
+			float pitch = 0.0f;
 			float radius = 2.0f;
 			bool crouchTransition = false;
 			float currentHeight;
@@ -136,6 +163,8 @@ namespace NCL {
 			float shotTimer = 0;
 			bool collision = false;
 			bool crouching = false;
+			bool rollUse = false;
+			btIDebugDraw* debugDrawer;
 
 
 			Vector2 getDirectionalInput() const;
@@ -146,9 +175,11 @@ namespace NCL {
 			btVector3 FindFloorNormal();
 			void SetGunTransform();
 			void ShootBullet();
+			void Rotate(bool positive, bool rolling);
 			btVector3 CalculateUpDirection(float dt);
-			
-			float CalculateRoll();
+			btVector3 CalculateForwardFromYaw();
+			btVector3 CalculateRightFromYaw();
+		
 
 		};
 	};
