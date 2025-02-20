@@ -110,6 +110,7 @@ target_link_libraries(${PROJECT_NAME} PUBLIC ${BULLET_LIBRARIES})
 target_link_libraries(${PROJECT_NAME} PUBLIC nlohmann_json::nlohmann_json)
 target_link_libraries(${PROJECT_NAME} PUBLIC fmod)
 target_link_libraries(${PROJECT_NAME} PUBLIC fmodstudio)
+fmod_copy_libs(${PROJECT_NAME})
 
 target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_SOURCE_DIR})
 target_include_directories(${PROJECT_NAME} PUBLIC ${BULLET_INCLUDE_DIRS})
@@ -118,6 +119,12 @@ if(WIN32)
     set_target_properties(${PROJECT_NAME} PROPERTIES
         VS_DEBUGGER_WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
     )
+    set(outdir ${CMAKE_CURRENT_BINARY_DIR})
+    # Don't create an extra `Debug/Release` directory for executables
+    set_target_properties(${PROJECT_NAME} PROPERTIES RUNTIME_OUTPUT_DIRECTORY_DEBUG ${outdir})
+    set_target_properties(${PROJECT_NAME} PROPERTIES RUNTIME_OUTPUT_DIRECTORY_MINSIZEREL ${outdir})
+    set_target_properties(${PROJECT_NAME} PROPERTIES RUNTIME_OUTPUT_DIRECTORY_RELEASE ${outdir})
+    set_target_properties(${PROJECT_NAME} PROPERTIES RUNTIME_OUTPUT_DIRECTORY_RELWITHDEBINFO ${outdir})
 endif()
 
 foreach(file ${COMPILED_MESHES})
