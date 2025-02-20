@@ -459,7 +459,6 @@ GameObject* TutorialGame::AddFloorToWorld(const Vector3& position, const Vector3
 	btTransform transform = floor1->GetPhysicsObject()->GetRigidBody()->getWorldTransform();
 	transform.setRotation(rotationQuat);
 	floor1->GetPhysicsObject()->GetRigidBody()->setWorldTransform(transform);
-	floor1->setIsFloor(isFloor);
 	return floor1;
 }
 

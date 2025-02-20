@@ -9,7 +9,7 @@ std::ostream& operator<<(std::ostream& os, const btVector3& vec) {
     return os;
 }
 
-// Helper function to print btVector3
+// Helper function to print btQuaternion
 std::ostream& operator<<(std::ostream& os, const btQuaternion& vec) {
     os << "(" << vec.getX() << ", " << vec.getY() << ", " << vec.getZ()  << ", "<< vec.getW() << ")";
     return os;
@@ -28,14 +28,13 @@ btVector3 GetEulerAngles(btQuaternion quat) {
 }
 
 
-
 void PlayerController::UpdateMovement(float dt) {
     transformPlayer = rb->getWorldTransform();
     btPlayerPos = transformPlayer.getOrigin();
 
    //shooting
     if (controller->GetDigital(Controller::DigitalControl::Fire) && shotTimer >= shotCooldown) {
-        ShootBullet();
+        Shoot();
         shotTimer = 0.0f;
     }
     else {
@@ -117,7 +116,7 @@ void PlayerController::UpdateMovement(float dt) {
     movement += upDirection * -(gravityScale * dt);
 
     // jump input
-    if (controller->GetDigital(Controller::DigitalControl::Jump) && player->getCollided()) {
+    if (controller->GetDigital(Controller::DigitalControl::Jump) && player->getCollided() && inAirTime <= 0) {
         btVector3 normal = FindFloorNormal();
         float dotProduct = normal.dot(upDirection.absolute());
         if (fabs(dotProduct <= 1)) {
@@ -155,24 +154,53 @@ void PlayerController::SetGunTransform() {
     gun->GetPhysicsObject()->GetRigidBody()->setWorldTransform(transformGun);
 }
 
-void PlayerController::ShootBullet() {
+void PlayerController::Shoot() {
     // Convert camera pitch & yaw to radians
     float pitchRadians = Maths::DegreesToRadians(camera->GetPitch());
     float yawRadians = Maths::DegreesToRadians(yaw);
     btQuaternion yawQuat(btVector3(0, 1, 0), yawRadians);
     btQuaternion pitchQuat(btVector3(1, 0, 0), pitchRadians);
     btQuaternion bulletRotation = camRotOffset * yawQuat * pitchQuat;
+    btMatrix3x3 rotationMatrix(bulletRotation);
 
-    // Compute rotation matrix
+    btVector3 forwardDir = rotationMatrix * btVector3(0, 0, -1);
+    btVector3 forwardPos = (btPlayerPos + (forwardDir * 10000));
+    btCollisionWorld::AllHitsRayResultCallback callback(btPlayerPos, forwardPos);
+    bulletWorld->rayTest(btPlayerPos, forwardPos, callback);
+    btVector3 hitPoint = btVector3();
+
+    if (callback.hasHit()) {
+        GameObject* hitObj = nullptr;
+        float smallestDist = INFINITY;
+        for (int i = 0; i < callback.m_collisionObjects.size(); i++) { // loop all hits
+            GameObject* hit = static_cast<GameObject*>(callback.m_collisionObjects[i]->getUserPointer());
+            if (!hit->getIsPaintball()) { // ignore paintballs
+                btVector3 posHit = callback.m_hitPointWorld[i];
+                float distance = btPlayerPos.distance(posHit);
+                if (distance < smallestDist){ // find closest valid hit
+                    smallestDist = distance;
+                    hitPoint = posHit;
+                    hitObj = hit;
+                }
+            }
+        }
+        if (hitObj != nullptr) { // hit an object of some kind
+            hitObj->GetRenderObject()->SetColour(hitObj->GetRenderObject()->GetColour() + Vector4(0.05f, -0.05f, -0.05f, 0));
+        }
+    }
+    ShootBullet(bulletRotation, hitPoint);
+}
+
+void PlayerController::ShootBullet(btQuaternion bulletRotation ,btVector3 hitPoint) {
+
     btMatrix3x3 rotationMatrix(bulletRotation);
     btVector3 adjustedOffset = rotationMatrix * bulletCameraOffset;
-    btVector3 forwardDir = rotationMatrix * btVector3(0, 0, -1);
-    btVector3 rightDir = rotationMatrix * btVector3(1, 0, 0);
     btVector3 bulletPos = camera->GetPosition() + adjustedOffset;
+    btVector3 shorDirection = (hitPoint - bulletPos).normalize();
 
     Paintball* paintball = new Paintball();
     paintball->Initialise(player,bulletWorld);
-    Vector3 bulletSize(1, 1, 1);
+    Vector3 bulletSize(0.25f, 0.25f, 0.25f);
     paintball->setInitialPosition(bulletPos);
     paintball->setRenderScale(bulletSize);
     paintball->SetRenderObject(new RenderObject(
@@ -183,18 +211,17 @@ void PlayerController::ShootBullet() {
     paintball->GetRenderObject()->SetIsFlat(true);
     paintball->SetPhysicsObject(new PhysicsObject(paintball));
     paintball->GetRenderObject()->SetColour(Vector4(rand() % 2, rand() % 2, rand() % 2, 1));
-    btCollisionShape* shape = new btSphereShape(1);
+
+    btCollisionShape* shape = new btSphereShape(1.0f);
     shape->setMargin(0.01f);
     paintball->GetPhysicsObject()->InitBulletPhysics(bulletWorld, shape, 1.0f);
     world->AddGameObject(paintball);
-
     btVector3 playerVelocity = rb->getLinearVelocity();
-    float forwardSpeed = forwardDir.dot(playerVelocity);
-    float rightSpeed = rightDir.dot(playerVelocity);
-    btVector3 adjustedPlayerVelocity = (forwardDir * forwardSpeed) + (rightDirection * rightSpeed * playerVelocityStrafeInherit);
-    btVector3 bulletVelocity = adjustedPlayerVelocity + (forwardDir * bulletSpeed);
+    btVector3 bulletVelocity = playerVelocity + (shorDirection * bulletSpeed);
 
     // Apply impulse
+    paintball->setIsPaintball(true);
+    paintball->GetPhysicsObject()->GetRigidBody()->setGravity(btVector3(0, 0, 0));
     paintball->GetPhysicsObject()->GetRigidBody()->applyCentralImpulse(bulletVelocity);
     paintball->GetPhysicsObject()->GetRigidBody()->activate();
 }
