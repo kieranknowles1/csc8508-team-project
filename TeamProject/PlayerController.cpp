@@ -18,7 +18,7 @@ void PlayerController::Initialise() {
 void PlayerController::UpdateMovement(float dt) {
     transformPlayer = rb->getWorldTransform();
     btPlayerPos = transformPlayer.getOrigin();
- 
+
 
     //camera yaw
     yaw = fmod(yaw - controller->GetAnalogue(Controller::AnalogueControl::LookX) + 360.0f, 360.0f);
@@ -104,7 +104,7 @@ void PlayerController::UpdateMovement(float dt) {
 
     // jump input
     if (controller->GetDigital(Controller::DigitalControl::Jump) && player->getCollided()) {
-        audioEngine.PlaySounds("Assets/Audio/jump.wav", NCL::Maths::Vector3(player->GetTransform().getOrigin()), 0.0f);
+        audioEngine.PlaySounds("jump.wav", NCL::Maths::Vector3(player->GetTransform().getOrigin()), 0.0f);
         //Audio is played in the wrong place, I think the vector3 being passed into the func is wrong
         //Need to pass the player's current position
         btVector3 normal = FindFloorNormal();
@@ -339,14 +339,14 @@ btVector3 PlayerController::CalculateUpDirection(float dt) {
         oldWorldRotation = targetWorldRotation;
         rotationChanging = false;
     }
-   
+
     upDir.normalize();
     return upDir;
 }
 
 btVector3 PlayerController::CalculateRightDirection(btVector3 upDir) {
     btVector3 forward = btVector3(0, 0, 1);
-    if (fabs(upDir.dot(forward)) > 0.9) { 
+    if (fabs(upDir.dot(forward)) > 0.9) {
         forward = btVector3(0, 1, 0);
     }
     btVector3 rightDirection = upDir.cross(forward);

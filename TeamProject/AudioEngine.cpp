@@ -1,4 +1,5 @@
 #include "AudioEngine.h"
+#include "Assets.h"
 
 //Link of tutorial followed https://codyclaborn.me/tutorials/making-a-basic-fmod-audio-engine-in-c/#implementation-source
 
@@ -64,7 +65,8 @@ void CAudioEngine::LoadSound(const std::string& strSoundName, bool b3d, bool bLo
     eMode |= bStream ? FMOD_CREATESTREAM : FMOD_CREATECOMPRESSEDSAMPLE;
 
     FMOD::Sound* pSound = nullptr;
-    CAudioEngine::ErrorCheck(sgpImplementation->mpSystem->createSound(strSoundName.c_str(), eMode, nullptr, &pSound));
+    std::string assetPath = NCL::Assets::AUDIODIR + strSoundName;
+    CAudioEngine::ErrorCheck(sgpImplementation->mpSystem->createSound(assetPath.c_str(), eMode, nullptr, &pSound));
     if (pSound) {
         sgpImplementation->mSounds[strSoundName] = pSound;
     }
