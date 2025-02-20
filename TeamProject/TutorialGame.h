@@ -63,7 +63,6 @@ namespace NCL {
 			Controller* controller;
 
 			std::shared_ptr<Texture> defaultTexture;
-			std::shared_ptr<Shader> defaultShader;
 
 			//Coursework Additional functionality
 			GameObject* lockedObject	= nullptr;
