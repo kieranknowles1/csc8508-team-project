@@ -22,8 +22,19 @@ set(SOURCES
     Profiler.h
     Profiler.cpp
 )
+set(ASSETS_ROOT ${CMAKE_SOURCE_DIR}/Assets)
 
-file(GLOB_RECURSE COMPILED_MESHES "${CMAKE_SOURCE_DIR}/Assets/Meshes/*.msh")
+file(GLOB_RECURSE MESHES "${ASSETS_ROOT}/Meshes/*.msh")
+file(GLOB SHADERS "${ASSETS_ROOT}/Shaders/*")
+file(GLOB_RECURSE TEXTURES
+    "${ASSETS_ROOT}/Textures/*.jpg"
+    "${ASSETS_ROOT}/Textures/*.png"
+    "${ASSETS_ROOT}/Textures/*.dds"
+    "${ASSETS_ROOT}/Textures/*.tga"
+)
+file(GLOB_RECURSE LEVELS "${ASSETS_ROOT}/Levels/*")
+file(GLOB_RECURSE DATA "${ASSETS_ROOT}/Data/*")
+file(GLOB_RECURSE FONTS "${ASSETS_ROOT}/Fonts/*")
 
 if(NOT PS5_BUILD)
     list(APPEND SOURCES main.cpp)
@@ -110,13 +121,7 @@ target_link_libraries(${PROJECT_NAME} PUBLIC nlohmann_json::nlohmann_json)
 target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_SOURCE_DIR})
 target_include_directories(${PROJECT_NAME} PUBLIC ${BULLET_INCLUDE_DIRS})
 
-if(WIN32)
-    set_target_properties(${PROJECT_NAME} PROPERTIES
-        VS_DEBUGGER_WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
-    )
-endif()
-
-foreach(file ${COMPILED_MESHES})
+foreach(file ${MESHES})
     set(out "${file}b")
     add_custom_command(
         OUTPUT ${out}
@@ -127,6 +132,28 @@ foreach(file ${COMPILED_MESHES})
     list(APPEND PROCESSED_MESHES ${out})
 endforeach()
 add_custom_target(ProcessMeshes ALL DEPENDS ${PROCESSED_MESHES})
+
+set(RUNTIME_ASSETS
+    ${PROCESSED_MESHES}
+    ${SHADERS}
+    ${TEXTURES}
+    ${LEVELS}
+    ${DATA}
+    ${FONTS}
+)
+
+message("Will copy assets to ${CMAKE_CURRENT_BINARY_DIR}")
+foreach(file ${RUNTIME_ASSETS})
+    file(RELATIVE_PATH relative ${CMAKE_SOURCE_DIR} ${file})
+    add_custom_command(
+        TARGET ${PROJECT_NAME} POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy
+            ${file}
+            "${CMAKE_CURRENT_BINARY_DIR}/${relative}"
+    )
+endforeach()
+
+
 # TODO: PS5 support
 if(NOT PS5_BUILD)
     add_dependencies(${PROJECT_NAME} ProcessMeshes)
