@@ -81,7 +81,8 @@ void TutorialGame::UpdateGame(float dt) {
 	
 	UpdatePlayer(dt);
 
-	profiler.startSection("Update Camera");
+	profiler.startSection("Update Audio");
+	audioEngine.Update(&world->GetMainCamera());
 
 
 	profiler.startSection("Prepare Render");

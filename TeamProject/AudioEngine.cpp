@@ -24,12 +24,12 @@ Implementation::~Implementation() {
 }
 
 //Updates FMod system and removes stopped channels from tracking.
-void Implementation::Update() {
+void Implementation::Update(NCL::Camera* camera) {
     vector<ChannelMap::iterator> pStoppedChannels;
     for (auto it = mChannels.begin(), itEnd = mChannels.end(); it != itEnd; ++it) {
         bool bIsPlaying = false;
         it->second->isPlaying(&bIsPlaying);
-        if (!bIsPlaying) 
+        if (!bIsPlaying)
         {
             pStoppedChannels.push_back(it);
         }
@@ -38,6 +38,12 @@ void Implementation::Update() {
     {
         mChannels.erase(it);
     }
+
+    auto position = CAudioEngine::VectorToFmod(camera->GetPosition());
+    // TODO: Pass other fields
+    mpSystem->set3DListenerAttributes(0, &position, nullptr, nullptr, nullptr);
+
+    CAudioEngine::ErrorCheck(mpSystem->update());
     CAudioEngine::ErrorCheck(mpStudioSystem->update());
 }
 
@@ -49,8 +55,8 @@ void CAudioEngine::Init() {
 }
 
 //Updates FMod system every frame to process audio events
-void CAudioEngine::Update() {
-    sgpImplementation->Update();
+void CAudioEngine::Update(NCL::Camera* camera) {
+    sgpImplementation->Update(camera);
 }
 
 //Loads a sound file into FMod with it's properties
@@ -94,7 +100,7 @@ int CAudioEngine::PlaySounds(const string& strSoundName, const NCL::Maths::Vecto
             return nChannelId;
         }
     }
-    
+
     FMOD::Channel* pChannel = nullptr;
     CAudioEngine::ErrorCheck(sgpImplementation->mpSystem->playSound(tFoundIt->second, nullptr, true, &pChannel));
     if (pChannel) {

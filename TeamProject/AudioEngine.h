@@ -5,6 +5,7 @@
 #ifndef _AUDIO_ENGINE_H_
 #define _AUDIO_ENGINE_H_
 
+#include "Camera.h"
 
 #include "fmod_studio.hpp"
 #include <fmod.hpp>
@@ -26,7 +27,7 @@ struct Implementation {
 	Implementation();
 	~Implementation();
 
-	void Update();
+	void Update(NCL::Camera* camera);
 
 	FMOD::Studio::System* mpStudioSystem;
 	FMOD::System* mpSystem;
@@ -75,7 +76,7 @@ public:
 class CAudioEngine {
 public:
 	static void Init();
-	static void Update();
+	static void Update(NCL::Camera* camera);
 	static void Shutdown();
 	static int ErrorCheck(FMOD_RESULT result);
 
@@ -97,7 +98,7 @@ public:
 	bool IsEventPlaying(const string& strEventName) const;
 	float dbToVolume(float dB);
 	float VolumeTodB(float volume);
-	FMOD_VECTOR VectorToFmod(const NCL::Maths::Vector3& vPosition);
+	static FMOD_VECTOR VectorToFmod(const NCL::Maths::Vector3& vPosition);
 };
 
 //Global instance of the audio engine
