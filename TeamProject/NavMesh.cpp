@@ -184,6 +184,7 @@ std::vector<btVector3> NavMesh::FindPath(const btVector3& start, const btVector3
 
         current = cameFrom[current];
     }
+    path.insert(path.begin(), end);
     path.push_back(start);  // Add start point
     std::reverse(path.begin(), path.end());
 

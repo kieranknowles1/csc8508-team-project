@@ -80,11 +80,10 @@ void TutorialGame::UpdateGame(float dt) {
 		btVector3 endPoint(68, 0.5833334, 34);
 
 		btIDebugDraw* debugDrawer = bulletWorld->getDebugDrawer();
-		btVector3 color(0, 0, 1); // Red color for debug lines
 
 		// Draw vertical lines at start and end points
-		debugDrawer->drawLine(startPoint, startPoint + btVector3(0, 10, 0), color);
-		debugDrawer->drawLine(endPoint, endPoint + btVector3(0, 10, 0), color);
+		debugDrawer->drawLine(startPoint, startPoint + btVector3(0, 10, 0), btVector3(0,1,0));
+		debugDrawer->drawLine(endPoint, endPoint + btVector3(0, 10, 0), btVector3(0, 0, 1));
 
 		// Find path and draw it
 		std::vector<btVector3> path = navMesh->FindPath(startPoint, endPoint);
