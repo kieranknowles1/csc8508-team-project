@@ -24,6 +24,11 @@ namespace NCL::PS5 {
 		float fireThreshold = 127.0f;
 		float lookSensitivity = 2.0f;
 
+		/**
+		Is a button pressed?
+		isDebug - If true, enable only when DebugMask is held. Otherwise disable when DebugMask is held
+		thisFrame - If true, register this input for a single frame only. Otherwise register for as long as the button is held
+		*/
 		bool buttonPressed(ScePadButtonDataOffset button, bool isDebug = false, bool thisFrame = false) const;
 
 		uint32_t padHandle;

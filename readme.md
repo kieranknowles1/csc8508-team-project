@@ -4,6 +4,8 @@
   - [Building](#building)
   - [Debug Controls](#debug-controls)
 
+For further information, see [docs/readme.md](docs/readme.md)
+
 ## Building
 
 To prepare for building on Windows, run
