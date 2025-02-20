@@ -66,11 +66,11 @@ namespace NCL {
 			}
 
 			void rollRight() {
-				Rotate(false, true);
+				Rotate(true, true);
 			}
 
 			void rollLeft() {
-				Rotate(true, true);
+				Rotate(false, true);
 			}
 
 			void pitchUp() {
