@@ -10,6 +10,9 @@ set(FMOD_VERSION 2.02.26 CACHE STRING "" FORCE)
 
 option(USE_SDL2 "Use SDL2 for window creation and input" OFF)
 option(PS5_BUILD "Build for the PS5, also needs the options passed through configure-ps5" OFF)
+set(FMOD_SDK_PATH "C:/Program Files (x86)/FMOD SoundSystem/FMOD Studio API Windows/api" CACHE STRING "Path to the FMOD SDK")
+set(FMOD_DLL "${FMOD_SDK_PATH}/core/lib/x64/fmod.dll")
+set(FMOD_STUDIO_DLL "${FMOD_SDK_PATH}/studio/lib/x64/fmodstudio.dll")
 
 if (USE_SDL2)
     add_definitions(-DCSC_USE_SDL2)
@@ -60,6 +63,10 @@ if (NOT PS5_BUILD)
     add_subdirectory(OpenGLRendering)
 	# Not sure if it would work on ps5 yet
 	add_subdirectory(fmod-cmake)
+    include_directories(
+        ${FMOD_SDK_PATH}/core/inc
+        ${FMOD_SDK_PATH}/studio/inc
+    )
 else()
     add_subdirectory(PS5Core)
     add_subdirectory(PS5Starter)
