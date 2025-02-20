@@ -44,21 +44,9 @@ namespace NCL {
 				rotateTimer = 0.0f;
 				rotationChanging = true;
 			}
-			btVector3 getOldWorldRotation() {
-				return oldWorldRotation;
-			}
+
 			btVector3 getUpDirection() {
 				return upDirection;
-			}
-			btVector3 getRightDirection() {
-				return rightDirection;
-			}
-			btVector3 getForwardDirection() {
-				return forwardDirection;
-			}
-
-			btQuaternion getCamRotOffset() {
-				return camRotOffset;
 			}
 
 			float getYaw() {
@@ -92,18 +80,17 @@ namespace NCL {
 			float jumpHeight = 300.0f;
 			float gravityScale = 300.0f;
 			float cameraHeight = 3.0f;
-			float airMulti = 1.2f;
+
+			float sprintMulti = 2.0f;
 			float strafeMulti = 0.65f;
 			float backwardsMulti = 0.55f;
-			float sprintMulti = 2.0f;
+			float airMulti = 1.2f;
+	
 			float crouchingTime = 0.3f;
 			float crouchMulti = 0.4f;
 			float crouchHeight = 0.0f;
+
 			float slidingTime = 0.25f;
-			float jumpDampening = 0.2f;
-			float slidingDampening = 0.2f;
-			float slidingFriction = 0.25f;
-			float floorDampening = 0.2f;
 			float slidingAngle = 75.0f;
 			float slidingCameraHeight = 0.0f;
 			float slidingCameraBackwards = 2.5f;
@@ -113,7 +100,6 @@ namespace NCL {
 			float bulletSpeed = 1000.0f;
 			btVector3 gunCameraOffset = btVector3(1.3, -0.7, -1.2);
 			btVector3 bulletCameraOffset = btVector3(1.0, -0.5, -3.0);
-			float playerVelocityStrafeInherit = 1.0f;
 
 			//Rotation Variables
 			float rotateTime = 0.5f;
@@ -137,9 +123,6 @@ namespace NCL {
 			const Controller* controller = nullptr;
 			Camera* camera = nullptr;
 			float yaw = 0;
-			float roll = 0.0f;
-			float pitch = 0.0f;
-			float radius = 2.0f;
 			bool crouchTransition = false;
 			float currentHeight;
 			float standingHeight = 4.0f;
@@ -193,17 +176,12 @@ class Paintball : public GameObject {
 public:
 	void OnCollisionEnter(const CollisionInfo& collisionInfo) override {
 		if (collisionInfo.otherObject == player) return;
-		//collisionInfo.otherObject->GetRenderObject()->SetColour(this->GetRenderObject()->GetColour());
-		//collisionInfo.otherObject->GetRenderObject()->SetIsFlat(true);
-		//player->GetRenderObject()->SetColour(this->GetRenderObject()->GetColour());
-		//player->GetRenderObject()->SetIsFlat(true);
 		this->GetPhysicsObject()->removeFromBullet(bulletWorld);
 	}
 	void Initialise(GameObject* playerIn, btDiscreteDynamicsWorld* bulletWorldIn) {
 		player = playerIn;
 		bulletWorld = bulletWorldIn;
 	}
-
 private:
 	GameObject* player;
 	btDiscreteDynamicsWorld* bulletWorld;
