@@ -24,7 +24,7 @@ endif()
 message("${CMAKE_VS_PLATFORM_NAME} architecture in use")
 
 ################################################################################
-# Use solution folders feature
+# Third-party dependencies
 ################################################################################
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
@@ -41,6 +41,34 @@ set(BULLET_LIBRARIES BulletDynamics BulletCollision LinearMath)
 
 add_subdirectory(ThirdParty/bullet3)
 add_subdirectory(ThirdParty/nlohmann_json)
+
+################################################################################
+# Projects
+################################################################################
+set(ASSETS_ROOT ${CMAKE_SOURCE_DIR}/Assets)
+
+file(GLOB_RECURSE MESHES "${ASSETS_ROOT}/Meshes/*.msh")
+if(NOT PS5_BUILD)
+    file(GLOB_RECURSE SHADERS
+        "${ASSETS_ROOT}/Shaders/*.frag"
+        "${ASSETS_ROOT}/Shaders/*.vert"
+    )
+else()
+    file(GLOB_RECURSE SHADERS
+        "${ASSETS_ROOT}/Shaders/PSSL/*.pssl"
+    )
+endif()
+file(GLOB_RECURSE TEXTURES
+    "${ASSETS_ROOT}/Textures/*.jpg"
+    "${ASSETS_ROOT}/Textures/*.png"
+    "${ASSETS_ROOT}/Textures/*.dds"
+    # FIXME: These aren't being converted properly on PS5 due to only having
+    # 1 channel
+    # "${ASSETS_ROOT}/Textures/*.tga"
+)
+file(GLOB_RECURSE LEVELS "${ASSETS_ROOT}/Levels/*")
+file(GLOB_RECURSE DATA "${ASSETS_ROOT}/Data/*")
+file(GLOB_RECURSE FONTS "${ASSETS_ROOT}/Fonts/*")
 
 add_subdirectory(NCLCoreClasses)
 # TODO: Can we do this on PS5 as well?

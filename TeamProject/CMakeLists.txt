@@ -22,19 +22,6 @@ set(SOURCES
     Profiler.h
     Profiler.cpp
 )
-set(ASSETS_ROOT ${CMAKE_SOURCE_DIR}/Assets)
-
-file(GLOB_RECURSE MESHES "${ASSETS_ROOT}/Meshes/*.msh")
-file(GLOB SHADERS "${ASSETS_ROOT}/Shaders/*")
-file(GLOB_RECURSE TEXTURES
-    "${ASSETS_ROOT}/Textures/*.jpg"
-    "${ASSETS_ROOT}/Textures/*.png"
-    "${ASSETS_ROOT}/Textures/*.dds"
-    "${ASSETS_ROOT}/Textures/*.tga"
-)
-file(GLOB_RECURSE LEVELS "${ASSETS_ROOT}/Levels/*")
-file(GLOB_RECURSE DATA "${ASSETS_ROOT}/Data/*")
-file(GLOB_RECURSE FONTS "${ASSETS_ROOT}/Fonts/*")
 
 if(NOT PS5_BUILD)
     list(APPEND SOURCES main.cpp)
