@@ -109,11 +109,11 @@ namespace NCL {
 			float slidingCameraBackwards = 2.5f;
 
 			//Gun Variables
-			float shotCooldown = 0.25f;
-			float bulletSpeed = 500.0f;
+			float shotCooldown = 0.075f;
+			float bulletSpeed = 1000.0f;
 			btVector3 gunCameraOffset = btVector3(1.3, -0.7, -1.2);
 			btVector3 bulletCameraOffset = btVector3(1.0, -0.5, -3.0);
-			float playerVelocityStrafeInherit = 0.05f;
+			float playerVelocityStrafeInherit = 1.0f;
 
 			//Rotation Variables
 			float rotateTime = 0.5f;
@@ -174,7 +174,8 @@ namespace NCL {
 			bool CheckCeling();
 			btVector3 FindFloorNormal();
 			void SetGunTransform();
-			void ShootBullet();
+			void Shoot();
+			void ShootBullet(btQuaternion bulletRotation, btVector3 hitPoint);
 			void Rotate(bool positive, bool rolling);
 			btVector3 CalculateUpDirection(float dt);
 			btVector3 CalculateForwardFromYaw();
@@ -192,10 +193,10 @@ class Paintball : public GameObject {
 public:
 	void OnCollisionEnter(const CollisionInfo& collisionInfo) override {
 		if (collisionInfo.otherObject == player) return;
-		collisionInfo.otherObject->GetRenderObject()->SetColour(this->GetRenderObject()->GetColour());
-		collisionInfo.otherObject->GetRenderObject()->SetIsFlat(true);
-		player->GetRenderObject()->SetColour(this->GetRenderObject()->GetColour());
-		player->GetRenderObject()->SetIsFlat(true);
+		//collisionInfo.otherObject->GetRenderObject()->SetColour(this->GetRenderObject()->GetColour());
+		//collisionInfo.otherObject->GetRenderObject()->SetIsFlat(true);
+		//player->GetRenderObject()->SetColour(this->GetRenderObject()->GetColour());
+		//player->GetRenderObject()->SetIsFlat(true);
 		this->GetPhysicsObject()->removeFromBullet(bulletWorld);
 	}
 	void Initialise(GameObject* playerIn, btDiscreteDynamicsWorld* bulletWorldIn) {
