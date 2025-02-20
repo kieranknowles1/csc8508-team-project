@@ -76,7 +76,7 @@ void TutorialGame::UpdateGame(float dt) {
 	profiler.startSection("Check Collisions");
 	// Check for collisions
 	CheckCollisions();
-	
+
 	UpdatePlayer(dt);
 
 	profiler.startSection("Update Camera");
@@ -111,40 +111,35 @@ void TutorialGame::UpdatePlayer(float dt) {
 }
 
 void TutorialGame::UpdateKeys() {
-	if (Window::GetKeyboard()->KeyPressed(KeyCodes::F1)) {
+	using enum Controller::DigitalControl;
+	if (controller->GetDigital(DebugReloadWorld)) {
 		InitWorld(); //We can reset the simulation at any time with F1
 	}
-
-	if (Window::GetKeyboard()->KeyPressed(KeyCodes::F2)) {
-		InitCamera(); //F2 will reset the camera to a specific default place
-	}
-
-	if (Window::GetKeyboard()->KeyPressed(KeyCodes::F3)) {
+	if (controller->GetDigital(DebugBulletOverlay)) {
 		bulletDebug->toggle();
 	}
-	if (Window::GetKeyboard()->KeyPressed(KeyCodes::F4)) {
+	if (controller->GetDigital(DebugShowProfiling)) {
 		showProfiling = !showProfiling;
 	}
-	if (Window::GetKeyboard()->KeyPressed(KeyCodes::H)) {
+	if (controller->GetDigital(DebugFreeCam)) {
 		freeCam = !freeCam;
 	}
-	if (Window::GetKeyboard()->KeyPressed(KeyCodes::G)) {
+	if (controller->GetDigital(ThirdPerson)) {
 		thirdPerson = !thirdPerson;
 		playerController->SetThirdPerson(thirdPerson);
 	}
 
-	if (Window::GetKeyboard()->KeyPressed(KeyCodes::Q)) {
+	if (controller->GetDigital(WorldRollRight)) {
 			playerController->rollRight();
-		}
-	if (Window::GetKeyboard()->KeyPressed(KeyCodes::E)) {
+	}
+	if (controller->GetDigital(WorldRollLeft)) {
 			playerController->rollLeft();
-		}
-	if (Window::GetKeyboard()->KeyPressed(KeyCodes::R)) {
+	}
+	if (controller->GetDigital(WorldPitchUp)) {
 			playerController->pitchUp();
-		}
-	if (Window::GetKeyboard()->KeyPressed(KeyCodes::F)) {
+	}
+	if (controller->GetDigital(WorldPitchDown)) {
 			playerController->pitchDown();
-
 	}
 }
 
@@ -305,7 +300,7 @@ void TutorialGame::InitPlayer() {
 	player->GetPhysicsObject()->GetRigidBody()->setAngularFactor(0);
 	player->GetPhysicsObject()->GetRigidBody()->setFriction(0.0f);
 	player->GetPhysicsObject()->GetRigidBody()->setDamping(0.0, 0);
-	gun = AddCubeToWorld(Vector3(10, 2, 20), Vector3(0.6, 0.6, 1.6), 0, false); 
+	gun = AddCubeToWorld(Vector3(10, 2, 20), Vector3(0.6, 0.6, 1.6), 0, false);
 	playerController = new PlayerController(player, gun, controller, mainCamera, bulletWorld, world, resourceManager.get());
 	player->GetRenderObject()->SetColour(playerColour);
 
