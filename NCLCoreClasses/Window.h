@@ -38,11 +38,6 @@ namespace NCL {
 		uint32_t refreshRate		= 60;
 
 		std::string windowTitle		= "NCLGL!";
-
-		uint32_t windowPositionX	= 0;
-		uint32_t windowPositionY	= 0;
-		uint32_t consolePositionX	= 0;
-		uint32_t consolePositionY	= 0;
 	};
 
 	using WindowEventHandler = std::function<void(WindowEvent e, uint32_t w, uint32_t h)>;
