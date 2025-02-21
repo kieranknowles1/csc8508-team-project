@@ -310,6 +310,7 @@ void TutorialGame::InitPlayer() {
 	}
 	// Keep us from clipping when falling too fast
 	player->GetPhysicsObject()->GetRigidBody()->setCcdMotionThreshold(1.0f);
+	player->GetPhysicsObject()->GetRigidBody()->setCcdSweptSphereRadius(0.4f);
 	player->GetPhysicsObject()->GetRigidBody()->setAngularFactor(0);
 	player->GetPhysicsObject()->GetRigidBody()->setFriction(0.0f);
 	player->GetPhysicsObject()->GetRigidBody()->setDamping(0.0, 0);
