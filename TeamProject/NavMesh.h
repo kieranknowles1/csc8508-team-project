@@ -19,15 +19,32 @@ struct Triangle {
     }
 };
 
+struct AStarNode {
+    int triangleIndex;
+    float gCost, hCost;
+
+    float TotalCost() const { return gCost + hCost; }
+
+    bool operator>(const AStarNode& other) const {
+        return TotalCost() > other.TotalCost();
+    }
+};
+
 class NavMesh {
 public:
+    NavMesh(btDiscreteDynamicsWorld* bulletWorld);
     bool LoadFromFile(const std::string& filename);
-    void VisualiseNavMesh(btDiscreteDynamicsWorld* world);
+    void VisualiseNavMesh();
 
-//private:
+    std::vector<btVector3> FindPath(const btVector3& start, const btVector3& end);
+    void DebugDrawPath(const std::vector<btVector3>& path);
+
+private:
     std::vector<btVector3> vertices;
     std::vector<Triangle> triangles;
+    btDiscreteDynamicsWorld* world;
 
     int GetTriangleContainingPoint(const btVector3& point);
     std::vector<int> GetNeighbors(int triangleIndex);
+    bool PointInTriangle(const btVector3& p, const btVector3& a, const btVector3& b, const btVector3& c);
 };

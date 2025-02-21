@@ -31,7 +31,9 @@ std::unique_ptr<Window> createWindow(const Config& config) {
 int main(int argc, char** argv) {
 	auto config = Config("user-config.jsonc", "default-config.jsonc");
 
+
 	auto window = createWindow(config);
+	bool paused = false;
 
 	window->ShowOSPointer(false);
 	window->LockMouseToWindow(true);
@@ -43,12 +45,19 @@ int main(int argc, char** argv) {
 	auto game = std::make_unique<TutorialGame>(renderer.get(), world.get(), controller.get());
 	// Clear delta time to exclude start up time
 	window->GetTimer().GetTimeDeltaSeconds();
+
 	while (window->UpdateWindow() && !Window::GetKeyboard()->KeyDown(KeyCodes::ESCAPE)) {
+
+		if (NCL::Window::GetKeyboard()->KeyDown(NCL::KeyCodes::P)) {
+			paused = !paused;
+		}
+
 		float dt = window->GetTimer().GetTimeDeltaSeconds();
 
 		window->SetTitle("Gametech frame time:" + std::to_string(1000.0f * dt));
-
-		game->UpdateGame(dt);
+		if (!paused) {
+			game->UpdateGame(dt);
+		}
 		renderer->Update(dt);
 		renderer->Render();
 		Debug::UpdateRenderables(dt);
