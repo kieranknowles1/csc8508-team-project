@@ -15,8 +15,3 @@ if (NOT FMOD_VERSION)
 endif()
 
 add_subdirectory(fmod)
-
-# ===== Example project =====
-if (FMOD_CMAKE_EXAMPLE OR CMAKE_SOURCE_DIR STREQUAL "${CMAKE_CURRENT_SOURCE_DIR}")
-    add_subdirectory(example)
-endif()
