@@ -5,6 +5,7 @@
 #ifndef _AUDIO_ENGINE_H_
 #define _AUDIO_ENGINE_H_
 
+#include "Camera.h"
 
 #include "fmod_studio.hpp"
 #include <fmod.hpp>
@@ -14,29 +15,21 @@
 #include <math.h>
 #include <iostream>
 
-using namespace std;
-
-struct Vector3 {
-	float x;
-	float y;
-	float z;
-};
-
 struct Implementation {
 	Implementation();
 	~Implementation();
 
-	void Update();
+	void Update(NCL::Camera* camera);
 
 	FMOD::Studio::System* mpStudioSystem;
 	FMOD::System* mpSystem;
 
 	int mnNextChannelId;
 
-	typedef map <string, FMOD::Sound*> SoundMap;
-	typedef map <int, FMOD::Channel*> ChannelMap;
-	typedef map <string, FMOD::Studio::EventInstance*> EventMap;
-	typedef map<string, FMOD::Studio::Bank*> BankMap;
+	typedef std::map<std::string, FMOD::Sound*> SoundMap;
+	typedef std::map<int, FMOD::Channel*> ChannelMap;
+	typedef std::map<std::string, FMOD::Studio::EventInstance*> EventMap;
+	typedef std::map<std::string, FMOD::Studio::Bank*> BankMap;
 
 	BankMap mBanks;
 	EventMap mEvents;
@@ -75,29 +68,29 @@ public:
 class CAudioEngine {
 public:
 	static void Init();
-	static void Update();
+	static void Update(NCL::Camera* camera);
 	static void Shutdown();
 	static int ErrorCheck(FMOD_RESULT result);
 
 	void LoadBank(const std::string& strBankName, FMOD_STUDIO_LOAD_BANK_FLAGS flags);
 	void LoadEvent(const std::string& strEventName);
-	void LoadSound(const string& strSoundName, bool b3d = true, bool bLooping = false, bool bStream = false);
-	void UnLoadSound(const string& strSoundName);
+	void LoadSound(const std::string& strSoundName, bool b3d = true, bool bLooping = false, bool bStream = false);
+	void UnLoadSound(const std::string& strSoundName);
 	void Set3dListenerAndOrientation(const NCL::Maths::Vector3& vPosition, const NCL::Maths::Vector3& vLook, const NCL::Maths::Vector3& vUp);
-	int PlaySounds(const string& strSoundName, const NCL::Maths::Vector3& vPos = NCL::Maths::Vector3{ 0, 0, 0 }, float fVolumedB = 0.0f);
-	void PlayEvent(const string& strEventName);
+	int PlaySounds(const std::string& strSoundName, const NCL::Maths::Vector3& vPos = NCL::Maths::Vector3{ 0, 0, 0 }, float fVolumedB = 0.0f);
+	void PlayEvent(const std::string& strEventName);
 	void StopChannel(int nChannelId);
-	void StopEvent(const string& strEventName, bool bImmediate = false);
-	void GetEventParameter(const string& strEventName, const string& strEventParameter, float* parameter);
-	void SetEventParameter(const string& strEventName, const string& strParameterName, float fValue);
+	void StopEvent(const std::string& strEventName, bool bImmediate = false);
+	void GetEventParameter(const std::string& strEventName, const std::string& strEventParameter, float* parameter);
+	void SetEventParameter(const std::string& strEventName, const std::string& strParameterName, float fValue);
 	void StopAllChannels();
 	void SetChannel3dPosition(int nChannelId, const NCL::Maths::Vector3& vPosition);
 	void SetChannelVolume(int nChannelId, float fVolumedB);
 	bool IsPlaying(int nChannelId) const;
-	bool IsEventPlaying(const string& strEventName) const;
+	bool IsEventPlaying(const std::string& strEventName) const;
 	float dbToVolume(float dB);
 	float VolumeTodB(float volume);
-	FMOD_VECTOR VectorToFmod(const NCL::Maths::Vector3& vPosition);
+	static FMOD_VECTOR VectorToFmod(const NCL::Maths::Vector3& vPosition);
 };
 
 //Global instance of the audio engine

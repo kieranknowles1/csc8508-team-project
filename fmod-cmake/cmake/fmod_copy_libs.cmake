@@ -47,7 +47,7 @@ macro(fmod_copy_dlls)
 
         execute_process(
             COMMAND ${CMAKE_COMMAND} -E copy_if_different
-                ${FMOD_DLL}
+                ${FMOD_STUDIO_DLL}
                 ${TARGET_DIR}/${FMOD_STUDIO_DLL_FILENAME}
         )
     endif()

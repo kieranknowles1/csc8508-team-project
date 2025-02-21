@@ -1,4 +1,5 @@
 #include "AudioEngine.h"
+#include "Assets.h"
 
 //Link of tutorial followed https://codyclaborn.me/tutorials/making-a-basic-fmod-audio-engine-in-c/#implementation-source
 
@@ -23,20 +24,18 @@ Implementation::~Implementation() {
 }
 
 //Updates FMod system and removes stopped channels from tracking.
-void Implementation::Update() {
-    vector<ChannelMap::iterator> pStoppedChannels;
-    for (auto it = mChannels.begin(), itEnd = mChannels.end(); it != itEnd; ++it) {
-        bool bIsPlaying = false;
-        it->second->isPlaying(&bIsPlaying);
-        if (!bIsPlaying) 
-        {
-            pStoppedChannels.push_back(it);
-        }
-    }
-    for (auto& it : pStoppedChannels)
-    {
-        mChannels.erase(it);
-    }
+void Implementation::Update(NCL::Camera* camera) {
+    std::erase_if(mChannels, [](const auto& channel) {
+        bool playing = false;
+        channel.second->isPlaying(&playing);
+        return !playing;
+    });
+
+    auto position = CAudioEngine::VectorToFmod(camera->GetPosition());
+    // TODO: Pass other fields
+    mpSystem->set3DListenerAttributes(0, &position, nullptr, nullptr, nullptr);
+
+    CAudioEngine::ErrorCheck(mpSystem->update());
     CAudioEngine::ErrorCheck(mpStudioSystem->update());
 }
 
@@ -48,8 +47,8 @@ void CAudioEngine::Init() {
 }
 
 //Updates FMod system every frame to process audio events
-void CAudioEngine::Update() {
-    sgpImplementation->Update();
+void CAudioEngine::Update(NCL::Camera* camera) {
+    sgpImplementation->Update(camera);
 }
 
 //Loads a sound file into FMod with it's properties
@@ -64,7 +63,8 @@ void CAudioEngine::LoadSound(const std::string& strSoundName, bool b3d, bool bLo
     eMode |= bStream ? FMOD_CREATESTREAM : FMOD_CREATECOMPRESSEDSAMPLE;
 
     FMOD::Sound* pSound = nullptr;
-    CAudioEngine::ErrorCheck(sgpImplementation->mpSystem->createSound(strSoundName.c_str(), eMode, nullptr, &pSound));
+    std::string assetPath = NCL::Assets::AUDIODIR + strSoundName;
+    CAudioEngine::ErrorCheck(sgpImplementation->mpSystem->createSound(assetPath.c_str(), eMode, nullptr, &pSound));
     if (pSound) {
         sgpImplementation->mSounds[strSoundName] = pSound;
     }
@@ -81,7 +81,7 @@ void CAudioEngine::UnLoadSound(const std::string& strSoundName) {
 }
 
 //Plays a sound and assigns it to an available channel
-int CAudioEngine::PlaySounds(const string& strSoundName, const NCL::Maths::Vector3& vPosition, float fVolumedB) {
+int CAudioEngine::PlaySounds(const std::string& strSoundName, const NCL::Maths::Vector3& vPosition, float fVolumedB) {
     int nChannelId = sgpImplementation->mnNextChannelId++;
     auto tFoundIt = sgpImplementation->mSounds.find(strSoundName);
 
@@ -92,7 +92,7 @@ int CAudioEngine::PlaySounds(const string& strSoundName, const NCL::Maths::Vecto
             return nChannelId;
         }
     }
-    
+
     FMOD::Channel* pChannel = nullptr;
     CAudioEngine::ErrorCheck(sgpImplementation->mpSystem->playSound(tFoundIt->second, nullptr, true, &pChannel));
     if (pChannel) {
@@ -176,7 +176,7 @@ void CAudioEngine::PlayEvent(const std::string& strEventName) {
 }
 
 //Stops an FMod event instance.
-void CAudioEngine::StopEvent(const string& strEventName, bool bImmediate) {
+void CAudioEngine::StopEvent(const std::string& strEventName, bool bImmediate) {
     auto tFoundIt = sgpImplementation->mEvents.find(strEventName);
     if (tFoundIt == sgpImplementation->mEvents.end()) {
         return;
@@ -188,7 +188,7 @@ void CAudioEngine::StopEvent(const string& strEventName, bool bImmediate) {
 }
 
 //Checks if an FMod event is currently playing
-bool CAudioEngine::IsEventPlaying(const string& strEventName) const {
+bool CAudioEngine::IsEventPlaying(const std::string& strEventName) const {
     auto tFoundIt = sgpImplementation->mEvents.find(strEventName);
     if (tFoundIt == sgpImplementation->mEvents.end()) {
         return false;
@@ -202,7 +202,7 @@ bool CAudioEngine::IsEventPlaying(const string& strEventName) const {
 }
 
 //Retrieves the current value of an FMod event parameter
-void CAudioEngine::GetEventParameter(const string& strEventName, const string& strParameterName, float* parameter) {
+void CAudioEngine::GetEventParameter(const std::string& strEventName, const std::string& strParameterName, float* parameter) {
     auto tFoundIt = sgpImplementation->mEvents.find(strEventName);
     if (tFoundIt == sgpImplementation->mEvents.end()) {
         return;
@@ -213,7 +213,7 @@ void CAudioEngine::GetEventParameter(const string& strEventName, const string& s
 }
 
 //Sets the value of an FMod event parameter
-void CAudioEngine::SetEventParameter(const string& strEventName, const string& strParameterName, float fValue) {
+void CAudioEngine::SetEventParameter(const std::string& strEventName, const std::string& strParameterName, float fValue) {
     auto tFoundIt = sgpImplementation->mEvents.find(strEventName);
     if (tFoundIt == sgpImplementation->mEvents.end()) {
         return;
@@ -246,7 +246,7 @@ float CAudioEngine::VolumeTodB(float volume) {
 //Checks FMod function return values and logs errors if found
 int CAudioEngine::ErrorCheck(FMOD_RESULT result) {
     if (result != FMOD_OK) {
-        cout << "FMOD ERROR: " << result << endl;
+        std::cout << "FMOD ERROR: " << result << std::endl;
         return 1;
     }
     //cout << "FMOD all good" << endl;

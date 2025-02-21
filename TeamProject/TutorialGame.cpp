@@ -95,7 +95,10 @@ void TutorialGame::UpdateGame(float dt) {
 	CheckCollisions();
 
 	UpdatePlayer(dt);
-
+	profiler.startSection("Update Audio");
+	audioEngine.Update(&world->GetMainCamera());
+  
+  
 	profiler.startSection("Prepare Render");
 	bulletWorld->debugDrawWorld();
 
