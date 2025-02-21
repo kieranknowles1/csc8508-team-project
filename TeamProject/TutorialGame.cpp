@@ -172,8 +172,6 @@ void TutorialGame::ThirdPersonControls() {
 }
 
 
-
-
 void TutorialGame::CheckCollisions()
 {
 	// Checking for collisions using Bullet's collision detection system
