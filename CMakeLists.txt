@@ -5,6 +5,7 @@ set(CMAKE_SYSTEM_VERSION 10.0 CACHE STRING "" FORCE)
 project(CSC8508)
 
 set(CMAKE_CXX_STANDARD 20)
+set(FMOD_VERSION 2.02.26 CACHE STRING "" FORCE)
 
 
 option(USE_SDL2 "Use SDL2 for window creation and input" OFF)
@@ -57,6 +58,8 @@ endif()
 add_subdirectory(CSC8503CoreClasses)
 if (NOT PS5_BUILD)
     add_subdirectory(OpenGLRendering)
+	# Not sure if it would work on ps5 yet
+	add_subdirectory(fmod-cmake)
 else()
     add_subdirectory(PS5Core)
     add_subdirectory(PS5Starter)

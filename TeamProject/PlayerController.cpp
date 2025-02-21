@@ -1,4 +1,5 @@
 #include "PlayerController.h"
+#include "AudioEngine.h"
 
 using namespace NCL;
 using namespace CSC8503;
@@ -117,6 +118,7 @@ void PlayerController::UpdateMovement(float dt) {
 
     // jump input
     if (controller->GetDigital(Controller::DigitalControl::Jump) && player->getCollided() && inAirTime <= 0) {
+
         btVector3 normal = FindFloorNormal();
         float dotProduct = normal.dot(upDirection.absolute());
         if (fabs(dotProduct <= 1)) {
