@@ -52,6 +52,11 @@ void CAudioEngine::Init() {
     auto libFmod = sceKernelLoadStartModule("/app0/libfmod.prx", 0, nullptr, 0, nullptr, nullptr);
     auto libFmodStudio = sceKernelLoadStartModule("/app0/libfmodstudio.prx", 0, nullptr, 0, nullptr, nullptr);
 
+    if (libFmod < 0 || libFmodStudio < 0) {
+        std::cerr << "Failed to load fmod runtime" << std::endl;
+        return;
+    }
+
 #endif
 
     sgpImplementation = new Implementation;
