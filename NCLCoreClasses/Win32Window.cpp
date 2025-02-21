@@ -23,9 +23,6 @@ Win32Window::Win32Window(const WindowInitialisation& winInitInfo) {
 	size = Vector2i(winInitInfo.width, winInitInfo.height);
 	defaultSize = size;
 
-	position.x = fullScreen ? 0 : winInitInfo.windowPositionX;
-	position.y = fullScreen ? 0 : winInitInfo.windowPositionY;
-
 	windowInstance = GetModuleHandle(NULL);
 
 	WNDCLASSEX windowClass;
@@ -46,7 +43,7 @@ Win32Window::Win32Window(const WindowInitialisation& winInitInfo) {
 		}
 	}
 
-	if(fullScreen) {
+	if(fullScreen == FullScreenState::Exclusive) {
 		DEVMODE dmScreenSettings;								// Device Mode
 		memset(&dmScreenSettings,0,sizeof(dmScreenSettings));	// Makes Sure Memory's Cleared
 
@@ -63,10 +60,26 @@ Win32Window::Win32Window(const WindowInitialisation& winInitInfo) {
 		}
 	}
 
-	windowHandle = CreateWindowEx(fullScreen ? WS_EX_TOPMOST : NULL,
+	int exStyleFlags = 0;
+	int styleFlags = WS_POPUP | WS_VISIBLE;
+	switch (fullScreen)
+	{
+	case FullScreenState::None:
+		styleFlags |= WS_OVERLAPPEDWINDOW | WS_SYSMENU | WS_MAXIMIZEBOX | WS_MINIMIZEBOX;
+		break;
+	case FullScreenState::Exclusive:
+		// This would prevent us from alt-tabbing
+		//exStyleFlags |= WS_EX_TOPMOST; // Always on top
+		break;
+	case FullScreenState::Borderless:
+		break;
+	default: assert(false);
+	}
+
+	windowHandle = CreateWindowEx(exStyleFlags,
 		WINDOWCLASS,							// name of the window class
 		winInitInfo.windowTitle.c_str(),		// title of the window
-		fullScreen ? WS_POPUP|WS_VISIBLE : WS_OVERLAPPEDWINDOW|WS_POPUP|WS_VISIBLE|WS_SYSMENU|WS_MAXIMIZEBOX|WS_MINIMIZEBOX,    // window style
+		styleFlags,    // window style
 		CW_USEDEFAULT,			// x-position of the window
 		CW_USEDEFAULT,			// y-position of the window
 		winInitInfo.width,				// width of the window

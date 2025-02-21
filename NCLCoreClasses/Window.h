@@ -16,6 +16,8 @@ https://research.ncl.ac.uk/game/
 
 #include "Vector.h"
 
+#include <nlohmann/json.hpp>
+
 namespace NCL {
 	class GameTimer;
 	namespace Rendering {
@@ -31,10 +33,22 @@ namespace NCL {
 		Windowed
 	};
 
+	enum class FullScreenState {
+		None,
+		Exclusive,
+		Borderless
+	};
+
+	NLOHMANN_JSON_SERIALIZE_ENUM(FullScreenState, {
+		{FullScreenState::None, "None"},
+		{FullScreenState::Exclusive, "Exclusive"},
+		{FullScreenState::Borderless, "Borderless"}
+	})
+
 	struct WindowInitialisation {
 		uint32_t width;
 		uint32_t height;
-		bool	 fullScreen			= false;
+		FullScreenState	fullScreen = FullScreenState::None;
 		uint32_t refreshRate		= 60;
 
 		std::string windowTitle		= "NCLGL!";

@@ -4,5 +4,8 @@
 {
     "windowWidth": 1280,
     "windowHeight": 720,
-    "fullscreen": false
+    // One of "None", "Exclusive", "Borderless"
+    // If borderless, then windowWidth and height should match your display
+    // resolution
+    "fullscreen": "None"
 }

@@ -16,7 +16,7 @@ std::unique_ptr<Window> createWindow(const Config& config) {
 	WindowInitialisation options = {
 		.width = config.get<uint32_t>("windowWidth"),
 		.height = config.get<uint32_t>("windowHeight"),
-		.fullScreen = config.get<bool>("fullscreen"),
+		.fullScreen = config.get<FullScreenState>("fullscreen"),
 		.windowTitle = "Team Project",
 	};
 
