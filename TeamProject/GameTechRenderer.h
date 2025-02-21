@@ -19,6 +19,15 @@ namespace NCL {
 			Texture*	LoadTexture(const std::string& name);
 			Shader*		LoadShader(const std::string& vertex, const std::string& fragment);
 
+			//toggle post processing:
+			bool GetHDRON() const{
+				return hdrON; 
+			}
+
+			void SetHDRON(bool ison) {
+				hdrON = ison;
+			}
+
 		protected:
 			void NewRenderLines();
 			void NewRenderText();
@@ -42,8 +51,6 @@ namespace NCL {
 
 			void SetDebugStringBufferSizes(size_t newVertCount);
 			void SetDebugLineBufferSizes(size_t newVertCount);
-
-			OGLMesh* GenerateQuad(); //for post processing 
 
 			std::vector<const RenderObject*> activeObjects;
 
@@ -91,10 +98,7 @@ namespace NCL {
 			GLuint hdrDepthTex;
 			OGLMesh* hdrQuad;
 			OGLShader* hdrShader;
-			//GLuint defaultTexture;
-			Texture* defaultTexture;  
-			//std::unique_ptr<ResourceManager> resourceManager; 
-
+			bool hdrON = true;
 		};
 	}
 }
