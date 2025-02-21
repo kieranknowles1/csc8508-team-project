@@ -69,6 +69,22 @@ void TutorialGame::UpdateGame(float dt) {
 	if (testTurret) {
 		testTurret->Update(dt);
 	}
+	/*if (navMesh) {
+		navMesh->VisualiseNavMesh();
+
+		btVector3 startPoint(94, 0.5833334, 26);
+		btVector3 endPoint(68, 0.5833334, 34);
+
+		btIDebugDraw* debugDrawer = bulletWorld->getDebugDrawer();
+
+		// Draw vertical lines at start and end points
+		debugDrawer->drawLine(startPoint, startPoint + btVector3(0, 10, 0), btVector3(0,1,0));
+		debugDrawer->drawLine(endPoint, endPoint + btVector3(0, 10, 0), btVector3(0, 0, 1));
+
+		// Find path and draw it
+		std::vector<btVector3> path = navMesh->FindPath(startPoint, endPoint);
+		navMesh->DebugDrawPath(path);
+	}*/
 
 	UpdateKeys();
 	world->UpdateWorld(dt);
@@ -239,7 +255,8 @@ void TutorialGame::InitWorld() {
 	world->ClearAndErase();
 	InitBullet();
 
-
+	navMesh = new NavMesh(bulletWorld);
+	navMesh->LoadFromFile("Assets/Meshes/NavMeshes/smalltest.navmesh");
 
 	if (loadFromLevel) {
 		levelImporter = new LevelImporter(resourceManager.get(), world, bulletWorld);

@@ -109,6 +109,7 @@ namespace NCL {
 			bool loadFromLevel;
 
 
+			NavMesh* navMesh;
 		};
 	}
 }
