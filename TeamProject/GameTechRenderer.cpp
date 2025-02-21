@@ -89,29 +89,33 @@ GameTechRenderer::GameTechRenderer(GameWorld& world) : OGLRenderer(*Window::GetW
 	hdrQuad->SetVertexTextureCoords({ Vector2(0, 1), Vector2(0,0) , Vector2(1,0) , Vector2(1,1) }); 
 	hdrQuad->SetVertexIndices({ 0,1,2,2,3,0 }); 
 	hdrQuad->UploadToGPU(); 
-
+	//defaultTexture = resourceManager->getTextures().get("checkerboard.png");  
+	//defaultTexture = SOIL_load_OGL_texture(TEXTUREDIR"water.TGA", SOIL_LOAD_AUTO, SOIL_CREATE_NEW_ID, SOIL_FLAG_MIPMAPS); 
+	//resourceManager = std::make_unique<ResourceManager>(renderer); 
+	defaultTexture = LoadTexture("checkerboard.png"); 
+	 
  	//start setting up framebuffers for post processing:
 	//first generate the textures to store the rendered scene:
 	glGenTextures(1, &hdrTex); //first, colour attachment
 	glBindTexture(GL_TEXTURE_2D, hdrTex); 
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE); 
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE); //GL_CLAMP
-	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR); //GL_NEAREST  
-	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);  
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, windowSize.x, windowSize.y, 0, GL_RGBA, GL_FLOAT, NULL); //currently hardcoding width and height. Floating point texture for HDR. 
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST); //GL_NEAREST  GL_LINEAR
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);  
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, windowSize.x, windowSize.y, 0, GL_RGBA, GL_FLOAT, NULL); //currently hardcoding width and height. Floating point texture for HDR.  
 
 	glGenTextures(1, &hdrDepthTex); //then, depth-stencil attachment
 	glBindTexture(GL_TEXTURE_2D, hdrDepthTex);
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);  
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE); 
-	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR); 
-	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR); 
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST); 
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST); 
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH24_STENCIL8, windowSize.x, windowSize.y, 0, GL_DEPTH_STENCIL, GL_UNSIGNED_INT_24_8, NULL); //still hardcoding the width and height ||  1280, 720
 	
 	glGenFramebuffers(1, &hdrFBO);
 	glBindFramebuffer(GL_FRAMEBUFFER, hdrFBO);
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, hdrTex, 0); //attach hdrTex to the FBO colour attachment 
-	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, hdrDepthTex, 0); //attach hdrDepthTexx to the FBO depth attachment 
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, hdrDepthTex, 0); //attach hdrDepthTex to the FBO depth attachment 
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_STENCIL_ATTACHMENT, GL_TEXTURE_2D, hdrDepthTex, 0); 
 	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE || !hdrTex || !hdrDepthTex) { //check FBO attachment success
 		return;
@@ -226,13 +230,15 @@ void GameTechRenderer::RenderFrame() {
 	//glUniformMatrix4fv(projLocation, 1, false, (float*)&projMatrix.array);    
 	//Matrix4 viewMatrix = gameWorld.GetMainCamera().BuildProjectionMatrix(); 
 	//glUniformMatrix4fv(viewLocation, 1, false, (float*)&viewMatrix);  
-	glActiveTexture(GL_TEXTURE0);     
+	glActiveTexture(GL_TEXTURE0);  
 	glBindTexture(GL_TEXTURE_2D, hdrTex);     
-	glUniform1i(glGetUniformLocation(hdrShader->GetProgramID(), "hdrTex"), 0);   
+	//GLuint texLocation = glGetUniformLocation(hdrShader->GetProgramID(), "hdrTex");
+	//glUniform1i(texLocation, 0);
+	glUniform1i(glGetUniformLocation(hdrShader->GetProgramID(), "hdrTex"), 0);    
 	BindMesh(*hdrQuad);  
 	DrawBoundMesh();   
-	glEnable(GL_BLEND);  
-	glEnable(GL_DEPTH_TEST); 
+	//glEnable(GL_BLEND);  
+	//glEnable(GL_DEPTH_TEST); 
 }
 
 void GameTechRenderer::BuildObjectList() {

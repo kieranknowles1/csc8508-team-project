@@ -91,6 +91,9 @@ namespace NCL {
 			GLuint hdrDepthTex;
 			OGLMesh* hdrQuad;
 			OGLShader* hdrShader;
+			//GLuint defaultTexture;
+			Texture* defaultTexture;  
+			//std::unique_ptr<ResourceManager> resourceManager; 
 
 		};
 	}

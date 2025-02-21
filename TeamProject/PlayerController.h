@@ -151,7 +151,7 @@ public:
 		player->GetRenderObject()->SetIsFlat(true);
 		this->GetPhysicsObject()->removeFromBullet(bulletWorld);
 	}
-	void Initialise(GameObject* playerIn, btDiscreteDynamicsWorld* bulletWorldIn) {
+	void Initialise(GameObject* playerIn, btDiscreteDynamicsWorld* bulletWorldIn) { 
 		player = playerIn;
 		bulletWorld = bulletWorldIn;
 	}
