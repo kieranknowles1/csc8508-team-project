@@ -108,8 +108,9 @@ namespace NCL {
 			LevelImporter* levelImporter;
 			bool loadFromLevel;
 
-
 			NavMesh* navMesh;
+			bool navMeshDebug = false;
+			void visualiseNavMesh();
 		};
 	}
 }
