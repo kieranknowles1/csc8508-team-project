@@ -33,23 +33,15 @@ void PlayerController::UpdateMovement(float dt) {
     transformPlayer = rb->getWorldTransform();
     btPlayerPos = transformPlayer.getOrigin();
 
-   //shooting
-    if (controller->GetDigital(Controller::DigitalControl::Fire) && shotTimer >= shotCooldown) {
-        Shoot();
-        shotTimer = 0.0f;
-    }
-    else {
-        shotTimer += dt;
-    }
+    HandleShooting(dt);
 
     // yaw is fully local
     yaw = fmod(yaw - controller->GetAnalogue(Controller::AnalogueControl::LookX) + 360.0f, 360.0f);
-    if (!thirdPerson) camera->SetYaw(yaw);
+    camera->SetYaw(yaw);
 
     //camera offset for rotation
     btVector3 rot = GetEulerAngles(camRotOffset);
     camera->setRotation(rot);
-
 
     //sliding/floor detection
     HandleSliding(dt);
@@ -134,6 +126,7 @@ void PlayerController::UpdateMovement(float dt) {
 
     rb->setLinearVelocity(movement);
     rb->activate();
+  
 }
 
 
@@ -155,6 +148,18 @@ void PlayerController::SetGunTransform() {
 
     gun->GetPhysicsObject()->GetRigidBody()->setWorldTransform(transformGun);
 }
+
+void PlayerController::HandleShooting(float dt) {
+    if (controller->GetDigital(Controller::DigitalControl::Fire) && shotTimer >= shotCooldown) {
+        Shoot();
+        shotTimer = 0.0f;
+    }
+    else {
+        shotTimer += dt;
+    }
+}
+
+
 
 void PlayerController::Shoot() {
     // Convert camera pitch & yaw to radians
