@@ -81,7 +81,6 @@ namespace NCL::CSC8503 {
         //ResourceMap<std::string, Rendering::Texture>& getCubeMaps() { return cubeMaps; }
         ResourceMap<std::string, Rendering::Mesh>& getMeshes() { return meshes; }
         ResourceMap<std::string, Rendering::Texture>& getTextures() { return textures; }
-        ResourceMap<Rendering::Shader::Key, Rendering::Shader>& getShaders() { return shaders; }
     protected:
         // Needed to upload platform-specific data to GPU
         GameTechRendererInterface* renderer;
@@ -89,7 +88,6 @@ namespace NCL::CSC8503 {
         //ResourceMap<std::string, Rendering::Texture> cubeMaps;
         ResourceMap<std::string, Rendering::Mesh> meshes;
         ResourceMap<std::string, Rendering::Texture> textures;
-        ResourceMap<Rendering::Shader::Key, Rendering::Shader> shaders;
     };
 
 }

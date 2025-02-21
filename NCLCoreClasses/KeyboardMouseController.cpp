@@ -32,6 +32,17 @@ bool KeyboardMouseController::GetDigital(DigitalControl button)  const {
 	case DigitalControl::Jump: return keyboard.KeyDown(KeyCodes::SPACE);
 	case DigitalControl::Sprint: return keyboard.KeyDown(KeyCodes::SHIFT);
 	case DigitalControl::Crouch: return keyboard.KeyDown(KeyCodes::CONTROL) || keyboard.KeyDown(KeyCodes::C);
+	case DigitalControl::ThirdPerson: return keyboard.KeyPressed(KeyCodes::G);
+
+	case DigitalControl::WorldRollLeft: return keyboard.KeyPressed(KeyCodes::Q);
+	case DigitalControl::WorldRollRight: return keyboard.KeyPressed(KeyCodes::E);
+	case DigitalControl::WorldPitchUp: return keyboard.KeyPressed(KeyCodes::R);
+	case DigitalControl::WorldPitchDown: return keyboard.KeyPressed(KeyCodes::F);
+
+	case DigitalControl::DebugBulletOverlay: return keyboard.KeyPressed(KeyCodes::F3);
+	case DigitalControl::DebugFreeCam: return keyboard.KeyPressed(KeyCodes::H);
+	case DigitalControl::DebugReloadWorld: return keyboard.KeyPressed(KeyCodes::F1);
+	case DigitalControl::DebugShowProfiling: return keyboard.KeyPressed(KeyCodes::F4);
 	default: assert(false && "Unknown axis");
 	}
 }

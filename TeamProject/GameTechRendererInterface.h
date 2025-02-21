@@ -12,7 +12,6 @@ namespace NCL::CSC8503 {
 	public:
 		virtual Rendering::Mesh* LoadMesh(const std::string& name) = 0;
 		virtual Rendering::Texture*	LoadTexture(const std::string& name) = 0;
-		virtual Rendering::Shader* LoadShader(const std::string& vertex, const std::string& fragment) = 0;
 	};
 }
 

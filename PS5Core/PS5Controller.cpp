@@ -30,27 +30,38 @@ float ConvertAxis(uint8_t rawValue, uint8_t deadZone) {
 }
 
 void PS5Controller::Update(float dt) {
+	lastFrameData = data;
 	int ret = scePadReadState(padHandle, &data);
+	if (ret != SCE_OK) {
+		std::cerr << "Failed to read input" << std::endl;
+	}
 }
 
-bool PS5Controller::buttonPressed(ScePadButtonDataOffset button) const {
-	return data.buttons & button ? true : false;
+bool PS5Controller::buttonPressed(ScePadButtonDataOffset button, bool isDebug, bool thisFrame) const {
+	bool debugMask = data.buttons & DebugMask ? true : false;
+	if (debugMask != isDebug) return false;
+
+
+	bool current = data.buttons & button ? true : false;
+	if (!thisFrame) return current;
+	bool previous = lastFrameData.buttons & button ? true : false;
+	return current && !previous;
 }
 
 float PS5Controller::GetAnalogue(AnalogueControl control) const
 {
 	switch (control)
 	{
-	case Controller::AnalogueControl::MoveSidestep:
+	case AnalogueControl::MoveSidestep:
 		return ConvertAxis(data.leftStick.x, padInfo.stickInfo.deadZoneLeft);
-	case Controller::AnalogueControl::MoveUpDown:
+	case AnalogueControl::MoveUpDown:
 		if (buttonPressed(SCE_PAD_BUTTON_UP)) return 1.0f;
-		return buttonPressed(SCE_PAD_BUTTON_DOWN) ? 1.0f : 0.0f;
-	case Controller::AnalogueControl::MoveForward:
+		return buttonPressed(SCE_PAD_BUTTON_DOWN) ? -1.0f : 0.0f;
+	case AnalogueControl::MoveForward:
 		return -ConvertAxis(data.leftStick.y, padInfo.stickInfo.deadZoneLeft);
-	case Controller::AnalogueControl::LookX:
+	case AnalogueControl::LookX:
 		return ConvertAxis(data.rightStick.x, padInfo.stickInfo.deadZoneRight) * lookSensitivity;
-	case Controller::AnalogueControl::LookY:
+	case AnalogueControl::LookY:
 		return ConvertAxis(data.rightStick.y, padInfo.stickInfo.deadZoneRight) * lookSensitivity;
 	default:
 		assert(false);
@@ -61,14 +72,21 @@ bool PS5Controller::GetDigital(DigitalControl button) const
 {
 	switch (button)
 	{
-	case Controller::DigitalControl::Fire:
-		return data.analogButtons.r2 >= fireThreshold;
-	case Controller::DigitalControl::Jump:
-		return buttonPressed(SCE_PAD_BUTTON_CROSS);
-	case Controller::DigitalControl::Sprint:
-		return buttonPressed(SCE_PAD_BUTTON_L3);
-	case Controller::DigitalControl::Crouch:
-		return buttonPressed(SCE_PAD_BUTTON_CIRCLE);
+	case DigitalControl::Fire: return data.analogButtons.r2 >= fireThreshold;
+	case DigitalControl::Jump: return buttonPressed(SCE_PAD_BUTTON_CROSS);
+	case DigitalControl::Sprint: return buttonPressed(SCE_PAD_BUTTON_L3);
+	case DigitalControl::Crouch: return buttonPressed(SCE_PAD_BUTTON_CIRCLE);
+	case DigitalControl::ThirdPerson: return buttonPressed(SCE_PAD_BUTTON_R1, false, true);
+
+	case DigitalControl::WorldRollLeft: return buttonPressed(SCE_PAD_BUTTON_LEFT, false, true);
+	case DigitalControl::WorldRollRight: return buttonPressed(SCE_PAD_BUTTON_RIGHT, false, true);
+	case DigitalControl::WorldPitchUp: return buttonPressed(SCE_PAD_BUTTON_UP, false, true);
+	case DigitalControl::WorldPitchDown: return buttonPressed(SCE_PAD_BUTTON_DOWN, false, true);
+
+	case DigitalControl::DebugBulletOverlay: return buttonPressed(SCE_PAD_BUTTON_UP, true, true);
+	case DigitalControl::DebugFreeCam: return buttonPressed(SCE_PAD_BUTTON_LEFT, true, true);
+	case DigitalControl::DebugReloadWorld: return buttonPressed(SCE_PAD_BUTTON_DOWN, true, true);
+	case DigitalControl::DebugShowProfiling: return buttonPressed(SCE_PAD_BUTTON_RIGHT, true, true);
 	default:
 		assert(false);
 	}

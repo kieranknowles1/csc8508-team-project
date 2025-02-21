@@ -9,7 +9,8 @@ namespace NCL::UnixCode {
         int fullScreenFlag = initData.fullScreen ? SDL_WINDOW_FULLSCREEN_DESKTOP : 0;
         sdlWindow = SDL_CreateWindow(
             initData.windowTitle.c_str(),
-            initData.windowPositionX, initData.windowPositionY,
+            // Centre window on primary monitor
+            SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
             initData.width, initData.height,
             SDL_WINDOW_OPENGL | fullScreenFlag
         );

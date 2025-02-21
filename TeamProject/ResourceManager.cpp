@@ -11,7 +11,6 @@ ResourceManager::ResourceManager(GameTechRendererInterface* renderer)
 	: renderer(renderer)
 	, meshes(this)
 	, textures(this)
-	, shaders(this)
 {
 	auto pwd = std::filesystem::current_path().string();
 	std::cout << "Using working directory: " << pwd << std::endl;
@@ -27,12 +26,6 @@ template<>
 std::shared_ptr<Rendering::Texture> ResourceMap<std::string, Rendering::Texture>::load(const std::string& key) {
 	auto texture = owner->getRenderer()->LoadTexture(key);
 	return std::shared_ptr<Rendering::Texture>(texture);
-}
-
-template<>
-std::shared_ptr<Rendering::Shader> ResourceMap<Rendering::Shader::Key, Rendering::Shader>::load(const Rendering::Shader::Key& key) {
-	auto shader = owner->getRenderer()->LoadShader(key.vertex, key.fragment);
-	return std::shared_ptr<Rendering::Shader>(shader);
 }
 
 }

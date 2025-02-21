@@ -16,6 +16,7 @@ using namespace NCL::CSC8503;
 class PlayerObject : public GameObject {
 public:
 	void OnCollisionEnter(const CollisionInfo& collisionInfo) override {
+		if (collisionInfo.otherObject->getIsPaintball()) return;
 		btVector3 playerPos = this->GetPhysicsObject()->GetRigidBody()->getWorldTransform().getOrigin();
 		btVector3 objPos = collisionInfo.contactPointA;
 		btVector3 direction = (objPos - playerPos).normalized();
@@ -29,6 +30,7 @@ public:
 
 
 	void OnCollisionExit(const CollisionInfo& collisionInfo) override {
+		if (collisionInfo.otherObject->getIsPaintball()) return;
 		auto it = std::find(collidedObjects.begin(), collidedObjects.end(), collisionInfo.otherObject);
 		if (it != collidedObjects.end()) {
 			collidedObjects.erase(it);
@@ -39,6 +41,7 @@ public:
 	}
 
 	void OnCollisionStay(const CollisionInfo& collision) override {
+		if (collision.otherObject->getIsPaintball()) return;
 		btVector3 playerPos = this->GetPhysicsObject()->GetRigidBody()->getWorldTransform().getOrigin();
 		btVector3 objPos = collision.contactPointA;
 		btVector3 direction = (objPos - playerPos).normalized();
