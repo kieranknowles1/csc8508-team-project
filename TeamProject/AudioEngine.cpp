@@ -1,6 +1,11 @@
 #include "AudioEngine.h"
 #include "Assets.h"
 
+#ifdef __PROSPERO__
+#include "agc.h"
+#endif // __PROSPERO__
+
+
 //Link of tutorial followed https://codyclaborn.me/tutorials/making-a-basic-fmod-audio-engine-in-c/#implementation-source
 
 CAudioEngine audioEngine;
@@ -43,6 +48,12 @@ Implementation* sgpImplementation = nullptr;
 
 //Initializing a global FMod implementation instance
 void CAudioEngine::Init() {
+#if __PROSPERO__
+    auto libFmod = sceKernelLoadStartModule("/app0/libfmod.prx", 0, nullptr, 0, nullptr, nullptr);
+    auto libFmodStudio = sceKernelLoadStartModule("/app0/libfmodstudio.prx", 0, nullptr, 0, nullptr, nullptr);
+
+#endif
+
     sgpImplementation = new Implementation;
 }
 
