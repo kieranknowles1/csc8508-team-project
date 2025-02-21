@@ -7,16 +7,20 @@
 #include "GameTechRenderer.h"
 #include "TutorialGame.h"
 #include "NavMesh.h"
+#include "Config.h"
 
-std::unique_ptr<NCL::Window> createWindow() {
-	NCL::WindowInitialisation options = {
-		.width = 1280,
-		.height = 720,
-		.fullScreen = false,
+using namespace NCL;
+using namespace NCL::CSC8503;
+
+std::unique_ptr<Window> createWindow(const Config& config) {
+	WindowInitialisation options = {
+		.width = config.get<uint32_t>("windowWidth"),
+		.height = config.get<uint32_t>("windowHeight"),
+		.fullScreen = config.get<FullScreenState>("fullscreen"),
 		.windowTitle = "Team Project",
 	};
 
-	std::unique_ptr<NCL::Window> window(NCL::Window::CreateGameWindow(options));
+	std::unique_ptr<Window> window(Window::CreateGameWindow(options));
 	if (!window || !window->HasInitialised()) {
 		throw std::runtime_error("Window failed to initialise!");
 	}
@@ -25,9 +29,12 @@ std::unique_ptr<NCL::Window> createWindow() {
 }
 
 int main(int argc, char** argv) {
+	auto config = Config("user-config.jsonc", "default-config.jsonc");
 
-	auto window = createWindow();
+
+	auto window = createWindow(config);
 	bool paused = false;
+
 	window->ShowOSPointer(false);
 	window->LockMouseToWindow(true);
 
@@ -35,13 +42,16 @@ int main(int argc, char** argv) {
 	auto renderer = std::make_unique<GameTechRenderer>(world.get());
 	auto controller = std::make_unique<KeyboardMouseController>(*window->GetKeyboard(), *window->GetMouse());
 
-	auto game = std::make_unique<NCL::CSC8503::TutorialGame>(renderer.get(), world.get(), controller.get());
+	auto game = std::make_unique<TutorialGame>(renderer.get(), world.get(), controller.get());
 	// Clear delta time to exclude start up time
 	window->GetTimer().GetTimeDeltaSeconds();
-	while (window->UpdateWindow() && !NCL::Window::GetKeyboard()->KeyDown(NCL::KeyCodes::ESCAPE)) {
+
+	while (window->UpdateWindow() && !Window::GetKeyboard()->KeyDown(KeyCodes::ESCAPE)) {
+
 		if (NCL::Window::GetKeyboard()->KeyDown(NCL::KeyCodes::P)) {
 			paused = !paused;
 		}
+
 		float dt = window->GetTimer().GetTimeDeltaSeconds();
 
 		window->SetTitle("Gametech frame time:" + std::to_string(1000.0f * dt));

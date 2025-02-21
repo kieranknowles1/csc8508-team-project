@@ -118,6 +118,7 @@ endif()
 ################################################################################
 add_library(${PROJECT_NAME} STATIC ${ALL_FILES})
 target_include_directories(${PROJECT_NAME} PUBLIC ${BULLET_INCLUDE_DIRS})
+target_link_libraries(${PROJECT_NAME} PUBLIC nlohmann_json::nlohmann_json)
 
 set_target_properties(${PROJECT_NAME} PROPERTIES
     INTERPROCEDURAL_OPTIMIZATION_RELEASE "TRUE"
