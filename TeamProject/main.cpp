@@ -27,7 +27,7 @@ std::unique_ptr<NCL::Window> createWindow() {
 int main(int argc, char** argv) {
 
 	auto window = createWindow();
-
+	bool paused = false;
 	window->ShowOSPointer(false);
 	window->LockMouseToWindow(true);
 
@@ -39,11 +39,15 @@ int main(int argc, char** argv) {
 	// Clear delta time to exclude start up time
 	window->GetTimer().GetTimeDeltaSeconds();
 	while (window->UpdateWindow() && !NCL::Window::GetKeyboard()->KeyDown(NCL::KeyCodes::ESCAPE)) {
+		if (NCL::Window::GetKeyboard()->KeyDown(NCL::KeyCodes::P)) {
+			paused = !paused;
+		}
 		float dt = window->GetTimer().GetTimeDeltaSeconds();
 
 		window->SetTitle("Gametech frame time:" + std::to_string(1000.0f * dt));
-
-		game->UpdateGame(dt);
+		if (!paused) {
+			game->UpdateGame(dt);
+		}
 		renderer->Update(dt);
 		renderer->Render();
 		Debug::UpdateRenderables(dt);

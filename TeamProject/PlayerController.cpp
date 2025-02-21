@@ -185,7 +185,7 @@ void PlayerController::Shoot() {
             }
         }
         if (hitObj != nullptr) { // hit an object of some kind
-            hitObj->GetRenderObject()->SetColour(hitObj->GetRenderObject()->GetColour() + Vector4(0.05f, -0.05f, -0.05f, 0));
+            hitObj->GetRenderObject()->SetColour(hitObj->GetRenderObject()->GetColour() * Vector4(1.05f, 0.95f, 0.95f, 1.0f));
         }
     }
     ShootBullet(bulletRotation, hitPoint);
