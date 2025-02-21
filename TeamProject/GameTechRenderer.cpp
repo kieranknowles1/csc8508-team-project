@@ -20,8 +20,9 @@ Matrix4 biasMatrix = Matrix::Translation(Vector3(0.5f, 0.5f, 0.5f)) * Matrix::Sc
 GameTechRenderer::GameTechRenderer(GameWorld* world) : OGLRenderer(*Window::GetWindow()), gameWorld(world)	{
 	glEnable(GL_DEPTH_TEST);
 
-	debugShader  = new OGLShader("Debug.vert", "Debug.frag");
-	shadowShader = new OGLShader("shadow.vert", "shadow.frag");
+	debugShader = std::make_unique<OGLShader>("Debug.vert", "Debug.frag");
+	shadowShader = std::make_unique<OGLShader>("shadow.vert", "shadow.frag");
+	sceneShader = std::make_unique<OGLShader>("scene.vert", "scene.frag");
 
 	glGenTextures(1, &shadowTex);
 	glBindTexture(GL_TEXTURE_2D, shadowTex);
@@ -49,8 +50,8 @@ GameTechRenderer::GameTechRenderer(GameWorld* world) : OGLRenderer(*Window::GetW
 	lightPosition = Vector3(-200.0f, 60.0f, -200.0f);
 
 	//Skybox!
-	skyboxShader = new OGLShader("skybox.vert", "skybox.frag");
-	skyboxMesh = new OGLMesh();
+	skyboxShader = std::make_unique<OGLShader>("skybox.vert", "skybox.frag");
+	skyboxMesh = std::make_unique<OGLMesh>();
 	skyboxMesh->SetVertexPositions({Vector3(-1, 1,-1), Vector3(-1,-1,-1) , Vector3(1,-1,-1) , Vector3(1,1,-1) });
 	skyboxMesh->SetVertexIndices({ 0,1,2,2,3,0 });
 	skyboxMesh->UploadToGPU();
@@ -68,7 +69,7 @@ GameTechRenderer::GameTechRenderer(GameWorld* world) : OGLRenderer(*Window::GetW
 	Debug::CreateDebugFont("PressStart2P.fnt", *LoadTexture("PressStart2P.png"));
 
 	//Debug quad for drawing tex
-	debugTexMesh = new OGLMesh();
+	debugTexMesh = std::make_unique<OGLMesh>();
 	debugTexMesh->SetVertexPositions({ Vector3(-1, 1,0), Vector3(-1,-1,0) , Vector3(1,-1,0) , Vector3(1,1,0) });
 	debugTexMesh->SetVertexTextureCoords({ Vector2(0, 1), Vector2(0,0) , Vector2(1,0) , Vector2(1,1) });
 	debugTexMesh->SetVertexIndices({ 0,1,2,2,3,0 });
@@ -82,16 +83,6 @@ GameTechRenderer::GameTechRenderer(GameWorld* world) : OGLRenderer(*Window::GetW
 }
 
 GameTechRenderer::~GameTechRenderer()	{
-	delete debugShader;
-	delete shadowShader;
-
-	delete skyboxShader;
-	delete skyboxMesh;
-
-	delete debugTexMesh;
-
-	delete crosshairShader; //This line Ameya added for crosshair
-
 	glDeleteTextures(1, &shadowTex);
 	glDeleteFramebuffers(1, &shadowFBO);
 }
@@ -249,32 +240,42 @@ void GameTechRenderer::RenderCamera() {
 	Matrix4 viewMatrix = gameWorld->GetMainCamera().BuildViewMatrix();
 	Matrix4 projMatrix = gameWorld->GetMainCamera().BuildProjectionMatrix(hostWindow.GetScreenAspect());
 
-	OGLShader* activeShader = nullptr;
-	int projLocation	= 0;
-	int viewLocation	= 0;
-	int modelLocation	= 0;
-	int colourLocation  = 0;
-	int hasVColLocation = 0;
-	int hasTexLocation  = 0;
-	int shadowLocation  = 0;
-	int hasFlatLocation = 0;
-	int hasNormalLocation = 0;
-	int texRepeatingLocation = 0; 
+	UseShader(*sceneShader);
+	int projLocation	= glGetUniformLocation(sceneShader->GetProgramID(), "projMatrix");
+	int viewLocation	= glGetUniformLocation(sceneShader->GetProgramID(), "viewMatrix");
+	int modelLocation	= glGetUniformLocation(sceneShader->GetProgramID(), "modelMatrix");
+	int colourLocation  = glGetUniformLocation(sceneShader->GetProgramID(), "objectColour");
+	int hasVColLocation = glGetUniformLocation(sceneShader->GetProgramID(), "hasVertexColours");
+	int hasTexLocation  = glGetUniformLocation(sceneShader->GetProgramID(), "hasTexture");
+	int shadowLocation  = glGetUniformLocation(sceneShader->GetProgramID(), "shadowMatrix");
+	int hasFlatLocation = glGetUniformLocation(sceneShader->GetProgramID(), "isFlat");
+	int hasNormalLocation = glGetUniformLocation(sceneShader->GetProgramID(), "hasNormalMap");
+	int texRepeatingLocation = glGetUniformLocation(sceneShader->GetProgramID(), "texRepeating");
 
-	int lightPosLocation	= 0;
-	int lightColourLocation = 0;
-	int lightRadiusLocation = 0;
+	int lightPosLocation	= glGetUniformLocation(sceneShader->GetProgramID(), "lightPos");
+	int lightColourLocation = glGetUniformLocation(sceneShader->GetProgramID(), "lightColour");
+	int lightRadiusLocation = glGetUniformLocation(sceneShader->GetProgramID(), "lightRadius");
 
-	int cameraLocation = 0;
+	int cameraLocation = glGetUniformLocation(sceneShader->GetProgramID(), "cameraPos");
+
+	Vector3 camPos = gameWorld->GetMainCamera().GetPosition();
+	glUniform3fv(cameraLocation, 1, &camPos.x);
+
+	glUniformMatrix4fv(projLocation, 1, false, (float*)&projMatrix);
+	glUniformMatrix4fv(viewLocation, 1, false, (float*)&viewMatrix);
+
+	glUniform3fv(lightPosLocation, 1, (float*)&lightPosition);
+	glUniform4fv(lightColourLocation, 1, (float*)&lightColour);
+	glUniform1f(lightRadiusLocation, lightRadius);
+
+	int shadowTexLocation = glGetUniformLocation(sceneShader->GetProgramID(), "shadowTex");
+	glUniform1i(shadowTexLocation, 1);
 
 	//TODO - PUT IN FUNCTION
 	glActiveTexture(GL_TEXTURE0 + 1);
 	glBindTexture(GL_TEXTURE_2D, shadowTex);
 
 	for (const auto&i : activeObjects) {
-		OGLShader* shader = (OGLShader*)(*i).GetShader();
-		UseShader(*shader);
-
 		if ((*i).GetDefaultTexture()) { 
 			BindTextureToShader(*(OGLTexture*)(*i).GetDefaultTexture(), "mainTex", 0);
 			//figure out scale of object:
@@ -282,49 +283,15 @@ void GameTechRenderer::RenderCamera() {
 			float scaleX = (*i).getParent()->getRenderScale().x*multiplier;
 			float scaleY = (*i).getParent()->getRenderScale().y*multiplier;
 			float scaleZ = (*i).getParent()->getRenderScale().z*multiplier; 
-			glUniform1f(glGetUniformLocation(shader->GetProgramID(), "texScaleX"), scaleX);
-			glUniform1f(glGetUniformLocation(shader->GetProgramID(), "texScaleY"), scaleY);
-			glUniform1f(glGetUniformLocation(shader->GetProgramID(), "texScaleZ"), scaleZ);
+			glUniform1f(glGetUniformLocation(sceneShader->GetProgramID(), "texScaleX"), scaleX);
+			glUniform1f(glGetUniformLocation(sceneShader->GetProgramID(), "texScaleY"), scaleY);
+			glUniform1f(glGetUniformLocation(sceneShader->GetProgramID(), "texScaleZ"), scaleZ);
 			
 		}
 
 		//normal map capabilities added:
 		if ((*i).GetNormalMap()) {
 			BindTextureToShader(*(OGLTexture*)(*i).GetNormalMap(), "normalTex", 2); //need a shader that utilises normal maps, has a uniform sampler2D called "normalTex" in texture unit 2
-		}
-
-		if (activeShader != shader) {
-			projLocation	= glGetUniformLocation(shader->GetProgramID(), "projMatrix");
-			viewLocation	= glGetUniformLocation(shader->GetProgramID(), "viewMatrix");
-			modelLocation	= glGetUniformLocation(shader->GetProgramID(), "modelMatrix");
-			shadowLocation  = glGetUniformLocation(shader->GetProgramID(), "shadowMatrix");
-			colourLocation  = glGetUniformLocation(shader->GetProgramID(), "objectColour");
-			hasVColLocation = glGetUniformLocation(shader->GetProgramID(), "hasVertexColours");
-			hasTexLocation  = glGetUniformLocation(shader->GetProgramID(), "hasTexture");
-			hasFlatLocation =  glGetUniformLocation(shader->GetProgramID(), "isFlat");
-			hasNormalLocation = glGetUniformLocation(shader->GetProgramID(), "hasNormalMap");
-			texRepeatingLocation = glGetUniformLocation(shader->GetProgramID(), "texRepeating");
-
-			lightPosLocation	= glGetUniformLocation(shader->GetProgramID(), "lightPos");
-			lightColourLocation = glGetUniformLocation(shader->GetProgramID(), "lightColour");
-			lightRadiusLocation = glGetUniformLocation(shader->GetProgramID(), "lightRadius");
-
-			cameraLocation = glGetUniformLocation(shader->GetProgramID(), "cameraPos");
-
-			Vector3 camPos = gameWorld->GetMainCamera().GetPosition();
-			glUniform3fv(cameraLocation, 1, &camPos.x);
-
-			glUniformMatrix4fv(projLocation, 1, false, (float*)&projMatrix);
-			glUniformMatrix4fv(viewLocation, 1, false, (float*)&viewMatrix);
-
-			glUniform3fv(lightPosLocation	, 1, (float*)&lightPosition);
-			glUniform4fv(lightColourLocation, 1, (float*)&lightColour);
-			glUniform1f(lightRadiusLocation , lightRadius);
-
-			int shadowTexLocation = glGetUniformLocation(shader->GetProgramID(), "shadowTex");
-			glUniform1i(shadowTexLocation, 1);
-
-			activeShader = shader;
 		}
 
 		//Matrix4 modelMatrix = (*i).GetTransform()->GetMatrix();
@@ -500,10 +467,6 @@ Texture* GameTechRenderer::LoadTexture(const std::string& name) {
 	return OGLTexture::TextureFromFile(name).release();
 }
 
-Shader* GameTechRenderer::LoadShader(const std::string& vertex, const std::string& fragment) {
-	return new OGLShader(vertex, fragment);
-}
-
 void GameTechRenderer::SetDebugStringBufferSizes(size_t newVertCount) {
 	if (newVertCount > textCount) {
 		textCount = newVertCount;
@@ -618,7 +581,7 @@ void GameTechRenderer::InitCrosshair() {
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glBindVertexArray(0);
 
-	crosshairShader = new OGLShader("crosshair.vert", "crosshair.frag");
+	crosshairShader = std::make_unique<OGLShader>("crosshair.vert", "crosshair.frag");
 }
 
 void GameTechRenderer::RenderCrosshair() {

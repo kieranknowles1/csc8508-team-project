@@ -57,6 +57,10 @@ namespace NCL {
 			return *this;
 		}
 
+		void setRotation(Vector3 rotIn) {
+			rotation = rotIn;
+		}
+
 		//Builds a view matrix for the current camera variables, suitable for sending straight
 		//to a vertex shader (i.e it's already an 'inverse camera matrix').
 		Matrix4 BuildViewMatrix() const;
@@ -78,6 +82,10 @@ namespace NCL {
 		//Sets pitch, in degrees
 		Camera& SetPitch(float p)	{ pitch = p; return *this; }
 
+		void setPitchOffset(float pitchOffsetIn) {
+			pitchOffset = pitchOffsetIn;
+		}
+
 		//Gets pitch, in degrees
 		float	GetRoll() const { return roll; }
 		//Sets pitch, in degrees
@@ -95,6 +103,8 @@ namespace NCL {
 		float   roll = 0;
 		Vector3 position;
 		float	speed;
+		float pitchOffset = 0;
+		Vector3 rotation;
 
 		const Controller* activeController = nullptr;
 	};

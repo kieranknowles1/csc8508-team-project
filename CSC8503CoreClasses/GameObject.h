@@ -100,11 +100,11 @@ namespace NCL::CSC8503 {
 		void setRenderScale(const Vector3& scale) {
 			renderScale = scale;
 		}
-		void setIsFloor(bool floorIn) {
-			floor = floorIn;
+		void setIsPaintball(bool paintballIn) {
+			paintball = paintballIn;
 		}
-		bool getIsFloor() {
-			return floor;
+		bool getIsPaintball() {
+			return paintball;
 		}
 
 	protected:
@@ -113,7 +113,7 @@ namespace NCL::CSC8503 {
 		NetworkObject*		networkObject;
 
 		bool		isActive;
-		bool floor = false;
+		bool paintball = false;
 		int			worldID;
 		std::string	name;
 

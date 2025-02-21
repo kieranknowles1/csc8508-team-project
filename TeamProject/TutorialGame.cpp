@@ -38,7 +38,6 @@ for this module, even in the coursework, but you can add it if you like!
 */
 void TutorialGame::InitialiseAssets() {
 	defaultTexture = resourceManager->getTextures().get("checkerboard.png");
-	defaultShader = resourceManager->getShaders().get(Shader::Default);
 
 	InitCamera();
 	InitWorld();
@@ -72,19 +71,34 @@ void TutorialGame::UpdateGame(float dt) {
 	if (testTurret) {
 		testTurret->Update(dt);
 	}
+	/*if (navMesh) {
+		navMesh->VisualiseNavMesh();
+
+		btVector3 startPoint(94, 0.5833334, 26);
+		btVector3 endPoint(68, 0.5833334, 34);
+
+		btIDebugDraw* debugDrawer = bulletWorld->getDebugDrawer();
+
+		// Draw vertical lines at start and end points
+		debugDrawer->drawLine(startPoint, startPoint + btVector3(0, 10, 0), btVector3(0,1,0));
+		debugDrawer->drawLine(endPoint, endPoint + btVector3(0, 10, 0), btVector3(0, 0, 1));
+
+		// Find path and draw it
+		std::vector<btVector3> path = navMesh->FindPath(startPoint, endPoint);
+		navMesh->DebugDrawPath(path);
+	}*/
 
 	UpdateKeys();
 	world->UpdateWorld(dt);
 	profiler.startSection("Check Collisions");
 	// Check for collisions
 	CheckCollisions();
-	
-	UpdatePlayer(dt);
 
+	UpdatePlayer(dt);
 	profiler.startSection("Update Audio");
 	audioEngine.Update(&world->GetMainCamera());
-
-
+  
+  
 	profiler.startSection("Prepare Render");
 	bulletWorld->debugDrawWorld();
 
@@ -110,94 +124,57 @@ void TutorialGame::UpdatePlayer(float dt) {
 			ThirdPersonControls();
 		}
 	}
-	//player invisable in first person
-	if (!thirdPerson && !freeCam) {
-		// TODO: Proper invisibility
-		player->setRenderScale(Vector3(0, 0, 0));
-
-		Vector4 colour = player->GetRenderObject()->GetColour();
-		colour.w = 0;
-		player->GetRenderObject()->SetColour(colour);
-	}
-	else {
-		Vector4 colour = player->GetRenderObject()->GetColour();
-		colour.w = 1;
-		player->GetRenderObject()->SetColour(colour);
-	}
-
-	/*if (rotateTimer < rotateTime) {
-		rotateTimer += dt;
-		playerController->setWorldRotation(std::lerp(oldRotate, targetRotate, rotateTimer / rotateTime));
-	}
-	else if (!finished) {
-		playerController->setWorldRotation(targetRotate);
-		finished = true;
-	}*/
-
 	bulletWorld->setGravity(playerController->getUpDirection() * -30.0f);
 }
 
 void TutorialGame::UpdateKeys() {
-	if (Window::GetKeyboard()->KeyPressed(KeyCodes::F1)) {
+	using enum Controller::DigitalControl;
+	if (controller->GetDigital(DebugReloadWorld)) {
 		InitWorld(); //We can reset the simulation at any time with F1
 	}
-
-	if (Window::GetKeyboard()->KeyPressed(KeyCodes::F2)) {
-		InitCamera(); //F2 will reset the camera to a specific default place
-	}
-
-	if (Window::GetKeyboard()->KeyPressed(KeyCodes::F3)) {
+	if (controller->GetDigital(DebugBulletOverlay)) {
 		bulletDebug->toggle();
 	}
-	if (Window::GetKeyboard()->KeyPressed(KeyCodes::F4)) {
+	if (controller->GetDigital(DebugShowProfiling)) {
 		showProfiling = !showProfiling;
 	}
-	if (Window::GetKeyboard()->KeyPressed(KeyCodes::F)) {
+	if (controller->GetDigital(DebugFreeCam)) {
 		freeCam = !freeCam;
 	}
-	if (Window::GetKeyboard()->KeyPressed(KeyCodes::G)) {
+	if (controller->GetDigital(ThirdPerson)) {
 		thirdPerson = !thirdPerson;
 		playerController->SetThirdPerson(thirdPerson);
 	}
-	if (Window::GetKeyboard()->KeyPressed(KeyCodes::Q)) {
-		btVector3 oldRotate = playerController->getUpDirection();
-		btVector3 targetRotate = playerController->CalculateRightDirection(oldRotate);
-		playerController->setTargetWorldRotation(targetRotate);
+
+	if (controller->GetDigital(WorldRollRight)) {
+			playerController->rollRight();
 	}
-	if (Window::GetKeyboard()->KeyPressed(KeyCodes::E)) {
-		btVector3 oldRotate = playerController->getUpDirection();
-		btVector3 targetRotate = playerController->CalculateRightDirection(oldRotate);
-		playerController->setTargetWorldRotation(-targetRotate);
+	if (controller->GetDigital(WorldRollLeft)) {
+			playerController->rollLeft();
+	}
+	if (controller->GetDigital(WorldPitchUp)) {
+			playerController->pitchUp();
+	}
+	if (controller->GetDigital(WorldPitchDown)) {
+			playerController->pitchDown();
 	}
 }
 
 void TutorialGame::ThirdPersonControls() {
 	btTransform transformPlayer = player->GetPhysicsObject()->GetRigidBody()->getWorldTransform();
 	btVector3 up = playerController->getUpDirection();
-	btVector3 right = playerController->getRightDirection();
-	btVector3 forw = playerController->getForwardDirection();
 	btQuaternion playerRotation = transformPlayer.getRotation();
 	btMatrix3x3 rotationMatrix(playerRotation);
-	btVector3 r = rotationMatrix * btVector3(1, 0, 0);
-	btVector3 forward = rotationMatrix * btVector3(0, 0, -1);
-	forward = (forward * right.absolute()) + (forward * forw.absolute());
-	forward.normalize();
+	btVector3 forward = rotationMatrix * btVector3(0,0,-1);
+	btVector3 upwards = rotationMatrix * btVector3(0, 1, 0);
 	float camHeight = 10.0f;
-	float camDist = 30.0f;
-	btVector3 cameraOffset = (-forward * camDist) + (up * camHeight);
-
+	float camDist = -30.0f;
+	btVector3 cameraOffset = (forward.normalize() * camDist) + (upwards.normalize() * camHeight);
 	btVector3 cameraPosition = transformPlayer.getOrigin() + cameraOffset;
 	mainCamera->SetPosition(cameraPosition);
-
-	float forwardProjX = forw.dot(forward);
-	float rightProjX = right.dot(forward);
-	float playerYaw = Maths::RadiansToDegrees(atan2(rightProjX, forwardProjX))+180;
-
-	mainCamera->SetYaw(playerYaw);
+	mainCamera->SetYaw(playerController->getYaw());
 	mainCamera->SetPitch(-15.0f);
 }
-
-
 
 
 void TutorialGame::CheckCollisions()
@@ -282,7 +259,8 @@ void TutorialGame::InitWorld() {
 	InitBullet();
 	audioEngine.Init();
 
-
+	navMesh = new NavMesh(bulletWorld);
+	navMesh->LoadFromFile("Assets/Meshes/NavMeshes/smalltest.navmesh");
 
 	if (loadFromLevel) {
 		levelImporter = new LevelImporter(resourceManager.get(), world, bulletWorld);
@@ -334,10 +312,12 @@ void TutorialGame::InitPlayer() {
 	}else {
 		player = AddPlayerCapsuleToWorld(Vector3(10, 5, 20), 4.0f, 2.0f, 10.0f);
 	}
+	// Keep us from clipping when falling too fast
+	player->GetPhysicsObject()->GetRigidBody()->setCcdMotionThreshold(1.0f);
 	player->GetPhysicsObject()->GetRigidBody()->setAngularFactor(0);
 	player->GetPhysicsObject()->GetRigidBody()->setFriction(0.0f);
 	player->GetPhysicsObject()->GetRigidBody()->setDamping(0.0, 0);
-	gun = AddCubeToWorld(Vector3(10, 2, 20), Vector3(0.6, 0.6, 1.6), 0, false); 
+	gun = AddCubeToWorld(Vector3(10, 2, 20), Vector3(0.6, 0.6, 1.6), 0, false);
 	playerController = new PlayerController(player, gun, controller, mainCamera, bulletWorld, world, resourceManager.get());
 	player->GetRenderObject()->SetColour(playerColour);
 
@@ -350,7 +330,7 @@ Turret* TutorialGame::AddTurretToWorld() {
 	turret->setInitialPosition(btVector3(5, 5, 5));
 	turret->setRenderScale(dimensions);
 
-	turret->SetRenderObject(new RenderObject(turret, resourceManager->getMeshes().get("Kitten.msh"), defaultTexture, defaultShader));
+	turret->SetRenderObject(new RenderObject(turret, resourceManager->getMeshes().get("Kitten.msh"), defaultTexture));
 
 	btCollisionShape* shape = new btBoxShape(btVector3(dimensions.x / 2.0f, dimensions.y / 2.0f, dimensions.z / 2.0f));
 
@@ -396,7 +376,7 @@ GameObject* TutorialGame::AddCubeToWorld(const Vector3& position, Vector3 dimens
 	cube->GetPhysicsObject()->InitBulletPhysics(bulletWorld, shape, inverseMass, hasCollision);
 
 	// Setting render object
-	cube->SetRenderObject(new RenderObject(cube, resourceManager->getMeshes().get("Cube.msh"), defaultTexture, defaultShader));
+	cube->SetRenderObject(new RenderObject(cube, resourceManager->getMeshes().get("Cube.msh"), defaultTexture));
 	cube->GetRenderObject()->SetTexRepeating(true); //scale texture (no stretching)
 
 	world->AddGameObject(cube);
@@ -418,7 +398,7 @@ PlayerObject* TutorialGame::AddPlayerCapsuleToWorld(const Vector3& position, flo
 	btCollisionShape* shape = new btCapsuleShape(radius, height);
 
 	// Setting the render object for the capsule
-	capsule->SetRenderObject(new RenderObject(capsule, resourceManager->getMeshes().get("Capsule.msh"), defaultTexture, defaultShader));
+	capsule->SetRenderObject(new RenderObject(capsule, resourceManager->getMeshes().get("Capsule.msh"), defaultTexture));
 	// Setting the physics object for the capsule
 	capsule->SetPhysicsObject(new PhysicsObject(capsule));
 
@@ -444,7 +424,7 @@ GameObject* TutorialGame::AddCapsuleToWorld(const Vector3& position, float heigh
 	btCollisionShape* shape = new btCapsuleShape(radius, height);
 
 	// Setting the render object for the capsule
-	capsule->SetRenderObject(new RenderObject(capsule, resourceManager->getMeshes().get("Capsule.msh"), defaultTexture, defaultShader));
+	capsule->SetRenderObject(new RenderObject(capsule, resourceManager->getMeshes().get("Capsule.msh"), defaultTexture));
 	// Setting the physics object for the capsule
 	capsule->SetPhysicsObject(new PhysicsObject(capsule));
 
@@ -466,7 +446,7 @@ GameObject* TutorialGame::AddInfinitePlaneToWorld(const Vector3& position, const
 	btCollisionShape* shape = new btStaticPlaneShape(btVector3(normal.x, normal.y, normal.z), planeConstant);
 
 	// Set the render object
-	plane->SetRenderObject(new RenderObject(plane, resourceManager->getMeshes().get("Plane.msh"), defaultTexture, defaultShader));
+	plane->SetRenderObject(new RenderObject(plane, resourceManager->getMeshes().get("Plane.msh"), defaultTexture));
 	plane->GetRenderObject()->SetTexRepeating(true); //scale texture
 
 	// Set the physics object
@@ -500,7 +480,6 @@ GameObject* TutorialGame::AddFloorToWorld(const Vector3& position, const Vector3
 	btTransform transform = floor1->GetPhysicsObject()->GetRigidBody()->getWorldTransform();
 	transform.setRotation(rotationQuat);
 	floor1->GetPhysicsObject()->GetRigidBody()->setWorldTransform(transform);
-	floor1->setIsFloor(isFloor);
 	return floor1;
 }
 
@@ -515,7 +494,7 @@ GameObject* TutorialGame::AddSphereToWorld(const Vector3& position, float radius
 	sphere->setRenderScale(sphereSize);
 
 	// Setting the render object for the sphere
-	sphere->SetRenderObject(new RenderObject(sphere, resourceManager->getMeshes().get("Sphere.msh"), defaultTexture, defaultShader));
+	sphere->SetRenderObject(new RenderObject(sphere, resourceManager->getMeshes().get("Sphere.msh"), defaultTexture));
 	sphere->SetPhysicsObject(new PhysicsObject(sphere));
 
 	// Creating a Bullet collision shape for the sphere

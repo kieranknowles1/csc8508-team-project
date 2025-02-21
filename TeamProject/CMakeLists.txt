@@ -23,6 +23,8 @@ set(SOURCES
     Profiler.cpp
 	AudioEngine.h
 	AudioEngine.cpp
+    Config.h
+    Config.cpp
 )
 
 file(GLOB_RECURSE COMPILED_MESHES "${CMAKE_SOURCE_DIR}/Assets/Meshes/*.msh")

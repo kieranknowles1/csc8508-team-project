@@ -1,6 +1,5 @@
 #pragma once
 #include "Texture.h"
-#include "Shader.h"
 #include "Mesh.h"
 #include "Buffer.h"
 
@@ -14,7 +13,7 @@ namespace NCL {
 		class RenderObject
 		{
 		public:
-			RenderObject(GameObject* parent, std::shared_ptr<Mesh> mesh, std::shared_ptr<Texture> tex, std::shared_ptr<Shader> shader, std::shared_ptr<Texture> normal = nullptr);
+			RenderObject(GameObject* parent, std::shared_ptr<Mesh> mesh, std::shared_ptr<Texture> tex, std::shared_ptr<Texture> normal = nullptr);
 			~RenderObject();
 
 			void SetDefaultTexture(std::shared_ptr<Texture> t) {
@@ -27,10 +26,6 @@ namespace NCL {
 
 			Mesh* GetMesh() const {
 				return mesh.get();
-			}
-
-			Shader*	GetShader() const {
-				return shader.get();
 			}
 
 			void SetColour(const Vector4& c) {
@@ -93,7 +88,6 @@ namespace NCL {
 			Buffer* buffer;
 			std::shared_ptr<Mesh> mesh;
 			std::shared_ptr<Texture> texture;
-			std::shared_ptr<Shader> shader;
 			Vector4		colour = Vector4(1, 1, 0, 0.99);
 			bool isFlat = false;
 			bool texRepeating = false; // added to allow repeating textures per object

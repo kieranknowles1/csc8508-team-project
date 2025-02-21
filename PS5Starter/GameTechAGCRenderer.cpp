@@ -140,10 +140,6 @@ Texture* GameTechAGCRenderer::LoadTexture(const std::string& name) {
 	return (Texture*)t;
 }
 
-Shader* GameTechAGCRenderer::LoadShader(const std::string& vertex, const std::string& fragment) {
-	return nullptr;
-}
-
 void GameTechAGCRenderer::RenderFrame() {
 	currentFrame = &allFrames[currentFrameIndex];
 
@@ -345,8 +341,13 @@ void GameTechAGCRenderer::MainRenderPass() {
 	depthControl.setDepth(sce::Agc::CxDepthStencilControl::Depth::kEnable);
 	depthControl.setDepthFunction(sce::Agc::CxDepthStencilControl::DepthFunction::kLessEqual);
 	depthControl.setDepthWrite(sce::Agc::CxDepthStencilControl::DepthWrite::kEnable);
-
 	frameContext->m_sb.setState(depthControl);
+
+	sce::Agc::CxPrimitiveSetup primitiveSetup;
+	primitiveSetup.init()
+		.setCullFace(sce::Agc::CxPrimitiveSetup::CullFace::kBack);
+	frameContext->m_sb.setState(primitiveSetup);
+
 
 	frameContext->m_bdr.getStage(sce::Agc::ShaderType::kGs)
 		.setConstantBuffers(0, 1, &currentFrame->constantBuffer)
