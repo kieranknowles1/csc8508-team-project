@@ -129,7 +129,8 @@ void LevelImporter::AddObjectToWorld(ObjectData* data) {
         optionalTexture(data->mainTextureName),
         optionalTexture(data->normalTextureName)
     ));
-    world->AddGameObject(cube);;
+    world->AddGameObject(cube);
+    cube->GetRenderObject()->SetColour(Vector4(0.75f, 0.75f, 0.75f, 1.0f));
     cube->GetRenderObject()->SetTexRepeating(true);//sets texture to repeat and scale
     if (data->meshName == "Quad") {
         cube->GetRenderObject()->SetTexScaleMultiplier(0.005f);

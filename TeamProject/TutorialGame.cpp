@@ -4,9 +4,9 @@
 #include "RenderObject.h"
 #include "TextureLoader.h"
 #include "AudioEngine.h"
-
+#include "GameTechRendererInterface.h"
 #include "BulletDebug.h"
-
+#include "GameTechRenderer.h"
 #include <CSC8503CoreClasses/Debug.h>
 
 #include "Window.h"
@@ -158,11 +158,11 @@ void TutorialGame::UpdateKeys() {
 	if (controller->GetDigital(WorldPitchDown)) {
 			playerController->pitchDown();
 	}
-	if (Window::GetKeyboard()->KeyPressed(KeyCodes::F5)) {
-		bool toggleHDR = renderer->GetHDRON();
-		toggleHDR = !toggleHDR;
-		renderer->SetHDRON(toggleHDR);
-	}
+	//if (Window::GetKeyboard()->KeyPressed(KeyCodes::F5)) {
+	//	bool toggleHDR = renderer->GetHDRON();
+	//	toggleHDR = !toggleHDR;
+	//	renderer->SetHDRON(toggleHDR);
+	//}
 }
 
 void TutorialGame::ThirdPersonControls() {
