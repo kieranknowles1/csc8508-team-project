@@ -52,6 +52,9 @@ namespace NCL {
 			float getYaw() {
 				return yaw;
 			}
+			btQuaternion getCamOffset() {
+				return camRotOffset;
+			}
 
 			void rollRight() {
 				Rotate(true, true);
@@ -152,6 +155,7 @@ namespace NCL {
 
 			Vector2 getDirectionalInput() const;
 			void Initialise();
+			void HandleShooting(float dt);
 			void HandleCrouching(float dt);
 			void HandleSliding(float dt);
 			bool CheckCeling();

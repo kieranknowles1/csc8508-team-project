@@ -162,9 +162,8 @@ void TutorialGame::UpdateKeys() {
 
 void TutorialGame::ThirdPersonControls() {
 	btTransform transformPlayer = player->GetPhysicsObject()->GetRigidBody()->getWorldTransform();
-	btVector3 up = playerController->getUpDirection();
-	btQuaternion playerRotation = transformPlayer.getRotation();
-	btMatrix3x3 rotationMatrix(playerRotation);
+	btQuaternion playerRotation1(btVector3(0, 1, 0), Maths::DegreesToRadians(playerController->getYaw()));
+	btMatrix3x3 rotationMatrix(playerController->getCamOffset() * playerRotation1);
 	btVector3 forward = rotationMatrix * btVector3(0,0,-1);
 	btVector3 upwards = rotationMatrix * btVector3(0, 1, 0);
 	float camHeight = 10.0f;
@@ -172,7 +171,6 @@ void TutorialGame::ThirdPersonControls() {
 	btVector3 cameraOffset = (forward.normalize() * camDist) + (upwards.normalize() * camHeight);
 	btVector3 cameraPosition = transformPlayer.getOrigin() + cameraOffset;
 	mainCamera->SetPosition(cameraPosition);
-	mainCamera->SetYaw(playerController->getYaw());
 	mainCamera->SetPitch(-15.0f);
 }
 
