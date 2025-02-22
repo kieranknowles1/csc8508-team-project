@@ -158,6 +158,11 @@ void TutorialGame::UpdateKeys() {
 	if (controller->GetDigital(WorldPitchDown)) {
 			playerController->pitchDown();
 	}
+	if (Window::GetKeyboard()->KeyPressed(KeyCodes::F5)) {
+		bool toggleHDR = renderer->GetHDRON();
+		toggleHDR = !toggleHDR;
+		renderer->SetHDRON(toggleHDR);
+	}
 }
 
 void TutorialGame::ThirdPersonControls() {
@@ -318,7 +323,7 @@ void TutorialGame::InitPlayer() {
 	player->GetPhysicsObject()->GetRigidBody()->setDamping(0.0, 0);
 	gun = AddCubeToWorld(Vector3(10, 2, 20), Vector3(0.6, 0.6, 1.6), 0, false);
 	playerController = new PlayerController(player, gun, controller, mainCamera, bulletWorld, world, resourceManager.get());
-	player->GetRenderObject()->SetColour(playerColour);
+	player->GetRenderObject()->SetColour(Vector4(playerColour));
 
 }
 

@@ -24,6 +24,15 @@ namespace NCL {
 			Mesh* LoadMesh(const std::string& name) override;
 			Texture* LoadTexture(const std::string& name) override;
 
+			//toggle post processing:
+			bool GetHDRON() const{
+				return hdrON; 
+			}
+
+			void SetHDRON(bool ison) {
+				hdrON = ison;
+			}
+
 		protected:
 			void NewRenderLines();
 			void NewRenderText();
@@ -86,6 +95,14 @@ namespace NCL {
 			GLuint textColourVBO;
 			GLuint textTexVBO;
 			size_t textCount = 0;
+
+			//Post processing additions:
+			GLuint hdrTex;
+			GLuint hdrFBO;
+			GLuint hdrDepthTex;
+			OGLMesh* hdrQuad;
+			OGLShader* hdrShader;
+			bool hdrON = true;
 		};
 	}
 }
