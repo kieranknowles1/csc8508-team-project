@@ -14,8 +14,8 @@
 using namespace NCL;
 using namespace CSC8503;
 
-TutorialGame::TutorialGame(GameTechRendererInterface* renderer, GameWorld* world, Controller* controller)
-	: renderer(renderer)
+TutorialGame::TutorialGame(GameTechRendererInterface* renderer, GameWorld* world, Controller* controller)   
+	: renderer(renderer)  
 	, controller(controller)
 	, world(world)
 {
@@ -158,11 +158,11 @@ void TutorialGame::UpdateKeys() {
 	if (controller->GetDigital(WorldPitchDown)) {
 			playerController->pitchDown();
 	}
-	//if (Window::GetKeyboard()->KeyPressed(KeyCodes::F5)) {
-	//	bool toggleHDR = renderer->GetHDRON();
-	//	toggleHDR = !toggleHDR;
-	//	renderer->SetHDRON(toggleHDR);
-	//}
+	if (Window::GetKeyboard()->KeyPressed(KeyCodes::F5)) { 
+		bool toggleHDR = renderer->GetHDRON();  
+		toggleHDR = !toggleHDR; 
+		renderer->SetHDRON(toggleHDR); 
+	} 
 }
 
 void TutorialGame::ThirdPersonControls() {
