@@ -159,9 +159,9 @@ void TutorialGame::UpdateKeys() {
 			playerController->pitchDown();
 	}
 	if (Window::GetKeyboard()->KeyPressed(KeyCodes::F5)) { 
-		bool toggleHDR = renderer->GetHDRON();  
+		bool toggleHDR = renderer->GetHDROn();  
 		toggleHDR = !toggleHDR; 
-		renderer->SetHDRON(toggleHDR); 
+		renderer->SetHDROn(toggleHDR); 
 	} 
 }
 
@@ -267,7 +267,7 @@ void TutorialGame::InitWorld() {
 
 	if (loadFromLevel) {
 		levelImporter = new LevelImporter(resourceManager.get(), world, bulletWorld);
-		levelImporter->LoadLevel(7);
+		levelImporter->LoadLevel(8);
 		InitPlayer();
 		return;
 	}

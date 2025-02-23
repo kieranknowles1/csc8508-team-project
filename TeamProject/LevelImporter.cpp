@@ -35,6 +35,7 @@ void from_json(const json& j, ObjectData& obj) {
     }
     j.at("mainTextureName").get_to(obj.mainTextureName);
     j.at("normalTextureName").get_to(obj.normalTextureName);
+    j.at("type").get_to(obj.type);
 }
 
 LevelImporter::LevelImporter(ResourceManager* resourceManager, GameWorld* worldIn, btDiscreteDynamicsWorld* bulletWorldIn) {
@@ -135,4 +136,5 @@ void LevelImporter::AddObjectToWorld(ObjectData* data) {
     if (data->meshName == "Quad") {
         cube->GetRenderObject()->SetTexScaleMultiplier(0.005f);
     }
+    cube->setType(data->type);
 }

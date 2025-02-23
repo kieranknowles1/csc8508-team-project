@@ -35,6 +35,7 @@ public:
     std::string meshName;
     std::string mainTextureName;
     std::string normalTextureName;
+    char type;
 };
 
 using namespace NCL;

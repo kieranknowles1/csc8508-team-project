@@ -106,7 +106,12 @@ namespace NCL::CSC8503 {
 		bool getIsPaintball() {
 			return paintball;
 		}
-
+		void setType(char typeIn) {
+			type = typeIn;
+		}
+		char getType() {
+			return type;
+		}
 	protected:
 		PhysicsObject*		physicsObject;
 		RenderObject*		renderObject;
@@ -116,6 +121,7 @@ namespace NCL::CSC8503 {
 		bool paintball = false;
 		int			worldID;
 		std::string	name;
+		char type;
 
 		Vector3 renderScale = Vector3(1, 1, 1); // Only affects rendering, not physics
 		btVector3 initialPosition;
