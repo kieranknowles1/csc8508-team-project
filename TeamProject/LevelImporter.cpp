@@ -137,4 +137,25 @@ void LevelImporter::AddObjectToWorld(ObjectData* data) {
         cube->GetRenderObject()->SetTexScaleMultiplier(0.005f);
     }
     cube->setType(data->type);
+    HandleTypes(cube);
+}
+
+
+void LevelImporter::HandleTypes(GameObject* obj) {
+    switch (obj->getType())
+    {
+    case 'D':    // Default
+        break;
+    case 'J':   // Jump-Pads
+        obj->GetRenderObject()->SetColour(Vector4(1000, 0, 1000, 1));
+        break;
+    case 'S':   // Slime
+        obj->GetRenderObject()->SetColour(Vector4(0, 1000, 0, 1));
+        break;
+    case 'I':   // Ice
+        obj->GetRenderObject()->SetColour(Vector4(0, 100, 100, 1));
+        break;
+    default:
+        break;
+    }
 }

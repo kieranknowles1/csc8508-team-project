@@ -87,7 +87,7 @@ namespace NCL {
 			float sprintMulti = 2.0f;
 			float strafeMulti = 0.65f;
 			float backwardsMulti = 0.55f;
-			float airMulti = 1.2f;
+			float airMulti = 1.0f;
 	
 			float crouchingTime = 0.3f;
 			float crouchMulti = 0.4f;
@@ -106,6 +106,9 @@ namespace NCL {
 
 			//Rotation Variables
 			float rotateTime = 0.5f;
+
+			//Special Types Variables
+			float bouncePadHeight = 5000.0f;
 
 			btQuaternion camRotOffset = btQuaternion::getIdentity();
 			btQuaternion oldcamRotOffset = btQuaternion::getIdentity();
@@ -151,6 +154,7 @@ namespace NCL {
 			bool crouching = false;
 			bool rollUse = false;
 			btIDebugDraw* debugDrawer;
+			bool onIce = false;
 
 
 			Vector2 getDirectionalInput() const;
@@ -158,6 +162,7 @@ namespace NCL {
 			void HandleShooting(float dt);
 			void HandleCrouching(float dt);
 			void HandleSliding(float dt);
+			void HandleTypes();
 			bool CheckCeling();
 			btVector3 FindFloorNormal();
 			void SetGunTransform();

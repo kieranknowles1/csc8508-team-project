@@ -51,6 +51,7 @@ public:
     void ClearObjects();
 
 private:
+    void HandleTypes(GameObject* obj);
     ResourceManager* resourceManager;
     GameWorld* world;
     btDiscreteDynamicsWorld* bulletWorld;
