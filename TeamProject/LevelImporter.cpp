@@ -35,6 +35,7 @@ void from_json(const json& j, ObjectData& obj) {
     }
     j.at("mainTextureName").get_to(obj.mainTextureName);
     j.at("normalTextureName").get_to(obj.normalTextureName);
+    j.at("type").get_to(obj.type);
 }
 
 LevelImporter::LevelImporter(ResourceManager* resourceManager, GameWorld* worldIn, btDiscreteDynamicsWorld* bulletWorldIn) {
@@ -134,5 +135,27 @@ void LevelImporter::AddObjectToWorld(ObjectData* data) {
     cube->GetRenderObject()->SetTexRepeating(true);//sets texture to repeat and scale
     if (data->meshName == "Quad") {
         cube->GetRenderObject()->SetTexScaleMultiplier(0.005f);
+    }
+    cube->setType(data->type);
+    HandleTypes(cube);
+}
+
+
+void LevelImporter::HandleTypes(GameObject* obj) {
+    switch (obj->getType())
+    {
+    case 'D':    // Default
+        break;
+    case 'J':   // Jump-Pads
+        obj->GetRenderObject()->SetColour(Vector4(1000, 0, 1000, 1));
+        break;
+    case 'S':   // Slime
+        obj->GetRenderObject()->SetColour(Vector4(0, 1000, 0, 1));
+        break;
+    case 'I':   // Ice
+        obj->GetRenderObject()->SetColour(Vector4(0, 100, 100, 1));
+        break;
+    default:
+        break;
     }
 }

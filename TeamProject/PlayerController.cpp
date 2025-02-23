@@ -43,6 +43,8 @@ void PlayerController::UpdateMovement(float dt) {
     btVector3 rot = GetEulerAngles(camRotOffset);
     camera->setRotation(rot);
 
+    HandleTypes();
+
     //sliding/floor detection
     HandleSliding(dt);
     HandleCrouching(dt);
@@ -101,7 +103,7 @@ void PlayerController::UpdateMovement(float dt) {
         player->setCollided(0);
         inAirTime -= dt;
     }
-    if (player->getCollided() <= 0) {
+    if (player->getCollided() <= 0 || onIce) {
         movement *= (airMulti*dt);
         movement += rb->getLinearVelocity();
     }
@@ -289,7 +291,7 @@ bool PlayerController::CheckCeling() {
 // finds surface normal of floor below
 btVector3 PlayerController::FindFloorNormal() {
     btVector3 btBelowPlayerPos = btPlayerPos;
-    btBelowPlayerPos -= (upDirection * 8);
+    btBelowPlayerPos -= (upDirection * 16);
     btCollisionWorld::ClosestRayResultCallback callback(btPlayerPos, btBelowPlayerPos);
     bulletWorld->rayTest(btPlayerPos, btBelowPlayerPos, callback);
     if (callback.hasHit()) {
@@ -353,6 +355,48 @@ void PlayerController::HandleSliding(float dt) {
         rb->setLinearVelocity(pastMovement);
         rb->activate();
     }
+}
+
+void PlayerController::HandleTypes() {
+    switch (player->getType())
+    {
+    case 'D': //Default
+        onIce = false;
+        break;
+    case 'J': {//Jump-pads
+        btVector3 normal = FindFloorNormal();
+        float dotProduct = normal.dot(upDirection.absolute());
+        btVector3 movement = btVector3(0, 0, 0);
+        movement += (bouncePadHeight * FindFloorNormal());
+        rb->setLinearVelocity(btVector3(0, 0, 0));
+        player->setCollided(0);
+        inAirTime = 0.2f;
+        rb->applyCentralImpulse(movement);
+        break;
+    }
+    case 'S': { // Slime
+        btVector3 normal = FindFloorNormal();
+        float dotProduct = normal.dot(upDirection.absolute());
+        if (fabs(dotProduct) > 1) {
+            normal = upDirection;
+        }
+        btVector3 velocity = rb->getLinearVelocity();
+        float dampening = 0.95f;
+        btVector3 reflectedVelocity = velocity + (1000 * normal);
+        reflectedVelocity *= dampening; 
+        player->setCollided(0);
+        inAirTime = 0.2f;
+        rb->applyCentralImpulse(reflectedVelocity);
+        break;
+    }
+    case 'I': {// Ice
+        onIce = true;
+        break;
+    }
+    default:
+        break;
+    }
+    player->resetType();
 }
 
 

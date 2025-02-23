@@ -26,6 +26,9 @@ public:
 			collided++;
 			collidedObjects.push_back(collisionInfo.otherObject);
 		}
+
+		// set special type collision
+		collisionType = collisionInfo.otherObject->getType();
 	}
 
 
@@ -62,9 +65,15 @@ public:
 				collidedObjects.push_back(collision.otherObject);
 			}
 		}
+		collisionType = collision.otherObject->getType();
 	}
 
-
+	char getType() {
+		return collisionType;
+	}
+	void resetType() {
+		collisionType = 'N'; //type None
+	}
 	void setCollided(int collidedIn) {
 		collided = collidedIn;
 	}
@@ -78,4 +87,5 @@ private:
 	int collided = 0;
 	btVector3 upDirection;
 	std::list<GameObject*> collidedObjects;
+	char collisionType;
 };

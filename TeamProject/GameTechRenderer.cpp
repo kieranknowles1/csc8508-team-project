@@ -178,7 +178,7 @@ void GameTechRenderer::RenderFrame() {
 	SortObjectList();
 	RenderShadowMap();
 	//Set up to render into framebuffer
-	if (hdrON) {
+	if (hdrOn) {
 		glBindFramebuffer(GL_FRAMEBUFFER, hdrFBO);
 		glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 	}
@@ -196,7 +196,7 @@ void GameTechRenderer::RenderFrame() {
 	glEnable(GL_DEPTH_TEST);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	RenderCrosshair(); //This line Ameya added for crosshair 
-	if (hdrON) {
+	if (hdrOn) {
 		glBindFramebuffer(GL_FRAMEBUFFER, 0); //unbind hdrFBO   
 		glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 		glDisable(GL_CULL_FACE);
