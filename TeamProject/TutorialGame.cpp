@@ -13,8 +13,8 @@
 using namespace NCL;
 using namespace CSC8503;
 
-TutorialGame::TutorialGame(GameTechRendererInterface* renderer, GameWorld* world, Controller* controller)   
-	: renderer(renderer)  
+TutorialGame::TutorialGame(GameTechRendererInterface* renderer, GameWorld* world, Controller* controller)
+	: renderer(renderer)
 	, controller(controller)
 	, world(world)
 {
@@ -96,8 +96,8 @@ void TutorialGame::UpdateGame(float dt) {
 	UpdatePlayer(dt);
 	profiler.startSection("Update Audio");
 	audioEngine.Update(&world->GetMainCamera());
-  
-  
+
+
 	profiler.startSection("Prepare Render");
 	bulletWorld->debugDrawWorld();
 
@@ -123,6 +123,7 @@ void TutorialGame::UpdatePlayer(float dt) {
 			ThirdPersonControls();
 		}
 	}
+	resourceManager->update(dt);
 	bulletWorld->setGravity(playerController->getUpDirection() * -30.0f);
 }
 
@@ -157,11 +158,11 @@ void TutorialGame::UpdateKeys() {
 	if (controller->GetDigital(WorldPitchDown)) {
 			playerController->pitchDown();
 	}
-	if (Window::GetKeyboard()->KeyPressed(KeyCodes::F5)) { 
-		bool toggleHDR = renderer->GetHDROn();  
-		toggleHDR = !toggleHDR; 
-		renderer->SetHDROn(toggleHDR); 
-	} 
+	if (Window::GetKeyboard()->KeyPressed(KeyCodes::F5)) {
+		bool toggleHDR = renderer->GetHDROn();
+		toggleHDR = !toggleHDR;
+		renderer->SetHDROn(toggleHDR);
+	}
 }
 
 void TutorialGame::ThirdPersonControls() {
