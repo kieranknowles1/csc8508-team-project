@@ -363,10 +363,10 @@ void PlayerController::HandleTypes() {
         onIce = false;
         break;
     case 'J': {//Jump-pads
-        btVector3 normal = player->getJumpPadNormal();
+        btVector3 normal = player->getCollisionNormal();
         float dotProduct = normal.dot(upDirection.absolute());
         btVector3 movement = btVector3(0, 0, 0);
-        movement += (bouncePadHeight * -player->getJumpPadNormal());
+        movement += (bouncePadHeight * -player->getCollisionNormal());
         rb->setLinearVelocity(btVector3(0, 0, 0));
         player->setCollided(0);
         inAirTime = 0.2f;
@@ -375,11 +375,12 @@ void PlayerController::HandleTypes() {
     }
     case 'S': { // Slime
         if (inAirTime <= 0) {
-            btVector3 normal = FindFloorNormal();
+            btVector3 normal = player->getCollisionNormal();
             float dampening = 0.85f;
             btVector3 reflectedVelocity = rb->getLinearVelocity() - (10 * previousVelocity.dot(normal) * normal);
             if (fabs(10 * previousVelocity.dot(normal)) <= 0.25f) {
                 player->setCollided(1);
+                std::cout << "STOPPED";
                 break;
             }
             else {
