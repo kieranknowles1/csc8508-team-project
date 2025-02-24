@@ -29,6 +29,9 @@ public:
 
 		// set special type collision
 		collisionType = collisionInfo.otherObject->getType();
+		if (collisionInfo.otherObject->getType() == 'J') {
+			jumpPadNormal = collisionInfo.contactNormal;
+		}
 	}
 
 
@@ -83,9 +86,13 @@ public:
 	void setUpDirection(btVector3 upDirectionIn) {
 		upDirection = upDirectionIn;
 	};
+	btVector3 getJumpPadNormal() {
+		return jumpPadNormal;
+	}
 private:
 	int collided = 0;
 	btVector3 upDirection;
+	btVector3 jumpPadNormal = btVector3(0, 1, 0);
 	std::list<GameObject*> collidedObjects;
 	char collisionType;
 };

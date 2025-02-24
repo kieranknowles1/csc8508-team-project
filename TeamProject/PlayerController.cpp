@@ -364,10 +364,10 @@ void PlayerController::HandleTypes() {
         onIce = false;
         break;
     case 'J': {//Jump-pads
-        btVector3 normal = FindFloorNormal();
+        btVector3 normal = player->getJumpPadNormal();
         float dotProduct = normal.dot(upDirection.absolute());
         btVector3 movement = btVector3(0, 0, 0);
-        movement += (bouncePadHeight * FindFloorNormal());
+        movement += (bouncePadHeight * -player->getJumpPadNormal());
         rb->setLinearVelocity(btVector3(0, 0, 0));
         player->setCollided(0);
         inAirTime = 0.2f;
