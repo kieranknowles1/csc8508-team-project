@@ -135,15 +135,13 @@ void LevelImporter::AddObjectToWorld(ObjectData* data) {
     cube->GetRenderObject()->SetTexRepeating(true);//sets texture to repeat and scale
     if (data->meshName == "Quad") {
         cube->GetRenderObject()->SetTexScaleMultiplier(0.005f);
-        cube->GetRenderObject()->SetDefaultTexture(resourceManager->getTextures().get("tiles_0099_color_4k.jpg"));
-        cube->GetRenderObject()->SetNormal(resourceManager->getTextures().get("tiles_0099_normal_opengl_4k.png"));
+        cube->GetRenderObject()->SetDefaultTexture(resourceManager->getTextures().get("tiles_0099_color_1k.jpg"));
+        cube->GetRenderObject()->SetNormal(resourceManager->getTextures().get("tiles_0099_normal_opengl_1k.png"));
     }
     else {
         cube->GetRenderObject()->SetTexScaleMultiplier(0.01f);
-        cube->GetRenderObject()->SetDefaultTexture(resourceManager->getTextures().get("marble_0013_color_4k.jpg"));
-        cube->GetRenderObject()->SetNormal(resourceManager->getTextures().get("marble_0013_normal_opengl_4k.png"));
-
-      
+        cube->GetRenderObject()->SetDefaultTexture(resourceManager->getTextures().get("marble_0013_color_1k.jpg"));
+        cube->GetRenderObject()->SetNormal(resourceManager->getTextures().get("marble_0013_normal_opengl_1k.png"));
     }
     cube->setType(data->type);
     HandleTypes(cube);
@@ -158,20 +156,20 @@ void LevelImporter::HandleTypes(GameObject* obj) {
     case 'J':   // Jump-Pads
         obj->GetRenderObject()->SetColour(Vector4(0.3f, 0.3f, 0.3f, 1));
         obj->GetRenderObject()->SetTexScaleMultiplier(0.0025f);
-        obj->GetRenderObject()->SetDefaultTexture(resourceManager->getTextures().get("metal_0082_color_4k.jpg"));
-        obj->GetRenderObject()->SetNormal(resourceManager->getTextures().get("metal_0082_normal_opengl_4k.png"));
+        obj->GetRenderObject()->SetDefaultTexture(resourceManager->getTextures().get("metal_0082_color_1k.jpg"));
+        obj->GetRenderObject()->SetNormal(resourceManager->getTextures().get("metal_0082_normal_opengl_1k.png"));
         break;
     case 'S':   // Slime
         obj->GetRenderObject()->SetColour(Vector4(0, 1, 0, 1));
         obj->GetRenderObject()->SetTexScaleMultiplier(0.0025f);
-        obj->GetRenderObject()->SetDefaultTexture(resourceManager->getTextures().get("others_0001_color_4k.jpg"));
-        obj->GetRenderObject()->SetNormal(resourceManager->getTextures().get("others_0001_normal_opengl_4k.png"));
+        obj->GetRenderObject()->SetDefaultTexture(resourceManager->getTextures().get("others_0001_color_1k.jpg"));
+        obj->GetRenderObject()->SetNormal(resourceManager->getTextures().get("others_0001_normal_opengl_1k.png"));
         break;
     case 'I':   // Ice
         obj->GetRenderObject()->SetColour(Vector4(1, 2.0f, 2.0f, 1));
         obj->GetRenderObject()->SetTexScaleMultiplier(0.005f);
-        obj->GetRenderObject()->SetDefaultTexture(resourceManager->getTextures().get("ground_0031_color_4k.jpg"));
-        obj->GetRenderObject()->SetNormal(resourceManager->getTextures().get("ground_0031_normal_opengl_4k.png"));
+        obj->GetRenderObject()->SetDefaultTexture(resourceManager->getTextures().get("ground_0031_color_1k.jpg"));
+        obj->GetRenderObject()->SetNormal(resourceManager->getTextures().get("ground_0031_normal_opengl_1k.png"));
         break;
     default:
         break;
