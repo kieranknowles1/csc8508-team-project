@@ -155,6 +155,7 @@ namespace NCL {
 			bool rollUse = false;
 			btIDebugDraw* debugDrawer;
 			bool onIce = false;
+			btVector3 previousVelocity;
 
 
 			Vector2 getDirectionalInput() const;

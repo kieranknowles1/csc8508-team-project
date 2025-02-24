@@ -112,7 +112,8 @@ void PlayerController::UpdateMovement(float dt) {
 
     // jump input
     if (controller->GetDigital(Controller::DigitalControl::Jump) && player->getCollided() && inAirTime <= 0) {
-      audioEngine.PlaySounds("jump.wav", NCL::Maths::Vector3(player->GetTransform().getOrigin()), 0.0f);
+        std::cout << "Jumping" << std::endl;
+        audioEngine.PlaySounds("jump.wav", NCL::Maths::Vector3(player->GetTransform().getOrigin()), 0.0f);
         btVector3 normal = FindFloorNormal();
         float dotProduct = normal.dot(upDirection.absolute());
         if (fabs(dotProduct <= 1)) {
@@ -120,12 +121,11 @@ void PlayerController::UpdateMovement(float dt) {
         }
         else {
             movement += (jumpHeight * upDirection);
-
         }
         player->setCollided(0);
         inAirTime = 0.2f;
     }
-
+    previousVelocity = rb->getLinearVelocity();
     rb->setLinearVelocity(movement);
     rb->activate();
   
@@ -375,18 +375,20 @@ void PlayerController::HandleTypes() {
         break;
     }
     case 'S': { // Slime
-        btVector3 normal = FindFloorNormal();
-        float dotProduct = normal.dot(upDirection.absolute());
-        if (fabs(dotProduct) > 1) {
-            normal = upDirection;
+        if (inAirTime <= 0) {
+            btVector3 normal = FindFloorNormal();
+            float dampening = 0.85f;
+            btVector3 reflectedVelocity = rb->getLinearVelocity() - (10 * previousVelocity.dot(normal) * normal);
+            if (fabs(10 * previousVelocity.dot(normal)) <= 0.25f) {
+                player->setCollided(1);
+                break;
+            }
+            else {
+                reflectedVelocity *= dampening;
+                inAirTime = 0.1f;
+                rb->applyCentralImpulse(reflectedVelocity);
+            }
         }
-        btVector3 velocity = rb->getLinearVelocity();
-        float dampening = 0.95f;
-        btVector3 reflectedVelocity = velocity + (1000 * normal);
-        reflectedVelocity *= dampening; 
-        player->setCollided(0);
-        inAirTime = 0.2f;
-        rb->applyCentralImpulse(reflectedVelocity);
         break;
     }
     case 'I': {// Ice
