@@ -20,10 +20,17 @@ namespace NCL {
 		class BulletDebug;
 
 		class TutorialGame {
+		private:
+			static TutorialGame* instance;
+
 		public:
 			// Physics update frequency, in hertz
 			const static constexpr float PHYSICS_PERIOD = 1.0f / 60.0f;
 
+			static TutorialGame* getInstance() {
+				assert(instance && "TutorialGame is not initialised");
+				return instance;
+			}
 
 			TutorialGame(GameTechRendererInterface* renderer, GameWorld* world, Controller* controller);
 			~TutorialGame();

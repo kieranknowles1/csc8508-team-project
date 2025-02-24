@@ -18,6 +18,9 @@ TutorialGame::TutorialGame(GameTechRendererInterface* renderer, GameWorld* world
 	, controller(controller)
 	, world(world)
 {
+	assert(instance == nullptr && "TutorialGame must be unique");
+	instance = this;
+
 	/* Initializing the Bullet Physics World here as it should be done before Initialize the NCL framework's PhysicsSystem */
 	//InitBullet(); //bullet is initialised in initialiseAssets already
 	world->GetMainCamera().SetController(controller);
@@ -43,6 +46,7 @@ void TutorialGame::InitialiseAssets() {
 }
 
 TutorialGame::~TutorialGame()	{
+	instance = nullptr;
 	DestroyBullet();
 	audioEngine.Shutdown();
 
