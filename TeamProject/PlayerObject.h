@@ -15,77 +15,16 @@ using namespace NCL::CSC8503;
 // Paintball class derived from GameObject
 class PlayerObject : public GameObject {
 public:
-	void OnCollisionEnter(const CollisionInfo& collisionInfo) override {
-		if (collisionInfo.otherObject->getIsPaintball()) return;
-		btVector3 playerPos = this->GetPhysicsObject()->GetRigidBody()->getWorldTransform().getOrigin();
-		btVector3 objPos = collisionInfo.contactPointA;
-		btVector3 direction = (objPos - playerPos).normalized();
-		float dot = direction.dot(-upDirection);
-		float angle = acos(dot) * (180.0f / SIMD_PI);
-		if (angle <= 25.0f) {
-			collided++;
-			collidedObjects.push_back(collisionInfo.otherObject);
-		}
-
-		// set special type collision
-		collisionType = collisionInfo.otherObject->getType();
-	}
-
-
-	void OnCollisionExit(const CollisionInfo& collisionInfo) override {
-		if (collisionInfo.otherObject->getIsPaintball()) return;
-		auto it = std::find(collidedObjects.begin(), collidedObjects.end(), collisionInfo.otherObject);
-		if (it != collidedObjects.end()) {
-			collidedObjects.erase(it);
-			if (collided > 0) {
-				collided--;
-			}
-		}
-	}
-
-	void OnCollisionStay(const CollisionInfo& collision) override {
-		if (collision.otherObject->getIsPaintball()) return;
-		btVector3 playerPos = this->GetPhysicsObject()->GetRigidBody()->getWorldTransform().getOrigin();
-		btVector3 objPos = collision.contactPointA;
-		btVector3 direction = (objPos - playerPos).normalized();
-		float dot = direction.dot(-upDirection);
-		float angle = acos(dot) * (180.0f / SIMD_PI);
-		auto it = std::find(collidedObjects.begin(), collidedObjects.end(), collision.otherObject);
-		if (it != collidedObjects.end()) { // contains already
-			if (angle > 25.0f) { // now too steep for floor
-				collidedObjects.erase(it);
-				if (collided > 0) {
-					collided--;
-				}
-			}
-		}
-		else { // not counted as floor yet
-			if (angle <= 25.0f) {
-				collided++;
-				collidedObjects.push_back(collision.otherObject);
-			}
-		}
-		collisionType = collision.otherObject->getType();
-	}
-
-	char getType() {
-		return collisionType;
-	}
-	void resetType() {
-		collisionType = 'N'; //type None
-	}
-	void setCollided(int collidedIn) {
-		collided = collidedIn;
-	}
-	int getCollided() {
-		return collided;
-	}
 	void setUpDirection(btVector3 upDirectionIn) {
 		upDirection = upDirectionIn;
 	};
+
+	GameObject* getGround(btDiscreteDynamicsWorld* world);
+	float getGroundRayOffset() { return groundRayOffset; };
 private:
-	int collided = 0;
+	// This + height
+	float groundRayOffset = 0.25f;
+
 	btVector3 upDirection;
 	std::list<GameObject*> collidedObjects;
-	char collisionType;
 };

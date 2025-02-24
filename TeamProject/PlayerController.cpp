@@ -30,6 +30,7 @@ btVector3 GetEulerAngles(btQuaternion quat) {
 
 
 void PlayerController::UpdateMovement(float dt) {
+    auto ground = inAirTime <= 0.0f ? player->getGround(bulletWorld) : nullptr;
     transformPlayer = rb->getWorldTransform();
     btPlayerPos = transformPlayer.getOrigin();
 
@@ -43,7 +44,9 @@ void PlayerController::UpdateMovement(float dt) {
     btVector3 rot = GetEulerAngles(camRotOffset);
     camera->setRotation(rot);
 
-    HandleTypes();
+    if (ground) {
+        HandleTypes(ground->getType());
+    }
 
     //sliding/floor detection
     HandleSliding(dt);
@@ -73,7 +76,7 @@ void PlayerController::UpdateMovement(float dt) {
     btVector3 right = rotationMatrix * btVector3(1, 0, 0);
 
     //if on ground, movement based on floor angle
-    if (player->getCollided() > 0) {
+    if (ground) {
         btVector3 groundNormal = FindFloorNormal();
         if (groundNormal != btVector3(0, 0, 0)) {
             float cosAngleThreshold = cos(btRadians(50.0f));
@@ -95,15 +98,15 @@ void PlayerController::UpdateMovement(float dt) {
     Vector2 directionalInput = getDirectionalInput();
     bool sprinting = controller->GetDigital(Controller::DigitalControl::Sprint);
     float forwardMovement = directionalInput.y;
-    float moveMulti = playerSpeed * (sprinting ? sprintMulti : 1) * (isCrouching ? crouchMulti : 1) * (player->getCollided() <= 0 ? airMulti : 1);
+    float moveMulti = playerSpeed * (sprinting ? sprintMulti : 1) * (isCrouching ? crouchMulti : 1) * (ground ? 1 : airMulti);
     forwardMovement *= (forwardMovement <= 0) ? backwardsMulti : 1;
     btVector3 movement = (right * directionalInput.x * strafeMulti * moveMulti ) +(forward * forwardMovement * moveMulti);
 
     if (inAirTime > 0) {
-        player->setCollided(0);
         inAirTime -= dt;
     }
-    if (player->getCollided() <= 0 || onIce) {
+    // inAirTime may have been set by a bounce pad
+    if (!ground || ground->getType() == 'I' || inAirTime > 0.0f) {
         movement *= (airMulti*dt);
         movement += rb->getLinearVelocity();
     }
@@ -111,7 +114,7 @@ void PlayerController::UpdateMovement(float dt) {
     movement += upDirection * -(gravityScale * dt);
 
     // jump input
-    if (controller->GetDigital(Controller::DigitalControl::Jump) && player->getCollided() && inAirTime <= 0) {
+    if (controller->GetDigital(Controller::DigitalControl::Jump) && ground && inAirTime <= 0) {
       audioEngine.PlaySounds("jump.wav", NCL::Maths::Vector3(player->GetTransform().getOrigin()), 0.0f);
         btVector3 normal = FindFloorNormal();
         float dotProduct = normal.dot(upDirection.absolute());
@@ -122,13 +125,12 @@ void PlayerController::UpdateMovement(float dt) {
             movement += (jumpHeight * upDirection);
 
         }
-        player->setCollided(0);
         inAirTime = 0.2f;
     }
 
     rb->setLinearVelocity(movement);
     rb->activate();
-  
+
 }
 
 
@@ -291,7 +293,8 @@ bool PlayerController::CheckCeling() {
 // finds surface normal of floor below
 btVector3 PlayerController::FindFloorNormal() {
     btVector3 btBelowPlayerPos = btPlayerPos;
-    btBelowPlayerPos -= (upDirection * 16);
+    auto shape = (btCapsuleShape*)player->GetPhysicsObject()->GetRigidBody()->getCollisionShape();
+    btBelowPlayerPos -= upDirection * (shape->getHalfHeight() + shape->getRadius() + player->getGroundRayOffset());
     btCollisionWorld::ClosestRayResultCallback callback(btPlayerPos, btBelowPlayerPos);
     bulletWorld->rayTest(btPlayerPos, btBelowPlayerPos, callback);
     if (callback.hasHit()) {
@@ -357,21 +360,13 @@ void PlayerController::HandleSliding(float dt) {
     }
 }
 
-void PlayerController::HandleTypes() {
-    switch (player->getType())
+void PlayerController::HandleTypes(char groundType) {
+    switch (groundType)
     {
-    case 'D': //Default
-        onIce = false;
-        break;
     case 'J': {//Jump-pads
-        btVector3 normal = FindFloorNormal();
-        float dotProduct = normal.dot(upDirection.absolute());
-        btVector3 movement = btVector3(0, 0, 0);
-        movement += (bouncePadHeight * FindFloorNormal());
-        rb->setLinearVelocity(btVector3(0, 0, 0));
-        player->setCollided(0);
+        btVector3 movement = bouncePadHeight * FindFloorNormal();
         inAirTime = 0.2f;
-        rb->applyCentralImpulse(movement);
+        rb->setLinearVelocity(movement);
         break;
     }
     case 'S': { // Slime
@@ -383,20 +378,14 @@ void PlayerController::HandleTypes() {
         btVector3 velocity = rb->getLinearVelocity();
         float dampening = 0.95f;
         btVector3 reflectedVelocity = velocity + (1000 * normal);
-        reflectedVelocity *= dampening; 
-        player->setCollided(0);
+        reflectedVelocity *= dampening;
         inAirTime = 0.2f;
         rb->applyCentralImpulse(reflectedVelocity);
-        break;
-    }
-    case 'I': {// Ice
-        onIce = true;
         break;
     }
     default:
         break;
     }
-    player->resetType();
 }
 
 
@@ -443,7 +432,7 @@ btVector3 PlayerController::CalculateUpDirection(float dt) {
 
 btVector3 PlayerController::CalculateRightDirection(btVector3 upDir) {
     btVector3 forward = btVector3(0, 0, 1);
-    if (fabs(upDir.dot(forward)) > 0.999f) { 
+    if (fabs(upDir.dot(forward)) > 0.999f) {
         forward = btVector3(0, 1, 0);
     }
     btVector3 rightDirection = upDir.cross(forward);
