@@ -206,6 +206,9 @@ void GameTechRenderer::RenderFrame() {
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, hdrTex);
 		glUniform1i(glGetUniformLocation(hdrShader->GetProgramID(), "hdrTex"), 0);
+		//glUniform2fv(glGetUniformLocation(hdrShader->GetProgramID(), "windowSize"), 1, (float*)&windowSize); //sending windowSize for vignette  This did not properly send windowSize to shader  
+		glUniform1f(glGetUniformLocation(hdrShader->GetProgramID(), "windowSizex"), windowSize.x); 
+		glUniform1f(glGetUniformLocation(hdrShader->GetProgramID(), "windowSizey"), windowSize.y);  
 		BindMesh(*hdrQuad);
 		DrawBoundMesh();
 	}
