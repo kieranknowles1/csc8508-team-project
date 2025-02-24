@@ -5,8 +5,8 @@ set(CMAKE_SYSTEM_VERSION 10.0 CACHE STRING "" FORCE)
 project(CSC8508)
 
 set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake;${CMAKE_MODULE_PATH}")
 set(FMOD_VERSION 2.02.26 CACHE STRING "" FORCE)
-
 
 option(USE_SDL2 "Use SDL2 for window creation and input" OFF)
 option(PS5_BUILD "Build for the PS5, also needs the options passed through configure-ps5" OFF)
@@ -32,6 +32,14 @@ if(NOT CMAKE_VS_PLATFORM_NAME)
     set(CMAKE_VS_PLATFORM_NAME "x64")
 endif()
 message("${CMAKE_VS_PLATFORM_NAME} architecture in use")
+
+if (PS5_BUILD)
+    set(RUNTIME_ASSET_PATH ${CMAKE_BINARY_DIR}/Assets)
+else()
+    set(RUNTIME_ASSET_PATH ${CMAKE_BINARY_DIR}/TeamProject/Assets)
+endif()
+
+include(copy_assets)
 
 ################################################################################
 # Use solution folders feature
