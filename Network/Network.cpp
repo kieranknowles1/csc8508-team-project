@@ -2,13 +2,13 @@
 
 #include "Network.hpp"
 
-Network::Network(int maxConnections) : m_maxConnections(maxConnections) {
+Network::Network(const ENetAddress* address, int maxConnections) : m_maxConnections(maxConnections) {
 	if (!enet_initialize()) {
 		SetErrored();
 		return;
 	}
 
-	m_host = enet_host_create(ENET_HOST_ANY, maxConnections, static_cast<int>(Channel::CHANNEL_COUNT), 0, 0);
+	m_host = enet_host_create(&address, maxConnections, static_cast<int>(Channel::CHANNEL_COUNT), 0, 0);
 	if (m_host == nullptr) {
 		SetErrored();
 		return;

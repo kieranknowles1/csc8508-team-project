@@ -121,7 +121,7 @@ enum class NetworkState {
 
 class Network {
 public:
-	Network(const ENetAddress& address, int maxConnections);
+	Network(const ENetAddress* address, int maxConnections);
 	~Network();
 
 	/**
