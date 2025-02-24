@@ -1,12 +1,13 @@
 #pragma once
 
+#include <algorithm>
 #include <cstdint>
 #include <memory>
 #include <unordered_map>
+#include <thread>
+#include <mutex>
 
 #include <./enet/enet.h>
-
-#include "Network.hpp"
 
 namespace Packet {
 	typedef uint16_t Type;
@@ -152,22 +153,31 @@ namespace Packet {
 	};
 
 
+	/**
+	 * @brief PacketBuffer class.
+	 * 
+	 * A threadsafe buffer for storing packets until they are processed.
+	 */
 	class PacketBuffer {
 	public:
-		PacketBuffer() {}
+		PacketBuffer(int size) : m_size(size) { m_packets = std::make_unique<Packet[]>(size); }
 
 		/**
 		 * @brief Insert a packet into the buffer.
 		 * @param item A buffer item.
-		 * 
+		 *
 		 * Inserts a packet into the buffer unless the buffer is full in which case
 		 * the packet will not be added..
 		 */
 		bool Insert(Packet item) {
 			// Drop packets when buffer is full.
 			if (!IsFull()) {
-				m_packets[m_numPackets++] = item;
-				std::push_heap(m_packets.begin(), m_packets.begin() + m_numPackets);
+
+				std::lock_guard<std::mutex> bufferLock(m_bufferMut);
+				std::lock_guard<std::mutex> totalLock(m_totalMut);
+
+				m_packets.get()[m_numPackets++] = item;
+				std::push_heap(Begin(), Begin() + m_numPackets);
 				return true;
 			}
 			return false;
@@ -181,28 +191,54 @@ namespace Packet {
 		Packet Pop() {
 			if (IsEmpty()) return Packet();
 
-			std::pop_heap(m_packets.begin(), m_packets.begin() + m_numPackets);
-			return m_packets[--m_numPackets];
+			std::lock_guard<std::mutex> bufferLock(m_bufferMut);
+			std::lock_guard<std::mutex> totalLock(m_totalMut);
+
+			std::pop_heap(Begin(), Begin() + m_numPackets);
+			return m_packets.get()[--m_numPackets];
 		}
 
 		/**
 		 * @brief Get the item that is at the head of the queue without removing.
-		 * @return The item at the front of the queue.
+		 * @return The item at the front of the queue or an empty packet if the
+		 *			buffer is empty.
 		 */
-		const Packet Peek() const {
+		inline Packet Peek() {
 			if (IsEmpty()) return Packet();
-			return m_packets[0];
+
+			std::lock_guard<std::mutex> lock(m_bufferMut);
+			return m_packets.get()[0];
 		}
 
-		bool IsEmpty() const { return m_numPackets <= 0; }
-		bool IsFull() const { return m_numPackets >= BUFFER_SIZE; }
+		/**
+		 * @brief Check if the buffer is empty.
+		 * @return True if the buffer is empty. Otherwise, false.
+		 */
+		inline bool IsEmpty() {
+			std::lock_guard<std::mutex> lock(m_totalMut);
+			return m_numPackets <= 0;
+		}
+
+		/**
+		 * @brief Check if the buffer is full.
+		 * @return True if the buffer is full. Otherwise, false.
+		 */
+		inline bool IsFull() {
+			std::lock_guard<std::mutex> lock(m_totalMut);
+			return m_numPackets >= m_size;
+		}
 
 	private:
+		inline Packet* Begin() { return m_packets.get(); }
+		inline Packet* End() { return m_packets.get() + m_size; }
+
+		std::mutex m_totalMut;
+		std::mutex m_bufferMut;
+
+		int m_size;
 		int m_numPackets = 0;
-		std::array<Packet, BUFFER_SIZE> m_packets;
+		std::unique_ptr<Packet[]> m_packets;
 	};
-
-
 }
 
 
