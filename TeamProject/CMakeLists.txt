@@ -32,7 +32,7 @@ file(GLOB_RECURSE FONTS "${ASSET_ROOT}/Fonts/*.fnt")
 file(GLOB_RECURSE LEVELS "${ASSET_ROOT}/Levels/*.json")
 file(GLOB_RECURSE MESHES "${ASSET_ROOT}/Meshes/*.msh")
 if (PS5_BUILD)
-    file(GLOB_RECURSE SHADERS "${ASSET_ROOT}/Shaders/PSSL/*")
+    file(GLOB_RECURSE SHADERS "${ASSET_ROOT}/Shaders/PSSL/*.pssl")
 else()
     file(GLOB_RECURSE SHADERS
         "${ASSET_ROOT}/Shaders/*.frag"
@@ -40,8 +40,8 @@ else()
     )
 endif()
 file(GLOB_RECURSE TEXTURES
+    "${ASSET_ROOT}/Textures/*.jpg"
     "${ASSET_ROOT}/Textures/*.png"
-    "${ASSET_ROOT}/Textures/*.tga"
     "${ASSET_ROOT}/Textures/*.dds"
 )
 set(ASSETS

@@ -5,4 +5,3 @@ popd
 
 @REM // FIXME: Manual steps required:
 @REM Copy assets to output
-@REM Copy sce_module to output
