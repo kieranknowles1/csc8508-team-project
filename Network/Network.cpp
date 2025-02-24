@@ -30,7 +30,7 @@ void Network::Start() {
 	if (m_state != NetworkState::OFF) return;
 
 	m_state = NetworkState::ON;
-	m_networkThread = std::thread(Network::Run, this);
+	m_networkThread = std::thread(&Network::Run, this);
 }
 
 
@@ -105,7 +105,7 @@ void Network::Tick(float dt) {
 				DisconnectPeer();
 				break;
 			case ENET_EVENT_TYPE_RECEIVE:
-				HandlePacket(event.packet);
+				HandleIncomingPacket(event.packet);
 				break;
 			}
 			enet_packet_destroy(event.packet);
