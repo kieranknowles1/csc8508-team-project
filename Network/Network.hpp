@@ -13,14 +13,11 @@
 // The rate at which packets will be sent and received.
 const float NETWORK_RATE = 1 / 60.0f; // Seconds
 
-// How long the server will wait for packets sent unreliably (in ticks).
-const float NETWORK_DELAY = 2; // Ticks (1 tick = 1 NETWORK_RATE)
-
 // How many packets to store before denying packets.
 const int BUFFER_SIZE = 1024;
 
-// How long to wait for a packet (enet_host_service).
-const float EVENT_WAIT = NETWORK_RATE * 0.5f; // Seconds
+// Default binding port.
+const int DEFAULT_PORT = 12345;
 
 
 /**
@@ -124,7 +121,7 @@ enum class NetworkState {
 
 class Network {
 public:
-	Network(int maxConnections);
+	Network(const ENetAddress& address, int maxConnections);
 	~Network();
 
 	/**
