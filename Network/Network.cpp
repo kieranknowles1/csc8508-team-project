@@ -55,6 +55,11 @@ void Network::Close() {
 }
 
 
+void Network::ConnectTo(const ENetAddress* destination) {
+	enet_host_connect(m_host, destination, static_cast<int>(Channel::CHANNEL_COUNT), 0);
+}
+
+
 void Network::Send(Packet::Packet packet) {
 	std::lock_guard<std::mutex> lock(m_sendMut);
 	m_sendBuffer.push_back(packet);

@@ -132,6 +132,7 @@ public:
 	void Start();
 	void Stop();
 	void Close();
+	void ConnectTo(const ENetAddress* destination);
 
 	void Send(Packet::Packet packet);
 	Packet::Packet Fetch();
