@@ -3,6 +3,7 @@
 
 #include "Network.hpp"
 
+using namespace std::chrono_literals;
 
 void TestPacketBuffer() {
 	Packet::Packet packet1 = Packet::Packet(1, 0, 0);
@@ -25,6 +26,37 @@ void TestPacketBuffer() {
 		std::cout << ConsoleTextColor::YELLOW << "Sequence Number: " << ConsoleTextColor::DEFAULT << packet.GetSequenceNumber() << std::endl;
 	}
 
+	ENetAddress destination;
+	enet_address_set_host(&destination, "127.0.0.1");
+	destination.port = DEFAULT_PORT;
+
+	std::vector<std::unique_ptr<Network>> clients;
+
+	ENetAddress serverAddr(ENET_HOST_ANY, DEFAULT_PORT);
+	Network server = Network(&serverAddr, 8);
+	server.Start();
+
+	std::cout << "Starting clients.\n";
+	for (int i = 0; i < 8; ++i) {
+		clients.push_back(std::make_unique<Network>(nullptr, 0));
+		if (clients[i].get()->GetState() == NetworkState::ERRORED) {
+			std::cout << "Client: " << i << " is broken.\n";
+		}
+		else {
+			clients[i]->Start();
+			clients[i]->ConnectTo(&destination);
+		}
+	}
+
+
+
+	std::this_thread::sleep_for(1000ms);
+
+	server.Close();
+	for (int i = 0; i < 8; ++i) {
+		clients[i].get()->Close();
+		std::cout << "joined.\n";
+	}
 }
 
 

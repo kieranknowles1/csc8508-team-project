@@ -160,7 +160,7 @@ namespace Packet {
 		PacketRegister() { if (packetRegister == nullptr) packetRegister = this; }
 
 		static inline PacketRegister* packetRegister = nullptr;
-		static std::unordered_map<Type, PacketHandler*, TypeHash> handlers;
+		static inline std::unordered_map<Type, PacketHandler*, TypeHash> handlers;
 	};
 
 

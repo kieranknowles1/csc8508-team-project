@@ -1,15 +1,18 @@
+#include <iostream>
 #include <chrono>
 
 #include "Network.hpp"
 
 Network::Network(const ENetAddress* address, int maxConnections) : m_maxConnections(maxConnections) {
-	if (!enet_initialize()) {
+	if (enet_initialize() != 0) {
+		std::cout << "enet failed\n";
 		SetErrored();
 		return;
 	}
 
 	m_host = enet_host_create(address, maxConnections, static_cast<int>(Channel::CHANNEL_COUNT), 0, 0);
 	if (m_host == nullptr) {
+		std::cout << "host creation failed.\n";
 		SetErrored();
 		return;
 	}
@@ -35,10 +38,13 @@ void Network::Start() {
 
 
 void Network::Stop() {
-	std::lock_guard<std::mutex> lock(m_stateMut);
-	if (!(m_state == NetworkState::ON)) return;
-
+	m_stateMut.lock();
+	if (!(m_state == NetworkState::ON)) {
+		m_stateMut.unlock();
+		return;
+	}
 	m_state = NetworkState::OFF;
+	m_stateMut.unlock();
 	m_networkThread.join();
 }
 
@@ -105,12 +111,15 @@ void Network::Tick(float dt) {
 			switch (event.type) {
 			case ENET_EVENT_TYPE_CONNECT:
 				if (!ConnectPeer()) enet_peer_disconnect(event.peer, 0);
+				std::cout << "Connection.\n";
 				break;
 			case ENET_EVENT_TYPE_DISCONNECT:
 				DisconnectPeer();
+				std::cout << "Disconnection.\n";
 				break;
 			case ENET_EVENT_TYPE_RECEIVE:
 				HandleIncomingPacket(event.packet);
+				std::cout << "Packet Received.\n";
 				break;
 			}
 			enet_packet_destroy(event.packet);
