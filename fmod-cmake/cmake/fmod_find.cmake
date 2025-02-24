@@ -147,8 +147,8 @@ macro(fmod_find_libs _PLATFORM_NAME _VERSION _FMOD_LIBS _FMOD_STUDIO_LIBS _FMOD_
             ${FMOD_LIB_ROOT}/fmodstudio${FMOD_LIB_TYPE}.dll
         )
     elseif(CMAKE_SYSTEM_NAME MATCHES "Linux")
-        set(${_FMOD_LIBS}        ${FMOD_LIB_ROOT}/libfmod${FMOD_LIB_TYPE}.so)
-        set(${_FMOD_STUDIO_LIBS} ${FMOD_LIB_ROOT}/libfmodstudio${FMOD_LIB_TYPE}.so)
+        set(${_FMOD_LIBS}        ${FMOD_SDK_PATH}/core/lib/x86_64/libfmod${FMOD_LIB_TYPE}.so)
+        set(${_FMOD_STUDIO_LIBS} ${FMOD_SDK_PATH}/studio/lib/x86_64/libfmodstudio${FMOD_LIB_TYPE}.so)
     elseif(ANDROID)
         set(${_FMOD_LIBS}        ${FMOD_LIB_ROOT}/fmod${FMOD_LIB_TYPE}.so)
         set(${_FMOD_STUDIO_LIBS} ${FMOD_LIB_ROOT}/fmodstudio${FMOD_LIB_TYPE}.so)
@@ -161,14 +161,18 @@ macro(fmod_find_libs _PLATFORM_NAME _VERSION _FMOD_LIBS _FMOD_STUDIO_LIBS _FMOD_
             set(${_FMOD_STUDIO_LIBS} ${FMOD_LIB_ROOT}/fmodstudioL_wasm.a)
         endif()
     elseif(PS5_BUILD)
-        set(FMOD_LIB_ROOT ${FMOD_SDK_PATH})
-        set(${_FMOD_LIBS} ${FMOD_LIB_ROOT}/core/lib/libfmod${FMOD_LIB_TYPE}_stub_weak.a)
-        set(${_FMOD_STUDIO_LIBS} ${FMOD_LIB_ROOT}/studio/lib/libfmodstudio${FMOD_LIB_TYPE}_stub_weak.a)
+        set(${_FMOD_LIBS} ${FMOD_SDK_PATH}/core/lib/libfmod${FMOD_LIB_TYPE}_stub_weak.a)
+        set(${_FMOD_STUDIO_LIBS} ${FMOD_SDK_PATH}/studio/lib/libfmodstudio${FMOD_LIB_TYPE}_stub_weak.a)
         set(${_FMOD_DLLS}
-            ${FMOD_LIB_ROOT}/core/lib/libfmod${FMOD_LIB_TYPE}.prx
-            ${FMOD_LIB_ROOT}/studio/lib/libfmodstudio${FMOD_LIB_TYPE}.prx
+            ${FMOD_SDK_PATH}/core/lib/libfmod${FMOD_LIB_TYPE}.prx
+            ${FMOD_SDK_PATH}/studio/lib/libfmodstudio${FMOD_LIB_TYPE}.prx
         )
-
     endif()
     message("Using fmod libs ${${_FMOD_LIBS}}, ${${_FMOD_STUDIO_LIBS}}")
+    if (NOT EXISTS ${${_FMOD_LIBS}})
+        message(WARNING "Could not find FMOD lib")
+    endif()
+    if (NOT EXISTS ${${_FMOD_STUDIO_LIBS}})
+        message(WARNING "Could not find FMOD studio lib")
+    endif()
 endmacro()
