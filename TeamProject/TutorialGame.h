@@ -1,18 +1,17 @@
+#pragma once
+
 #include "../NCLCoreClasses/KeyboardMouseController.h"
 
-#pragma once
-#include "GameTechRenderer.h"
-#ifdef USEVULKAN
-#include "GameTechVulkanRenderer.h"
-#endif
-
+#include "GameTechRendererInterface.h"
 #include "ResourceManager.h"
 
 #include "LevelImporter.h"
-#include "StateGameObject.h"
 #include "PlayerController.h"
 #include "PlayerObject.h"
 #include "Turret.h"
+#include "NavMesh.h"
+#include "Profiler.h"
+
 
 #include <btBulletDynamicsCommon.h>
 
@@ -26,7 +25,7 @@ namespace NCL {
 			const static constexpr float PHYSICS_PERIOD = 1.0f / 60.0f;
 
 
-			TutorialGame();
+			TutorialGame(GameTechRendererInterface* renderer, GameWorld* world, Controller* controller);
 			~TutorialGame();
 
 			virtual void UpdateGame(float dt);
@@ -39,9 +38,13 @@ namespace NCL {
 			void ThirdPersonControls();
 			void InitWorld();
 
+
+			void UpdatePlayer(float dt);
+
+
 			Turret* AddTurretToWorld();
 
-			GameObject* AddFloorToWorld(const Vector3& position, const Vector3& size, const Vector3& rotation, bool isFloor);
+			GameObject* AddFloorToWorld(const Vector3& position, const Vector3& size, const Vector3& rotation);
 			GameObject* AddSphereToWorld(const Vector3& position, float radius, float inverseMass = 10.0f);
 			GameObject* AddCubeToWorld(const Vector3& position, Vector3 dimensions, float inverseMass = 10.0f,bool hasCollision = true);
 			PlayerObject* AddPlayerCapsuleToWorld(const Vector3& position, float halfHeight, float radius, float inverseMass = 10.0f);
@@ -50,18 +53,15 @@ namespace NCL {
 			GameObject* AddInfinitePlaneToWorld(const Vector3& position, const Vector3& normal, float planeConstant);
 
 			std::unique_ptr<ResourceManager> resourceManager;
+			bool showProfiling = false;
+			Profiler profiler;
 
-#ifdef USEVULKAN
-			GameTechVulkanRenderer* renderer;
-#else
-			GameTechRenderer* renderer;
-#endif
+			GameTechRendererInterface* renderer;
 			GameWorld* world;
 
-			KeyboardMouseController controller;
+			Controller* controller;
 
 			std::shared_ptr<Texture> defaultTexture;
-			std::shared_ptr<Shader> defaultShader;
 
 			//Coursework Additional functionality
 			GameObject* lockedObject	= nullptr;
@@ -82,6 +82,7 @@ namespace NCL {
 
 			BulletDebug* bulletDebug = nullptr;
 
+			void CheckCollisions();
 			void DestroyBullet();
 			void InitBullet(); // Initialises the Bullet physics world
 
@@ -105,6 +106,9 @@ namespace NCL {
 			//Level import
 			LevelImporter* levelImporter;
 			bool loadFromLevel;
+
+
+			NavMesh* navMesh;
 		};
 	}
 }

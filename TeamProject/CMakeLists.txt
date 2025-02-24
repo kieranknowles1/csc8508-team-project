@@ -1,15 +1,7 @@
 set(SOURCES
     BulletDebug.cpp
     BulletDebug.h
-    GameTechRenderer.cpp
-    GameTechRenderer.h
-    main.cpp
-    NetworkedGame.cpp
-    NetworkedGame.h
-    NetworkPlayer.cpp
-    NetworkPlayer.h
-    StateGameObject.cpp
-    StateGameObject.h
+    GameTechRendererInterface.h
     TutorialGame.cpp
     TutorialGame.h
     PlayerController.cpp
@@ -21,30 +13,62 @@ set(SOURCES
 	BWHelperFunctions.cpp
     LevelImporter.cpp
     LevelImporter.h
+	NavMesh.h
+	NavMesh.cpp
     ResourceManager.h
     ResourceManager.cpp
+    Profiler.h
+    Profiler.cpp
+	AudioEngine.h
+	AudioEngine.cpp
+    Config.h
+    Config.cpp
 )
 
-set(COMPILED_MESHES
-    Capsule.msh
-    Plane.msh
-    Cube.msh
-    Sphere.msh
-    ORIGAMI_Chat.msh
-    Kitten.msh
-    Keeper.msh
-    19463_Kitten_Head_v1.msh
-    /Max/Rig_Maximilian.msh
-    /MaleGuard/Male_Guard.msh
-    /FemaleGuard/Female_Guard.msh
+set(ASSET_ROOT "${CMAKE_SOURCE_DIR}/Assets")
+file(GLOB_RECURSE AUDIO "${ASSET_ROOT}/Audio/*.wav")
+file(GLOB_RECURSE DATA "${ASSET_ROOT}/Data/*")
+file(GLOB_RECURSE FONTS "${ASSET_ROOT}/Fonts/*.fnt")
+file(GLOB_RECURSE LEVELS "${ASSET_ROOT}/Levels/*.json")
+file(GLOB_RECURSE MESHES "${ASSET_ROOT}/Meshes/*.msh")
+if (PS5_BUILD)
+    file(GLOB_RECURSE SHADERS "${ASSET_ROOT}/Shaders/PSSL/*.pssl")
+else()
+    file(GLOB_RECURSE SHADERS
+        "${ASSET_ROOT}/Shaders/*.frag"
+        "${ASSET_ROOT}/Shaders/*.vert"
+    )
+endif()
+file(GLOB_RECURSE TEXTURES
+    "${ASSET_ROOT}/Textures/*.jpg"
+    "${ASSET_ROOT}/Textures/*.png"
+    "${ASSET_ROOT}/Textures/*.dds"
+)
+set(ASSETS
+    ${AUDIO}
+    ${DATA}
+    ${FONTS}
+    ${LEVELS}
+    ${MESHES}
+    ${SHADERS}
+    ${TEXTURES}
 )
 
-add_executable(${PROJECT_NAME} ${SOURCES})
-add_dependencies(${PROJECT_NAME} MeshCompiler)
+if(NOT PS5_BUILD)
+    list(APPEND SOURCES
+        main.cpp
+        GameTechRenderer.cpp
+        GameTechRenderer.h
+    )
+    add_executable(${PROJECT_NAME} ${SOURCES})
+else()
+    # There is quite a bit of extra work for PS5 builds,
+    # so this is split into PS5Starter where we link against
+    # the main game statically
+    add_library(${PROJECT_NAME} STATIC ${SOURCES})
+endif()
+copy_assets(${RUNTIME_ASSET_PATH} ${ASSET_ROOT} ${PROJECT_NAME} ${ASSETS})
 
-set_target_properties(${PROJECT_NAME} PROPERTIES
-    VS_GLOBAL_KEYWORD "Win32Proj"
-)
 set_target_properties(${PROJECT_NAME} PROPERTIES
     INTERPROCEDURAL_OPTIMIZATION_RELEASE "TRUE"
 )
@@ -78,7 +102,6 @@ target_precompile_headers(${PROJECT_NAME} PRIVATE
     <sstream>
 
     "../NCLCoreClasses/Vector.h"
-    "../NCLCoreClasses/Quaternion.h"
     "../NCLCoreClasses/Plane.h"
     "../NCLCoreClasses/Matrix.h"
     "../NCLCoreClasses/GameTimer.h"
@@ -89,7 +112,7 @@ target_precompile_headers(${PROJECT_NAME} PRIVATE
 ################################################################################
 if(MSVC)
     # Required for enet
-    target_link_libraries(${PROJECT_NAME} "Winmm.lib")
+    target_link_libraries(${PROJECT_NAME} PUBLIC "Winmm.lib")
 endif()
 
 set(INCLUDE_DIRECTORIES
@@ -98,32 +121,35 @@ set(INCLUDE_DIRECTORIES
 	${CMAKE_SOURCE_DIR}/CSC8503CoreClasses/
     ${CMAKE_SOURCE_DIR}/TeamProject/
     ${CMAKE_SOURCE_DIR}/Network/
+    ${CMAKE_SOURCE_DIR}
 )
 
 target_include_directories(${PROJECT_NAME} PRIVATE ${INCLUDE_DIRECTORIES}>)
 
-target_link_libraries(${PROJECT_NAME} NCLCoreClasses)
-target_link_libraries(${PROJECT_NAME} CSC8503CoreClasses)
-target_link_libraries(${PROJECT_NAME} OpenGLRendering)
-target_link_libraries(${PROJECT_NAME} NetworkLib)
-target_link_libraries(${PROJECT_NAME} ${BULLET_LIBRARIES})
-target_link_libraries(${PROJECT_NAME} nlohmann_json::nlohmann_json)
+target_link_libraries(${PROJECT_NAME} PUBLIC NCLCoreClasses)
+target_link_libraries(${PROJECT_NAME} PUBLIC CSC8503CoreClasses)
+if(NOT PS5_BUILD)
+    target_link_libraries(${PROJECT_NAME} PUBLIC OpenGLRendering)
+    # TODO: PS5 Support
+    target_link_libraries(${PROJECT_NAME} PUBLIC NetworkLib)
+endif()
+target_link_libraries(${PROJECT_NAME} PUBLIC ${BULLET_LIBRARIES})
+target_link_libraries(${PROJECT_NAME} PUBLIC nlohmann_json::nlohmann_json)
+target_link_libraries(${PROJECT_NAME} PUBLIC fmod)
+target_link_libraries(${PROJECT_NAME} PUBLIC fmodstudio)
+fmod_copy_libs(${PROJECT_NAME})
 
-target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR})
-set_target_properties(${PROJECT_NAME} PROPERTIES
-    VS_DEBUGGER_WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
-)
+target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_SOURCE_DIR})
+target_include_directories(${PROJECT_NAME} PUBLIC ${BULLET_INCLUDE_DIRS})
 
-foreach(file ${COMPILED_MESHES})
-    set(out "${CMAKE_SOURCE_DIR}/Assets/Meshes/${file}b")
-    add_custom_command(
-        OUTPUT ${out}
-        COMMAND MeshCompiler ${file} ${out}
-        DEPENDS "${CMAKE_SOURCE_DIR}/Assets/Meshes/${file}" MeshCompiler
-        COMMENT "Compiling mesh ${file}"
-        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+if(WIN32)
+    set_target_properties(${PROJECT_NAME} PROPERTIES
+        VS_DEBUGGER_WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
     )
-    list(APPEND PROCESSED_MESHES ${out})
-endforeach()
-add_custom_target(ProcessMeshes ALL DEPENDS ${PROCESSED_MESHES})
-add_dependencies(${PROJECT_NAME} ProcessMeshes)
+    set(outdir ${CMAKE_CURRENT_BINARY_DIR})
+    # Don't create an extra `Debug/Release` directory for executables
+    set_target_properties(${PROJECT_NAME} PROPERTIES RUNTIME_OUTPUT_DIRECTORY_DEBUG ${outdir})
+    set_target_properties(${PROJECT_NAME} PROPERTIES RUNTIME_OUTPUT_DIRECTORY_MINSIZEREL ${outdir})
+    set_target_properties(${PROJECT_NAME} PROPERTIES RUNTIME_OUTPUT_DIRECTORY_RELEASE ${outdir})
+    set_target_properties(${PROJECT_NAME} PROPERTIES RUNTIME_OUTPUT_DIRECTORY_RELWITHDEBINFO ${outdir})
+endif()

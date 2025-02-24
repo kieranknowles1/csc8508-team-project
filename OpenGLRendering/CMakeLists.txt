@@ -60,7 +60,6 @@ target_precompile_headers(${PROJECT_NAME} PRIVATE
 
     <NCLCoreClasses/Vector.h>
     <NCLCoreClasses/Matrix.h>
-    <NCLCoreClasses/Quaternion.h>
 )
 
 target_include_directories (${PROJECT_NAME}

@@ -20,7 +20,6 @@ namespace NCL {
 
 			// Add Bullet-specific methods
 			void InitBulletPhysics(btDynamicsWorld* world, btCollisionShape* shape, float mass, bool collide=true);
-			void InitBulletPhysics(btDynamicsWorld* world, btCompoundShape* compoundShape, float mass, bool collide = true);
 			void removeFromBullet(btDynamicsWorld* world);
 			btRigidBody* GetRigidBody() { return rigidBody; }
 

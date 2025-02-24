@@ -1,23 +1,32 @@
 #pragma once
+
+#ifdef __PROSPERO__
+#error GameTechRenderer.h cannot be included on PS5
+#endif
+
+#include <memory>
+
 #include "OGLRenderer.h"
 #include "OGLShader.h"
 #include "OGLTexture.h"
 #include "OGLMesh.h"
 
 #include "GameWorld.h"
+#include "GameTechRendererInterface.h"
 
 namespace NCL {
 	namespace CSC8503 {
 		class RenderObject;
 
-		class GameTechRenderer : public OGLRenderer	{
+		class GameTechRenderer
+			: public OGLRenderer
+			, public GameTechRendererInterface {
 		public:
-			GameTechRenderer(GameWorld& world);
+			GameTechRenderer(GameWorld* world);
 			~GameTechRenderer();
 
-			Mesh*		LoadMesh(const std::string& name);
-			Texture*	LoadTexture(const std::string& name);
-			Shader*		LoadShader(const std::string& vertex, const std::string& fragment);
+			Mesh* LoadMesh(const std::string& name) override;
+			Texture* LoadTexture(const std::string& name) override;
 
 		protected:
 			void NewRenderLines();
@@ -26,9 +35,7 @@ namespace NCL {
 
 			void RenderFrame()	override;
 
-			OGLShader*		defaultShader;
-
-			GameWorld&	gameWorld;
+			GameWorld*	gameWorld;
 
 			void BuildObjectList();
 			void SortObjectList();
@@ -45,19 +52,20 @@ namespace NCL {
 
 			std::vector<const RenderObject*> activeObjects;
 
-			OGLShader*  debugShader;
-			OGLShader*  skyboxShader;
-			OGLMesh*	skyboxMesh;
-			OGLMesh*	debugTexMesh;
+			std::unique_ptr<OGLShader> sceneShader;
+			std::unique_ptr<OGLShader> debugShader;
+			std::unique_ptr<OGLShader> skyboxShader;
+			std::unique_ptr<OGLMesh> skyboxMesh;
+			std::unique_ptr<OGLMesh> debugTexMesh;
 			GLuint		skyboxTex;
 
 			GLuint crosshairVAO;
 			GLuint crosshairVBO;
 			GLuint crosshairEBO;
-			OGLShader* crosshairShader; //This line Ameya added for crosshair
+			std::unique_ptr<OGLShader> crosshairShader; //This line Ameya added for crosshair
 
 			//shadow mapping things
-			OGLShader*	shadowShader;
+			std::unique_ptr<OGLShader> shadowShader;
 			GLuint		shadowTex;
 			GLuint		shadowFBO;
 			Matrix4     shadowMatrix;
@@ -82,6 +90,13 @@ namespace NCL {
 			GLuint textColourVBO;
 			GLuint textTexVBO;
 			size_t textCount = 0;
+
+			//Post processing additions:
+			GLuint hdrTex;
+			GLuint hdrFBO;
+			GLuint hdrDepthTex;
+			OGLMesh* hdrQuad;
+			OGLShader* hdrShader;
 		};
 	}
 }

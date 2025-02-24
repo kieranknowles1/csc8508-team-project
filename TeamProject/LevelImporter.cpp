@@ -1,9 +1,42 @@
 #include "LevelImporter.h"
 
+#include <nlohmann/json.hpp>
+
 using namespace NCL;
 using namespace CSC8503;
 
 using json = nlohmann::json;
+
+// Custom from_json functions for btVector3 and btQuaternion
+inline void from_json(const json& j, btVector3& vec) {
+    vec.setX(j.at("x").get<float>());
+    vec.setY(j.at("y").get<float>());
+    vec.setZ(j.at("z").get<float>());
+}
+
+inline void from_json(const json& j, btQuaternion& quat) {
+    quat.setX(j.at("x").get<float>());
+    quat.setY(j.at("y").get<float>());
+    quat.setZ(j.at("z").get<float>());
+    quat.setW(j.at("w").get<float>());
+}
+
+void from_json(const json& j, ObjectData& obj) {
+    j.at("position").get_to(obj.position);
+    j.at("rotation").get_to(obj.rotation);
+    j.at("scale").get_to(obj.scale);
+    j.at("colliderPosition").get_to(obj.colliderPosition);
+    j.at("colliderScale").get_to(obj.colliderScale);
+    j.at("meshName").get_to(obj.meshName);
+    // TODO: This should be done during export
+    auto colon = obj.meshName.find(":");
+    if (colon != std::string::npos) {
+        obj.meshName.replace(colon, 1, "/");
+    }
+    j.at("mainTextureName").get_to(obj.mainTextureName);
+    j.at("normalTextureName").get_to(obj.normalTextureName);
+    j.at("type").get_to(obj.type);
+}
 
 LevelImporter::LevelImporter(ResourceManager* resourceManager, GameWorld* worldIn, btDiscreteDynamicsWorld* bulletWorldIn) {
     this->resourceManager = resourceManager;
@@ -34,16 +67,10 @@ void LevelImporter::LoadLevel(int level) {
 
     std::string line;
     while (std::getline(file, line)) {
-        try {
-            json j = json::parse(line);
-            ObjectData* obj = new ObjectData();
-            j.get_to(*obj);
-            objects.push_back(obj);
-        }
-        catch (const json::exception& e) {
-            std::cerr << "Error parsing JSON line: " << e.what() << std::endl;
-            std::cerr << "Line content: " << line << std::endl;
-        }
+        json j = json::parse(line);
+        ObjectData* obj = new ObjectData();
+        j.get_to(*obj);
+        objects.push_back(obj);
     }
 
     file.close();
@@ -65,6 +92,7 @@ void LevelImporter::LoadLevel(int level) {
 
     // Immediately free anything not needed by the new scene that was loaded for the old one
     resourceManager->collectGarbage();
+    std::cout << "Loaded level " << level << "; Contained " << count << " GameObjects" << std::endl;
 }
 
 void LevelImporter::AddObjectToWorld(ObjectData* data) {
@@ -72,64 +100,65 @@ void LevelImporter::AddObjectToWorld(ObjectData* data) {
 
     // Initializing variables for meshes and textures
     Mesh* selectedMesh = nullptr;
+    // TODO: Don't hard code this
     bool isFloor = data->meshName == "corridor_walls_and_floor/Corridor_Floor_Basic";
+	cube->setInitialPosition(data->position * scale);
 
-	// If not a floor, apply an offset to move the floor up/down
-    Vector3 position = data->position * scale;
-    if (!isFloor) {
-        position.y -= 8.0f;
-    }
-	cube->setInitialPosition(position);
-
-    btVector3 eulerRotation = btVector3(data->rotation.getX(), data->rotation.getY(), data->rotation.getZ());
-    if (data->meshName == "corridor_walls_and_floor/corridor_Wall_Straight_Mid_end_L") {
-        eulerRotation.setX(eulerRotation.getX() - 90);
-    }
-
-    float pitchRadians = Maths::DegreesToRadians(eulerRotation.x());
-    float yawRadians = Maths::DegreesToRadians(eulerRotation.y());
-    float rollRadians = Maths::DegreesToRadians(eulerRotation.z());
-    btQuaternion rotationQuat;
-    rotationQuat.setEulerZYX(rollRadians, yawRadians, pitchRadians);
-    cube->setInitialRotation(Quaternion(rotationQuat.getX(), rotationQuat.getY(), rotationQuat.getZ(), rotationQuat.getW()));
+    cube->setInitialRotation(data->rotation);
     cube->setRenderScale(data->scale* scale);
 
 
-    btCollisionShape* boxShape;
-    if (data->meshName == "corridor_walls_and_floor/corridor_Wall_Straight_Mid_end_L") {
-        boxShape = new btBoxShape(btVector3(data->colliderScale.getX() / 2.0f, data->colliderScale.getZ() / 2.0f, data->colliderScale.getY() / 2.0f)* scale);
+    // Divide by 2 for half-size
+    btCompoundShape* compoundShape = new btCompoundShape();
+    bool hasCollision = (data->colliderScale != btVector3(0,0,0));
+    if (hasCollision) {
+        btCollisionShape* boxShape = new btBoxShape(data->colliderScale * scale* data->scale / 2.0f);
+        btTransform colliderOffset;
+        colliderOffset.setIdentity();
+        colliderOffset.setOrigin(data->colliderPosition * scale);
+        compoundShape->addChildShape(colliderOffset, boxShape);
     }
-    else {
-        boxShape = new btBoxShape(btVector3(data->colliderScale.getX() / 2.0f, data->colliderScale.getY() / 2.0f, data->colliderScale.getZ() / 2.0f)* scale);
-    }
-
-    // The object is penetrating the floor a bit, so I reduced the bullet collision margin to avoid sinking in the floor
-    boxShape->setMargin(0.01f);
-
-	btCompoundShape* compoundShape = new btCompoundShape();
-    btTransform colliderOffset;
-	colliderOffset.setIdentity();
-
-    // Check if it's a floor or not and apply the offset to the collider upward to align it with the mesh
-    if (!isFloor) {
-        colliderOffset.setOrigin(btVector3(0, (data->colliderPosition.getY() / 2.0f * scale) + 27, data->colliderScale.getZ() - 10.5));
-    }
-    else {
-        colliderOffset.setOrigin(btVector3(0, data->colliderPosition.getY(), 0));  // No offset for floor
-    }
-
-	compoundShape->addChildShape(colliderOffset, boxShape);
-
-    // Setting the physics object for the cube
     cube->SetPhysicsObject(new PhysicsObject(cube));
-    cube->GetPhysicsObject()->InitBulletPhysics(bulletWorld, compoundShape, 0, true);
+    cube->GetPhysicsObject()->InitBulletPhysics(bulletWorld, compoundShape, 0, hasCollision);
+
+
     // Setting render object
-
-    // TODO: Use null instead of magic
-    // TODO: Include extensions
-    auto texture = data->mainTextureName == "No Texture" ? nullptr : resourceManager->getTextures().get(data->mainTextureName + ".tga");
-    cube->SetRenderObject(new RenderObject(cube, resourceManager->getMeshes().get(data->meshName + ".msh"), texture, resourceManager->getShaders().get(Shader::Default)));
+    // TODO: Include file extensions
+    auto optionalTexture = [&](const std::string& tex) {
+        return tex.empty() ? resourceManager->getTextures().get("checkerboard.png") : resourceManager->getTextures().get(tex + ".tga");
+    };
+    cube->SetRenderObject(new RenderObject(
+        cube,
+        resourceManager->getMeshes().get(data->meshName + ".msh"),
+        optionalTexture(data->mainTextureName),
+        optionalTexture(data->normalTextureName)
+    ));
     world->AddGameObject(cube);
+    cube->GetRenderObject()->SetColour(Vector4(0.75f, 0.75f, 0.75f, 1.0f));
+    cube->GetRenderObject()->SetTexRepeating(true);//sets texture to repeat and scale
+    if (data->meshName == "Quad") {
+        cube->GetRenderObject()->SetTexScaleMultiplier(0.005f);
+    }
+    cube->setType(data->type);
+    HandleTypes(cube);
+}
 
-    cube->setIsFloor(true);
+
+void LevelImporter::HandleTypes(GameObject* obj) {
+    switch (obj->getType())
+    {
+    case 'D':    // Default
+        break;
+    case 'J':   // Jump-Pads
+        obj->GetRenderObject()->SetColour(Vector4(1000, 0, 1000, 1));
+        break;
+    case 'S':   // Slime
+        obj->GetRenderObject()->SetColour(Vector4(0, 1000, 0, 1));
+        break;
+    case 'I':   // Ice
+        obj->GetRenderObject()->SetColour(Vector4(0, 100, 100, 1));
+        break;
+    default:
+        break;
+    }
 }
