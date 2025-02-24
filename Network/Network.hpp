@@ -127,6 +127,11 @@ public:
 	Network(int maxConnections);
 	~Network();
 
+	/**
+	 * @brief Start the thread for receiving and sending packets.
+	 * 
+	 * Starts a new thread. The thread handles sending and receiving of packets.
+	 */
 	void Start();
 	void Stop();
 	void Close();
@@ -134,23 +139,35 @@ public:
 	void Send(Packet::Packet packet);
 	Packet::Packet Fetch();
 
+	NetworkState GetState() {
+		std::lock_guard<std::mutex> lock(m_stateMut);
+		return m_state;
+	}
+
 protected:
 	void Run();				// Function the thread runs.
 	void Tick(float dt);	// Tick the server (when to receive and send).
+	void SendAll();			// Queue all the packets to be sent. Packets will send on next enet flush.
 
 	void SetErrored();	// Set the server into an errored state.
 
 private:
-	void SendAll();
+	bool ConnectPeer();
+	void HandleIncomingPacket(ENetPacket* packet);
+	void DisconnectPeer();
 
 	std::thread m_networkThread;
 	std::mutex m_stateMut;
+	std::mutex m_sendMut;
+
 	NetworkState m_state = NetworkState::CLOSED;
 
 	Packet::PacketBuffer m_receiveBuffer = Packet::PacketBuffer(BUFFER_SIZE);
 	std::vector<Packet::Packet> m_sendBuffer = std::vector<Packet::Packet>(BUFFER_SIZE);
 	
-	float elapsedTime = 0;
+	float m_elapsedTime = 0;
+	float m_lastTick = 0;
+	int m_lastMaxSequence = 0; // Each tick will drop optional packets that didn't make the first tick.
 
 	int m_connections = 0;
 	int m_maxConnections;

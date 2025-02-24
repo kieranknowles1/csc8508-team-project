@@ -89,9 +89,9 @@ namespace Packet {
 
 		/**
 		 * @brief Creates an ENet Packet.
-		 * @return A new ENetPacket. Please manage accordinly.
+		 * @return A new ENetPacket. Please manage accordingly.
 		 */
-		virtual ENetPacket* ToENetPacket(Packet packet) = 0;
+		virtual ENetPacket* ToENetPacket(const Packet& packet) = 0;
 
 		/**
 		 * @brief Get the type of the packet this object handles.
@@ -144,6 +144,17 @@ namespace Packet {
 		 * @param handler The handler for the packet.
 		 */
 		static void Register(PacketHandler* handler) { handlers[handler->GetType()] = handler; }
+
+		/**
+		 * @brief Get the handler for the requested packet type.
+		 * @param type The type of the packet.
+		 */
+		static PacketHandler* GetHandler(Type type) {
+			if (handlers.contains(type)) {
+				return handlers[type];
+			}
+			return nullptr;
+		}
 
 	private:
 		PacketRegister() { if (packetRegister == nullptr) packetRegister = this; }
