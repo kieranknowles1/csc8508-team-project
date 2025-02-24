@@ -29,7 +29,6 @@ void ResourceManager::collectGarbage()
 	timeSinceGc = 0;
 	meshes.collectGarbage();
 	textures.collectGarbage();
-	shaders.collectGarbage();
 }
 
 template<>
