@@ -140,11 +140,11 @@ macro(fmod_find_libs _PLATFORM_NAME _VERSION _FMOD_LIBS _FMOD_STUDIO_LIBS _FMOD_
         set(${_FMOD_LIBS}        ${FMOD_LIB_ROOT}/libfmod${FMOD_LIB_TYPE}.dylib)
         set(${_FMOD_STUDIO_LIBS} ${FMOD_LIB_ROOT}/libfmodstudio${FMOD_LIB_TYPE}.dylib)
     elseif(WIN32)
-        set(${_FMOD_LIBS} ${FMOD_SDK_PATH}/core/lib/x64/fmod_vc.lib)
-        set(${_FMOD_STUDIO_LIBS} ${FMOD_SDK_PATH}/studio/lib/x64/fmodstudio_vc.lib)
+        set(${_FMOD_LIBS} ${FMOD_SDK_PATH}/core/lib/x64/fmod_vc${FMOD_LIB_TYPE}.lib)
+        set(${_FMOD_STUDIO_LIBS} ${FMOD_SDK_PATH}/studio/lib/x64/fmodstudio_vc${FMOD_LIB_TYPE}.lib)
         set(${_FMOD_DLLS}                                # set the dlls var, since we're on windows
-            ${FMOD_LIB_ROOT}/fmod${FMOD_LIB_TYPE}.dll
-            ${FMOD_LIB_ROOT}/fmodstudio${FMOD_LIB_TYPE}.dll
+            ${FMOD_SDK_PATH}/core/lib/x64/fmod${FMOD_LIB_TYPE}.dll
+            ${FMOD_SDK_PATH}/studio/lib/x64/fmodstudio${FMOD_LIB_TYPE}.dll
         )
     elseif(CMAKE_SYSTEM_NAME MATCHES "Linux")
         set(${_FMOD_LIBS}        ${FMOD_SDK_PATH}/core/lib/x86_64/libfmod${FMOD_LIB_TYPE}.so)
