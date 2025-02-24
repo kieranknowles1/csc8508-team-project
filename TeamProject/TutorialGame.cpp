@@ -13,8 +13,10 @@
 using namespace NCL;
 using namespace CSC8503;
 
-TutorialGame::TutorialGame(GameTechRendererInterface* renderer, GameWorld* world, Controller* controller)   
-	: renderer(renderer)  
+TutorialGame* TutorialGame::instance = nullptr;
+
+TutorialGame::TutorialGame(GameTechRendererInterface* renderer, GameWorld* world, Controller* controller)
+	: renderer(renderer)
 	, controller(controller)
 	, world(world)
 {
@@ -100,8 +102,8 @@ void TutorialGame::UpdateGame(float dt) {
 	UpdatePlayer(dt);
 	profiler.startSection("Update Audio");
 	audioEngine.Update(&world->GetMainCamera());
-  
-  
+
+	clearGraveyard();
 	profiler.startSection("Prepare Render");
 	bulletWorld->debugDrawWorld();
 
@@ -161,11 +163,11 @@ void TutorialGame::UpdateKeys() {
 	if (controller->GetDigital(WorldPitchDown)) {
 			playerController->pitchDown();
 	}
-	if (Window::GetKeyboard()->KeyPressed(KeyCodes::F5)) { 
-		bool toggleHDR = renderer->GetHDROn();  
-		toggleHDR = !toggleHDR; 
-		renderer->SetHDROn(toggleHDR); 
-	} 
+	if (Window::GetKeyboard()->KeyPressed(KeyCodes::F5)) {
+		bool toggleHDR = renderer->GetHDROn();
+		toggleHDR = !toggleHDR;
+		renderer->SetHDROn(toggleHDR);
+	}
 }
 
 void TutorialGame::ThirdPersonControls() {
@@ -222,13 +224,15 @@ void TutorialGame::CheckCollisions()
 	}
 }
 
-void TutorialGame::DestroyBullet() {
-	world->OperateOnContents([&](GameObject* obj) {
-		if (obj->GetPhysicsObject()) {
-			obj->GetPhysicsObject()->removeFromBullet(bulletWorld);
-		}
-	});
+void TutorialGame::clearGraveyard() {
+	for (auto obj : objectGraveyard) {
+		bulletWorld->removeRigidBody(obj->GetPhysicsObject()->GetRigidBody());
+		world->RemoveGameObject(obj); // Also deletes it
+	}
+	objectGraveyard.clear();
+}
 
+void TutorialGame::DestroyBullet() {
 	delete bulletWorld;
 	delete bulletDebug;
 	delete solver;
