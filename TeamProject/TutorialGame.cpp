@@ -6,7 +6,6 @@
 #include "AudioEngine.h"
 #include "GameTechRendererInterface.h"
 #include "BulletDebug.h"
-#include "GameTechRenderer.h"
 #include <CSC8503CoreClasses/Debug.h>
 
 #include "Window.h"

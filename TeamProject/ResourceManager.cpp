@@ -3,7 +3,7 @@
 #include <filesystem>
 #include <iostream>
 
-#include "GameTechRenderer.h"
+#include "GameTechRendererInterface.h"
 
 namespace NCL::CSC8503 {
 
