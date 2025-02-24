@@ -64,5 +64,6 @@ void GameWorld::UpdateWorld(float dt) {
 
 	for (auto& i : gameObjects) {
 		i->Update(dt);
+		i->GetPhysicsObject()->Update();
 	}
 }

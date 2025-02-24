@@ -8,7 +8,7 @@ using namespace NCL::Maths;
 namespace NCL {
 	namespace CSC8503 {
 		class GameObject;
-		class CustomCollisionCallback;
+		struct CollisionInfo;
 
 		// Wrapper to apply Bullet physics to an object. Holds the transform therefore is required for all objects
 		// NOTE: Bullet deactivates rigid bodies after inactivity, when applying forces they must be manually be activated
@@ -34,10 +34,10 @@ namespace NCL {
 				return motionState;
 			}
 
-			// Checks the object's currently in collision
-			void CheckCollisions(btDynamicsWorld* world);
-
 			void ClearForces();
+
+			void sendCollisionEvents(const CollisionInfo& info);
+			void Update();
 
 		protected:
 			GameObject* parent;
@@ -46,6 +46,8 @@ namespace NCL {
 			btRigidBody* rigidBody;
 			btMotionState* motionState;
 
+			std::set<GameObject*> thisFrameCollisions;
+			std::set<GameObject*> lastFrameCollisions;
 			std::set<GameObject*> activeCollisions;
 
 #ifndef NDEBUG

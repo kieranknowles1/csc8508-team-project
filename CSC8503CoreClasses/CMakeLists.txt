@@ -58,7 +58,6 @@ source_group("Networking" FILES ${Networking})
 set(Physics
     "PhysicsObject.cpp"
     "PhysicsObject.h"
-    "CustomCollisionCallback.h"
     "CollisionInfo.cpp"
     "CollisionInfo.h"
 )

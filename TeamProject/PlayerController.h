@@ -11,7 +11,6 @@
 #include "RenderObject.h"
 #include "BulletDebug.h"
 #include "PlayerObject.h"
-#include "CustomCollisionCallback.h"
 #include <btBulletDynamicsCommon.h>
 #include <btBulletCollisionCommon.h>
 
@@ -184,7 +183,8 @@ class Paintball : public GameObject {
 public:
 	void OnCollisionEnter(const CollisionInfo& collisionInfo) override {
 		if (collisionInfo.otherObject == player) return;
-		this->GetPhysicsObject()->removeFromBullet(bulletWorld);
+		// TODO: Delayed removal, we're iterating the world when this is called
+		//this->GetPhysicsObject()->removeFromBullet(bulletWorld);
 	}
 	void Initialise(GameObject* playerIn, btDiscreteDynamicsWorld* bulletWorldIn) { 
 		player = playerIn;

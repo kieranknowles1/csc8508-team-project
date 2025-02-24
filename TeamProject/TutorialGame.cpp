@@ -88,12 +88,12 @@ void TutorialGame::UpdateGame(float dt) {
 	}*/
 
 	UpdateKeys();
+	UpdatePlayer(dt);
 	world->UpdateWorld(dt);
 	profiler.startSection("Check Collisions");
 	// Check for collisions
 	CheckCollisions();
 
-	UpdatePlayer(dt);
 	profiler.startSection("Update Audio");
 	audioEngine.Update(&world->GetMainCamera());
   
@@ -185,36 +185,30 @@ void TutorialGame::CheckCollisions()
 	// Bullet already keeps track of all the objects that are colliding with each other
 	// So, we don't need to check for collisions manually
 
-	//world->OperateOnContents([&](GameObject* obj) {
-	//	obj->GetPhysicsObject()->CheckCollisions(bulletWorld);
-	//	});
-
 	btDispatcher* dispatcher = bulletWorld->getDispatcher();
 	int numManifolds = dispatcher->getNumManifolds();
+	// Loop backwards in case a collision is removed during iteration
+	for (int i = dispatcher->getNumManifolds() - 1; i >= 0; i--) {
+		btPersistentManifold* manifold = dispatcher->getManifoldByIndexInternal(i);
+		if (manifold->getNumContacts() == 0) continue;
+		auto point = manifold->getContactPoint(0);
 
-	for (int i = 0; i < numManifolds; i++) {
-		// The UpdateGame loop may be using a faster an outdated number of manifolds
-		// So, we need to check if the index is still valid
-		if (i >= dispatcher->getNumManifolds()) {
-			break;
-		}
+		GameObject* obj0 = (GameObject*)manifold->getBody0()->getUserPointer();
+		GameObject* obj1 = (GameObject*)manifold->getBody1()->getUserPointer();
 
-		// Get the contact manifold
-		btPersistentManifold* contactManifold = dispatcher->getManifoldByIndexInternal(i);
+		CollisionInfo info;
+		info.contactPointA = point.m_positionWorldOnA;
+		info.contactPointB = point.m_positionWorldOnB;
+		info.contactNormal = point.m_normalWorldOnB;
+		info.otherObject = obj0;
+		info.penetrationDepth = point.getDistance();
+		info.relativeVelocity = obj0->GetPhysicsObject()->GetRigidBody()->getLinearVelocity() - obj1->GetPhysicsObject()->GetRigidBody()->getLinearVelocity();
+		obj1->GetPhysicsObject()->sendCollisionEvents(info);
 
-		// Get the collision objects from the contact manifold
-		const btCollisionObject* objectA = contactManifold->getBody0();
-		const btCollisionObject* objectB = contactManifold->getBody1();
-
-		// Get the GameObjects from the collision objects
-		const GameObject* gameObjectA = static_cast<const GameObject*>(objectA->getUserPointer());
-		const GameObject* gameObjectB = static_cast<const GameObject*>(objectB->getUserPointer());
-
-		// Check if the GameObjects are valid
-		if (gameObjectA && gameObjectB) {
-			gameObjectA->GetPhysicsObject()->CheckCollisions(bulletWorld);
-			gameObjectB->GetPhysicsObject()->CheckCollisions(bulletWorld);
-		}
+		std::swap(info.contactPointA, info.contactPointB);
+		info.contactNormal = -info.contactNormal;
+		info.otherObject = obj1;
+		obj0->GetPhysicsObject()->sendCollisionEvents(info);
 	}
 }
 

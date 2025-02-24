@@ -50,16 +50,13 @@ namespace NCL::CSC8503 {
 			//std::cout << "OnCollisionEnter event occured!\n";
 		}
 
-		virtual void OnCollisionExit(const CollisionInfo& collision) {
-			//std::cout << "OnCollisionEnd event occured!\n";
-		}
-
 		virtual void OnCollisionStay(const CollisionInfo& collision) {
-			//std::cout << "OnCollisionStay event occured!\n";
+
 		}
 
-		virtual void OnCollisionStay(GameObject* otherObject) {
-			//std::cout << "OnCollisionStay: " << this->GetWorldID() << " is still colliding with " << otherObject->GetWorldID() << std::endl;
+		// No collision info for OnCollisionExit as there is no collision any more
+		virtual void OnCollisionExit(const GameObject* obj) {
+			//std::cout << "OnCollisionEnd event occured!\n";
 		}
 
 		virtual void Update(float dt) {
@@ -103,7 +100,7 @@ namespace NCL::CSC8503 {
 		void setIsPaintball(bool paintballIn) {
 			paintball = paintballIn;
 		}
-		bool getIsPaintball() {
+		bool getIsPaintball() const {
 			return paintball;
 		}
 		void setType(char typeIn) {

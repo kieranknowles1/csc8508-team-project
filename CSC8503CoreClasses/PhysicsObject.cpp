@@ -1,8 +1,6 @@
 #include "PhysicsObject.h"
 #include "GameObject.h"
 
-#include "CustomCollisionCallback.h"
-
 #include <btBulletDynamicsCommon.h>
 
 namespace NCL::CSC8503 {
@@ -102,65 +100,30 @@ void PhysicsObject::ApplyLinearImpulse(const Vector3& impulse) {
 	}
 }
 
-void PhysicsObject::CheckCollisions(btDynamicsWorld* world)
-{
-	if (!rigidBody || !world) {
-		return;
-	}
-
-	// Collect a list of all objects we are currently colliding with
-	// Send out events for new collisions and ended collisions
-	CustomCollisionCallback callback(parent);
-	world->contactTest(rigidBody, callback);
-
-	// Store objects while colliding, to check for ended collisions later
-	std::set<GameObject*> currentCollisions;
-
-	// Loop through all active collisions this frame
-	for (const auto& collision : callback.activeCollisions) {
-		currentCollisions.insert(collision.otherObject);
-
-		// Check if this is a new collision or it existed in the previous frame
-		if (!activeCollisions.count(collision.otherObject)) {
-			// New collision (Not existed in the previous frame)
-			activeCollisions.insert(collision.otherObject);
-			parent->OnCollisionEnter(collision);
-		}
-		else {
-			// Persistent collision (Existed in the previous frame)
-			parent->OnCollisionStay(collision);
-		}
-	}
-
-	// Handle ended collisions
-	for (auto it = activeCollisions.begin(); it != activeCollisions.end();) {
-		// Storing the pointer to the object in a temporary variable
-		// just so that I can understand my own code :)
-		GameObject* obj = *it;
-		if (!currentCollisions.count(obj)) {
-			// Find the corresponding collision info
-			CollisionInfo collisionInfo;
-			collisionInfo.otherObject = obj;
-
-			// Call the OnCollisionExit method of the parent object
-			parent->OnCollisionExit(collisionInfo);
-			it = activeCollisions.erase(it);
-		}
-		else {
-			++it;
-		}
-	}
-
-	// Remove objects that are no longer colliding
-	std::erase_if(activeCollisions, [&](GameObject* obj) {
-		return callback.activeCollisions.find(obj) == callback.activeCollisions.end();
-	});
-}
-
 void PhysicsObject::ClearForces() {
 	if (rigidBody) {
 		rigidBody->clearForces();
 	}
+}
+
+void PhysicsObject::sendCollisionEvents(const CollisionInfo& info) {
+	if (!lastFrameCollisions.contains(info.otherObject)) {
+		parent->OnCollisionEnter(info);
+	}
+	else {
+		 parent->OnCollisionStay(info);
+	}
+	thisFrameCollisions.insert(info.otherObject);
+}
+
+void PhysicsObject::Update() {
+	 for (auto it : lastFrameCollisions) {
+	 	if (!thisFrameCollisions.contains(it)) {
+	 		parent->OnCollisionExit(it);
+	 	}
+	 }
+	std::swap(thisFrameCollisions, lastFrameCollisions);
+	thisFrameCollisions.clear();
 }
 
 }
