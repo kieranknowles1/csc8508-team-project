@@ -21,6 +21,8 @@ set(SOURCES
     ResourceManager.cpp
     Profiler.h
     Profiler.cpp
+	NavEntity.h
+	NavEntity.cpp
 )
 
 file(GLOB_RECURSE COMPILED_MESHES "${CMAKE_SOURCE_DIR}/Assets/Meshes/*.msh")
