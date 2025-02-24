@@ -1,5 +1,9 @@
 #pragma once
 
+#ifdef __PROSPERO__
+#error GameTechRenderer.h cannot be included on PS5
+#endif
+
 #include <memory>
 
 #include "OGLRenderer.h"

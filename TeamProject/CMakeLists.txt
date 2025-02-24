@@ -1,8 +1,6 @@
 set(SOURCES
     BulletDebug.cpp
     BulletDebug.h
-    GameTechRenderer.cpp
-    GameTechRenderer.h
     GameTechRendererInterface.h
     TutorialGame.cpp
     TutorialGame.h
@@ -30,7 +28,11 @@ set(SOURCES
 file(GLOB_RECURSE COMPILED_MESHES "${CMAKE_SOURCE_DIR}/Assets/Meshes/*.msh")
 
 if(NOT PS5_BUILD)
-    list(APPEND SOURCES main.cpp)
+    list(APPEND SOURCES
+        main.cpp
+        GameTechRenderer.cpp
+        GameTechRenderer.h
+    )
     add_executable(${PROJECT_NAME} ${SOURCES})
 else()
     # There is quite a bit of extra work for PS5 builds,

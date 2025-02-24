@@ -3,7 +3,6 @@
 #include "../NCLCoreClasses/KeyboardMouseController.h"
 
 #include "GameTechRendererInterface.h"
-#include "GameTechRenderer.h"
 #include "ResourceManager.h"
 
 #include "LevelImporter.h"
