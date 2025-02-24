@@ -22,10 +22,9 @@ public:
 	 * @brief Connect to a server.
 	 * @param address The address of the server.
 	 * 
-	 * Attempts to connect to a server. Sets the state to WAITING.
-	 * Spawns a separate thread that lasts until the time elapsed exceeds
-	 * RESPONSE_WAIT_TIME or the client receives a connection response from the
-	 * server.
+	 * Attempts to connect to a server.
+	 * Spawns a new thread to receive responses from the server. If no response is
+	 * received, client disconnects.
 	 */
 	void ConnectTo(ENetAddress& address);
 
@@ -59,6 +58,8 @@ public:
 private:
 
 	std::mutex m_connectionMutex;
+	std::thread* m_thread;
+
 	ConnectionState m_state;
 	ENetPeer* m_server;
 };
