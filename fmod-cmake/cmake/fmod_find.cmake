@@ -101,6 +101,8 @@ macro(fmod_detect_platform PLATFORM_VAR)
         set(${PLATFORM_VAR} android-${ANDROID_ARCH})
     elseif(EMSCRIPTEN)
         set (${PLATFORM_VAR} html5-w32)
+    elseif(PS5_BUILD)
+        set(${PLATFORM_VAR} Prospero)
     endif()
 endmacro()
 
@@ -158,5 +160,15 @@ macro(fmod_find_libs _PLATFORM_NAME _VERSION _FMOD_LIBS _FMOD_STUDIO_LIBS _FMOD_
             set(${_FMOD_LIBS}        ${FMOD_LIB_ROOT}/fmod${FMOD_LIB_TYPE}_wasm.a)
             set(${_FMOD_STUDIO_LIBS} ${FMOD_LIB_ROOT}/fmodstudioL_wasm.a)
         endif()
+    elseif(PS5_BUILD)
+        set(FMOD_LIB_ROOT ${FMOD_SDK_PATH})
+        set(${_FMOD_LIBS} ${FMOD_LIB_ROOT}/core/lib/libfmod${FMOD_LIB_TYPE}_stub_weak.a)
+        set(${_FMOD_STUDIO_LIBS} ${FMOD_LIB_ROOT}/studio/lib/libfmodstudio${FMOD_LIB_TYPE}_stub_weak.a)
+        set(${_FMOD_DLLS}
+            ${FMOD_LIB_ROOT}/core/lib/libfmod${FMOD_LIB_TYPE}.prx
+            ${FMOD_LIB_ROOT}/studio/lib/libfmodstudio${FMOD_LIB_TYPE}.prx
+        )
+
     endif()
+    message("Using fmod libs ${${_FMOD_LIBS}}, ${${_FMOD_STUDIO_LIBS}}")
 endmacro()
