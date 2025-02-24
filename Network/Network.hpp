@@ -52,11 +52,10 @@ enum class Channel {
  * @brief Different states the network can be in.
  */
 enum class NetworkState {
+	CLOSED,
+	OFF,
 	ERRORED,
-	ACTIVE,
-	INACTIVE,
-	STARTING,
-	IDLE
+	ON
 };
 
 
@@ -65,61 +64,96 @@ enum class NetworkState {
  * 
  * Basically handles initialisation and deinitialisation of enet.
  */
+//class NetworkA {
+//public:
+//	NetworkA();
+//	~NetworkA();
+//
+//	/**
+//	 * @brief Call to determine if enet was successfully initialised.
+//	 * @return true if successful.
+//	 */
+//	inline bool IsInitialised() { return m_initialised; }
+//
+//	/**
+//	 * @brief Wrapper function for enet_host_create().
+//	 * @see enet_host_create()
+//	 * @return true if host was successfully created.
+//	 */
+//	inline bool CreateHost(ENetAddress* address, int maxClients, int nChannels, int incBandwidth, int outBandwidth) {
+//		m_host = enet_host_create(address, maxClients, nChannels, incBandwidth, outBandwidth);
+//		return m_host != nullptr;
+//	}
+//
+//	/**
+//	 * @brief Get an event from enet_host_service.
+//	 * @return The event from enet_host_service. Returns empty event if failed.
+//	 */
+//	inline ENetEvent GetEvent() {
+//		ENetEvent event;
+//		enet_host_service(m_host, &event, EVENT_WAIT);
+//		return event;
+//	}
+//
+//	void Stop() {
+//		m_stateMutex.lock();
+//		m_state = NetworkState::INACTIVE;
+//		m_stateMutex.unlock();
+//
+//		m_thread->join();
+//	}
+//
+//	void Update();
+//
+//	void Start();
+//
+//	virtual void Handle(ENetPacket* packet);
+//
+//protected:
+//	ENetHost* m_host = nullptr;
+//	NetworkState m_state = NetworkState::ERRORED;
+//
+//	std::mutex m_stateMutex;
+//	std::thread* m_thread = nullptr;
+//
+//private:
+//	bool m_initialised = false;
+//};
+
+
+
 class Network {
 public:
-	Network();
+	Network(int maxConnections);
 	~Network();
 
-	/**
-	 * @brief Call to determine if enet was successfully initialised.
-	 * @return true if successful.
-	 */
-	inline bool IsInitialised() { return m_initialised; }
-
-	/**
-	 * @brief Wrapper function for enet_host_create().
-	 * @see enet_host_create()
-	 * @return true if host was successfully created.
-	 */
-	inline bool CreateHost(ENetAddress* address, int maxClients, int nChannels, int incBandwidth, int outBandwidth) {
-		m_host = enet_host_create(address, maxClients, nChannels, incBandwidth, outBandwidth);
-		return m_host != nullptr;
-	}
-
-	/**
-	 * @brief Get an event from enet_host_service.
-	 * @return The event from enet_host_service. Returns empty event if failed.
-	 */
-	inline ENetEvent GetEvent() {
-		ENetEvent event;
-		enet_host_service(m_host, &event, EVENT_WAIT);
-		return event;
-	}
-
-	void Stop() {
-		m_stateMutex.lock();
-		m_state = NetworkState::INACTIVE;
-		m_stateMutex.unlock();
-
-		m_thread->join();
-	}
-
-	void Update();
-
 	void Start();
+	void Stop();
+	void Close();
 
-	virtual void Handle(ENetPacket* packet);
+	void Send(Packet::Packet packet);
+	Packet::Packet Fetch();
 
 protected:
-	ENetHost* m_host = nullptr;
-	NetworkState m_state = NetworkState::ERRORED;
+	void Run();				// Function the thread runs.
+	void Tick(float dt);	// Tick the server (when to receive and send).
 
-	std::mutex m_stateMutex;
-	std::thread* m_thread = nullptr;
+	void SetErrored();	// Set the server into an errored state.
 
 private:
-	bool m_initialised = false;
+	void SendAll();
+
+	std::thread m_networkThread;
+	std::mutex m_stateMut;
+	NetworkState m_state = NetworkState::CLOSED;
+
+	Packet::PacketBuffer m_receiveBuffer = Packet::PacketBuffer(BUFFER_SIZE);
+	std::vector<Packet::Packet> m_sendBuffer = std::vector<Packet::Packet>(BUFFER_SIZE);
+	
+	float elapsedTime = 0;
+
+	int m_connections = 0;
+	int m_maxConnections;
+
+	ENetHost* m_host = nullptr;
 };
-
-
-

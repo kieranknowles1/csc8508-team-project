@@ -1,9 +1,7 @@
 #include <stdexcept>
 #include <iostream>
 
-#include "Server.hpp"
-#include "Packet.hpp"
-#include "Client.hpp"
+#include "Network.hpp"
 
 
 void TestPacketBuffer() {
@@ -14,7 +12,7 @@ void TestPacketBuffer() {
 	Packet::Packet packet5 = Packet::Packet(1, 0, 102);
 	Packet::Packet packet6 = Packet::Packet(1, 0, 101);
 
-	Packet::PacketBuffer buffer;
+	Packet::PacketBuffer buffer(16);
 	buffer.Insert(packet1);
 	buffer.Insert(packet2);
 	buffer.Insert(packet3);
