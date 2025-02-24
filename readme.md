@@ -16,6 +16,10 @@ be found automatically. Otherwise set `FMOD_SDK_PATH` to your FMod install direc
 `Fmod-cmake` is an interface provided by github user `tadashibashi` at
 `https://github.com/tadashibashi/fmod-cmake`
 
+On Linux, the `FMOD_SDK_PATH` must be manually set to wherever you've
+extracted FMOD to. NOTE: currently fmod loads but can't find an audio
+server. This may be an issue with just my system, but is untested.
+
 ## Building
 
 To prepare for building on Windows, run
