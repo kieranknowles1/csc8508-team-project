@@ -129,6 +129,7 @@ void TutorialGame::UpdatePlayer(float dt) {
 			ThirdPersonControls();
 		}
 	}
+	resourceManager->update(dt);
 	bulletWorld->setGravity(playerController->getUpDirection() * -30.0f);
 }
 

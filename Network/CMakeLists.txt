@@ -1,11 +1,7 @@
 set(SOURCES
-	Client.cpp
-	Client.hpp
+	Network.cpp
 	Network.hpp
-	Packet.cpp
 	Packet.hpp
-	Server.cpp
-	Server.hpp
 )
 
 set(TEST_SOURCES
