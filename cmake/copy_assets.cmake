@@ -20,7 +20,7 @@ macro(process_file)
         list(APPEND PROCESSED_ASSETS ${file}.gnf)
         add_custom_command(
             OUTPUT ${file}.gnf
-            COMMAND image2gnf -g 1 -i ${file} -o ${file}.gnf -f Bc1UNorm
+            COMMAND image2gnf -g 1 -i ${file} -o ${file}.gnf -f Auto
             DEPENDS ${file}
         )
     elseif(${extension} STREQUAL ".pssl" AND PS5_BUILD)
