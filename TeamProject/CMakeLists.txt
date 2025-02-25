@@ -19,6 +19,8 @@ set(SOURCES
     ResourceManager.cpp
     Profiler.h
     Profiler.cpp
+	NavEntity.h
+	NavEntity.cpp
 	AudioEngine.h
 	AudioEngine.cpp
     Config.h
