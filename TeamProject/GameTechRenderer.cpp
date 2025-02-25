@@ -313,6 +313,7 @@ void GameTechRenderer::RenderCamera() {
 	int hasFlatLocation = glGetUniformLocation(sceneShader->GetProgramID(), "isFlat");
 	int hasNormalLocation = glGetUniformLocation(sceneShader->GetProgramID(), "hasNormalMap");
 	int texRepeatingLocation = glGetUniformLocation(sceneShader->GetProgramID(), "texRepeating");
+	int texScaleLocation = glGetUniformLocation(sceneShader->GetProgramID(), "texScale");
 
 	int lightPosLocation	= glGetUniformLocation(sceneShader->GetProgramID(), "lightPos");
 	int lightColourLocation = glGetUniformLocation(sceneShader->GetProgramID(), "lightColour");
@@ -341,13 +342,8 @@ void GameTechRenderer::RenderCamera() {
 		if ((*i).GetDefaultTexture()) { 
 			BindTextureToShader(*(OGLTexture*)(*i).GetDefaultTexture(), "mainTex", 0);
 			//figure out scale of object:
-			float multiplier = (*i).GetTexScaleMultiplier();   
-			float scaleX = (*i).getParent()->getRenderScale().x*multiplier;
-			float scaleY = (*i).getParent()->getRenderScale().y*multiplier;
-			float scaleZ = (*i).getParent()->getRenderScale().z*multiplier; 
-			glUniform1f(glGetUniformLocation(sceneShader->GetProgramID(), "texScaleX"), scaleX);
-			glUniform1f(glGetUniformLocation(sceneShader->GetProgramID(), "texScaleY"), scaleY);
-			glUniform1f(glGetUniformLocation(sceneShader->GetProgramID(), "texScaleZ"), scaleZ);
+			Vector3 scale = i->getParent()->getRenderScale() * i->GetTexScaleMultiplier();
+			glUniform3fv(texScaleLocation, 1, scale.array);
 			
 		}
 
