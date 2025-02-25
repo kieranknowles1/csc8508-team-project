@@ -58,7 +58,7 @@ namespace Packet {
 		 */
 		bool operator<(const Packet& other) const { return m_sequenceNum > other.m_sequenceNum; }
 
-	private:
+	protected:
 		Type m_type;
 		uint8_t m_channel;
 		uint32_t m_sequenceNum;

@@ -4,8 +4,8 @@
 
 
 namespace Packet {
-	const Type DELTA = 1;
-
+	const Type DELTA = CUSTOM_TYPE;
+	const Type POSITION = CUSTOM_TYPE + 1;
 
 
 	/**
@@ -14,8 +14,8 @@ namespace Packet {
 	 * Stores the velocity of an object.
 	 */
 	class DeltaPacket : public Packet {
-		DeltaPacket() {
-
+		DeltaPacket() : m_type(DELTA) {
+			
 		}
 
 	};
