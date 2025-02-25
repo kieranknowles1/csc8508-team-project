@@ -5,14 +5,12 @@
 
 Network::Network(const ENetAddress* address, int maxConnections) : m_maxConnections(maxConnections) {
 	if (enet_initialize() != 0) {
-		std::cout << "enet failed\n";
 		SetErrored();
 		return;
 	}
 
 	m_host = enet_host_create(address, maxConnections, static_cast<int>(Channel::CHANNEL_COUNT), 0, 0);
 	if (m_host == nullptr) {
-		std::cout << "host creation failed.\n";
 		SetErrored();
 		return;
 	}
@@ -65,7 +63,6 @@ void Network::Close() {
 
 void Network::ConnectTo(const ENetAddress* destination) {
 	ENetPeer* peer = enet_host_connect(m_host, destination, static_cast<int>(Channel::CHANNEL_COUNT), 0);
-	if (peer == nullptr) std::cout << "NULL PEER\n";
 }
 
 
@@ -112,22 +109,17 @@ void Network::Tick(float dt) {
 
 		ENetEvent event;
 		int x = enet_host_service(m_host, &event, 100);
-		std::cout << m_host << std::endl;
-		std::cout << "RETURNED: " << x << std::endl;
 
 		while (enet_host_service(m_host, &event, 100) > 0) {
 			switch (event.type) {
 			case ENET_EVENT_TYPE_CONNECT:
 				if (!ConnectPeer()) enet_peer_disconnect(event.peer, 0);
-				std::cout << "Connection.\n";
 				break;
 			case ENET_EVENT_TYPE_DISCONNECT:
 				DisconnectPeer();
-				std::cout << "Disconnection.\n";
 				break;
 			case ENET_EVENT_TYPE_RECEIVE:
 				HandleIncomingPacket(event.packet);
-				std::cout << "Packet Received.\n";
 				break;
 			}
 			enet_packet_destroy(event.packet);
