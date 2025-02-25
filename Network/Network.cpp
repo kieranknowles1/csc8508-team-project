@@ -23,8 +23,10 @@ Network::Network(const ENetAddress* address, int maxConnections) : m_maxConnecti
 
 
 Network::~Network() {
-	Stop();
-	Close();
+	std::lock_guard<std::mutex> lock(m_stateMut);
+	if (m_state != NetworkState::CLOSED) {
+		Close();
+	}
 }
 
 
@@ -52,23 +54,24 @@ void Network::Stop() {
 void Network::Close() {
 	Stop();
 
-	for (int peer = 0; peer < m_host->peerCount; ++peer) {
-		enet_peer_disconnect(&(m_host->peers[peer]), 0);
-	}
-	m_connections = 0;
-
+	enet_host_destroy(m_host);
 	enet_deinitialize();
+	m_connections = 1;
+
+	std::lock_guard<std::mutex> lock(m_stateMut);
+	m_state = NetworkState::CLOSED;
 }
 
 
 void Network::ConnectTo(const ENetAddress* destination) {
-	enet_host_connect(m_host, destination, static_cast<int>(Channel::CHANNEL_COUNT), 0);
+	ENetPeer* peer = enet_host_connect(m_host, destination, static_cast<int>(Channel::CHANNEL_COUNT), 0);
+	if (peer == nullptr) std::cout << "NULL PEER\n";
 }
 
 
 void Network::Send(Packet::Packet packet) {
 	std::lock_guard<std::mutex> lock(m_sendMut);
-	m_sendBuffer.push_back(packet);
+	m_sendBuffer[m_numPackets++] = packet;
 }
 
 
@@ -91,7 +94,8 @@ void Network::Run() {
 		}
 
 		now = std::chrono::high_resolution_clock::now();
-		dt = std::chrono::duration_cast<std::chrono::seconds>(last - now);
+		dt = std::chrono::duration_cast<std::chrono::nanoseconds>(now - last);
+		last = now;
 
 		Tick(dt.count());
 	}
@@ -107,7 +111,11 @@ void Network::Tick(float dt) {
 		SendAll();
 
 		ENetEvent event;
-		while (enet_host_service(m_host, &event, 0) > 0) {
+		int x = enet_host_service(m_host, &event, 100);
+		std::cout << m_host << std::endl;
+		std::cout << "RETURNED: " << x << std::endl;
+
+		while (enet_host_service(m_host, &event, 100) > 0) {
 			switch (event.type) {
 			case ENET_EVENT_TYPE_CONNECT:
 				if (!ConnectPeer()) enet_peer_disconnect(event.peer, 0);
@@ -129,16 +137,14 @@ void Network::Tick(float dt) {
 
 
 void Network::SendAll() {
-	auto current = m_sendBuffer.begin();
-	auto end = m_sendBuffer.end();
-
 	Packet::PacketRegister* packetRegister = Packet::PacketRegister::GetRegister();
 
-	do {
-		Packet::PacketHandler* handler = packetRegister->GetHandler(current->GetType());
-		ENetPacket* packet = handler->ToENetPacket(*current);
-		enet_host_broadcast(m_host, current->GetChannel(), packet);
-	} while (current != end);
+	for (int i = 0; i < m_numPackets; i++) {
+		Packet::PacketHandler* handler = packetRegister->GetHandler(m_sendBuffer[i].GetType());
+		ENetPacket* packet = handler->ToENetPacket(m_sendBuffer[i]);
+		enet_host_broadcast(m_host, m_sendBuffer[i].GetChannel(), packet);
+	}
+	m_numPackets = 0;
 }
 
 

@@ -17,7 +17,7 @@ const float NETWORK_RATE = 1 / 60.0f; // Seconds
 const int BUFFER_SIZE = 1024;
 
 // Default binding port.
-const int DEFAULT_PORT = 12345;
+const int DEFAULT_PORT = 49834;
 
 
 /**
@@ -99,12 +99,13 @@ private:
 
 	Packet::PacketBuffer m_receiveBuffer = Packet::PacketBuffer(BUFFER_SIZE);
 	std::vector<Packet::Packet> m_sendBuffer = std::vector<Packet::Packet>(BUFFER_SIZE);
+	int m_numPackets = 0;
 	
 	float m_elapsedTime = 0;
 	float m_lastTick = 0;
 	int m_lastMaxSequence = 0; // Each tick will drop optional packets that didn't make the first tick.
 
-	int m_connections = 0;
+	int m_connections = 1;
 	int m_maxConnections;
 
 	ENetHost* m_host = nullptr;
