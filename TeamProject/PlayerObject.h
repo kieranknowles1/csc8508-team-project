@@ -31,6 +31,7 @@ public:
 		collisionType = collisionInfo.otherObject->getType();
 		if (collisionInfo.otherObject->getType() == 'J' || collisionInfo.otherObject->getType() == 'S') {
 			collisionNormal = collisionInfo.contactNormal;
+			collisionPoint = collisionInfo.contactPointA;
 		}
 	}
 
@@ -68,7 +69,12 @@ public:
 				collidedObjects.push_back(collision.otherObject);
 			}
 		}
+		// set special type collision
 		collisionType = collision.otherObject->getType();
+		if (collision.otherObject->getType() == 'J' || collision.otherObject->getType() == 'S') {
+			collisionNormal = collision.contactNormal;
+			collisionPoint = collision.contactPointA;
+		}
 	}
 
 	char getType() {
@@ -89,10 +95,14 @@ public:
 	btVector3 getCollisionNormal() {
 		return collisionNormal;
 	}
+	btVector3 getCollisionPoint() {
+		return collisionPoint;
+	}
 private:
 	int collided = 0;
 	btVector3 upDirection;
 	btVector3 collisionNormal = btVector3(0, 1, 0);
+	btVector3 collisionPoint = btVector3(0, 0, 0);
 	std::list<GameObject*> collidedObjects;
 	char collisionType;
 };

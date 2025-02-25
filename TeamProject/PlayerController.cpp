@@ -377,16 +377,20 @@ void PlayerController::HandleTypes() {
         if (inAirTime <= 0) {
             btVector3 normal = player->getCollisionNormal();
             float dampening = 0.85f;
-            btVector3 reflectedVelocity = rb->getLinearVelocity() - (10 * previousVelocity.dot(normal) * normal);
+            btVector3 reflectedVelocity = previousVelocity - (2 * previousVelocity.dot(normal) * normal);
             if (fabs(10 * previousVelocity.dot(normal)) <= 0.25f) {
-                player->setCollided(1);
-                std::cout << "STOPPED";
-                break;
+                btVector3 direction = (player->getCollisionPoint() - transformPlayer.getOrigin()).normalized();
+                float dot = direction.dot(-upDirection);
+                float angle = acos(dot) * (180.0f / SIMD_PI);
+                if (angle <= 25.0f) { // come to rest on floor
+                    player->setCollided(1);
+                    break;
+                }
             }
             else {
                 reflectedVelocity *= dampening;
                 inAirTime = 0.1f;
-                rb->applyCentralImpulse(reflectedVelocity);
+                rb->setLinearVelocity(reflectedVelocity);
             }
         }
         break;
