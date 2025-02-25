@@ -8,11 +8,13 @@
 
 
 namespace Packet {
-	const Type DELTA = CUSTOM_TYPE;
-	const Type POSITION = CUSTOM_TYPE + 1;
-	const Type PLAYER_DEATH = CUSTOM_TYPE + 2;
-	const Type PLAYER_SPAWN = CUSTOM_TYPE + 3;
-	const Type PLAYER_GRAVITY_CHANGE = CUSTOM_TYPE + 4;
+
+	enum class PacketType : Type {
+		DELTA = CUSTOM_TYPE,
+		POSITION = CUSTOM_TYPE + 1,
+		PLAYER_STATE_CHANGE = CUSTOM_TYPE + 2,
+		PLAYER_GRAVITY_CHANGE = CUSTOM_TYPE + 3
+	};
 
 
 	/**
@@ -24,7 +26,7 @@ namespace Packet {
 	class DeltaPacket : public Packet {
 	public:
 		DeltaPacket(int objectID, const btVector3& linear, const btVector3& angular, int sequenceNum) :
-			Packet(DELTA, static_cast<int>(Channel::FREQUENT), sequenceNum),
+			Packet(static_cast<Type>(PacketType::DELTA), static_cast<int>(Channel::FREQUENT), sequenceNum),
 			m_objectID(objectID), m_linearVelocity(linear), m_angularVelocity(angular)
 		{}
 
@@ -43,7 +45,7 @@ namespace Packet {
 	class PositionPacket : public Packet {
 	public:
 		PositionPacket(int objectID, const btVector3& position, const btQuaternion& orientation, int sequenceNum) :
-			Packet(DELTA, static_cast<int>(Channel::FREQUENT), sequenceNum),
+			Packet(static_cast<Type>(PacketType::POSITION), static_cast<int>(Channel::FREQUENT), sequenceNum),
 			m_objectID(objectID), m_position(position), m_orientation(orientation)
 		{}
 
@@ -63,7 +65,7 @@ namespace Packet {
 	class PlayerChangeStatePacket : public Packet {
 	public:
 		PlayerChangeStatePacket(int objectID, int playerID, PlayerState state, int sequenceNum) :
-			Packet(DELTA, static_cast<int>(Channel::UNSEQUENCED), sequenceNum),
+			Packet(static_cast<Type>(PacketType::PLAYER_STATE_CHANGE), static_cast<int>(Channel::UNSEQUENCED), sequenceNum),
 			m_objectID(objectID), m_playerID(playerID), m_newState(state)
 		{}
 
@@ -71,7 +73,6 @@ namespace Packet {
 		int m_objectID;
 		int m_playerID;
 		PlayerState m_newState;
-
 	};
 }
 
