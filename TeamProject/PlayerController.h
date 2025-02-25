@@ -52,6 +52,9 @@ namespace NCL {
 			float getYaw() {
 				return yaw;
 			}
+			btQuaternion getCamOffset() {
+				return camRotOffset;
+			}
 
 			void rollRight() {
 				Rotate(true, true);
@@ -84,8 +87,8 @@ namespace NCL {
 			float sprintMulti = 2.0f;
 			float strafeMulti = 0.65f;
 			float backwardsMulti = 0.55f;
-			float airMulti = 1.2f;
-	
+			float airMulti = 1.0f;
+
 			float crouchingTime = 0.3f;
 			float crouchMulti = 0.4f;
 			float crouchHeight = 0.0f;
@@ -103,6 +106,9 @@ namespace NCL {
 
 			//Rotation Variables
 			float rotateTime = 0.5f;
+
+			//Special Types Variables
+			float bouncePadHeight = 5000.0f;
 
 			btQuaternion camRotOffset = btQuaternion::getIdentity();
 			btQuaternion oldcamRotOffset = btQuaternion::getIdentity();
@@ -148,12 +154,16 @@ namespace NCL {
 			bool crouching = false;
 			bool rollUse = false;
 			btIDebugDraw* debugDrawer;
+			bool onIce = false;
+			btVector3 previousVelocity;
 
 
 			Vector2 getDirectionalInput() const;
 			void Initialise();
+			void HandleShooting(float dt);
 			void HandleCrouching(float dt);
 			void HandleSliding(float dt);
+			void HandleTypes();
 			bool CheckCeling();
 			btVector3 FindFloorNormal();
 			void SetGunTransform();
@@ -163,30 +173,19 @@ namespace NCL {
 			btVector3 CalculateUpDirection(float dt);
 			btVector3 CalculateForwardFromYaw();
 			btVector3 CalculateRightFromYaw();
-		
+
 
 		};
 	};
+
+	// Paintball class derived from GameObject
+	class Paintball : public GameObject {
+	public:
+		void OnCollisionEnter(const CollisionInfo& collisionInfo) override;
+		void Initialise(GameObject* playerIn) {
+			player = playerIn;
+		}
+	private:
+		GameObject* player;
+	};
 }
-
-
-using namespace NCL::CSC8503;
-// Paintball class derived from GameObject
-class Paintball : public GameObject {
-public:
-	void OnCollisionEnter(const CollisionInfo& collisionInfo) override {
-		if (collisionInfo.otherObject == player) return;
-		this->GetPhysicsObject()->removeFromBullet(bulletWorld);
-	}
-	void Initialise(GameObject* playerIn, btDiscreteDynamicsWorld* bulletWorldIn) {
-		player = playerIn;
-		bulletWorld = bulletWorldIn;
-	}
-private:
-	GameObject* player;
-	btDiscreteDynamicsWorld* bulletWorld;
-};
-
-
-
-

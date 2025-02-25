@@ -80,11 +80,54 @@ GameTechRenderer::GameTechRenderer(GameWorld* world) : OGLRenderer(*Window::GetW
 	SetDebugLineBufferSizes(1000);
 
 	InitCrosshair(); //This line Ameya added for crosshair
+
+	//Post processing additions: 
+	hdrShader = new OGLShader("texturevert.glsl", "hdrfrag.glsl");
+	
+	hdrQuad = new OGLMesh();
+	hdrQuad->SetVertexPositions({ Vector3(-1, 1,0), Vector3(-1,-1,0) , Vector3(1,-1,0) , Vector3(1,1,0) }); 
+	hdrQuad->SetVertexTextureCoords({ Vector2(0, 1), Vector2(0,0) , Vector2(1,0) , Vector2(1,1) }); 
+	hdrQuad->SetVertexIndices({ 0,1,2,2,3,0 }); 
+	hdrQuad->UploadToGPU(); 
+	 
+ 	//start setting up framebuffers for post processing:
+	//first generate the textures to store the rendered scene:
+	glGenTextures(1, &hdrTex); //first, colour attachment
+	glBindTexture(GL_TEXTURE_2D, hdrTex); 
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE); 
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE); 
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR); 
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);  
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, windowSize.x, windowSize.y, 0, GL_RGBA, GL_FLOAT, NULL); //Floating point texture for HDR.  
+
+	glGenTextures(1, &hdrDepthTex); //then, depth-stencil attachment
+	glBindTexture(GL_TEXTURE_2D, hdrDepthTex);
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);  
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE); 
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR); 
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR); 
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH24_STENCIL8, windowSize.x, windowSize.y, 0, GL_DEPTH_STENCIL, GL_UNSIGNED_INT_24_8, NULL); 
+	
+	glGenFramebuffers(1, &hdrFBO);
+	glBindFramebuffer(GL_FRAMEBUFFER, hdrFBO);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, hdrTex, 0); //attach textures to FBO attachments
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, hdrDepthTex, 0); 
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_STENCIL_ATTACHMENT, GL_TEXTURE_2D, hdrDepthTex, 0); 
+	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE || !hdrTex || !hdrDepthTex) { 
+		return;
+	}
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
 GameTechRenderer::~GameTechRenderer()	{
 	glDeleteTextures(1, &shadowTex);
 	glDeleteFramebuffers(1, &shadowFBO);
+
+	glDeleteTextures(1, &hdrTex);
+	glDeleteFramebuffers(1, &hdrFBO);
+	delete hdrQuad;
+	delete hdrShader;
+	
 }
 
 void GameTechRenderer::LoadSkybox() {
@@ -134,6 +177,12 @@ void GameTechRenderer::RenderFrame() {
 	BuildObjectList();
 	SortObjectList();
 	RenderShadowMap();
+	//Set up to render into framebuffer
+	if (hdrOn) {
+		glBindFramebuffer(GL_FRAMEBUFFER, hdrFBO);
+		glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+	}
+	//
 	RenderSkybox();
 	RenderCamera();
 	glDisable(GL_CULL_FACE); //Todo - text indices are going the wrong way...
@@ -146,7 +195,20 @@ void GameTechRenderer::RenderFrame() {
 	glDisable(GL_BLEND);
 	glEnable(GL_DEPTH_TEST);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-	RenderCrosshair(); //This line Ameya added for crosshair
+	RenderCrosshair(); //This line Ameya added for crosshair 
+	if (hdrOn) {
+		glBindFramebuffer(GL_FRAMEBUFFER, 0); //unbind hdrFBO   
+		glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+		glDisable(GL_CULL_FACE);
+		glDisable(GL_BLEND);
+		glDisable(GL_DEPTH_TEST);
+		UseShader(*hdrShader);
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, hdrTex);
+		glUniform1i(glGetUniformLocation(hdrShader->GetProgramID(), "hdrTex"), 0);
+		BindMesh(*hdrQuad);
+		DrawBoundMesh();
+	}
 }
 
 void GameTechRenderer::BuildObjectList() {
@@ -202,7 +264,7 @@ void GameTechRenderer::RenderShadowMap() {
 
 	glViewport(0, 0, windowSize.x, windowSize.y);
 	glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);// 0
 
 	glCullFace(GL_BACK);
 }
@@ -595,3 +657,4 @@ void GameTechRenderer::RenderCrosshair() {
 	glUseProgram(0);
 	glEnable(GL_DEPTH_TEST);
 }
+

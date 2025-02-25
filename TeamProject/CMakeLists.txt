@@ -1,8 +1,6 @@
 set(SOURCES
     BulletDebug.cpp
     BulletDebug.h
-    GameTechRenderer.cpp
-    GameTechRenderer.h
     GameTechRendererInterface.h
     TutorialGame.cpp
     TutorialGame.h
@@ -23,12 +21,47 @@ set(SOURCES
     Profiler.cpp
 	NavEntity.h
 	NavEntity.cpp
+	AudioEngine.h
+	AudioEngine.cpp
+    Config.h
+    Config.cpp
 )
 
-file(GLOB_RECURSE COMPILED_MESHES "${CMAKE_SOURCE_DIR}/Assets/Meshes/*.msh")
+set(ASSET_ROOT "${CMAKE_SOURCE_DIR}/Assets")
+file(GLOB_RECURSE AUDIO "${ASSET_ROOT}/Audio/*.wav")
+file(GLOB_RECURSE DATA "${ASSET_ROOT}/Data/*")
+file(GLOB_RECURSE FONTS "${ASSET_ROOT}/Fonts/*.fnt")
+file(GLOB_RECURSE LEVELS "${ASSET_ROOT}/Levels/*.json")
+file(GLOB_RECURSE MESHES "${ASSET_ROOT}/Meshes/*.msh")
+if (PS5_BUILD)
+    file(GLOB_RECURSE SHADERS "${ASSET_ROOT}/Shaders/PSSL/*.pssl")
+else()
+    file(GLOB_RECURSE SHADERS
+        "${ASSET_ROOT}/Shaders/*.frag"
+        "${ASSET_ROOT}/Shaders/*.vert"
+    )
+endif()
+file(GLOB_RECURSE TEXTURES
+    "${ASSET_ROOT}/Textures/*.jpg"
+    "${ASSET_ROOT}/Textures/*.png"
+    "${ASSET_ROOT}/Textures/*.dds"
+)
+set(ASSETS
+    ${AUDIO}
+    ${DATA}
+    ${FONTS}
+    ${LEVELS}
+    ${MESHES}
+    ${SHADERS}
+    ${TEXTURES}
+)
 
 if(NOT PS5_BUILD)
-    list(APPEND SOURCES main.cpp)
+    list(APPEND SOURCES
+        main.cpp
+        GameTechRenderer.cpp
+        GameTechRenderer.h
+    )
     add_executable(${PROJECT_NAME} ${SOURCES})
 else()
     # There is quite a bit of extra work for PS5 builds,
@@ -36,11 +69,7 @@ else()
     # the main game statically
     add_library(${PROJECT_NAME} STATIC ${SOURCES})
 endif()
-
-# TODO: PS5 Support
-if(NOT PS5_BUILD)
-    add_dependencies(${PROJECT_NAME} MeshCompiler)
-endif()
+copy_assets(${RUNTIME_ASSET_PATH} ${ASSET_ROOT} ${PROJECT_NAME} ${ASSETS})
 
 set_target_properties(${PROJECT_NAME} PROPERTIES
     INTERPROCEDURAL_OPTIMIZATION_RELEASE "TRUE"
@@ -108,6 +137,9 @@ if(NOT PS5_BUILD)
 endif()
 target_link_libraries(${PROJECT_NAME} PUBLIC ${BULLET_LIBRARIES})
 target_link_libraries(${PROJECT_NAME} PUBLIC nlohmann_json::nlohmann_json)
+target_link_libraries(${PROJECT_NAME} PUBLIC fmod)
+target_link_libraries(${PROJECT_NAME} PUBLIC fmodstudio)
+fmod_copy_libs(${PROJECT_NAME})
 
 target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_SOURCE_DIR})
 target_include_directories(${PROJECT_NAME} PUBLIC ${BULLET_INCLUDE_DIRS})
@@ -116,20 +148,10 @@ if(WIN32)
     set_target_properties(${PROJECT_NAME} PROPERTIES
         VS_DEBUGGER_WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
     )
-endif()
-
-foreach(file ${COMPILED_MESHES})
-    set(out "${file}b")
-    add_custom_command(
-        OUTPUT ${out}
-        COMMAND MeshCompiler ${file} ${out}
-        DEPENDS ${file} MeshCompiler
-        COMMENT "Compiling mesh ${file}"
-    )
-    list(APPEND PROCESSED_MESHES ${out})
-endforeach()
-add_custom_target(ProcessMeshes ALL DEPENDS ${PROCESSED_MESHES})
-# TODO: PS5 support
-if(NOT PS5_BUILD)
-    add_dependencies(${PROJECT_NAME} ProcessMeshes)
+    set(outdir ${CMAKE_CURRENT_BINARY_DIR})
+    # Don't create an extra `Debug/Release` directory for executables
+    set_target_properties(${PROJECT_NAME} PROPERTIES RUNTIME_OUTPUT_DIRECTORY_DEBUG ${outdir})
+    set_target_properties(${PROJECT_NAME} PROPERTIES RUNTIME_OUTPUT_DIRECTORY_MINSIZEREL ${outdir})
+    set_target_properties(${PROJECT_NAME} PROPERTIES RUNTIME_OUTPUT_DIRECTORY_RELEASE ${outdir})
+    set_target_properties(${PROJECT_NAME} PROPERTIES RUNTIME_OUTPUT_DIRECTORY_RELWITHDEBINFO ${outdir})
 endif()

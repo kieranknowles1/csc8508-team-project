@@ -16,6 +16,7 @@ using namespace NCL::CSC8503;
 class PlayerObject : public GameObject {
 public:
 	void OnCollisionEnter(const CollisionInfo& collisionInfo) override {
+		if (collisionInfo.otherObject->getIsPaintball()) return;
 		btVector3 playerPos = this->GetPhysicsObject()->GetRigidBody()->getWorldTransform().getOrigin();
 		btVector3 objPos = collisionInfo.contactPointA;
 		btVector3 direction = (objPos - playerPos).normalized();
@@ -25,10 +26,18 @@ public:
 			collided++;
 			collidedObjects.push_back(collisionInfo.otherObject);
 		}
+
+		// set special type collision
+		collisionType = collisionInfo.otherObject->getType();
+		if (collisionInfo.otherObject->getType() == 'J' || collisionInfo.otherObject->getType() == 'S') {
+			collisionNormal = collisionInfo.contactNormal;
+			collisionPoint = collisionInfo.contactPointA;
+		}
 	}
 
 
 	void OnCollisionExit(const CollisionInfo& collisionInfo) override {
+		if (collisionInfo.otherObject->getIsPaintball()) return;
 		auto it = std::find(collidedObjects.begin(), collidedObjects.end(), collisionInfo.otherObject);
 		if (it != collidedObjects.end()) {
 			collidedObjects.erase(it);
@@ -39,6 +48,7 @@ public:
 	}
 
 	void OnCollisionStay(const CollisionInfo& collision) override {
+		if (collision.otherObject->getIsPaintball()) return;
 		btVector3 playerPos = this->GetPhysicsObject()->GetRigidBody()->getWorldTransform().getOrigin();
 		btVector3 objPos = collision.contactPointA;
 		btVector3 direction = (objPos - playerPos).normalized();
@@ -59,9 +69,20 @@ public:
 				collidedObjects.push_back(collision.otherObject);
 			}
 		}
+		// set special type collision
+		collisionType = collision.otherObject->getType();
+		if (collision.otherObject->getType() == 'J' || collision.otherObject->getType() == 'S') {
+			collisionNormal = collision.contactNormal;
+			collisionPoint = collision.contactPointA;
+		}
 	}
 
-
+	char getType() {
+		return collisionType;
+	}
+	void resetType() {
+		collisionType = 'N'; //type None
+	}
 	void setCollided(int collidedIn) {
 		collided = collidedIn;
 	}
@@ -71,8 +92,17 @@ public:
 	void setUpDirection(btVector3 upDirectionIn) {
 		upDirection = upDirectionIn;
 	};
+	btVector3 getCollisionNormal() {
+		return collisionNormal;
+	}
+	btVector3 getCollisionPoint() {
+		return collisionPoint;
+	}
 private:
 	int collided = 0;
 	btVector3 upDirection;
+	btVector3 collisionNormal = btVector3(0, 1, 0);
+	btVector3 collisionPoint = btVector3(0, 0, 0);
 	std::list<GameObject*> collidedObjects;
+	char collisionType;
 };

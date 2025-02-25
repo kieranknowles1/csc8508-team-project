@@ -1,4 +1,6 @@
 #include "PlayerController.h"
+#include "AudioEngine.h"
+#include "TutorialGame.h"
 
 using namespace NCL;
 using namespace CSC8503;
@@ -32,23 +34,17 @@ void PlayerController::UpdateMovement(float dt) {
     transformPlayer = rb->getWorldTransform();
     btPlayerPos = transformPlayer.getOrigin();
 
-   //shooting
-    if (controller->GetDigital(Controller::DigitalControl::Fire) && shotTimer >= shotCooldown) {
-        Shoot();
-        shotTimer = 0.0f;
-    }
-    else {
-        shotTimer += dt;
-    }
+    HandleShooting(dt);
 
     // yaw is fully local
     yaw = fmod(yaw - controller->GetAnalogue(Controller::AnalogueControl::LookX) + 360.0f, 360.0f);
-    if (!thirdPerson) camera->SetYaw(yaw);
+    camera->SetYaw(yaw);
 
     //camera offset for rotation
     btVector3 rot = GetEulerAngles(camRotOffset);
     camera->setRotation(rot);
 
+    HandleTypes();
 
     //sliding/floor detection
     HandleSliding(dt);
@@ -108,7 +104,7 @@ void PlayerController::UpdateMovement(float dt) {
         player->setCollided(0);
         inAirTime -= dt;
     }
-    if (player->getCollided() <= 0) {
+    if (player->getCollided() <= 0 || onIce) {
         movement *= (airMulti*dt);
         movement += rb->getLinearVelocity();
     }
@@ -117,6 +113,7 @@ void PlayerController::UpdateMovement(float dt) {
 
     // jump input
     if (controller->GetDigital(Controller::DigitalControl::Jump) && player->getCollided() && inAirTime <= 0) {
+        audioEngine.PlaySounds("jump.wav", NCL::Maths::Vector3(player->GetTransform().getOrigin()), 0.0f);
         btVector3 normal = FindFloorNormal();
         float dotProduct = normal.dot(upDirection.absolute());
         if (fabs(dotProduct <= 1)) {
@@ -124,14 +121,14 @@ void PlayerController::UpdateMovement(float dt) {
         }
         else {
             movement += (jumpHeight * upDirection);
-
         }
         player->setCollided(0);
         inAirTime = 0.2f;
     }
-
+    previousVelocity = rb->getLinearVelocity();
     rb->setLinearVelocity(movement);
     rb->activate();
+
 }
 
 
@@ -153,6 +150,18 @@ void PlayerController::SetGunTransform() {
 
     gun->GetPhysicsObject()->GetRigidBody()->setWorldTransform(transformGun);
 }
+
+void PlayerController::HandleShooting(float dt) {
+    if (controller->GetDigital(Controller::DigitalControl::Fire) && shotTimer >= shotCooldown) {
+        Shoot();
+        shotTimer = 0.0f;
+    }
+    else {
+        shotTimer += dt;
+    }
+}
+
+
 
 void PlayerController::Shoot() {
     // Convert camera pitch & yaw to radians
@@ -185,7 +194,7 @@ void PlayerController::Shoot() {
             }
         }
         if (hitObj != nullptr) { // hit an object of some kind
-            hitObj->GetRenderObject()->SetColour(hitObj->GetRenderObject()->GetColour() + Vector4(0.05f, -0.05f, -0.05f, 0));
+            hitObj->GetRenderObject()->SetColour(hitObj->GetRenderObject()->GetColour() * Vector4(1.05f, 0.95f, 0.95f, 1.0f));
         }
     }
     ShootBullet(bulletRotation, hitPoint);
@@ -199,7 +208,7 @@ void PlayerController::ShootBullet(btQuaternion bulletRotation ,btVector3 hitPoi
     btVector3 shorDirection = (hitPoint - bulletPos).normalize();
 
     Paintball* paintball = new Paintball();
-    paintball->Initialise(player,bulletWorld);
+    paintball->Initialise(player);
     Vector3 bulletSize(0.25f, 0.25f, 0.25f);
     paintball->setInitialPosition(bulletPos);
     paintball->setRenderScale(bulletSize);
@@ -282,7 +291,7 @@ bool PlayerController::CheckCeling() {
 // finds surface normal of floor below
 btVector3 PlayerController::FindFloorNormal() {
     btVector3 btBelowPlayerPos = btPlayerPos;
-    btBelowPlayerPos -= (upDirection * 8);
+    btBelowPlayerPos -= (upDirection * 16);
     btCollisionWorld::ClosestRayResultCallback callback(btPlayerPos, btBelowPlayerPos);
     bulletWorld->rayTest(btPlayerPos, btBelowPlayerPos, callback);
     if (callback.hasHit()) {
@@ -348,6 +357,55 @@ void PlayerController::HandleSliding(float dt) {
     }
 }
 
+void PlayerController::HandleTypes() {
+    switch (player->getType())
+    {
+    case 'D': //Default
+        onIce = false;
+        break;
+    case 'J': {//Jump-pads
+        btVector3 normal = player->getCollisionNormal();
+        float dotProduct = normal.dot(upDirection.absolute());
+        btVector3 movement = btVector3(0, 0, 0);
+        movement += (bouncePadHeight * -player->getCollisionNormal());
+        rb->setLinearVelocity(btVector3(0, 0, 0));
+        player->setCollided(0);
+        inAirTime = 0.2f;
+        rb->applyCentralImpulse(movement);
+        break;
+    }
+    case 'S': { // Slime
+        if (inAirTime <= 0) {
+            btVector3 normal = player->getCollisionNormal();
+            float dampening = 0.85f;
+            btVector3 reflectedVelocity = previousVelocity - (2 * previousVelocity.dot(normal) * normal);
+            if (fabs(10 * previousVelocity.dot(normal)) <= 0.25f) {
+                btVector3 direction = (player->getCollisionPoint() - transformPlayer.getOrigin()).normalized();
+                float dot = direction.dot(-upDirection);
+                float angle = acos(dot) * (180.0f / SIMD_PI);
+                if (angle <= 25.0f) { // come to rest on floor
+                    player->setCollided(1);
+                    break;
+                }
+            }
+            else {
+                reflectedVelocity *= dampening;
+                inAirTime = 0.1f;
+                rb->setLinearVelocity(reflectedVelocity);
+            }
+        }
+        break;
+    }
+    case 'I': {// Ice
+        onIce = true;
+        break;
+    }
+    default:
+        break;
+    }
+    player->resetType();
+}
+
 
 // world rotate things
 void PlayerController::Rotate(bool positive, bool rolling) {
@@ -392,7 +450,7 @@ btVector3 PlayerController::CalculateUpDirection(float dt) {
 
 btVector3 PlayerController::CalculateRightDirection(btVector3 upDir) {
     btVector3 forward = btVector3(0, 0, 1);
-    if (fabs(upDir.dot(forward)) > 0.999f) { 
+    if (fabs(upDir.dot(forward)) > 0.999f) {
         forward = btVector3(0, 1, 0);
     }
     btVector3 rightDirection = upDir.cross(forward);
@@ -462,4 +520,11 @@ Vector2 PlayerController::getDirectionalInput() const
     Vector2 raw(controller->GetAnalogue(Controller::AnalogueControl::MoveSidestep), controller->GetAnalogue(Controller::AnalogueControl::MoveForward));
     float magnitude = Vector::Length(raw);
     return magnitude <= 1.0f ? raw : raw / magnitude;
+}
+
+void NCL::Paintball::OnCollisionEnter(const CollisionInfo &collisionInfo)
+{
+    if (collisionInfo.otherObject == player) return;
+
+    TutorialGame::getInstance()->delayedRemoveObject(this);
 }

@@ -1,5 +1,9 @@
 #pragma once
 
+#ifdef __PROSPERO__
+#error GameTechRenderer.h cannot be included on PS5
+#endif
+
 #include <memory>
 
 #include "OGLRenderer.h"
@@ -86,6 +90,13 @@ namespace NCL {
 			GLuint textColourVBO;
 			GLuint textTexVBO;
 			size_t textCount = 0;
+
+			//Post processing additions:
+			GLuint hdrTex;
+			GLuint hdrFBO;
+			GLuint hdrDepthTex;
+			OGLMesh* hdrQuad;
+			OGLShader* hdrShader;
 		};
 	}
 }

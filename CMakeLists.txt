@@ -5,10 +5,21 @@ set(CMAKE_SYSTEM_VERSION 10.0 CACHE STRING "" FORCE)
 project(CSC8508)
 
 set(CMAKE_CXX_STANDARD 20)
-
+set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake;${CMAKE_MODULE_PATH}")
+set(FMOD_VERSION 2.02.26 CACHE STRING "" FORCE)
 
 option(USE_SDL2 "Use SDL2 for window creation and input" OFF)
 option(PS5_BUILD "Build for the PS5, also needs the options passed through configure-ps5" OFF)
+if (PS5_BUILD)
+    set(FMOD_SDK_PATH "C:/Program Files (x86)/FMOD SoundSystem/FMOD Studio API PS5/api" CACHE STRING "Path to the FMOD SDK")
+    set(FMOD_DLL "${FMOD_SDK_PATH}/core/lib/libfmod.prx")
+    set(FMOD_STUDIO_DLL "${FMOD_SDK_PATH}/studio/lib/libfmodstudio.prx")
+    set(PS5_SDK_TOOLS "C:/Program Files (x86)/SCE/Prospero SDKs/10.000/host_tools/bin")
+else()
+    set(FMOD_SDK_PATH "C:/Program Files (x86)/FMOD SoundSystem/FMOD Studio API Windows/api" CACHE STRING "Path to the FMOD SDK")
+    set(FMOD_DLL "${FMOD_SDK_PATH}/core/lib/x64/fmod.dll")
+    set(FMOD_STUDIO_DLL "${FMOD_SDK_PATH}/studio/lib/x64/fmodstudio.dll")
+endif()
 
 if (USE_SDL2)
     add_definitions(-DCSC_USE_SDL2)
@@ -22,6 +33,14 @@ if(NOT CMAKE_VS_PLATFORM_NAME)
     set(CMAKE_VS_PLATFORM_NAME "x64")
 endif()
 message("${CMAKE_VS_PLATFORM_NAME} architecture in use")
+
+if (PS5_BUILD)
+    set(RUNTIME_ASSET_PATH ${CMAKE_BINARY_DIR}/Assets)
+else()
+    set(RUNTIME_ASSET_PATH ${CMAKE_BINARY_DIR}/TeamProject/Assets)
+endif()
+
+include(copy_assets)
 
 ################################################################################
 # Use solution folders feature
@@ -49,10 +68,19 @@ set(BULLET_LIBRARIES BulletDynamics BulletCollision LinearMath)
 add_subdirectory(ThirdParty/bullet3)
 add_subdirectory(ThirdParty/nlohmann_json)
 
+add_subdirectory(fmod-cmake)
+include_directories(
+    ${FMOD_SDK_PATH}/core/inc
+    ${FMOD_SDK_PATH}/studio/inc
+)
+
 add_subdirectory(NCLCoreClasses)
 # TODO: Can we do this on PS5 as well?
 if (NOT PS5_BUILD)
     add_subdirectory(MeshCompiler)
+else()
+    add_executable(MeshCompiler IMPORTED)
+    set_target_properties(MeshCompiler PROPERTIES IMPORTED_LOCATION ${CMAKE_SOURCE_DIR}/build/MeshCompiler/Debug/MeshCompiler)
 endif()
 add_subdirectory(CSC8503CoreClasses)
 if (NOT PS5_BUILD)

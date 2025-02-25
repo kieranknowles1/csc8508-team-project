@@ -70,7 +70,13 @@
               bullet
               enet
               nlohmann_json
+              pulseaudio
             ];
+
+            options = {
+              USE_SDL2 = "YES";
+              FMOD_SDK_PATH = "/home/kieran/Documents/src/fmodstudioapi20306linux/api";
+            };
           });
         };
       };

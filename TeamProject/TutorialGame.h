@@ -3,7 +3,6 @@
 #include "../NCLCoreClasses/KeyboardMouseController.h"
 
 #include "GameTechRendererInterface.h"
-
 #include "ResourceManager.h"
 
 #include "LevelImporter.h"
@@ -22,10 +21,24 @@ namespace NCL {
 		class BulletDebug;
 
 		class TutorialGame {
+		private:
+			static TutorialGame* instance;
+
 		public:
 			// Physics update frequency, in hertz
 			const static constexpr float PHYSICS_PERIOD = 1.0f / 60.0f;
 
+			static TutorialGame* getInstance() {
+				assert(instance && "TutorialGame is not initialised");
+				return instance;
+			}
+
+			// Remove an object at the end of this frame. Use during update to avoid removing
+			// from containers while iterating
+			// It is the caller's responsibility to ensure there are no dangling references from other objects
+			void delayedRemoveObject(GameObject* obj) {
+				objectGraveyard.push_back(obj);
+			}
 
 			TutorialGame(GameTechRendererInterface* renderer, GameWorld* world, Controller* controller);
 			~TutorialGame();
@@ -46,7 +59,7 @@ namespace NCL {
 
 			Turret* AddTurretToWorld();
 
-			GameObject* AddFloorToWorld(const Vector3& position, const Vector3& size, const Vector3& rotation, bool isFloor);
+			GameObject* AddFloorToWorld(const Vector3& position, const Vector3& size, const Vector3& rotation);
 			GameObject* AddSphereToWorld(const Vector3& position, float radius, float inverseMass = 10.0f);
 			GameObject* AddCubeToWorld(const Vector3& position, Vector3 dimensions, float inverseMass = 10.0f,bool hasCollision = true);
 			PlayerObject* AddPlayerCapsuleToWorld(const Vector3& position, float halfHeight, float radius, float inverseMass = 10.0f);
@@ -60,6 +73,8 @@ namespace NCL {
 
 			GameTechRendererInterface* renderer;
 			GameWorld* world;
+			std::vector<GameObject*> objectGraveyard;
+			void clearGraveyard();
 
 			Controller* controller;
 

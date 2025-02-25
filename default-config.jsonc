@@ -1,0 +1,11 @@
+// Default configuration file
+// Should not normally be modified, instead create a `user-config.jsonc`
+// Use this as a reference for what options are available
+{
+    "windowWidth": 1280,
+    "windowHeight": 720,
+    // One of "None", "Exclusive", "Borderless"
+    // If borderless, then windowWidth and height should match your display
+    // resolution
+    "fullscreen": "None"
+}

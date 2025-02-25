@@ -3,9 +3,9 @@
 #include "PhysicsObject.h"
 #include "RenderObject.h"
 #include "TextureLoader.h"
-
+#include "AudioEngine.h"
+#include "GameTechRendererInterface.h"
 #include "BulletDebug.h"
-
 #include <CSC8503CoreClasses/Debug.h>
 
 #include "Window.h"
@@ -13,11 +13,16 @@
 using namespace NCL;
 using namespace CSC8503;
 
+TutorialGame* TutorialGame::instance = nullptr;
+
 TutorialGame::TutorialGame(GameTechRendererInterface* renderer, GameWorld* world, Controller* controller)
 	: renderer(renderer)
 	, controller(controller)
 	, world(world)
 {
+	assert(instance == nullptr && "TutorialGame must be unique");
+	instance = this;
+
 	/* Initializing the Bullet Physics World here as it should be done before Initialize the NCL framework's PhysicsSystem */
 	//InitBullet(); //bullet is initialised in initialiseAssets already
 	world->GetMainCamera().SetController(controller);
@@ -43,7 +48,9 @@ void TutorialGame::InitialiseAssets() {
 }
 
 TutorialGame::~TutorialGame()	{
+	instance = nullptr;
 	DestroyBullet();
+	audioEngine.Shutdown();
 
 	delete playerController;
 }
@@ -83,7 +90,10 @@ void TutorialGame::UpdateGame(float dt) {
 	CheckCollisions();
 
 	UpdatePlayer(dt);
+	profiler.startSection("Update Audio");
+	audioEngine.Update(&world->GetMainCamera());
 
+	clearGraveyard();
 	profiler.startSection("Prepare Render");
 	bulletWorld->debugDrawWorld();
 
@@ -109,6 +119,7 @@ void TutorialGame::UpdatePlayer(float dt) {
 			ThirdPersonControls();
 		}
 	}
+	resourceManager->update(dt);
 	bulletWorld->setGravity(playerController->getUpDirection() * -30.0f);
 }
 
@@ -143,13 +154,17 @@ void TutorialGame::UpdateKeys() {
 	if (controller->GetDigital(WorldPitchDown)) {
 			playerController->pitchDown();
 	}
+	if (Window::GetKeyboard()->KeyPressed(KeyCodes::F5)) {
+		bool toggleHDR = renderer->GetHDROn();
+		toggleHDR = !toggleHDR;
+		renderer->SetHDROn(toggleHDR);
+	}
 }
 
 void TutorialGame::ThirdPersonControls() {
 	btTransform transformPlayer = player->GetPhysicsObject()->GetRigidBody()->getWorldTransform();
-	btVector3 up = playerController->getUpDirection();
-	btQuaternion playerRotation = transformPlayer.getRotation();
-	btMatrix3x3 rotationMatrix(playerRotation);
+	btQuaternion playerRotation1(btVector3(0, 1, 0), Maths::DegreesToRadians(playerController->getYaw()));
+	btMatrix3x3 rotationMatrix(playerController->getCamOffset() * playerRotation1);
 	btVector3 forward = rotationMatrix * btVector3(0,0,-1);
 	btVector3 upwards = rotationMatrix * btVector3(0, 1, 0);
 	float camHeight = 10.0f;
@@ -157,7 +172,6 @@ void TutorialGame::ThirdPersonControls() {
 	btVector3 cameraOffset = (forward.normalize() * camDist) + (upwards.normalize() * camHeight);
 	btVector3 cameraPosition = transformPlayer.getOrigin() + cameraOffset;
 	mainCamera->SetPosition(cameraPosition);
-	mainCamera->SetYaw(playerController->getYaw());
 	mainCamera->SetPitch(-15.0f);
 }
 
@@ -177,6 +191,7 @@ void TutorialGame::visualiseNavMesh() {
 	std::vector<btVector3> path = navMesh->FindPath(startPoint, endPoint);
 	navMesh->DebugDrawPath(path);
 }
+
 
 void TutorialGame::CheckCollisions()
 {
@@ -217,13 +232,15 @@ void TutorialGame::CheckCollisions()
 	}
 }
 
-void TutorialGame::DestroyBullet() {
-	world->OperateOnContents([&](GameObject* obj) {
-		if (obj->GetPhysicsObject()) {
-			obj->GetPhysicsObject()->removeFromBullet(bulletWorld);
-		}
-	});
+void TutorialGame::clearGraveyard() {
+	for (auto obj : objectGraveyard) {
+		bulletWorld->removeRigidBody(obj->GetPhysicsObject()->GetRigidBody());
+		world->RemoveGameObject(obj); // Also deletes it
+	}
+	objectGraveyard.clear();
+}
 
+void TutorialGame::DestroyBullet() {
 	delete bulletWorld;
 	delete bulletDebug;
 	delete solver;
@@ -258,6 +275,7 @@ void TutorialGame::InitWorld() {
 	DestroyBullet();
 	world->ClearAndErase();
 	InitBullet();
+	audioEngine.Init();
 
 	navMeshDebug = false;
 	if (navMeshDebug) {
@@ -275,25 +293,25 @@ void TutorialGame::InitWorld() {
 
 	if (loadFromLevel) {
 		levelImporter = new LevelImporter(resourceManager.get(), world, bulletWorld);
-		levelImporter->LoadLevel(6);
+		levelImporter->LoadLevel(8);
 		InitPlayer();
 		return;
 	}
 
 	//floors
-	AddFloorToWorld(Vector3(0, 0, 0), Vector3(500, 2, 500), Vector3(0, 0, 0), true)->SetName("Floor1");
-	AddFloorToWorld(Vector3(498.5, -21.75, 0), Vector3(500, 2, 500), Vector3(0, 0, -5),true)->SetName("Floor2");
-	AddFloorToWorld(Vector3(996, -43.6, 0), Vector3(500, 2, 500), Vector3(0, 0, 0),true)->SetName("Floor3");
+	AddFloorToWorld(Vector3(0, 0, 0), Vector3(500, 2, 500), Vector3(0, 0, 0));
+	AddFloorToWorld(Vector3(498.5, -21.75, 0), Vector3(500, 2, 500), Vector3(0, 0, -5));
+	AddFloorToWorld(Vector3(996, -43.6, 0), Vector3(500, 2, 500), Vector3(0, 0, 0));
 
 	//walls
-	AddFloorToWorld(Vector3(1245, 206, 0), Vector3(2, 500, 500), Vector3(0, 0, 0),false);
-	AddFloorToWorld(Vector3(996, 206, 249), Vector3(500, 500, 2), Vector3(0, 0, 0), false);
-	AddFloorToWorld(Vector3(996, 206, -249), Vector3(500, 500, 2), Vector3(0, 0, 0), false);
-	AddFloorToWorld(Vector3(498, 206, 249), Vector3(500, 500, 2), Vector3(0, 0, 0), false);
-	AddFloorToWorld(Vector3(498, 206, -249), Vector3(500, 500, 2), Vector3(0, 0, 0), false);
-	AddFloorToWorld(Vector3(-2, 206, 249), Vector3(500, 500, 2), Vector3(0, 0, 0), false);
-	AddFloorToWorld(Vector3(-2, 206, -249), Vector3(500, 500, 2), Vector3(0, 0, 0), false);
-	AddFloorToWorld(Vector3(-248, 206, 0), Vector3(2, 500, 500), Vector3(0, 0, 0), false);
+	AddFloorToWorld(Vector3(1245, 206, 0), Vector3(2, 500, 500), Vector3(0, 0, 0));
+	AddFloorToWorld(Vector3(996, 206, 249), Vector3(500, 500, 2), Vector3(0, 0, 0));
+	AddFloorToWorld(Vector3(996, 206, -249), Vector3(500, 500, 2), Vector3(0, 0, 0));
+	AddFloorToWorld(Vector3(498, 206, 249), Vector3(500, 500, 2), Vector3(0, 0, 0));
+	AddFloorToWorld(Vector3(498, 206, -249), Vector3(500, 500, 2), Vector3(0, 0, 0));
+	AddFloorToWorld(Vector3(-2, 206, 249), Vector3(500, 500, 2), Vector3(0, 0, 0));
+	AddFloorToWorld(Vector3(-2, 206, -249), Vector3(500, 500, 2), Vector3(0, 0, 0));
+	AddFloorToWorld(Vector3(-248, 206, 0), Vector3(2, 500, 500), Vector3(0, 0, 0));
 
 	// Use this as a reference to create more cube objects
 	AddCubeToWorld(Vector3(0, 30, 0), Vector3(5, 5, 5), 1.0f);
@@ -325,12 +343,13 @@ void TutorialGame::InitPlayer() {
 	}
 	// Keep us from clipping when falling too fast
 	player->GetPhysicsObject()->GetRigidBody()->setCcdMotionThreshold(1.0f);
+	player->GetPhysicsObject()->GetRigidBody()->setCcdSweptSphereRadius(0.4f);
 	player->GetPhysicsObject()->GetRigidBody()->setAngularFactor(0);
 	player->GetPhysicsObject()->GetRigidBody()->setFriction(0.0f);
 	player->GetPhysicsObject()->GetRigidBody()->setDamping(0.0, 0);
 	gun = AddCubeToWorld(Vector3(10, 2, 20), Vector3(0.6, 0.6, 1.6), 0, false);
 	playerController = new PlayerController(player, gun, controller, mainCamera, bulletWorld, world, resourceManager.get());
-	player->GetRenderObject()->SetColour(playerColour);
+	player->GetRenderObject()->SetColour(Vector4(playerColour));
 
 }
 
@@ -502,7 +521,7 @@ GameObject* TutorialGame::AddInfinitePlaneToWorld(const Vector3& position, const
 A single function to add a large immoveable cube to the bottom of our world
 
 */
-GameObject* TutorialGame::AddFloorToWorld(const Vector3& position, const Vector3& size, const Vector3& rotation, bool isFloor) {
+GameObject* TutorialGame::AddFloorToWorld(const Vector3& position, const Vector3& size, const Vector3& rotation) {
 	GameObject* floor1 = AddCubeToWorld(position, size, 0);
 	btVector3 eulerRotation = rotation;
 	float pitchRadians = Maths::DegreesToRadians(eulerRotation.x());

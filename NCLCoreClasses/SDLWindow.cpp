@@ -3,15 +3,25 @@
 #include <SDL2/SDL.h>
 
 namespace NCL::UnixCode {
+    int getFullScreenFlag(FullScreenState state) {
+        switch (state)
+        {
+        case FullScreenState::None: return 0;
+        case FullScreenState::Exclusive: return SDL_WINDOW_FULLSCREEN;
+        case FullScreenState::Borderless: return SDL_WINDOW_FULLSCREEN_DESKTOP;
+        default: assert(false);
+        }
+    }
+
     SDLWindow::SDLWindow(const WindowInitialisation& initData) : Window() {
         // Use a borderless window. Most modern games do this
         // for seamless alt-tabbing
-        int fullScreenFlag = initData.fullScreen ? SDL_WINDOW_FULLSCREEN_DESKTOP : 0;
         sdlWindow = SDL_CreateWindow(
             initData.windowTitle.c_str(),
-            initData.windowPositionX, initData.windowPositionY,
+            // Centre window on primary monitor
+            SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
             initData.width, initData.height,
-            SDL_WINDOW_OPENGL | fullScreenFlag
+            SDL_WINDOW_OPENGL | getFullScreenFlag(initData.fullScreen)
         );
 
         init = sdlWindow != nullptr;

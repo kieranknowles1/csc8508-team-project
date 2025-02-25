@@ -12,6 +12,17 @@ namespace NCL::CSC8503 {
 	public:
 		virtual Rendering::Mesh* LoadMesh(const std::string& name) = 0;
 		virtual Rendering::Texture*	LoadTexture(const std::string& name) = 0;
+
+		bool GetHDROn() const {
+			return hdrOn;
+		}
+
+		void SetHDROn(bool toggle) {
+			hdrOn = toggle;
+		}
+	protected:
+		//adding bools to toggle post processing. Must be accessible from the specific renderer
+		bool hdrOn = true;
 	};
 }
 
