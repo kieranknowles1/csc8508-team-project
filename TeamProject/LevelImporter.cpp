@@ -159,7 +159,7 @@ void LevelImporter::HandleTypes(GameObject* obj) {
     case 'J':   // Jump-Pads
         obj->GetRenderObject()->SetColour(Vector4(0.3f, 0.3f, 0.3f, 1));
         obj->GetRenderObject()->SetTexScaleMultiplier(0.0025f);
-        obj->GetRenderObject()->SetDefaultTexture(resourceManager->getTextures().get("metal_0082_color_1k.jpg"));
+        obj->GetRenderObject()->SetDefaultTexture(resourceManager->getTextures().get("metal_0082_ao_1k.jpg"));
         obj->GetRenderObject()->SetNormal(resourceManager->getTextures().get("metal_0082_normal_opengl_1k.png"));
         break;
     case 'S':   // Slime
