@@ -20,9 +20,20 @@ namespace NCL::CSC8503 {
 		void SetHDROn(bool toggle) {
 			hdrOn = toggle;
 		}
+
+		bool GetVignetteOn() const {
+			return vignetteOn;
+		}
+
+		void SetVignetteOn(bool toggle) {
+			vignetteOn = toggle;
+		}
+
 	protected:
 		//adding bools to toggle post processing. Must be accessible from the specific renderer
 		bool hdrOn = true;
+		bool vignetteOn = true; 
+
 	};
 }
 

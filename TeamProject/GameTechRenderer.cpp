@@ -89,6 +89,8 @@ GameTechRenderer::GameTechRenderer(GameWorld* world) : OGLRenderer(*Window::GetW
 	hdrQuad->SetVertexTextureCoords({ Vector2(0, 1), Vector2(0,0) , Vector2(1,0) , Vector2(1,1) }); 
 	hdrQuad->SetVertexIndices({ 0,1,2,2,3,0 }); 
 	hdrQuad->UploadToGPU(); 
+
+	vignetteShader = new OGLShader("texturevert.glsl", "vignettefrag.glsl");
 	 
  	//start setting up framebuffers for post processing:
 	//first generate the textures to store the rendered scene:
@@ -119,17 +121,30 @@ GameTechRenderer::GameTechRenderer(GameWorld* world) : OGLRenderer(*Window::GetW
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
 	//set up framebuffer for vignette. May rename the framebuffers and textures to be more generic if more effects are added later
-	glGenTextures(1, &BTex); //since this FBO will only be used to do post processing on other quads, does not need a depth stencil attachment I think
+	glGenTextures(1, &BTex); 
 	glBindTexture(GL_TEXTURE_2D, BTex);
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, windowSize.x, windowSize.y, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, windowSize.x, windowSize.y, 0, GL_RGBA, GL_FLOAT, NULL);//making this one floating point as well. Will assume that values maintained even if final output is clamped
+
+	glGenTextures(1, &BDepthTex); //set up depth stencil test
+	glBindTexture(GL_TEXTURE_2D, BDepthTex);
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH24_STENCIL8, windowSize.x, windowSize.y, 0, GL_DEPTH_STENCIL, GL_UNSIGNED_INT_24_8, NULL);
+
 
 	glGenFramebuffers(1, &BFBO);
 	glBindFramebuffer(GL_FRAMEBUFFER, BFBO);
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, BTex, 0); //attach BFBO as the colour attachment
+	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE || !BTex || !BDepthTex); {
+		return;
+	}
+
 }
 
 GameTechRenderer::~GameTechRenderer()	{
@@ -191,8 +206,8 @@ void GameTechRenderer::RenderFrame() {
 	SortObjectList();
 	RenderShadowMap();
 	//Set up to render into framebuffer
-	if (hdrOn) {
-		glBindFramebuffer(GL_FRAMEBUFFER, hdrFBO);
+	if (hdrOn || vignetteOn) {
+		glBindFramebuffer(GL_FRAMEBUFFER, hdrFBO); 
 		glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 	}
 	//
@@ -209,22 +224,7 @@ void GameTechRenderer::RenderFrame() {
 	glEnable(GL_DEPTH_TEST);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	RenderCrosshair(); //This line Ameya added for crosshair 
-	if (hdrOn) {
-		glBindFramebuffer(GL_FRAMEBUFFER, 0); //unbind hdrFBO   
-		glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
-		glDisable(GL_CULL_FACE);
-		glDisable(GL_BLEND);
-		glDisable(GL_DEPTH_TEST);
-		UseShader(*hdrShader);
-		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, hdrTex);
-		glUniform1i(glGetUniformLocation(hdrShader->GetProgramID(), "hdrTex"), 0);
-		//glUniform2fv(glGetUniformLocation(hdrShader->GetProgramID(), "windowSize"), 1, (float*)&windowSize); //sending windowSize for vignette  This did not properly send windowSize to shader  
-		glUniform1f(glGetUniformLocation(hdrShader->GetProgramID(), "windowSizex"), windowSize.x); 
-		glUniform1f(glGetUniformLocation(hdrShader->GetProgramID(), "windowSizey"), windowSize.y);  
-		BindMesh(*hdrQuad);
-		DrawBoundMesh();
-	}
+	RenderPostProcessing();
 }
 
 void GameTechRenderer::BuildObjectList() {
@@ -674,3 +674,36 @@ void GameTechRenderer::RenderCrosshair() {
 	glEnable(GL_DEPTH_TEST);
 }
 
+void GameTechRenderer::RenderPostProcessing() {
+	if (vignetteOn) {
+		GLuint buff = (hdrOn ? BFBO : 0);
+		glBindFramebuffer(GL_FRAMEBUFFER, buff); //unbind hdrFBO and set BFBO  //was glBindFramebuffer(GL_FRAMEBUFFER, 0); 
+		glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT); //BFBO has neither depth nor stencil attachment
+		glDisable(GL_CULL_FACE);
+		glDisable(GL_BLEND);
+		glDisable(GL_DEPTH_TEST);
+		UseShader(*vignetteShader);//was hdrShader
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, hdrTex); //hdrTex currently holds raw scene
+		glUniform1i(glGetUniformLocation(vignetteShader->GetProgramID(), "diffuseTex"), 0); //was hdrTex
+		//glUniform2fv(glGetUniformLocation(hdrShader->GetProgramID(), "windowSize"), 1, (float*)&windowSize); //sending windowSize for vignette  This did not properly send windowSize to shader  
+		glUniform1f(glGetUniformLocation(vignetteShader->GetProgramID(), "windowSizex"), windowSize.x);
+		glUniform1f(glGetUniformLocation(vignetteShader->GetProgramID(), "windowSizey"), windowSize.y);
+		BindMesh(*hdrQuad); //simply a quad
+		DrawBoundMesh(); //finished rendering into BTex now, ready to unbind to draw quad straight to screen next:
+	}
+	if (hdrOn) {
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+		glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+		glDisable(GL_CULL_FACE);
+		glDisable(GL_BLEND);
+		glDisable(GL_DEPTH_TEST);
+		UseShader(*hdrShader);
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, BTex);//BTex currently holds vignetted scene. (tonemapping should be done pretty much last)
+		glUniform1i(glGetUniformLocation(hdrShader->GetProgramID(), "hdrTex"), 0);
+		BindMesh(*hdrQuad);
+		DrawBoundMesh();
+	}
+
+}

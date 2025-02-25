@@ -99,6 +99,9 @@ namespace NCL {
 			OGLShader* hdrShader;
 			GLuint BTex;
 			GLuint BFBO;
+			OGLShader* vignetteShader;
+			GLuint BDepthTex;
+			void RenderPostProcessing();
 		};
 	}
 }
