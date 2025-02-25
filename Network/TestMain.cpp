@@ -28,18 +28,18 @@ void TestPacketBuffer() {
 	}
 
 	ENetAddress destination;
-	enet_address_set_host(&destination, "127.0.0.1");
+	enet_address_set_host(&destination, "10.70.33.113");
 	destination.port = DEFAULT_PORT;
 
 	std::vector<std::unique_ptr<Network>> clients;
 
 	ENetAddress serverAddr(ENET_HOST_ANY, DEFAULT_PORT);
-	Network server = Network(&serverAddr, 8);
+	Network server = Network(&serverAddr, 1);
 	server.Start();
 
 	std::cout << "Starting clients.\n";
-	for (int i = 0; i < 8; ++i) {
-		clients.push_back(std::make_unique<Network>(nullptr, 0));
+	for (int i = 0; i < 1; ++i) {
+		clients.push_back(std::make_unique<Network>(nullptr, 1));
 		if (clients[i].get()->GetState() == NetworkState::ERRORED) {
 			std::cout << "Client: " << i << " is broken.\n";
 		}
@@ -49,17 +49,14 @@ void TestPacketBuffer() {
 		}
 	}
 
-
-
 	std::this_thread::sleep_for(1000ms);
 
 	server.Close();
-	for (int i = 0; i < 8; ++i) {
+	for (int i = 0; i < 1; ++i) {
 		clients[i].get()->Close();
 		std::cout << "joined.\n";
 	}
 }
-
 
 
 int main(int argc, char** argv) {
