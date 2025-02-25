@@ -21,8 +21,7 @@ Network::Network(const ENetAddress* address, int maxConnections) : m_maxConnecti
 
 
 Network::~Network() {
-	std::lock_guard<std::mutex> lock(m_stateMut);
-	if (m_state != NetworkState::CLOSED) {
+	if (GetState() != NetworkState::CLOSED) {
 		Close();
 	}
 }
