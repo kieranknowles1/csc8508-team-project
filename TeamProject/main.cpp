@@ -48,7 +48,7 @@ int main(int argc, char** argv) {
 
 	while (window->UpdateWindow() && !Window::GetKeyboard()->KeyDown(KeyCodes::ESCAPE)) {
 
-		if (NCL::Window::GetKeyboard()->KeyDown(NCL::KeyCodes::P)) {
+		if (NCL::Window::GetKeyboard()->KeyPressed(NCL::KeyCodes::P)) {
 			paused = !paused;
 		}
 
