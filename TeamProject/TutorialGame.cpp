@@ -69,7 +69,7 @@ void TutorialGame::UpdateGame(float dt) {
 	if (testTurret) {
 		testTurret->Update(dt);
 	}
-	if (navMesh) {
+	if (navMesh && navMeshDebug) {
 		visualiseNavMesh();
 		if (navEntity) {
 			navEntity->Update(dt);
@@ -259,11 +259,11 @@ void TutorialGame::InitWorld() {
 	world->ClearAndErase();
 	InitBullet();
 
-	navMesh = new NavMesh(bulletWorld);
-	navMesh->LoadFromFile("Assets/Meshes/NavMeshes/smalltest.navmesh");
-	navMeshDebug = true;
+	navMeshDebug = false;
 	if (navMeshDebug) {
 		freeCam = true;
+		navMesh = new NavMesh(bulletWorld);
+		navMesh->LoadFromFile("Assets/Meshes/NavMeshes/smalltest.navmesh");
 		AddNavEntityToWorld();
 
 		btVector3 startPoint(94, 0.5833334, 26);
@@ -273,7 +273,7 @@ void TutorialGame::InitWorld() {
 		navEntity->NewPath(path);
 	}
 
-	/*if (loadFromLevel) {
+	if (loadFromLevel) {
 		levelImporter = new LevelImporter(resourceManager.get(), world, bulletWorld);
 		levelImporter->LoadLevel(6);
 		InitPlayer();
@@ -312,7 +312,7 @@ void TutorialGame::InitWorld() {
 	AddCapsuleToWorld(Vector3(70, 15, -20), 8.0f, 4.0f, 4.0f);
 	AddCapsuleToWorld(Vector3(-20, 15, 12), 6.0f, 5.0f, 8.0f);
 
-	AddTurretToWorld();*/
+	AddTurretToWorld();
 	InitPlayer();
 
 }
