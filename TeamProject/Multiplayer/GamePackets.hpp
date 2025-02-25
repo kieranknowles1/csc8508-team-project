@@ -13,7 +13,7 @@ namespace Packet {
 		DELTA = CUSTOM_TYPE,
 		POSITION = CUSTOM_TYPE + 1,
 		PLAYER_STATE_CHANGE = CUSTOM_TYPE + 2,
-		PLAYER_GRAVITY_CHANGE = CUSTOM_TYPE + 3
+		OBJECT_CHANGE_GRAVITY = CUSTOM_TYPE + 3
 	};
 
 
@@ -64,15 +64,33 @@ namespace Packet {
 	 */
 	class PlayerChangeStatePacket : public Packet {
 	public:
-		PlayerChangeStatePacket(int objectID, int playerID, PlayerState state, int sequenceNum) :
+		PlayerChangeStatePacket(int playerID, const PlayerState& state, int sequenceNum) :
 			Packet(static_cast<Type>(PacketType::PLAYER_STATE_CHANGE), static_cast<int>(Channel::UNSEQUENCED), sequenceNum),
-			m_objectID(objectID), m_playerID(playerID), m_newState(state)
+			m_playerID(playerID), m_newState(state)
+		{}
+
+	private:
+		int m_playerID;
+		PlayerState m_newState;
+	};
+
+
+	/**
+	 * @brief Objet Change Gravity Packet class.
+	 * 
+	 * Used to change the direction of an objects gravity.
+	 * Changes the up vector of the object.
+	 */
+	class ObjectChangeGravity : public Packet {
+	public:
+		ObjectChangeGravity(int objectID, const btVector3& upDirection, int sequenceNum) :
+			Packet(static_cast<Type>(PacketType::OBJECT_CHANGE_GRAVITY), static_cast<int>(Channel::UNSEQUENCED), sequenceNum),
+			m_objectID(objectID), m_upVector(upDirection)
 		{}
 
 	private:
 		int m_objectID;
-		int m_playerID;
-		PlayerState m_newState;
+		btVector3 m_upVector;
 	};
 }
 
