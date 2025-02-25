@@ -97,6 +97,8 @@ namespace NCL {
 			GLuint hdrDepthTex;
 			OGLMesh* hdrQuad;
 			OGLShader* hdrShader;
+			GLuint BTex;
+			GLuint BFBO;
 		};
 	}
 }

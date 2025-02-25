@@ -117,6 +117,19 @@ GameTechRenderer::GameTechRenderer(GameWorld* world) : OGLRenderer(*Window::GetW
 		return;
 	}
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+	//set up framebuffer for vignette. May rename the framebuffers and textures to be more generic if more effects are added later
+	glGenTextures(1, &BTex); //since this FBO will only be used to do post processing on other quads, does not need a depth stencil attachment I think
+	glBindTexture(GL_TEXTURE_2D, BTex);
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, windowSize.x, windowSize.y, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+
+	glGenFramebuffers(1, &BFBO);
+	glBindFramebuffer(GL_FRAMEBUFFER, BFBO);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, BTex, 0); //attach BFBO as the colour attachment
 }
 
 GameTechRenderer::~GameTechRenderer()	{
