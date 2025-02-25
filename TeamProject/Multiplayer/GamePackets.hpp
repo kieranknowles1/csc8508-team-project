@@ -57,7 +57,8 @@ namespace Packet {
 	/**
 	 * @brief Player Change State Packet class.
 	 * 
-	 * Used to notify of a player death.
+	 * Used to notify of a player's state change (usually spawning in or
+	 * dying).
 	 */
 	class PlayerChangeStatePacket : public Packet {
 	public:
