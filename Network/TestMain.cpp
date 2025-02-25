@@ -51,11 +51,11 @@ void TestPacketBuffer() {
 
 	std::this_thread::sleep_for(1000ms);
 
-	server.Close();
-	for (int i = 0; i < 1; ++i) {
-		clients[i].get()->Close();
-		std::cout << "joined.\n";
-	}
+	//server.Close();
+	//for (int i = 0; i < 1; ++i) {
+	//	clients[i].get()->Close();
+	//	std::cout << "joined.\n";
+	//}
 }
 
 

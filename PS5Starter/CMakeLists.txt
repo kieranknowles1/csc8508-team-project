@@ -9,6 +9,17 @@ set(SOURCES
     main.cpp
 )
 
+set(SCE_MODULES
+    libc.prx
+    libSceFace.prx
+    libSceFaceTracker.prx
+    libSceFontGsm.prx
+    libSceJobManager.prx
+    libSceJobManager_nosubmission.prx
+    libSceNpCppWebApi.prx
+    libScePfs.prx
+)
+
 ################################################################################
 # Target
 ################################################################################
@@ -88,3 +99,7 @@ target_link_libraries(${PROJECT_NAME}
 )
 
 include_directories(${COMPILE_ASSET_ROOT})
+
+foreach(file ${SCE_MODULES})
+    file(COPY ${PS5_SCE_MODULE}/${file} DESTINATION ${CMAKE_BINARY_DIR}/sce_module/)
+endforeach()

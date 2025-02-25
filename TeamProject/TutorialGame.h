@@ -10,6 +10,7 @@
 #include "PlayerObject.h"
 #include "Turret.h"
 #include "NavMesh.h"
+#include "NavEntity.h"
 #include "Profiler.h"
 
 
@@ -123,8 +124,11 @@ namespace NCL {
 			LevelImporter* levelImporter;
 			bool loadFromLevel;
 
-
 			NavMesh* navMesh;
+			bool navMeshDebug = false;
+			void visualiseNavMesh();
+			NavEntity* navEntity;
+			NavEntity* AddNavEntityToWorld();
 		};
 	}
 }
