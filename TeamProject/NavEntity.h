@@ -5,13 +5,18 @@ namespace NCL {
 	namespace CSC8503 {
 		class NavEntity : public GameObject {
 		public:
-			NavEntity();
-			~NavEntity();
-		private:
-			float speed = 3;
+			NavEntity() {};
+			~NavEntity() {};
 
-			std::vector<btVector3> path;
-			btVector3 nextNode;
+			void NewPath(std::vector<btVector3> newPath);
+			void Update(float dt);
+		private:
+			float speed = 0.01;
+
+			std::vector<btVector3> path = {};
+			int nextNode = -1;
+
+			btTransform trans;
 		};
 	}
 }

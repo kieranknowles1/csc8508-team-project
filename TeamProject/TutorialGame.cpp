@@ -71,6 +71,9 @@ void TutorialGame::UpdateGame(float dt) {
 	}
 	if (navMesh) {
 		visualiseNavMesh();
+		if (navEntity) {
+			navEntity->Update(dt);
+		}
 	}
 
 	UpdateKeys();
@@ -259,9 +262,18 @@ void TutorialGame::InitWorld() {
 	navMesh = new NavMesh(bulletWorld);
 	navMesh->LoadFromFile("Assets/Meshes/NavMeshes/smalltest.navmesh");
 	navMeshDebug = true;
-	if (navMeshDebug) freeCam = true;
+	if (navMeshDebug) {
+		freeCam = true;
+		AddNavEntityToWorld();
 
-	if (loadFromLevel) {
+		btVector3 startPoint(94, 0.5833334, 26);
+		btVector3 endPoint(68, 0.5833334, 34);
+
+		std::vector<btVector3> path = navMesh->FindPath(startPoint, endPoint);
+		navEntity->NewPath(path);
+	}
+
+	/*if (loadFromLevel) {
 		levelImporter = new LevelImporter(resourceManager.get(), world, bulletWorld);
 		levelImporter->LoadLevel(6);
 		InitPlayer();
@@ -300,7 +312,7 @@ void TutorialGame::InitWorld() {
 	AddCapsuleToWorld(Vector3(70, 15, -20), 8.0f, 4.0f, 4.0f);
 	AddCapsuleToWorld(Vector3(-20, 15, 12), 6.0f, 5.0f, 8.0f);
 
-	AddTurretToWorld();
+	AddTurretToWorld();*/
 	InitPlayer();
 
 }
@@ -347,6 +359,28 @@ Turret* TutorialGame::AddTurretToWorld() {
 	testTurret = turret;
 
 	return turret;
+}
+
+NavEntity* TutorialGame::AddNavEntityToWorld() {
+	NavEntity* navEntity = new NavEntity();
+
+	navEntity->setInitialPosition(btVector3(94, 0.5833334, 26));
+	navEntity->setRenderScale(btVector3(4.0f, 4.0f, 4.0f));
+
+	btCollisionShape* shape = new btCapsuleShape(2.0f, 4.0f);
+
+	navEntity->SetRenderObject(new RenderObject(navEntity, resourceManager->getMeshes().get("Capsule.msh"), defaultTexture));
+
+	PhysicsObject* physicsObject = new PhysicsObject(navEntity);
+	physicsObject->InitBulletPhysics(bulletWorld, shape, 0);
+	navEntity->SetPhysicsObject(physicsObject);
+
+	navEntity->GetRenderObject()->SetColour(Vector4(1, 0, 0, 1));
+
+	world->AddGameObject(navEntity);
+
+	this->navEntity = navEntity;
+	return navEntity;
 }
 
 /* Adding an object to test the bullet physics */
