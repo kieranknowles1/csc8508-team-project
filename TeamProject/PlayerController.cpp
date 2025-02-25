@@ -112,7 +112,7 @@ void PlayerController::UpdateMovement(float dt) {
 
     // jump input
     if (controller->GetDigital(Controller::DigitalControl::Jump) && player->getCollided() && inAirTime <= 0) {
-      audioEngine.PlaySounds("jump.wav", NCL::Maths::Vector3(player->GetTransform().getOrigin()), 0.0f);
+        audioEngine.PlaySounds("jump.wav", NCL::Maths::Vector3(player->GetTransform().getOrigin()), 0.0f);
         btVector3 normal = FindFloorNormal();
         float dotProduct = normal.dot(upDirection.absolute());
         if (fabs(dotProduct <= 1)) {
@@ -120,12 +120,11 @@ void PlayerController::UpdateMovement(float dt) {
         }
         else {
             movement += (jumpHeight * upDirection);
-
         }
         player->setCollided(0);
         inAirTime = 0.2f;
     }
-
+    previousVelocity = rb->getLinearVelocity();
     rb->setLinearVelocity(movement);
     rb->activate();
   
@@ -364,10 +363,10 @@ void PlayerController::HandleTypes() {
         onIce = false;
         break;
     case 'J': {//Jump-pads
-        btVector3 normal = FindFloorNormal();
+        btVector3 normal = player->getCollisionNormal();
         float dotProduct = normal.dot(upDirection.absolute());
         btVector3 movement = btVector3(0, 0, 0);
-        movement += (bouncePadHeight * FindFloorNormal());
+        movement += (bouncePadHeight * -player->getCollisionNormal());
         rb->setLinearVelocity(btVector3(0, 0, 0));
         player->setCollided(0);
         inAirTime = 0.2f;
@@ -375,18 +374,25 @@ void PlayerController::HandleTypes() {
         break;
     }
     case 'S': { // Slime
-        btVector3 normal = FindFloorNormal();
-        float dotProduct = normal.dot(upDirection.absolute());
-        if (fabs(dotProduct) > 1) {
-            normal = upDirection;
+        if (inAirTime <= 0) {
+            btVector3 normal = player->getCollisionNormal();
+            float dampening = 0.85f;
+            btVector3 reflectedVelocity = previousVelocity - (2 * previousVelocity.dot(normal) * normal);
+            if (fabs(10 * previousVelocity.dot(normal)) <= 0.25f) {
+                btVector3 direction = (player->getCollisionPoint() - transformPlayer.getOrigin()).normalized();
+                float dot = direction.dot(-upDirection);
+                float angle = acos(dot) * (180.0f / SIMD_PI);
+                if (angle <= 25.0f) { // come to rest on floor
+                    player->setCollided(1);
+                    break;
+                }
+            }
+            else {
+                reflectedVelocity *= dampening;
+                inAirTime = 0.1f;
+                rb->setLinearVelocity(reflectedVelocity);
+            }
         }
-        btVector3 velocity = rb->getLinearVelocity();
-        float dampening = 0.95f;
-        btVector3 reflectedVelocity = velocity + (1000 * normal);
-        reflectedVelocity *= dampening; 
-        player->setCollided(0);
-        inAirTime = 0.2f;
-        rb->applyCentralImpulse(reflectedVelocity);
         break;
     }
     case 'I': {// Ice
