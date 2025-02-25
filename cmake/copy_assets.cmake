@@ -1,4 +1,5 @@
 set(TEXTURE_EXTENSIONS ".jpg" ".png" ".dds")
+set(MIP_LEVELS 8)
 
 macro(process_file)
     set(outvar ${ARGV0})
@@ -20,7 +21,7 @@ macro(process_file)
         list(APPEND PROCESSED_ASSETS ${file}.gnf)
         add_custom_command(
             OUTPUT ${file}.gnf
-            COMMAND image2gnf -g 1 -i ${file} -o ${file}.gnf -f Auto
+            COMMAND image2gnf -g 1 -i ${file} -o ${file}.gnf -f Auto --mipmaps ${MIP_LEVELS}
             DEPENDS ${file}
         )
     elseif(${extension} STREQUAL ".pssl" AND PS5_BUILD)
