@@ -12,6 +12,14 @@
 #include <btBulletCollisionCommon.h>
 
 using namespace NCL::CSC8503;
+
+
+enum class PlayerState {
+	DEAD,
+	ALIVE
+};
+
+
 // Paintball class derived from GameObject
 class PlayerObject : public GameObject {
 public:
@@ -98,6 +106,13 @@ public:
 	btVector3 getCollisionPoint() {
 		return collisionPoint;
 	}
+
+	/**
+	 * @brief Get the state of the player (usually alive or dead).
+	 * @return PlayerState Enum
+	 */
+	inline PlayerState GetState() { return state; }
+
 private:
 	int collided = 0;
 	btVector3 upDirection;
@@ -105,4 +120,5 @@ private:
 	btVector3 collisionPoint = btVector3(0, 0, 0);
 	std::list<GameObject*> collidedObjects;
 	char collisionType;
+	PlayerState state;
 };
