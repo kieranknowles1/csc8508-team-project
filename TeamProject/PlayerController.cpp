@@ -1,5 +1,6 @@
 #include "PlayerController.h"
 #include "AudioEngine.h"
+#include "TutorialGame.h"
 
 using namespace NCL;
 using namespace CSC8503;
@@ -127,7 +128,7 @@ void PlayerController::UpdateMovement(float dt) {
     previousVelocity = rb->getLinearVelocity();
     rb->setLinearVelocity(movement);
     rb->activate();
-  
+
 }
 
 
@@ -207,7 +208,7 @@ void PlayerController::ShootBullet(btQuaternion bulletRotation ,btVector3 hitPoi
     btVector3 shorDirection = (hitPoint - bulletPos).normalize();
 
     Paintball* paintball = new Paintball();
-    paintball->Initialise(player,bulletWorld);
+    paintball->Initialise(player);
     Vector3 bulletSize(0.25f, 0.25f, 0.25f);
     paintball->setInitialPosition(bulletPos);
     paintball->setRenderScale(bulletSize);
@@ -449,7 +450,7 @@ btVector3 PlayerController::CalculateUpDirection(float dt) {
 
 btVector3 PlayerController::CalculateRightDirection(btVector3 upDir) {
     btVector3 forward = btVector3(0, 0, 1);
-    if (fabs(upDir.dot(forward)) > 0.999f) { 
+    if (fabs(upDir.dot(forward)) > 0.999f) {
         forward = btVector3(0, 1, 0);
     }
     btVector3 rightDirection = upDir.cross(forward);
@@ -519,4 +520,11 @@ Vector2 PlayerController::getDirectionalInput() const
     Vector2 raw(controller->GetAnalogue(Controller::AnalogueControl::MoveSidestep), controller->GetAnalogue(Controller::AnalogueControl::MoveForward));
     float magnitude = Vector::Length(raw);
     return magnitude <= 1.0f ? raw : raw / magnitude;
+}
+
+void NCL::Paintball::OnCollisionEnter(const CollisionInfo &collisionInfo)
+{
+    if (collisionInfo.otherObject == player) return;
+
+    TutorialGame::getInstance()->delayedRemoveObject(this);
 }

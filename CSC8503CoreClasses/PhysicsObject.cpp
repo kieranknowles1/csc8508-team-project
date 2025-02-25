@@ -19,12 +19,6 @@ PhysicsObject::~PhysicsObject()	{
 		delete rigidBody->getCollisionShape();
 		delete rigidBody;
 	}
-
-#ifndef NDEBUG
-	if (hasBullet) {
-		std::cerr << "WARN: PhysicsObject was not removed from Bullet world, this will cause use-after-free" << std::endl;
-	}
-#endif
 }
 
 /* Bullet Physics Implementation start here */
@@ -55,21 +49,7 @@ void PhysicsObject::InitBulletPhysics(btDynamicsWorld* world, btCollisionShape* 
 
 	if (collide) {
 		world->addRigidBody(rigidBody);
-#ifndef NDEBUG
-		hasBullet = true;
-#endif
 	}
-}
-
-void NCL::CSC8503::PhysicsObject::removeFromBullet(btDynamicsWorld* world)
-{
-	if (rigidBody) {
-		world->removeRigidBody(rigidBody);
-#ifndef NDEBUG
-		hasBullet = false;
-#endif
-	}
-
 }
 
 void PhysicsObject::AddForce(const Vector3& force) {

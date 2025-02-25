@@ -13,11 +13,16 @@
 using namespace NCL;
 using namespace CSC8503;
 
+TutorialGame* TutorialGame::instance = nullptr;
+
 TutorialGame::TutorialGame(GameTechRendererInterface* renderer, GameWorld* world, Controller* controller)
 	: renderer(renderer)
 	, controller(controller)
 	, world(world)
 {
+	assert(instance == nullptr && "TutorialGame must be unique");
+	instance = this;
+
 	/* Initializing the Bullet Physics World here as it should be done before Initialize the NCL framework's PhysicsSystem */
 	//InitBullet(); //bullet is initialised in initialiseAssets already
 	world->GetMainCamera().SetController(controller);
@@ -43,6 +48,7 @@ void TutorialGame::InitialiseAssets() {
 }
 
 TutorialGame::~TutorialGame()	{
+	instance = nullptr;
 	DestroyBullet();
 	audioEngine.Shutdown();
 
@@ -97,7 +103,7 @@ void TutorialGame::UpdateGame(float dt) {
 	profiler.startSection("Update Audio");
 	audioEngine.Update(&world->GetMainCamera());
 
-
+	clearGraveyard();
 	profiler.startSection("Prepare Render");
 	bulletWorld->debugDrawWorld();
 
@@ -219,13 +225,15 @@ void TutorialGame::CheckCollisions()
 	}
 }
 
-void TutorialGame::DestroyBullet() {
-	world->OperateOnContents([&](GameObject* obj) {
-		if (obj->GetPhysicsObject()) {
-			obj->GetPhysicsObject()->removeFromBullet(bulletWorld);
-		}
-	});
+void TutorialGame::clearGraveyard() {
+	for (auto obj : objectGraveyard) {
+		bulletWorld->removeRigidBody(obj->GetPhysicsObject()->GetRigidBody());
+		world->RemoveGameObject(obj); // Also deletes it
+	}
+	objectGraveyard.clear();
+}
 
+void TutorialGame::DestroyBullet() {
 	delete bulletWorld;
 	delete bulletDebug;
 	delete solver;
