@@ -25,6 +25,7 @@ set(SOURCES
 	AudioEngine.cpp
     Config.h
     Config.cpp
+    Multiplayer/GamePackets.hpp
 )
 
 set(ASSET_ROOT "${CMAKE_SOURCE_DIR}/Assets")
