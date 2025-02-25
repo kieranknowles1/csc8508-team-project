@@ -1,7 +1,7 @@
 #pragma once
 #include "Texture.h"
-#include "Shader.h"
 #include "Mesh.h"
+#include "Buffer.h"
 
 namespace NCL {
 	using namespace NCL::Rendering;
@@ -13,23 +13,19 @@ namespace NCL {
 		class RenderObject
 		{
 		public:
-			RenderObject(GameObject* parent, Mesh* mesh, Texture* tex, Shader* shader);
+			RenderObject(GameObject* parent, std::shared_ptr<Mesh> mesh, std::shared_ptr<Texture> tex, std::shared_ptr<Texture> normal = nullptr);
 			~RenderObject();
 
-			void SetDefaultTexture(Texture* t) {
+			void SetDefaultTexture(std::shared_ptr<Texture> t) {
 				texture = t;
 			}
 
 			Texture* GetDefaultTexture() const {
-				return texture;
+				return texture.get();
 			}
 
-			Mesh*	GetMesh() const {
-				return mesh;
-			}
-
-			Shader*		GetShader() const {
-				return shader;
+			Mesh* GetMesh() const {
+				return mesh.get();
 			}
 
 			void SetColour(const Vector4& c) {
@@ -37,19 +33,67 @@ namespace NCL {
 			}
 
 			Vector4 GetColour() const {
-				return colour;
+				return  colour;
 			}
 
 			GameObject* getParent() const {
 				return parent;
 			}
 
+			bool GetIsFlat() const{
+				return isFlat;
+			}
+
+			bool GetHasNormal() const {
+				return normalMap != nullptr;
+			}
+
+			void SetIsFlat(bool isFlatIn) {
+				isFlat = isFlatIn;
+			}
+
+			void SetNormal(std::shared_ptr<Texture> n) {
+				normalMap = n;
+			}
+
+			Texture* GetNormalMap() const {
+				return normalMap.get();
+			}
+
+			bool GetTexRepeating() const {
+				return texRepeating;
+			}
+
+			void SetTexRepeating(bool tr) {
+				texRepeating = tr;
+			}
+
+			float GetTexScaleMultiplier() const {
+				return texScaleMultiplier;
+			}
+
+			void SetTexScaleMultiplier(float f) { //in case an individual object's texture scale needs to be modified
+				texScaleMultiplier = f;
+			}
+
+			void SetGPUBuffer(Buffer* buf) {
+				buffer = buf;
+			}
+			Buffer* GetGPUBuffer() {
+				return buffer;
+			}
+
 		protected:
 			GameObject* parent;
-			Mesh*		mesh;
-			Texture*	texture;
-			Shader*		shader;
-			Vector4		colour;
+			Buffer* buffer;
+			std::shared_ptr<Mesh> mesh;
+			std::shared_ptr<Texture> texture;
+			Vector4		colour = Vector4(1, 1, 0, 0.99);
+			bool isFlat = false;
+			bool texRepeating = false; // added to allow repeating textures per object
+			float texScaleMultiplier = 0.05f; //unless set to something else, all scaled textures will be scaled with this and their renderScale
+			//additional normal map option:
+			std::shared_ptr<Texture> normalMap;
 		};
 	}
 }

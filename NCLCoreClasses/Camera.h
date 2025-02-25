@@ -52,9 +52,13 @@ namespace NCL {
 			return *this;
 		}
 
-		Camera& SetController(const Controller& c) {
-			activeController = &c;
+		Camera& SetController(const Controller* c) {
+			activeController = c;
 			return *this;
+		}
+
+		void setRotation(Vector3 rotIn) {
+			rotation = rotIn;
 		}
 
 		//Builds a view matrix for the current camera variables, suitable for sending straight
@@ -78,6 +82,15 @@ namespace NCL {
 		//Sets pitch, in degrees
 		Camera& SetPitch(float p)	{ pitch = p; return *this; }
 
+		void setPitchOffset(float pitchOffsetIn) {
+			pitchOffset = pitchOffsetIn;
+		}
+
+		//Gets pitch, in degrees
+		float	GetRoll() const { return roll; }
+		//Sets pitch, in degrees
+		Camera& SetRoll(float r) { roll = r; return *this; }
+
 		float	GetSpeed() const	{ return speed; }
 		Camera& SetSpeed(float s)	{ speed = s; return *this; }
 
@@ -87,8 +100,11 @@ namespace NCL {
 
 		float	yaw;
 		float	pitch;
+		float   roll = 0;
 		Vector3 position;
 		float	speed;
+		float pitchOffset = 0;
+		Vector3 rotation;
 
 		const Controller* activeController = nullptr;
 	};

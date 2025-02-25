@@ -25,7 +25,7 @@ namespace NCL::Rendering {
 		};
 	};
 
-	class Shader	{
+	class Shader {
 	public:
 		Shader() {
 			assetID = 0;

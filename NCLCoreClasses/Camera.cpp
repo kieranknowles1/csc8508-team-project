@@ -14,7 +14,7 @@ void Camera::UpdateCamera(float dt, bool movement) {
 	}
 
 	//Update the mouse by how much
-	pitch -= activeController->GetNamedAxis("YLook");
+	pitch -= activeController->GetAnalogue(Controller::AnalogueControl::LookY);
 
 
 	//Bounds check the pitch, to be between straight up and straight down ;)
@@ -23,7 +23,7 @@ void Camera::UpdateCamera(float dt, bool movement) {
 
 
 	if (movement) {
-		yaw -= activeController->GetNamedAxis("XLook");
+		yaw -= activeController->GetAnalogue(Controller::AnalogueControl::LookX);
 		if (yaw < 0) {
 			yaw += 360.0f;
 		}
@@ -34,10 +34,10 @@ void Camera::UpdateCamera(float dt, bool movement) {
 		float frameSpeed = speed * dt;
 		Matrix3 yawRotation = Matrix::RotationMatrix3x3(yaw, Vector3(0, 1, 0));
 
-		position += yawRotation * Vector3(0, 0, -activeController->GetNamedAxis("Forward")) * frameSpeed;
-		position += yawRotation * Vector3(activeController->GetNamedAxis("Sidestep"), 0, 0) * frameSpeed;
+		position += yawRotation * Vector3(0, 0, -activeController->GetAnalogue(Controller::AnalogueControl::MoveForward)) * frameSpeed;
+		position += yawRotation * Vector3(activeController->GetAnalogue(Controller::AnalogueControl::MoveSidestep), 0, 0) * frameSpeed;
 
-		position.y += activeController->GetNamedAxis("UpDown") * frameSpeed;
+		position.y += activeController->GetAnalogue(Controller::AnalogueControl::MoveUpDown) * frameSpeed;
 	}
 	else {
 		yaw = 0;
@@ -52,9 +52,13 @@ straight to the shader...it's already an 'inverse camera' matrix.
 Matrix4 Camera::BuildViewMatrix() const {
 	//Why do a complicated matrix inversion, when we can just generate the matrix
 	//using the negative values ;). The matrix multiplication order is important!
-	return	Matrix::Rotation(-pitch, Vector3(1, 0, 0)) *
+	return	(Matrix::Rotation(-pitch-pitchOffset, Vector3(1, 0, 0)) *
 		Matrix::Rotation(-yaw, Vector3(0, 1, 0)) *
-		Matrix::Translation(-position);
+		Matrix::Rotation(-roll, Vector3(0, 0, 1)) * 
+		Matrix::Rotation(-rotation.y, Vector3(1, 0, 0)) *
+		Matrix::Rotation(-rotation.x, Vector3(0, 1, 0)) *
+		Matrix::Rotation(-rotation.z, Vector3(0, 0, 1)) *
+		Matrix::Translation(-position)) ;
 };
 
 Matrix4 PerspectiveCamera::BuildProjectionMatrix(float currentAspect) const {

@@ -3,42 +3,28 @@
 #include "PhysicsObject.h"
 #include "RenderObject.h"
 #include "TextureLoader.h"
-
-#include "StateGameObject.h"
+#include "AudioEngine.h"
+#include "GameTechRendererInterface.h"
 #include "BulletDebug.h"
-
 #include <CSC8503CoreClasses/Debug.h>
 
+#include "Window.h"
 
 using namespace NCL;
 using namespace CSC8503;
 
-TutorialGame::TutorialGame() : controller(*Window::GetWindow()->GetKeyboard(), *Window::GetWindow()->GetMouse()) {
+TutorialGame::TutorialGame(GameTechRendererInterface* renderer, GameWorld* world, Controller* controller)
+	: renderer(renderer)
+	, controller(controller)
+	, world(world)
+{
 	/* Initializing the Bullet Physics World here as it should be done before Initialize the NCL framework's PhysicsSystem */
-	InitBullet();
-
-	world		= new GameWorld();
-#ifdef USEVULKAN
-	renderer	= new GameTechVulkanRenderer(*world);
-	renderer->Init();
-	renderer->InitStructures();
-#else
-	renderer = new GameTechRenderer(*world);
-#endif
-
+	//InitBullet(); //bullet is initialised in initialiseAssets already
 	world->GetMainCamera().SetController(controller);
 	mainCamera = &world->GetMainCamera();
-	controller.MapAxis(0, "Sidestep");
-	controller.MapAxis(1, "UpDown");
-	controller.MapAxis(2, "Forward");
 
-	controller.MapAxis(3, "XLook");
-	controller.MapAxis(4, "YLook");
-
-	controller.MapButton(2, "Jump");
-	controller.MapButton(3, "Sprint");
-	controller.MapButton(4, "Crouch");
-
+	loadFromLevel = true;
+	resourceManager = std::make_unique<ResourceManager>(renderer);
 	InitialiseAssets();
 }
 
@@ -50,25 +36,7 @@ for this module, even in the coursework, but you can add it if you like!
 
 */
 void TutorialGame::InitialiseAssets() {
-	planeMesh = renderer->LoadMesh("Plane.msh");
-	cubeMesh	= renderer->LoadMesh("Cube.msh");
-	sphereMesh	= renderer->LoadMesh("Sphere.msh");
-	catMesh		= renderer->LoadMesh("ORIGAMI_Chat.msh");
-	kittenMesh	= renderer->LoadMesh("Kitten.msh");
-
-	enemyMesh	= renderer->LoadMesh("Keeper.msh");
-	bonusMesh	= renderer->LoadMesh("19463_Kitten_Head_v1.msh");
-	capsuleMesh = renderer->LoadMesh("Capsule.msh");
-
-	//EG Assets:
-
-	//EG character meshes:
-	maxMesh = renderer->LoadMesh("/Max/Rig_Maximilian.msh");
-	maleguardMesh = renderer->LoadMesh("/MaleGuard/Male_Guard.msh");
-	femaleguardMesh = renderer->LoadMesh("/FemaleGuard/Female_Guard.msh");
-
-	basicTex	= renderer->LoadTexture("checkerboard.png");
-	basicShader = renderer->LoadShader("scene.vert", "scene.frag");
+	defaultTexture = resourceManager->getTextures().get("checkerboard.png");
 
 	InitCamera();
 	InitWorld();
@@ -76,25 +44,7 @@ void TutorialGame::InitialiseAssets() {
 
 TutorialGame::~TutorialGame()	{
 	DestroyBullet();
-	// TODO: Should we use a proper resource manager or smart pointers?
-	delete planeMesh;
-	delete cubeMesh;
-	delete sphereMesh;
-	delete catMesh;
-	delete kittenMesh;
-	delete enemyMesh;
-	delete bonusMesh;
-	delete capsuleMesh;
-
-	delete maxMesh;
-	delete maleguardMesh;
-	delete femaleguardMesh;
-
-	delete basicTex;
-	delete basicShader;
-
-	delete renderer;
-	delete world;
+	audioEngine.Shutdown();
 
 	delete playerController;
 }
@@ -105,11 +55,65 @@ static bool BulletRaycast(btDynamicsWorld* world, const btVector3& start, const 
 }
 
 void TutorialGame::UpdateGame(float dt) {
+	profiler.beginFrame();
+	profiler.startSection("Physics");
+	// Old
+	//int substeps = std::floor(dt / PHYSICS_PERIOD);
+	//int steps = bulletWorld->stepSimulation(dt , substeps, PHYSICS_PERIOD);
+
+	////New
+	int substeps = 0;
+	float maxDt = btMin(PHYSICS_PERIOD, dt);
+	int steps = bulletWorld->stepSimulation(maxDt, substeps, PHYSICS_PERIOD);
+
+	profiler.startSection("Update World");
+	if (testTurret) {
+		testTurret->Update(dt);
+	}
+	/*if (navMesh) {
+		navMesh->VisualiseNavMesh();
+
+		btVector3 startPoint(94, 0.5833334, 26);
+		btVector3 endPoint(68, 0.5833334, 34);
+
+		btIDebugDraw* debugDrawer = bulletWorld->getDebugDrawer();
+
+		// Draw vertical lines at start and end points
+		debugDrawer->drawLine(startPoint, startPoint + btVector3(0, 10, 0), btVector3(0,1,0));
+		debugDrawer->drawLine(endPoint, endPoint + btVector3(0, 10, 0), btVector3(0, 0, 1));
+
+		// Find path and draw it
+		std::vector<btVector3> path = navMesh->FindPath(startPoint, endPoint);
+		navMesh->DebugDrawPath(path);
+	}*/
+
+	UpdateKeys();
+	world->UpdateWorld(dt);
+	profiler.startSection("Check Collisions");
+	// Check for collisions
+	CheckCollisions();
+
+	UpdatePlayer(dt);
+	profiler.startSection("Update Audio");
+	audioEngine.Update(&world->GetMainCamera());
+
+
+	profiler.startSection("Prepare Render");
+	bulletWorld->debugDrawWorld();
+
+	profiler.endFrame();
+	if (showProfiling) {
+		profiler.printTimes();
+	}
+}
+
+void TutorialGame::UpdatePlayer(float dt) {
+
+	playerController->CalculateDirections(dt);
 	// Press F for freeCam, press G for thirdPerson
 	if (freeCam) {
 		//freeCam Movement
 		world->GetMainCamera().UpdateCamera(dt, true);
-		player->GetRenderObject()->SetColour(Vector4(1, 0.8, 1, 1));
 	}
 	else {
 		//player Movement
@@ -119,76 +123,100 @@ void TutorialGame::UpdateGame(float dt) {
 			ThirdPersonControls();
 		}
 	}
-	player->GetRenderObject()->SetColour((thirdPerson || freeCam)?playerColour:Vector4());
-
-	// Update the physics simulation by delta time, aiming for 60hz with up to 10 substeps
-	int steps = bulletWorld->stepSimulation(dt, MaxStepsPerFrame, 1.0f / PhysicsFrequency);
-	if (steps >= MaxStepsPerFrame) {
-		std::cerr << "Warning: Physics MaxStepsPerFrame reached, simulation slowed down" << std::endl;
-	}
-	
-	bulletWorld->debugDrawWorld();
-	if (testTurret) {
-		testTurret->Update(dt);
-	}
-
-	UpdateKeys();
-	world->UpdateWorld(dt);
-	world->OperateOnContents([&](GameObject* obj) {
-		obj->GetPhysicsObject()->CheckCollisions(bulletWorld);
-	});
-	renderer->Update(dt);
-
-	renderer->Render();
-	Debug::UpdateRenderables(dt);
+	resourceManager->update(dt);
+	bulletWorld->setGravity(playerController->getUpDirection() * -30.0f);
 }
 
 void TutorialGame::UpdateKeys() {
-	if (Window::GetKeyboard()->KeyPressed(KeyCodes::F1)) {
+	using enum Controller::DigitalControl;
+	if (controller->GetDigital(DebugReloadWorld)) {
 		InitWorld(); //We can reset the simulation at any time with F1
 	}
-
-	if (Window::GetKeyboard()->KeyPressed(KeyCodes::F2)) {
-		InitCamera(); //F2 will reset the camera to a specific default place
-	}
-
-	if (Window::GetKeyboard()->KeyPressed(KeyCodes::F3)) {
+	if (controller->GetDigital(DebugBulletOverlay)) {
 		bulletDebug->toggle();
 	}
-	if (Window::GetKeyboard()->KeyPressed(KeyCodes::F)) {
+	if (controller->GetDigital(DebugShowProfiling)) {
+		showProfiling = !showProfiling;
+	}
+	if (controller->GetDigital(DebugFreeCam)) {
 		freeCam = !freeCam;
 	}
-	if (Window::GetKeyboard()->KeyPressed(KeyCodes::G)) {
+	if (controller->GetDigital(ThirdPerson)) {
 		thirdPerson = !thirdPerson;
 		playerController->SetThirdPerson(thirdPerson);
+	}
+
+	if (controller->GetDigital(WorldRollRight)) {
+			playerController->rollRight();
+	}
+	if (controller->GetDigital(WorldRollLeft)) {
+			playerController->rollLeft();
+	}
+	if (controller->GetDigital(WorldPitchUp)) {
+			playerController->pitchUp();
+	}
+	if (controller->GetDigital(WorldPitchDown)) {
+			playerController->pitchDown();
+	}
+	if (Window::GetKeyboard()->KeyPressed(KeyCodes::F5)) {
+		bool toggleHDR = renderer->GetHDROn();
+		toggleHDR = !toggleHDR;
+		renderer->SetHDROn(toggleHDR);
 	}
 }
 
 void TutorialGame::ThirdPersonControls() {
 	btTransform transformPlayer = player->GetPhysicsObject()->GetRigidBody()->getWorldTransform();
-	btQuaternion playerRotation = transformPlayer.getRotation();
-
-	// Extract yaw from playerRotation
-	btMatrix3x3 rotationMatrix(playerRotation);
-	btVector3 forward = rotationMatrix * btVector3(0, 0, -1);
-
-	// Zero out the Y component to ignore pitch/roll
-	forward.setY(0);
-	forward.normalize(); // Ensure it's a unit vector
-
-	// Camera offset (up 10, back 30)
-	btVector3 cameraOffset(0, 10, 30);
-	btVector3 cameraPosition = transformPlayer.getOrigin() - (forward * cameraOffset.z()) + btVector3(0, cameraOffset.y(), 0);
-
+	btQuaternion playerRotation1(btVector3(0, 1, 0), Maths::DegreesToRadians(playerController->getYaw()));
+	btMatrix3x3 rotationMatrix(playerController->getCamOffset() * playerRotation1);
+	btVector3 forward = rotationMatrix * btVector3(0,0,-1);
+	btVector3 upwards = rotationMatrix * btVector3(0, 1, 0);
+	float camHeight = 10.0f;
+	float camDist = -30.0f;
+	btVector3 cameraOffset = (forward.normalize() * camDist) + (upwards.normalize() * camHeight);
+	btVector3 cameraPosition = transformPlayer.getOrigin() + cameraOffset;
 	mainCamera->SetPosition(cameraPosition);
+	mainCamera->SetPitch(-15.0f);
+}
 
-	// Compute yaw correctly from forward vector
-	float playerYaw = Maths::RadiansToDegrees(atan2(forward.x(), forward.z())) + 180.0f;
-	mainCamera->SetYaw(playerYaw);
-	mainCamera->SetPitch(-15);
 
-	player->GetRenderObject()->SetColour(Vector4(1, 0.8, 1, 1));
+void TutorialGame::CheckCollisions()
+{
+	// Checking for collisions using Bullet's collision detection system
+	// Bullet already keeps track of all the objects that are colliding with each other
+	// So, we don't need to check for collisions manually
 
+	//world->OperateOnContents([&](GameObject* obj) {
+	//	obj->GetPhysicsObject()->CheckCollisions(bulletWorld);
+	//	});
+
+	btDispatcher* dispatcher = bulletWorld->getDispatcher();
+	int numManifolds = dispatcher->getNumManifolds();
+
+	for (int i = 0; i < numManifolds; i++) {
+		// The UpdateGame loop may be using a faster an outdated number of manifolds
+		// So, we need to check if the index is still valid
+		if (i >= dispatcher->getNumManifolds()) {
+			break;
+		}
+
+		// Get the contact manifold
+		btPersistentManifold* contactManifold = dispatcher->getManifoldByIndexInternal(i);
+
+		// Get the collision objects from the contact manifold
+		const btCollisionObject* objectA = contactManifold->getBody0();
+		const btCollisionObject* objectB = contactManifold->getBody1();
+
+		// Get the GameObjects from the collision objects
+		const GameObject* gameObjectA = static_cast<const GameObject*>(objectA->getUserPointer());
+		const GameObject* gameObjectB = static_cast<const GameObject*>(objectB->getUserPointer());
+
+		// Check if the GameObjects are valid
+		if (gameObjectA && gameObjectB) {
+			gameObjectA->GetPhysicsObject()->CheckCollisions(bulletWorld);
+			gameObjectB->GetPhysicsObject()->CheckCollisions(bulletWorld);
+		}
+	}
 }
 
 void TutorialGame::DestroyBullet() {
@@ -214,15 +242,15 @@ void TutorialGame::InitBullet() {
 	solver = new btSequentialImpulseConstraintSolver();
 
 	bulletWorld = new btDiscreteDynamicsWorld(dispatcher, broadphase, solver, collisionConfig);
-	bulletWorld->setGravity(btVector3(0, -9.8, 0));
-
+	bulletWorld->setGravity(btVector3(00.0f, -30.0f, 0));
 	bulletDebug = new BulletDebug();
 	bulletWorld->setDebugDrawer(bulletDebug);
 }
 
 void TutorialGame::InitCamera() {
+	mainCamera->SetFieldOfVision(90);
 	world->GetMainCamera().SetNearPlane(0.1f);
-	world->GetMainCamera().SetFarPlane(500.0f);
+	world->GetMainCamera().SetFarPlane(5000.0f);
 	world->GetMainCamera().SetPitch(-15.0f);
 	world->GetMainCamera().SetYaw(315.0f);
 	world->GetMainCamera().SetPosition(Vector3(-60, 40, 60));
@@ -232,19 +260,44 @@ void TutorialGame::InitWorld() {
 	DestroyBullet();
 	world->ClearAndErase();
 	InitBullet();
+	audioEngine.Init();
 
-	InitDefaultFloor();
+	navMesh = new NavMesh(bulletWorld);
+	navMesh->LoadFromFile("Assets/Meshes/NavMeshes/smalltest.navmesh");
+
+	if (loadFromLevel) {
+		levelImporter = new LevelImporter(resourceManager.get(), world, bulletWorld);
+		levelImporter->LoadLevel(8);
+		InitPlayer();
+		return;
+	}
+
+	//floors
+	AddFloorToWorld(Vector3(0, 0, 0), Vector3(500, 2, 500), Vector3(0, 0, 0));
+	AddFloorToWorld(Vector3(498.5, -21.75, 0), Vector3(500, 2, 500), Vector3(0, 0, -5));
+	AddFloorToWorld(Vector3(996, -43.6, 0), Vector3(500, 2, 500), Vector3(0, 0, 0));
+
+	//walls
+	AddFloorToWorld(Vector3(1245, 206, 0), Vector3(2, 500, 500), Vector3(0, 0, 0));
+	AddFloorToWorld(Vector3(996, 206, 249), Vector3(500, 500, 2), Vector3(0, 0, 0));
+	AddFloorToWorld(Vector3(996, 206, -249), Vector3(500, 500, 2), Vector3(0, 0, 0));
+	AddFloorToWorld(Vector3(498, 206, 249), Vector3(500, 500, 2), Vector3(0, 0, 0));
+	AddFloorToWorld(Vector3(498, 206, -249), Vector3(500, 500, 2), Vector3(0, 0, 0));
+	AddFloorToWorld(Vector3(-2, 206, 249), Vector3(500, 500, 2), Vector3(0, 0, 0));
+	AddFloorToWorld(Vector3(-2, 206, -249), Vector3(500, 500, 2), Vector3(0, 0, 0));
+	AddFloorToWorld(Vector3(-248, 206, 0), Vector3(2, 500, 500), Vector3(0, 0, 0));
 
 	// Use this as a reference to create more cube objects
 	AddCubeToWorld(Vector3(0, 30, 0), Vector3(5, 5, 5), 1.0f);
-	AddCubeToWorld(Vector3(50, 30, 0), Vector3(10, 10, 10), 5.0f);
+	AddCubeToWorld(Vector3(500, 30, 0), Vector3(10, 10, 10), 5.0f);
 	AddCubeToWorld(Vector3(20, 30, 50), Vector3(7, 7, 7), 4.0f);
 	AddCubeToWorld(Vector3(120, 30, -20), Vector3(5, 5, 5), 1.0f);
+	AddCubeToWorld(Vector3(100, 8, 100), Vector3(30, 2,30), 0.0f);
 
 	// Use this as a reference to create more sphere objects
 	AddSphereToWorld(Vector3(10, 30, 0), 5.0f, 4.0f);
 	AddSphereToWorld(Vector3(-30, 30, 0), 7.0f, 8.0f);
-	AddSphereToWorld(Vector3(10, 30, -40), 9.0f, 16.0f);
+	AddSphereToWorld(Vector3(300, 30, -40), 9.0f, 16.0f);
 
 	// Use this as a reference to create more capsule objects
 	AddCapsuleToWorld(Vector3(20, 15, 0), 4.0f, 2.0f, 2.0f);
@@ -253,27 +306,35 @@ void TutorialGame::InitWorld() {
 
 	AddTurretToWorld();
 	InitPlayer();
+
 }
 
 void TutorialGame::InitPlayer() {
-
-	player = AddCapsuleToWorld(Vector3(10, 200, 20), 4.0f, 2.0f, 10.0f);
+	if (loadFromLevel) {
+		player = AddPlayerCapsuleToWorld(Vector3(0, 100, 30), 4.0f, 2.0f, 10.0f);
+	}else {
+		player = AddPlayerCapsuleToWorld(Vector3(10, 5, 20), 4.0f, 2.0f, 10.0f);
+	}
+	// Keep us from clipping when falling too fast
+	player->GetPhysicsObject()->GetRigidBody()->setCcdMotionThreshold(1.0f);
+	player->GetPhysicsObject()->GetRigidBody()->setCcdSweptSphereRadius(0.4f);
 	player->GetPhysicsObject()->GetRigidBody()->setAngularFactor(0);
-	player->GetPhysicsObject()->GetRigidBody()->setFriction(1);
-	player->GetPhysicsObject()->GetRigidBody()->setDamping(0.999, 0);
-	playerController = new PlayerController(player, controller, mainCamera, bulletWorld);
-	player->GetRenderObject()->SetColour(playerColour);
+	player->GetPhysicsObject()->GetRigidBody()->setFriction(0.0f);
+	player->GetPhysicsObject()->GetRigidBody()->setDamping(0.0, 0);
+	gun = AddCubeToWorld(Vector3(10, 2, 20), Vector3(0.6, 0.6, 1.6), 0, false);
+	playerController = new PlayerController(player, gun, controller, mainCamera, bulletWorld, world, resourceManager.get());
+	player->GetRenderObject()->SetColour(Vector4(playerColour));
 
 }
 
 Turret* TutorialGame::AddTurretToWorld() {
-	Turret* turret = new Turret();
+	Turret* turret = new Turret(player);
 
 	Vector3 dimensions = Vector3(5, 5, 5);
 	turret->setInitialPosition(btVector3(5, 5, 5));
 	turret->setRenderScale(dimensions);
 
-	turret->SetRenderObject(new RenderObject(turret, kittenMesh, basicTex, basicShader));
+	turret->SetRenderObject(new RenderObject(turret, resourceManager->getMeshes().get("Kitten.msh"), defaultTexture));
 
 	btCollisionShape* shape = new btBoxShape(btVector3(dimensions.x / 2.0f, dimensions.y / 2.0f, dimensions.z / 2.0f));
 
@@ -294,7 +355,7 @@ Turret* TutorialGame::AddTurretToWorld() {
 }
 
 /* Adding an object to test the bullet physics */
-GameObject* TutorialGame::AddCubeToWorld(const Vector3& position, Vector3 dimensions, float inverseMass) {
+GameObject* TutorialGame::AddCubeToWorld(const Vector3& position, Vector3 dimensions, float inverseMass,bool hasCollision) {
 	GameObject* cube = new GameObject();
 
 	// Setting the transform properties for the cube
@@ -308,7 +369,6 @@ GameObject* TutorialGame::AddCubeToWorld(const Vector3& position, Vector3 dimens
 	// Note: The scale of the cube is set when creating the collision shape, When the collision shapes are created,
 	// so the size of the collision shape acts as the scale of the object
 	btCollisionShape* shape = new btBoxShape(btVector3(dimensions.x / 2.0f, dimensions.y / 2.0f, dimensions.z / 2.0f));
-
 	// The object is penetrating the floor a bit, so I reduced the bullet collison margin to avoid sinking in the floor
 	shape->setMargin(0.01f);
 
@@ -317,14 +377,41 @@ GameObject* TutorialGame::AddCubeToWorld(const Vector3& position, Vector3 dimens
 
 	// Initialize Bullet physics for the cube
 	// WTF: Setting shape to nullptr causes camera stutter
-	cube->GetPhysicsObject()->InitBulletPhysics(bulletWorld, shape, inverseMass);
+	cube->GetPhysicsObject()->InitBulletPhysics(bulletWorld, shape, inverseMass, hasCollision);
 
 	// Setting render object
-	cube->SetRenderObject(new RenderObject(cube, cubeMesh, basicTex, basicShader));
+	cube->SetRenderObject(new RenderObject(cube, resourceManager->getMeshes().get("Cube.msh"), defaultTexture));
+	cube->GetRenderObject()->SetTexRepeating(true); //scale texture (no stretching)
 
 	world->AddGameObject(cube);
 
 	return cube;
+}
+
+PlayerObject* TutorialGame::AddPlayerCapsuleToWorld(const Vector3& position, float height, float radius, float inverseMass) {
+	PlayerObject* capsule = new PlayerObject();
+
+	// Setting the transform properties for the capsule
+	capsule->setInitialPosition(position);
+	capsule->setRenderScale(Vector3(radius * 2, height, radius * 2));
+
+	// TODO: Set the orientation of the capsule
+	//capsule->SetOrientation(rotation);
+
+	// Creating a Bullet collision shape for the capsule
+	btCollisionShape* shape = new btCapsuleShape(radius, height);
+
+	// Setting the render object for the capsule
+	capsule->SetRenderObject(new RenderObject(capsule, resourceManager->getMeshes().get("Capsule.msh"), defaultTexture));
+	// Setting the physics object for the capsule
+	capsule->SetPhysicsObject(new PhysicsObject(capsule));
+
+	// Initializing the physics object for the capsule
+	capsule->GetPhysicsObject()->InitBulletPhysics(bulletWorld, shape, inverseMass);
+
+	world->AddGameObject(capsule);
+
+	return capsule;
 }
 
 GameObject* TutorialGame::AddCapsuleToWorld(const Vector3& position, float height, float radius, float inverseMass) {
@@ -341,8 +428,7 @@ GameObject* TutorialGame::AddCapsuleToWorld(const Vector3& position, float heigh
 	btCollisionShape* shape = new btCapsuleShape(radius, height);
 
 	// Setting the render object for the capsule
-	capsule->SetRenderObject(new RenderObject(capsule, capsuleMesh, basicTex, basicShader));
-
+	capsule->SetRenderObject(new RenderObject(capsule, resourceManager->getMeshes().get("Capsule.msh"), defaultTexture));
 	// Setting the physics object for the capsule
 	capsule->SetPhysicsObject(new PhysicsObject(capsule));
 
@@ -364,7 +450,8 @@ GameObject* TutorialGame::AddInfinitePlaneToWorld(const Vector3& position, const
 	btCollisionShape* shape = new btStaticPlaneShape(btVector3(normal.x, normal.y, normal.z), planeConstant);
 
 	// Set the render object
-	plane->SetRenderObject(new RenderObject(plane, planeMesh, basicTex, basicShader));
+	plane->SetRenderObject(new RenderObject(plane, resourceManager->getMeshes().get("Plane.msh"), defaultTexture));
+	plane->GetRenderObject()->SetTexRepeating(true); //scale texture
 
 	// Set the physics object
 	plane->SetPhysicsObject(new PhysicsObject(plane));
@@ -386,34 +473,18 @@ GameObject* TutorialGame::AddInfinitePlaneToWorld(const Vector3& position, const
 A single function to add a large immoveable cube to the bottom of our world
 
 */
-GameObject* TutorialGame::AddFloorToWorld(const Vector3& position) {
-	GameObject* floor = new GameObject();
-
-	Vector3 floorSize = Vector3(500, 2, 500);
-
-	// Setting the transform properties for the floor
-	floor->setInitialPosition(position);
-	floor->setRenderScale(floorSize);
-
-	// Creating a bullet collision shape
-	btCollisionShape* shape = new btBoxShape(btVector3(floorSize.x / 2.0f, floorSize.y / 2.0f, floorSize.z / 2.0f));
-
-	// Setting the render object for the floor
-	floor->SetRenderObject(new RenderObject(floor, cubeMesh, basicTex, basicShader));
-
-	// Setting the physics object for the floor
-	floor->SetPhysicsObject(new PhysicsObject(floor));
-
-	// Setting the collision margin for the floor
-	shape->setMargin(0.01f);
-
-	// Initializing the physics object for the floor
-	floor->GetPhysicsObject()->InitBulletPhysics(bulletWorld, shape, 0.0f);
-
-	// Adding the floor to the game world
-	world->AddGameObject(floor);
-
-	return floor;
+GameObject* TutorialGame::AddFloorToWorld(const Vector3& position, const Vector3& size, const Vector3& rotation) {
+	GameObject* floor1 = AddCubeToWorld(position, size, 0);
+	btVector3 eulerRotation = rotation;
+	float pitchRadians = Maths::DegreesToRadians(eulerRotation.x());
+	float yawRadians = Maths::DegreesToRadians(eulerRotation.y());
+	float rollRadians = Maths::DegreesToRadians(eulerRotation.z());
+	btQuaternion rotationQuat;
+	rotationQuat.setEulerZYX(rollRadians, yawRadians, pitchRadians);
+	btTransform transform = floor1->GetPhysicsObject()->GetRigidBody()->getWorldTransform();
+	transform.setRotation(rotationQuat);
+	floor1->GetPhysicsObject()->GetRigidBody()->setWorldTransform(transform);
+	return floor1;
 }
 
 GameObject* TutorialGame::AddSphereToWorld(const Vector3& position, float radius, float inverseMass) {
@@ -427,7 +498,7 @@ GameObject* TutorialGame::AddSphereToWorld(const Vector3& position, float radius
 	sphere->setRenderScale(sphereSize);
 
 	// Setting the render object for the sphere
-	sphere->SetRenderObject(new RenderObject(sphere, sphereMesh, basicTex, basicShader));
+	sphere->SetRenderObject(new RenderObject(sphere, resourceManager->getMeshes().get("Sphere.msh"), defaultTexture));
 	sphere->SetPhysicsObject(new PhysicsObject(sphere));
 
 	// Creating a Bullet collision shape for the sphere
@@ -442,8 +513,4 @@ GameObject* TutorialGame::AddSphereToWorld(const Vector3& position, float radius
 	world->AddGameObject(sphere);
 
 	return sphere;
-}
-
-void TutorialGame::InitDefaultFloor() {
-	AddFloorToWorld(Vector3(0, 0, 0));
 }

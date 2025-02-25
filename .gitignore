@@ -1,4 +1,15 @@
 build
+build-ps5
 .vs
 *.bak
 *.bak
+*.mshb
+fmod-cmake/fmod/2.02.26/
+
+# User-specific configuration
+user-config.jsonc
+
+# PS5 Textures
+*.gnf
+# PS5 Shaders
+*.ags

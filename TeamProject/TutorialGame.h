@@ -1,14 +1,17 @@
+#pragma once
+
 #include "../NCLCoreClasses/KeyboardMouseController.h"
 
-#pragma once
-#include "GameTechRenderer.h"
-#ifdef USEVULKAN
-#include "GameTechVulkanRenderer.h"
-#endif
+#include "GameTechRendererInterface.h"
+#include "ResourceManager.h"
 
-#include "StateGameObject.h"
+#include "LevelImporter.h"
 #include "PlayerController.h"
+#include "PlayerObject.h"
 #include "Turret.h"
+#include "NavMesh.h"
+#include "Profiler.h"
+
 
 #include <btBulletDynamicsCommon.h>
 
@@ -19,12 +22,10 @@ namespace NCL {
 		class TutorialGame {
 		public:
 			// Physics update frequency, in hertz
-			const static constexpr float PhysicsFrequency = 60.0f;
-			// Max steps per frame if physics is lagging
-			const static constexpr int MaxStepsPerFrame = 10;
+			const static constexpr float PHYSICS_PERIOD = 1.0f / 60.0f;
 
 
-			TutorialGame();
+			TutorialGame(GameTechRendererInterface* renderer, GameWorld* world, Controller* controller);
 			~TutorialGame();
 
 			virtual void UpdateGame(float dt);
@@ -37,48 +38,32 @@ namespace NCL {
 			void ThirdPersonControls();
 			void InitWorld();
 
+
+			void UpdatePlayer(float dt);
+
+
 			Turret* AddTurretToWorld();
 
-			void InitDefaultFloor();
-
-			GameObject* AddFloorToWorld(const Vector3& position);
+			GameObject* AddFloorToWorld(const Vector3& position, const Vector3& size, const Vector3& rotation);
 			GameObject* AddSphereToWorld(const Vector3& position, float radius, float inverseMass = 10.0f);
-			GameObject* AddCubeToWorld(const Vector3& position, Vector3 dimensions, float inverseMass = 10.0f);
+			GameObject* AddCubeToWorld(const Vector3& position, Vector3 dimensions, float inverseMass = 10.0f,bool hasCollision = true);
+			PlayerObject* AddPlayerCapsuleToWorld(const Vector3& position, float halfHeight, float radius, float inverseMass = 10.0f);
 			GameObject* AddCapsuleToWorld(const Vector3& position, float halfHeight, float radius, float inverseMass = 10.0f);
 
 			GameObject* AddInfinitePlaneToWorld(const Vector3& position, const Vector3& normal, float planeConstant);
 
+			std::unique_ptr<ResourceManager> resourceManager;
+			bool showProfiling = false;
+			Profiler profiler;
 
-#ifdef USEVULKAN
-			GameTechVulkanRenderer* renderer;
-#else
-			GameTechRenderer* renderer;
-#endif
+			GameTechRendererInterface* renderer;
 			GameWorld* world;
 
-			KeyboardMouseController controller;
+			Controller* controller;
 
+			std::shared_ptr<Texture> defaultTexture;
 
-			Mesh* planeMesh = nullptr;
-			Mesh* capsuleMesh = nullptr;
-			Mesh* cubeMesh = nullptr;
-			Mesh* sphereMesh = nullptr;
-
-			Texture* basicTex = nullptr;
-			Shader* basicShader = nullptr;
-
-			//Coursework Meshes
-			Mesh*	catMesh		= nullptr;
-			Mesh*	kittenMesh	= nullptr;
-			Mesh*	enemyMesh	= nullptr;
-			Mesh*	bonusMesh	= nullptr;
-
-			//EG Meshes:
-			Mesh* maxMesh = nullptr;
-			Mesh* maleguardMesh = nullptr;
-			Mesh* femaleguardMesh = nullptr;
-
-			//Coursework Additional functionality	
+			//Coursework Additional functionality
 			GameObject* lockedObject	= nullptr;
 			Vector3 lockedOffset		= Vector3(0, 14, 20);
 			void LockCameraToObject(GameObject* o) {
@@ -97,23 +82,33 @@ namespace NCL {
 
 			BulletDebug* bulletDebug = nullptr;
 
+			void CheckCollisions();
 			void DestroyBullet();
 			void InitBullet(); // Initialises the Bullet physics world
 
 			//Player things
 			void InitPlayer();
 			PerspectiveCamera* mainCamera;
-			GameObject* player;
+			PlayerObject* player;
+			GameObject* gun;
 			PlayerController* playerController;
 			bool freeCam = false;
 			bool thirdPerson = false;
 			Vector4 playerColour = Vector4(1, 0.8, 1, 1);
 
-			//fixed update 
+			//fixed update
 			float accumulator = 0.0f;
 			float fixedDeltaTime = 1.0f / 60.0f;
-			
+
+			//AI
 			Turret* testTurret = nullptr;
+
+			//Level import
+			LevelImporter* levelImporter;
+			bool loadFromLevel;
+
+
+			NavMesh* navMesh;
 		};
 	}
 }
