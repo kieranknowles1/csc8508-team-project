@@ -16,6 +16,7 @@ namespace Packet {
 	const Type NONE = 0;
 	const uint8_t REQUIRED_CHANNEL = 0;
 
+	const Type CUSTOM_TYPE = 64;
 
 	/**
 	 * @brief Packet class.
