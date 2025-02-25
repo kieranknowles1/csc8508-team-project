@@ -1,32 +1,69 @@
 #include <stdexcept>
 #include <iostream>
+#include <chrono>
 
-#include "Server.hpp"
-#include "Packet.hpp"
+#include "Network.hpp"
+
+using namespace std::chrono_literals;
+
+void TestPacketBuffer() {
+	Packet::Packet packet1 = Packet::Packet(1, 0, 0);
+	Packet::Packet packet2 = Packet::Packet(1, 0, 100);
+	Packet::Packet packet3 = Packet::Packet(1, 0, 90);
+	Packet::Packet packet4 = Packet::Packet(1, 0, 45);
+	Packet::Packet packet5 = Packet::Packet(1, 0, 102);
+	Packet::Packet packet6 = Packet::Packet(1, 0, 101);
+
+	Packet::PacketBuffer buffer(16);
+	buffer.Insert(packet1);
+	buffer.Insert(packet2);
+	buffer.Insert(packet3);
+	buffer.Insert(packet4);
+	buffer.Insert(packet5);
+	buffer.Insert(packet6);
+
+	while (!buffer.IsEmpty()) {
+		Packet::Packet packet = buffer.Pop();
+		std::cout << ConsoleTextColor::YELLOW << "Sequence Number: " << ConsoleTextColor::DEFAULT << packet.GetSequenceNumber() << std::endl;
+	}
+
+	ENetAddress destination;
+	enet_address_set_host(&destination, "127.0.0.1");
+	destination.port = DEFAULT_PORT;
+
+	std::vector<std::unique_ptr<Network>> clients;
+
+	ENetAddress serverAddr(ENET_HOST_ANY, DEFAULT_PORT);
+	Network server = Network(&serverAddr, 8);
+	server.Start();
+
+	std::cout << "Starting clients.\n";
+	for (int i = 0; i < 8; ++i) {
+		clients.push_back(std::make_unique<Network>(nullptr, 0));
+		if (clients[i].get()->GetState() == NetworkState::ERRORED) {
+			std::cout << "Client: " << i << " is broken.\n";
+		}
+		else {
+			clients[i]->Start();
+			clients[i]->ConnectTo(&destination);
+		}
+	}
+
+
+
+	std::this_thread::sleep_for(1000ms);
+
+	server.Close();
+	for (int i = 0; i < 8; ++i) {
+		clients[i].get()->Close();
+		std::cout << "joined.\n";
+	}
+}
+
+
 
 int main(int argc, char** argv) {
-	Server server;
+	TestPacketBuffer();
 
-	std::shared_ptr<char[]> data = std::make_shared<char[]>(sizeof(char) * 5);
-	data[0] = 'a';
-	data[1] = 'b';
-	data[2] = 'c';
-	data[3] = 'd';
-	data[4] = '\0';
-	Packet::Type type = 4;
-	unsigned short size = 5;
-	char channel = 1;
-
-	Packet::PacketBase packet(type, size, channel, data);
-	ENetPacket* enetPacket = packet.ToENetPacket();
-	Packet::PacketBase back = Packet::PacketBase::FromENetPacket(enetPacket);
-	enet_packet_destroy(enetPacket);
-
-	std::cout << packet.data << std::endl;
-	std::cout << back.data << std::endl;
-	
-
-	server.Start();
-	server.Stop();
 	return 0;
 }
