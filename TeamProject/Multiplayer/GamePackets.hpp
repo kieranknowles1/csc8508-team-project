@@ -8,7 +8,11 @@
 
 
 namespace Packet {
-
+	/**
+	 * @brief PacketType Enum.
+	 * 
+	 * Contains user defined enums for the types of packets in the network.
+	 */
 	enum class PacketType : Type {
 		DELTA = CUSTOM_TYPE,
 		POSITION = CUSTOM_TYPE + 1,
