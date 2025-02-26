@@ -9,7 +9,7 @@ namespace Packet {
 		DeltaPacketHandler() : PacketHandler(static_cast<Type>(PacketType::DELTA)) {}
 
 		void Handle(const Packet& packet) override;
-		Packet Translate(ENetPacket* packet) const override;
+		std::shared_ptr<Packet> Translate(const ENetPacket* packet) const override;
 		ENetPacket* ToENetPacket(const Packet& packet) const override;
 	};
 
@@ -19,7 +19,7 @@ namespace Packet {
 		PositionPacketHandler() : PacketHandler(static_cast<Type>(PacketType::POSITION)) {}
 
 		void Handle(const Packet& packet) override;
-		Packet Translate(ENetPacket* packet) const override;
+		std::shared_ptr<Packet> Translate(const ENetPacket* packet) const override;
 		ENetPacket* ToENetPacket(const Packet& packet) const override;
 	};
 
@@ -29,7 +29,7 @@ namespace Packet {
 		PlayerStateChangePacketHandler() : PacketHandler(static_cast<Type>(PacketType::PLAYER_STATE_CHANGE)) {}
 
 		void Handle(const Packet& packet) override;
-		Packet Translate(ENetPacket* packet) const override;
+		std::shared_ptr<Packet> Translate(const ENetPacket* packet) const override;
 		ENetPacket* ToENetPacket(const Packet& packet) const override;
 	};
 
@@ -39,7 +39,7 @@ namespace Packet {
 		ObjectChangeGravityPacketHandler() : PacketHandler(static_cast<Type>(PacketType::OBJECT_CHANGE_GRAVITY)) {}
 
 		void Handle(const Packet& packet) override;
-		Packet Translate(ENetPacket* packet) const override;
+		std::shared_ptr<Packet> Translate(const ENetPacket* packet) const override;
 		ENetPacket* ToENetPacket(const Packet& packet) const override;
 	};
 }
