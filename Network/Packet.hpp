@@ -109,6 +109,13 @@ namespace Packet {
 			return m_type == other.GetType();
 		}
 
+	protected:
+		void GetBaseData(const ENetPacket* packet, Type* type, uint8_t* channel, uint32_t* sequenceNum) {
+			memcpy(type, packet->data, sizeof(Type));
+			memcpy(channel, packet->data + sizeof(Type), sizeof(uint8_t));
+			memcpy(sequenceNum, packet->data + sizeof(Type) + sizeof(uint8_t), sizeof(uint32_t));
+		}
+
 	private:
 		Type m_type = 0;
 	};
