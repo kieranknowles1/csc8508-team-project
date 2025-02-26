@@ -1,6 +1,6 @@
 #pragma once
 
-#include "GamePackets.hpp"
+#include "Multiplayer/GamePackets.hpp"
 
 namespace Packet {
 
