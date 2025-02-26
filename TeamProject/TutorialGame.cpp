@@ -78,6 +78,9 @@ void TutorialGame::UpdateGame(float dt) {
 	}
 	if (navMesh && navMeshDebug) {
 		visualiseNavMesh();
+		if (wanderer) {
+			wanderer->Update(dt);
+		}
 	}
 
 	UpdateKeys();
@@ -186,7 +189,7 @@ void TutorialGame::visualiseNavMesh() {
 
 	// Find path and draw it
 	std::vector<btVector3> path = navMesh->FindPath(startPoint, endPoint);
-	navMesh->DebugDrawPath(path);
+	//navMesh->DebugDrawPath(path);
 }
 
 
@@ -274,11 +277,12 @@ void TutorialGame::InitWorld() {
 	InitBullet();
 	audioEngine.Init();
 
-	navMeshDebug = false;
+	navMeshDebug = true;
 	if (navMeshDebug) {
 		freeCam = true;
 		navMesh = new NavMesh(bulletWorld);
 		navMesh->LoadFromFile("Assets/Meshes/NavMeshes/smalltest.navmesh");
+		AddWandererToWorld();
 	}
 
 	if (loadFromLevel) {
@@ -368,6 +372,33 @@ Turret* TutorialGame::AddTurretToWorld() {
 	testTurret = turret;
 
 	return turret;
+}
+
+Wanderer* TutorialGame::AddWandererToWorld() {
+	Wanderer* wanderer = new Wanderer(navMesh);
+
+	float height = 4.0f;
+	float radius = 2.0f;
+
+	wanderer->setInitialPosition(navMesh->GetRandomPointInNavMesh());
+	wanderer->setRenderScale(btVector3(radius * 2, height, radius + 2));
+
+	btCollisionShape* shape = new btCapsuleShape(radius, height);
+
+	wanderer->SetRenderObject(new RenderObject(wanderer, resourceManager->getMeshes().get("Capsule.msh"), defaultTexture));
+
+	PhysicsObject* physicsObject = new PhysicsObject(wanderer);
+	physicsObject->InitBulletPhysics(bulletWorld, shape, 0);
+	wanderer->SetPhysicsObject(physicsObject);
+
+	wanderer->GetRenderObject()->SetColour(Vector4(1, 0, 0, 1));
+
+	wanderer->SetOffset();
+
+	world->AddGameObject(wanderer);
+	
+	this->wanderer = wanderer;
+	return wanderer;
 }
 
 /* Adding an object to test the bullet physics */
