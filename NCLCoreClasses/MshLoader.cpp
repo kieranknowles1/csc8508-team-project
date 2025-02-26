@@ -90,6 +90,9 @@ bool NCL::Rendering::MshLoader::LoadBinaryMesh(const std::string& filename, Mesh
 	read(fs, numVertexes);
 	read(fs, numIndexes);
 	read(fs, numChunks);
+	float bounds;
+	read(fs, bounds);
+	destinationMesh.setBoundingRadius(bounds);
 
 	for (int i = 0; i < numChunks; i++) {
 		GeometryChunkTypes type;
@@ -258,6 +261,14 @@ bool MshLoader::LoadTextMesh(const std::string& filename, Mesh& destinationMesh)
 	}
 
 	destinationMesh.SetPrimitiveType(GeometryPrimitive::Triangles);
+
+	// Calculate the bounding radius of the mesh
+	float maxDistance = 0;
+	for (auto vtx : destinationMesh.GetPositionData()) {
+		maxDistance = std::max(Vector::LengthSquared(vtx), maxDistance);
+	}
+	maxDistance = std::sqrt(maxDistance);
+	destinationMesh.setBoundingRadius(maxDistance);
 
 	return true;
 }

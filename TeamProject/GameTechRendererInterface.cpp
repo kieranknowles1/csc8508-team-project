@@ -1,18 +1,37 @@
 #include "GameTechRendererInterface.h"
 
+#include <NCLCoreClasses/Frustum.h>
+#include <NCLCoreClasses/Window.h>
+
 #include <CSC8503CoreClasses/GameWorld.h>
 #include <CSC8503CoreClasses/GameObject.h>
+#include <CSC8503CoreClasses/RenderObject.h>
+
+#include "Debug.h"
 
 namespace NCL::CSC8503 {
 	void GameTechRendererInterface::collectFrameObjects(GameWorld* world)
 	{
+		// TODO: Have one window pointer, avoid globals if possible
+		auto window = Window::GetWindow();
+		auto viewProjMatrix = camera->BuildProjectionMatrix(window->GetScreenAspect()) * camera->BuildViewMatrix();
+		auto frustum = Frustum::FromViewProjMatrix(viewProjMatrix);
+
 		frameObjects.clear();
 
 		world->OperateOnContents([&](GameObject* obj) {
 			// TODO: Frustum culling, sorting
-			if (obj->IsActive() && obj->GetRenderObject()) {
-				frameObjects.emplace_back(obj->GetRenderObject());
-			}
+			if (!obj->IsActive()) return;
+			auto render = obj->GetRenderObject();
+			if (!render) return;
+
+			float maxScale = std::max({ std::abs(obj->getRenderScale().x), std::abs(obj->getRenderScale().y), std::abs(obj->getRenderScale().z) });
+			float bounds = render->GetMesh()->getBoundingRadius() * maxScale;
+			if (!frustum.SphereInsideFrustum(obj->GetTransform().getOrigin(), bounds)) return;
+
+			frameObjects.emplace_back(render);
 		});
+
+		Debug::Print("Frame object count: " + std::to_string(frameObjects.size()), Vector2(10, 10));
 	}
 }

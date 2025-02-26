@@ -216,12 +216,16 @@ namespace NCL::Rendering {
 			assetID = newID;
 		}
 
+		float getBoundingRadius() const { return boundingRadius; }
+		void setBoundingRadius(float val) { boundingRadius = val; }
+
 	protected:
 		virtual bool ValidateMeshData();
 
 		GeometryPrimitive::Type		primType;
 		std::string					debugName;
 		uint32_t					assetID;
+		float boundingRadius;
 
 		std::vector<Vector3>		positions;
 		std::vector<Vector2>		texCoords;
