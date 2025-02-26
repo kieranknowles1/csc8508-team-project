@@ -1,8 +1,15 @@
+#include "TutorialGame.h"
+#include "GameObject.h"
+
 #include "Multiplayer/GamePacketHandlers.hpp"
 
 namespace Packet {
 	void DeltaPacketHandler::Handle(const Packet& packet) {
+		const DeltaPacket& deltaPacket = static_cast<const DeltaPacket&>(packet);
+		GameObject* object = GameObject::GetGameObjectByID(deltaPacket.GetTargetID());
 
+		object->GetPhysicsObject()->GetRigidBody()->setLinearVelocity(deltaPacket.GetLinearVelocity());
+		object->GetPhysicsObject()->GetRigidBody()->setAngularVelocity(deltaPacket.GetAngularVelocity());
 	}
 	
 	Packet DeltaPacketHandler::Translate(ENetPacket* packet) const {
