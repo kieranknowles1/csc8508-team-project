@@ -65,7 +65,7 @@ void Network::ConnectTo(const ENetAddress* destination) {
 }
 
 
-void Network::Send(Packet::Packet packet) {
+void Network::Send(std::shared_ptr<Packet::Packet> packet) {
 	std::lock_guard<std::mutex> lock(m_sendMut);
 	m_sendBuffer[m_numPackets++] = packet;
 }
@@ -138,9 +138,9 @@ void Network::SendAll() {
 	Packet::PacketRegister* packetRegister = Packet::PacketRegister::GetRegister();
 
 	for (int i = 0; i < m_numPackets; i++) {
-		Packet::PacketHandler* handler = packetRegister->GetHandler(m_sendBuffer[i].GetType());
+		Packet::PacketHandler* handler = packetRegister->GetHandler(m_sendBuffer[i].get()->GetType());
 		ENetPacket* packet = handler->ToENetPacket(m_sendBuffer[i]);
-		enet_host_broadcast(m_host, m_sendBuffer[i].GetChannel(), packet);
+		enet_host_broadcast(m_host, m_sendBuffer[i].get()->GetChannel(), packet);
 	}
 	m_numPackets = 0;
 }

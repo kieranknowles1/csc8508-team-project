@@ -90,9 +90,11 @@ namespace Packet {
 
 		/**
 		 * @brief Creates an ENet Packet.
-		 * @return A new ENetPacket. Please manage accordingly.
+		 * @return A new ENetPacket.
+		 * @warning Remember to call enet_packet_destroy IF
+		 * you do not send the packet.
 		 */
-		virtual ENetPacket* ToENetPacket(const Packet& packet) const = 0;
+		virtual ENetPacket* ToENetPacket(const std::shared_ptr<Packet> packet) const = 0;
 
 		/**
 		 * @brief Get the type of the packet this object handles.

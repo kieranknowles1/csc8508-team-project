@@ -71,7 +71,7 @@ public:
 	void Close();
 	void ConnectTo(const ENetAddress* destination);
 
-	void Send(Packet::Packet packet);
+	void Send(std::shared_ptr<Packet::Packet> packet);
 	std::shared_ptr<Packet::Packet> Fetch();
 
 	NetworkState GetState() {
@@ -98,7 +98,7 @@ private:
 	NetworkState m_state = NetworkState::CLOSED;
 
 	Packet::PacketBuffer m_receiveBuffer = Packet::PacketBuffer(BUFFER_SIZE);
-	std::vector<Packet::Packet> m_sendBuffer = std::vector<Packet::Packet>(BUFFER_SIZE);
+	std::vector<std::shared_ptr<Packet::Packet>> m_sendBuffer = std::vector<std::shared_ptr<Packet::Packet>>(BUFFER_SIZE);
 	int m_numPackets = 0;
 	
 	float m_elapsedTime = 0;
