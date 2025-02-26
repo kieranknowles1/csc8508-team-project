@@ -72,7 +72,7 @@ public:
 	void ConnectTo(const ENetAddress* destination);
 
 	void Send(Packet::Packet packet);
-	Packet::Packet Fetch();
+	std::shared_ptr<Packet::Packet> Fetch();
 
 	NetworkState GetState() {
 		std::lock_guard<std::mutex> lock(m_stateMut);

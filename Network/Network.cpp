@@ -71,13 +71,13 @@ void Network::Send(Packet::Packet packet) {
 }
 
 
-Packet::Packet Network::Fetch() {
-	Packet::Packet fetched;
+std::shared_ptr<Packet::Packet> Network::Fetch() {
+	std::shared_ptr<Packet::Packet> fetched;
 	do {
 		fetched = m_receiveBuffer.Pop();
 	} while (
-		fetched.GetSequenceNumber() < m_lastMaxSequence
-		&& (fetched.GetChannel() != static_cast<int>(Channel::RELIABLE) || fetched.GetChannel() != static_cast<int>(Channel::UNSEQUENCED))
+		fetched.get()->GetSequenceNumber() < m_lastMaxSequence
+		&& (fetched.get()->GetChannel() != static_cast<int>(Channel::RELIABLE) || fetched.get()->GetChannel() != static_cast<int>(Channel::UNSEQUENCED))
 	);
 	return fetched;
 }
@@ -167,7 +167,7 @@ void Network::HandleIncomingPacket(ENetPacket* packet) {
 		
 	Packet::PacketRegister* packetRegister = Packet::PacketRegister::GetRegister();
 	Packet::PacketHandler* packetHandler = packetRegister->GetHandler(packetType);
-	Packet::Packet translated = packetHandler->Translate(packet);
+	std::shared_ptr<Packet::Packet> translated = packetHandler->Translate(packet);
 
 	m_receiveBuffer.Insert(translated);
 }

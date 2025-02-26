@@ -179,7 +179,7 @@ namespace Packet {
 	 */
 	class PacketBuffer {
 	public:
-		PacketBuffer(int size) : m_size(size) { m_packets = std::make_unique<Packet[]>(size); }
+		PacketBuffer(int size) : m_size(size) { m_packets = std::make_unique<std::shared_ptr<Packet>[]>(size); }
 
 		/**
 		 * @brief Insert a packet into the buffer.
@@ -188,7 +188,7 @@ namespace Packet {
 		 * Inserts a packet into the buffer unless the buffer is full in which case
 		 * the packet will not be added..
 		 */
-		bool Insert(Packet item) {
+		bool Insert(std::shared_ptr<Packet> item) {
 			// Drop packets when buffer is full.
 			if (!IsFull()) {
 
@@ -207,8 +207,8 @@ namespace Packet {
 		 * @brief Fetch the item at the head of the queue.
 		 * @return The buffer item in the queue.
 		 */
-		Packet Pop() {
-			if (IsEmpty()) return Packet();
+		std::shared_ptr<Packet> Pop() {
+			if (IsEmpty()) return std::make_shared<Packet>();
 
 			std::lock_guard<std::mutex> bufferLock(m_bufferMut);
 			std::lock_guard<std::mutex> totalLock(m_totalMut);
@@ -222,8 +222,8 @@ namespace Packet {
 		 * @return The item at the front of the queue or an empty packet if the
 		 *			buffer is empty.
 		 */
-		inline Packet Peek() {
-			if (IsEmpty()) return Packet();
+		inline std::shared_ptr<Packet> Peek() {
+			if (IsEmpty()) return std::make_shared<Packet>();
 
 			std::lock_guard<std::mutex> lock(m_bufferMut);
 			return m_packets.get()[0];
@@ -248,15 +248,15 @@ namespace Packet {
 		}
 
 	private:
-		inline Packet* Begin() { return m_packets.get(); }
-		inline Packet* End() { return m_packets.get() + m_size; }
+		inline std::shared_ptr<Packet>* Begin() { return m_packets.get(); }
+		inline std::shared_ptr<Packet>* End() { return m_packets.get() + m_size; }
 
 		std::mutex m_totalMut;
 		std::mutex m_bufferMut;
 
 		int m_size;
 		int m_numPackets = 0;
-		std::unique_ptr<Packet[]> m_packets;
+		std::unique_ptr<std::shared_ptr<Packet>[]> m_packets;
 	};
 }
 
