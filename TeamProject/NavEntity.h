@@ -8,8 +8,11 @@ namespace NCL {
 			NavEntity() {};
 			~NavEntity() {};
 
+		protected:
+
 			void NewPath(std::vector<btVector3> newPath);
-			void Update(float dt);
+			void FollowPath(float dt);
+			btVector3 pathPoint;
 		private:
 			float speed = 0.01;
 
