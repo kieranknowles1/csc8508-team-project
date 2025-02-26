@@ -127,8 +127,6 @@ namespace NCL {
 			NavMesh* navMesh;
 			bool navMeshDebug = false;
 			void visualiseNavMesh();
-			NavEntity* navEntity;
-			NavEntity* AddNavEntityToWorld();
 		};
 	}
 }
