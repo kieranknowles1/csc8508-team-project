@@ -7,8 +7,6 @@
 #include <CSC8503CoreClasses/GameObject.h>
 #include <CSC8503CoreClasses/RenderObject.h>
 
-#include "Debug.h"
-
 namespace NCL::CSC8503 {
 	void GameTechRendererInterface::collectFrameObjects(GameWorld* world)
 	{
@@ -31,7 +29,5 @@ namespace NCL::CSC8503 {
 
 			frameObjects.emplace_back(render);
 		});
-
-		Debug::Print("Frame object count: " + std::to_string(frameObjects.size()), Vector2(10, 10));
 	}
 }
