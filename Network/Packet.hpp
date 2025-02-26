@@ -71,7 +71,7 @@ namespace Packet {
 	 */
 	class PacketHandler {
 	public:
-		PacketHandler() {};
+		PacketHandler(Type type) : m_type(type) {};
 
 		/**
 		 * @brief Handle the packet.
@@ -98,7 +98,7 @@ namespace Packet {
 		 * @brief Get the type of the packet this object handles.
 		 * @return Type of the packet.
 		 */
-		Type GetType() const { return type; }
+		Type GetType() const { return m_type; }
 
 		/**
 		 * @brief Compare 2 PacketHandlers.
@@ -106,11 +106,11 @@ namespace Packet {
 		 * @return True if both PacketHandlers handle the same packet type.
 		 */
 		bool operator==(const PacketHandler& other) const {
-			return type == other.GetType();
+			return m_type == other.GetType();
 		}
 
 	private:
-		Type type = 0;
+		Type m_type = 0;
 	};
 
 
