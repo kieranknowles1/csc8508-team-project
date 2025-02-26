@@ -5,7 +5,7 @@
 
 namespace Packet {
 	void DeltaPacketHandler::Handle(const std::shared_ptr<Packet> packet) {
-		const DeltaPacket* deltaPacket = static_cast<const DeltaPacket*>(packet.get());
+		const DeltaPacket* deltaPacket = std::static_pointer_cast<DeltaPacket>(packet).get();
 		GameObject* object = GameObject::GetGameObjectByID(deltaPacket->GetTargetID());
 
 		object->GetPhysicsObject()->GetRigidBody()->setLinearVelocity(deltaPacket->GetLinearVelocity());
@@ -20,7 +20,6 @@ namespace Packet {
 		int objectID;
 		btVector3 linearVelocity;
 		btVector3 angularVelocity;
-
 		size_t offset = sizeof(Type) + sizeof(uint8_t) + sizeof(uint32_t);
 
 		GetBaseData(packet, &type, &channel, &sequenceNumber);
@@ -84,7 +83,12 @@ namespace Packet {
 
 
 	void PositionPacketHandler::Handle(const std::shared_ptr<Packet> packet) {
+		const PositionPacket* positionPacket = std::static_pointer_cast<PositionPacket>(packet).get();
+		GameObject* targetObject = GameObject::GetGameObjectByID(positionPacket->GetTargetID());
+		btRigidBody* body = targetObject->GetPhysicsObject()->GetRigidBody();
 
+		body->getWorldTransform().setOrigin(positionPacket->GetPosition());
+		body->getWorldTransform().setRotation(positionPacket->GetOrientation());
 	}
 
 	std::shared_ptr<Packet> PositionPacketHandler::Translate(const ENetPacket* packet) const {
