@@ -224,7 +224,7 @@ void GameTechRenderer::RenderFrame() {
 	glEnable(GL_DEPTH_TEST);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	RenderCrosshair(); //This line Ameya added for crosshair 
-	RenderPostProcessing();
+	RenderPostProcessing();  
 }
 
 void GameTechRenderer::BuildObjectList() {
@@ -674,7 +674,7 @@ void GameTechRenderer::RenderCrosshair() {
 	glEnable(GL_DEPTH_TEST);
 }
 
-void GameTechRenderer::RenderPostProcessing() {
+void GameTechRenderer::RenderPostProcessing() { 
 	if (vignetteOn) {
 		GLuint buff = (hdrOn ? BFBO : 0);
 		glBindFramebuffer(GL_FRAMEBUFFER, buff); //unbind hdrFBO and set BFBO  //was glBindFramebuffer(GL_FRAMEBUFFER, 0); 
@@ -689,21 +689,29 @@ void GameTechRenderer::RenderPostProcessing() {
 		//glUniform2fv(glGetUniformLocation(hdrShader->GetProgramID(), "windowSize"), 1, (float*)&windowSize); //sending windowSize for vignette  This did not properly send windowSize to shader  
 		glUniform1f(glGetUniformLocation(vignetteShader->GetProgramID(), "windowSizex"), windowSize.x);
 		glUniform1f(glGetUniformLocation(vignetteShader->GetProgramID(), "windowSizey"), windowSize.y);
+		Vector3 VignetteColour = Vector3(1.0, 0.0, 0.0);
+		//float invVignetteRange = 2.0f; //smaller number = greater radius of effect, higher number = smaller radius of effect i.e. more pushed out to edges
+		float vignetteIntensity = 2.0f; //Recommendation: vary Intensity between 0.8 and 3
+		glUniform3fv(glGetUniformLocation(vignetteShader->GetProgramID(), "effectColour"), 1, (float*)&VignetteColour);
+		//glUniform1f(glGetUniformLocation(vignetteShader->GetProgramID(), "invRange"), invVignetteRange);
+		glUniform1f(glGetUniformLocation(vignetteShader->GetProgramID(), "intensity"), vignetteIntensity);
+		glUniform1f(glGetUniformLocation(vignetteShader->GetProgramID(), "time"), vignettePulse);  
 		BindMesh(*hdrQuad); //simply a quad
 		DrawBoundMesh(); //finished rendering into BTex now, ready to unbind to draw quad straight to screen next:
 	}
 	if (hdrOn) {
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+		GLuint tex = (vignetteOn ? BTex : hdrTex);
 		glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 		glDisable(GL_CULL_FACE);
 		glDisable(GL_BLEND);
 		glDisable(GL_DEPTH_TEST);
 		UseShader(*hdrShader);
 		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, BTex);//BTex currently holds vignetted scene. (tonemapping should be done pretty much last)
+		glBindTexture(GL_TEXTURE_2D, tex);//BTex would hold vignetted scene. (tonemapping should be done pretty much last)
 		glUniform1i(glGetUniformLocation(hdrShader->GetProgramID(), "hdrTex"), 0);
 		BindMesh(*hdrQuad);
 		DrawBoundMesh();
 	}
-
+	
 }

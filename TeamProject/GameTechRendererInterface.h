@@ -29,10 +29,15 @@ namespace NCL::CSC8503 {
 			vignetteOn = toggle;
 		}
 
+		void SetVignettePulse(float dt) {
+			vignettePulse = dt;
+		}
+
 	protected:
 		//adding bools to toggle post processing. Must be accessible from the specific renderer
 		bool hdrOn = true;
-		bool vignetteOn = true; 
+		bool vignetteOn = false; 
+		float vignettePulse = 0;
 
 	};
 }

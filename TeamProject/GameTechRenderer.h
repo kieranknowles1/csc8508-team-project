@@ -101,7 +101,8 @@ namespace NCL {
 			GLuint BFBO;
 			OGLShader* vignetteShader;
 			GLuint BDepthTex;
-			void RenderPostProcessing();
+			void RenderPostProcessing(); 
+		
 		};
 	}
 }

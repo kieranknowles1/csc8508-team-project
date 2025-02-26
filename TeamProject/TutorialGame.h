@@ -109,6 +109,9 @@ namespace NCL {
 
 
 			NavMesh* navMesh;
+
+			//post processing time variable effects
+			float pulse = 0;
 		};
 	}
 }
