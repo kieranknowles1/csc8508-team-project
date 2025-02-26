@@ -72,7 +72,14 @@ void Network::Send(Packet::Packet packet) {
 
 
 Packet::Packet Network::Fetch() {
-	return m_receiveBuffer.Pop();
+	Packet::Packet fetched;
+	do {
+		fetched = m_receiveBuffer.Pop();
+	} while (
+		fetched.GetSequenceNumber() < m_lastMaxSequence
+		&& (fetched.GetChannel() != static_cast<int>(Channel::RELIABLE) || fetched.GetChannel() != static_cast<int>(Channel::UNSEQUENCED))
+	);
+	return fetched;
 }
 
 
