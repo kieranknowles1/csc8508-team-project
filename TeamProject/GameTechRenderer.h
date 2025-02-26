@@ -11,7 +11,6 @@
 #include "OGLTexture.h"
 #include "OGLMesh.h"
 
-#include "GameWorld.h"
 #include "GameTechRendererInterface.h"
 
 namespace NCL {
@@ -22,7 +21,7 @@ namespace NCL {
 			: public OGLRenderer
 			, public GameTechRendererInterface {
 		public:
-			GameTechRenderer(GameWorld* world);
+			GameTechRenderer();
 			~GameTechRenderer();
 
 			Mesh* LoadMesh(const std::string& name) override;
@@ -35,10 +34,6 @@ namespace NCL {
 
 			void RenderFrame()	override;
 
-			GameWorld*	gameWorld;
-
-			void BuildObjectList();
-			void SortObjectList();
 			void RenderShadowMap();
 			void RenderCamera(); 
 			void RenderSkybox();
@@ -49,8 +44,6 @@ namespace NCL {
 
 			void SetDebugStringBufferSizes(size_t newVertCount);
 			void SetDebugLineBufferSizes(size_t newVertCount);
-
-			std::vector<const RenderObject*> activeObjects;
 
 			std::unique_ptr<OGLShader> sceneShader;
 			std::unique_ptr<OGLShader> debugShader;
