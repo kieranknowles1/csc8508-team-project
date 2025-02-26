@@ -34,10 +34,34 @@ namespace Packet {
 			m_objectID(objectID), m_linearVelocity(linear), m_angularVelocity(angular)
 		{}
 
+		/**
+		 * @brief Get the ID of the object this delta packet should be applied to.
+		 * @return int representing the GameObject's worldID.
+		 */
+		inline int GetTargetID() const { return m_objectID; }
+
+		/**
+		 * @brief Get the Linear Velocity of the Delta Packet.
+		 * 
+		 * This is the current linear velocity of the object on the server.
+		 * 
+		 * @return btVector3 containing the linear velocity.
+		 */
+		inline btVector3 GetLinearVelocity() const { return m_linearVelocity; }
+
+		/**
+		 * @brief Get the Angular Velocity of the Delta Packet.
+		 * 
+		 * This is the current angular velocity of thet object on the server.
+		 * 
+		 * @return btVector3 containing the angular velocity.
+		 */
+		inline btVector3 GetAngularVelocity() const { return m_angularVelocity; }
+
 	private:
-		int m_objectID;
-		btVector3 m_linearVelocity;
-		btVector3 m_angularVelocity;
+		const int m_objectID;
+		const btVector3 m_linearVelocity;
+		const btVector3 m_angularVelocity;
 	};
 
 
