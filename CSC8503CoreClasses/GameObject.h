@@ -116,6 +116,12 @@ namespace NCL::CSC8503 {
 		char getType() {
 			return type;
 		}
+
+		static GameObject* GetGameObjectByID(int id) {
+			if (objects.contains(id)) return objects[id];
+			return nullptr;
+		}
+
 	protected:
 		PhysicsObject*		physicsObject;
 		RenderObject*		renderObject;
