@@ -110,7 +110,7 @@ namespace Packet {
 		}
 
 	protected:
-		void GetBaseData(const ENetPacket* packet, Type* type, uint8_t* channel, uint32_t* sequenceNum) {
+		void GetBaseData(const ENetPacket* packet, Type* type, uint8_t* channel, uint32_t* sequenceNum) const {
 			memcpy(type, packet->data, sizeof(Type));
 			memcpy(channel, packet->data + sizeof(Type), sizeof(uint8_t));
 			memcpy(sequenceNum, packet->data + sizeof(Type) + sizeof(uint8_t), sizeof(uint32_t));
