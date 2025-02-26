@@ -86,7 +86,7 @@ namespace Packet {
 		 * @param packet the received ENetPacket.
 		 * @return Pointer to the created packet.
 		 */
-		virtual Packet Translate(ENetPacket* packet) const = 0;
+		virtual std::shared_ptr<Packet> Translate(const ENetPacket* packet) const = 0;
 
 		/**
 		 * @brief Creates an ENet Packet.
