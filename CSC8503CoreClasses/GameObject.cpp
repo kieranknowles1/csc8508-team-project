@@ -18,4 +18,6 @@ GameObject::~GameObject()	{
 	delete physicsObject;
 	delete renderObject;
 	delete networkObject;
+
+	if (objects.contains(worldID)) objects.erase(worldID);
 }
