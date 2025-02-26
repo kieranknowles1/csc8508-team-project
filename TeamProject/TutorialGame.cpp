@@ -277,7 +277,7 @@ void TutorialGame::InitWorld() {
 	InitBullet();
 	audioEngine.Init();
 
-	navMeshDebug = true;
+	navMeshDebug = false;
 	if (navMeshDebug) {
 		freeCam = true;
 		navMesh = new NavMesh(bulletWorld);
