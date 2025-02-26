@@ -79,20 +79,20 @@ namespace Packet {
 		 * 
 		 * Deserializes the packet and then processes it.
 		 */
-		virtual void Handle(Packet packet) = 0;
+		virtual void Handle(const Packet& packet) = 0;
 
 		/**
 		 * @brief Convert the ENet packet into a Packet type.
 		 * @param packet the received ENetPacket.
 		 * @return Pointer to the created packet.
 		 */
-		virtual Packet Translate(ENetPacket* packet) = 0;
+		virtual Packet Translate(ENetPacket* packet) const = 0;
 
 		/**
 		 * @brief Creates an ENet Packet.
 		 * @return A new ENetPacket. Please manage accordingly.
 		 */
-		virtual ENetPacket* ToENetPacket(const Packet& packet) = 0;
+		virtual ENetPacket* ToENetPacket(const Packet& packet) const = 0;
 
 		/**
 		 * @brief Get the type of the packet this object handles.

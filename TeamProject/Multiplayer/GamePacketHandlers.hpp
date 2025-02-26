@@ -8,9 +8,9 @@ namespace Packet {
 	public:
 		DeltaPacketHandler() : PacketHandler(static_cast<Type>(PacketType::DELTA)) {}
 
-		void Handle(Packet packet) override;
-		Packet Translate(ENetPacket* packet) override;
-		ENetPacket* ToENetPacket(const Packet& packet) override;
+		void Handle(const Packet& packet) override;
+		Packet Translate(ENetPacket* packet) const override;
+		ENetPacket* ToENetPacket(const Packet& packet) const override;
 	};
 
 
@@ -18,9 +18,9 @@ namespace Packet {
 	public:
 		PositionPacketHandler() : PacketHandler(static_cast<Type>(PacketType::POSITION)) {}
 
-		void Handle(Packet packet) override;
-		Packet Translate(ENetPacket* packet) override;
-		ENetPacket* ToENetPacket(const Packet& packet) override;
+		void Handle(const Packet& packet) override;
+		Packet Translate(ENetPacket* packet) const override;
+		ENetPacket* ToENetPacket(const Packet& packet) const override;
 	};
 
 
@@ -28,9 +28,9 @@ namespace Packet {
 	public:
 		PlayerStateChangePacketHandler() : PacketHandler(static_cast<Type>(PacketType::PLAYER_STATE_CHANGE)) {}
 
-		void Handle(Packet packet) override;
-		Packet Translate(ENetPacket* packet) override;
-		ENetPacket* ToENetPacket(const Packet& packet) override;
+		void Handle(const Packet& packet) override;
+		Packet Translate(ENetPacket* packet) const override;
+		ENetPacket* ToENetPacket(const Packet& packet) const override;
 	};
 
 
@@ -38,8 +38,8 @@ namespace Packet {
 	public:
 		ObjectChangeGravityPacketHandler() : PacketHandler(static_cast<Type>(PacketType::OBJECT_CHANGE_GRAVITY)) {}
 
-		void Handle(Packet packet) override;
-		Packet Translate(ENetPacket* packet) override;
-		ENetPacket* ToENetPacket(const Packet& packet) override;
+		void Handle(const Packet& packet) override;
+		Packet Translate(ENetPacket* packet) const override;
+		ENetPacket* ToENetPacket(const Packet& packet) const override;
 	};
 }
