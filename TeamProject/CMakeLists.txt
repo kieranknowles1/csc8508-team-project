@@ -26,6 +26,8 @@ set(SOURCES
     Config.h
     Config.cpp
     Multiplayer/GamePackets.hpp
+	Wanderer.h
+	Wanderer.cpp
 )
 
 set(ASSET_ROOT "${CMAKE_SOURCE_DIR}/Assets")
