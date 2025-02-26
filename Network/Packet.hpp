@@ -79,7 +79,7 @@ namespace Packet {
 		 * 
 		 * Deserializes the packet and then processes it.
 		 */
-		virtual void Handle(const Packet& packet) = 0;
+		virtual void Handle(const std::shared_ptr<Packet> packet) = 0;
 
 		/**
 		 * @brief Convert the ENet packet into a Packet type.
