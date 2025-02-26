@@ -76,6 +76,26 @@ namespace Packet {
 			Packet(static_cast<Type>(PacketType::POSITION), static_cast<int>(Channel::FREQUENT), sequenceNum),
 			m_objectID(objectID), m_position(position), m_orientation(orientation)
 		{}
+		
+		/**
+		 * @brief Get the ID of the object this position packet should be applied to.
+		 * @return int representing the GameObject's worldID.
+		 */
+		inline int GetTargetID() { return m_objectID; }
+
+		/**
+		 * @brief Get the new position of the game object from the packet.
+		 * 
+		 * @return btVector3 containing the new position data.
+		 */
+		inline btVector3 GetPosition() { return m_position; }
+
+		/**
+		 * @brief Get the new orientation of the game object from the packet.
+		 * 
+		 * @return btQaternion containing the new orientation data. 
+		 */
+		inline btQuaternion GetOrientation() { return m_orientation; }
 
 	private:
 		int m_objectID;
