@@ -5,11 +5,14 @@
 #include "Bindless.psslh"
 #include "Vertex.psslh"
 
+#include "glinterop.h"
+#include "../include/vert/texscale.glsl"
+
 struct VS_OUTPUT
 {
 	float4 Position		: S_POSITION;
 	float2 UV			: TEXCOORD0;
-	float4 Colour		: TEXCOORD1;	
+	float4 Colour		: TEXCOORD1;
 	int	texID			: TEXCOORD2;
 
 	float4 ShadowClip	: TEXCOORD2;
@@ -31,8 +34,12 @@ VS_OUTPUT main(uint vertID : S_VERTEX_ID, uint objID : S_SRT_DATA, uint instance
 
 	TransformVertexToWorld(s, vertID, position, normal, tangent, bitangent);
 
+	float2 rawUv = TextureCoords[vertID];
+	Output.UV = scaleUv(
+		rawUv, s.texScale, normal, s.texRepeats
+	);
+
 	Output.Position = TransformWorldToClip(position);
-	Output.UV		= TextureCoords[vertID];
 	Output.Colour	= s.colour;
 	Output.texID	= s.index[0];
 

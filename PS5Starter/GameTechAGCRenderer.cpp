@@ -495,6 +495,8 @@ void GameTechAGCRenderer::UpdateObjectList() {
 					state.modelMatrix = transMatrix * Matrix::Scale(g->getParent()->getRenderScale());
 
 					state.colour = g->GetColour();
+					state.texRepeats = g->GetTexRepeating();
+					state.texScale = g->getParent()->getRenderScale() * g->GetTexScaleMultiplier();
 					state.index[0] = 0; //Default Texture
 					state.index[1] = 0; //Skinning buffer
 
