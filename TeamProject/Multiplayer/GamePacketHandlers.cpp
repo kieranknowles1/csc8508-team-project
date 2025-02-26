@@ -38,11 +38,10 @@ namespace Packet {
 	}
 	
 	ENetPacket* DeltaPacketHandler::ToENetPacket(const std::shared_ptr<Packet> packet) const {
-		char* data;
-		size_t offset = 0;
+		//char* buffer = new char[sizeof(DeltaPacket)];
+		//DeltaPacket deltaPacket = (*static_cast<DeltaPacket*>(packet.get()));
 
-		//DeltaPacket deltaPacket =
-
+		//memcpy(buffer, &deltaPacket, sizeof(deltaPacket));
 
 		return nullptr;
 	}
