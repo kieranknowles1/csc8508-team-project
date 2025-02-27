@@ -20,6 +20,19 @@ namespace NCL {
 	namespace CSC8503 {
 		class BulletDebug;
 
+
+		enum class TeamColor : uint8_t {
+			RED,
+			ORANGE,
+			BLUE,
+			GREEN,
+			PURPLE,
+			PINK,
+			YELLOW,
+			LIGHT_BLUE
+		};
+
+
 		class TutorialGame {
 		private:
 			static TutorialGame* instance;
