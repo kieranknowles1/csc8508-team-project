@@ -292,7 +292,6 @@ void TutorialGame::InitWorld() {
 		freeCam = true;
 		navMesh = new NavMesh(bulletWorld);
 		navMesh->LoadFromFile("Assets/Meshes/NavMeshes/smalltest.navmesh");
-		AddWandererToWorld();
 	}
 
 	if (loadFromLevel) {
@@ -336,7 +335,7 @@ void TutorialGame::InitWorld() {
 
 	AddTurretToWorld();
 	InitPlayer();
-
+	if (navMeshDebug) AddWandererToWorld();
 }
 
 void TutorialGame::InitPlayer() {
@@ -385,7 +384,7 @@ Turret* TutorialGame::AddTurretToWorld() {
 }
 
 Wanderer* TutorialGame::AddWandererToWorld() {
-	Wanderer* wanderer = new Wanderer(navMesh);
+	Wanderer* wanderer = new Wanderer(player, navMesh);
 
 	float height = 4.0f;
 	float radius = 2.0f;
