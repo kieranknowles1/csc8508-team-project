@@ -68,6 +68,15 @@ namespace NCL {
 			 */
 			void InitNetwork(bool host = false);
 
+			/**
+			 * @brief Connect to a host game at the given address.
+			 * 
+			 * Connection resolution is handled by packet response.
+			 * 
+			 * @param address ENetAddress of the servers location.
+			 */
+			void ConnectToServer(ENetAddress& address);
+
 			void UpdatePlayer(float dt);
 
 

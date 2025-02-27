@@ -342,6 +342,13 @@ void TutorialGame::InitNetwork(bool host) {
 	network = new Network(&address, host ? MAX_PLAYERS : 1);
 }
 
+
+void TutorialGame::ConnectToServer(ENetAddress& address) {
+	assert(network != nullptr);
+	network->ConnectTo(&address);
+}
+
+
 void TutorialGame::InitPlayer() {
 	if (loadFromLevel) {
 		player = AddPlayerCapsuleToWorld(Vector3(0, 100, 30), 4.0f, 2.0f, 10.0f);
