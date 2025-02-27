@@ -28,6 +28,8 @@ set(SOURCES
     Multiplayer/GamePackets.hpp
     Multiplayer/GamePacketHandlers.hpp
     Multiplayer/GamePacketHandlers.cpp
+	Wanderer.h
+	Wanderer.cpp
 )
 
 set(ASSET_ROOT "${CMAKE_SOURCE_DIR}/Assets")

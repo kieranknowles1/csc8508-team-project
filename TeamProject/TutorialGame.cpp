@@ -78,8 +78,8 @@ void TutorialGame::UpdateGame(float dt) {
 	}
 	if (navMesh && navMeshDebug) {
 		visualiseNavMesh();
-		if (navEntity) {
-			navEntity->Update(dt);
+		if (wanderer) {
+			wanderer->Update(dt);
 		}
 	}
 
@@ -189,7 +189,7 @@ void TutorialGame::visualiseNavMesh() {
 
 	// Find path and draw it
 	std::vector<btVector3> path = navMesh->FindPath(startPoint, endPoint);
-	navMesh->DebugDrawPath(path);
+	//navMesh->DebugDrawPath(path);
 }
 
 
@@ -282,13 +282,7 @@ void TutorialGame::InitWorld() {
 		freeCam = true;
 		navMesh = new NavMesh(bulletWorld);
 		navMesh->LoadFromFile("Assets/Meshes/NavMeshes/smalltest.navmesh");
-		AddNavEntityToWorld();
-
-		btVector3 startPoint(94, 0.5833334, 26);
-		btVector3 endPoint(68, 0.5833334, 34);
-
-		std::vector<btVector3> path = navMesh->FindPath(startPoint, endPoint);
-		navEntity->NewPath(path);
+		AddWandererToWorld();
 	}
 
 	if (loadFromLevel) {
@@ -380,26 +374,31 @@ Turret* TutorialGame::AddTurretToWorld() {
 	return turret;
 }
 
-NavEntity* TutorialGame::AddNavEntityToWorld() {
-	NavEntity* navEntity = new NavEntity();
+Wanderer* TutorialGame::AddWandererToWorld() {
+	Wanderer* wanderer = new Wanderer(navMesh);
 
-	navEntity->setInitialPosition(btVector3(94, 0.5833334, 26));
-	navEntity->setRenderScale(btVector3(4.0f, 4.0f, 4.0f));
+	float height = 4.0f;
+	float radius = 2.0f;
 
-	btCollisionShape* shape = new btCapsuleShape(2.0f, 4.0f);
+	wanderer->setInitialPosition(navMesh->GetRandomPointInNavMesh());
+	wanderer->setRenderScale(btVector3(radius * 2, height, radius + 2));
 
-	navEntity->SetRenderObject(new RenderObject(navEntity, resourceManager->getMeshes().get("Capsule.msh"), defaultTexture));
+	btCollisionShape* shape = new btCapsuleShape(radius, height);
 
-	PhysicsObject* physicsObject = new PhysicsObject(navEntity);
+	wanderer->SetRenderObject(new RenderObject(wanderer, resourceManager->getMeshes().get("Capsule.msh"), defaultTexture));
+
+	PhysicsObject* physicsObject = new PhysicsObject(wanderer);
 	physicsObject->InitBulletPhysics(bulletWorld, shape, 0);
-	navEntity->SetPhysicsObject(physicsObject);
+	wanderer->SetPhysicsObject(physicsObject);
 
-	navEntity->GetRenderObject()->SetColour(Vector4(1, 0, 0, 1));
+	wanderer->GetRenderObject()->SetColour(Vector4(1, 0, 0, 1));
 
-	world->AddGameObject(navEntity);
+	wanderer->SetOffset();
 
-	this->navEntity = navEntity;
-	return navEntity;
+	world->AddGameObject(wanderer);
+	
+	this->wanderer = wanderer;
+	return wanderer;
 }
 
 /* Adding an object to test the bullet physics */

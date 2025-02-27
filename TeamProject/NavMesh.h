@@ -38,6 +38,7 @@ public:
 
     std::vector<btVector3> FindPath(const btVector3& start, const btVector3& end);
     void DebugDrawPath(const std::vector<btVector3>& path);
+    btVector3 GetRandomPointInNavMesh();
 
 private:
     std::vector<btVector3> vertices;
