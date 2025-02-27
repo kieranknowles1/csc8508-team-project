@@ -333,9 +333,11 @@ void TutorialGame::InitWorld() {
 	AddCapsuleToWorld(Vector3(70, 15, -20), 8.0f, 4.0f, 4.0f);
 	AddCapsuleToWorld(Vector3(-20, 15, 12), 6.0f, 5.0f, 8.0f);
 
-	AddTurretToWorld();
 	InitPlayer();
-	if (navMeshDebug) AddWandererToWorld();
+	if (navMeshDebug) {
+		AddTurretToWorld();
+		AddWandererToWorld();
+	}
 }
 
 void TutorialGame::InitPlayer() {
