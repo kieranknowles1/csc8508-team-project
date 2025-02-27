@@ -25,6 +25,13 @@ set(SOURCES
 	AudioEngine.cpp
     Config.h
     Config.cpp
+    PushdownState.h
+    PushdownMachine.cpp
+    PushdownMachine.h
+    MainMenuState.h
+    PlayingState.h
+    PausedState.h
+    
     Multiplayer/GamePackets.hpp
     Multiplayer/GamePacketHandlers.hpp
     Multiplayer/GamePacketHandlers.cpp

@@ -25,15 +25,20 @@ namespace NCL {
 			GameTechRenderer(GameWorld* world);
 			~GameTechRenderer();
 
+			void RenderFrame()	override;
+			
+			//Made RenderFrame() and AddUIElement() public so the pushdown states can use them, is this a problem?
+
 			Mesh* LoadMesh(const std::string& name) override;
 			Texture* LoadTexture(const std::string& name) override;
+			void AddUIElement(Vector2 position, Vector2 size, Vector4 color, OGLTexture* texture = nullptr);
 
 		protected:
 			void NewRenderLines();
 			void NewRenderText();
 			void NewRenderTextures();
 
-			void RenderFrame()	override;
+			//void RenderFrame()	override;
 
 			GameWorld*	gameWorld;
 
@@ -43,7 +48,7 @@ namespace NCL {
 			void RenderCamera(); 
 			void RenderSkybox();
 			void InitCrosshair(); //InitCrosshair and RenderCrosshair Ameya added for crosshair
-			void AddUIElement(Vector2 position, Vector2 size, Vector4 color, OGLTexture* texture = nullptr);
+			//void AddUIElement(Vector2 position, Vector2 size, Vector4 color, OGLTexture* texture = nullptr);
 			void InitUIQuad();
 			void RenderUI();
 
