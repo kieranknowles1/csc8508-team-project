@@ -90,20 +90,25 @@ public:
 
 	/**
 	 * @brief Queue a Packet to be send next tick via Broadcasting.
+	 * Is threadsafe.
 	 * @param packet The packet to send.
 	 */
 	void Send(std::shared_ptr<Packet::Packet> packet);
 
-
 	/**
 	 * @brief Fetch a packet from the buffer.
 	 * 
-	 * Fetch from the buffer. The buffer is updated every tick.
+	 * Fetch from the buffer. The buffer is updated every tick. Is threadsafe.
 	 * 
 	 * @return The next packet in the buffer. Empty packet if no packet exists.
 	 */
 	std::shared_ptr<Packet::Packet> Fetch();
 
+	/**
+	 * @brief Get the current state of the network.
+	 * Is Threadsafe.
+	 * @return 
+	 */
 	NetworkState GetState() {
 		std::lock_guard<std::mutex> lock(m_stateMut);
 		return m_state;
