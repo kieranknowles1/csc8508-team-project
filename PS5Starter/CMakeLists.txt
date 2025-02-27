@@ -3,37 +3,27 @@ set(PROJECT_NAME PS5Starter)
 ################################################################################
 # Source groups
 ################################################################################
-
-file(GLOB_RECURSE Header_Files CONFIGURE_DEPENDS *.h)
-source_group("Header Files" FILES ${Header_Files})
-
-file(GLOB_RECURSE Source_Files CONFIGURE_DEPENDS *.cpp)
-source_group("Source Files" FILES ${Source_Files})
-
-file(GLOB_RECURSE ALL_SHADERS CONFIGURE_DEPENDS
-	${COMPILE_ASSET_ROOT}Shaders/PSSL/*.pssl
+set(SOURCES
+    GameTechAGCRenderer.h
+    GameTechAGCRenderer.cpp
+    main.cpp
 )
-source_group("Shader Files" FILES ${ALL_SHADERS})
 
-
-file(GLOB_RECURSE ALL_TEXTURES CONFIGURE_DEPENDS
-	${COMPILE_ASSET_ROOT}Textures/*.jpg
-	${COMPILE_ASSET_ROOT}Textures/*.png
-	${COMPILE_ASSET_ROOT}Textures/*.dds
-)
-source_group("Texture Files" FILES ${ALL_TEXTURES})
-
-set(ALL_FILES
-    ${Header_Files}
-    ${Source_Files}
-	${ALL_SHADERS}
-	${ALL_TEXTURES}
+set(SCE_MODULES
+    libc.prx
+    libSceFace.prx
+    libSceFaceTracker.prx
+    libSceFontGsm.prx
+    libSceJobManager.prx
+    libSceJobManager_nosubmission.prx
+    libSceNpCppWebApi.prx
+    libScePfs.prx
 )
 
 ################################################################################
 # Target
 ################################################################################
-add_executable(${PROJECT_NAME} ${ALL_FILES})
+add_executable(${PROJECT_NAME} ${SOURCES})
 target_include_directories(${PROJECT_NAME} PUBLIC ${BULLET_INCLUDE_DIRS})
 
 target_precompile_headers(${PROJECT_NAME} PRIVATE
@@ -84,59 +74,15 @@ target_include_directories (${PROJECT_NAME}
 	PUBLIC ${CMAKE_SOURCE_DIR}/TeamProject
 )
 
-# Set the tool and GenerateHeader on PSSL files in ${PSSL_SHADERS}
-set_property(SOURCE ${ALL_SHADERS} PROPERTY VS_TOOL_OVERRIDE WavePsslc)
-set_property(SOURCE ${ALL_SHADERS} PROPERTY VS_SETTINGS "GenerateHeader=false")
-set_property(SOURCE ${ALL_SHADERS} PROPERTY VS_SETTINGS "OutputFileName=${COMPILE_ASSET_ROOT}Shaders/PSSL/%(FileName).ags")
-set_property(SOURCE ${ALL_SHADERS} PROPERTY OUTPUT_NAME "$(Test)%(FileName).ags")
-
-
 # Set FileType to Document for all files using the WavePsslc tool
 set_property(TARGET PS5Starter PROPERTY VS_SOURCE_SETTINGS_WavePsslc "FileType=Document")
 
-add_custom_target(
-    Shaders
-)
-
-foreach (file ${ALL_TEXTURES})
-    get_filename_component(file_name ${file} NAME)
-	get_filename_component(file_ext ${file} EXT)
-
-	message("Adding custom command to ${file}")
-	get_filename_component(file_dir ${file} ABSOLUTE)
-	#set(SPIRV_OUTPUT ${file_name}.spv)
-	set(TEX_INPUT ${file_dir})
-	set(TEX_OUTPUT ${file_dir}.gnf)
-
-	message("Reading from ${TEX_INPUT}")
-	message("Writing to ${TEX_OUTPUT}")
-
-	add_custom_command(
-		OUTPUT ${TEX_OUTPUT}
-
-		COMMENT "Generating GNF for texture ${file}"
-		COMMAND image2gnf.exe -g 1 -i "${file}" -o ${TEX_OUTPUT} -f Bc1UNorm
-		DEPENDS ${file}
-		VERBATIM
-	)
-	list(APPEND TEX_GNF_FILES ${TEX_OUTPUT})
-endforeach()
-
-add_custom_target(
-    Textures
-	DEPENDS ON ${TEX_GNF_FILES}
-)
 set(PROJECT_DEPENDENCIES
     ${BULLET_LIBRARIES}
     NCLCoreClasses
     PS5Core
     CSC8508
     CSC8503CoreClasses
-)
-
-add_dependencies(${PROJECT_NAME}
-    Shaders
-	Textures
 )
 
 target_link_libraries(${PROJECT_NAME}
@@ -153,3 +99,7 @@ target_link_libraries(${PROJECT_NAME}
 )
 
 include_directories(${COMPILE_ASSET_ROOT})
+
+foreach(file ${SCE_MODULES})
+    file(COPY ${PS5_SCE_MODULE}/${file} DESTINATION ${CMAKE_BINARY_DIR}/sce_module/)
+endforeach()

@@ -11,6 +11,7 @@
 #include "Turret.h"
 #include "NavMesh.h"
 #include "Profiler.h"
+#include "Wanderer.h"
 
 
 #include <btBulletDynamicsCommon.h>
@@ -20,10 +21,24 @@ namespace NCL {
 		class BulletDebug;
 
 		class TutorialGame {
+		private:
+			static TutorialGame* instance;
+
 		public:
 			// Physics update frequency, in hertz
 			const static constexpr float PHYSICS_PERIOD = 1.0f / 60.0f;
 
+			static TutorialGame* getInstance() {
+				assert(instance && "TutorialGame is not initialised");
+				return instance;
+			}
+
+			// Remove an object at the end of this frame. Use during update to avoid removing
+			// from containers while iterating
+			// It is the caller's responsibility to ensure there are no dangling references from other objects
+			void delayedRemoveObject(GameObject* obj) {
+				objectGraveyard.push_back(obj);
+			}
 
 			TutorialGame(GameTechRendererInterface* renderer, GameWorld* world, Controller* controller);
 			~TutorialGame();
@@ -58,6 +73,8 @@ namespace NCL {
 
 			GameTechRendererInterface* renderer;
 			GameWorld* world;
+			std::vector<GameObject*> objectGraveyard;
+			void clearGraveyard();
 
 			Controller* controller;
 
@@ -107,8 +124,12 @@ namespace NCL {
 			LevelImporter* levelImporter;
 			bool loadFromLevel;
 
-
 			NavMesh* navMesh;
+			bool navMeshDebug = false;
+			void visualiseNavMesh();
+
+			Wanderer* wanderer;
+			Wanderer* AddWandererToWorld();
 
 			//post processing time variable effects
 			float pulse = 0;

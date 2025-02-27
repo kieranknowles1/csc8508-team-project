@@ -16,6 +16,21 @@ ResourceManager::ResourceManager(GameTechRendererInterface* renderer)
 	std::cout << "Using working directory: " << pwd << std::endl;
 }
 
+void ResourceManager::update(float dt)
+{
+	timeSinceGc += dt;
+	if (timeSinceGc >= gcFrequency) {
+		collectGarbage();
+	}
+}
+
+void ResourceManager::collectGarbage()
+{
+	timeSinceGc = 0;
+	meshes.collectGarbage();
+	textures.collectGarbage();
+}
+
 template<>
 std::shared_ptr<Rendering::Mesh> ResourceMap<std::string, Rendering::Mesh>::load(const std::string& key) {
 	auto mesh = owner->getRenderer()->LoadMesh(key);

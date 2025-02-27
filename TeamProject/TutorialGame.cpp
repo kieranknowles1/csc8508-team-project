@@ -13,11 +13,16 @@
 using namespace NCL;
 using namespace CSC8503;
 
-TutorialGame::TutorialGame(GameTechRendererInterface* renderer, GameWorld* world, Controller* controller)   
-	: renderer(renderer)  
+TutorialGame* TutorialGame::instance = nullptr;
+
+TutorialGame::TutorialGame(GameTechRendererInterface* renderer, GameWorld* world, Controller* controller)
+	: renderer(renderer)
 	, controller(controller)
 	, world(world)
 {
+	assert(instance == nullptr && "TutorialGame must be unique");
+	instance = this;
+
 	/* Initializing the Bullet Physics World here as it should be done before Initialize the NCL framework's PhysicsSystem */
 	//InitBullet(); //bullet is initialised in initialiseAssets already
 	world->GetMainCamera().SetController(controller);
@@ -43,6 +48,7 @@ void TutorialGame::InitialiseAssets() {
 }
 
 TutorialGame::~TutorialGame()	{
+	instance = nullptr;
 	DestroyBullet();
 	audioEngine.Shutdown();
 
@@ -70,22 +76,12 @@ void TutorialGame::UpdateGame(float dt) {
 	if (testTurret) {
 		testTurret->Update(dt);
 	}
-	/*if (navMesh) {
-		navMesh->VisualiseNavMesh();
-
-		btVector3 startPoint(94, 0.5833334, 26);
-		btVector3 endPoint(68, 0.5833334, 34);
-
-		btIDebugDraw* debugDrawer = bulletWorld->getDebugDrawer();
-
-		// Draw vertical lines at start and end points
-		debugDrawer->drawLine(startPoint, startPoint + btVector3(0, 10, 0), btVector3(0,1,0));
-		debugDrawer->drawLine(endPoint, endPoint + btVector3(0, 10, 0), btVector3(0, 0, 1));
-
-		// Find path and draw it
-		std::vector<btVector3> path = navMesh->FindPath(startPoint, endPoint);
-		navMesh->DebugDrawPath(path);
-	}*/
+	if (navMesh && navMeshDebug) {
+		visualiseNavMesh();
+		if (wanderer) {
+			wanderer->Update(dt);
+		}
+	}
 
 	UpdateKeys();
 	world->UpdateWorld(dt);
@@ -96,8 +92,8 @@ void TutorialGame::UpdateGame(float dt) {
 	UpdatePlayer(dt);
 	profiler.startSection("Update Audio");
 	audioEngine.Update(&world->GetMainCamera());
-  
-  
+
+	clearGraveyard();
 	profiler.startSection("Prepare Render");
 	bulletWorld->debugDrawWorld();
 
@@ -127,6 +123,7 @@ void TutorialGame::UpdatePlayer(float dt) {
 			ThirdPersonControls();
 		}
 	}
+	resourceManager->update(dt);
 	bulletWorld->setGravity(playerController->getUpDirection() * -30.0f);
 }
 
@@ -161,6 +158,7 @@ void TutorialGame::UpdateKeys() {
 	if (controller->GetDigital(WorldPitchDown)) {
 			playerController->pitchDown();
 	}
+
 	if (Window::GetKeyboard()->KeyPressed(KeyCodes::F5)) { 
 		bool toggleHDR = renderer->GetHDROn();  
 		toggleHDR = !toggleHDR; 
@@ -185,6 +183,23 @@ void TutorialGame::ThirdPersonControls() {
 	btVector3 cameraPosition = transformPlayer.getOrigin() + cameraOffset;
 	mainCamera->SetPosition(cameraPosition);
 	mainCamera->SetPitch(-15.0f);
+}
+
+void TutorialGame::visualiseNavMesh() {
+	navMesh->VisualiseNavMesh();
+
+	btVector3 startPoint(94, 0.5833334, 26);
+	btVector3 endPoint(68, 0.5833334, 34);
+
+	btIDebugDraw* debugDrawer = bulletWorld->getDebugDrawer();
+
+	// Draw vertical lines at start and end points
+	debugDrawer->drawLine(startPoint, startPoint + btVector3(0, 10, 0), btVector3(0, 1, 0));
+	debugDrawer->drawLine(endPoint, endPoint + btVector3(0, 10, 0), btVector3(0, 0, 1));
+
+	// Find path and draw it
+	std::vector<btVector3> path = navMesh->FindPath(startPoint, endPoint);
+	//navMesh->DebugDrawPath(path);
 }
 
 
@@ -227,13 +242,15 @@ void TutorialGame::CheckCollisions()
 	}
 }
 
-void TutorialGame::DestroyBullet() {
-	world->OperateOnContents([&](GameObject* obj) {
-		if (obj->GetPhysicsObject()) {
-			obj->GetPhysicsObject()->removeFromBullet(bulletWorld);
-		}
-	});
+void TutorialGame::clearGraveyard() {
+	for (auto obj : objectGraveyard) {
+		bulletWorld->removeRigidBody(obj->GetPhysicsObject()->GetRigidBody());
+		world->RemoveGameObject(obj); // Also deletes it
+	}
+	objectGraveyard.clear();
+}
 
+void TutorialGame::DestroyBullet() {
 	delete bulletWorld;
 	delete bulletDebug;
 	delete solver;
@@ -270,8 +287,13 @@ void TutorialGame::InitWorld() {
 	InitBullet();
 	audioEngine.Init();
 
-	navMesh = new NavMesh(bulletWorld);
-	navMesh->LoadFromFile("Assets/Meshes/NavMeshes/smalltest.navmesh");
+	navMeshDebug = false;
+	if (navMeshDebug) {
+		freeCam = true;
+		navMesh = new NavMesh(bulletWorld);
+		navMesh->LoadFromFile("Assets/Meshes/NavMeshes/smalltest.navmesh");
+		AddWandererToWorld();
+	}
 
 	if (loadFromLevel) {
 		levelImporter = new LevelImporter(resourceManager.get(), world, bulletWorld);
@@ -360,6 +382,33 @@ Turret* TutorialGame::AddTurretToWorld() {
 	testTurret = turret;
 
 	return turret;
+}
+
+Wanderer* TutorialGame::AddWandererToWorld() {
+	Wanderer* wanderer = new Wanderer(navMesh);
+
+	float height = 4.0f;
+	float radius = 2.0f;
+
+	wanderer->setInitialPosition(navMesh->GetRandomPointInNavMesh());
+	wanderer->setRenderScale(btVector3(radius * 2, height, radius + 2));
+
+	btCollisionShape* shape = new btCapsuleShape(radius, height);
+
+	wanderer->SetRenderObject(new RenderObject(wanderer, resourceManager->getMeshes().get("Capsule.msh"), defaultTexture));
+
+	PhysicsObject* physicsObject = new PhysicsObject(wanderer);
+	physicsObject->InitBulletPhysics(bulletWorld, shape, 0);
+	wanderer->SetPhysicsObject(physicsObject);
+
+	wanderer->GetRenderObject()->SetColour(Vector4(1, 0, 0, 1));
+
+	wanderer->SetOffset();
+
+	world->AddGameObject(wanderer);
+	
+	this->wanderer = wanderer;
+	return wanderer;
 }
 
 /* Adding an object to test the bullet physics */

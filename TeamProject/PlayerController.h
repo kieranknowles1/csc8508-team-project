@@ -88,7 +88,7 @@ namespace NCL {
 			float strafeMulti = 0.65f;
 			float backwardsMulti = 0.55f;
 			float airMulti = 1.0f;
-	
+
 			float crouchingTime = 0.3f;
 			float crouchMulti = 0.4f;
 			float crouchHeight = 0.0f;
@@ -155,6 +155,7 @@ namespace NCL {
 			bool rollUse = false;
 			btIDebugDraw* debugDrawer;
 			bool onIce = false;
+			btVector3 previousVelocity;
 
 
 			Vector2 getDirectionalInput() const;
@@ -172,30 +173,19 @@ namespace NCL {
 			btVector3 CalculateUpDirection(float dt);
 			btVector3 CalculateForwardFromYaw();
 			btVector3 CalculateRightFromYaw();
-		
+
 
 		};
 	};
+
+	// Paintball class derived from GameObject
+	class Paintball : public GameObject {
+	public:
+		void OnCollisionEnter(const CollisionInfo& collisionInfo) override;
+		void Initialise(GameObject* playerIn) {
+			player = playerIn;
+		}
+	private:
+		GameObject* player;
+	};
 }
-
-
-using namespace NCL::CSC8503;
-// Paintball class derived from GameObject
-class Paintball : public GameObject {
-public:
-	void OnCollisionEnter(const CollisionInfo& collisionInfo) override {
-		if (collisionInfo.otherObject == player) return;
-		this->GetPhysicsObject()->removeFromBullet(bulletWorld);
-	}
-	void Initialise(GameObject* playerIn, btDiscreteDynamicsWorld* bulletWorldIn) { 
-		player = playerIn;
-		bulletWorld = bulletWorldIn;
-	}
-private:
-	GameObject* player;
-	btDiscreteDynamicsWorld* bulletWorld;
-};
-
-
-
-

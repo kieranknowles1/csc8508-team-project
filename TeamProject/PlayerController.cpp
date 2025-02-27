@@ -1,5 +1,6 @@
 #include "PlayerController.h"
 #include "AudioEngine.h"
+#include "TutorialGame.h"
 
 using namespace NCL;
 using namespace CSC8503;
@@ -48,6 +49,12 @@ void PlayerController::UpdateMovement(float dt) {
     //sliding/floor detection
     HandleSliding(dt);
     HandleCrouching(dt);
+
+    if (inAirTime > 0) {
+        player->setCollided(0);
+        inAirTime -= dt;
+    }
+
     if ((isSliding||slideTransition) && !isCrouching) return;
 
     //player rotation
@@ -99,10 +106,6 @@ void PlayerController::UpdateMovement(float dt) {
     forwardMovement *= (forwardMovement <= 0) ? backwardsMulti : 1;
     btVector3 movement = (right * directionalInput.x * strafeMulti * moveMulti ) +(forward * forwardMovement * moveMulti);
 
-    if (inAirTime > 0) {
-        player->setCollided(0);
-        inAirTime -= dt;
-    }
     if (player->getCollided() <= 0 || onIce) {
         movement *= (airMulti*dt);
         movement += rb->getLinearVelocity();
@@ -112,7 +115,7 @@ void PlayerController::UpdateMovement(float dt) {
 
     // jump input
     if (controller->GetDigital(Controller::DigitalControl::Jump) && player->getCollided() && inAirTime <= 0) {
-      audioEngine.PlaySounds("jump.wav", NCL::Maths::Vector3(player->GetTransform().getOrigin()), 0.0f);
+        audioEngine.PlaySounds("jump.wav", NCL::Maths::Vector3(player->GetTransform().getOrigin()), 0.0f);
         btVector3 normal = FindFloorNormal();
         float dotProduct = normal.dot(upDirection.absolute());
         if (fabs(dotProduct <= 1)) {
@@ -120,15 +123,14 @@ void PlayerController::UpdateMovement(float dt) {
         }
         else {
             movement += (jumpHeight * upDirection);
-
         }
         player->setCollided(0);
         inAirTime = 0.2f;
     }
-
+    previousVelocity = rb->getLinearVelocity();
     rb->setLinearVelocity(movement);
     rb->activate();
-  
+
 }
 
 
@@ -208,7 +210,7 @@ void PlayerController::ShootBullet(btQuaternion bulletRotation ,btVector3 hitPoi
     btVector3 shorDirection = (hitPoint - bulletPos).normalize();
 
     Paintball* paintball = new Paintball();
-    paintball->Initialise(player,bulletWorld);
+    paintball->Initialise(player);
     Vector3 bulletSize(0.25f, 0.25f, 0.25f);
     paintball->setInitialPosition(bulletPos);
     paintball->setRenderScale(bulletSize);
@@ -352,6 +354,7 @@ void PlayerController::HandleSliding(float dt) {
         //CheckFloor(dt);
         btVector3 pastMovement = rb->getLinearVelocity();
         pastMovement += upDirection * -(gravityScale * dt);
+        previousVelocity = rb->getLinearVelocity();
         rb->setLinearVelocity(pastMovement);
         rb->activate();
     }
@@ -364,10 +367,10 @@ void PlayerController::HandleTypes() {
         onIce = false;
         break;
     case 'J': {//Jump-pads
-        btVector3 normal = FindFloorNormal();
+        btVector3 normal = player->getCollisionNormal();
         float dotProduct = normal.dot(upDirection.absolute());
         btVector3 movement = btVector3(0, 0, 0);
-        movement += (bouncePadHeight * FindFloorNormal());
+        movement += (bouncePadHeight * -player->getCollisionNormal());
         rb->setLinearVelocity(btVector3(0, 0, 0));
         player->setCollided(0);
         inAirTime = 0.2f;
@@ -375,18 +378,25 @@ void PlayerController::HandleTypes() {
         break;
     }
     case 'S': { // Slime
-        btVector3 normal = FindFloorNormal();
-        float dotProduct = normal.dot(upDirection.absolute());
-        if (fabs(dotProduct) > 1) {
-            normal = upDirection;
+        if (inAirTime <= 0) {
+            btVector3 normal = player->getCollisionNormal();
+            float dampening = 0.85f;
+            btVector3 reflectedVelocity = previousVelocity - (2 * previousVelocity.dot(normal) * normal);
+            if (fabs(10 * previousVelocity.dot(normal)) <= 0.25f) {
+                btVector3 direction = (player->getCollisionPoint() - transformPlayer.getOrigin()).normalized();
+                float dot = direction.dot(-upDirection);
+                float angle = acos(dot) * (180.0f / SIMD_PI);
+                if (angle <= 25.0f) { // come to rest on floor
+                    player->setCollided(1);
+                    break;
+                }
+            }
+            else {
+                reflectedVelocity *= dampening;
+                inAirTime = 0.1f;
+                rb->setLinearVelocity(reflectedVelocity);
+            }
         }
-        btVector3 velocity = rb->getLinearVelocity();
-        float dampening = 0.95f;
-        btVector3 reflectedVelocity = velocity + (1000 * normal);
-        reflectedVelocity *= dampening; 
-        player->setCollided(0);
-        inAirTime = 0.2f;
-        rb->applyCentralImpulse(reflectedVelocity);
         break;
     }
     case 'I': {// Ice
@@ -443,7 +453,7 @@ btVector3 PlayerController::CalculateUpDirection(float dt) {
 
 btVector3 PlayerController::CalculateRightDirection(btVector3 upDir) {
     btVector3 forward = btVector3(0, 0, 1);
-    if (fabs(upDir.dot(forward)) > 0.999f) { 
+    if (fabs(upDir.dot(forward)) > 0.999f) {
         forward = btVector3(0, 1, 0);
     }
     btVector3 rightDirection = upDir.cross(forward);
@@ -513,4 +523,11 @@ Vector2 PlayerController::getDirectionalInput() const
     Vector2 raw(controller->GetAnalogue(Controller::AnalogueControl::MoveSidestep), controller->GetAnalogue(Controller::AnalogueControl::MoveForward));
     float magnitude = Vector::Length(raw);
     return magnitude <= 1.0f ? raw : raw / magnitude;
+}
+
+void NCL::Paintball::OnCollisionEnter(const CollisionInfo &collisionInfo)
+{
+    if (collisionInfo.otherObject == player) return;
+
+    TutorialGame::getInstance()->delayedRemoveObject(this);
 }

@@ -1,21 +1,33 @@
 #pragma once
 
+#include <algorithm>
+#include <array>
+#include <thread>
+#include <mutex>
+
 #include <./enet/enet.h>
-//#include <./enet/time.h>
 
-//#ifdef NETWORK_TEST
-//#include <iostream>
-//
-//void DebugOut(const std::string& message) {
-//	std::cerr << "[DEBUG]: ";
-//	std::cerr << message << std::endl;
-//}
-//
-//#endif
+#include "Packet.hpp"
 
 
-const unsigned int MAX_CLIENTS = 8;
-const float EVENT_WAIT = 1000; // ms
+// The rate at which packets will be sent and received.
+const float NETWORK_RATE = 1 / 60.0f; // Seconds
+
+// How many packets to store before denying packets.
+const int BUFFER_SIZE = 1024;
+
+// Default binding port.
+const int DEFAULT_PORT = 49834;
+
+
+/**
+ * @brief Character codes for console colors.
+ */
+namespace ConsoleTextColor {
+	inline const char* GREEN = "\x1b[32m";
+	inline const char* YELLOW = "\x1b[33m";
+	inline const char* DEFAULT = "\x1b[0m";
+};
 
 
 /**
@@ -27,62 +39,122 @@ const float EVENT_WAIT = 1000; // ms
  */
 enum class Channel {
 	RELIABLE = 0,	// MUST BE FIRST CHANNEL AS FIRST CHANNEL IS ALWAYS RELIABLE.
+	UNSEQUENCED,	// Used for packet data that cannot be lost but order is not important.
 	FREQUENT,		// Used for packet data that can be lost and is frequently sent.
 	CHANNEL_COUNT	// Used to count how many channels should be created.
 };
 
 
 /**
- * @brief Network class.
- * 
- * Basically handles initialisation and deinitialisation of enet.
+ * @brief Different states the network can be in.
  */
-class Network {
-public:
-	Network() {
-		if (enet_initialize() == 0) m_initialised = true;
-	}
-	~Network() {
-		if (m_initialised) enet_deinitialize();
-		if (m_host) enet_host_destroy(m_host);
-		m_initialised = false;
-	}
-
-	/**
-	 * @brief Call to determine if enet was successfully initialised.
-	 * @return true if successful.
-	 */
-	bool IsInitialised() { return m_initialised; }
-
-	/**
-	 * @brief Wrapper function for enet_host_create().
-	 * @see enet_host_create()
-	 * @return true if host was successfully created.
-	 */
-	bool CreateHost(ENetAddress* address, int maxClients, int nChannels, int incBandwidth, int outBandwidth) {
-		m_host = enet_host_create(address, maxClients, nChannels, incBandwidth, outBandwidth);
-		return m_host != nullptr;
-	}
-
-	/**
-	 * @brief Get an event from enet_host_service.
-	 * @param waitTime	How long to wait for an event in ms
-	 * @return The event from enet_host_service. Returns empty event if failed.
-	 */
-	ENetEvent GetEvent(float waitTime) {
-		ENetEvent event;
-		enet_host_service(m_host, &event, waitTime);
-		return event;
-	}
-
-protected:
-	ENetHost* m_host = nullptr;
-
-private:
-	bool m_initialised = false;
+enum class NetworkState {
+	CLOSED,
+	OFF,
+	ERRORED,
+	ON
 };
 
 
+class Network {
+public:
+	Network(const ENetAddress* address, int maxConnections);
+	~Network();
+
+	/**
+	 * @brief Start the thread for receiving and sending packets.
+	 * 
+	 * Starts a new thread. The thread handles sending and receiving of packets.
+	 */
+	void Start();
+
+	/**
+	 * @brief Stop and join the execution thread.
+	 * 
+	 * Sets network state to OFF
+	 */
+	void Stop();
+
+	/**
+	 * @brief Closes the host.
+	 * 
+	 * Cleans up enet objects. Calls Stop() first.
+	 */
+	void Close();
+
+	/**
+	 * @brief Connect to another ENetHost.
+	 * @param destination The address of the endpoint to connect to.
+	 */
+	void ConnectTo(const ENetAddress* destination);
+
+	/**
+	 * @brief Queue a Packet to be send next tick via Broadcasting.
+	 * @param packet The packet to send.
+	 */
+	void Send(std::shared_ptr<Packet::Packet> packet);
 
 
+	/**
+	 * @brief Fetch a packet from the buffer.
+	 * 
+	 * Fetch from the buffer. The buffer is updated every tick.
+	 * 
+	 * @return The next packet in the buffer. Empty packet if no packet exists.
+	 */
+	std::shared_ptr<Packet::Packet> Fetch();
 
+	NetworkState GetState() {
+		std::lock_guard<std::mutex> lock(m_stateMut);
+		return m_state;
+	}
+
+protected:
+	/**
+	 * @brief The entry point for the thread for sending and receiving packets.
+	 */
+	void Run();
+
+	/**
+	 * @brief Step forward by dt.
+	 * 
+	 * If enough time has elapsed the server will fetch and send packets based
+	 * on the NETWORK_RATE.
+	 */
+	void Tick(float dt);
+
+	/**
+	 * @brief Sends all queued packets.
+	 * Broadcasts to all connections.
+	 */
+	void SendAll();
+
+	/**
+	 * @brief Set the network into an errored state.
+	 */
+	void SetErrored();
+
+private:
+	bool ConnectPeer();
+	void HandleIncomingPacket(ENetPacket* packet);
+	void DisconnectPeer();
+
+	std::thread m_networkThread;
+	std::mutex m_stateMut;
+	std::mutex m_sendMut;
+
+	NetworkState m_state = NetworkState::CLOSED;
+
+	Packet::PacketBuffer m_receiveBuffer = Packet::PacketBuffer(BUFFER_SIZE);
+	std::vector<std::shared_ptr<Packet::Packet>> m_sendBuffer = std::vector<std::shared_ptr<Packet::Packet>>(BUFFER_SIZE);
+	int m_numPackets = 0;
+	
+	float m_elapsedTime = 0;
+	float m_lastTick = 0;
+	int m_lastMaxSequence = 0; // Each tick will drop optional packets that didn't make the first tick.
+
+	int m_connections = 1;
+	int m_maxConnections;
+
+	ENetHost* m_host = nullptr;
+};

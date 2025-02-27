@@ -1,3 +1,4 @@
+#include <random>
 #include "NavMesh.h"
 #include "stdio.h"
 
@@ -202,4 +203,39 @@ void NavMesh::DebugDrawPath(const std::vector<btVector3>& path) {
     for (size_t i = 0; i < path.size() - 1; ++i) {
         debugDrawer->drawLine(path[i], path[i + 1], color);
     }
+}
+
+btVector3 NavMesh::GetRandomPointInNavMesh() {
+    if (triangles.empty()) {
+        std::cerr << "Error: No triangles in NavMesh!" << std::endl;
+        return btVector3(0, 0, 0);
+    }
+
+    // Step 1: Pick a random triangle
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_int_distribution<> triangleDist(0, triangles.size() - 1);
+    int randTriangleIndex = triangleDist(gen);
+
+    const Triangle& tri = triangles[randTriangleIndex];
+
+    const btVector3& A = vertices[tri.v1];
+    const btVector3& B = vertices[tri.v2];
+    const btVector3& C = vertices[tri.v3];
+
+    // Step 2: Generate random Barycentric coordinates
+    std::uniform_real_distribution<float> barycentricDist(0.0f, 1.0f);
+    float r1 = barycentricDist(gen);
+    float r2 = barycentricDist(gen);
+
+    // Ensure point remains inside triangle
+    if (r1 + r2 > 1.0f) {
+        r1 = 1.0f - r1;
+        r2 = 1.0f - r2;
+    }
+
+    // Compute final random point using Barycentric interpolation
+    btVector3 randomPoint = A + r1 * (B - A) + r2 * (C - A);
+
+    return randomPoint;
 }
