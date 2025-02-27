@@ -1,5 +1,6 @@
 #pragma once
 
+#include <array>
 #include <unordered_map>
 
 #include "Multiplayer/User.hpp"
@@ -13,6 +14,13 @@ namespace Lobbies {
 	 */
 	class UserColor {
 	public:
+		/**
+		 * @brief Default Constructor
+		 * 
+		 * Required for std::array as it requires default constructible object.
+		 */
+		UserColor() : m_color(static_cast<TeamColor>(UINT8_MAX)) {}
+
 		/**
 		 * @brief UserColor Constructor.
 		 * 
@@ -41,7 +49,7 @@ namespace Lobbies {
 		 * 
 		 * @return std::optional container. If there is a user assigned, it will be inside.
 		 */
-		inline std::optional<User> GetUser() { return m_assigned; }
+		inline std::optional<User> GetUser() const { return m_assigned; }
 
 	private:
 		TeamColor m_color;
@@ -59,7 +67,7 @@ namespace Lobbies {
 		 * 
 		 * @param hostID The User who is in charge of the lobby.
 		 */
-		Lobby(User hostUser, int maxSize) : m_hostUser(hostUser), m_maxSize(maxSize) {}
+		Lobby(User hostUser, int maxSize);
 
 		/**
 		 * Fetch the maximum size of the lobby.
@@ -85,10 +93,40 @@ namespace Lobbies {
 		 */
 		inline void RemoveUser(const User& user) { m_players.erase(user.GetUserID()); }
 
+		/**
+		 * @brief Get an array of all the colors.
+		 * 
+		 * The returned array will contain assigned users IFF the UserColor
+		 * has been assigned a user.
+		 * 
+		 * @see UserColor
+		 * 
+		 * @return std::array<UserColor> of colors.
+		 */
+		inline std::array<UserColor, 8> GetUserColors() const { return m_userColors; }
+
+		/**
+		 * @brief Determine if all the players currently in the lobby are assigned
+		 * a color.
+		 * 
+		 * @return true if all the players are assigned a color, otherwise false. 
+		 */
+		bool AreAllPlayersAssignedColor() const;
+
+		/**
+		 * Attempt to assign a user to a color.
+		 * 
+		 * @param user The user to assign.
+		 * @param color The color to assign the user to.
+		 * @return true if the user was assigned, otherwise false.
+		 */
+		inline bool SetUserColor(User user, TeamColor color) { return m_userColors[static_cast<uint8_t>(color)].SetUser(user); }
+
 	private:
 		User m_hostUser;
 		const int m_maxSize;
 
+		std::array<UserColor, 8> m_userColors;
 		std::unordered_map<unsigned int, User> m_players;
 	};
 }
