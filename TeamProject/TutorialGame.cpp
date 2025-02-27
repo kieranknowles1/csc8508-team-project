@@ -101,6 +101,10 @@ void TutorialGame::UpdateGame(float dt) {
 	if (showProfiling) {
 		profiler.printTimes();
 	}
+
+	//post processing time variable effect:
+	pulse += dt;
+	renderer->SetVignettePulse(pulse);
 }
 
 void TutorialGame::UpdatePlayer(float dt) {
@@ -154,10 +158,16 @@ void TutorialGame::UpdateKeys() {
 	if (controller->GetDigital(WorldPitchDown)) {
 			playerController->pitchDown();
 	}
-	if (Window::GetKeyboard()->KeyPressed(KeyCodes::F5)) {
-		bool toggleHDR = renderer->GetHDROn();
-		toggleHDR = !toggleHDR;
-		renderer->SetHDROn(toggleHDR);
+
+	if (Window::GetKeyboard()->KeyPressed(KeyCodes::F5)) { 
+		bool toggleHDR = renderer->GetHDROn();  
+		toggleHDR = !toggleHDR; 
+		renderer->SetHDROn(toggleHDR); 
+	} 
+	if (Window::GetKeyboard()->KeyPressed(KeyCodes::F6)) {
+		bool toggleVignette = renderer->GetVignetteOn();
+		toggleVignette = !toggleVignette;
+		renderer->SetVignetteOn(toggleVignette);
 	}
 }
 
