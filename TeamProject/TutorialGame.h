@@ -161,6 +161,9 @@ namespace NCL {
 			Wanderer* wanderer;
 			Wanderer* AddWandererToWorld();
 
+			//post processing time variable effects
+			float pulse = 0;
+
 		private:
 			inline static Network* client = nullptr;
 			inline static Network* server = nullptr;
