@@ -20,7 +20,9 @@ namespace NCL {
 	namespace CSC8503 {
 		class BulletDebug;
 
-
+		/**
+		 * Different Team Colors to choose from for each player.
+		 */
 		enum class TeamColor : uint8_t {
 			RED,
 			ORANGE,
@@ -29,7 +31,7 @@ namespace NCL {
 			PURPLE,
 			PINK,
 			YELLOW,
-			LIGHT_BLUE
+			CYAN
 		};
 
 
