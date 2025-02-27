@@ -22,7 +22,7 @@ namespace NCL {
 			btVector3 navOffset;
 
 			StateMachine* stateMachine;
-			void canSeePlayer();
+			void UpdatePlayerDistance();
 			float senseDistance = 100.0f;
 			float playerDist = 100.0f;
 
