@@ -29,7 +29,7 @@ namespace Lobbies {
 		 * @param user The user to assume control.
 		 * @return true if the user was allowed to be assigned, otherwise false.
 		 */
-		bool SetUser(User user);
+		bool SetUser(const User& user);
 
 		/**
 		 * @brief Remove the current user's control.
@@ -73,7 +73,7 @@ namespace Lobbies {
 		 * @param user The user to insert.
 		 * @return true if the user was added, otherwise false.
 		 */
-		bool AddUser(User user);
+		bool AddUser(const User& user);
 
 		/**
 		 * @brief Remove a user from the lobby.
@@ -83,7 +83,7 @@ namespace Lobbies {
 		 * 
 		 * @param user The user to remove.
 		 */
-		inline void RemoveUser(User* user) { m_players.erase(user->GetUserID()); }
+		inline void RemoveUser(const User& user) { m_players.erase(user.GetUserID()); }
 
 	private:
 		User m_hostUser;
