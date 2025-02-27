@@ -1,6 +1,8 @@
 #include <iostream>
 #include <chrono>
 
+#include <cstring>
+
 #include "Network.hpp"
 
 Network::Network(const ENetAddress* address, int maxConnections) : m_maxConnections(maxConnections) {
@@ -164,7 +166,7 @@ bool Network::ConnectPeer() {
 void Network::HandleIncomingPacket(ENetPacket* packet) {
 	Packet::Type packetType;
 	memcpy(&packetType, packet->data, sizeof(Packet::Type));
-		
+
 	Packet::PacketRegister* packetRegister = Packet::PacketRegister::GetRegister();
 	Packet::PacketHandler* packetHandler = packetRegister->GetHandler(packetType);
 	std::shared_ptr<Packet::Packet> translated = packetHandler->Translate(packet);
