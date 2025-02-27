@@ -1,4 +1,7 @@
 #pragma once
+
+#include <cstdint>
+
 /**
  * Different Team Colors to choose from for each player.
  */
