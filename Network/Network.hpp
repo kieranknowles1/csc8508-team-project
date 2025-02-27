@@ -67,11 +67,41 @@ public:
 	 * Starts a new thread. The thread handles sending and receiving of packets.
 	 */
 	void Start();
+
+	/**
+	 * @brief Stop and join the execution thread.
+	 * 
+	 * Sets network state to OFF
+	 */
 	void Stop();
+
+	/**
+	 * @brief Closes the host.
+	 * 
+	 * Cleans up enet objects. Calls Stop() first.
+	 */
 	void Close();
+
+	/**
+	 * @brief Connect to another ENetHost.
+	 * @param destination The address of the endpoint to connect to.
+	 */
 	void ConnectTo(const ENetAddress* destination);
 
+	/**
+	 * @brief Queue a Packet to be send next tick via Broadcasting.
+	 * @param packet The packet to send.
+	 */
 	void Send(std::shared_ptr<Packet::Packet> packet);
+
+
+	/**
+	 * @brief Fetch a packet from the buffer.
+	 * 
+	 * Fetch from the buffer. The buffer is updated every tick.
+	 * 
+	 * @return The next packet in the buffer. Empty packet if no packet exists.
+	 */
 	std::shared_ptr<Packet::Packet> Fetch();
 
 	NetworkState GetState() {
@@ -80,11 +110,29 @@ public:
 	}
 
 protected:
-	void Run();				// Function the thread runs.
-	void Tick(float dt);	// Tick the server (when to receive and send).
-	void SendAll();			// Queue all the packets to be sent. Packets will send on next enet flush.
+	/**
+	 * @brief The entry point for the thread for sending and receiving packets.
+	 */
+	void Run();
 
-	void SetErrored();	// Set the server into an errored state.
+	/**
+	 * @brief Step forward by dt.
+	 * 
+	 * If enough time has elapsed the server will fetch and send packets based
+	 * on the NETWORK_RATE.
+	 */
+	void Tick(float dt);
+
+	/**
+	 * @brief Sends all queued packets.
+	 * Broadcasts to all connections.
+	 */
+	void SendAll();
+
+	/**
+	 * @brief Set the network into an errored state.
+	 */
+	void SetErrored();
 
 private:
 	bool ConnectPeer();
