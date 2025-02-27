@@ -98,9 +98,9 @@ namespace Packet {
 		inline btQuaternion GetOrientation() const { return m_orientation; }
 
 	private:
-		int m_objectID;
-		btVector3 m_position;
-		btQuaternion m_orientation;
+		const int m_objectID;
+		const btVector3 m_position;
+		const btQuaternion m_orientation;
 	};
 
 
