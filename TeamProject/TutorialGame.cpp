@@ -54,7 +54,8 @@ TutorialGame::~TutorialGame()	{
 
 	delete playerController;
 
-	if (network != nullptr) delete network;
+	if (server != nullptr) delete server;
+	if (client != nullptr) delete client;
 }
 
 static bool BulletRaycast(btDynamicsWorld* world, const btVector3& start, const btVector3& end, btCollisionWorld::ClosestRayResultCallback& resultCallback) {
@@ -332,20 +333,22 @@ void TutorialGame::InitWorld() {
 }
 
 void TutorialGame::InitNetwork(bool host) {
-	ENetAddress address;
+	ENetAddress clientAddress;
+	client = new Network(&clientAddress, 1);
 	
 	if (host) {
-		address.host = ENET_HOST_ANY;
-		address.port = DEFAULT_PORT;
-	}
+		ENetAddress serverAddress;
+		serverAddress.host = ENET_HOST_ANY;
+		serverAddress.port = DEFAULT_PORT;
 
-	network = new Network(&address, host ? MAX_PLAYERS : 1);
+		server = new Network(&serverAddress, MAX_PLAYERS);
+	}
 }
 
 
 void TutorialGame::ConnectToServer(ENetAddress& address) {
-	assert(network != nullptr);
-	network->ConnectTo(&address);
+	if (client == nullptr) return;
+	client->ConnectTo(&address);
 }
 
 
