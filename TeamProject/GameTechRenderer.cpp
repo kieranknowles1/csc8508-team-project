@@ -141,9 +141,13 @@ GameTechRenderer::GameTechRenderer(GameWorld* world) : OGLRenderer(*Window::GetW
 	glGenFramebuffers(1, &BFBO);
 	glBindFramebuffer(GL_FRAMEBUFFER, BFBO);
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, BTex, 0); //attach BFBO as the colour attachment
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, BDepthTex, 0);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_STENCIL_ATTACHMENT, GL_TEXTURE_2D, BDepthTex, 0);
 	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE || !BTex || !BDepthTex); {
 		return;
 	}
+
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
 }
 
@@ -153,8 +157,12 @@ GameTechRenderer::~GameTechRenderer()	{
 
 	glDeleteTextures(1, &hdrTex);
 	glDeleteFramebuffers(1, &hdrFBO);
+	glDeleteTextures(1, &BTex);
+	glDeleteFramebuffers(1, &BFBO);
 	delete hdrQuad;
 	delete hdrShader;
+	delete vignetteShader;
+	
 	
 }
 
@@ -677,23 +685,20 @@ void GameTechRenderer::RenderCrosshair() {
 void GameTechRenderer::RenderPostProcessing() { 
 	if (vignetteOn) {
 		GLuint buff = (hdrOn ? BFBO : 0);
-		glBindFramebuffer(GL_FRAMEBUFFER, buff); //unbind hdrFBO and set BFBO  //was glBindFramebuffer(GL_FRAMEBUFFER, 0); 
+		glBindFramebuffer(GL_FRAMEBUFFER, buff); //unbind hdrFBO and set BFBO   
 		glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT); //BFBO has neither depth nor stencil attachment
 		glDisable(GL_CULL_FACE);
 		glDisable(GL_BLEND);
 		glDisable(GL_DEPTH_TEST);
-		UseShader(*vignetteShader);//was hdrShader
+		UseShader(*vignetteShader); 
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, hdrTex); //hdrTex currently holds raw scene
-		glUniform1i(glGetUniformLocation(vignetteShader->GetProgramID(), "diffuseTex"), 0); //was hdrTex
-		//glUniform2fv(glGetUniformLocation(hdrShader->GetProgramID(), "windowSize"), 1, (float*)&windowSize); //sending windowSize for vignette  This did not properly send windowSize to shader  
+		glUniform1i(glGetUniformLocation(vignetteShader->GetProgramID(), "diffuseTex"), 0); 
 		glUniform1f(glGetUniformLocation(vignetteShader->GetProgramID(), "windowSizex"), windowSize.x);
 		glUniform1f(glGetUniformLocation(vignetteShader->GetProgramID(), "windowSizey"), windowSize.y);
-		Vector3 VignetteColour = Vector3(1.0, 0.0, 0.0);
-		//float invVignetteRange = 2.0f; //smaller number = greater radius of effect, higher number = smaller radius of effect i.e. more pushed out to edges
+		Vector3 VignetteColour = Vector3(0.0, 0.0, 0.0); //different colours appear more intense at a given intensity (green)
 		float vignetteIntensity = 2.0f; //Recommendation: vary Intensity between 0.8 and 3
 		glUniform3fv(glGetUniformLocation(vignetteShader->GetProgramID(), "effectColour"), 1, (float*)&VignetteColour);
-		//glUniform1f(glGetUniformLocation(vignetteShader->GetProgramID(), "invRange"), invVignetteRange);
 		glUniform1f(glGetUniformLocation(vignetteShader->GetProgramID(), "intensity"), vignetteIntensity);
 		glUniform1f(glGetUniformLocation(vignetteShader->GetProgramID(), "time"), vignettePulse);  
 		BindMesh(*hdrQuad); //simply a quad
