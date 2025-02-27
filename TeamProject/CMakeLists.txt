@@ -26,6 +26,8 @@ set(SOURCES
     Config.h
     Config.cpp
     Multiplayer/GamePackets.hpp
+    Multiplayer/GamePacketHandlers.hpp
+    Multiplayer/GamePacketHandlers.cpp
 	Wanderer.h
 	Wanderer.cpp
 )

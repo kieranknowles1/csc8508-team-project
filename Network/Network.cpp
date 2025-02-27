@@ -65,19 +65,19 @@ void Network::ConnectTo(const ENetAddress* destination) {
 }
 
 
-void Network::Send(Packet::Packet packet) {
+void Network::Send(std::shared_ptr<Packet::Packet> packet) {
 	std::lock_guard<std::mutex> lock(m_sendMut);
 	m_sendBuffer[m_numPackets++] = packet;
 }
 
 
-Packet::Packet Network::Fetch() {
-	Packet::Packet fetched;
+std::shared_ptr<Packet::Packet> Network::Fetch() {
+	std::shared_ptr<Packet::Packet> fetched;
 	do {
 		fetched = m_receiveBuffer.Pop();
 	} while (
-		fetched.GetSequenceNumber() < m_lastMaxSequence
-		&& (fetched.GetChannel() != static_cast<int>(Channel::RELIABLE) || fetched.GetChannel() != static_cast<int>(Channel::UNSEQUENCED))
+		fetched.get()->GetSequenceNumber() < m_lastMaxSequence
+		&& (fetched.get()->GetChannel() != static_cast<int>(Channel::RELIABLE) || fetched.get()->GetChannel() != static_cast<int>(Channel::UNSEQUENCED))
 	);
 	return fetched;
 }
@@ -138,9 +138,9 @@ void Network::SendAll() {
 	Packet::PacketRegister* packetRegister = Packet::PacketRegister::GetRegister();
 
 	for (int i = 0; i < m_numPackets; i++) {
-		Packet::PacketHandler* handler = packetRegister->GetHandler(m_sendBuffer[i].GetType());
+		Packet::PacketHandler* handler = packetRegister->GetHandler(m_sendBuffer[i].get()->GetType());
 		ENetPacket* packet = handler->ToENetPacket(m_sendBuffer[i]);
-		enet_host_broadcast(m_host, m_sendBuffer[i].GetChannel(), packet);
+		enet_host_broadcast(m_host, m_sendBuffer[i].get()->GetChannel(), packet);
 	}
 	m_numPackets = 0;
 }
@@ -167,7 +167,7 @@ void Network::HandleIncomingPacket(ENetPacket* packet) {
 		
 	Packet::PacketRegister* packetRegister = Packet::PacketRegister::GetRegister();
 	Packet::PacketHandler* packetHandler = packetRegister->GetHandler(packetType);
-	Packet::Packet translated = packetHandler->Translate(packet);
+	std::shared_ptr<Packet::Packet> translated = packetHandler->Translate(packet);
 
 	m_receiveBuffer.Insert(translated);
 }
