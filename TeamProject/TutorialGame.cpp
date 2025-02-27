@@ -53,6 +53,8 @@ TutorialGame::~TutorialGame()	{
 	audioEngine.Shutdown();
 
 	delete playerController;
+
+	if (network != nullptr) delete network;
 }
 
 static bool BulletRaycast(btDynamicsWorld* world, const btVector3& start, const btVector3& end, btCollisionWorld::ClosestRayResultCallback& resultCallback) {
@@ -327,6 +329,17 @@ void TutorialGame::InitWorld() {
 	AddTurretToWorld();
 	InitPlayer();
 
+}
+
+void TutorialGame::InitNetwork(bool host) {
+	ENetAddress address;
+	
+	if (host) {
+		address.host = ENET_HOST_ANY;
+		address.port = DEFAULT_PORT;
+	}
+
+	network = new Network(&address, host ? MAX_PLAYERS : 1);
 }
 
 void TutorialGame::InitPlayer() {

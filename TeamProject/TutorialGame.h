@@ -12,7 +12,7 @@
 #include "NavMesh.h"
 #include "Profiler.h"
 #include "Wanderer.h"
-
+#include "Network/Network.hpp"
 
 #include <btBulletDynamicsCommon.h>
 
@@ -20,18 +20,27 @@ namespace NCL {
 	namespace CSC8503 {
 		class BulletDebug;
 
+		const int MAX_PLAYERS = 8;
+
 		class TutorialGame {
 		private:
 			static TutorialGame* instance;
 
 		public:
-			// Physics update frequency, in hertz
+			// Physics update frequency, in seconds.
 			const static constexpr float PHYSICS_PERIOD = 1.0f / 60.0f;
 
 			static TutorialGame* getInstance() {
 				assert(instance && "TutorialGame is not initialised");
 				return instance;
 			}
+
+			/**
+			 * @brief Get the Network Instance.
+			 * @return Returns a pointer to the network instance. Returns
+			 * nullptr if there isn't one.
+			 */
+			inline static Network* GetNetwork() { return network; }
 
 			// Remove an object at the end of this frame. Use during update to avoid removing
 			// from containers while iterating
@@ -53,6 +62,11 @@ namespace NCL {
 			void ThirdPersonControls();
 			void InitWorld();
 
+			/**
+			 * @brief Initialise the network object and run it.
+			 * @param host Whether the network should be the host server.
+			 */
+			void InitNetwork(bool host = false);
 
 			void UpdatePlayer(float dt);
 
@@ -130,6 +144,9 @@ namespace NCL {
 
 			Wanderer* wanderer;
 			Wanderer* AddWandererToWorld();
+
+		private:
+			inline static Network* network = nullptr;
 		};
 	}
 }
