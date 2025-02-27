@@ -36,11 +36,18 @@ namespace NCL {
 			}
 
 			/**
-			 * @brief Get the Network Instance.
-			 * @return Returns a pointer to the network instance. Returns
+			 * @brief Get the Network Instance of the Server.
+			 * @return Returns a pointer to the server instance. Returns
 			 * nullptr if there isn't one.
 			 */
-			inline static Network* GetNetwork() { return network; }
+			inline static Network* GetServerInstance() { return server; }
+
+			/**
+			 * @brief Get the Network Instance of the Client.
+			 * @return Returns a pointer to the client instance. Returns
+			 * nullptr if there isn't one.
+			 */
+			inline static Network* GetClientInstance() { return client; }
 
 			// Remove an object at the end of this frame. Use during update to avoid removing
 			// from containers while iterating
@@ -155,7 +162,8 @@ namespace NCL {
 			Wanderer* AddWandererToWorld();
 
 		private:
-			inline static Network* network = nullptr;
+			inline static Network* client = nullptr;
+			inline static Network* server = nullptr;
 		};
 	}
 }
