@@ -10,8 +10,8 @@
 #include "PlayerObject.h"
 #include "Turret.h"
 #include "NavMesh.h"
-#include "NavEntity.h"
 #include "Profiler.h"
+#include "Wanderer.h"
 
 
 #include <btBulletDynamicsCommon.h>
@@ -127,6 +127,9 @@ namespace NCL {
 			NavMesh* navMesh;
 			bool navMeshDebug = false;
 			void visualiseNavMesh();
+
+			Wanderer* wanderer;
+			Wanderer* AddWandererToWorld();
 		};
 	}
 }
