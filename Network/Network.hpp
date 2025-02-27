@@ -114,6 +114,13 @@ public:
 		return m_state;
 	}
 
+	/**
+	 * @brief Get the number of external connections.
+	 * @return int representing the number of external connections.
+	 */
+	int GetConnectionCount() const { return m_connections - 1; }
+
+
 protected:
 	/**
 	 * @brief The entry point for the thread for sending and receiving packets.
