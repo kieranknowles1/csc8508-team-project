@@ -4,6 +4,7 @@
 #include <array>
 #include <thread>
 #include <mutex>
+#include <functional>
 
 #include <./enet/enet.h>
 
@@ -90,24 +91,45 @@ public:
 
 	/**
 	 * @brief Queue a Packet to be send next tick via Broadcasting.
+	 * Is threadsafe.
 	 * @param packet The packet to send.
 	 */
 	void Send(std::shared_ptr<Packet::Packet> packet);
 
+	/**
+	 * @brief Assign which function to call upon receiving a connect packet.
+	 * 
+	 * Passes ENetPeer* incase the callback function requires it.
+	 * 
+	 * @param callback The function to call.
+	 */
+	inline void SetConnectCallback(std::function<void(ENetPeer*)> callback) { m_connectCallback = callback; }
 
 	/**
 	 * @brief Fetch a packet from the buffer.
 	 * 
-	 * Fetch from the buffer. The buffer is updated every tick.
+	 * Fetch from the buffer. The buffer is updated every tick. Is threadsafe.
 	 * 
 	 * @return The next packet in the buffer. Empty packet if no packet exists.
 	 */
 	std::shared_ptr<Packet::Packet> Fetch();
 
+	/**
+	 * @brief Get the current state of the network.
+	 * Is Threadsafe.
+	 * @return 
+	 */
 	NetworkState GetState() {
 		std::lock_guard<std::mutex> lock(m_stateMut);
 		return m_state;
 	}
+
+	/**
+	 * @brief Get the number of external connections.
+	 * @return int representing the number of external connections.
+	 */
+	int GetConnectionCount() const { return m_connections - 1; }
+
 
 protected:
 	/**
@@ -157,4 +179,5 @@ private:
 	int m_maxConnections;
 
 	ENetHost* m_host = nullptr;
+	std::function<void(ENetPeer*)> m_connectCallback;
 };

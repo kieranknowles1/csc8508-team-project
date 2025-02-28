@@ -53,6 +53,9 @@ TutorialGame::~TutorialGame()	{
 	audioEngine.Shutdown();
 
 	delete playerController;
+
+	if (server != nullptr) delete server;
+	if (client != nullptr) delete client;
 }
 
 static bool BulletRaycast(btDynamicsWorld* world, const btVector3& start, const btVector3& end, btCollisionWorld::ClosestRayResultCallback& resultCallback) {
@@ -333,10 +336,32 @@ void TutorialGame::InitWorld() {
 	AddCapsuleToWorld(Vector3(70, 15, -20), 8.0f, 4.0f, 4.0f);
 	AddCapsuleToWorld(Vector3(-20, 15, 12), 6.0f, 5.0f, 8.0f);
 
-	AddTurretToWorld();
 	InitPlayer();
-	if (navMeshDebug) AddWandererToWorld();
+	if (navMeshDebug) {
+		AddTurretToWorld();
+		AddWandererToWorld();
+	}
 }
+
+void TutorialGame::InitNetwork(bool host) {
+	ENetAddress clientAddress;
+	client = new Network(&clientAddress, 1);
+	
+	if (host) {
+		ENetAddress serverAddress;
+		serverAddress.host = ENET_HOST_ANY;
+		serverAddress.port = DEFAULT_PORT;
+
+		server = new Network(&serverAddress, MAX_PLAYERS);
+	}
+}
+
+
+void TutorialGame::ConnectToServer(ENetAddress& address) {
+	if (client == nullptr) return;
+	client->ConnectTo(&address);
+}
+
 
 void TutorialGame::InitPlayer() {
 	if (loadFromLevel) {
