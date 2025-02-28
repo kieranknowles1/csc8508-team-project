@@ -111,8 +111,6 @@ void PlayerController::UpdateMovement(float dt) {
         movement += rb->getLinearVelocity();
     }
 
-    movement += upDirection * -(gravityScale * dt);
-
     // jump input
     if (controller->GetDigital(Controller::DigitalControl::Jump) && player->getCollided() && inAirTime <= 0) {
         audioEngine.PlaySounds("jump.wav", NCL::Maths::Vector3(player->GetTransform().getOrigin()), 0.0f);

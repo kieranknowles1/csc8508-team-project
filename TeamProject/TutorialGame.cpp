@@ -130,7 +130,7 @@ void TutorialGame::UpdatePlayer(float dt) {
 		}
 	}
 	resourceManager->update(dt);
-	bulletWorld->setGravity(playerController->getUpDirection() * -30.0f);
+	player->updateGravity(dt);
 }
 
 void TutorialGame::UpdateKeys() {
