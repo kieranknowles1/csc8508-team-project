@@ -22,12 +22,27 @@ namespace NCL {
 			: public OGLRenderer
 			, public GameTechRendererInterface {
 		public:
+
+			struct UIElement {
+				Vector2 position;
+				Vector2 size;
+				Vector4 color;
+				//GLuint* texture;
+				OGLTexture* texture;
+
+				Vector2 GetPosition() { return position; }
+				Vector2 GetSize() { return size; }
+				Vector4 GetColor() { return color; }
+				OGLTexture* GetTexture() { return texture; }
+			};
+
+
 			GameTechRenderer(GameWorld* world);
 			~GameTechRenderer();
 
-			void RenderFrame()	override;
+			//void RenderFrame()	override;
 			
-			//Made RenderFrame() and AddUIElement() public so the pushdown states can use them, is this a problem?
+			//Made AddUIElement() public so the pushdown states can use them, is this a problem?
 
 			Mesh* LoadMesh(const std::string& name) override;
 			Texture* LoadTexture(const std::string& name) override;
@@ -38,7 +53,7 @@ namespace NCL {
 			void NewRenderText();
 			void NewRenderTextures();
 
-			//void RenderFrame()	override;
+			void RenderFrame()	override;
 
 			GameWorld*	gameWorld;
 
@@ -58,6 +73,8 @@ namespace NCL {
 			void SetDebugLineBufferSizes(size_t newVertCount);
 
 			std::vector<const RenderObject*> activeObjects;
+
+			std::vector<UIElement> uiElements;
 
 			std::unique_ptr<OGLShader> uiShader;
 			std::unique_ptr<OGLShader> sceneShader;

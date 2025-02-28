@@ -15,7 +15,7 @@ namespace NCL {
 			bool Update(float dt);
 
 		protected:
-			PushdownState* activeState;
+			PushdownState* activeState = nullptr;
 			PushdownState* initialState;
 
 			std::stack<PushdownState*> stateStack;

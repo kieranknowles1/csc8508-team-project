@@ -17,21 +17,6 @@ using namespace CSC8503;
 
 Matrix4 biasMatrix = Matrix::Translation(Vector3(0.5f, 0.5f, 0.5f)) * Matrix::Scale(Vector3(0.5f, 0.5f, 0.5f));
 
-struct UIElement {
-	Vector2 position;
-	Vector2 size;
-	Vector4 color;
-	//GLuint* texture;
-	OGLTexture* texture;
-
-	Vector2 GetPosition() { return position; }
-	Vector2 GetSize() { return size; }
-	Vector4 GetColor() { return color; }
-	OGLTexture* GetTexture() { return texture; }
-};
-
-std::vector<UIElement> uiElements;
-
 GameTechRenderer::GameTechRenderer(GameWorld* world) : OGLRenderer(*Window::GetWindow()), gameWorld(world)	{
 	glEnable(GL_DEPTH_TEST);
 

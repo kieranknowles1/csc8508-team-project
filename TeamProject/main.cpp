@@ -55,9 +55,9 @@ class PauseScreen : public PushdownState {
 			return PushdownResult::Pop;
 		}
 		return PushdownResult::NoChange;
+		Debug::Print("Press U to unpause the game!", Vector2(10, 10), Vector4(0, 0, 0, 1));
 	}
 	void OnAwake() override {
-		Debug::Print("Press U to unpause the game!", Vector2(0.1f, 0.1f), Vector4(0, 0, 0, 1));
 	}
 };
 
@@ -104,7 +104,7 @@ std::unique_ptr<Window> createWindow(const Config& config) {
 	return window;
 }
 
-int main(int argc, char** argv) {
+/*int main(int argc, char** argv) {
 	auto config = Config("user-config.jsonc", "default-config.jsonc");
 
 
@@ -141,9 +141,9 @@ int main(int argc, char** argv) {
 		
 		Debug::UpdateRenderables(dt);
 	}
-}
+}*/
 
-/*int main(int argc, char** argv) {
+int main(int argc, char** argv) {
 	PushdownMachine machine(new GameScreen());
 
 	auto config = Config("user-config.jsonc", "default-config.jsonc");
@@ -185,4 +185,4 @@ int main(int argc, char** argv) {
 
 		Debug::UpdateRenderables(dt);
 	}
-}*/
+}
