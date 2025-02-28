@@ -708,10 +708,6 @@ void GameTechRenderer::RenderDecals() {
 
 	UseShader(*decalShader);
 
-	// Bind the decalFBO to render decals onto decalTexture
-	//glBindFramebuffer(GL_FRAMEBUFFER, decalSystem.GetDecalFBO());
-	//glClear(GL_COLOR_BUFFER_BIT);
-
 	// Get the uniform locations for the decal shader
 	GLuint decalTextureLocation = glGetUniformLocation(decalShader->GetProgramID(), "decalTexture");
 	glUniform1i(decalTextureLocation, 0);
@@ -723,43 +719,11 @@ void GameTechRenderer::RenderDecals() {
 
 	for (const auto& decal : decalSystem.GetDecals()) {
 		// Create a rotation matrix to orient the decal based on the normal of the surface it is projected onto
-		Vector3 decalNormal = Vector::Normalise(decal.normal);
-
-		std::cout << "Decal normal: " << decalNormal.x << " " << decalNormal.y << " " << decalNormal.z << std::endl;
-
-		// Choose an arbitrary up vector that is not parallel to the decal normal
-		// Avoid using (0, 1, 0) (if normal is near vertical) as the up vector to prevent the cross product from returning (0, 0, 0)
-		Vector3 up = fabs(decalNormal.y) < 0.9f ? Vector3(0, 1, 0) : Vector3(1, 0, 0);
-		// hardcoding the up vector to (0, 1, 0) and passing it to the cross product function to get the right vector
-		// does yield somewhat correct results, the right vector should be perpendicular to the normal and up vectors
-		// but the up vector should not be parallel to the normal vector
-
-		std::cout << "up: " << up.x << " " << up.y << " " << up.z << std::endl;
-
-		// Compute the right vector using the cross product of the normal and up vectors
-		Vector3 right = Vector::Normalise(Vector::Cross(decalNormal, up));
-
-		std::cout << "Right: " << right.x << " " << right.y << " " << right.z << std::endl;
-
-		// Compute the new up vector using the cross product of the right and normal vectors
-		Vector3 newUp = Vector::Normalise(Vector::Cross(right, decalNormal));
-
-		std::cout << "newUp: " << newUp.x << " " << newUp.y << " " << newUp.z << std::endl;
-
-		float dotrightUp = Vector::Dot(right, newUp);
-		if (fabs(dotrightUp) > 0.001f) {
-			std::cout << "Right and newUp are not perpendicular: " << dotrightUp << std::endl;
-		}
-
 		Matrix4 rotationMatrix = Matrix::RotationFromNormal(decal.normal);
 
 		Matrix4 modelMatrix = Matrix::Translation(decal.position) *
 							  rotationMatrix *
 							  Matrix::Scale(Vector3(decal.radius, decal.radius, decal.radius));
-
-		Debug::DrawLine(decal.position, decal.position + (decal.normal * 5.0f), Vector4(1, 0, 0, 1), 0.5f);  // Line along the normal
-		Debug::DrawLine(decal.position, decal.position + (right * 5.0f), Vector4(0, 1, 0, 1), 0.5f);   // Line along the right vector
-		Debug::DrawLine(decal.position, decal.position + (newUp * 5.0f), Vector4(0, 0, 1, 1), 0.5f);   // Line along the new up vector
 
 		// Projection matrix is required because decals require projection from world space onto a surface,
 		// which is done by projecting the decal onto the surface using the normal of the surface.
