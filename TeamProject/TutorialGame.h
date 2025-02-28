@@ -12,7 +12,7 @@
 #include "NavMesh.h"
 #include "Profiler.h"
 #include "Wanderer.h"
-
+#include "Network/Network.hpp"
 
 #include <btBulletDynamicsCommon.h>
 
@@ -20,18 +20,34 @@ namespace NCL {
 	namespace CSC8503 {
 		class BulletDebug;
 
+		const int MAX_PLAYERS = 8;
+
 		class TutorialGame {
 		private:
 			static TutorialGame* instance;
 
 		public:
-			// Physics update frequency, in hertz
+			// Physics update frequency, in seconds.
 			const static constexpr float PHYSICS_PERIOD = 1.0f / 60.0f;
 
 			static TutorialGame* getInstance() {
 				assert(instance && "TutorialGame is not initialised");
 				return instance;
 			}
+
+			/**
+			 * @brief Get the Network Instance of the Server.
+			 * @return Returns a pointer to the server instance. Returns
+			 * nullptr if there isn't one.
+			 */
+			inline static Network* GetServerInstance() { return server; }
+
+			/**
+			 * @brief Get the Network Instance of the Client.
+			 * @return Returns a pointer to the client instance. Returns
+			 * nullptr if there isn't one.
+			 */
+			inline static Network* GetClientInstance() { return client; }
 
 			// Remove an object at the end of this frame. Use during update to avoid removing
 			// from containers while iterating
@@ -53,6 +69,20 @@ namespace NCL {
 			void ThirdPersonControls();
 			void InitWorld();
 
+			/**
+			 * @brief Initialise the network object and run it.
+			 * @param host Whether the network should be the host server.
+			 */
+			void InitNetwork(bool host = false);
+
+			/**
+			 * @brief Connect to a host game at the given address.
+			 * 
+			 * Connection resolution is handled by packet response.
+			 * 
+			 * @param address ENetAddress of the servers location.
+			 */
+			void ConnectToServer(ENetAddress& address);
 
 			void UpdatePlayer(float dt);
 
@@ -133,6 +163,10 @@ namespace NCL {
 
 			//post processing time variable effects
 			float pulse = 0;
+
+		private:
+			inline static Network* client = nullptr;
+			inline static Network* server = nullptr;
 		};
 	}
 }
