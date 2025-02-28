@@ -4,6 +4,7 @@
 #include "Camera.h"
 #include "TextureLoader.h"
 #include "MshLoader.h"
+#include "ResourceManager.h"
 
 #include "Debug.h"
 
@@ -17,12 +18,13 @@ using namespace CSC8503;
 
 Matrix4 biasMatrix = Matrix::Translation(Vector3(0.5f, 0.5f, 0.5f)) * Matrix::Scale(Vector3(0.5f, 0.5f, 0.5f));
 
-GameTechRenderer::GameTechRenderer(GameWorld* world) : OGLRenderer(*Window::GetWindow()), gameWorld(world)	{
+GameTechRenderer::GameTechRenderer(GameWorld* world) : OGLRenderer(*Window::GetWindow()), gameWorld(world), decalSystem(1024, 768) {
 	glEnable(GL_DEPTH_TEST);
 
 	debugShader = std::make_unique<OGLShader>("Debug.vert", "Debug.frag");
 	shadowShader = std::make_unique<OGLShader>("shadow.vert", "shadow.frag");
 	sceneShader = std::make_unique<OGLShader>("scene.vert", "scene.frag");
+	decalShader = std::make_unique<OGLShader>("decal.vert", "decal.frag");
 
 	glGenTextures(1, &shadowTex);
 	glBindTexture(GL_TEXTURE_2D, shadowTex);
@@ -119,7 +121,7 @@ GameTechRenderer::GameTechRenderer(GameWorld* world) : OGLRenderer(*Window::GetW
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
-GameTechRenderer::~GameTechRenderer()	{
+GameTechRenderer::~GameTechRenderer() {
 	glDeleteTextures(1, &shadowTex);
 	glDeleteFramebuffers(1, &shadowFBO);
 
@@ -127,7 +129,6 @@ GameTechRenderer::~GameTechRenderer()	{
 	glDeleteFramebuffers(1, &hdrFBO);
 	delete hdrQuad;
 	delete hdrShader;
-	
 }
 
 void GameTechRenderer::LoadSkybox() {
@@ -209,6 +210,8 @@ void GameTechRenderer::RenderFrame() {
 		BindMesh(*hdrQuad);
 		DrawBoundMesh();
 	}
+
+	RenderDecals();
 }
 
 void GameTechRenderer::BuildObjectList() {
@@ -658,3 +661,129 @@ void GameTechRenderer::RenderCrosshair() {
 	glEnable(GL_DEPTH_TEST);
 }
 
+/*
+	RenderQuad() is a helper function that renders a quad to the screen.
+	The first time this function is called, it will generate the VAO and VBO with the quad vertices.
+	Subsequent calls will simply bind the VAO and draw the quad.
+*/
+void GameTechRenderer::RenderQuad() {
+	// Generate the VAO and VBO for the quad if it doesn't already exist
+	if (decalQuadVAO == 0) {
+		float quadVertices[] = {
+			// Positions        // Texture Coords
+			-1.0f,  1.0f, 0.0f,  0.0f, 1.0f,
+			-1.0f, -1.0f, 0.0f,  0.0f, 0.0f,
+			 1.0f, -1.0f, 0.0f,  1.0f, 0.0f,
+
+			-1.0f,  1.0f, 0.0f,  0.0f, 1.0f,
+			 1.0f, -1.0f, 0.0f,  1.0f, 0.0f,
+			 1.0f,  1.0f, 0.0f,  1.0f, 1.0f
+		};
+
+		// Generate and bind VAO and VBO
+		glGenVertexArrays(1, &decalQuadVAO);
+		glGenBuffers(1, &decalQuadVBO);
+		glBindVertexArray(decalQuadVAO);
+		glBindBuffer(GL_ARRAY_BUFFER, decalQuadVBO);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(quadVertices), quadVertices, GL_STATIC_DRAW);
+		
+		// Set up position attribute
+		glEnableVertexAttribArray(0);
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+		
+		// Set up texture coordinate attribute
+		glEnableVertexAttribArray(1);
+		glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+	}
+
+	// Bind the VAO and draw the quad
+	glBindVertexArray(decalQuadVAO);
+	glDrawArrays(GL_TRIANGLES, 0, 6);
+	glBindVertexArray(0);
+}
+
+void GameTechRenderer::RenderDecals() {
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+	UseShader(*decalShader);
+
+	// Bind the decalFBO to render decals onto decalTexture
+	//glBindFramebuffer(GL_FRAMEBUFFER, decalSystem.GetDecalFBO());
+	//glClear(GL_COLOR_BUFFER_BIT);
+
+	// Get the uniform locations for the decal shader
+	GLuint decalTextureLocation = glGetUniformLocation(decalShader->GetProgramID(), "decalTexture");
+	glUniform1i(decalTextureLocation, 0);
+
+	GLuint alphaFadeLocation = glGetUniformLocation(decalShader->GetProgramID(), "alphaFade");
+	glUniform1f(alphaFadeLocation, decalSystem.GetAlphaFade());
+
+	GLuint modelMatrixLocation = glGetUniformLocation(decalShader->GetProgramID(), "modelMatrix");
+	GLuint viewProjMatrixLocation = glGetUniformLocation(decalShader->GetProgramID(), "viewProjMatrix");
+
+	for (const auto& decal : decalSystem.GetDecals()) {
+		// Create a rotation matrix to orient the decal based on the normal of the surface it is projected onto
+		Vector3 decalNormal = Vector::Normalise(decal.normal);
+
+		std::cout << "Decal normal: " << decalNormal.x << " " << decalNormal.y << " " << decalNormal.z << std::endl;
+
+		// Choose an arbitrary up vector that is not parallel to the decal normal
+		// Avoid using (0, 1, 0) (if normal is near vertical) as the up vector to prevent the cross product from returning (0, 0, 0)
+		Vector3 up = fabs(decalNormal.y) < 0.9f ? Vector3(0, 1, 0) : Vector3(1, 0, 0);
+		// hardcoding the up vector to (0, 1, 0) and passing it to the cross product function to get the right vector
+		// does yield somewhat correct results, the right vector should be perpendicular to the normal and up vectors
+		// but the up vector should not be parallel to the normal vector
+
+		std::cout << "up: " << up.x << " " << up.y << " " << up.z << std::endl;
+
+		// Compute the right vector using the cross product of the normal and up vectors
+		Vector3 right = Vector::Normalise(Vector::Cross(decalNormal, up));
+
+		std::cout << "Right: " << right.x << " " << right.y << " " << right.z << std::endl;
+
+		// Compute the new up vector using the cross product of the right and normal vectors
+		Vector3 newUp = Vector::Normalise(Vector::Cross(right, decalNormal));
+
+		std::cout << "newUp: " << newUp.x << " " << newUp.y << " " << newUp.z << std::endl;
+
+		float dotrightUp = Vector::Dot(right, newUp);
+		if (fabs(dotrightUp) > 0.001f) {
+			std::cout << "Right and newUp are not perpendicular: " << dotrightUp << std::endl;
+		}
+
+		Matrix4 rotationMatrix = Matrix::RotationMatrixFromAxes(right, newUp, decalNormal);
+
+		Matrix4 modelMatrix = Matrix::Translation(decal.position) *
+							  rotationMatrix *
+							  Matrix::Scale(Vector3(decal.radius, decal.radius, decal.radius));
+
+		Debug::DrawLine(decal.position, decal.position + (decal.normal * 5.0f), Vector4(1, 0, 0, 1), 0.5f);  // Line along the normal
+		Debug::DrawLine(decal.position, decal.position + (right * 5.0f), Vector4(0, 1, 0, 1), 0.5f);   // Line along the right vector
+		Debug::DrawLine(decal.position, decal.position + (newUp * 5.0f), Vector4(0, 0, 1, 1), 0.5f);   // Line along the new up vector
+
+		// Projection matrix is required because decals require projection from world space onto a surface,
+		// which is done by projecting the decal onto the surface using the normal of the surface.
+		Matrix4 viewMatrix = gameWorld->GetMainCamera().BuildViewMatrix();
+		Matrix4 projMatrix = gameWorld->GetMainCamera().BuildProjectionMatrix(hostWindow.GetScreenAspect());
+		Matrix4 viewProjMatrix = projMatrix * viewMatrix;
+
+		glUniformMatrix4fv(modelMatrixLocation, 1, false, (float*)&modelMatrix);
+		glUniformMatrix4fv(viewProjMatrixLocation, 1, false, (float*)&viewProjMatrix);
+
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, ((OGLTexture*)decal.texture.get())->GetObjectID());
+		
+		// RenderQuad() renders the decal at the specific hit location to the decalFBO
+		RenderQuad();
+	}
+
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, decalSystem.GetDecalTexture());
+
+	glUniform1i(decalTextureLocation, 0);
+	
+	glDisable(GL_BLEND);
+}

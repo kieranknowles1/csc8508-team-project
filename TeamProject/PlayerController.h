@@ -14,7 +14,7 @@
 #include "CustomCollisionCallback.h"
 #include <btBulletDynamicsCommon.h>
 #include <btBulletCollisionCommon.h>
-
+#include "DecalSystem.h"
 
 
 namespace NCL {
@@ -22,7 +22,7 @@ namespace NCL {
 
 		class PlayerController {
 		public:
-			PlayerController(PlayerObject* playerIn, GameObject* gunIn, const Controller* c, Camera* cam, btDiscreteDynamicsWorld* bulletWorldIn, GameWorld* worldIn, ResourceManager* resourceManager) {
+			PlayerController(PlayerObject* playerIn, GameObject* gunIn, const Controller* c, Camera* cam, btDiscreteDynamicsWorld* bulletWorldIn, GameWorld* worldIn, ResourceManager* resourceManager, DecalSystem& decalSys) {
 				player = playerIn;
 				gun = gunIn;
 				controller = c;
@@ -30,6 +30,7 @@ namespace NCL {
 				bulletWorld = bulletWorldIn;
 				world = worldIn;
 				this->resourceManager = resourceManager;
+				decalSystem = &decalSys;
 				Initialise();
 			}
 			~PlayerController() {};
@@ -174,7 +175,8 @@ namespace NCL {
 			btVector3 CalculateForwardFromYaw();
 			btVector3 CalculateRightFromYaw();
 
-
+			// decal system
+			DecalSystem* decalSystem;
 		};
 	};
 

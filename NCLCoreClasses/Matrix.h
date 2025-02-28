@@ -412,5 +412,35 @@ namespace NCL::Maths {
 
             return rMat * tMat;
         }
+
+        template <typename T>
+        constexpr MatrixTemplate<T, 4, 4> RotationMatrixFromAxes(
+            const VectorTemplate<T, 3>& right,
+            const VectorTemplate<T, 3>& newUp,
+            const VectorTemplate<T, 3>& normal
+        ) {
+            MatrixTemplate<T, 4, 4> rotationMatrix;
+
+            // Set up the rotation matrix
+            rotationMatrix.array[0][0] = right.x;
+            rotationMatrix.array[1][0] = right.y;
+            rotationMatrix.array[2][0] = right.z;
+
+            rotationMatrix.array[0][1] = newUp.x;
+            rotationMatrix.array[1][1] = newUp.y;
+            rotationMatrix.array[2][1] = newUp.z;
+
+            rotationMatrix.array[0][2] = -normal.x;  // Inverted because OpenGL's "forward" is opposite to our surface normal
+            rotationMatrix.array[1][2] = -normal.y;
+            rotationMatrix.array[2][2] = -normal.z;
+
+            // Homogeneous coordinates
+            rotationMatrix.array[3][0] = 0;
+            rotationMatrix.array[3][1] = 0;
+            rotationMatrix.array[3][2] = 0;
+            rotationMatrix.array[3][3] = 1;
+
+            return rotationMatrix;
+        }
     }
 }

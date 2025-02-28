@@ -23,6 +23,8 @@ set(SOURCES
 	AudioEngine.cpp
     Config.h
     Config.cpp
+    DecalSystem.h
+    DecalSystem.cpp
 )
 
 set(ASSET_ROOT "${CMAKE_SOURCE_DIR}/Assets")

@@ -32,6 +32,10 @@ namespace NCL {
 				return instance;
 			}
 
+			ResourceManager* GetResourceManager() {
+				return resourceManager.get();
+			}
+
 			// Remove an object at the end of this frame. Use during update to avoid removing
 			// from containers while iterating
 			// It is the caller's responsibility to ensure there are no dangling references from other objects

@@ -58,6 +58,7 @@ namespace NCL::CSC8503 {
 			//std::cout << "OnCollisionStay event occured!\n";
 		}
 
+		// TODO:: Remove this OnCollisionStay method, since the CollisionInfo returns the otherObject now in the above function
 		virtual void OnCollisionStay(GameObject* otherObject) {
 			//std::cout << "OnCollisionStay: " << this->GetWorldID() << " is still colliding with " << otherObject->GetWorldID() << std::endl;
 		}

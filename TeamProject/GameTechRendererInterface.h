@@ -1,5 +1,7 @@
 #pragma once
 
+#include "DecalSystem.h"
+
 namespace NCL::Rendering {
 	class Mesh;
 	class Texture;
@@ -20,6 +22,9 @@ namespace NCL::CSC8503 {
 		void SetHDROn(bool toggle) {
 			hdrOn = toggle;
 		}
+
+		virtual DecalSystem& GetDecalSystem() = 0;
+
 	protected:
 		//adding bools to toggle post processing. Must be accessible from the specific renderer
 		bool hdrOn = true;
