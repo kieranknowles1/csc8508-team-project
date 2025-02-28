@@ -84,8 +84,6 @@ GameTechRenderer::GameTechRenderer() : OGLRenderer(*Window::GetWindow()), GameTe
 	SetDebugStringBufferSizes(10000);
 	SetDebugLineBufferSizes(1000);
 
-	InitCrosshair(); //This line Ameya added for crosshair
-
 	//Post processing additions:
 	hdrShader = new OGLShader("texturevert.glsl", "hdrfrag.glsl");
 
@@ -599,38 +597,6 @@ void GameTechRenderer::SetDebugLineBufferSizes(size_t newVertCount) {
 	}
 }
 
-void GameTechRenderer::AddUIElement(Vector2 position, Vector2 size, Vector4 color, OGLTexture* texture) {
-	uiElements.push_back({ position, size, color, texture });
-}
-
-void GameTechRenderer::InitCrosshair() {
-	Vector2 screenCenter = Vector2(0.5f, 0.5f);
-	Vector4 crosshairColor = Vector4(1, 1, 1, 1); // White crosshair
-
-	float lineLength = 0.02f; // Length of the crosshair lines
-	float lineThickness = 0.0025f; // Thickness of each line
-	float horizontalLineThickness = 0.0035f;
-	float horizontalLineLength = 0.015f;
-	float gapSize = 0.0005f; // Gap between the lines
-
-
-	// Left line
-	AddUIElement(Vector2(screenCenter.x - gapSize - lineLength, screenCenter.y),
-		Vector2(horizontalLineLength, horizontalLineThickness), crosshairColor);
-
-	// Right line
-	AddUIElement(Vector2(screenCenter.x + gapSize + lineLength, screenCenter.y),
-		Vector2(horizontalLineLength, horizontalLineThickness), crosshairColor);
-
-	// Top line
-	AddUIElement(Vector2(screenCenter.x, screenCenter.y + gapSize + lineLength),
-		Vector2(lineThickness, lineLength), crosshairColor);
-
-	// Bottom line
-	AddUIElement(Vector2(screenCenter.x, screenCenter.y - gapSize - lineLength),
-		Vector2(lineThickness, lineLength), crosshairColor);
-}
-
 void GameTechRenderer::InitUIQuad() {
 	uiQuadMesh = std::make_unique<OGLMesh>();
 
@@ -691,7 +657,7 @@ void GameTechRenderer::RenderUI() {
 		if (uiElement.texture) {
 			glUniform1i(hasTextureLocation, 1);
 			glActiveTexture(GL_TEXTURE0);
-			glBindTexture(GL_TEXTURE_2D, ((OGLTexture*)uiElement.texture)->GetObjectID());
+			glBindTexture(GL_TEXTURE_2D, ((OGLTexture*)uiElement.texture.get())->GetObjectID());
 			glUniform1i(textureLocation, 0);
 		}
 		else {
