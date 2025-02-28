@@ -25,9 +25,13 @@ set(SOURCES
 	AudioEngine.cpp
     Config.h
     Config.cpp
+    Colors.h
     Multiplayer/GamePackets.hpp
     Multiplayer/GamePacketHandlers.hpp
     Multiplayer/GamePacketHandlers.cpp
+    Multiplayer/Lobby.hpp
+    Multiplayer/Lobby.cpp
+    Multiplayer/User.hpp
 	Wanderer.h
 	Wanderer.cpp
 )
