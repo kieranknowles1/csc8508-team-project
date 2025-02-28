@@ -11,7 +11,6 @@
 #include "OGLTexture.h"
 #include "OGLMesh.h"
 
-#include "GameWorld.h"
 #include "GameTechRendererInterface.h"
 
 namespace NCL {
@@ -22,6 +21,7 @@ namespace NCL {
 			: public OGLRenderer
 			, public GameTechRendererInterface {
 		public:
+			GameTechRenderer();
 
 			struct UIElement {
 				Vector2 position;
@@ -36,12 +36,10 @@ namespace NCL {
 				OGLTexture* GetTexture() { return texture; }
 			};
 
-
-			GameTechRenderer(GameWorld* world);
 			~GameTechRenderer();
 
 			//void RenderFrame()	override;
-			
+
 			//Made AddUIElement() public so the pushdown states can use them, is this a problem?
 
 			Mesh* LoadMesh(const std::string& name) override;
@@ -55,12 +53,8 @@ namespace NCL {
 
 			void RenderFrame()	override;
 
-			GameWorld*	gameWorld;
-
-			void BuildObjectList();
-			void SortObjectList();
 			void RenderShadowMap();
-			void RenderCamera(); 
+			void RenderCamera();
 			void RenderSkybox();
 			void InitCrosshair(); //InitCrosshair and RenderCrosshair Ameya added for crosshair
 			//void AddUIElement(Vector2 position, Vector2 size, Vector4 color, OGLTexture* texture = nullptr);
@@ -71,8 +65,6 @@ namespace NCL {
 
 			void SetDebugStringBufferSizes(size_t newVertCount);
 			void SetDebugLineBufferSizes(size_t newVertCount);
-
-			std::vector<const RenderObject*> activeObjects;
 
 			std::vector<UIElement> uiElements;
 
@@ -126,8 +118,8 @@ namespace NCL {
 			GLuint BFBO;
 			OGLShader* vignetteShader;
 			GLuint BDepthTex;
-			void RenderPostProcessing(); 
-		
+			void RenderPostProcessing();
+
 		};
 	}
 }

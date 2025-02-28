@@ -1,5 +1,4 @@
 #pragma once
-#include "../CSC8503CoreClasses/GameWorld.h"
 
 #include "GameTechRendererInterface.h"
 
@@ -30,7 +29,7 @@ namespace NCL {
 			public NCL::CSC8503::GameTechRendererInterface	
 		{
 		public:
-			GameTechAGCRenderer(GameWorld& world);
+			GameTechAGCRenderer();
 			~GameTechAGCRenderer();
 
 			virtual Mesh*		LoadMesh(const std::string& name)				override;
@@ -41,8 +40,6 @@ namespace NCL {
 			void UpdateObjectList();
 
 			NCL::PS5::AGCTexture* CreateFrameBufferTextureSlot(const std::string& name);
-
-			std::vector<const RenderObject*> activeObjects;
 
 			void WriteRenderPassConstants();
 			void DrawObjects();
@@ -58,8 +55,6 @@ namespace NCL {
 			void DisplayRenderPass();
 
 			Shader*		defaultShader;
-
-			GameWorld&	gameWorld;
 
 			/*
 			Handling buffers in AGC isn't too bad, as they are a small wrapper around an existing

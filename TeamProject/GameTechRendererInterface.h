@@ -1,12 +1,22 @@
 #pragma once
 
+#include <string>
+#include <vector>
+
 namespace NCL::Rendering {
 	class Mesh;
 	class Texture;
 	class Shader;
 }
 
+namespace NCL {
+	class Camera;
+}
+
 namespace NCL::CSC8503 {
+	class GameWorld;
+	class RenderObject;
+
 	class GameTechRendererInterface
 	{
 	public:
@@ -20,6 +30,13 @@ namespace NCL::CSC8503 {
 		void SetHDROn(bool toggle) {
 			hdrOn = toggle;
 		}
+
+		void setCamera(Camera* cam) {
+			camera = cam;
+		}
+
+		// Collect a list of RenderObjects that need to be rendered this frame
+		void collectFrameObjects(GameWorld* world);
 
 		bool GetVignetteOn() const {
 			return vignetteOn;
@@ -36,9 +53,10 @@ namespace NCL::CSC8503 {
 	protected:
 		//adding bools to toggle post processing. Must be accessible from the specific renderer
 		bool hdrOn = true;
-		bool vignetteOn = false; 
+		bool vignetteOn = false;
 		float vignettePulse = 0;
-
+		Camera* camera = nullptr;
+		std::vector<RenderObject*> frameObjects;
 	};
 }
 

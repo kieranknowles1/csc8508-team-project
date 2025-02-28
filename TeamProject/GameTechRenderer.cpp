@@ -17,7 +17,7 @@ using namespace CSC8503;
 
 Matrix4 biasMatrix = Matrix::Translation(Vector3(0.5f, 0.5f, 0.5f)) * Matrix::Scale(Vector3(0.5f, 0.5f, 0.5f));
 
-GameTechRenderer::GameTechRenderer(GameWorld* world) : OGLRenderer(*Window::GetWindow()), gameWorld(world)	{
+GameTechRenderer::GameTechRenderer() : OGLRenderer(*Window::GetWindow()) {
 	glEnable(GL_DEPTH_TEST);
 
 	debugShader = std::make_unique<OGLShader>("Debug.vert", "Debug.frag");
@@ -213,8 +213,6 @@ void GameTechRenderer::LoadSkybox() {
 void GameTechRenderer::RenderFrame() {
 	glEnable(GL_CULL_FACE);
 	glClearColor(1, 1, 1, 1);
-	BuildObjectList();
-	SortObjectList();
 	RenderShadowMap();
 	//Set up to render into framebuffer
 	if (hdrOn || vignetteOn) {
@@ -238,25 +236,6 @@ void GameTechRenderer::RenderFrame() {
 	RenderPostProcessing();  
 }
 
-void GameTechRenderer::BuildObjectList() {
-	activeObjects.clear();
-
-	gameWorld->OperateOnContents(
-		[&](GameObject* o) {
-			if (o->IsActive()) {
-				const RenderObject* g = o->GetRenderObject();
-				if (g) {
-					activeObjects.emplace_back(g);
-				}
-			}
-		}
-	);
-}
-
-void GameTechRenderer::SortObjectList() {
-
-}
-
 void GameTechRenderer::RenderShadowMap() {
 	glBindFramebuffer(GL_FRAMEBUFFER, shadowFBO);
 	glClear(GL_DEPTH_BUFFER_BIT);
@@ -275,7 +254,7 @@ void GameTechRenderer::RenderShadowMap() {
 
 	shadowMatrix = biasMatrix * mvMatrix; //we'll use this one later on
 
-	for (const auto&i : activeObjects) {
+	for (const auto&i : frameObjects) {
 		//Matrix4 modelMatrix = (*i).getParent()->GetTransform().getOpenGLMatrix ()->GetMatrix();
 		Matrix4 modelMatrix;
 		i->getParent()->GetTransform().getOpenGLMatrix((btScalar*)&modelMatrix);
@@ -301,8 +280,8 @@ void GameTechRenderer::RenderSkybox() {
 	glDisable(GL_BLEND);
 	glDisable(GL_DEPTH_TEST);
 
-	Matrix4 viewMatrix = gameWorld->GetMainCamera().BuildViewMatrix();
-	Matrix4 projMatrix = gameWorld->GetMainCamera().BuildProjectionMatrix(hostWindow.GetScreenAspect());
+	Matrix4 viewMatrix = camera->BuildViewMatrix();
+	Matrix4 projMatrix = camera->BuildProjectionMatrix(hostWindow.GetScreenAspect());
 
 	UseShader(*skyboxShader);
 
@@ -326,8 +305,8 @@ void GameTechRenderer::RenderSkybox() {
 }
 
 void GameTechRenderer::RenderCamera() {
-	Matrix4 viewMatrix = gameWorld->GetMainCamera().BuildViewMatrix();
-	Matrix4 projMatrix = gameWorld->GetMainCamera().BuildProjectionMatrix(hostWindow.GetScreenAspect());
+	Matrix4 viewMatrix = camera->BuildViewMatrix();
+	Matrix4 projMatrix = camera->BuildProjectionMatrix(hostWindow.GetScreenAspect());
 
 	UseShader(*sceneShader);
 	int projLocation	= glGetUniformLocation(sceneShader->GetProgramID(), "projMatrix");
@@ -348,7 +327,7 @@ void GameTechRenderer::RenderCamera() {
 
 	int cameraLocation = glGetUniformLocation(sceneShader->GetProgramID(), "cameraPos");
 
-	Vector3 camPos = gameWorld->GetMainCamera().GetPosition();
+	Vector3 camPos = camera->GetPosition();
 	glUniform3fv(cameraLocation, 1, &camPos.x);
 
 	glUniformMatrix4fv(projLocation, 1, false, (float*)&projMatrix);
@@ -365,7 +344,7 @@ void GameTechRenderer::RenderCamera() {
 	glActiveTexture(GL_TEXTURE0 + 1);
 	glBindTexture(GL_TEXTURE_2D, shadowTex);
 
-	for (const auto&i : activeObjects) {
+	for (const auto&i : frameObjects) {
 		if ((*i).GetDefaultTexture()) { 
 			BindTextureToShader(*(OGLTexture*)(*i).GetDefaultTexture(), "mainTex", 0);
 			//figure out scale of object:
@@ -420,8 +399,8 @@ void GameTechRenderer::NewRenderLines() {
 		return;
 	}
 
-	Matrix4 viewMatrix = gameWorld->GetMainCamera().BuildViewMatrix();
-	Matrix4 projMatrix = gameWorld->GetMainCamera().BuildProjectionMatrix(hostWindow.GetScreenAspect());
+	Matrix4 viewMatrix = camera->BuildViewMatrix();
+	Matrix4 projMatrix = camera->BuildProjectionMatrix(hostWindow.GetScreenAspect());
 
 	Matrix4 viewProj  = projMatrix * viewMatrix;
 

@@ -15,13 +15,15 @@ using namespace CSC8503;
 
 TutorialGame* TutorialGame::instance = nullptr;
 
-TutorialGame::TutorialGame(GameTechRendererInterface* renderer, GameWorld* world, Controller* controller)
+TutorialGame::TutorialGame(GameTechRendererInterface* renderer, Controller* controller)
 	: renderer(renderer)
 	, controller(controller)
-	, world(world)
 {
 	assert(instance == nullptr && "TutorialGame must be unique");
 	instance = this;
+
+	world = std::make_unique<GameWorld>();
+	renderer->setCamera(&world->GetMainCamera());
 
 	/* Initializing the Bullet Physics World here as it should be done before Initialize the NCL framework's PhysicsSystem */
 	//InitBullet(); //bullet is initialised in initialiseAssets already
@@ -99,6 +101,7 @@ void TutorialGame::UpdateGame(float dt) {
 	clearGraveyard();
 	profiler.startSection("Prepare Render");
 	bulletWorld->debugDrawWorld();
+	renderer->collectFrameObjects(world.get());
 
 	profiler.endFrame();
 	if (showProfiling) {
@@ -308,7 +311,7 @@ void TutorialGame::InitWorld() {
 	}
 
 	if (loadFromLevel) {
-		levelImporter = new LevelImporter(resourceManager.get(), world, bulletWorld);
+		levelImporter = new LevelImporter(resourceManager.get(), world.get(), bulletWorld);
 		levelImporter->LoadLevel(8);
 		InitPlayer();
 		return;
@@ -386,7 +389,7 @@ void TutorialGame::InitPlayer() {
 	player->GetPhysicsObject()->GetRigidBody()->setFriction(0.0f);
 	player->GetPhysicsObject()->GetRigidBody()->setDamping(0.0, 0);
 	gun = AddCubeToWorld(Vector3(10, 2, 20), Vector3(0.6, 0.6, 1.6), 0, false);
-	playerController = new PlayerController(player, gun, controller, mainCamera, bulletWorld, world, resourceManager.get());
+	playerController = new PlayerController(player, gun, controller, mainCamera, bulletWorld, world.get(), resourceManager.get());
 	player->GetRenderObject()->SetColour(Vector4(playerColour));
 
 }

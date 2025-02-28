@@ -65,7 +65,7 @@ namespace NCL {
 				earlyGraveyard.push_back(obj);
 			}
 
-			TutorialGame(GameTechRendererInterface* renderer, GameWorld* world, Controller* controller);
+			TutorialGame(GameTechRendererInterface* renderer, Controller* controller);
 			~TutorialGame();
 
 			virtual void UpdateGame(float dt);
@@ -111,7 +111,7 @@ namespace NCL {
 			Profiler profiler;
 
 			GameTechRendererInterface* renderer;
-			GameWorld* world;
+			std::unique_ptr<GameWorld> world;
 			std::vector<GameObject*> earlyGraveyard; // Added this frame
 			std::vector<GameObject*> lateGraveyard; // Added previous frame
 			void clearGraveyard();

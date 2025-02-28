@@ -1,6 +1,7 @@
 set(SOURCES
     BulletDebug.cpp
     BulletDebug.h
+    GameTechRendererInterface.cpp
     GameTechRendererInterface.h
     TutorialGame.cpp
     TutorialGame.h
