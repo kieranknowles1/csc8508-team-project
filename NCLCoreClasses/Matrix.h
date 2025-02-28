@@ -117,7 +117,7 @@ namespace NCL::Maths {
     		v.x*mat.array[0][0] + v.y*mat.array[1][0] + v.z*mat.array[2][0]  + v.w * mat.array[3][0] ,
     		v.x*mat.array[0][1] + v.y*mat.array[1][1] + v.z*mat.array[2][1]  + v.w * mat.array[3][1] ,
     		v.x*mat.array[0][2] + v.y*mat.array[1][2] + v.z*mat.array[2][2]  + v.w * mat.array[3][2] ,
-    		v.x*mat.array[0][3] + v.y*mat.array[1][3] + v.z*mat.array[2][3]  + v.w * mat.array[3][3] 
+    		v.x*mat.array[0][3] + v.y*mat.array[1][3] + v.z*mat.array[2][3]  + v.w * mat.array[3][3]
     	);
     }
 
@@ -413,34 +413,18 @@ namespace NCL::Maths {
             return rMat * tMat;
         }
 
-        template <typename T>
-        constexpr MatrixTemplate<T, 4, 4> RotationMatrixFromAxes(
-            const VectorTemplate<T, 3>& right,
-            const VectorTemplate<T, 3>& newUp,
-            const VectorTemplate<T, 3>& normal
+        // https://gamedev.stackexchange.com/questions/22204/from-normal-to-rotation-matrix
+        inline Matrix4 RotationFromNormal(
+            const Vector3& normal
         ) {
-            MatrixTemplate<T, 4, 4> rotationMatrix;
-
-            // Set up the rotation matrix
-            rotationMatrix.array[0][0] = right.x;
-            rotationMatrix.array[1][0] = right.y;
-            rotationMatrix.array[2][0] = right.z;
-
-            rotationMatrix.array[0][1] = newUp.x;
-            rotationMatrix.array[1][1] = newUp.y;
-            rotationMatrix.array[2][1] = newUp.z;
-
-            rotationMatrix.array[0][2] = -normal.x;  // Inverted because OpenGL's "forward" is opposite to our surface normal
-            rotationMatrix.array[1][2] = -normal.y;
-            rotationMatrix.array[2][2] = -normal.z;
-
-            // Homogeneous coordinates
-            rotationMatrix.array[3][0] = 0;
-            rotationMatrix.array[3][1] = 0;
-            rotationMatrix.array[3][2] = 0;
-            rotationMatrix.array[3][3] = 1;
-
-            return rotationMatrix;
+            Vector3 tan0 = Vector::Normalise(Vector::Cross(normal, Vector3(1, 0, 0)));
+            Vector3 tan1 = Vector::Normalise(Vector::Cross(normal, tan0));
+            Matrix4 mat;
+            mat.SetColumn(0, Vector4(tan0, 0));
+            mat.SetColumn(1, Vector4(tan1, 0));
+            mat.SetColumn(2, Vector4(normal, 0));
+            mat.SetColumn(3, Vector4(0, 0, 0, 1));
+            return mat;
         }
     }
 }

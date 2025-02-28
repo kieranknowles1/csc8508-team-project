@@ -48,7 +48,7 @@ GameTechRenderer::GameTechRenderer(GameWorld* world) : OGLRenderer(*Window::GetW
 
 	//Set up the light properties
 	lightColour = Vector4(0.8f, 0.8f, 0.5f, 1.0f);
-	lightRadius = 1000.0f; 
+	lightRadius = 1000.0f;
 	lightPosition = Vector3(-200.0f, 60.0f, -200.0f);
 
 	//Skybox!
@@ -83,39 +83,39 @@ GameTechRenderer::GameTechRenderer(GameWorld* world) : OGLRenderer(*Window::GetW
 
 	InitCrosshair(); //This line Ameya added for crosshair
 
-	//Post processing additions: 
+	//Post processing additions:
 	hdrShader = new OGLShader("texturevert.glsl", "hdrfrag.glsl");
-	
+
 	hdrQuad = new OGLMesh();
-	hdrQuad->SetVertexPositions({ Vector3(-1, 1,0), Vector3(-1,-1,0) , Vector3(1,-1,0) , Vector3(1,1,0) }); 
-	hdrQuad->SetVertexTextureCoords({ Vector2(0, 1), Vector2(0,0) , Vector2(1,0) , Vector2(1,1) }); 
-	hdrQuad->SetVertexIndices({ 0,1,2,2,3,0 }); 
-	hdrQuad->UploadToGPU(); 
-	 
+	hdrQuad->SetVertexPositions({ Vector3(-1, 1,0), Vector3(-1,-1,0) , Vector3(1,-1,0) , Vector3(1,1,0) });
+	hdrQuad->SetVertexTextureCoords({ Vector2(0, 1), Vector2(0,0) , Vector2(1,0) , Vector2(1,1) });
+	hdrQuad->SetVertexIndices({ 0,1,2,2,3,0 });
+	hdrQuad->UploadToGPU();
+
  	//start setting up framebuffers for post processing:
 	//first generate the textures to store the rendered scene:
 	glGenTextures(1, &hdrTex); //first, colour attachment
-	glBindTexture(GL_TEXTURE_2D, hdrTex); 
-	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE); 
-	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE); 
-	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR); 
-	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);  
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, windowSize.x, windowSize.y, 0, GL_RGBA, GL_FLOAT, NULL); //Floating point texture for HDR.  
+	glBindTexture(GL_TEXTURE_2D, hdrTex);
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, windowSize.x, windowSize.y, 0, GL_RGBA, GL_FLOAT, NULL); //Floating point texture for HDR.
 
 	glGenTextures(1, &hdrDepthTex); //then, depth-stencil attachment
 	glBindTexture(GL_TEXTURE_2D, hdrDepthTex);
-	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);  
-	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE); 
-	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR); 
-	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR); 
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH24_STENCIL8, windowSize.x, windowSize.y, 0, GL_DEPTH_STENCIL, GL_UNSIGNED_INT_24_8, NULL); 
-	
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH24_STENCIL8, windowSize.x, windowSize.y, 0, GL_DEPTH_STENCIL, GL_UNSIGNED_INT_24_8, NULL);
+
 	glGenFramebuffers(1, &hdrFBO);
 	glBindFramebuffer(GL_FRAMEBUFFER, hdrFBO);
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, hdrTex, 0); //attach textures to FBO attachments
-	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, hdrDepthTex, 0); 
-	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_STENCIL_ATTACHMENT, GL_TEXTURE_2D, hdrDepthTex, 0); 
-	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE || !hdrTex || !hdrDepthTex) { 
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, hdrDepthTex, 0);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_STENCIL_ATTACHMENT, GL_TEXTURE_2D, hdrDepthTex, 0);
+	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE || !hdrTex || !hdrDepthTex) {
 		return;
 	}
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -191,14 +191,14 @@ void GameTechRenderer::RenderFrame() {
 	glDisable(GL_DEPTH_TEST);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	NewRenderLines();
-	NewRenderTextures(); 
+	NewRenderTextures();
 	NewRenderText();
 	glDisable(GL_BLEND);
 	glEnable(GL_DEPTH_TEST);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-	RenderCrosshair(); //This line Ameya added for crosshair 
+	RenderCrosshair(); //This line Ameya added for crosshair
 	if (hdrOn) {
-		glBindFramebuffer(GL_FRAMEBUFFER, 0); //unbind hdrFBO   
+		glBindFramebuffer(GL_FRAMEBUFFER, 0); //unbind hdrFBO
 		glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 		glDisable(GL_CULL_FACE);
 		glDisable(GL_BLEND);
@@ -341,17 +341,17 @@ void GameTechRenderer::RenderCamera() {
 	glBindTexture(GL_TEXTURE_2D, shadowTex);
 
 	for (const auto&i : activeObjects) {
-		if ((*i).GetDefaultTexture()) { 
+		if ((*i).GetDefaultTexture()) {
 			BindTextureToShader(*(OGLTexture*)(*i).GetDefaultTexture(), "mainTex", 0);
 			//figure out scale of object:
-			float multiplier = (*i).GetTexScaleMultiplier();   
+			float multiplier = (*i).GetTexScaleMultiplier();
 			float scaleX = (*i).getParent()->getRenderScale().x*multiplier;
 			float scaleY = (*i).getParent()->getRenderScale().y*multiplier;
-			float scaleZ = (*i).getParent()->getRenderScale().z*multiplier; 
+			float scaleZ = (*i).getParent()->getRenderScale().z*multiplier;
 			glUniform1f(glGetUniformLocation(sceneShader->GetProgramID(), "texScaleX"), scaleX);
 			glUniform1f(glGetUniformLocation(sceneShader->GetProgramID(), "texScaleY"), scaleY);
 			glUniform1f(glGetUniformLocation(sceneShader->GetProgramID(), "texScaleZ"), scaleZ);
-			
+
 		}
 
 		//normal map capabilities added:
@@ -377,7 +377,7 @@ void GameTechRenderer::RenderCamera() {
 		glUniform1i(hasFlatLocation, i->GetIsFlat());
 		glUniform1i(hasNormalLocation, i->GetHasNormal());
 		glUniform1i(texRepeatingLocation, i->GetTexRepeating());
-	
+
 		BindMesh((OGLMesh&)*(*i).GetMesh());
 		size_t layerCount = (*i).GetMesh()->GetSubMeshCount();
 		for (size_t i = 0; i < layerCount; ++i) {
@@ -686,11 +686,11 @@ void GameTechRenderer::RenderQuad() {
 		glBindVertexArray(decalQuadVAO);
 		glBindBuffer(GL_ARRAY_BUFFER, decalQuadVBO);
 		glBufferData(GL_ARRAY_BUFFER, sizeof(quadVertices), quadVertices, GL_STATIC_DRAW);
-		
+
 		// Set up position attribute
 		glEnableVertexAttribArray(0);
 		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
-		
+
 		// Set up texture coordinate attribute
 		glEnableVertexAttribArray(1);
 		glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
@@ -752,7 +752,7 @@ void GameTechRenderer::RenderDecals() {
 			std::cout << "Right and newUp are not perpendicular: " << dotrightUp << std::endl;
 		}
 
-		Matrix4 rotationMatrix = Matrix::RotationMatrixFromAxes(right, newUp, decalNormal);
+		Matrix4 rotationMatrix = Matrix::RotationFromNormal(decal.normal);
 
 		Matrix4 modelMatrix = Matrix::Translation(decal.position) *
 							  rotationMatrix *
@@ -773,7 +773,7 @@ void GameTechRenderer::RenderDecals() {
 
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, ((OGLTexture*)decal.texture.get())->GetObjectID());
-		
+
 		// RenderQuad() renders the decal at the specific hit location to the decalFBO
 		RenderQuad();
 	}
@@ -784,6 +784,6 @@ void GameTechRenderer::RenderDecals() {
 	glBindTexture(GL_TEXTURE_2D, decalSystem.GetDecalTexture());
 
 	glUniform1i(decalTextureLocation, 0);
-	
+
 	glDisable(GL_BLEND);
 }
