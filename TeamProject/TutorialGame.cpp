@@ -55,10 +55,12 @@ TutorialGame::~TutorialGame()	{
 	audioEngine.Shutdown();
 
 	delete playerController;
+
+	// FIXME: Network on PS5
 #ifndef __PROSPERO__
 	if (server != nullptr) delete server;
 	if (client != nullptr) delete client;
-#endif
+#endif // !__PROSPERO__
 }
 
 static bool BulletRaycast(btDynamicsWorld* world, const btVector3& start, const btVector3& end, btCollisionWorld::ClosestRayResultCallback& resultCallback) {
@@ -361,6 +363,7 @@ void TutorialGame::InitWorld() {
 }
 
 void TutorialGame::InitNetwork(bool host) {
+	// FIXME
 #ifndef __PROSPERO__
 	ENetAddress clientAddress;
 	client = new Network(&clientAddress, 1);
@@ -377,10 +380,11 @@ void TutorialGame::InitNetwork(bool host) {
 
 
 void TutorialGame::ConnectToServer(ENetAddress& address) {
+	// FIXME
 #ifndef __PROSPERO__
 	if (client == nullptr) return;
 	client->ConnectTo(&address);
-#endif
+#endif // !__PROSPERO__
 }
 
 
