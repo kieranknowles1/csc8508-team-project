@@ -154,11 +154,10 @@ int main(int argc, char** argv) {
 	window->ShowOSPointer(false);
 	window->LockMouseToWindow(true);
 
-	auto world = std::make_unique<GameWorld>();
-	auto renderer = std::make_unique<GameTechRenderer>(world.get());
+	auto renderer = std::make_unique<GameTechRenderer>();
 	auto controller = std::make_unique<KeyboardMouseController>(*window->GetKeyboard(), *window->GetMouse());
 
-	auto game = std::make_unique<TutorialGame>(renderer.get(), world.get(), controller.get());
+	auto game = std::make_unique<TutorialGame>(renderer.get(), controller.get());
 	// Clear delta time to exclude start up time
 	window->GetTimer().GetTimeDeltaSeconds();
 
