@@ -122,10 +122,14 @@ namespace NCL::CSC8503 {
 			return nullptr;
 		}
 
+		void setDeleted() { deleted = true; }
+		bool isDeleted() { return deleted; }
 	protected:
 		PhysicsObject*		physicsObject;
 		RenderObject*		renderObject;
 		NetworkObject*		networkObject;
+
+		bool deleted = false;
 
 		bool		isActive;
 		bool paintball = false;

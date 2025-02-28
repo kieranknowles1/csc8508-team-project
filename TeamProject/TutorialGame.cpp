@@ -246,11 +246,21 @@ void TutorialGame::CheckCollisions()
 }
 
 void TutorialGame::clearGraveyard() {
-	for (auto obj : objectGraveyard) {
+	for (auto obj : earlyGraveyard) {
+		// Prevents physics, OnCollisionExit will trigger next frame
 		bulletWorld->removeRigidBody(obj->GetPhysicsObject()->GetRigidBody());
-		world->RemoveGameObject(obj); // Also deletes it
+		// Prevents OnUpdate and render
+		world->RemoveGameObject(obj);
 	}
-	objectGraveyard.clear();
+	for (auto obj : lateGraveyard) {
+		// References should have been cleaned up by now
+		// May not be strictly necessary to delay this, but it's
+		// not worth the risk for a micro-optimization
+		delete obj;
+	}
+	// Move earlyGraveyard to lateGraveyard, clear lateGraveyard
+	lateGraveyard.clear();
+	std::swap(earlyGraveyard, lateGraveyard);
 }
 
 void TutorialGame::DestroyBullet() {
