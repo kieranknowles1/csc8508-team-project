@@ -52,8 +52,17 @@ namespace NCL {
 			// Remove an object at the end of this frame. Use during update to avoid removing
 			// from containers while iterating
 			// It is the caller's responsibility to ensure there are no dangling references from other objects
+			//
+			// No-op if called multiple times on the same object
+			//
+			// Deletion process:
+			// - delayedRemoveObject - adds to graveyard and sets `deleted` flag
+			// - deleted flag - suppresses render & updates, instructs objects to remove their references
+			// - clearGraveyard - after 2 frames in the graveyard, to ensure everything has had at least 1 update call, delete the object for good
 			void delayedRemoveObject(GameObject* obj) {
-				objectGraveyard.push_back(obj);
+				if (obj->isDeleted()) return;
+				obj->setDeleted();
+				earlyGraveyard.push_back(obj);
 			}
 
 			TutorialGame(GameTechRendererInterface* renderer, GameWorld* world, Controller* controller);
@@ -77,9 +86,9 @@ namespace NCL {
 
 			/**
 			 * @brief Connect to a host game at the given address.
-			 * 
+			 *
 			 * Connection resolution is handled by packet response.
-			 * 
+			 *
 			 * @param address ENetAddress of the servers location.
 			 */
 			void ConnectToServer(ENetAddress& address);
@@ -103,7 +112,8 @@ namespace NCL {
 
 			GameTechRendererInterface* renderer;
 			GameWorld* world;
-			std::vector<GameObject*> objectGraveyard;
+			std::vector<GameObject*> earlyGraveyard; // Added this frame
+			std::vector<GameObject*> lateGraveyard; // Added previous frame
 			void clearGraveyard();
 
 			Controller* controller;
