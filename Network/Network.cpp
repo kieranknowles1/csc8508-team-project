@@ -122,6 +122,7 @@ void Network::Tick(float dt) {
 			switch (event.type) {
 			case ENET_EVENT_TYPE_CONNECT:
 				if (!ConnectPeer()) enet_peer_disconnect(event.peer, 0);
+				else if (m_connectCallback != nullptr) m_connectCallback(event.peer);
 				break;
 			case ENET_EVENT_TYPE_DISCONNECT:
 				DisconnectPeer();

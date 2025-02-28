@@ -4,6 +4,7 @@
 #include <array>
 #include <thread>
 #include <mutex>
+#include <functional>
 
 #include <./enet/enet.h>
 
@@ -96,6 +97,15 @@ public:
 	void Send(std::shared_ptr<Packet::Packet> packet);
 
 	/**
+	 * @brief Assign which function to call upon receiving a connect packet.
+	 * 
+	 * Passes ENetPeer* incase the callback function requires it.
+	 * 
+	 * @param callback The function to call.
+	 */
+	inline void SetConnectCallback(std::function<void(ENetPeer*)> callback) { m_connectCallback = callback; }
+
+	/**
 	 * @brief Fetch a packet from the buffer.
 	 * 
 	 * Fetch from the buffer. The buffer is updated every tick. Is threadsafe.
@@ -169,4 +179,5 @@ private:
 	int m_maxConnections;
 
 	ENetHost* m_host = nullptr;
+	std::function<void(ENetPeer*)> m_connectCallback;
 };
