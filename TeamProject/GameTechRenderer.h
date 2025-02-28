@@ -22,11 +22,31 @@ namespace NCL {
 			: public OGLRenderer
 			, public GameTechRendererInterface {
 		public:
+
+			struct UIElement {
+				Vector2 position;
+				Vector2 size;
+				Vector4 color;
+				//GLuint* texture;
+				OGLTexture* texture;
+
+				Vector2 GetPosition() { return position; }
+				Vector2 GetSize() { return size; }
+				Vector4 GetColor() { return color; }
+				OGLTexture* GetTexture() { return texture; }
+			};
+
+
 			GameTechRenderer(GameWorld* world);
 			~GameTechRenderer();
 
+			//void RenderFrame()	override;
+			
+			//Made AddUIElement() public so the pushdown states can use them, is this a problem?
+
 			Mesh* LoadMesh(const std::string& name) override;
 			Texture* LoadTexture(const std::string& name) override;
+			void AddUIElement(Vector2 position, Vector2 size, Vector4 color, OGLTexture* texture = nullptr);
 
 		protected:
 			void NewRenderLines();
@@ -43,7 +63,9 @@ namespace NCL {
 			void RenderCamera(); 
 			void RenderSkybox();
 			void InitCrosshair(); //InitCrosshair and RenderCrosshair Ameya added for crosshair
-			void RenderCrosshair();
+			//void AddUIElement(Vector2 position, Vector2 size, Vector4 color, OGLTexture* texture = nullptr);
+			void InitUIQuad();
+			void RenderUI();
 
 			void LoadSkybox();
 
@@ -52,17 +74,20 @@ namespace NCL {
 
 			std::vector<const RenderObject*> activeObjects;
 
+			std::vector<UIElement> uiElements;
+
+			std::unique_ptr<OGLShader> uiShader;
 			std::unique_ptr<OGLShader> sceneShader;
 			std::unique_ptr<OGLShader> debugShader;
 			std::unique_ptr<OGLShader> skyboxShader;
 			std::unique_ptr<OGLMesh> skyboxMesh;
 			std::unique_ptr<OGLMesh> debugTexMesh;
+			std::unique_ptr<OGLMesh> uiQuadMesh;
 			GLuint		skyboxTex;
 
 			GLuint crosshairVAO;
 			GLuint crosshairVBO;
 			GLuint crosshairEBO;
-			std::unique_ptr<OGLShader> crosshairShader; //This line Ameya added for crosshair
 
 			//shadow mapping things
 			std::unique_ptr<OGLShader> shadowShader;
