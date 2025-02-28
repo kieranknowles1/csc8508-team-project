@@ -717,7 +717,6 @@ void GameTechRenderer::RenderDecals() {
 	glUniform1i(decalTextureLocation, 0);
 
 	GLuint alphaFadeLocation = glGetUniformLocation(decalShader->GetProgramID(), "alphaFade");
-	glUniform1f(alphaFadeLocation, decalSystem.GetAlphaFade());
 
 	GLuint modelMatrixLocation = glGetUniformLocation(decalShader->GetProgramID(), "modelMatrix");
 	GLuint viewProjMatrixLocation = glGetUniformLocation(decalShader->GetProgramID(), "viewProjMatrix");
@@ -768,6 +767,7 @@ void GameTechRenderer::RenderDecals() {
 		Matrix4 projMatrix = gameWorld->GetMainCamera().BuildProjectionMatrix(hostWindow.GetScreenAspect());
 		Matrix4 viewProjMatrix = projMatrix * viewMatrix;
 
+		glUniform1f(alphaFadeLocation, decal.alphaFade);
 		glUniformMatrix4fv(modelMatrixLocation, 1, false, (float*)&modelMatrix);
 		glUniformMatrix4fv(viewProjMatrixLocation, 1, false, (float*)&viewProjMatrix);
 

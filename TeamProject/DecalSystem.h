@@ -18,6 +18,7 @@ namespace NCL {
 				Vector3 normal;
 				float radius;
 				std::shared_ptr<Rendering::Texture> texture;
+				float alphaFade;
 			};
 
 			DecalSystem(int width, int height);
@@ -28,7 +29,6 @@ namespace NCL {
 
 			GLuint GetDecalTexture() const { return decalTexture; }
 			GLuint GetDecalFBO() const { return decalFBO; }
-			float GetAlphaFade() const { return alphaFade; }
 
 			const std::vector<Decal>& GetDecals() const { return decals; }
 
@@ -40,7 +40,6 @@ namespace NCL {
 			int textureHeight;
 
 			float decayRate;
-			float alphaFade;
 
 			std::vector<Decal> decals;
 		};

@@ -6,7 +6,7 @@ using namespace NCL::Rendering;
 using namespace NCL::CSC8503;
 
 DecalSystem::DecalSystem(int width, int height) 
-	: decayRate(0.1f), textureWidth(width), textureHeight(height), alphaFade(1.0f)
+	: decayRate(0.1f), textureWidth(width), textureHeight(height)
 {
 	// Create an empty texture to store the applied decals
 	glGenTextures(1, &decalTexture);
@@ -39,13 +39,23 @@ DecalSystem::~DecalSystem()
 void DecalSystem::ApplyDecal(Decal& decal)
 {
 	// Add a new decal to the list
-	std::cout << "Decal Texture" << decal.texture << std::endl;
+	decal.alphaFade = 1.0f;
 	decals.emplace_back(decal);
-	alphaFade = 1.0f; // Reset alpha fade when adding a new decal
 }
 
 void DecalSystem::Update(float dt)
 {
-	// Reduce the alpha fade gradually over time
-	alphaFade = std::max(alphaFade - (decayRate * dt), 0.0f);
+	for (auto it = decals.begin(); it != decals.end();)
+	{
+		// Fade out the decal
+		it->alphaFade = std::max(it->alphaFade - decayRate * dt, 0.0f); // clamp alphaFade to 0.0f if it goes below 0.0f
+		
+		// Remove the decal if it has faded out
+		if (it->alphaFade <= 0.0f) {
+			it = decals.erase(it);
+		}
+		else {
+			++it;
+		}
+	}
 }

@@ -111,6 +111,9 @@ void TutorialGame::UpdateGame(float dt) {
 	if (showProfiling) {
 		profiler.printTimes();
 	}
+
+	// Fade decal after sometime - @Kieran: Didn't forget to call the Update function this time :)
+	renderer->GetDecalSystem().Update(dt);
 }
 
 void TutorialGame::UpdatePlayer(float dt) {
