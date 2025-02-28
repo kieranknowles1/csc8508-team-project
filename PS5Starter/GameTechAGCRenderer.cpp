@@ -39,9 +39,8 @@ GameTechAGCRenderer::GameTechAGCRenderer() : AGCRenderer(*Window::GetWindow()), 
 
 	skyboxTexture = (AGCTexture*)LoadTexture("Skybox.dds");
 
-	quadMesh = new AGCMesh(); 
-	CreateQuad(quadMesh);
-	quadMesh->UploadToGPU(this);
+	unitQuad = Mesh::Quad<AGCMesh>(1.0f);
+	unitQuad->UploadToGPU(this);
 
 	skinningCompute = new AGCShader("Skinning_c.ags", allocator);
 	gammaCompute	= new AGCShader("Gamma_c.ags", allocator);
@@ -275,8 +274,8 @@ void GameTechAGCRenderer::SkyboxPass() {
 		.setSamplers(0, 1, &defaultSampler)
 		.setTextures(1, 1, skyboxTexture->GetAGCPointer());
 
-	quadMesh->BindVertexBuffers(frameContext->m_bdr.getStage(sce::Agc::ShaderType::kGs));
-	DrawBoundMesh(*frameContext, *quadMesh);
+	unitQuad->BindVertexBuffers(frameContext->m_bdr.getStage(sce::Agc::ShaderType::kGs));
+	DrawBoundMesh(*frameContext, *unitQuad);
 }
 
 void GameTechAGCRenderer::ShadowmapPass() {

@@ -64,6 +64,17 @@ namespace NCL::Rendering {
 
 	class Mesh	{
 	public:
+		template <typename T>
+		static std::unique_ptr<T> Quad(float scale) {
+			auto mesh = std::make_unique<T>();
+			mesh->SetVertexPositions(
+				{ Vector3(-scale, scale,0), Vector3(-scale,-scale,0) , Vector3(scale,-scale,0) , Vector3(scale,scale,0) }
+			);
+			mesh->SetVertexTextureCoords({ Vector2(0, 1), Vector2(0,0) , Vector2(1,0) , Vector2(1,1) });
+			mesh->SetVertexIndices({ 0,1,2,2,3,0 });
+			return mesh;
+		}
+
 		Mesh();
 		virtual ~Mesh();
 

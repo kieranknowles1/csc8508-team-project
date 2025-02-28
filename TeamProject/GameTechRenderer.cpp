@@ -71,27 +71,16 @@ GameTechRenderer::GameTechRenderer() : OGLRenderer(*Window::GetWindow()), GameTe
 
 	Debug::CreateDebugFont("PressStart2P.fnt", *LoadTexture("PressStart2P.png"));
 
-	//Debug quad for drawing tex
-	debugTexMesh = std::make_unique<OGLMesh>();
-	debugTexMesh->SetVertexPositions({ Vector3(-1, 1,0), Vector3(-1,-1,0) , Vector3(1,-1,0) , Vector3(1,1,0) });
-	debugTexMesh->SetVertexTextureCoords({ Vector2(0, 1), Vector2(0,0) , Vector2(1,0) , Vector2(1,1) });
-	debugTexMesh->SetVertexIndices({ 0,1,2,2,3,0 });
-	debugTexMesh->UploadToGPU();
-
-	InitUIQuad();
-
+	unitQuad = Mesh::Quad<OGLMesh>(1.0f);
+	unitQuad->UploadToGPU();
+	halfUnitQuad = Mesh::Quad<OGLMesh>(0.5f);
+	halfUnitQuad->UploadToGPU();
 
 	SetDebugStringBufferSizes(10000);
 	SetDebugLineBufferSizes(1000);
 
 	//Post processing additions:
 	hdrShader = new OGLShader("texturevert.glsl", "hdrfrag.glsl");
-
-	hdrQuad = new OGLMesh();
-	hdrQuad->SetVertexPositions({ Vector3(-1, 1,0), Vector3(-1,-1,0) , Vector3(1,-1,0) , Vector3(1,1,0) });
-	hdrQuad->SetVertexTextureCoords({ Vector2(0, 1), Vector2(0,0) , Vector2(1,0) , Vector2(1,1) });
-	hdrQuad->SetVertexIndices({ 0,1,2,2,3,0 });
-	hdrQuad->UploadToGPU();
 
 	vignetteShader = new OGLShader("texturevert.glsl", "vignettefrag.glsl");
 
@@ -162,7 +151,6 @@ GameTechRenderer::~GameTechRenderer() {
 	glDeleteFramebuffers(1, &hdrFBO);
 	glDeleteTextures(1, &BTex);
 	glDeleteFramebuffers(1, &BFBO);
-	delete hdrQuad;
 	delete hdrShader;
 	delete vignetteShader;
 }
@@ -499,7 +487,7 @@ void GameTechRenderer::NewRenderTextures() {
 
 	GLuint colourSlot = glGetUniformLocation(debugShader->GetProgramID(), "texColour");
 
-	BindMesh(*debugTexMesh);
+	BindMesh(*unitQuad);
 
 	glActiveTexture(GL_TEXTURE0);
 
@@ -597,38 +585,6 @@ void GameTechRenderer::SetDebugLineBufferSizes(size_t newVertCount) {
 	}
 }
 
-void GameTechRenderer::InitUIQuad() {
-	uiQuadMesh = std::make_unique<OGLMesh>();
-
-	// Define a full-screen quad in NDC (-1 to 1)
-	std::vector<Vector3> positions = {
-		Vector3(-0.5f,  0.5f, 0.0f), // Top Left
-		Vector3(-0.5f, -0.5f, 0.0f), // Bottom Left
-		Vector3(0.5f, -0.5f, 0.0f), // Bottom Right
-		Vector3(0.5f,  0.5f, 0.0f)  // Top Right
-	};
-
-	std::vector<Vector2> texCoords = {
-		Vector2(0.0f, 1.0f), // Top Left
-		Vector2(0.0f, 0.0f), // Bottom Left
-		Vector2(1.0f, 0.0f), // Bottom Right
-		Vector2(1.0f, 1.0f)  // Top Right
-	};
-
-	std::vector<unsigned int> indices = {
-		0, 1, 2,  // First Triangle
-		2, 3, 0   // Second Triangle
-	};
-
-	// Assign to mesh
-	uiQuadMesh->SetVertexPositions(positions);
-	uiQuadMesh->SetVertexTextureCoords(texCoords);
-	uiQuadMesh->SetVertexIndices(indices);
-
-	uiQuadMesh->SetPrimitiveType(GeometryPrimitive::Triangles);
-	uiQuadMesh->UploadToGPU();
-}
-
 void GameTechRenderer::RenderUI() {
 	UseShader(*uiShader);
 
@@ -665,7 +621,7 @@ void GameTechRenderer::RenderUI() {
 		}
 
 		// Render UI quad
-		BindMesh(*uiQuadMesh);
+		BindMesh(*halfUnitQuad);
 		DrawBoundMesh();
 	}
 
@@ -783,7 +739,7 @@ void GameTechRenderer::RenderPostProcessing() {
 		glUniform3fv(glGetUniformLocation(vignetteShader->GetProgramID(), "effectColour"), 1, (float*)&VignetteColour);
 		glUniform1f(glGetUniformLocation(vignetteShader->GetProgramID(), "intensity"), vignetteIntensity);
 		glUniform1f(glGetUniformLocation(vignetteShader->GetProgramID(), "time"), vignettePulse);
-		BindMesh(*hdrQuad); //simply a quad
+		BindMesh(*unitQuad); //simply a quad
 		DrawBoundMesh(); //finished rendering into BTex now, ready to unbind to draw quad straight to screen next:
 	}
 	if (hdrOn) {
@@ -797,7 +753,7 @@ void GameTechRenderer::RenderPostProcessing() {
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, tex);//BTex would hold vignetted scene. (tonemapping should be done pretty much last)
 		glUniform1i(glGetUniformLocation(hdrShader->GetProgramID(), "hdrTex"), 0);
-		BindMesh(*hdrQuad);
+		BindMesh(*unitQuad);
 		DrawBoundMesh();
 	}
 

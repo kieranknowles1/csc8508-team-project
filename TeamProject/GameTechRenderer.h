@@ -40,7 +40,6 @@ namespace NCL {
 
 			void RenderDecals();
 			void RenderQuad();
-			void InitUIQuad();
 			void RenderUI();
 
 			void LoadSkybox();
@@ -53,8 +52,11 @@ namespace NCL {
 			std::unique_ptr<OGLShader> debugShader;
 			std::unique_ptr<OGLShader> skyboxShader;
 			std::unique_ptr<OGLMesh> skyboxMesh;
-			std::unique_ptr<OGLMesh> debugTexMesh;
-			std::unique_ptr<OGLMesh> uiQuadMesh;
+
+			// 1.0f size quad, for HDR
+			std::unique_ptr<OGLMesh> unitQuad;
+			// 0.5f size quad, for sprites
+			std::unique_ptr<OGLMesh> halfUnitQuad;
 			GLuint		skyboxTex;
 
 			GLuint crosshairVAO;
@@ -99,7 +101,6 @@ namespace NCL {
 			GLuint hdrTex;
 			GLuint hdrFBO;
 			GLuint hdrDepthTex;
-			OGLMesh* hdrQuad;
 			OGLShader* hdrShader;
 			GLuint BTex;
 			GLuint BFBO;

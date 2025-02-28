@@ -121,7 +121,7 @@ namespace NCL {
 			FrameData* currentFrame;
 			int currentFrameIndex;
 
-			NCL::PS5::AGCMesh* quadMesh;
+			std::unique_ptr<PS5::AGCMesh> unitQuad;
 
 			sce::Agc::Core::Texture*	bindlessTextures;
 			sce::Agc::Core::Buffer*		bindlessBuffers;
