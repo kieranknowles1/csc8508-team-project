@@ -26,7 +26,21 @@ set(SOURCES
 	AudioEngine.cpp
     Config.h
     Config.cpp
+    PushdownState.h
+    PushdownMachine.cpp
+    PushdownMachine.h
+    MainMenuState.h
+    PlayingState.h
+    PausedState.h
+    Colors.h
     Multiplayer/GamePackets.hpp
+    Multiplayer/GamePacketHandlers.hpp
+    Multiplayer/GamePacketHandlers.cpp
+    Multiplayer/Lobby.hpp
+    Multiplayer/Lobby.cpp
+    Multiplayer/User.hpp
+	Wanderer.h
+	Wanderer.cpp
 )
 
 set(ASSET_ROOT "${CMAKE_SOURCE_DIR}/Assets")

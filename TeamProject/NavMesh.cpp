@@ -1,3 +1,4 @@
+#include <random>
 #include "NavMesh.h"
 #include "stdio.h"
 
@@ -173,23 +174,23 @@ std::vector<btVector3> NavMesh::FindPath(const btVector3& start, const btVector3
         }
     }
 
-    // Reconstruct path
-    std::vector<btVector3> path;
+    // Reconstruct triangle path
+    std::vector<int> trianglePath;
     int current = endTri;
     while (cameFrom.count(current)) {
-        const Triangle& tri = triangles[current];
-
-        // Add triangle center to path
-        path.push_back((vertices[tri.v1] + vertices[tri.v2] + vertices[tri.v3]) / 3);
-
+        trianglePath.push_back(current);
         current = cameFrom[current];
     }
-    path.insert(path.begin(), end);
-    path.push_back(start);  // Add start point
-    std::reverse(path.begin(), path.end());
+    trianglePath.push_back(startTri);
+    std::reverse(trianglePath.begin(), trianglePath.end());
 
-    return path;
+    // Extract portals (shared edges)
+    std::vector<std::pair<btVector3, btVector3>> portals = ExtractPortals(trianglePath);
+
+    // Apply Funnel Algorithm to optimize the path
+    return ApplyFunnelAlgorithm(start, end, portals);
 }
+
 
 void NavMesh::DebugDrawPath(const std::vector<btVector3>& path) {
     if (!world || !world->getDebugDrawer()) {
@@ -202,4 +203,127 @@ void NavMesh::DebugDrawPath(const std::vector<btVector3>& path) {
     for (size_t i = 0; i < path.size() - 1; ++i) {
         debugDrawer->drawLine(path[i], path[i + 1], color);
     }
+}
+
+btVector3 NavMesh::GetRandomPointInNavMesh() {
+    if (triangles.empty()) {
+        std::cerr << "Error: No triangles in NavMesh!" << std::endl;
+        return btVector3(0, 0, 0);
+    }
+
+    // Step 1: Pick a random triangle
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_int_distribution<> triangleDist(0, triangles.size() - 1);
+    int randTriangleIndex = triangleDist(gen);
+
+    const Triangle& tri = triangles[randTriangleIndex];
+
+    const btVector3& A = vertices[tri.v1];
+    const btVector3& B = vertices[tri.v2];
+    const btVector3& C = vertices[tri.v3];
+
+    // Step 2: Generate random Barycentric coordinates
+    std::uniform_real_distribution<float> barycentricDist(0.0f, 1.0f);
+    float r1 = barycentricDist(gen);
+    float r2 = barycentricDist(gen);
+
+    // Ensure point remains inside triangle
+    if (r1 + r2 > 1.0f) {
+        r1 = 1.0f - r1;
+        r2 = 1.0f - r2;
+    }
+
+    // Compute final random point using Barycentric interpolation
+    btVector3 randomPoint = A + r1 * (B - A) + r2 * (C - A);
+
+    return randomPoint;
+}
+
+std::vector<std::pair<btVector3, btVector3>> NavMesh::ExtractPortals(const std::vector<int>& trianglePath) {
+    std::vector<std::pair<btVector3, btVector3>> portals;
+
+    for (size_t i = 0; i < trianglePath.size() - 1; ++i) {
+        const Triangle& currentTri = triangles[trianglePath[i]];
+        const Triangle& nextTri = triangles[trianglePath[i + 1]];
+
+        // Find the shared edge between the two triangles
+        std::vector<btVector3> sharedVertices;
+        btVector3 verticesCurrent[3] = { vertices[currentTri.v1], vertices[currentTri.v2], vertices[currentTri.v3] };
+        btVector3 verticesNext[3] = { vertices[nextTri.v1], vertices[nextTri.v2], vertices[nextTri.v3] };
+
+        for (int a = 0; a < 3; ++a) {
+            for (int b = 0; b < 3; ++b) {
+                if (verticesCurrent[a] == verticesNext[b]) {
+                    sharedVertices.push_back(verticesCurrent[a]);
+                }
+            }
+        }
+
+        if (sharedVertices.size() == 2) { // A valid edge should have exactly 2 shared vertices
+            portals.push_back({ sharedVertices[0], sharedVertices[1] });
+        }
+    }
+    return portals;
+}
+
+bool NavMesh::IsLeftOf(const btVector3& a, const btVector3& b, const btVector3& c) {
+    return ((b.x() - a.x()) * (c.z() - a.z()) - (b.z() - a.z()) * (c.x() - a.x())) > 0;
+}
+
+std::vector<btVector3> NavMesh::ApplyFunnelAlgorithm(const btVector3& start, const btVector3& end,
+    const std::vector<std::pair<btVector3, btVector3>>& portals) {
+    std::vector<btVector3> smoothPath;
+    smoothPath.push_back(start);  // Start at the actual starting position
+
+    if (portals.empty()) {
+        smoothPath.push_back(end);
+        return smoothPath;
+    }
+
+    btVector3 left = portals[0].first;
+    btVector3 right = portals[0].second;
+    size_t apexIndex = 0, leftIndex = 0, rightIndex = 0;
+
+    btVector3 apex = start;
+
+    for (size_t i = 1; i < portals.size(); ++i) {
+        btVector3 newLeft = portals[i].first;
+        btVector3 newRight = portals[i].second;
+
+        // Check if the left edge should be updated
+        if (IsLeftOf(apex, right, newLeft)) {
+            if (IsLeftOf(apex, left, newLeft)) {
+                smoothPath.push_back(left);
+                apex = left;
+                apexIndex = leftIndex;
+                right = apex;
+                left = newLeft;
+                leftIndex = i;
+                rightIndex = i;
+                continue;
+            }
+            left = newLeft;
+            leftIndex = i;
+        }
+
+        // Check if the right edge should be updated
+        if (!IsLeftOf(apex, left, newRight)) {
+            if (!IsLeftOf(apex, right, newRight)) {
+                smoothPath.push_back(right);
+                apex = right;
+                apexIndex = rightIndex;
+                left = apex;
+                right = newRight;
+                leftIndex = i;
+                rightIndex = i;
+                continue;
+            }
+            right = newRight;
+            rightIndex = i;
+        }
+    }
+
+    smoothPath.push_back(end);  // End at the actual end position
+    return smoothPath;
 }
