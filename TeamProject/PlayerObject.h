@@ -13,14 +13,12 @@
 
 using namespace NCL::CSC8503;
 
-
 enum class PlayerState {
 	DEAD,
 	ALIVE
 };
 
-
-// Paintball class derived from GameObject
+// Player class derived from GameObject
 class PlayerObject : public GameObject {
 public:
 	void OnCollisionEnter(const CollisionInfo& collisionInfo) override {
@@ -85,6 +83,12 @@ public:
 		}
 	}
 
+	void updateGravity(float dt) {
+		btVector3 movement = this->GetPhysicsObject()->GetRigidBody()->getLinearVelocity();
+		movement += upDirection * -(gravityScale * dt);
+		this->GetPhysicsObject()->GetRigidBody()->setLinearVelocity(movement);
+	}
+
 	char getType() {
 		return collisionType;
 	}
@@ -114,6 +118,8 @@ public:
 	inline PlayerState GetState() { return state; }
 
 private:
+	float gravityScale = 400.0f;
+
 	int collided = 0;
 	btVector3 upDirection;
 	btVector3 collisionNormal = btVector3(0, 1, 0);
