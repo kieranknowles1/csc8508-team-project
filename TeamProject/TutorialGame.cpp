@@ -15,13 +15,15 @@ using namespace CSC8503;
 
 TutorialGame* TutorialGame::instance = nullptr;
 
-TutorialGame::TutorialGame(GameTechRendererInterface* renderer, GameWorld* world, Controller* controller)
+TutorialGame::TutorialGame(GameTechRendererInterface* renderer, Controller* controller)
 	: renderer(renderer)
 	, controller(controller)
-	, world(world)
 {
 	assert(instance == nullptr && "TutorialGame must be unique");
 	instance = this;
+
+	world = std::make_unique<GameWorld>();
+	renderer->setCamera(&world->GetMainCamera());
 
 	/* Initializing the Bullet Physics World here as it should be done before Initialize the NCL framework's PhysicsSystem */
 	//InitBullet(); //bullet is initialised in initialiseAssets already
@@ -53,6 +55,9 @@ TutorialGame::~TutorialGame()	{
 	audioEngine.Shutdown();
 
 	delete playerController;
+
+	if (server != nullptr) delete server;
+	if (client != nullptr) delete client;
 }
 
 static bool BulletRaycast(btDynamicsWorld* world, const btVector3& start, const btVector3& end, btCollisionWorld::ClosestRayResultCallback& resultCallback) {
@@ -76,22 +81,12 @@ void TutorialGame::UpdateGame(float dt) {
 	if (testTurret) {
 		testTurret->Update(dt);
 	}
-	/*if (navMesh) {
-		navMesh->VisualiseNavMesh();
-
-		btVector3 startPoint(94, 0.5833334, 26);
-		btVector3 endPoint(68, 0.5833334, 34);
-
-		btIDebugDraw* debugDrawer = bulletWorld->getDebugDrawer();
-
-		// Draw vertical lines at start and end points
-		debugDrawer->drawLine(startPoint, startPoint + btVector3(0, 10, 0), btVector3(0,1,0));
-		debugDrawer->drawLine(endPoint, endPoint + btVector3(0, 10, 0), btVector3(0, 0, 1));
-
-		// Find path and draw it
-		std::vector<btVector3> path = navMesh->FindPath(startPoint, endPoint);
-		navMesh->DebugDrawPath(path);
-	}*/
+	if (navMesh && navMeshDebug) {
+		visualiseNavMesh();
+		if (wanderer) {
+			wanderer->Update(dt);
+		}
+	}
 
 	UpdateKeys();
 	world->UpdateWorld(dt);
@@ -106,6 +101,7 @@ void TutorialGame::UpdateGame(float dt) {
 	clearGraveyard();
 	profiler.startSection("Prepare Render");
 	bulletWorld->debugDrawWorld();
+	renderer->collectFrameObjects(world.get());
 
 	profiler.endFrame();
 	if (showProfiling) {
@@ -114,6 +110,9 @@ void TutorialGame::UpdateGame(float dt) {
 
 	// Fade decal after sometime - @Kieran: Didn't forget to call the Update function this time :)
 	renderer->GetDecalSystem().Update(dt);
+	//post processing time variable effect:
+	pulse += dt;
+	renderer->SetVignettePulse(pulse);
 }
 
 void TutorialGame::UpdatePlayer(float dt) {
@@ -133,7 +132,7 @@ void TutorialGame::UpdatePlayer(float dt) {
 		}
 	}
 	resourceManager->update(dt);
-	bulletWorld->setGravity(playerController->getUpDirection() * -30.0f);
+	player->updateGravity(dt);
 }
 
 void TutorialGame::UpdateKeys() {
@@ -167,10 +166,16 @@ void TutorialGame::UpdateKeys() {
 	if (controller->GetDigital(WorldPitchDown)) {
 			playerController->pitchDown();
 	}
+
 	if (Window::GetKeyboard()->KeyPressed(KeyCodes::F5)) {
 		bool toggleHDR = renderer->GetHDROn();
 		toggleHDR = !toggleHDR;
 		renderer->SetHDROn(toggleHDR);
+	}
+	if (Window::GetKeyboard()->KeyPressed(KeyCodes::F6)) {
+		bool toggleVignette = renderer->GetVignetteOn();
+		toggleVignette = !toggleVignette;
+		renderer->SetVignetteOn(toggleVignette);
 	}
 }
 
@@ -186,6 +191,23 @@ void TutorialGame::ThirdPersonControls() {
 	btVector3 cameraPosition = transformPlayer.getOrigin() + cameraOffset;
 	mainCamera->SetPosition(cameraPosition);
 	mainCamera->SetPitch(-15.0f);
+}
+
+void TutorialGame::visualiseNavMesh() {
+	navMesh->VisualiseNavMesh();
+
+	btVector3 startPoint(94, 0.5833334, 26);
+	btVector3 endPoint(68, 0.5833334, 34);
+
+	btIDebugDraw* debugDrawer = bulletWorld->getDebugDrawer();
+
+	// Draw vertical lines at start and end points
+	debugDrawer->drawLine(startPoint, startPoint + btVector3(0, 10, 0), btVector3(0, 1, 0));
+	debugDrawer->drawLine(endPoint, endPoint + btVector3(0, 10, 0), btVector3(0, 0, 1));
+
+	// Find path and draw it
+	std::vector<btVector3> path = navMesh->FindPath(startPoint, endPoint);
+	//navMesh->DebugDrawPath(path);
 }
 
 
@@ -229,11 +251,21 @@ void TutorialGame::CheckCollisions()
 }
 
 void TutorialGame::clearGraveyard() {
-	for (auto obj : objectGraveyard) {
+	for (auto obj : earlyGraveyard) {
+		// Prevents physics, OnCollisionExit will trigger next frame
 		bulletWorld->removeRigidBody(obj->GetPhysicsObject()->GetRigidBody());
-		world->RemoveGameObject(obj); // Also deletes it
+		// Prevents OnUpdate and render
+		world->RemoveGameObject(obj);
 	}
-	objectGraveyard.clear();
+	for (auto obj : lateGraveyard) {
+		// References should have been cleaned up by now
+		// May not be strictly necessary to delay this, but it's
+		// not worth the risk for a micro-optimization
+		delete obj;
+	}
+	// Move earlyGraveyard to lateGraveyard, clear lateGraveyard
+	lateGraveyard.clear();
+	std::swap(earlyGraveyard, lateGraveyard);
 }
 
 void TutorialGame::DestroyBullet() {
@@ -273,11 +305,15 @@ void TutorialGame::InitWorld() {
 	InitBullet();
 	audioEngine.Init();
 
-	navMesh = new NavMesh(bulletWorld);
-	navMesh->LoadFromFile("Assets/Meshes/NavMeshes/smalltest.navmesh");
+	navMeshDebug = false;
+	if (navMeshDebug) {
+		freeCam = true;
+		navMesh = new NavMesh(bulletWorld);
+		navMesh->LoadFromFile("Assets/Meshes/NavMeshes/smalltest.navmesh");
+	}
 
 	if (loadFromLevel) {
-		levelImporter = new LevelImporter(resourceManager.get(), world, bulletWorld);
+		levelImporter = new LevelImporter(resourceManager.get(), world.get(), bulletWorld);
 		levelImporter->LoadLevel(8);
 		InitPlayer();
 		return;
@@ -315,10 +351,32 @@ void TutorialGame::InitWorld() {
 	AddCapsuleToWorld(Vector3(70, 15, -20), 8.0f, 4.0f, 4.0f);
 	AddCapsuleToWorld(Vector3(-20, 15, 12), 6.0f, 5.0f, 8.0f);
 
-	AddTurretToWorld();
 	InitPlayer();
-
+	if (navMeshDebug) {
+		AddTurretToWorld();
+		AddWandererToWorld();
+	}
 }
+
+void TutorialGame::InitNetwork(bool host) {
+	ENetAddress clientAddress;
+	client = new Network(&clientAddress, 1);
+
+	if (host) {
+		ENetAddress serverAddress;
+		serverAddress.host = ENET_HOST_ANY;
+		serverAddress.port = DEFAULT_PORT;
+
+		server = new Network(&serverAddress, MAX_PLAYERS);
+	}
+}
+
+
+void TutorialGame::ConnectToServer(ENetAddress& address) {
+	if (client == nullptr) return;
+	client->ConnectTo(&address);
+}
+
 
 void TutorialGame::InitPlayer() {
 	if (loadFromLevel) {
@@ -363,6 +421,33 @@ Turret* TutorialGame::AddTurretToWorld() {
 	testTurret = turret;
 
 	return turret;
+}
+
+Wanderer* TutorialGame::AddWandererToWorld() {
+	Wanderer* wanderer = new Wanderer(player, navMesh);
+
+	float height = 4.0f;
+	float radius = 2.0f;
+
+	wanderer->setInitialPosition(navMesh->GetRandomPointInNavMesh());
+	wanderer->setRenderScale(btVector3(radius * 2, height, radius + 2));
+
+	btCollisionShape* shape = new btCapsuleShape(radius, height);
+
+	wanderer->SetRenderObject(new RenderObject(wanderer, resourceManager->getMeshes().get("Capsule.msh"), defaultTexture));
+
+	PhysicsObject* physicsObject = new PhysicsObject(wanderer);
+	physicsObject->InitBulletPhysics(bulletWorld, shape, 0);
+	wanderer->SetPhysicsObject(physicsObject);
+
+	wanderer->GetRenderObject()->SetColour(Vector4(1, 0, 0, 1));
+
+	wanderer->SetOffset();
+
+	world->AddGameObject(wanderer);
+
+	this->wanderer = wanderer;
+	return wanderer;
 }
 
 /* Adding an object to test the bullet physics */

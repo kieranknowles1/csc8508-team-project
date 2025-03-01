@@ -1,18 +1,18 @@
 #include <iostream>
 #include <chrono>
 
+#include <cstring>
+
 #include "Network.hpp"
 
 Network::Network(const ENetAddress* address, int maxConnections) : m_maxConnections(maxConnections) {
 	if (enet_initialize() != 0) {
-		std::cout << "enet failed\n";
 		SetErrored();
 		return;
 	}
 
 	m_host = enet_host_create(address, maxConnections, static_cast<int>(Channel::CHANNEL_COUNT), 0, 0);
 	if (m_host == nullptr) {
-		std::cout << "host creation failed.\n";
 		SetErrored();
 		return;
 	}
@@ -23,8 +23,9 @@ Network::Network(const ENetAddress* address, int maxConnections) : m_maxConnecti
 
 
 Network::~Network() {
-	Stop();
-	Close();
+	if (GetState() != NetworkState::CLOSED) {
+		Close();
+	}
 }
 
 
@@ -52,28 +53,35 @@ void Network::Stop() {
 void Network::Close() {
 	Stop();
 
-	for (int peer = 0; peer < m_host->peerCount; ++peer) {
-		enet_peer_disconnect(&(m_host->peers[peer]), 0);
-	}
-	m_connections = 0;
-
+	enet_host_destroy(m_host);
 	enet_deinitialize();
+	m_connections = 1;
+
+	std::lock_guard<std::mutex> lock(m_stateMut);
+	m_state = NetworkState::CLOSED;
 }
 
 
 void Network::ConnectTo(const ENetAddress* destination) {
-	enet_host_connect(m_host, destination, static_cast<int>(Channel::CHANNEL_COUNT), 0);
+	ENetPeer* peer = enet_host_connect(m_host, destination, static_cast<int>(Channel::CHANNEL_COUNT), 0);
 }
 
 
-void Network::Send(Packet::Packet packet) {
+void Network::Send(std::shared_ptr<Packet::Packet> packet) {
 	std::lock_guard<std::mutex> lock(m_sendMut);
-	m_sendBuffer.push_back(packet);
+	m_sendBuffer[m_numPackets++] = packet;
 }
 
 
-Packet::Packet Network::Fetch() {
-	return m_receiveBuffer.Pop();
+std::shared_ptr<Packet::Packet> Network::Fetch() {
+	std::shared_ptr<Packet::Packet> fetched;
+	do {
+		fetched = m_receiveBuffer.Pop();
+	} while (
+		fetched.get()->GetSequenceNumber() < m_lastMaxSequence
+		&& (fetched.get()->GetChannel() != static_cast<int>(Channel::RELIABLE) || fetched.get()->GetChannel() != static_cast<int>(Channel::UNSEQUENCED))
+	);
+	return fetched;
 }
 
 
@@ -91,7 +99,8 @@ void Network::Run() {
 		}
 
 		now = std::chrono::high_resolution_clock::now();
-		dt = std::chrono::duration_cast<std::chrono::seconds>(last - now);
+		dt = std::chrono::duration_cast<std::chrono::nanoseconds>(now - last);
+		last = now;
 
 		Tick(dt.count());
 	}
@@ -107,19 +116,19 @@ void Network::Tick(float dt) {
 		SendAll();
 
 		ENetEvent event;
-		while (enet_host_service(m_host, &event, 0) > 0) {
+		int x = enet_host_service(m_host, &event, 100);
+
+		while (enet_host_service(m_host, &event, 100) > 0) {
 			switch (event.type) {
 			case ENET_EVENT_TYPE_CONNECT:
 				if (!ConnectPeer()) enet_peer_disconnect(event.peer, 0);
-				std::cout << "Connection.\n";
+				else if (m_connectCallback != nullptr) m_connectCallback(event.peer);
 				break;
 			case ENET_EVENT_TYPE_DISCONNECT:
 				DisconnectPeer();
-				std::cout << "Disconnection.\n";
 				break;
 			case ENET_EVENT_TYPE_RECEIVE:
 				HandleIncomingPacket(event.packet);
-				std::cout << "Packet Received.\n";
 				break;
 			}
 			enet_packet_destroy(event.packet);
@@ -129,16 +138,14 @@ void Network::Tick(float dt) {
 
 
 void Network::SendAll() {
-	auto current = m_sendBuffer.begin();
-	auto end = m_sendBuffer.end();
-
 	Packet::PacketRegister* packetRegister = Packet::PacketRegister::GetRegister();
 
-	do {
-		Packet::PacketHandler* handler = packetRegister->GetHandler(current->GetType());
-		ENetPacket* packet = handler->ToENetPacket(*current);
-		enet_host_broadcast(m_host, current->GetChannel(), packet);
-	} while (current != end);
+	for (int i = 0; i < m_numPackets; i++) {
+		Packet::PacketHandler* handler = packetRegister->GetHandler(m_sendBuffer[i].get()->GetType());
+		ENetPacket* packet = handler->ToENetPacket(m_sendBuffer[i]);
+		enet_host_broadcast(m_host, m_sendBuffer[i].get()->GetChannel(), packet);
+	}
+	m_numPackets = 0;
 }
 
 
@@ -160,10 +167,10 @@ bool Network::ConnectPeer() {
 void Network::HandleIncomingPacket(ENetPacket* packet) {
 	Packet::Type packetType;
 	memcpy(&packetType, packet->data, sizeof(Packet::Type));
-		
+
 	Packet::PacketRegister* packetRegister = Packet::PacketRegister::GetRegister();
 	Packet::PacketHandler* packetHandler = packetRegister->GetHandler(packetType);
-	Packet::Packet translated = packetHandler->Translate(packet);
+	std::shared_ptr<Packet::Packet> translated = packetHandler->Translate(packet);
 
 	m_receiveBuffer.Insert(translated);
 }

@@ -11,7 +11,6 @@
 #include "OGLTexture.h"
 #include "OGLMesh.h"
 
-#include "GameWorld.h"
 #include "GameTechRendererInterface.h"
 
 #include "DecalSystem.h"
@@ -24,11 +23,30 @@ namespace NCL {
 			: public OGLRenderer
 			, public GameTechRendererInterface {
 		public:
-			GameTechRenderer(GameWorld* world);
+			GameTechRenderer();
+
+			struct UIElement {
+				Vector2 position;
+				Vector2 size;
+				Vector4 color;
+				//GLuint* texture;
+				OGLTexture* texture;
+
+				Vector2 GetPosition() { return position; }
+				Vector2 GetSize() { return size; }
+				Vector4 GetColor() { return color; }
+				OGLTexture* GetTexture() { return texture; }
+			};
+
 			~GameTechRenderer();
+
+			//void RenderFrame()	override;
+
+			//Made AddUIElement() public so the pushdown states can use them, is this a problem?
 
 			Mesh* LoadMesh(const std::string& name) override;
 			Texture* LoadTexture(const std::string& name) override;
+			void AddUIElement(Vector2 position, Vector2 size, Vector4 color, OGLTexture* texture = nullptr);
 
 		protected:
 			void NewRenderLines();
@@ -37,37 +55,36 @@ namespace NCL {
 
 			void RenderFrame()	override;
 
-			GameWorld*	gameWorld;
-
-			void BuildObjectList();
-			void SortObjectList();
 			void RenderShadowMap();
-			void RenderCamera(); 
+			void RenderCamera();
 			void RenderSkybox();
 			void InitCrosshair(); //InitCrosshair and RenderCrosshair Ameya added for crosshair
-			void RenderCrosshair();
 			void RenderDecals();
 			void RenderQuad();
 			void RenderFullscreenQuad();
+			//void AddUIElement(Vector2 position, Vector2 size, Vector4 color, OGLTexture* texture = nullptr);
+			void InitUIQuad();
+			void RenderUI();
 
 			void LoadSkybox();
 
 			void SetDebugStringBufferSizes(size_t newVertCount);
 			void SetDebugLineBufferSizes(size_t newVertCount);
 
-			std::vector<const RenderObject*> activeObjects;
+			std::vector<UIElement> uiElements;
 
+			std::unique_ptr<OGLShader> uiShader;
 			std::unique_ptr<OGLShader> sceneShader;
 			std::unique_ptr<OGLShader> debugShader;
 			std::unique_ptr<OGLShader> skyboxShader;
 			std::unique_ptr<OGLMesh> skyboxMesh;
 			std::unique_ptr<OGLMesh> debugTexMesh;
+			std::unique_ptr<OGLMesh> uiQuadMesh;
 			GLuint		skyboxTex;
 
 			GLuint crosshairVAO;
 			GLuint crosshairVBO;
 			GLuint crosshairEBO;
-			std::unique_ptr<OGLShader> crosshairShader; //This line Ameya added for crosshair
 
 			//shadow mapping things
 			std::unique_ptr<OGLShader> shadowShader;
@@ -111,6 +128,12 @@ namespace NCL {
 			GLuint hdrDepthTex;
 			OGLMesh* hdrQuad;
 			OGLShader* hdrShader;
+			GLuint BTex;
+			GLuint BFBO;
+			OGLShader* vignetteShader;
+			GLuint BDepthTex;
+			void RenderPostProcessing();
+
 		};
 	}
 }

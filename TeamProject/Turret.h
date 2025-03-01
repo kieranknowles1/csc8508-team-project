@@ -9,9 +9,9 @@ namespace NCL {
 		class Turret : public GameObject {
 		public:
 			Turret(GameObject* p, btQuaternion q = btQuaternion());
-			~Turret() override;
+			~Turret();
 
-			void Update(float dt) override;
+			void Update(float dt);
 
 		protected:
 			void RotateLeft(float dt);

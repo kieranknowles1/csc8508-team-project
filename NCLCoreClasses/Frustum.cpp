@@ -17,46 +17,58 @@ Frustum::Frustum(void) {
 
 };
 
-Frustum Frustum::FromViewProjMatrix(const Matrix4& viewProj, float ndcNear, float ndcFar) {
+Frustum Frustum::FromViewProjMatrix(const Matrix4& mat, float ndcNear, float ndcFar) {
 	Frustum f;
+	float* values = (float*)&mat;
 
-	Matrix4 invMatrix		= Matrix::Inverse(viewProj);
+	// Extract each axis from the matrix
+	// then add/subtract to tilt the normals
+	Vector3 xaxis = Vector3(values[0], values[4], values[8]);
+	Vector3 yaxis = Vector3(values[1], values[5], values[9]);
+	Vector3 zaxis = Vector3(values[2], values[6], values[10]);
+	Vector3 waxis = Vector3(values[3], values[7], values[11]);
 
-	//Takes NDC coordinates, transforms them into into clip space using the inverse matrix
-	Vector4 topLeftFar		= invMatrix * Vector4(-1.0f, 1.0f, ndcFar, 1.0f);
-	Vector4 topRightFar		= invMatrix * Vector4( 1.0f, 1.0f, ndcFar, 1.0f);
-	Vector4 bottomLeftFar	= invMatrix * Vector4(-1.0f, 1.0f, ndcFar, 1.0f);
-	Vector4 bottomRightFar	= invMatrix * Vector4( 1.0f, 1.0f, ndcFar, 1.0f);
+	// Right
+	f.planes[0] = Plane(
+		waxis - xaxis,
+		values[15] - values[12],
+		true
+	);
 
-	Vector4 topLeftNear		= invMatrix * Vector4(-1.0f, 1.0f, ndcNear, 1.0f);
-	Vector4 topRightNear	= invMatrix * Vector4( 1.0f, 1.0f, ndcNear, 1.0f);
-	Vector4 bottomLeftNear	= invMatrix * Vector4(-1.0f, 1.0f, ndcNear, 1.0f);
-	Vector4 bottomRightNear = invMatrix * Vector4( 1.0f, 1.0f, ndcNear, 1.0f);
+	// Left
+	f.planes[1] = Plane(
+		waxis + xaxis,
+		values[15] + values[12],
+		true
+	);
 
-	//To bring them fully into 'world' coodinates, we must divide them by their w component
+	// Bottom
+	f.planes[2] = Plane(
+		waxis + yaxis,
+		values[15] + values[13],
+		true
+	);
 
-	topLeftFar		/= topLeftFar.w;
-	topRightFar		/= topRightFar.w;
-	bottomLeftFar	/= bottomLeftFar.w;
-	bottomRightFar	/= bottomRightFar.w;
+	// Top
+	f.planes[3] = Plane(
+		waxis - yaxis,
+		values[15] - values[13],
+		true
+	);
 
-	topLeftNear		/= topLeftNear.w;
-	topRightNear	/= topRightNear.w;
-	bottomLeftNear	/= bottomLeftNear.w;
-	bottomRightNear /= bottomRightNear.w;
+	// Far
+	f.planes[4] = Plane(
+		waxis - zaxis,
+		values[15] - values[14],
+		true
+	);
 
-	//Now they are in world space, we can form planes from them, 3 at a time
-	//Note that the order is important, to make sure that the positive half space of the plane
-	//is facing 'in' to the frustum - a point positive to all 6 planes is inside the frustum
-	
-	f.planes[0] = Plane::PlaneFromTri(topLeftFar, bottomLeftFar, bottomLeftNear);	//left plane
-	f.planes[1] = Plane::PlaneFromTri(topRightFar, topRightNear, bottomRightNear);	//right plane
-
-	f.planes[2] = Plane::PlaneFromTri(topLeftFar, topRightFar, topRightNear);			//top plane
-	f.planes[3] = Plane::PlaneFromTri(bottomLeftFar, bottomRightFar, bottomRightNear);	//bottom plane
-
-	f.planes[4] = Plane::PlaneFromTri(topLeftNear, topRightNear, bottomRightNear);	//near plane
-	f.planes[5] = Plane::PlaneFromTri(topLeftFar, topRightFar, bottomRightFar);		//far plane
+	// Near
+	f.planes[5] = Plane(
+		waxis + zaxis,
+		values[15] + values[14],
+		true
+	);
 
 	return f;
 }

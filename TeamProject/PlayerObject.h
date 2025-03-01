@@ -12,7 +12,13 @@
 #include <btBulletCollisionCommon.h>
 
 using namespace NCL::CSC8503;
-// Paintball class derived from GameObject
+
+enum class PlayerState {
+	DEAD,
+	ALIVE
+};
+
+// Player class derived from GameObject
 class PlayerObject : public GameObject {
 public:
 	void OnCollisionEnter(const CollisionInfo& collisionInfo) override {
@@ -77,6 +83,12 @@ public:
 		}
 	}
 
+	void updateGravity(float dt) {
+		btVector3 movement = this->GetPhysicsObject()->GetRigidBody()->getLinearVelocity();
+		movement += upDirection * -(gravityScale * dt);
+		this->GetPhysicsObject()->GetRigidBody()->setLinearVelocity(movement);
+	}
+
 	char getType() {
 		return collisionType;
 	}
@@ -98,11 +110,21 @@ public:
 	btVector3 getCollisionPoint() {
 		return collisionPoint;
 	}
+
+	/**
+	 * @brief Get the state of the player (usually alive or dead).
+	 * @return PlayerState Enum
+	 */
+	inline PlayerState GetState() { return state; }
+
 private:
+	float gravityScale = 400.0f;
+
 	int collided = 0;
 	btVector3 upDirection;
 	btVector3 collisionNormal = btVector3(0, 1, 0);
 	btVector3 collisionPoint = btVector3(0, 0, 0);
 	std::list<GameObject*> collidedObjects;
 	char collisionType;
+	PlayerState state;
 };

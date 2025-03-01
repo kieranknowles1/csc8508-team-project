@@ -16,6 +16,7 @@ namespace Packet {
 	const Type NONE = 0;
 	const uint8_t REQUIRED_CHANNEL = 0;
 
+	const Type CUSTOM_TYPE = 64;
 
 	/**
 	 * @brief Packet class.
@@ -58,7 +59,7 @@ namespace Packet {
 		 */
 		bool operator<(const Packet& other) const { return m_sequenceNum > other.m_sequenceNum; }
 
-	private:
+	protected:
 		Type m_type;
 		uint8_t m_channel;
 		uint32_t m_sequenceNum;
@@ -70,7 +71,7 @@ namespace Packet {
 	 */
 	class PacketHandler {
 	public:
-		PacketHandler() {};
+		PacketHandler(Type type) : m_type(type) {};
 
 		/**
 		 * @brief Handle the packet.
@@ -78,26 +79,28 @@ namespace Packet {
 		 * 
 		 * Deserializes the packet and then processes it.
 		 */
-		virtual void Handle(Packet packet) = 0;
+		virtual void Handle(const std::shared_ptr<Packet> packet) = 0;
 
 		/**
 		 * @brief Convert the ENet packet into a Packet type.
 		 * @param packet the received ENetPacket.
 		 * @return Pointer to the created packet.
 		 */
-		virtual Packet Translate(ENetPacket* packet) = 0;
+		virtual std::shared_ptr<Packet> Translate(const ENetPacket* packet) const = 0;
 
 		/**
 		 * @brief Creates an ENet Packet.
-		 * @return A new ENetPacket. Please manage accordingly.
+		 * @return A new ENetPacket.
+		 * @warning Remember to call enet_packet_destroy IF
+		 * you do not send the packet.
 		 */
-		virtual ENetPacket* ToENetPacket(const Packet& packet) = 0;
+		virtual ENetPacket* ToENetPacket(const std::shared_ptr<Packet> packet) const = 0;
 
 		/**
 		 * @brief Get the type of the packet this object handles.
 		 * @return Type of the packet.
 		 */
-		Type GetType() const { return type; }
+		Type GetType() const { return m_type; }
 
 		/**
 		 * @brief Compare 2 PacketHandlers.
@@ -105,11 +108,18 @@ namespace Packet {
 		 * @return True if both PacketHandlers handle the same packet type.
 		 */
 		bool operator==(const PacketHandler& other) const {
-			return type == other.GetType();
+			return m_type == other.GetType();
+		}
+
+	protected:
+		void GetBaseData(const ENetPacket* packet, Type* type, uint8_t* channel, uint32_t* sequenceNum) const {
+			memcpy(type, packet->data, sizeof(Type));
+			memcpy(channel, packet->data + sizeof(Type), sizeof(uint8_t));
+			memcpy(sequenceNum, packet->data + sizeof(Type) + sizeof(uint8_t), sizeof(uint32_t));
 		}
 
 	private:
-		Type type = 0;
+		Type m_type = 0;
 	};
 
 
@@ -171,7 +181,7 @@ namespace Packet {
 	 */
 	class PacketBuffer {
 	public:
-		PacketBuffer(int size) : m_size(size) { m_packets = std::make_unique<Packet[]>(size); }
+		PacketBuffer(int size) : m_size(size) { m_packets = std::make_unique<std::shared_ptr<Packet>[]>(size); }
 
 		/**
 		 * @brief Insert a packet into the buffer.
@@ -180,7 +190,7 @@ namespace Packet {
 		 * Inserts a packet into the buffer unless the buffer is full in which case
 		 * the packet will not be added..
 		 */
-		bool Insert(Packet item) {
+		bool Insert(std::shared_ptr<Packet> item) {
 			// Drop packets when buffer is full.
 			if (!IsFull()) {
 
@@ -199,8 +209,8 @@ namespace Packet {
 		 * @brief Fetch the item at the head of the queue.
 		 * @return The buffer item in the queue.
 		 */
-		Packet Pop() {
-			if (IsEmpty()) return Packet();
+		std::shared_ptr<Packet> Pop() {
+			if (IsEmpty()) return std::make_shared<Packet>();
 
 			std::lock_guard<std::mutex> bufferLock(m_bufferMut);
 			std::lock_guard<std::mutex> totalLock(m_totalMut);
@@ -214,8 +224,8 @@ namespace Packet {
 		 * @return The item at the front of the queue or an empty packet if the
 		 *			buffer is empty.
 		 */
-		inline Packet Peek() {
-			if (IsEmpty()) return Packet();
+		inline std::shared_ptr<Packet> Peek() {
+			if (IsEmpty()) return std::make_shared<Packet>();
 
 			std::lock_guard<std::mutex> lock(m_bufferMut);
 			return m_packets.get()[0];
@@ -240,15 +250,15 @@ namespace Packet {
 		}
 
 	private:
-		inline Packet* Begin() { return m_packets.get(); }
-		inline Packet* End() { return m_packets.get() + m_size; }
+		inline std::shared_ptr<Packet>* Begin() { return m_packets.get(); }
+		inline std::shared_ptr<Packet>* End() { return m_packets.get() + m_size; }
 
 		std::mutex m_totalMut;
 		std::mutex m_bufferMut;
 
 		int m_size;
 		int m_numPackets = 0;
-		std::unique_ptr<Packet[]> m_packets;
+		std::unique_ptr<std::shared_ptr<Packet>[]> m_packets;
 	};
 }
 

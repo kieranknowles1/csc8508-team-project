@@ -38,6 +38,7 @@ public:
 
     std::vector<btVector3> FindPath(const btVector3& start, const btVector3& end);
     void DebugDrawPath(const std::vector<btVector3>& path);
+    btVector3 GetRandomPointInNavMesh();
 
 private:
     std::vector<btVector3> vertices;
@@ -47,4 +48,7 @@ private:
     int GetTriangleContainingPoint(const btVector3& point);
     std::vector<int> GetNeighbors(int triangleIndex);
     bool PointInTriangle(const btVector3& p, const btVector3& a, const btVector3& b, const btVector3& c);
+    std::vector<std::pair<btVector3, btVector3>> ExtractPortals(const std::vector<int>& trianglePath);
+    bool IsLeftOf(const btVector3& a, const btVector3& b, const btVector3& c);
+    std::vector<btVector3> ApplyFunnelAlgorithm(const btVector3& start, const btVector3& end, const std::vector<std::pair<btVector3, btVector3>>& portals);
 };

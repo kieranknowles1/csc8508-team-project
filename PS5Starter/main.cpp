@@ -18,17 +18,16 @@ using namespace NCL::CSC8503;
 int main() {
 	std::unique_ptr<PS5Window>		window	= std::make_unique<PS5Window>("Hello!", 1920, 1080);
 	auto controller = window->GetController();
-	std::unique_ptr<GameWorld>		world	= std::make_unique<GameWorld>();
 
 #ifdef USEVULKAN
-	std::unique_ptr<GameTechVulkanRenderer> renderer = std::make_unique<GameTechVulkanRenderer>(*world);
+	std::unique_ptr<GameTechVulkanRenderer> renderer = std::make_unique<GameTechVulkanRenderer>();
 #elif USEAGC
-	std::unique_ptr<GameTechAGCRenderer> renderer = std::make_unique<GameTechAGCRenderer>(*world);
+	std::unique_ptr<GameTechAGCRenderer> renderer = std::make_unique<GameTechAGCRenderer>();
 #else
 	GameTechRenderer* renderer = new GameTechRenderer(*world);
 #endif
 
-	std::unique_ptr<TutorialGame> g = std::make_unique<TutorialGame>(renderer.get(), world.get(), controller);
+	std::unique_ptr<TutorialGame> g = std::make_unique<TutorialGame>(renderer.get(), controller);
 
 	while (window->UpdateWindow()) {
 		float dt = window->GetTimer().GetTimeDeltaSeconds();

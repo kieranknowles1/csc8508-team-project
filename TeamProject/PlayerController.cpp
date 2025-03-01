@@ -49,6 +49,12 @@ void PlayerController::UpdateMovement(float dt) {
     //sliding/floor detection
     HandleSliding(dt);
     HandleCrouching(dt);
+
+    if (inAirTime > 0) {
+        player->setCollided(0);
+        inAirTime -= dt;
+    }
+
     if ((isSliding||slideTransition) && !isCrouching) return;
 
     //player rotation
@@ -100,16 +106,10 @@ void PlayerController::UpdateMovement(float dt) {
     forwardMovement *= (forwardMovement <= 0) ? backwardsMulti : 1;
     btVector3 movement = (right * directionalInput.x * strafeMulti * moveMulti ) +(forward * forwardMovement * moveMulti);
 
-    if (inAirTime > 0) {
-        player->setCollided(0);
-        inAirTime -= dt;
-    }
     if (player->getCollided() <= 0 || onIce) {
         movement *= (airMulti*dt);
         movement += rb->getLinearVelocity();
     }
-
-    movement += upDirection * -(gravityScale * dt);
 
     // jump input
     if (controller->GetDigital(Controller::DigitalControl::Jump) && player->getCollided() && inAirTime <= 0) {
@@ -365,6 +365,7 @@ void PlayerController::HandleSliding(float dt) {
         //CheckFloor(dt);
         btVector3 pastMovement = rb->getLinearVelocity();
         pastMovement += upDirection * -(gravityScale * dt);
+        previousVelocity = rb->getLinearVelocity();
         rb->setLinearVelocity(pastMovement);
         rb->activate();
     }

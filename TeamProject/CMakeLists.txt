@@ -1,6 +1,7 @@
 set(SOURCES
     BulletDebug.cpp
     BulletDebug.h
+    GameTechRendererInterface.cpp
     GameTechRendererInterface.h
     TutorialGame.cpp
     TutorialGame.h
@@ -19,12 +20,29 @@ set(SOURCES
     ResourceManager.cpp
     Profiler.h
     Profiler.cpp
+	NavEntity.h
+	NavEntity.cpp
 	AudioEngine.h
 	AudioEngine.cpp
     Config.h
     Config.cpp
     DecalSystem.h
     DecalSystem.cpp
+    PushdownState.h
+    PushdownMachine.cpp
+    PushdownMachine.h
+    MainMenuState.h
+    PlayingState.h
+    PausedState.h
+    Colors.h
+    Multiplayer/GamePackets.hpp
+    Multiplayer/GamePacketHandlers.hpp
+    Multiplayer/GamePacketHandlers.cpp
+    Multiplayer/Lobby.hpp
+    Multiplayer/Lobby.cpp
+    Multiplayer/User.hpp
+	Wanderer.h
+	Wanderer.cpp
 )
 
 set(ASSET_ROOT "${CMAKE_SOURCE_DIR}/Assets")

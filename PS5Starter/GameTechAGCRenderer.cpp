@@ -24,7 +24,7 @@ const int BINDLESS_BUFFER_COUNT		= 128;
 const size_t LINE_STRIDE = sizeof(Vector4) + sizeof(Vector4); 
 const size_t TEXT_STRIDE = sizeof(Vector2) + sizeof(Vector2) + sizeof(Vector4);
 
-GameTechAGCRenderer::GameTechAGCRenderer(GameWorld& world) : AGCRenderer(*Window::GetWindow()), gameWorld(world)	{
+GameTechAGCRenderer::GameTechAGCRenderer() : AGCRenderer(*Window::GetWindow()) {
 	SceError error = SCE_OK;
 	bindlessTextures = (sce::Agc::Core::Texture*)allocator.Allocate(BINDLESS_TEX_COUNT * sizeof(sce::Agc::Core::Texture), sce::Agc::Alignment::kBuffer);
 	sce::Agc::Core::BufferSpec texSpec;
@@ -181,10 +181,10 @@ void GameTechAGCRenderer::WriteRenderPassConstants() {
 	frameData.lightColour = Vector4(0.8f, 0.8f, 0.5f, 1.0f);
 	frameData.lightRadius = 1000.0f;
 	frameData.lightPosition = Vector3(-100.0f, 60.0f, -100.0f);
-	frameData.cameraPos = gameWorld.GetMainCamera().GetPosition();
+	frameData.cameraPos = camera->GetPosition();
 
-	frameData.viewMatrix = gameWorld.GetMainCamera().BuildViewMatrix();
-	frameData.projMatrix = gameWorld.GetMainCamera().BuildProjectionMatrix(hostWindow.GetScreenAspect());
+	frameData.viewMatrix = camera->BuildViewMatrix();
+	frameData.projMatrix = camera->BuildProjectionMatrix(hostWindow.GetScreenAspect());
 
 	frameData.viewProjMatrix = frameData.projMatrix * frameData.viewMatrix;
 
@@ -205,16 +205,16 @@ void GameTechAGCRenderer::WriteRenderPassConstants() {
 }
 
 void GameTechAGCRenderer::DrawObjects() {
-	if (activeObjects.empty()) {
+	if (frameObjects.empty()) {
 		return;
 	}
 	uint32_t startingIndex = 0;
 
-	AGCMesh* prevMesh = (AGCMesh*)activeObjects[0]->GetMesh();
+	AGCMesh* prevMesh = (AGCMesh*)frameObjects[0]->GetMesh();
 	int instanceCount = 0;
 
-	for (int i = 0; i < activeObjects.size(); ++i) {
-		AGCMesh* objectMesh = (AGCMesh*)activeObjects[i]->GetMesh();
+	for (int i = 0; i < frameObjects.size(); ++i) {
+		AGCMesh* objectMesh = (AGCMesh*)frameObjects[i]->GetMesh();
 
 	//The new mesh is different than previous meshes, flush out the old list
 		if( prevMesh != objectMesh) {
@@ -229,7 +229,7 @@ void GameTechAGCRenderer::DrawObjects() {
 			instanceCount = 0;
 			startingIndex = i;
 		}
-		if (i == activeObjects.size() - 1) {
+		if (i == frameObjects.size() - 1) {
 			objectMesh->BindVertexBuffers(frameContext->m_bdr.getStage(sce::Agc::ShaderType::kGs));
 
 			uint32_t* objID = static_cast<uint32_t*>(frameContext->m_dcb.allocateTopDown(sizeof(uint32_t), sce::Agc::Alignment::kBuffer));
@@ -478,68 +478,59 @@ void GameTechAGCRenderer::RenderDebugText() {
 }
 
 void GameTechAGCRenderer::UpdateObjectList() {
-	activeObjects.clear();
-
 	char* dataPos = currentFrame->data.data;
 	int at = 0;
-	gameWorld.OperateOnContents(
-		[&](GameObject* o) {
-			if (o->IsActive()) {
-				RenderObject* g = o->GetRenderObject();
-				if (g) {
-					activeObjects.push_back(g);
+	for (auto g : frameObjects) {
+		ObjectState state;
+		Matrix4 transMatrix;
+		g->getParent()->GetTransform().getOpenGLMatrix((float*)&transMatrix);
+		state.modelMatrix = transMatrix * Matrix::Scale(g->getParent()->getRenderScale());
 
-					ObjectState state;
-					Matrix4 transMatrix;
-					g->getParent()->GetTransform().getOpenGLMatrix((float*)&transMatrix);
-					state.modelMatrix = transMatrix * Matrix::Scale(g->getParent()->getRenderScale());
+		state.colour = g->GetColour();
+		state.texRepeats = g->GetTexRepeating();
+		state.texScale = g->getParent()->getRenderScale() * g->GetTexScaleMultiplier();
+		state.index[0] = 0; //Default Texture
+		state.index[1] = 0; //Skinning buffer
 
-					state.colour = g->GetColour();
-					state.index[0] = 0; //Default Texture
-					state.index[1] = 0; //Skinning buffer
-
-					Texture*t = g->GetDefaultTexture();
-					if (t) {			
-						state.index[0] = t->GetAssetID();
-					}
-					
-					AGCMesh* m = (AGCMesh*)g->GetMesh();
-					if (m && m->GetJointCount() > 0) {//It's a skeleton mesh, need to update transformed vertices buffer
-
-						Buffer* b = g->GetGPUBuffer();
-						if (!b) {
-							//We've not yet made a buffer to hold the verts of this mesh!
-							//We need a new mesh to store the positions, normals, and tangents of this mesh
-							size_t vertexSize	= sizeof(Vector3) + sizeof(Vector3) + sizeof(Vector4);
-							size_t vertexCount	= m->GetVertexCount();
-							size_t bufferSize	= vertexCount * vertexSize;
-
-							char* vertexData = (char*)allocator.Allocate((uint64_t)(bufferSize), sce::Agc::Alignment::kBuffer);
-
-							sce::Agc::Core::BufferSpec bufSpec;
-							bufSpec.initAsRegularBuffer(vertexData, vertexSize, vertexCount);
-
-							sce::Agc::Core::Buffer vBuffer;
-							SceError error = sce::Agc::Core::initialize(&vBuffer, &bufSpec);
-
-							uint32_t bufferID = bufferCount++;
-							b = new AGCBuffer(vBuffer, vertexData);
-							b->SetAssetID(bufferID);
-							g->SetGPUBuffer(b);
-
-							bindlessBuffers[bufferID] = vBuffer;
-						}
-						state.index[1] = b->GetAssetID();
-
-						frameJobs.push_back({g, b->GetAssetID()});
-					}
-					currentFrame->data.WriteData<ObjectState>(state);
-					currentFrame->debugLinesOffset += sizeof(ObjectState);
-					at++;
-				}
-			}
+		Texture* t = g->GetDefaultTexture();
+		if (t) {
+			state.index[0] = t->GetAssetID();
 		}
-	);
+
+		AGCMesh* m = (AGCMesh*)g->GetMesh();
+		if (m && m->GetJointCount() > 0) {//It's a skeleton mesh, need to update transformed vertices buffer
+
+			Buffer* b = g->GetGPUBuffer();
+			if (!b) {
+				//We've not yet made a buffer to hold the verts of this mesh!
+				//We need a new mesh to store the positions, normals, and tangents of this mesh
+				size_t vertexSize = sizeof(Vector3) + sizeof(Vector3) + sizeof(Vector4);
+				size_t vertexCount = m->GetVertexCount();
+				size_t bufferSize = vertexCount * vertexSize;
+
+				char* vertexData = (char*)allocator.Allocate((uint64_t)(bufferSize), sce::Agc::Alignment::kBuffer);
+
+				sce::Agc::Core::BufferSpec bufSpec;
+				bufSpec.initAsRegularBuffer(vertexData, vertexSize, vertexCount);
+
+				sce::Agc::Core::Buffer vBuffer;
+				SceError error = sce::Agc::Core::initialize(&vBuffer, &bufSpec);
+
+				uint32_t bufferID = bufferCount++;
+				b = new AGCBuffer(vBuffer, vertexData);
+				b->SetAssetID(bufferID);
+				g->SetGPUBuffer(b);
+
+				bindlessBuffers[bufferID] = vBuffer;
+			}
+			state.index[1] = b->GetAssetID();
+
+			frameJobs.push_back({ g, b->GetAssetID() });
+		}
+		currentFrame->data.WriteData<ObjectState>(state);
+		currentFrame->debugLinesOffset += sizeof(ObjectState);
+		at++;
+	}
 
 	sce::Agc::Core::BufferSpec bufSpec;
 	bufSpec.initAsRegularBuffer(dataPos, sizeof(ObjectState), at);

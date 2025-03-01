@@ -27,7 +27,8 @@ macro(fmod_copy_dlls)
         return()
     endif()
 
-    foreach(dll ${FMOD_DLL} ${FMOD_STUDIO_DLL})
+    foreach(dll ${FMOD_DLLS})
+        message("Copying DLL ${dll}")
         get_filename_component(FMOD_DLL_FILENAME ${dll} NAME)
         execute_process(
             COMMAND ${CMAKE_COMMAND} -E copy_if_different

@@ -1,5 +1,7 @@
 #pragma once
 
+#include <unordered_map>
+
 #include "PhysicsObject.h"
 #include "btBulletDynamicsCommon.h"
 #include "CollisionInfo.h"
@@ -68,7 +70,9 @@ namespace NCL::CSC8503 {
 		}
 
 		void SetWorldID(int newID) {
+			if (objects.contains(newID)) return;
 			worldID = newID;
+			objects[worldID] = this;
 		}
 
 		int		GetWorldID() const {
@@ -113,10 +117,20 @@ namespace NCL::CSC8503 {
 		char getType() {
 			return type;
 		}
+
+		static GameObject* GetGameObjectByID(int id) {
+			if (objects.contains(id)) return objects[id];
+			return nullptr;
+		}
+
+		void setDeleted() { deleted = true; }
+		bool isDeleted() { return deleted; }
 	protected:
 		PhysicsObject*		physicsObject;
 		RenderObject*		renderObject;
 		NetworkObject*		networkObject;
+
+		bool deleted = false;
 
 		bool		isActive;
 		bool paintball = false;
@@ -127,5 +141,7 @@ namespace NCL::CSC8503 {
 		Vector3 renderScale = Vector3(1, 1, 1); // Only affects rendering, not physics
 		btVector3 initialPosition;
 		btQuaternion initialRotation = btQuaternion(0, 0, 0);
+
+		inline static std::unordered_map<int, GameObject*> objects;
 	};
 }
