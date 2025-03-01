@@ -9,18 +9,15 @@ uniform float alphaFade;
 
 void main() {
     vec4 decalColor = texture(decalTexture, TexCoord);
-    //if (decalColor.a < 0.1) discard; // Discard transparent fragments
+    if (decalColor.a < 0.1) discard; // Discard transparent fragments
+
+    // Apply gamma correction as the decal looks washed out (coz of linear-space lighting calculations)
+    // This is a simple approximation of the sRGB color space (which is the default color space for most monitors)
+    decalColor.rgb = pow(decalColor.rgb, vec3(2.2));
 
     // Reduce alpha over time for fading effect
-    decalColor.a = max(decalColor.a - alphaFade, 0.0);
+    decalColor.a *= alphaFade;
 
     // Output final color
-    //FragColor = decalColor;
-    
-    // Debug output (red = missing texture, green = valid UVs)
-    if (decalColor.rgb == vec3(0.0)) {
-        FragColor = vec4(1.0, 0.0, 0.0, 1.0); // Red if texture fails
-    } else {
-        FragColor = vec4(0.0, 1.0, 0.0, 1.0); // Green if UVs work
-    }
+    FragColor = decalColor;
 }

@@ -198,7 +198,7 @@ void PlayerController::Shoot() {
         }
 
         if (hitObj != nullptr) { // hit an object of some kind
-            hitObj->GetRenderObject()->SetColour(hitObj->GetRenderObject()->GetColour() * Vector4(1.05f, 0.95f, 0.95f, 1.0f));
+            //hitObj->GetRenderObject()->SetColour(hitObj->GetRenderObject()->GetColour() * Vector4(1.05f, 0.95f, 0.95f, 1.0f));
 
 			// Convert Normal and Hit Point from Bullet's btVector3 to NCL::Maths::Vector3
 			NCL::Maths::Vector3 normal(hitNormal.getX(), hitNormal.getY(), hitNormal.getZ());

@@ -32,6 +32,8 @@ namespace NCL {
 
 			const std::vector<Decal>& GetDecals() const { return decals; }
 
+			void ClearDecalsFromWorld() { decals.clear(); }
+
 		private:
 			GLuint decalFBO;
 			GLuint decalTexture;

@@ -304,6 +304,7 @@ void TutorialGame::InitWorld() {
 	world->ClearAndErase();
 	InitBullet();
 	audioEngine.Init();
+	renderer->GetDecalSystem().ClearDecalsFromWorld();
 
 	navMeshDebug = false;
 	if (navMeshDebug) {
