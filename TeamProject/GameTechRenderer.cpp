@@ -148,7 +148,7 @@ GameTechRenderer::GameTechRenderer() : OGLRenderer(*Window::GetWindow()), decalS
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, BTex, 0); //attach BFBO as the colour attachment
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, BDepthTex, 0);
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_STENCIL_ATTACHMENT, GL_TEXTURE_2D, BDepthTex, 0);
-	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE || !BTex || !BDepthTex); {
+	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE || !BTex || !BDepthTex) {
 		return;
 	}
 
@@ -773,8 +773,8 @@ void GameTechRenderer::RenderDecals() {
 
 		// Projection matrix is required because decals require projection from world space onto a surface,
 		// which is done by projecting the decal onto the surface using the normal of the surface.
-		Matrix4 viewMatrix = gameWorld->GetMainCamera().BuildViewMatrix();
-		Matrix4 projMatrix = gameWorld->GetMainCamera().BuildProjectionMatrix(hostWindow.GetScreenAspect());
+		Matrix4 viewMatrix = camera->BuildViewMatrix();
+		Matrix4 projMatrix = camera->BuildProjectionMatrix(hostWindow.GetScreenAspect());
 		Matrix4 viewProjMatrix = projMatrix * viewMatrix;
 
 		glUniform1f(alphaFadeLocation, decal.alphaFade);
@@ -796,6 +796,8 @@ void GameTechRenderer::RenderDecals() {
 	glUniform1i(decalTextureLocation, 0);
 
 	glDisable(GL_BLEND);
+}
+
 void GameTechRenderer::RenderPostProcessing() {
 	if (vignetteOn) {
 		GLuint buff = (hdrOn ? BFBO : 0);

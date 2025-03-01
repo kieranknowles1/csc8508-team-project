@@ -61,7 +61,6 @@ namespace NCL {
 			void InitCrosshair(); //InitCrosshair and RenderCrosshair Ameya added for crosshair
 			void RenderDecals();
 			void RenderQuad();
-			void RenderFullscreenQuad();
 			//void AddUIElement(Vector2 position, Vector2 size, Vector4 color, OGLTexture* texture = nullptr);
 			void InitUIQuad();
 			void RenderUI();
