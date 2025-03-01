@@ -176,7 +176,9 @@ void PlayerController::Shoot() {
     btVector3 forwardPos = (btPlayerPos + (forwardDir * 10000));
     btCollisionWorld::AllHitsRayResultCallback callback(btPlayerPos, forwardPos);
     bulletWorld->rayTest(btPlayerPos, forwardPos, callback);
+    
     btVector3 hitPoint = btVector3();
+	btVector3 hitNormal = btVector3(0, 1, 0); // Default normal (up)
 
     if (callback.hasHit()) {
         GameObject* hitObj = nullptr;
@@ -189,12 +191,23 @@ void PlayerController::Shoot() {
                 if (distance < smallestDist){ // find closest valid hit
                     smallestDist = distance;
                     hitPoint = posHit;
+					hitNormal = callback.m_hitNormalWorld[i]; // Get the normal of the hit
                     hitObj = hit;
                 }
             }
         }
+
         if (hitObj != nullptr) { // hit an object of some kind
             hitObj->GetRenderObject()->SetColour(hitObj->GetRenderObject()->GetColour() * Vector4(1.05f, 0.95f, 0.95f, 1.0f));
+
+			// Convert Normal and Hit Point from Bullet's btVector3 to NCL::Maths::Vector3
+			NCL::Maths::Vector3 normal(hitNormal.getX(), hitNormal.getY(), hitNormal.getZ());
+			NCL::Maths::Vector3 hitPosition(hitPoint.getX(), hitPoint.getY(), hitPoint.getZ());
+            float decalRadius = 1.0f; // Decal radius (Alex: Adjust as needed)
+            auto pngTexture = resourceManager->getTextures().get("paintball_splash_red.png");
+            // Apply the decal using the hit position and normal
+			DecalSystem::Decal decal = { hitPosition, normal, decalRadius, pngTexture };
+            decalSystem->ApplyDecal(decal);
         }
     }
     ShootBullet(bulletRotation, hitPoint);

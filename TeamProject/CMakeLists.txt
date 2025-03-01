@@ -26,6 +26,8 @@ set(SOURCES
 	AudioEngine.cpp
     Config.h
     Config.cpp
+    DecalSystem.h
+    DecalSystem.cpp
     PushdownState.h
     PushdownMachine.cpp
     PushdownMachine.h

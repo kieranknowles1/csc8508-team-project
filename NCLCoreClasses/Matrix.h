@@ -117,7 +117,7 @@ namespace NCL::Maths {
     		v.x*mat.array[0][0] + v.y*mat.array[1][0] + v.z*mat.array[2][0]  + v.w * mat.array[3][0] ,
     		v.x*mat.array[0][1] + v.y*mat.array[1][1] + v.z*mat.array[2][1]  + v.w * mat.array[3][1] ,
     		v.x*mat.array[0][2] + v.y*mat.array[1][2] + v.z*mat.array[2][2]  + v.w * mat.array[3][2] ,
-    		v.x*mat.array[0][3] + v.y*mat.array[1][3] + v.z*mat.array[2][3]  + v.w * mat.array[3][3] 
+    		v.x*mat.array[0][3] + v.y*mat.array[1][3] + v.z*mat.array[2][3]  + v.w * mat.array[3][3]
     	);
     }
 
@@ -411,6 +411,20 @@ namespace NCL::Maths {
             rMat.array[2][2] = -zDir.z;
 
             return rMat * tMat;
+        }
+
+        // https://gamedev.stackexchange.com/questions/22204/from-normal-to-rotation-matrix
+        inline Matrix4 RotationFromNormal(
+            const Vector3& normal
+        ) {
+            Vector3 tan0 = Vector::Normalise(Vector::Cross(normal, Vector3(1, 0, 0)));
+            Vector3 tan1 = Vector::Normalise(Vector::Cross(normal, tan0));
+            Matrix4 mat;
+            mat.SetColumn(0, Vector4(tan0, 0));
+            mat.SetColumn(1, Vector4(tan1, 0));
+            mat.SetColumn(2, Vector4(normal, 0));
+            mat.SetColumn(3, Vector4(0, 0, 0, 1));
+            return mat;
         }
     }
 }

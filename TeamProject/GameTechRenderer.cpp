@@ -4,6 +4,7 @@
 #include "Camera.h"
 #include "TextureLoader.h"
 #include "MshLoader.h"
+#include "ResourceManager.h"
 
 #include "Debug.h"
 
@@ -17,12 +18,13 @@ using namespace CSC8503;
 
 Matrix4 biasMatrix = Matrix::Translation(Vector3(0.5f, 0.5f, 0.5f)) * Matrix::Scale(Vector3(0.5f, 0.5f, 0.5f));
 
-GameTechRenderer::GameTechRenderer() : OGLRenderer(*Window::GetWindow()) {
+GameTechRenderer::GameTechRenderer() : OGLRenderer(*Window::GetWindow()), decalSystem(1024, 768) {
 	glEnable(GL_DEPTH_TEST);
 
 	debugShader = std::make_unique<OGLShader>("Debug.vert", "Debug.frag");
 	shadowShader = std::make_unique<OGLShader>("shadow.vert", "shadow.frag");
 	sceneShader = std::make_unique<OGLShader>("scene.vert", "scene.frag");
+	decalShader = std::make_unique<OGLShader>("decal.vert", "decal.frag");
 	uiShader = std::make_unique<OGLShader>("ui.vert", "ui.frag");
 
 	glGenTextures(1, &shadowTex);
@@ -47,7 +49,7 @@ GameTechRenderer::GameTechRenderer() : OGLRenderer(*Window::GetWindow()) {
 
 	//Set up the light properties
 	lightColour = Vector4(0.8f, 0.8f, 0.5f, 1.0f);
-	lightRadius = 1000.0f; 
+	lightRadius = 1000.0f;
 	lightPosition = Vector3(-200.0f, 60.0f, -200.0f);
 
 	//Skybox!
@@ -84,47 +86,47 @@ GameTechRenderer::GameTechRenderer() : OGLRenderer(*Window::GetWindow()) {
 
 	InitCrosshair(); //This line Ameya added for crosshair
 
-	//Post processing additions: 
+	//Post processing additions:
 	hdrShader = new OGLShader("texturevert.glsl", "hdrfrag.glsl");
-	
+
 	hdrQuad = new OGLMesh();
-	hdrQuad->SetVertexPositions({ Vector3(-1, 1,0), Vector3(-1,-1,0) , Vector3(1,-1,0) , Vector3(1,1,0) }); 
-	hdrQuad->SetVertexTextureCoords({ Vector2(0, 1), Vector2(0,0) , Vector2(1,0) , Vector2(1,1) }); 
-	hdrQuad->SetVertexIndices({ 0,1,2,2,3,0 }); 
-	hdrQuad->UploadToGPU(); 
+	hdrQuad->SetVertexPositions({ Vector3(-1, 1,0), Vector3(-1,-1,0) , Vector3(1,-1,0) , Vector3(1,1,0) });
+	hdrQuad->SetVertexTextureCoords({ Vector2(0, 1), Vector2(0,0) , Vector2(1,0) , Vector2(1,1) });
+	hdrQuad->SetVertexIndices({ 0,1,2,2,3,0 });
+	hdrQuad->UploadToGPU();
 
 	vignetteShader = new OGLShader("texturevert.glsl", "vignettefrag.glsl");
-	 
+
  	//start setting up framebuffers for post processing:
 	//first generate the textures to store the rendered scene:
 	glGenTextures(1, &hdrTex); //first, colour attachment
-	glBindTexture(GL_TEXTURE_2D, hdrTex); 
-	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE); 
-	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE); 
-	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR); 
-	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);  
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, windowSize.x, windowSize.y, 0, GL_RGBA, GL_FLOAT, NULL); //Floating point texture for HDR.  
+	glBindTexture(GL_TEXTURE_2D, hdrTex);
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, windowSize.x, windowSize.y, 0, GL_RGBA, GL_FLOAT, NULL); //Floating point texture for HDR.
 
 	glGenTextures(1, &hdrDepthTex); //then, depth-stencil attachment
 	glBindTexture(GL_TEXTURE_2D, hdrDepthTex);
-	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);  
-	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE); 
-	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR); 
-	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR); 
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH24_STENCIL8, windowSize.x, windowSize.y, 0, GL_DEPTH_STENCIL, GL_UNSIGNED_INT_24_8, NULL); 
-	
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH24_STENCIL8, windowSize.x, windowSize.y, 0, GL_DEPTH_STENCIL, GL_UNSIGNED_INT_24_8, NULL);
+
 	glGenFramebuffers(1, &hdrFBO);
 	glBindFramebuffer(GL_FRAMEBUFFER, hdrFBO);
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, hdrTex, 0); //attach textures to FBO attachments
-	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, hdrDepthTex, 0); 
-	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_STENCIL_ATTACHMENT, GL_TEXTURE_2D, hdrDepthTex, 0); 
-	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE || !hdrTex || !hdrDepthTex) { 
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, hdrDepthTex, 0);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_STENCIL_ATTACHMENT, GL_TEXTURE_2D, hdrDepthTex, 0);
+	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE || !hdrTex || !hdrDepthTex) {
 		return;
 	}
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
 	//set up framebuffer for vignette. May rename the framebuffers and textures to be more generic if more effects are added later
-	glGenTextures(1, &BTex); 
+	glGenTextures(1, &BTex);
 	glBindTexture(GL_TEXTURE_2D, BTex);
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
@@ -146,7 +148,7 @@ GameTechRenderer::GameTechRenderer() : OGLRenderer(*Window::GetWindow()) {
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, BTex, 0); //attach BFBO as the colour attachment
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, BDepthTex, 0);
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_STENCIL_ATTACHMENT, GL_TEXTURE_2D, BDepthTex, 0);
-	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE || !BTex || !BDepthTex); {
+	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE || !BTex || !BDepthTex) {
 		return;
 	}
 
@@ -154,7 +156,7 @@ GameTechRenderer::GameTechRenderer() : OGLRenderer(*Window::GetWindow()) {
 
 }
 
-GameTechRenderer::~GameTechRenderer()	{
+GameTechRenderer::~GameTechRenderer() {
 	glDeleteTextures(1, &shadowTex);
 	glDeleteFramebuffers(1, &shadowFBO);
 
@@ -165,8 +167,6 @@ GameTechRenderer::~GameTechRenderer()	{
 	delete hdrQuad;
 	delete hdrShader;
 	delete vignetteShader;
-	
-	
 }
 
 void GameTechRenderer::LoadSkybox() {
@@ -216,7 +216,7 @@ void GameTechRenderer::RenderFrame() {
 	RenderShadowMap();
 	//Set up to render into framebuffer
 	if (hdrOn || vignetteOn) {
-		glBindFramebuffer(GL_FRAMEBUFFER, hdrFBO); 
+		glBindFramebuffer(GL_FRAMEBUFFER, hdrFBO);
 		glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 	}
 	//
@@ -227,13 +227,14 @@ void GameTechRenderer::RenderFrame() {
 	glDisable(GL_DEPTH_TEST);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	NewRenderLines();
-	NewRenderTextures(); 
+	NewRenderTextures();
 	NewRenderText();
+	RenderDecals();
 	glDisable(GL_BLEND);
 	glEnable(GL_DEPTH_TEST);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	RenderUI();
-	RenderPostProcessing();  
+	RenderPostProcessing();
 }
 
 void GameTechRenderer::RenderShadowMap() {
@@ -345,12 +346,12 @@ void GameTechRenderer::RenderCamera() {
 	glBindTexture(GL_TEXTURE_2D, shadowTex);
 
 	for (const auto&i : frameObjects) {
-		if ((*i).GetDefaultTexture()) { 
+		if ((*i).GetDefaultTexture()) {
 			BindTextureToShader(*(OGLTexture*)(*i).GetDefaultTexture(), "mainTex", 0);
 			//figure out scale of object:
 			Vector3 scale = i->getParent()->getRenderScale() * i->GetTexScaleMultiplier();
 			glUniform3fv(texScaleLocation, 1, scale.array);
-			
+
 		}
 
 		//normal map capabilities added:
@@ -376,7 +377,7 @@ void GameTechRenderer::RenderCamera() {
 		glUniform1i(hasFlatLocation, i->GetIsFlat());
 		glUniform1i(hasNormalLocation, i->GetHasNormal());
 		glUniform1i(texRepeatingLocation, i->GetTexRepeating());
-	
+
 		BindMesh((OGLMesh&)*(*i).GetMesh());
 		size_t layerCount = (*i).GetMesh()->GetSubMeshCount();
 		for (size_t i = 0; i < layerCount; ++i) {
@@ -706,25 +707,116 @@ void GameTechRenderer::RenderUI() {
 	glEnable(GL_DEPTH_TEST);
 }
 
-void GameTechRenderer::RenderPostProcessing() { 
+/*
+	RenderQuad() is a helper function that renders a quad to the screen.
+	The first time this function is called, it will generate the VAO and VBO with the quad vertices.
+	Subsequent calls will simply bind the VAO and draw the quad.
+*/
+void GameTechRenderer::RenderQuad() {
+	// Generate the VAO and VBO for the quad if it doesn't already exist
+	if (decalQuadVAO == 0) {
+		float quadVertices[] = {
+			// Positions        // Texture Coords
+			-1.0f,  1.0f, 0.0f,  0.0f, 1.0f,
+			-1.0f, -1.0f, 0.0f,  0.0f, 0.0f,
+			 1.0f, -1.0f, 0.0f,  1.0f, 0.0f,
+
+			-1.0f,  1.0f, 0.0f,  0.0f, 1.0f,
+			 1.0f, -1.0f, 0.0f,  1.0f, 0.0f,
+			 1.0f,  1.0f, 0.0f,  1.0f, 1.0f
+		};
+
+		// Generate and bind VAO and VBO
+		glGenVertexArrays(1, &decalQuadVAO);
+		glGenBuffers(1, &decalQuadVBO);
+		glBindVertexArray(decalQuadVAO);
+		glBindBuffer(GL_ARRAY_BUFFER, decalQuadVBO);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(quadVertices), quadVertices, GL_STATIC_DRAW);
+
+		// Set up position attribute
+		glEnableVertexAttribArray(0);
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+
+		// Set up texture coordinate attribute
+		glEnableVertexAttribArray(1);
+		glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+	}
+
+	// Bind the VAO and draw the quad
+	glBindVertexArray(decalQuadVAO);
+	glDrawArrays(GL_TRIANGLES, 0, 6);
+	glBindVertexArray(0);
+}
+
+void GameTechRenderer::RenderDecals() {
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+	UseShader(*decalShader);
+
+	// Get the uniform locations for the decal shader
+	GLuint decalTextureLocation = glGetUniformLocation(decalShader->GetProgramID(), "decalTexture");
+	glUniform1i(decalTextureLocation, 0);
+
+	GLuint alphaFadeLocation = glGetUniformLocation(decalShader->GetProgramID(), "alphaFade");
+
+	GLuint modelMatrixLocation = glGetUniformLocation(decalShader->GetProgramID(), "modelMatrix");
+	GLuint viewProjMatrixLocation = glGetUniformLocation(decalShader->GetProgramID(), "viewProjMatrix");
+
+	for (const auto& decal : decalSystem.GetDecals()) {
+		// Create a rotation matrix to orient the decal based on the normal of the surface it is projected onto
+		Matrix4 rotationMatrix = Matrix::RotationFromNormal(decal.normal);
+
+		Matrix4 modelMatrix = Matrix::Translation(decal.position) *
+							  rotationMatrix *
+							  Matrix::Scale(Vector3(decal.radius, decal.radius, decal.radius));
+
+		// Projection matrix is required because decals require projection from world space onto a surface,
+		// which is done by projecting the decal onto the surface using the normal of the surface.
+		Matrix4 viewMatrix = camera->BuildViewMatrix();
+		Matrix4 projMatrix = camera->BuildProjectionMatrix(hostWindow.GetScreenAspect());
+		Matrix4 viewProjMatrix = projMatrix * viewMatrix;
+
+		glUniform1f(alphaFadeLocation, decal.alphaFade);
+		glUniformMatrix4fv(modelMatrixLocation, 1, false, (float*)&modelMatrix);
+		glUniformMatrix4fv(viewProjMatrixLocation, 1, false, (float*)&viewProjMatrix);
+
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, ((OGLTexture*)decal.texture.get())->GetObjectID());
+
+		// RenderQuad() renders the decal at the specific hit location to the decalFBO
+		RenderQuad();
+	}
+
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, decalSystem.GetDecalTexture());
+
+	glUniform1i(decalTextureLocation, 0);
+
+	glDisable(GL_BLEND);
+}
+
+void GameTechRenderer::RenderPostProcessing() {
 	if (vignetteOn) {
 		GLuint buff = (hdrOn ? BFBO : 0);
-		glBindFramebuffer(GL_FRAMEBUFFER, buff); //unbind hdrFBO and set BFBO   
+		glBindFramebuffer(GL_FRAMEBUFFER, buff); //unbind hdrFBO and set BFBO
 		glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT); //BFBO has neither depth nor stencil attachment
 		glDisable(GL_CULL_FACE);
 		glDisable(GL_BLEND);
 		glDisable(GL_DEPTH_TEST);
-		UseShader(*vignetteShader); 
+		UseShader(*vignetteShader);
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, hdrTex); //hdrTex currently holds raw scene
-		glUniform1i(glGetUniformLocation(vignetteShader->GetProgramID(), "diffuseTex"), 0); 
+		glUniform1i(glGetUniformLocation(vignetteShader->GetProgramID(), "diffuseTex"), 0);
 		glUniform1f(glGetUniformLocation(vignetteShader->GetProgramID(), "windowSizex"), windowSize.x);
 		glUniform1f(glGetUniformLocation(vignetteShader->GetProgramID(), "windowSizey"), windowSize.y);
 		Vector3 VignetteColour = Vector3(0.0, 0.0, 0.0); //different colours appear more intense at a given intensity (green)
 		float vignetteIntensity = 2.0f; //Recommendation: vary Intensity between 0.8 and 3
 		glUniform3fv(glGetUniformLocation(vignetteShader->GetProgramID(), "effectColour"), 1, (float*)&VignetteColour);
 		glUniform1f(glGetUniformLocation(vignetteShader->GetProgramID(), "intensity"), vignetteIntensity);
-		glUniform1f(glGetUniformLocation(vignetteShader->GetProgramID(), "time"), vignettePulse);  
+		glUniform1f(glGetUniformLocation(vignetteShader->GetProgramID(), "time"), vignettePulse);
 		BindMesh(*hdrQuad); //simply a quad
 		DrawBoundMesh(); //finished rendering into BTex now, ready to unbind to draw quad straight to screen next:
 	}
@@ -742,5 +834,5 @@ void GameTechRenderer::RenderPostProcessing() {
 		BindMesh(*hdrQuad);
 		DrawBoundMesh();
 	}
-	
+
 }

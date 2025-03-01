@@ -108,6 +108,8 @@ void TutorialGame::UpdateGame(float dt) {
 		profiler.printTimes();
 	}
 
+	// Fade decal after sometime - @Kieran: Didn't forget to call the Update function this time :)
+	renderer->GetDecalSystem().Update(dt);
 	//post processing time variable effect:
 	pulse += dt;
 	renderer->SetVignettePulse(pulse);
@@ -165,11 +167,11 @@ void TutorialGame::UpdateKeys() {
 			playerController->pitchDown();
 	}
 
-	if (Window::GetKeyboard()->KeyPressed(KeyCodes::F5)) { 
-		bool toggleHDR = renderer->GetHDROn();  
-		toggleHDR = !toggleHDR; 
-		renderer->SetHDROn(toggleHDR); 
-	} 
+	if (Window::GetKeyboard()->KeyPressed(KeyCodes::F5)) {
+		bool toggleHDR = renderer->GetHDROn();
+		toggleHDR = !toggleHDR;
+		renderer->SetHDROn(toggleHDR);
+	}
 	if (Window::GetKeyboard()->KeyPressed(KeyCodes::F6)) {
 		bool toggleVignette = renderer->GetVignetteOn();
 		toggleVignette = !toggleVignette;
@@ -359,7 +361,7 @@ void TutorialGame::InitWorld() {
 void TutorialGame::InitNetwork(bool host) {
 	ENetAddress clientAddress;
 	client = new Network(&clientAddress, 1);
-	
+
 	if (host) {
 		ENetAddress serverAddress;
 		serverAddress.host = ENET_HOST_ANY;
@@ -389,7 +391,7 @@ void TutorialGame::InitPlayer() {
 	player->GetPhysicsObject()->GetRigidBody()->setFriction(0.0f);
 	player->GetPhysicsObject()->GetRigidBody()->setDamping(0.0, 0);
 	gun = AddCubeToWorld(Vector3(10, 2, 20), Vector3(0.6, 0.6, 1.6), 0, false);
-	playerController = new PlayerController(player, gun, controller, mainCamera, bulletWorld, world.get(), resourceManager.get());
+	playerController = new PlayerController(player, gun, controller, mainCamera, bulletWorld, world.get(), resourceManager.get(), renderer->GetDecalSystem());
 	player->GetRenderObject()->SetColour(Vector4(playerColour));
 
 }
@@ -443,7 +445,7 @@ Wanderer* TutorialGame::AddWandererToWorld() {
 	wanderer->SetOffset();
 
 	world->AddGameObject(wanderer);
-	
+
 	this->wanderer = wanderer;
 	return wanderer;
 }

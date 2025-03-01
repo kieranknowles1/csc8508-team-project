@@ -1,5 +1,6 @@
 #pragma once
 
+#include "DecalSystem.h"
 #include <string>
 #include <vector>
 
@@ -31,6 +32,7 @@ namespace NCL::CSC8503 {
 			hdrOn = toggle;
 		}
 
+		virtual DecalSystem& GetDecalSystem() = 0;
 		void setCamera(Camera* cam) {
 			camera = cam;
 		}

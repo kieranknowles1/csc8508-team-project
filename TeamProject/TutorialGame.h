@@ -35,6 +35,9 @@ namespace NCL {
 				return instance;
 			}
 
+			ResourceManager* GetResourceManager() {
+				return resourceManager.get();
+			}
 			/**
 			 * @brief Get the Network Instance of the Server.
 			 * @return Returns a pointer to the server instance. Returns
