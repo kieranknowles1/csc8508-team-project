@@ -103,13 +103,16 @@ void TutorialGame::UpdateGame(float dt) {
 	bulletWorld->debugDrawWorld();
 	renderer->collectFrameObjects(world.get());
 
+	profiler.startSection("Render Decals");
+	// Fade decal after sometime - @Kieran: Didn't forget to call the Update function this time :)
+	renderer->GetDecalSystem().Update(dt);
+
 	profiler.endFrame();
 	if (showProfiling) {
 		profiler.printTimes();
 	}
 
-	// Fade decal after sometime - @Kieran: Didn't forget to call the Update function this time :)
-	renderer->GetDecalSystem().Update(dt);
+	
 	//post processing time variable effect:
 	pulse += dt;
 	renderer->SetVignettePulse(pulse);
