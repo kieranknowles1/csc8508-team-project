@@ -233,8 +233,8 @@ void GameTechRenderer::RenderFrame() {
 	glDisable(GL_BLEND);
 	glEnable(GL_DEPTH_TEST);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-	RenderUI();
 	RenderPostProcessing();
+	RenderUI();
 }
 
 void GameTechRenderer::RenderShadowMap() {
