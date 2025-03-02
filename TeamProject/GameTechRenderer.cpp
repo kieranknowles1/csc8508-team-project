@@ -84,14 +84,58 @@ GameTechRenderer::GameTechRenderer() : OGLRenderer(*Window::GetWindow()) {
 
 	InitCrosshair(); //This line Ameya added for crosshair
 
+	//Deferred rendering additions:
+
+	lightSphere = new OGLMesh(); 
+	lightSphere = LoadMesh("Sphere.msh"); //does this need to be uploaded to GPU?
+
+	///set some shaders here
+
+	glGenFramebuffers(1, &bufferFBO);
+	glGenFramebuffers(1, &pointLightFBO);
+	GLenum buffers[2] = {
+	GL_COLOR_ATTACHMENT0,
+	GL_COLOR_ATTACHMENT1 
+	};
+
+	GenerateScreenTexture(bufferDepthTex, true);
+	GenerateScreenTexture(bufferColourTex);
+	GenerateScreenTexture(bufferNormalTex);
+	GenerateScreenTexture(lightDiffuseTex);
+	GenerateScreenTexture(lightSpecularTex);
+
+	//attach textures to FBOS:
+	//first pass:
+	glBindFramebuffer(GL_FRAMEBUFFER, bufferFBO);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, bufferColourTex, 0);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, bufferNormalTex, 0);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, bufferDepthTex, 0);
+	glDrawBuffers(2, buffers);
+
+	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {//check attachment success
+		return;
+	}
+
+	//second pass:
+	glBindFramebuffer(GL_FRAMEBUFFER, pointLightFBO);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, lightDiffuseTex, 0);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, lightSpecularTex, 0);
+	glDrawBuffers(2, buffers);
+
+	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
+		return;
+	}
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	//not enabling depth test etc here as this is done in the rendering functions
+
 	//Post processing additions: 
 	hdrShader = new OGLShader("texturevert.glsl", "hdrfrag.glsl");
 	
-	hdrQuad = new OGLMesh();
-	hdrQuad->SetVertexPositions({ Vector3(-1, 1,0), Vector3(-1,-1,0) , Vector3(1,-1,0) , Vector3(1,1,0) }); 
-	hdrQuad->SetVertexTextureCoords({ Vector2(0, 1), Vector2(0,0) , Vector2(1,0) , Vector2(1,1) }); 
-	hdrQuad->SetVertexIndices({ 0,1,2,2,3,0 }); 
-	hdrQuad->UploadToGPU(); 
+	fullscreenQuad = new OGLMesh();
+	fullscreenQuad->SetVertexPositions({ Vector3(-1, 1,0), Vector3(-1,-1,0) , Vector3(1,-1,0) , Vector3(1,1,0) }); 
+	fullscreenQuad->SetVertexTextureCoords({ Vector2(0, 1), Vector2(0,0) , Vector2(1,0) , Vector2(1,1) }); 
+	fullscreenQuad->SetVertexIndices({ 0,1,2,2,3,0 }); 
+	fullscreenQuad->UploadToGPU(); 
 
 	vignetteShader = new OGLShader("texturevert.glsl", "vignettefrag.glsl");
 	 
@@ -158,11 +202,20 @@ GameTechRenderer::~GameTechRenderer()	{
 	glDeleteTextures(1, &shadowTex);
 	glDeleteFramebuffers(1, &shadowFBO);
 
+	delete lightSphere;
+	glDeleteFramebuffers(1, &bufferFBO);
+	glDeleteFramebuffers(1, &pointLightFBO);
+	glDeleteTextures(1, &bufferColourTex);
+	glDeleteTextures(1, &bufferNormalTex);
+	glDeleteTextures(1, &bufferDepthTex);
+	glDeleteTextures(1, &lightDiffuseTex);
+	glDeleteTextures(1, &lightSpecularTex);
+
 	glDeleteTextures(1, &hdrTex);
 	glDeleteFramebuffers(1, &hdrFBO);
 	glDeleteTextures(1, &BTex);
 	glDeleteFramebuffers(1, &BFBO);
-	delete hdrQuad;
+	delete fullscreenQuad; //only mesh that needs to be deleted as others are std::make_unique<OGLMesh>
 	delete hdrShader;
 	delete vignetteShader;
 	
@@ -215,10 +268,10 @@ void GameTechRenderer::RenderFrame() {
 	glClearColor(1, 1, 1, 1);
 	RenderShadowMap();
 	//Set up to render into framebuffer
-	if (hdrOn || vignetteOn) {
+	/*if (hdrOn || vignetteOn) {
 		glBindFramebuffer(GL_FRAMEBUFFER, hdrFBO); 
 		glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
-	}
+	}*/
 	//
 	RenderSkybox();
 	RenderCamera();
@@ -233,7 +286,7 @@ void GameTechRenderer::RenderFrame() {
 	glEnable(GL_DEPTH_TEST);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	RenderUI();
-	RenderPostProcessing();  
+	//RenderPostProcessing();  
 }
 
 void GameTechRenderer::RenderShadowMap() {
@@ -385,7 +438,7 @@ void GameTechRenderer::RenderCamera() {
 	}
 }
 
-Mesh* GameTechRenderer::LoadMesh(const std::string& name) {
+OGLMesh* GameTechRenderer::LoadMesh(const std::string& name) {///changed this to return OGLMesh* instead of Mesh*
 	OGLMesh* mesh = new OGLMesh();
 	MshLoader::LoadMesh(name, *mesh);
 	mesh->SetPrimitiveType(GeometryPrimitive::Triangles);
@@ -725,7 +778,7 @@ void GameTechRenderer::RenderPostProcessing() {
 		glUniform3fv(glGetUniformLocation(vignetteShader->GetProgramID(), "effectColour"), 1, (float*)&VignetteColour);
 		glUniform1f(glGetUniformLocation(vignetteShader->GetProgramID(), "intensity"), vignetteIntensity);
 		glUniform1f(glGetUniformLocation(vignetteShader->GetProgramID(), "time"), vignettePulse);  
-		BindMesh(*hdrQuad); //simply a quad
+		BindMesh(*fullscreenQuad); //simply a quad
 		DrawBoundMesh(); //finished rendering into BTex now, ready to unbind to draw quad straight to screen next:
 	}
 	if (hdrOn) {
@@ -739,8 +792,24 @@ void GameTechRenderer::RenderPostProcessing() {
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, tex);//BTex would hold vignetted scene. (tonemapping should be done pretty much last)
 		glUniform1i(glGetUniformLocation(hdrShader->GetProgramID(), "hdrTex"), 0);
-		BindMesh(*hdrQuad);
+		BindMesh(*fullscreenQuad);
 		DrawBoundMesh();
 	}
 	
+}
+
+void GameTechRenderer::GenerateScreenTexture(GLuint& into, bool depth) {
+	glGenTextures(1, &into);
+	glBindTexture(GL_TEXTURE_2D, into);
+
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+
+	GLuint format = depth ? GL_DEPTH_COMPONENT24 : GL_RGBA8; //may need to change this to floating point colour texture
+	GLuint type = depth ? GL_DEPTH_COMPONENT : GL_RGBA;
+
+	glTexImage2D(GL_TEXTURE_2D, 0, format, windowSize.x, windowSize.y, 0, type, GL_UNSIGNED_BYTE, NULL);
+	glBindTexture(GL_TEXTURE_2D, 0);
 }

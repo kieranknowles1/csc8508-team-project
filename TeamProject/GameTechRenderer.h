@@ -42,7 +42,7 @@ namespace NCL {
 
 			//Made AddUIElement() public so the pushdown states can use them, is this a problem?
 
-			Mesh* LoadMesh(const std::string& name) override;
+			OGLMesh* LoadMesh(const std::string& name) override; /////WAS Mesh* instead of OGLMesh*
 			Texture* LoadTexture(const std::string& name) override;
 			void AddUIElement(Vector2 position, Vector2 size, Vector4 color, OGLTexture* texture = nullptr);
 
@@ -108,11 +108,22 @@ namespace NCL {
 			GLuint textTexVBO;
 			size_t textCount = 0;
 
+			//Deferred rendering additions:
+			OGLMesh* lightSphere;
+			GLuint bufferFBO;
+			GLuint pointLightFBO;
+			void GenerateScreenTexture(GLuint& into, bool depth = false);
+			GLuint bufferDepthTex;
+			GLuint bufferColourTex;
+			GLuint bufferNormalTex;
+			GLuint lightDiffuseTex;
+			GLuint lightSpecularTex;
+
 			//Post processing additions:
 			GLuint hdrTex;
 			GLuint hdrFBO;
 			GLuint hdrDepthTex;
-			OGLMesh* hdrQuad;
+			OGLMesh* fullscreenQuad; 
 			OGLShader* hdrShader;
 			GLuint BTex;
 			GLuint BFBO;
