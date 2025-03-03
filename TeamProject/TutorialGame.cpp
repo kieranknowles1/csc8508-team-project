@@ -55,9 +55,10 @@ TutorialGame::~TutorialGame()	{
 	audioEngine.Shutdown();
 
 	delete playerController;
-
+#ifndef __PROSPERO__
 	if (server != nullptr) delete server;
 	if (client != nullptr) delete client;
+#endif
 }
 
 static bool BulletRaycast(btDynamicsWorld* world, const btVector3& start, const btVector3& end, btCollisionWorld::ClosestRayResultCallback& resultCallback) {
@@ -360,6 +361,7 @@ void TutorialGame::InitWorld() {
 }
 
 void TutorialGame::InitNetwork(bool host) {
+#ifndef __PROSPERO__
 	ENetAddress clientAddress;
 	client = new Network(&clientAddress, 1);
 
@@ -370,12 +372,15 @@ void TutorialGame::InitNetwork(bool host) {
 
 		server = new Network(&serverAddress, MAX_PLAYERS);
 	}
+#endif // !__PROSPERO__
 }
 
 
 void TutorialGame::ConnectToServer(ENetAddress& address) {
+#ifndef __PROSPERO__
 	if (client == nullptr) return;
 	client->ConnectTo(&address);
+#endif
 }
 
 
