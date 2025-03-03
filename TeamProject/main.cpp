@@ -142,6 +142,12 @@ std::unique_ptr<Window> createWindow(const Config& config) {
 	}
 }*/
 
+std::unique_ptr<TutorialGame> LoadGame(GameTechRenderer* renderRef, KeyboardMouseController* controllerRef) {
+	return std::move(std::make_unique<TutorialGame>(renderRef, controllerRef));
+}
+
+
+
 int main(int argc, char** argv) {
 	PushdownMachine machine(new GameScreen());
 
@@ -157,7 +163,8 @@ int main(int argc, char** argv) {
 	auto renderer = std::make_unique<GameTechRenderer>();
 	auto controller = std::make_unique<KeyboardMouseController>(*window->GetKeyboard(), *window->GetMouse());
 
-	auto game = std::make_unique<TutorialGame>(renderer.get(), controller.get());
+	std::unique_ptr<TutorialGame> game = LoadGame(renderer.get(), controller.get());
+	//auto game = std::make_unique<TutorialGame>(renderer.get(), controller.get());
 	// Clear delta time to exclude start up time
 	window->GetTimer().GetTimeDeltaSeconds();
 
