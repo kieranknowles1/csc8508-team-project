@@ -159,7 +159,6 @@ int main(int argc, char** argv) {
 
 
 	auto game = std::make_unique<TutorialGame>(renderer.get(), controller.get());
-	game->LoadWorldFromFile(8);
 
 	// Clear delta time to exclude start up time
 	window->GetTimer().GetTimeDeltaSeconds();
@@ -168,26 +167,33 @@ int main(int argc, char** argv) {
 	const std::string hostGame = "Host Game";
 	const std::string joinGame = "Join Game";
 	int selection = 0;
+	bool inMenu = true;
+
 	std::string menuItems[3] = { singleplayer, hostGame, joinGame };
 
 	while (window->UpdateWindow() && !Window::GetKeyboard()->KeyDown(KeyCodes::ESCAPE)) {
 
-		if (NCL::Window::GetKeyboard()->KeyPressed(NCL::KeyCodes::DOWN)) {
-			selection = std::min(2, selection + 1);
-		}
-		if (NCL::Window::GetKeyboard()->KeyPressed(NCL::KeyCodes::UP)) {
-			selection = std::max(0, selection - 1);
-		}
-		if (NCL::Window::GetKeyboard()->KeyPressed(NCL::KeyCodes::RETURN)) {
-			GameMode mode = static_cast<GameMode>(selection);
-			std::cout << "Starting " << menuItems[selection] << std::endl;
+		if (inMenu) {
+			if (NCL::Window::GetKeyboard()->KeyPressed(NCL::KeyCodes::DOWN)) {
+				selection = std::min(2, selection + 1);
+			}
+			if (NCL::Window::GetKeyboard()->KeyPressed(NCL::KeyCodes::UP)) {
+				selection = std::max(0, selection - 1);
+			}
+			if (NCL::Window::GetKeyboard()->KeyPressed(NCL::KeyCodes::RETURN)) {
+				GameMode mode = static_cast<GameMode>(selection);
+				game->LoadWorldFromFile(8);
+				inMenu = false;
+			}
+
+			for (int i = 0; i < 3; i++) {
+				std::string currentItem = menuItems[i];
+				if (i == selection) currentItem = currentItem + " <";
+				Debug::Print(currentItem, Vector2(1, 50 + (10 * i)));
+			}
 		}
 
-		for (int i = 0; i < 2; i++) {
-			std::string currentItem = menuItems[i];
-			if (i == selection) currentItem = currentItem + " <";
-			Debug::Print(currentItem, Vector2(1, 50 + (10 * i)));
-		}
+
 		float dt = window->GetTimer().GetTimeDeltaSeconds();
 
 		window->SetTitle("Gametech frame time:" + std::to_string(1000.0f * dt));

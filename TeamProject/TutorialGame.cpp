@@ -309,7 +309,6 @@ void TutorialGame::LoadWorldFromFile(int levelNum) {
 
 	levelImporter = new LevelImporter(resourceManager.get(), world.get(), bulletWorld);
 	levelImporter->LoadLevel(levelNum);
-	InitPlayer();
 }
 
 void TutorialGame::ResetWorld() {
@@ -321,6 +320,7 @@ void TutorialGame::ResetWorld() {
 void TutorialGame::InitWorld() {
 	InitBullet();
 	audioEngine.Init();
+	InitPlayer();
 
 	navMeshDebug = false;
 	if (navMeshDebug) {
