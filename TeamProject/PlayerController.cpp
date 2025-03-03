@@ -201,11 +201,11 @@ void PlayerController::Shoot() {
             //hitObj->GetRenderObject()->SetColour(hitObj->GetRenderObject()->GetColour() * Vector4(1.05f, 0.95f, 0.95f, 1.0f));
 
 			// Convert Normal and Hit Point from Bullet's btVector3 to NCL::Maths::Vector3
-			NCL::Maths::Vector3 normal(hitNormal.getX(), hitNormal.getY(), hitNormal.getZ());
-			NCL::Maths::Vector3 hitPosition(hitPoint.getX(), hitPoint.getY(), hitPoint.getZ());
+			btVector3 normal(hitNormal.getX(), hitNormal.getY(), hitNormal.getZ());
+			btVector3 hitPosition(hitPoint.getX(), hitPoint.getY(), hitPoint.getZ());
             float decalRadius = 1.0f; // Decal radius (Alex: Adjust as needed)
 			float alphaFade = 1.0f; // Decal alpha fade (Alex: Adjust as needed)
-			Vector4 decalColor = Vector4(1.0f, 0.0f, 0.0f, 1.0f); // Decal color (Alex: Adjust as needed)
+			btVector4 decalColor = btVector4(1.0f, 0.0f, 0.0f, 1.0f); // Decal color (Alex: Adjust as needed)
             auto pngTexture = resourceManager->getTextures().get("paintball_splash_red.png");
             // Apply the decal using the hit position and normal
 			DecalSystem::Decal decal = { hitPosition, normal, decalRadius, pngTexture };

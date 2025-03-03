@@ -768,7 +768,7 @@ void GameTechRenderer::RenderDecals() {
 		// Create a rotation matrix to orient the decal based on the normal of the surface it is projected onto
 		Matrix4 rotationMatrix = Matrix::RotationFromNormal(decal.normal);
 
-		Matrix4 modelMatrix = Matrix::Translation(decal.position) *
+		Matrix4 modelMatrix = Matrix::Translation(Vector3(decal.position)) *
 							  rotationMatrix *
 							  Matrix::Scale(Vector3(decal.radius, decal.radius, decal.radius));
 
