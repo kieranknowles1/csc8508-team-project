@@ -113,12 +113,8 @@ set(ALL_FILES
     ${AI_Pathfinding}
 	${Networking}
 	${Physics}
+    ${enet_Files}
 )
-
-# TODO: Networking for PS5
-if(NOT PS5_BUILD)
-    list(APPEND ALL_FILES ${enet_Files})
-endif()
 
 set_source_files_properties(${ALL_FILES} PROPERTIES LANGUAGE CXX)
 

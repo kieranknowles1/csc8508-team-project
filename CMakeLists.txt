@@ -23,10 +23,6 @@ if (USE_SDL2)
     add_definitions(-DCSC_USE_SDL2)
 endif()
 
-if (PS5_BUILD)
-    add_compile_definitions("USEAGC")
-endif()
-
 if(NOT CMAKE_VS_PLATFORM_NAME)
     set(CMAKE_VS_PLATFORM_NAME "x64")
 endif()
@@ -73,7 +69,6 @@ include_directories(
 )
 
 add_subdirectory(NCLCoreClasses)
-# TODO: Can we do this on PS5 as well?
 if (NOT PS5_BUILD)
     add_subdirectory(MeshCompiler)
 else()
