@@ -13,8 +13,6 @@
 
 #include "GameTechRendererInterface.h"
 
-#include "DecalSystem.h"
-
 namespace NCL {
 	namespace CSC8503 {
 		class RenderObject;
@@ -92,13 +90,11 @@ namespace NCL {
 			Matrix4     shadowMatrix;
 
 			// Decal stuff
-			DecalSystem decalSystem; // GameTechRenderer owns the decal system
 			std::unique_ptr<OGLShader> decalShader;
 			GLuint decalQuadVAO = 0;
 			GLuint decalQuadVBO = 0;
 			GLuint fullscreenQuadVAO = 0;
 			GLuint fullscreenQuadVBO = 0;
-			DecalSystem& GetDecalSystem() override { return decalSystem; }
 
 			Vector4		lightColour;
 			float		lightRadius;

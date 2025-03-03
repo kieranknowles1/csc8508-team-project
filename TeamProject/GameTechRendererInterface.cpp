@@ -8,10 +8,14 @@
 #include <CSC8503CoreClasses/RenderObject.h>
 
 namespace NCL::CSC8503 {
+	GameTechRendererInterface::GameTechRendererInterface(Window* window)
+		: window(window)
+		, decalSystem(window->GetScreenSize().x, window->GetScreenSize().y)
+	{
+	}
+
 	void GameTechRendererInterface::collectFrameObjects(GameWorld* world)
 	{
-		// TODO: Have one window pointer, avoid globals if possible
-		auto window = Window::GetWindow();
 		auto viewProjMatrix = camera->BuildProjectionMatrix(window->GetScreenAspect()) * camera->BuildViewMatrix();
 		auto frustum = Frustum::FromViewProjMatrix(viewProjMatrix);
 

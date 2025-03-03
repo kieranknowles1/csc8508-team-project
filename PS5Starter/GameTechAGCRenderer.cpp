@@ -24,7 +24,7 @@ const int BINDLESS_BUFFER_COUNT		= 128;
 const size_t LINE_STRIDE = sizeof(Vector4) + sizeof(Vector4); 
 const size_t TEXT_STRIDE = sizeof(Vector2) + sizeof(Vector2) + sizeof(Vector4);
 
-GameTechAGCRenderer::GameTechAGCRenderer() : AGCRenderer(*Window::GetWindow()) {
+GameTechAGCRenderer::GameTechAGCRenderer() : AGCRenderer(*Window::GetWindow()), GameTechRendererInterface(Window::GetWindow()) {
 	SceError error = SCE_OK;
 	bindlessTextures = (sce::Agc::Core::Texture*)allocator.Allocate(BINDLESS_TEX_COUNT * sizeof(sce::Agc::Core::Texture), sce::Agc::Alignment::kBuffer);
 	sce::Agc::Core::BufferSpec texSpec;

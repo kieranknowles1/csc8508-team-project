@@ -12,6 +12,7 @@ namespace NCL::Rendering {
 
 namespace NCL {
 	class Camera;
+	class Window;
 }
 
 namespace NCL::CSC8503 {
@@ -21,6 +22,8 @@ namespace NCL::CSC8503 {
 	class GameTechRendererInterface
 	{
 	public:
+		GameTechRendererInterface(Window* window);
+
 		virtual Rendering::Mesh* LoadMesh(const std::string& name) = 0;
 		virtual Rendering::Texture*	LoadTexture(const std::string& name) = 0;
 
@@ -32,7 +35,9 @@ namespace NCL::CSC8503 {
 			hdrOn = toggle;
 		}
 
-		virtual DecalSystem& GetDecalSystem() = 0;
+		DecalSystem& GetDecalSystem() {
+			return decalSystem;
+		}
 		void setCamera(Camera* cam) {
 			camera = cam;
 		}
@@ -57,8 +62,10 @@ namespace NCL::CSC8503 {
 		bool hdrOn = true;
 		bool vignetteOn = false;
 		float vignettePulse = 0;
+		Window* window;
 		Camera* camera = nullptr;
 		std::vector<RenderObject*> frameObjects;
+		DecalSystem decalSystem;
 	};
 }
 

@@ -18,7 +18,7 @@ using namespace CSC8503;
 
 Matrix4 biasMatrix = Matrix::Translation(Vector3(0.5f, 0.5f, 0.5f)) * Matrix::Scale(Vector3(0.5f, 0.5f, 0.5f));
 
-GameTechRenderer::GameTechRenderer() : OGLRenderer(*Window::GetWindow()), decalSystem(1024, 768) {
+GameTechRenderer::GameTechRenderer() : OGLRenderer(*Window::GetWindow()), GameTechRendererInterface(Window::GetWindow()) {
 	glEnable(GL_DEPTH_TEST);
 
 	debugShader = std::make_unique<OGLShader>("Debug.vert", "Debug.frag");

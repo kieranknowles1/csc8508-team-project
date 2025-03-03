@@ -2,7 +2,6 @@
 
 #include <vector>
 #include <Vector.h>
-#include <OGLTexture.h>
 #include "Maths.h"
 #include "Texture.h"
 
@@ -27,16 +26,16 @@ namespace NCL {
 			void ApplyDecal(Decal& decal);
 			void Update(float dt);
 
-			GLuint GetDecalTexture() const { return decalTexture; }
-			GLuint GetDecalFBO() const { return decalFBO; }
+			unsigned int GetDecalTexture() const { return decalTexture; }
+			unsigned int GetDecalFBO() const { return decalFBO; }
 
 			const std::vector<Decal>& GetDecals() const { return decals; }
 
 			void ClearDecalsFromWorld() { decals.clear(); }
 
 		private:
-			GLuint decalFBO;
-			GLuint decalTexture;
+			unsigned int decalFBO;
+			unsigned int decalTexture;
 
 			int textureWidth;
 			int textureHeight;
