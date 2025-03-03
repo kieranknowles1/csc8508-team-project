@@ -50,6 +50,14 @@ namespace NCL {
 				return upDirection;
 			}
 
+			btVector3 getRightDirection() {
+				return rightDirection;
+			}
+
+			btVector3 getForwardDirection() {
+				return forwardDirection;
+			}
+
 			float getYaw() {
 				return yaw;
 			}

@@ -429,6 +429,9 @@ void PlayerController::CalculateDirections(float dt) {
     rightDirection = CalculateRightDirection(upDirection);
     forwardDirection = CalculateForwardDirection(upDirection, rightDirection);
     player->setUpDirection(upDirection);
+
+    //Update FMod listener each frame so audio is correctly positioned
+    audioEngine.Set3dListenerAndOrientation(player->GetTransform().getOrigin(), forwardDirection, upDirection);
 }
 
 btVector3 PlayerController::CalculateUpDirection(float dt) {

@@ -136,6 +136,18 @@ void CAudioEngine::SetChannel3dPosition(int nChannelId, const NCL::Maths::Vector
     CAudioEngine::ErrorCheck(tFoundIt->second->set3DAttributes(&position, NULL));
 }
 
+void CAudioEngine::Set3dListenerAndOrientation(const NCL::Maths::Vector3& vPosition, const NCL::Maths::Vector3& vLook, const NCL::Maths::Vector3& vUp) {
+    FMOD_VECTOR fmodPosition = VectorToFmod(vPosition);
+    FMOD_VECTOR fmodLook = VectorToFmod(vLook);
+    FMOD_VECTOR fmodUp = VectorToFmod(vUp);
+
+    FMOD_VECTOR fmodVelocity = { 0.0f, 0.0f, 0.0f }; // Velocity is usually needed for Doppler effect, but we don't have it here
+
+    if (sgpImplementation && sgpImplementation->mpSystem) {
+        sgpImplementation->mpSystem->set3DListenerAttributes(0, &fmodPosition, &fmodVelocity, &fmodLook, &fmodUp);
+    }
+}
+
 //Sets the volume of an FMod channel
 void CAudioEngine::SetChannelVolume(int nChannelId, float fVolumedB) {
     auto tFoundIt = sgpImplementation->mChannels.find(nChannelId);
