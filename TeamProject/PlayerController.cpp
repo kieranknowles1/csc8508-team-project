@@ -209,7 +209,9 @@ void PlayerController::Shoot() {
             auto pngTexture = resourceManager->getTextures().get("paintball_splash_red.png");
             // Apply the decal using the hit position and normal
 			DecalSystem::Decal decal = { hitPosition, normal, decalRadius, pngTexture };
-            decalSystem->ApplyDecal(decal, alphaFade, decalColor);
+			decal.color = decalColor;
+			decal.alphaFade = alphaFade;
+            decalSystem->ApplyDecal(decal);
         }
     }
     ShootBullet(bulletRotation, hitPoint);

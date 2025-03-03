@@ -36,12 +36,8 @@ DecalSystem::~DecalSystem()
 	glDeleteFramebuffers(1, &decalFBO);
 }
 
-void DecalSystem::ApplyDecal(Decal& decal, float alphaFade, Vector4 decalColor)
+void DecalSystem::ApplyDecal(Decal& decal)
 {
-	// Add a new decal to the list
-	decal.alphaFade = alphaFade;
-	decal.color = decalColor; // Alex: Set the decal color here
-
 	decals.emplace_back(decal);
 }
 

@@ -25,7 +25,7 @@ namespace NCL {
 			DecalSystem(int width, int height);
 			~DecalSystem();
 
-			void ApplyDecal(Decal& decal, float alphaFade, Vector4 decalColor);
+			void ApplyDecal(Decal& decal);
 			void Update(float dt);
 
 			GLuint GetDecalTexture() const { return decalTexture; }
