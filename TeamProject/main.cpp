@@ -182,7 +182,13 @@ int main(int argc, char** argv) {
 			}
 			if (NCL::Window::GetKeyboard()->KeyPressed(NCL::KeyCodes::RETURN)) {
 				GameMode mode = static_cast<GameMode>(selection);
-				game->LoadWorldFromFile(8);
+
+				if (mode == GameMode::SINGLEPLAYER) {
+					game->LoadWorldFromFile(8);
+				}
+				else {
+					game->JoinGame(mode == GameMode::HOST_GAME);
+				}
 				inMenu = false;
 			}
 

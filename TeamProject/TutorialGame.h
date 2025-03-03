@@ -79,6 +79,7 @@ namespace NCL {
 
 			virtual void UpdateGame(float dt);
 			void LoadWorldFromFile(int levelNum);
+			void JoinGame(bool host) {};
 
 		protected:
 			void InitialiseAssets();
@@ -89,6 +90,8 @@ namespace NCL {
 
 			void InitWorld();
 			void ResetWorld();
+
+			void SetupHost() {};
 
 			/**
 			 * @brief Initialise the network object and run it.
