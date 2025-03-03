@@ -72,6 +72,7 @@ class GameScreen : public PushdownState {
 			pauseReminder = 0;
 			*newState = new PauseScreen();
 			return PushdownResult::Push;
+			//std::cout << "Game entered pause state \n";
 		}
 		if (Window::GetKeyboard()->KeyPressed(NCL::KeyCodes::RCONTROL)) {
 			Debug::Print("Going back to main menu", Vector2(0.1f, 0.3f), Vector4(0, 0, 0, 1));
