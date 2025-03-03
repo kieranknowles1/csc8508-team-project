@@ -22,6 +22,12 @@ namespace NCL {
 
 		const int MAX_PLAYERS = 8;
 
+		enum class GameMode {
+			SINGLEPLAYER,
+			HOST_GAME,
+			JOIN_GAME
+		};
+
 		class TutorialGame {
 		private:
 			static TutorialGame* instance;

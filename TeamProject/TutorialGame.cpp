@@ -32,7 +32,7 @@ TutorialGame::TutorialGame(GameTechRendererInterface* renderer, Controller* cont
 
 	loadFromLevel = true;
 	resourceManager = std::make_unique<ResourceManager>(renderer);
-	InitialiseAssets();
+	//InitialiseAssets();
 }
 
 /*
