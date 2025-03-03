@@ -71,29 +71,16 @@ GameTechRenderer::GameTechRenderer() : OGLRenderer(*Window::GetWindow()), GameTe
 
 	Debug::CreateDebugFont("PressStart2P.fnt", *LoadTexture("PressStart2P.png"));
 
-	//Debug quad for drawing tex
-	debugTexMesh = std::make_unique<OGLMesh>();
-	debugTexMesh->SetVertexPositions({ Vector3(-1, 1,0), Vector3(-1,-1,0) , Vector3(1,-1,0) , Vector3(1,1,0) });
-	debugTexMesh->SetVertexTextureCoords({ Vector2(0, 1), Vector2(0,0) , Vector2(1,0) , Vector2(1,1) });
-	debugTexMesh->SetVertexIndices({ 0,1,2,2,3,0 });
-	debugTexMesh->UploadToGPU();
-
-	InitUIQuad();
-
+	unitQuad = Mesh::Quad<OGLMesh>(1.0f);
+	unitQuad->UploadToGPU();
+	halfUnitQuad = Mesh::Quad<OGLMesh>(0.5f);
+	halfUnitQuad->UploadToGPU();
 
 	SetDebugStringBufferSizes(10000);
 	SetDebugLineBufferSizes(1000);
 
-	InitCrosshair(); //This line Ameya added for crosshair
-
 	//Post processing additions:
 	hdrShader = new OGLShader("texturevert.glsl", "hdrfrag.glsl");
-
-	hdrQuad = new OGLMesh();
-	hdrQuad->SetVertexPositions({ Vector3(-1, 1,0), Vector3(-1,-1,0) , Vector3(1,-1,0) , Vector3(1,1,0) });
-	hdrQuad->SetVertexTextureCoords({ Vector2(0, 1), Vector2(0,0) , Vector2(1,0) , Vector2(1,1) });
-	hdrQuad->SetVertexIndices({ 0,1,2,2,3,0 });
-	hdrQuad->UploadToGPU();
 
 	vignetteShader = new OGLShader("texturevert.glsl", "vignettefrag.glsl");
 
@@ -164,7 +151,6 @@ GameTechRenderer::~GameTechRenderer() {
 	glDeleteFramebuffers(1, &hdrFBO);
 	glDeleteTextures(1, &BTex);
 	glDeleteFramebuffers(1, &BFBO);
-	delete hdrQuad;
 	delete hdrShader;
 	delete vignetteShader;
 }
@@ -501,7 +487,7 @@ void GameTechRenderer::NewRenderTextures() {
 
 	GLuint colourSlot = glGetUniformLocation(debugShader->GetProgramID(), "texColour");
 
-	BindMesh(*debugTexMesh);
+	BindMesh(*unitQuad);
 
 	glActiveTexture(GL_TEXTURE0);
 
@@ -599,70 +585,6 @@ void GameTechRenderer::SetDebugLineBufferSizes(size_t newVertCount) {
 	}
 }
 
-void GameTechRenderer::AddUIElement(Vector2 position, Vector2 size, Vector4 color, OGLTexture* texture) {
-	uiElements.push_back({ position, size, color, texture });
-}
-
-void GameTechRenderer::InitCrosshair() {
-	Vector2 screenCenter = Vector2(0.5f, 0.5f);
-	Vector4 crosshairColor = Vector4(1, 1, 1, 1); // White crosshair
-
-	float lineLength = 0.02f; // Length of the crosshair lines
-	float lineThickness = 0.0025f; // Thickness of each line
-	float horizontalLineThickness = 0.0035f;
-	float horizontalLineLength = 0.015f;
-	float gapSize = 0.0005f; // Gap between the lines
-
-
-	// Left line
-	AddUIElement(Vector2(screenCenter.x - gapSize - lineLength, screenCenter.y),
-		Vector2(horizontalLineLength, horizontalLineThickness), crosshairColor);
-
-	// Right line
-	AddUIElement(Vector2(screenCenter.x + gapSize + lineLength, screenCenter.y),
-		Vector2(horizontalLineLength, horizontalLineThickness), crosshairColor);
-
-	// Top line
-	AddUIElement(Vector2(screenCenter.x, screenCenter.y + gapSize + lineLength),
-		Vector2(lineThickness, lineLength), crosshairColor);
-
-	// Bottom line
-	AddUIElement(Vector2(screenCenter.x, screenCenter.y - gapSize - lineLength),
-		Vector2(lineThickness, lineLength), crosshairColor);
-}
-
-void GameTechRenderer::InitUIQuad() {
-	uiQuadMesh = std::make_unique<OGLMesh>();
-
-	// Define a full-screen quad in NDC (-1 to 1)
-	std::vector<Vector3> positions = {
-		Vector3(-0.5f,  0.5f, 0.0f), // Top Left
-		Vector3(-0.5f, -0.5f, 0.0f), // Bottom Left
-		Vector3(0.5f, -0.5f, 0.0f), // Bottom Right
-		Vector3(0.5f,  0.5f, 0.0f)  // Top Right
-	};
-
-	std::vector<Vector2> texCoords = {
-		Vector2(0.0f, 1.0f), // Top Left
-		Vector2(0.0f, 0.0f), // Bottom Left
-		Vector2(1.0f, 0.0f), // Bottom Right
-		Vector2(1.0f, 1.0f)  // Top Right
-	};
-
-	std::vector<unsigned int> indices = {
-		0, 1, 2,  // First Triangle
-		2, 3, 0   // Second Triangle
-	};
-
-	// Assign to mesh
-	uiQuadMesh->SetVertexPositions(positions);
-	uiQuadMesh->SetVertexTextureCoords(texCoords);
-	uiQuadMesh->SetVertexIndices(indices);
-
-	uiQuadMesh->SetPrimitiveType(GeometryPrimitive::Triangles);
-	uiQuadMesh->UploadToGPU();
-}
-
 void GameTechRenderer::RenderUI() {
 	UseShader(*uiShader);
 
@@ -691,7 +613,7 @@ void GameTechRenderer::RenderUI() {
 		if (uiElement.texture) {
 			glUniform1i(hasTextureLocation, 1);
 			glActiveTexture(GL_TEXTURE0);
-			glBindTexture(GL_TEXTURE_2D, ((OGLTexture*)uiElement.texture)->GetObjectID());
+			glBindTexture(GL_TEXTURE_2D, ((OGLTexture*)uiElement.texture.get())->GetObjectID());
 			glUniform1i(textureLocation, 0);
 		}
 		else {
@@ -699,7 +621,7 @@ void GameTechRenderer::RenderUI() {
 		}
 
 		// Render UI quad
-		BindMesh(*uiQuadMesh);
+		BindMesh(*halfUnitQuad);
 		DrawBoundMesh();
 	}
 
@@ -759,6 +681,7 @@ void GameTechRenderer::RenderDecals() {
 	glUniform1i(decalTextureLocation, 0);
 
 	GLuint alphaFadeLocation = glGetUniformLocation(decalShader->GetProgramID(), "alphaFade");
+	GLuint decalColorLocation = glGetUniformLocation(decalShader->GetProgramID(), "decalColor");
 
 	GLuint modelMatrixLocation = glGetUniformLocation(decalShader->GetProgramID(), "modelMatrix");
 	GLuint viewProjMatrixLocation = glGetUniformLocation(decalShader->GetProgramID(), "viewProjMatrix");
@@ -767,7 +690,7 @@ void GameTechRenderer::RenderDecals() {
 		// Create a rotation matrix to orient the decal based on the normal of the surface it is projected onto
 		Matrix4 rotationMatrix = Matrix::RotationFromNormal(decal.normal);
 
-		Matrix4 modelMatrix = Matrix::Translation(decal.position) *
+		Matrix4 modelMatrix = Matrix::Translation(Vector3(decal.position)) *
 							  rotationMatrix *
 							  Matrix::Scale(Vector3(decal.radius, decal.radius, decal.radius));
 
@@ -778,6 +701,7 @@ void GameTechRenderer::RenderDecals() {
 		Matrix4 viewProjMatrix = projMatrix * viewMatrix;
 
 		glUniform1f(alphaFadeLocation, decal.alphaFade);
+		glUniform4fv(decalColorLocation, 1, (float*)&decal.color);
 		glUniformMatrix4fv(modelMatrixLocation, 1, false, (float*)&modelMatrix);
 		glUniformMatrix4fv(viewProjMatrixLocation, 1, false, (float*)&viewProjMatrix);
 
@@ -817,7 +741,7 @@ void GameTechRenderer::RenderPostProcessing() {
 		glUniform3fv(glGetUniformLocation(vignetteShader->GetProgramID(), "effectColour"), 1, (float*)&VignetteColour);
 		glUniform1f(glGetUniformLocation(vignetteShader->GetProgramID(), "intensity"), vignetteIntensity);
 		glUniform1f(glGetUniformLocation(vignetteShader->GetProgramID(), "time"), vignettePulse);
-		BindMesh(*hdrQuad); //simply a quad
+		BindMesh(*unitQuad); //simply a quad
 		DrawBoundMesh(); //finished rendering into BTex now, ready to unbind to draw quad straight to screen next:
 	}
 	if (hdrOn) {
@@ -831,7 +755,7 @@ void GameTechRenderer::RenderPostProcessing() {
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, tex);//BTex would hold vignetted scene. (tonemapping should be done pretty much last)
 		glUniform1i(glGetUniformLocation(hdrShader->GetProgramID(), "hdrTex"), 0);
-		BindMesh(*hdrQuad);
+		BindMesh(*unitQuad);
 		DrawBoundMesh();
 	}
 

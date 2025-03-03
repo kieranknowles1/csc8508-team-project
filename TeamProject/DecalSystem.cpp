@@ -43,8 +43,6 @@ DecalSystem::~DecalSystem()
 
 void DecalSystem::ApplyDecal(Decal& decal)
 {
-	// Add a new decal to the list
-	decal.alphaFade = 1.0f;
 	decals.emplace_back(decal);
 }
 

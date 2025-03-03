@@ -4,7 +4,7 @@
 namespace NCL {
 	namespace CSC8503 {
 		class PushdownState {
-		public: 
+		public:
 			enum PushdownResult {
 				Push, Pop, NoChange
 			};

@@ -55,8 +55,13 @@ TutorialGame::~TutorialGame()	{
 	audioEngine.Shutdown();
 
 	delete playerController;
+
+	// FIXME: Network on PS5
+#ifndef __PROSPERO__
 	if (server != nullptr) delete server;
 	if (client != nullptr) delete client;
+#endif // !__PROSPERO__
+
 }
 
 static bool BulletRaycast(btDynamicsWorld* world, const btVector3& start, const btVector3& end, btCollisionWorld::ClosestRayResultCallback& resultCallback) {
@@ -102,13 +107,16 @@ void TutorialGame::UpdateGame(float dt) {
 	bulletWorld->debugDrawWorld();
 	renderer->collectFrameObjects(world.get());
 
+	profiler.startSection("Render Decals");
+	// Fade decal after sometime - @Kieran: Didn't forget to call the Update function this time :)
+	renderer->GetDecalSystem().Update(dt);
+
 	profiler.endFrame();
 	if (showProfiling) {
 		profiler.printTimes();
 	}
 
-	// Fade decal after sometime - @Kieran: Didn't forget to call the Update function this time :)
-	renderer->GetDecalSystem().Update(dt);
+	
 	//post processing time variable effect:
 	pulse += dt;
 	renderer->SetVignettePulse(pulse);
@@ -359,6 +367,8 @@ void TutorialGame::InitWorld() {
 }
 
 void TutorialGame::InitNetwork(bool host) {
+
+#ifndef __PROSPERO__
 	ENetAddress clientAddress;
 	client = new Network(&clientAddress, 1);
 
@@ -373,8 +383,11 @@ void TutorialGame::InitNetwork(bool host) {
 
 
 void TutorialGame::ConnectToServer(ENetAddress& address) {
+	// FIXME
+#ifndef __PROSPERO__
 	if (client == nullptr) return;
 	client->ConnectTo(&address);
+#endif // !__PROSPERO__
 }
 
 

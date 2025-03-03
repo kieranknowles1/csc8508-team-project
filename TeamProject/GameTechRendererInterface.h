@@ -3,6 +3,9 @@
 #include "DecalSystem.h"
 #include <string>
 #include <vector>
+#include <memory>
+
+#include <NCLCoreClasses/Vector.h>
 
 namespace NCL::Rendering {
 	class Mesh;
@@ -18,6 +21,15 @@ namespace NCL {
 namespace NCL::CSC8503 {
 	class GameWorld;
 	class RenderObject;
+
+	struct UIElement {
+		// TODO: Need a UV field
+		Maths::Vector2 position;
+		Maths::Vector2 size;
+		Maths::Vector4 color;
+		std::shared_ptr<Rendering::Texture> texture;
+	};
+
 
 	class GameTechRendererInterface
 	{
@@ -57,6 +69,13 @@ namespace NCL::CSC8503 {
 			vignettePulse = dt;
 		}
 
+		void AddUIElement(const UIElement& element) {
+			uiElements.push_back(element);
+		}
+
+		// TODO: Proper UI class
+		void initUi();
+
 	protected:
 		//adding bools to toggle post processing. Must be accessible from the specific renderer
 		bool hdrOn = true;
@@ -64,6 +83,7 @@ namespace NCL::CSC8503 {
 		float vignettePulse = 0;
 		Window* window;
 		Camera* camera = nullptr;
+		std::vector<UIElement> uiElements;
 		std::vector<RenderObject*> frameObjects;
 		DecalSystem decalSystem;
 	};

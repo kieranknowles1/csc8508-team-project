@@ -173,9 +173,9 @@ void PlayerController::Shoot() {
     btMatrix3x3 rotationMatrix(bulletRotation);
 
     btVector3 forwardDir = rotationMatrix * btVector3(0, 0, -1);
-    btVector3 forwardPos = (btPlayerPos + (forwardDir * 10000));
-    btCollisionWorld::AllHitsRayResultCallback callback(btPlayerPos, forwardPos);
-    bulletWorld->rayTest(btPlayerPos, forwardPos, callback);
+    btVector3 forwardPos = (camera->GetPosition() + (forwardDir * 10000));
+    btCollisionWorld::AllHitsRayResultCallback callback(camera->GetPosition(), forwardPos);
+    bulletWorld->rayTest(camera->GetPosition(), forwardPos, callback);
     
     btVector3 hitPoint = btVector3();
 	btVector3 hitNormal = btVector3(0, 1, 0); // Default normal (up)
@@ -201,12 +201,16 @@ void PlayerController::Shoot() {
             //hitObj->GetRenderObject()->SetColour(hitObj->GetRenderObject()->GetColour() * Vector4(1.05f, 0.95f, 0.95f, 1.0f));
 
 			// Convert Normal and Hit Point from Bullet's btVector3 to NCL::Maths::Vector3
-			NCL::Maths::Vector3 normal(hitNormal.getX(), hitNormal.getY(), hitNormal.getZ());
-			NCL::Maths::Vector3 hitPosition(hitPoint.getX(), hitPoint.getY(), hitPoint.getZ());
+			btVector3 normal(hitNormal.getX(), hitNormal.getY(), hitNormal.getZ());
+			btVector3 hitPosition(hitPoint.getX(), hitPoint.getY(), hitPoint.getZ());
             float decalRadius = 1.0f; // Decal radius (Alex: Adjust as needed)
+			float alphaFade = 1.0f; // Decal alpha fade (Alex: Adjust as needed)
+			btVector4 decalColor = btVector4(1.0f, 0.0f, 0.0f, 1.0f); // Decal color (Alex: Adjust as needed)
             auto pngTexture = resourceManager->getTextures().get("paintball_splash_red.png");
             // Apply the decal using the hit position and normal
 			DecalSystem::Decal decal = { hitPosition, normal, decalRadius, pngTexture };
+			decal.color = decalColor;
+			decal.alphaFade = alphaFade;
             decalSystem->ApplyDecal(decal);
         }
     }

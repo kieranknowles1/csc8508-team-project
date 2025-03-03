@@ -1,0 +1,31 @@
+#include "UIObject.psslh"
+#include "VertexAttributes.psslh"
+
+RegularBuffer<UiState> objects : register(t0);
+
+struct VS_OUTPUT {
+    float4 position : S_POSITION;
+    float2 UV : TEXCOORD0;
+    float4 colour : TEXCOORD1;
+    int texId : TEXCOORD2;
+};
+
+[CxxSymbol("UIShader::gs")]
+VS_OUTPUT main(uint vertID : S_VERTEX_ID, uint instanceID : S_INSTANCE_ID)
+{
+    VS_OUTPUT output;
+    UiState state = objects[instanceID];
+
+    float3 vPos = Positions[vertID];
+    // Screenspace position in range (0..1)
+    float2 position = state.position + (vPos * state.size);
+
+    // Convert screenspace to NDC (-1..1)
+    output.position = float4(position * 2 - 1, 0, 1);
+
+    output.UV = Positions[vertID].xy;
+    output.colour = state.colour;
+    output.texId = state.texture;
+
+    return output;
+}
