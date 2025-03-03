@@ -19,12 +19,13 @@ namespace NCL {
 				float radius;
 				std::shared_ptr<Rendering::Texture> texture;
 				float alphaFade;
+				Vector4 color;
 			};
 
 			DecalSystem(int width, int height);
 			~DecalSystem();
 
-			void ApplyDecal(Decal& decal);
+			void ApplyDecal(Decal& decal, float alphaFade, Vector4 decalColor);
 			void Update(float dt);
 
 			GLuint GetDecalTexture() const { return decalTexture; }
