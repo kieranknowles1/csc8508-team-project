@@ -410,8 +410,8 @@ void GameTechRenderer::RenderCamera() {
 	//glUniform1i(shadowTexLocation, 1);
 
 	//TODO - PUT IN FUNCTION
-	glActiveTexture(GL_TEXTURE0 + 1);
-	glBindTexture(GL_TEXTURE_2D, shadowTex);
+	//glActiveTexture(GL_TEXTURE0 + 1); TEMPORARILY REMOVED THESE TWO LINES
+	//glBindTexture(GL_TEXTURE_2D, shadowTex);
 
 	for (const auto&i : frameObjects) {
 		if ((*i).GetDefaultTexture()) { 
@@ -423,8 +423,8 @@ void GameTechRenderer::RenderCamera() {
 		}
 
 		//normal map capabilities added:
-		if ((*i).GetNormalMap()) {
-			BindTextureToShader(*(OGLTexture*)(*i).GetNormalMap(), "normalTex", 2); //need a shader that utilises normal maps, has a uniform sampler2D called "normalTex" in texture unit 2
+		if ((*i).GetNormalMap()) { //changed texture unit to 1 instead of 2 while there are no shadows
+			BindTextureToShader(*(OGLTexture*)(*i).GetNormalMap(), "normalTex", 1); //need a shader that utilises normal maps, has a uniform sampler2D called "normalTex" in texture unit 2
 		}
 
 		//Matrix4 modelMatrix = (*i).GetTransform()->GetMatrix();
@@ -433,8 +433,8 @@ void GameTechRenderer::RenderCamera() {
 		modelMatrix = modelMatrix * Matrix::Scale(i->getParent()->getRenderScale());
 		glUniformMatrix4fv(modelLocation, 1, false, (float*)&modelMatrix);
 
-		Matrix4 fullShadowMat = shadowMatrix * modelMatrix;
-		glUniformMatrix4fv(shadowLocation, 1, false, (float*)&fullShadowMat);
+		//Matrix4 fullShadowMat = shadowMatrix * modelMatrix; //TEMPORARILY REMOVING SHADOWS
+		//glUniformMatrix4fv(shadowLocation, 1, false, (float*)&fullShadowMat);
 
 		Vector4 colour = i->GetColour();
 		glUniform4fv(colourLocation, 1, &colour.x);
@@ -830,15 +830,107 @@ void GameTechRenderer::GenerateScreenTexture(GLuint& into, bool depth) {
 	glBindTexture(GL_TEXTURE_2D, 0);
 }
 
-/*
-void GameTechRenderer::FillBuffers() { //basically draws unlit scene
-	glBindFramebuffer(GL_FRAMEBUFFER, bufferFBO);
-	glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
+void GameTechRenderer::DrawScene() { //the basic rendering for the scene, currently not including shadows. Also not including post processing at the moment.
+	glEnable(GL_CULL_FACE);
+	glClearColor(1, 1, 1, 1); //should this be set to black instead?
+	RenderSkybox();
+    RenderCamera();
+    glDisable(GL_CULL_FACE); //Todo - text indices are going the wrong way...
+    glDisable(GL_BLEND);
+    glDisable(GL_DEPTH_TEST);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    NewRenderLines();
+    NewRenderTextures();
+    NewRenderText();
+    glDisable(GL_BLEND);
+    glEnable(GL_DEPTH_TEST);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    RenderUI();
+}
 
-	UseShader(*deferredsceneShader);
-	glUniform1i(glGetUniformLocation(deferredsceneShader->GetProgramID(), "diffuseTex"), 0);
-	glUniform1i(glGetUniformLocation(deferredsceneShader->GetProgramID(), "normalTex"), 0);
+void GameTechRenderer::FillBuffers() { //basically draws unlit scene 
+    //bind the framebuffer to store unlit scene
+	glBindFramebuffer(GL_FRAMEBUFFER, bufferFBO); //We will draw the whole scene into bufferFBO for now including the skybox though it may be removed later 
+	glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT); 
+	 
+	//draw scene:
+	DrawScene(); //perhaps don't need to draw whole seen but just what will be affected by lighting i.e. skybox will not
 
+	//Unbind the framebuffer:
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+}
+
+void GameTechRenderer::DrawPointLights() {
+	glBindFramebuffer(GL_FRAMEBUFFER, pointLightFBO);
+	UseShader(*pointlightShader);
+
+	glClearColor(0, 0, 0, 1); //set to black so that it doesn't interfere with additive blending for light
+	glClear(GL_COLOR_BUFFER_BIT);
+	glBlendFunc(GL_ONE, GL_ONE);
+	glCullFace(GL_FRONT);
+	glDepthFunc(GL_ALWAYS);
+	glDepthMask(GL_FALSE);
+
+	glUniform1i(glGetUniformLocation(pointlightShader->GetProgramID(), "depthTex"), 0);
 	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, )
-}*/
+	glBindTexture(GL_TEXTURE_2D, bufferDepthTex);
+
+	glUniform1i(glGetUniformLocation(pointlightShader->GetProgramID(), "normTex"), 1);
+	glActiveTexture(GL_TEXTURE1);
+	glBindTexture(GL_TEXTURE_2D, bufferNormalTex);
+
+	//glUniform3fv(glGetUniformLocation(pointlightShader->GetProgramID(), "cameraPos"), 1, (float*)&camera->GetPosition().x); //maybe dont need float
+
+	int cameraLocation = glGetUniformLocation(sceneShader->GetProgramID(), "cameraPos");
+
+	Vector3 camPos = camera->GetPosition();
+	glUniform3fv(cameraLocation, 1, &camPos.x);
+
+	glUniform2f(glGetUniformLocation(pointlightShader->GetProgramID(), "pixelSize"), 1.0f / windowSize.x, 1.0f / windowSize.y);
+
+	//gonna use the same proj and view matrices from RenderCamera(): (This might not be the right one)
+	Matrix4 viewMatrix = camera->BuildViewMatrix();
+	Matrix4 projMatrix = camera->BuildProjectionMatrix(hostWindow.GetScreenAspect());
+
+	Matrix4 invViewProj = Matrix::Inverse(projMatrix * viewMatrix); // trying to take inverse of projview matrix
+	glUniformMatrix4fv(glGetUniformLocation(pointlightShader->GetProgramID(), "inverseProjView"), 1, false, (float*)&invViewProj);
+	//update shader matrices here (don't need to set model matrices though as this will be taken care of in vertex shader):
+	glUniformMatrix4fv(glGetUniformLocation(pointlightShader->GetProgramID(), "viewMatrix"), 1, false, (float*)&viewMatrix);
+	glUniformMatrix4fv(glGetUniformLocation(pointlightShader->GetProgramID(), "projMatrix"), 1, false, (float*)&projMatrix);
+	//now send the lights to the shader: (We currently don't have a light class and therefore have to set each of the properties per light here or as currently set in constructor)
+	//for multiple lights, iterate over them here. For now, just one light:
+	glUniform3fv(glGetUniformLocation(pointlightShader->GetProgramID(), "lightPos"), 1, (float*)&lightPosition);
+	glUniform4fv(glGetUniformLocation(pointlightShader->GetProgramID(), "lightColour"), 1, (float*)&lightColour);
+	glUniform1f(glGetUniformLocation(pointlightShader->GetProgramID(), "lightRadius"), lightRadius);
+	BindMesh(*lightSphere);
+	DrawBoundMesh();
+
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	glCullFace(GL_BACK);
+	glDepthFunc(GL_LEQUAL);
+
+	glDepthMask(GL_TRUE);
+
+	glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
+
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+}
+
+void GameTechRenderer::CombineBuffers() {//basically final post processing output. Don't need to update matrices as fullscreen quad is not transformed at all
+	UseShader(*combineShader);
+	glUniform1i(glGetUniformLocation(combineShader->GetProgramID(), "diffuseTex"), 0);
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, bufferColourTex);
+
+	glUniform1i(glGetUniformLocation(combineShader->GetProgramID(), "diffuseLight"), 1);
+	glActiveTexture(GL_TEXTURE1);
+	glBindTexture(GL_TEXTURE_2D, lightDiffuseTex);
+
+	glUniform1i(glGetUniformLocation(combineShader->GetProgramID(), "specularLight"), 2); 
+	glActiveTexture(GL_TEXTURE2);
+	glBindTexture(GL_TEXTURE_2D, lightSpecularTex);
+
+	BindMesh(*fullscreenQuad);
+	DrawBoundMesh();
+
+}

@@ -124,6 +124,7 @@ namespace NCL {
 			void FillBuffers();
 			void DrawPointLights();
 			void CombineBuffers();
+			void DrawScene(); 
 
 			//Post processing additions:
 			GLuint hdrTex;
