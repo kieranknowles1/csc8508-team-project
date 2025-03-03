@@ -85,6 +85,9 @@ GameTechRenderer::GameTechRenderer() : OGLRenderer(*Window::GetWindow()) {
 	InitCrosshair(); //This line Ameya added for crosshair
 
 	//Deferred rendering additions:
+	deferredsceneShader = new OGLShader("scene.vert", "deferredscenefrag.glsl");
+	pointlightShader = new OGLShader("pointlightvertex.glsl", "pointlightfrag.glsl");
+	combineShader = new OGLShader("texturevert.glsl", "combinefrag.glsl");
 
 	lightSphere = new OGLMesh(); 
 	lightSphere = LoadMesh("Sphere.msh"); //does this need to be uploaded to GPU?
@@ -202,6 +205,9 @@ GameTechRenderer::~GameTechRenderer()	{
 	glDeleteTextures(1, &shadowTex);
 	glDeleteFramebuffers(1, &shadowFBO);
 
+	delete deferredsceneShader;
+	delete pointlightShader;
+	delete combineShader;
 	delete lightSphere;
 	glDeleteFramebuffers(1, &bufferFBO);
 	glDeleteFramebuffers(1, &pointLightFBO);
@@ -264,16 +270,16 @@ void GameTechRenderer::LoadSkybox() {
 }
 
 void GameTechRenderer::RenderFrame() {
-	glEnable(GL_CULL_FACE);
+	/*glEnable(GL_CULL_FACE);
 	glClearColor(1, 1, 1, 1);
-	RenderShadowMap();
+	RenderShadowMap();*/
 	//Set up to render into framebuffer
 	/*if (hdrOn || vignetteOn) {
 		glBindFramebuffer(GL_FRAMEBUFFER, hdrFBO); 
 		glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 	}*/
 	//
-	RenderSkybox();
+	/*RenderSkybox();
 	RenderCamera();
 	glDisable(GL_CULL_FACE); //Todo - text indices are going the wrong way...
 	glDisable(GL_BLEND);
@@ -287,6 +293,13 @@ void GameTechRenderer::RenderFrame() {
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	RenderUI();
 	//RenderPostProcessing();  
+	*/
+
+	//////deferred rendering version:
+	glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
+	FillBuffers();
+	DrawPointLights();
+	CombineBuffers();
 }
 
 void GameTechRenderer::RenderShadowMap() {
@@ -361,22 +374,24 @@ void GameTechRenderer::RenderCamera() {
 	Matrix4 viewMatrix = camera->BuildViewMatrix();
 	Matrix4 projMatrix = camera->BuildProjectionMatrix(hostWindow.GetScreenAspect());
 
-	UseShader(*sceneShader);
-	int projLocation	= glGetUniformLocation(sceneShader->GetProgramID(), "projMatrix");
-	int viewLocation	= glGetUniformLocation(sceneShader->GetProgramID(), "viewMatrix");
-	int modelLocation	= glGetUniformLocation(sceneShader->GetProgramID(), "modelMatrix");
-	int colourLocation  = glGetUniformLocation(sceneShader->GetProgramID(), "objectColour");
-	int hasVColLocation = glGetUniformLocation(sceneShader->GetProgramID(), "hasVertexColours");
-	int hasTexLocation  = glGetUniformLocation(sceneShader->GetProgramID(), "hasTexture");
-	int shadowLocation  = glGetUniformLocation(sceneShader->GetProgramID(), "shadowMatrix");
-	int hasFlatLocation = glGetUniformLocation(sceneShader->GetProgramID(), "isFlat");
-	int hasNormalLocation = glGetUniformLocation(sceneShader->GetProgramID(), "hasNormalMap");
-	int texRepeatingLocation = glGetUniformLocation(sceneShader->GetProgramID(), "texRepeating");
-	int texScaleLocation = glGetUniformLocation(sceneShader->GetProgramID(), "texScale");
+	UseShader(*deferredsceneShader); //changed all sceneShader to deferredsceneShader
+	int projLocation	= glGetUniformLocation(deferredsceneShader->GetProgramID(), "projMatrix");
+	int viewLocation	= glGetUniformLocation(deferredsceneShader->GetProgramID(), "viewMatrix");
+	int modelLocation	= glGetUniformLocation(deferredsceneShader->GetProgramID(), "modelMatrix");
+	int colourLocation  = glGetUniformLocation(deferredsceneShader->GetProgramID(), "objectColour");
+	int hasVColLocation = glGetUniformLocation(deferredsceneShader->GetProgramID(), "hasVertexColours");
+	int hasTexLocation  = glGetUniformLocation(deferredsceneShader->GetProgramID(), "hasTexture");
+	int shadowLocation  = glGetUniformLocation(deferredsceneShader->GetProgramID(), "shadowMatrix");
+	int hasFlatLocation = glGetUniformLocation(deferredsceneShader->GetProgramID(), "isFlat");
+	int hasNormalLocation = glGetUniformLocation(deferredsceneShader->GetProgramID(), "hasNormalMap");
+	int texRepeatingLocation = glGetUniformLocation(deferredsceneShader->GetProgramID(), "texRepeating");
+	int texScaleLocation = glGetUniformLocation(deferredsceneShader->GetProgramID(), "texScale");
 
-	int lightPosLocation	= glGetUniformLocation(sceneShader->GetProgramID(), "lightPos");
+	/*
+	int lightPosLocation	= glGetUniformLocation(sceneShader->GetProgramID(), "lightPos"); Lighting to be deferred
 	int lightColourLocation = glGetUniformLocation(sceneShader->GetProgramID(), "lightColour");
 	int lightRadiusLocation = glGetUniformLocation(sceneShader->GetProgramID(), "lightRadius");
+	*/
 
 	int cameraLocation = glGetUniformLocation(sceneShader->GetProgramID(), "cameraPos");
 
@@ -386,12 +401,13 @@ void GameTechRenderer::RenderCamera() {
 	glUniformMatrix4fv(projLocation, 1, false, (float*)&projMatrix);
 	glUniformMatrix4fv(viewLocation, 1, false, (float*)&viewMatrix);
 
+	/*
 	glUniform3fv(lightPosLocation, 1, (float*)&lightPosition);
 	glUniform4fv(lightColourLocation, 1, (float*)&lightColour);
-	glUniform1f(lightRadiusLocation, lightRadius);
+	glUniform1f(lightRadiusLocation, lightRadius);*/
 
-	int shadowTexLocation = glGetUniformLocation(sceneShader->GetProgramID(), "shadowTex");
-	glUniform1i(shadowTexLocation, 1);
+	//int shadowTexLocation = glGetUniformLocation(sceneShader->GetProgramID(), "shadowTex"); Also temporarily removing shadows
+	//glUniform1i(shadowTexLocation, 1);
 
 	//TODO - PUT IN FUNCTION
 	glActiveTexture(GL_TEXTURE0 + 1);
@@ -813,3 +829,16 @@ void GameTechRenderer::GenerateScreenTexture(GLuint& into, bool depth) {
 	glTexImage2D(GL_TEXTURE_2D, 0, format, windowSize.x, windowSize.y, 0, type, GL_UNSIGNED_BYTE, NULL);
 	glBindTexture(GL_TEXTURE_2D, 0);
 }
+
+/*
+void GameTechRenderer::FillBuffers() { //basically draws unlit scene
+	glBindFramebuffer(GL_FRAMEBUFFER, bufferFBO);
+	glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
+
+	UseShader(*deferredsceneShader);
+	glUniform1i(glGetUniformLocation(deferredsceneShader->GetProgramID(), "diffuseTex"), 0);
+	glUniform1i(glGetUniformLocation(deferredsceneShader->GetProgramID(), "normalTex"), 0);
+
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, )
+}*/

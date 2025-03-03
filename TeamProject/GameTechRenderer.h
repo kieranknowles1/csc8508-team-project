@@ -109,6 +109,9 @@ namespace NCL {
 			size_t textCount = 0;
 
 			//Deferred rendering additions:
+			OGLShader* deferredsceneShader;
+			OGLShader* pointlightShader;
+			OGLShader* combineShader;
 			OGLMesh* lightSphere;
 			GLuint bufferFBO;
 			GLuint pointLightFBO;
@@ -118,6 +121,9 @@ namespace NCL {
 			GLuint bufferNormalTex;
 			GLuint lightDiffuseTex;
 			GLuint lightSpecularTex;
+			void FillBuffers();
+			void DrawPointLights();
+			void CombineBuffers();
 
 			//Post processing additions:
 			GLuint hdrTex;
