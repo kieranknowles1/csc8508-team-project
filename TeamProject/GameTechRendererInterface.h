@@ -23,6 +23,7 @@ namespace NCL::CSC8503 {
 	class RenderObject;
 
 	struct UIElement {
+		// TODO: Need a UV field
 		Maths::Vector2 position;
 		Maths::Vector2 size;
 		Maths::Vector4 color;
