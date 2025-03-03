@@ -33,6 +33,8 @@ TutorialGame::TutorialGame(GameTechRendererInterface* renderer, Controller* cont
 	loadFromLevel = true;
 	resourceManager = std::make_unique<ResourceManager>(renderer);
 	InitialiseAssets();
+	InitCamera();
+	InitWorld();
 }
 
 /*
@@ -44,9 +46,6 @@ for this module, even in the coursework, but you can add it if you like!
 */
 void TutorialGame::InitialiseAssets() {
 	defaultTexture = resourceManager->getTextures().get("checkerboard.png");
-
-	InitCamera();
-	InitWorld();
 }
 
 TutorialGame::~TutorialGame()	{
@@ -272,6 +271,16 @@ void TutorialGame::clearGraveyard() {
 	std::swap(earlyGraveyard, lateGraveyard);
 }
 
+
+void TutorialGame::InitCamera() {
+	mainCamera->SetFieldOfVision(90);
+	world->GetMainCamera().SetNearPlane(0.1f);
+	world->GetMainCamera().SetFarPlane(5000.0f);
+	world->GetMainCamera().SetPitch(-15.0f);
+	world->GetMainCamera().SetYaw(315.0f);
+	world->GetMainCamera().SetPosition(Vector3(-60, 40, 60));
+}
+
 void TutorialGame::DestroyBullet() {
 	delete bulletWorld;
 	delete bulletDebug;
@@ -294,21 +303,24 @@ void TutorialGame::InitBullet() {
 	bulletWorld->setDebugDrawer(bulletDebug);
 }
 
-void TutorialGame::InitCamera() {
-	mainCamera->SetFieldOfVision(90);
-	world->GetMainCamera().SetNearPlane(0.1f);
-	world->GetMainCamera().SetFarPlane(5000.0f);
-	world->GetMainCamera().SetPitch(-15.0f);
-	world->GetMainCamera().SetYaw(315.0f);
-	world->GetMainCamera().SetPosition(Vector3(-60, 40, 60));
+void TutorialGame::LoadWorldFromFile(int levelNum) {
+	ResetWorld();
+	InitWorld();
+
+	levelImporter = new LevelImporter(resourceManager.get(), world.get(), bulletWorld);
+	levelImporter->LoadLevel(levelNum);
+	InitPlayer();
+}
+
+void TutorialGame::ResetWorld() {
+	DestroyBullet();
+	world->ClearAndErase();
+	renderer->GetDecalSystem().ClearDecalsFromWorld();
 }
 
 void TutorialGame::InitWorld() {
-	DestroyBullet();
-	world->ClearAndErase();
 	InitBullet();
 	audioEngine.Init();
-	renderer->GetDecalSystem().ClearDecalsFromWorld();
 
 	navMeshDebug = false;
 	if (navMeshDebug) {
@@ -317,46 +329,6 @@ void TutorialGame::InitWorld() {
 		navMesh->LoadFromFile("Assets/Meshes/NavMeshes/smalltest.navmesh");
 	}
 
-	if (loadFromLevel) {
-		levelImporter = new LevelImporter(resourceManager.get(), world.get(), bulletWorld);
-		levelImporter->LoadLevel(8);
-		InitPlayer();
-		return;
-	}
-
-	//floors
-	AddFloorToWorld(Vector3(0, 0, 0), Vector3(500, 2, 500), Vector3(0, 0, 0));
-	AddFloorToWorld(Vector3(498.5, -21.75, 0), Vector3(500, 2, 500), Vector3(0, 0, -5));
-	AddFloorToWorld(Vector3(996, -43.6, 0), Vector3(500, 2, 500), Vector3(0, 0, 0));
-
-	//walls
-	AddFloorToWorld(Vector3(1245, 206, 0), Vector3(2, 500, 500), Vector3(0, 0, 0));
-	AddFloorToWorld(Vector3(996, 206, 249), Vector3(500, 500, 2), Vector3(0, 0, 0));
-	AddFloorToWorld(Vector3(996, 206, -249), Vector3(500, 500, 2), Vector3(0, 0, 0));
-	AddFloorToWorld(Vector3(498, 206, 249), Vector3(500, 500, 2), Vector3(0, 0, 0));
-	AddFloorToWorld(Vector3(498, 206, -249), Vector3(500, 500, 2), Vector3(0, 0, 0));
-	AddFloorToWorld(Vector3(-2, 206, 249), Vector3(500, 500, 2), Vector3(0, 0, 0));
-	AddFloorToWorld(Vector3(-2, 206, -249), Vector3(500, 500, 2), Vector3(0, 0, 0));
-	AddFloorToWorld(Vector3(-248, 206, 0), Vector3(2, 500, 500), Vector3(0, 0, 0));
-
-	// Use this as a reference to create more cube objects
-	AddCubeToWorld(Vector3(0, 30, 0), Vector3(5, 5, 5), 1.0f);
-	AddCubeToWorld(Vector3(500, 30, 0), Vector3(10, 10, 10), 5.0f);
-	AddCubeToWorld(Vector3(20, 30, 50), Vector3(7, 7, 7), 4.0f);
-	AddCubeToWorld(Vector3(120, 30, -20), Vector3(5, 5, 5), 1.0f);
-	AddCubeToWorld(Vector3(100, 8, 100), Vector3(30, 2,30), 0.0f);
-
-	// Use this as a reference to create more sphere objects
-	AddSphereToWorld(Vector3(10, 30, 0), 5.0f, 4.0f);
-	AddSphereToWorld(Vector3(-30, 30, 0), 7.0f, 8.0f);
-	AddSphereToWorld(Vector3(300, 30, -40), 9.0f, 16.0f);
-
-	// Use this as a reference to create more capsule objects
-	AddCapsuleToWorld(Vector3(20, 15, 0), 4.0f, 2.0f, 2.0f);
-	AddCapsuleToWorld(Vector3(70, 15, -20), 8.0f, 4.0f, 4.0f);
-	AddCapsuleToWorld(Vector3(-20, 15, 12), 6.0f, 5.0f, 8.0f);
-
-	InitPlayer();
 	if (navMeshDebug) {
 		AddTurretToWorld();
 		AddWandererToWorld();
