@@ -173,9 +173,9 @@ void PlayerController::Shoot() {
     btMatrix3x3 rotationMatrix(bulletRotation);
 
     btVector3 forwardDir = rotationMatrix * btVector3(0, 0, -1);
-    btVector3 forwardPos = (btPlayerPos + (forwardDir * 10000));
-    btCollisionWorld::AllHitsRayResultCallback callback(btPlayerPos, forwardPos);
-    bulletWorld->rayTest(btPlayerPos, forwardPos, callback);
+    btVector3 forwardPos = (camera->GetPosition() + (forwardDir * 10000));
+    btCollisionWorld::AllHitsRayResultCallback callback(camera->GetPosition(), forwardPos);
+    bulletWorld->rayTest(camera->GetPosition(), forwardPos, callback);
     
     btVector3 hitPoint = btVector3();
 	btVector3 hitNormal = btVector3(0, 1, 0); // Default normal (up)
