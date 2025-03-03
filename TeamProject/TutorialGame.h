@@ -78,6 +78,7 @@ namespace NCL {
 			~TutorialGame();
 
 			virtual void UpdateGame(float dt);
+			void LoadWorldFromFile(int levelNum);
 
 		protected:
 			void InitialiseAssets();
@@ -85,7 +86,9 @@ namespace NCL {
 			void InitCamera();
 			void UpdateKeys();
 			void ThirdPersonControls();
+
 			void InitWorld();
+			void ResetWorld();
 
 			/**
 			 * @brief Initialise the network object and run it.
@@ -101,6 +104,8 @@ namespace NCL {
 			 * @param address ENetAddress of the servers location.
 			 */
 			void ConnectToServer(ENetAddress& address);
+
+
 
 			void UpdatePlayer(float dt);
 
@@ -137,7 +142,6 @@ namespace NCL {
 			}
 
 			GameObject* objClosest = nullptr;
-
 
 			/* bullet physics stuff here */
 			btDiscreteDynamicsWorld* bulletWorld = nullptr;

@@ -1,6 +1,7 @@
 #include "DecalSystem.h"
 #include "ResourceManager.h"
 #include <iostream>
+#include <glad/gl.h>
 
 using namespace NCL::Rendering;
 using namespace NCL::CSC8503;
@@ -8,6 +9,7 @@ using namespace NCL::CSC8503;
 DecalSystem::DecalSystem(int width, int height) 
 	: decayRate(0.1f), textureWidth(width), textureHeight(height)
 {
+#ifndef __PROSPERO__
 	// Create an empty texture to store the applied decals
 	glGenTextures(1, &decalTexture);
 	glBindTexture(GL_TEXTURE_2D, decalTexture);
@@ -28,18 +30,19 @@ DecalSystem::DecalSystem(int width, int height)
 	}
 
 	glBindFramebuffer(GL_FRAMEBUFFER, 0); // Unbind FBO
+#endif
 }
 
 DecalSystem::~DecalSystem()
 {
+#ifndef __PROSPERO__
 	glDeleteTextures(1, &decalTexture);
 	glDeleteFramebuffers(1, &decalFBO);
+#endif
 }
 
 void DecalSystem::ApplyDecal(Decal& decal)
 {
-	// Add a new decal to the list
-	decal.alphaFade = 1.0f;
 	decals.emplace_back(decal);
 }
 

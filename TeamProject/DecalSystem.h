@@ -1,12 +1,12 @@
 #pragma once
 
 #include <vector>
-#include <Vector.h>
-#include <OGLTexture.h>
-#include "Maths.h"
-#include "Texture.h"
 
-using namespace NCL::Maths;
+#include <Vector.h>
+#include "Maths.h"
+#include <OGLTexture.h>
+#include "Texture.h"
+#include "btBulletDynamicsCommon.h"
 
 namespace NCL {
 	namespace CSC8503 {
@@ -14,11 +14,12 @@ namespace NCL {
 		class DecalSystem {
 		public:
 			struct Decal {
-				Vector3 position;
-				Vector3 normal;
+				btVector3 position;
+				btVector3 normal;
 				float radius;
 				std::shared_ptr<Rendering::Texture> texture;
 				float alphaFade;
+				btVector4 color;
 			};
 
 			DecalSystem(int width, int height);
@@ -27,16 +28,16 @@ namespace NCL {
 			void ApplyDecal(Decal& decal);
 			void Update(float dt);
 
-			GLuint GetDecalTexture() const { return decalTexture; }
-			GLuint GetDecalFBO() const { return decalFBO; }
+			unsigned int GetDecalTexture() const { return decalTexture; }
+			unsigned int GetDecalFBO() const { return decalFBO; }
 
 			const std::vector<Decal>& GetDecals() const { return decals; }
 
 			void ClearDecalsFromWorld() { decals.clear(); }
 
 		private:
-			GLuint decalFBO;
-			GLuint decalTexture;
+			unsigned int decalFBO;
+			unsigned int decalTexture;
 
 			int textureWidth;
 			int textureHeight;

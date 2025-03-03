@@ -6,14 +6,27 @@
 
 #include <sys/types.h>
 #include <sys/socket.h>
-#include <sys/ioctl.h>
 #include <sys/time.h>
 #include <netinet/tcp.h>
-#include <netdb.h>
 #include <unistd.h>
 #include <string.h>
 #include <errno.h>
 #include <time.h>
+
+#ifndef __PROSPERO__
+#include <sys/ioctl.h>
+#include <netdb.h>
+#else
+#include <net.h>
+#include <sys/ioccom.h>
+
+#define FIONBIO SCE_NET_SO_NBIO
+
+#define HAS_INET_NTOP 1
+#define HAS_INET_PTON 1
+#define HAS_FCNTL 1
+
+#endif // !__PROSPERO__
 
 #define ENET_BUILDING_LIB 1
 #include "enet/enet.h"
@@ -53,7 +66,7 @@
 #include <poll.h>
 #endif
 
-#if !defined(HAS_SOCKLEN_T) && !defined(__socklen_t_defined)
+#if !defined(HAS_SOCKLEN_T) && !defined(__socklen_t_defined) && !defined(__PROSPERO__)
 typedef int socklen_t;
 #endif
 
@@ -141,6 +154,8 @@ enet_address_set_host (ENetAddress * address, const char * name)
 
     if (resultList != NULL)
       freeaddrinfo (resultList);
+#elif defined(__PROSPERO__)
+    assert(0 && "enet_address_set_host not implemented for PS5");
 #else
     struct hostent * hostEntry = NULL;
 #ifdef HAS_GETHOSTBYNAME_R
@@ -210,6 +225,8 @@ enet_address_get_host (const ENetAddress * address, char * name, size_t nameLeng
     }
     if (err != EAI_NONAME)
       return -1;
+#elif defined(__PROSPERO__)
+    assert(0 && "enet_address_get_host not defined for PS5");
 #else
     struct in_addr in;
     struct hostent * hostEntry = NULL;
@@ -287,7 +304,12 @@ enet_socket_get_address (ENetSocket socket, ENetAddress * address)
 int 
 enet_socket_listen (ENetSocket socket, int backlog)
 {
+#ifndef __PROSPERO__
     return listen (socket, backlog < 0 ? SOMAXCONN : backlog);
+#else
+    return sceNetListen(socket, backlog);
+#endif // !__PROSPERO__
+
 }
 
 ENetSocket

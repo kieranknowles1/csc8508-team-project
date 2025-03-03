@@ -1,10 +1,10 @@
 #pragma once
-#include "GameTechRenderer.h"
+#include "GameTechRendererInterface.h"
 
 namespace NCL {
 	namespace CSC8503 {
 		class PushdownState {
-		public: 
+		public:
 			enum PushdownResult {
 				Push, Pop, NoChange
 			};
@@ -15,7 +15,7 @@ namespace NCL {
 			virtual void OnAwake() {}
 			virtual void OnSleep() {}
 
-			virtual void OnRender(GameTechRenderer* renderer) {}
+			virtual void OnRender(GameTechRendererInterface* renderer) {}
 		};
 	}
 }

@@ -3,6 +3,9 @@
 #include "DecalSystem.h"
 #include <string>
 #include <vector>
+#include <memory>
+
+#include <NCLCoreClasses/Vector.h>
 
 namespace NCL::Rendering {
 	class Mesh;
@@ -12,15 +15,27 @@ namespace NCL::Rendering {
 
 namespace NCL {
 	class Camera;
+	class Window;
 }
 
 namespace NCL::CSC8503 {
 	class GameWorld;
 	class RenderObject;
 
+	struct UIElement {
+		// TODO: Need a UV field
+		Maths::Vector2 position;
+		Maths::Vector2 size;
+		Maths::Vector4 color;
+		std::shared_ptr<Rendering::Texture> texture;
+	};
+
+
 	class GameTechRendererInterface
 	{
 	public:
+		GameTechRendererInterface(Window* window);
+
 		virtual Rendering::Mesh* LoadMesh(const std::string& name) = 0;
 		virtual Rendering::Texture*	LoadTexture(const std::string& name) = 0;
 
@@ -32,7 +47,9 @@ namespace NCL::CSC8503 {
 			hdrOn = toggle;
 		}
 
-		virtual DecalSystem& GetDecalSystem() = 0;
+		DecalSystem& GetDecalSystem() {
+			return decalSystem;
+		}
 		void setCamera(Camera* cam) {
 			camera = cam;
 		}
@@ -52,13 +69,23 @@ namespace NCL::CSC8503 {
 			vignettePulse = dt;
 		}
 
+		void AddUIElement(const UIElement& element) {
+			uiElements.push_back(element);
+		}
+
+		// TODO: Proper UI class
+		void initUi();
+
 	protected:
 		//adding bools to toggle post processing. Must be accessible from the specific renderer
 		bool hdrOn = true;
 		bool vignetteOn = false;
 		float vignettePulse = 0;
+		Window* window;
 		Camera* camera = nullptr;
+		std::vector<UIElement> uiElements;
 		std::vector<RenderObject*> frameObjects;
+		DecalSystem decalSystem;
 	};
 }
 

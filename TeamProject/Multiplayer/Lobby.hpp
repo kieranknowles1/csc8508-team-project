@@ -2,6 +2,7 @@
 
 #include <array>
 #include <unordered_map>
+#include <optional>
 
 #include "Multiplayer/User.hpp"
 #include "Colors.h"

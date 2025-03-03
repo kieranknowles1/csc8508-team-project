@@ -9,6 +9,7 @@
 #include "./Shaders/PSSL/Interop.h"				//Always include this before any PSSL headers
 #include "./Shaders/PSSL/ShaderConstants.psslh"
 #include "./Shaders/PSSL/TechObject.psslh"
+#include "./Shaders/PSSL/UIObject.psslh"
 
 namespace NCL {
 	namespace Rendering {
@@ -51,6 +52,8 @@ namespace NCL {
 			void ShadowmapPass();
 			void SkyboxPass();
 			void MainRenderPass();
+
+			void UiPass();
 
 			void DisplayRenderPass();
 
@@ -97,6 +100,7 @@ namespace NCL {
 			struct FrameData {
 				sce::Agc::Core::Buffer constantBuffer;
 				sce::Agc::Core::Buffer objectBuffer;
+				sce::Agc::Core::Buffer uiBuffer;
 
 				sce::Agc::Core::Buffer debugLineBuffer;
 				sce::Agc::Core::Buffer debugTextBuffer;
@@ -105,6 +109,7 @@ namespace NCL {
 
 				int globalDataOffset	= 0;	//Where does the global data start in the buffer?
 				int objectStateOffset	= 0;	//Where does the object states start?
+				int uiOffset = 0;
 				int debugLinesOffset	= 0;	//Where do the debug lines start?
 				int debugTextOffset		= 0;	//Where do the debug text verts start?
 
@@ -121,7 +126,8 @@ namespace NCL {
 			FrameData* currentFrame;
 			int currentFrameIndex;
 
-			NCL::PS5::AGCMesh* quadMesh;
+			std::unique_ptr<PS5::AGCMesh> unitQuad;
+			std::unique_ptr<PS5::AGCMesh> halfUnitQuad;
 
 			sce::Agc::Core::Texture*	bindlessTextures;
 			sce::Agc::Core::Buffer*		bindlessBuffers;
@@ -138,6 +144,9 @@ namespace NCL {
 
 			NCL::PS5::AGCShader* defaultVertexShader;
 			NCL::PS5::AGCShader* defaultPixelShader;
+
+			std::unique_ptr<PS5::AGCShader> uiVertexShader;
+			std::unique_ptr<PS5::AGCShader> uiPixelShader;
 
 			NCL::PS5::AGCShader* shadowVertexShader;
 			NCL::PS5::AGCShader* shadowPixelShader;

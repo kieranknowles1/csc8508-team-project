@@ -148,10 +148,9 @@ target_include_directories(${PROJECT_NAME} PRIVATE ${INCLUDE_DIRECTORIES}>)
 
 target_link_libraries(${PROJECT_NAME} PUBLIC NCLCoreClasses)
 target_link_libraries(${PROJECT_NAME} PUBLIC CSC8503CoreClasses)
+target_link_libraries(${PROJECT_NAME} PUBLIC NetworkLib)
 if(NOT PS5_BUILD)
     target_link_libraries(${PROJECT_NAME} PUBLIC OpenGLRendering)
-    # TODO: PS5 Support
-    target_link_libraries(${PROJECT_NAME} PUBLIC NetworkLib)
 endif()
 target_link_libraries(${PROJECT_NAME} PUBLIC ${BULLET_LIBRARIES})
 target_link_libraries(${PROJECT_NAME} PUBLIC nlohmann_json::nlohmann_json)

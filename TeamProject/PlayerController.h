@@ -104,6 +104,10 @@ namespace NCL {
 			float bulletSpeed = 1000.0f;
 			btVector3 gunCameraOffset = btVector3(1.3, -0.7, -1.2);
 			btVector3 bulletCameraOffset = btVector3(1.0, -0.5, -3.0);
+			float decalRadius = 8.0f;
+			float alphaFade = 1.0f;
+			btVector4 decalColor = btVector4(1.0f, 0.0f, 0.0f, 1.0f);
+			std::string decalTexturePath = "paintball_splash_red.png";
 
 			//Rotation Variables
 			float rotateTime = 0.5f;
@@ -157,7 +161,7 @@ namespace NCL {
 			btIDebugDraw* debugDrawer;
 			bool onIce = false;
 			btVector3 previousVelocity;
-
+			std::shared_ptr<NCL::Rendering::Texture> pngTexture = nullptr;
 
 			Vector2 getDirectionalInput() const;
 			void Initialise();
