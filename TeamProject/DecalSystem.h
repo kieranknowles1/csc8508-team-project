@@ -19,6 +19,7 @@ namespace NCL {
 				float radius;
 				std::shared_ptr<Rendering::Texture> texture;
 				float alphaFade;
+				Vector4 color;
 			};
 
 			DecalSystem(int width, int height);

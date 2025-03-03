@@ -204,9 +204,13 @@ void PlayerController::Shoot() {
 			NCL::Maths::Vector3 normal(hitNormal.getX(), hitNormal.getY(), hitNormal.getZ());
 			NCL::Maths::Vector3 hitPosition(hitPoint.getX(), hitPoint.getY(), hitPoint.getZ());
             float decalRadius = 1.0f; // Decal radius (Alex: Adjust as needed)
+			float alphaFade = 1.0f; // Decal alpha fade (Alex: Adjust as needed)
+			Vector4 decalColor = Vector4(1.0f, 0.0f, 0.0f, 1.0f); // Decal color (Alex: Adjust as needed)
             auto pngTexture = resourceManager->getTextures().get("paintball_splash_red.png");
             // Apply the decal using the hit position and normal
 			DecalSystem::Decal decal = { hitPosition, normal, decalRadius, pngTexture };
+			decal.color = decalColor;
+			decal.alphaFade = alphaFade;
             decalSystem->ApplyDecal(decal);
         }
     }
