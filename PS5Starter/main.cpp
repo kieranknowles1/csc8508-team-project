@@ -21,7 +21,7 @@ int main() {
 
 #ifdef USEVULKAN
 	std::unique_ptr<GameTechVulkanRenderer> renderer = std::make_unique<GameTechVulkanRenderer>();
-#elif USEAGC
+#elif defined(__PROSPERO__)
 	std::unique_ptr<GameTechAGCRenderer> renderer = std::make_unique<GameTechAGCRenderer>();
 #else
 	GameTechRenderer* renderer = new GameTechRenderer(*world);

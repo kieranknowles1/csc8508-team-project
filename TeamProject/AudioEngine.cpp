@@ -2,7 +2,7 @@
 #include "Assets.h"
 
 #ifdef __PROSPERO__
-#include "agc.h"
+#include <kernel.h>
 #endif // __PROSPERO__
 
 

@@ -24,6 +24,7 @@
 
 #define HAS_INET_NTOP 1
 #define HAS_INET_PTON 1
+#define HAS_FCNTL 1
 
 #endif // !__PROSPERO__
 

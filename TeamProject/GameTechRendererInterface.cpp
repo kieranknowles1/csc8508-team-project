@@ -22,7 +22,6 @@ namespace NCL::CSC8503 {
 		frameObjects.clear();
 
 		world->OperateOnContents([&](GameObject* obj) {
-			// TODO: Frustum culling, sorting
 			if (!obj->IsActive()) return;
 			auto render = obj->GetRenderObject();
 			if (!render) return;
