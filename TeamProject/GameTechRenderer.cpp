@@ -681,6 +681,7 @@ void GameTechRenderer::RenderDecals() {
 	glUniform1i(decalTextureLocation, 0);
 
 	GLuint alphaFadeLocation = glGetUniformLocation(decalShader->GetProgramID(), "alphaFade");
+	GLuint decalColorLocation = glGetUniformLocation(decalShader->GetProgramID(), "decalColor");
 
 	GLuint modelMatrixLocation = glGetUniformLocation(decalShader->GetProgramID(), "modelMatrix");
 	GLuint viewProjMatrixLocation = glGetUniformLocation(decalShader->GetProgramID(), "viewProjMatrix");
@@ -689,7 +690,7 @@ void GameTechRenderer::RenderDecals() {
 		// Create a rotation matrix to orient the decal based on the normal of the surface it is projected onto
 		Matrix4 rotationMatrix = Matrix::RotationFromNormal(decal.normal);
 
-		Matrix4 modelMatrix = Matrix::Translation(decal.position) *
+		Matrix4 modelMatrix = Matrix::Translation(Vector3(decal.position)) *
 							  rotationMatrix *
 							  Matrix::Scale(Vector3(decal.radius, decal.radius, decal.radius));
 
@@ -700,6 +701,7 @@ void GameTechRenderer::RenderDecals() {
 		Matrix4 viewProjMatrix = projMatrix * viewMatrix;
 
 		glUniform1f(alphaFadeLocation, decal.alphaFade);
+		glUniform4fv(decalColorLocation, 1, (float*)&decal.color);
 		glUniformMatrix4fv(modelMatrixLocation, 1, false, (float*)&modelMatrix);
 		glUniformMatrix4fv(viewProjMatrixLocation, 1, false, (float*)&viewProjMatrix);
 
