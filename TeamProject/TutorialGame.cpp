@@ -56,11 +56,8 @@ TutorialGame::~TutorialGame()	{
 
 	delete playerController;
 
-	// FIXME: Network on PS5
-#ifndef __PROSPERO__
 	if (server != nullptr) delete server;
 	if (client != nullptr) delete client;
-#endif // !__PROSPERO__
 
 }
 
@@ -368,7 +365,6 @@ void TutorialGame::InitWorld() {
 
 void TutorialGame::InitNetwork(bool host) {
 
-#ifndef __PROSPERO__
 	ENetAddress clientAddress;
 	client = new Network(&clientAddress, 1);
 
@@ -384,10 +380,8 @@ void TutorialGame::InitNetwork(bool host) {
 
 void TutorialGame::ConnectToServer(ENetAddress& address) {
 	// FIXME
-#ifndef __PROSPERO__
 	if (client == nullptr) return;
 	client->ConnectTo(&address);
-#endif // !__PROSPERO__
 }
 
 
