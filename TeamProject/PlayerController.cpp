@@ -306,9 +306,7 @@ btVector3 PlayerController::FindFloorNormal() {
     else {
         return upDirection;
     }
-
 }
-
 
 //transitions states between standing and sliding, also handles physics for while sliding
 void PlayerController::HandleSliding(float dt) {

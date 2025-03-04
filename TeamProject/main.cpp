@@ -143,6 +143,7 @@ std::unique_ptr<Window> createWindow(const Config& config) {
 	}
 }*/
 
+
 int main(int argc, char** argv) {
 	PushdownMachine machine(new GameScreen());
 
@@ -157,17 +158,48 @@ int main(int argc, char** argv) {
 	auto renderer = std::make_unique<GameTechRenderer>();
 	auto controller = std::make_unique<KeyboardMouseController>(*window->GetKeyboard(), *window->GetMouse());
 
+
 	auto game = std::make_unique<TutorialGame>(renderer.get(), controller.get());
-	game->LoadWorldFromFile(8);
 
 	// Clear delta time to exclude start up time
 	window->GetTimer().GetTimeDeltaSeconds();
 
+	const std::string singleplayer = "Singleplayer";
+	const std::string hostGame = "Host Game";
+	const std::string joinGame = "Join Game";
+	int selection = 0;
+	bool inMenu = true;
+
+	std::string menuItems[3] = { singleplayer, hostGame, joinGame };
+
 	while (window->UpdateWindow() && !Window::GetKeyboard()->KeyDown(KeyCodes::ESCAPE)) {
 
-		//if (NCL::Window::GetKeyboard()->KeyPressed(NCL::KeyCodes::P)) {
-		//	paused = !paused;
-		//}
+		if (inMenu) {
+			if (NCL::Window::GetKeyboard()->KeyPressed(NCL::KeyCodes::DOWN)) {
+				selection = std::min(2, selection + 1);
+			}
+			if (NCL::Window::GetKeyboard()->KeyPressed(NCL::KeyCodes::UP)) {
+				selection = std::max(0, selection - 1);
+			}
+			if (NCL::Window::GetKeyboard()->KeyPressed(NCL::KeyCodes::RETURN)) {
+				GameMode mode = static_cast<GameMode>(selection);
+
+				if (mode == GameMode::SINGLEPLAYER) {
+					game->LoadWorldFromFile(8);
+				}
+				else {
+					game->JoinGame(mode == GameMode::HOST_GAME);
+				}
+				inMenu = false;
+			}
+
+			for (int i = 0; i < 3; i++) {
+				std::string currentItem = menuItems[i];
+				if (i == selection) currentItem = currentItem + " <";
+				Debug::Print(currentItem, Vector2(1, 50 + (10 * i)));
+			}
+		}
+
 
 		float dt = window->GetTimer().GetTimeDeltaSeconds();
 
@@ -175,6 +207,7 @@ int main(int argc, char** argv) {
 		//if (!paused) {
 		//	game->UpdateGame(dt);
 		//}
+
 		game->UpdateGame(dt);
 		//machine.Update(dt);
 
