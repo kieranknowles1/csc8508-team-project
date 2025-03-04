@@ -234,7 +234,7 @@ int main(int argc, char** argv) {
 	auto controller = createController(window.get());
 
 
-	auto game = std::make_unique<TutorialGame>(renderer.get(), controller.get());
+	auto game = std::make_unique<TutorialGame>(renderer.get(), controller);
 
 
 	// Clear delta time to exclude start up time
@@ -293,8 +293,8 @@ int main(int argc, char** argv) {
 		game->UpdateGame(dt);
 		//machine.Update(dt);
 
-		renderer->Update(dt);
-		renderer->Render();
+		renderer->drawFrame(dt);
+		machine.Update(dt);
 
 
 		Debug::UpdateRenderables(dt);
