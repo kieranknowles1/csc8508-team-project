@@ -204,10 +204,6 @@ void GameTechRenderer::RenderFrame() {
 	//Set up to render into framebuffer
 	glBindFramebuffer(GL_FRAMEBUFFER, hdrFBO);
 	glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
-
-	
-	
-	
 	RenderSkybox();
 	RenderCamera();
 
@@ -225,24 +221,35 @@ void GameTechRenderer::RenderFrame() {
 	// Blend decals onto the scene using a fullscreen quad
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
 	UseShader(*decalBlendShader);
 
-	// Bind decal texture
 	GLuint decalTextureLocation = glGetUniformLocation(decalBlendShader->GetProgramID(), "decalTexture");
-	//glUniform1i(decalTextureLocation, 0);
+	glUniform1i(decalTextureLocation, 0);
 
+	// Bind the decal texture
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, decalSystem.GetDecalTexture());
 
+	// Bind the scene texture
 	glActiveTexture(GL_TEXTURE1);
 	glBindTexture(GL_TEXTURE_2D, hdrTex);
 	glUniform1i(glGetUniformLocation(decalBlendShader->GetProgramID(), "sceneTexture"), 1);
 
+	// Bind depth texture
+	glActiveTexture(GL_TEXTURE2);
+	glBindTexture(GL_TEXTURE_2D, hdrDepthTex);
+	glUniform1i(glGetUniformLocation(decalBlendShader->GetProgramID(), "depthTexture"), 2);
+
+	// Bind the decal depth texture
+	glActiveTexture(GL_TEXTURE3);
+	glBindTexture(GL_TEXTURE_2D, decalSystem.GetDecalDepthTexture());
+	glUniform1i(glGetUniformLocation(decalBlendShader->GetProgramID(), "decalDepthTexture"), 3);
+
 	// Render fullscreen quad to apply decals over the scene
-	//RenderFullScreenQuad();
+	RenderFullScreenQuad();
+
 	glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 	glDisable(GL_CULL_FACE);
 	glDisable(GL_BLEND);
@@ -734,11 +741,25 @@ void GameTechRenderer::RenderFullScreenQuad() {
 void GameTechRenderer::RenderDecals() {
 	// Bind the decal FBO to keep decal rendering separate from the main scene
 	glBindFramebuffer(GL_FRAMEBUFFER, decalSystem.GetDecalFBO());
+
+	// Copy the scene depth buffer to the decal FBO
+	glBindFramebuffer(GL_READ_FRAMEBUFFER, hdrFBO);
+	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, decalSystem.GetDecalFBO());
+	glBlitFramebuffer(0, 0, windowSize.x, windowSize.y, // Read buffer (scene)
+					  0, 0, windowSize.x, windowSize.y, // Write buffer (decals)
+					  GL_DEPTH_BUFFER_BIT, GL_NEAREST); // Copy depth buffer
+
+	// Rebinding the FBO is necessary because the depth buffer is copied from the scene FBO
+	glBindFramebuffer(GL_FRAMEBUFFER, decalSystem.GetDecalFBO());
+
 	glClearColor(0, 0, 0, 0);
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // clear the decal FBO
+	// Not clearing the depth buffer because it was copied from the scene FBO
+	// This is to ensure that the decals are projected onto the correct surfaces
+	glClear(GL_COLOR_BUFFER_BIT); // clear the decal FBO
 
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	glEnable(GL_DEPTH_TEST); // Enable depth testing
 
 	UseShader(*decalShader);
 
