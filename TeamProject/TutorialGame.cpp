@@ -79,7 +79,7 @@ void TutorialGame::UpdateGame(float dt) {
 	if (navMesh && navMeshDebug) {
 		visualiseNavMesh();
 		if (wanderer) {
-			//wanderer->Update(dt);f
+			wanderer->Update(dt);
 		}
 	}
 
@@ -178,7 +178,7 @@ void TutorialGame::ThirdPersonControls() {
 void TutorialGame::visualiseNavMesh() {
 	navMesh->VisualiseNavMesh();
 
-	btVector3 startPoint(94, 0.5833334, 26);
+	/*btVector3 startPoint(94, 0.5833334, 26);
 	btVector3 endPoint(68, 0.5833334, 34);
 
 	btIDebugDraw* debugDrawer = bulletWorld->getDebugDrawer();
@@ -189,7 +189,7 @@ void TutorialGame::visualiseNavMesh() {
 
 	// Find path and draw it
 	std::vector<btVector3> path = navMesh->FindPath(startPoint, endPoint);
-	//navMesh->DebugDrawPath(path);
+	//navMesh->DebugDrawPath(path);*/
 }
 
 
@@ -288,6 +288,10 @@ void TutorialGame::InitWorld() {
 		levelImporter = new LevelImporter(resourceManager.get(), world, bulletWorld);
 		levelImporter->LoadLevel(8);
 		InitPlayer();
+		if (navMeshDebug) {
+			AddTurretToWorld();
+			AddWandererToWorld();
+		}
 		return;
 	}
 
@@ -325,8 +329,10 @@ void TutorialGame::InitWorld() {
 
 	
 	InitPlayer();
-	AddTurretToWorld();
-	//if (navMeshDebug) AddWandererToWorld();
+	if (navMeshDebug) {
+		AddTurretToWorld();
+		AddWandererToWorld();
+	}
 }
 
 void TutorialGame::InitPlayer() {
