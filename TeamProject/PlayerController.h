@@ -15,6 +15,7 @@
 #include <btBulletDynamicsCommon.h>
 #include <btBulletCollisionCommon.h>
 #include "DecalSystem.h"
+#include "Shoot.h"
 
 
 namespace NCL {
@@ -170,6 +171,7 @@ namespace NCL {
 			bool onIce = false;
 			btVector3 previousVelocity;
 			std::shared_ptr<NCL::Rendering::Texture> pngTexture = nullptr;
+			Shoot* shoot;
 
 			Vector2 getDirectionalInput() const;
 			void Initialise();

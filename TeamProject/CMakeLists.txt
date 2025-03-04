@@ -43,6 +43,8 @@ set(SOURCES
     Multiplayer/User.hpp
 	Wanderer.h
 	Wanderer.cpp
+    Shoot.cpp
+    Shoot.h
 )
 
 set(ASSET_ROOT "${CMAKE_SOURCE_DIR}/Assets")

@@ -2,6 +2,7 @@
 #include "AudioEngine.h"
 #include "TutorialGame.h"
 
+
 using namespace NCL;
 using namespace CSC8503;
 
@@ -22,6 +23,7 @@ void PlayerController::Initialise() {
     rb = player->GetPhysicsObject()->GetRigidBody();
     debugDrawer = bulletWorld->getDebugDrawer();
     pngTexture = resourceManager->getTextures().get(decalTexturePath);
+    shoot = Shoot::GetInstance();
 }
 
 btVector3 GetEulerAngles(btQuaternion quat) {
@@ -174,6 +176,8 @@ void PlayerController::Shoot() {
     btMatrix3x3 rotationMatrix(bulletRotation);
 
     btVector3 forwardDir = rotationMatrix * btVector3(0, 0, -1);
+    shoot->ShootBullet(camera->GetPosition(), forwardDir);
+
     btVector3 forwardPos = (camera->GetPosition() + (forwardDir * 10000));
     btCollisionWorld::AllHitsRayResultCallback callback(camera->GetPosition(), forwardPos);
     bulletWorld->rayTest(camera->GetPosition(), forwardPos, callback);
