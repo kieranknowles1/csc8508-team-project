@@ -214,13 +214,13 @@ void GameTechRenderer::RenderFrame() {
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	NewRenderLines();
 	NewRenderTextures();
-	NewRenderText();
 	RenderDecals();
 	glDisable(GL_BLEND);
 	glEnable(GL_DEPTH_TEST);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	RenderPostProcessing();
 	RenderUI();
+	NewRenderText();
 }
 
 void GameTechRenderer::RenderShadowMap() {
