@@ -28,6 +28,7 @@ namespace NCL::CSC8503 {
 		Maths::Vector2 size;
 		Maths::Vector4 color;
 		std::shared_ptr<Rendering::Texture> texture;
+		bool isScoreboard = false;
 	};
 
 
@@ -73,6 +74,10 @@ namespace NCL::CSC8503 {
 			uiElements.push_back(element);
 		}
 
+		void ToggleScoreboard() {
+			showScoreboard = !showScoreboard;
+		}
+
 		// TODO: Proper UI class
 		void initUi();
 
@@ -80,6 +85,7 @@ namespace NCL::CSC8503 {
 		//adding bools to toggle post processing. Must be accessible from the specific renderer
 		bool hdrOn = true;
 		bool vignetteOn = false;
+		bool showScoreboard = false;
 		float vignettePulse = 0;
 		Window* window;
 		Camera* camera = nullptr;

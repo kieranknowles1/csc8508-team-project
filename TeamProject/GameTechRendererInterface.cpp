@@ -63,6 +63,31 @@ namespace NCL::CSC8503 {
 		// Bottom line
 		AddUIElement({ Vector2(screenCenter.x, screenCenter.y - gapSize - lineLength),
 			Vector2(lineThickness, lineLength), crosshairColor });
+
+		//Scoreboard
+		Vector4 scoreboardColor = Vector4(0.1f, 0.1f, 0.1f, 0.7f);
+		Vector4 boxColor = Vector4(0.2f, 0.2f, 0.2f, 0.7f);
+		Vector4 borderColor = Vector4(0.5f, 0.5f, 0.5f, 0.7f); // Highlight color for borders
+		Vector4 textColor = Vector4(0.0f, 0.0f, 0.0f, 1.0f); // White text color
+		Vector2 totalSize = Vector2(0.7f, 0.7f);
+		Vector2 boxSize = Vector2(totalSize.x, totalSize.y / 9.0f); // 1 column, 9 rows
+		float borderThickness = 0.005f; // Thickness of the border
+
+		AddUIElement({ screenCenter, totalSize, scoreboardColor, nullptr, true });
+
+		for (int row = 0; row < 9; ++row) {
+			Vector2 position = Vector2(
+				screenCenter.x,
+				screenCenter.y - totalSize.y / 2.0f + boxSize.y / 2.0f + row * boxSize.y
+			);
+
+			// Add border
+			AddUIElement({ position, boxSize + Vector2(borderThickness, borderThickness), borderColor, nullptr, true});
+
+			// Add main box
+			AddUIElement({ position, boxSize, boxColor, nullptr, true});
+
+		}
 	}
 
 }

@@ -600,6 +600,11 @@ void GameTechRenderer::RenderUI() {
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 	for (const auto& uiElement : uiElements) {
+		
+		if (!showScoreboard && uiElement.isScoreboard) {
+			continue;
+		}
+		
 		Vector2 pos = uiElement.position;
 		Vector2 size = uiElement.size;
 		Vector4 color = uiElement.color;

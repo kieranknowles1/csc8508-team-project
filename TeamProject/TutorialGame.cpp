@@ -183,6 +183,9 @@ void TutorialGame::UpdateKeys() {
 		toggleVignette = !toggleVignette;
 		renderer->SetVignetteOn(toggleVignette);
 	}
+	if (Window::GetKeyboard()->KeyPressed(KeyCodes::TAB)) {
+		renderer->ToggleScoreboard();
+	}
 }
 
 void TutorialGame::ThirdPersonControls() {
