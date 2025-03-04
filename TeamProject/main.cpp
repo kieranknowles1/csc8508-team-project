@@ -14,6 +14,10 @@
 
 #include "Multiplayer/GamePacketHandlers.hpp"
 
+#ifdef CSC_USE_SDL2
+#include "SDLJoystick.h"
+#endif
+
 using namespace NCL;
 using namespace NCL::CSC8503;
 
@@ -137,8 +141,8 @@ std::unique_ptr<Window> createWindow(const Config& config) {
 
 		renderer->Update(dt);
 		renderer->Render();
-		
-		
+
+
 		Debug::UpdateRenderables(dt);
 	}
 }*/
@@ -157,7 +161,7 @@ int main(int argc, char** argv) {
 
 	auto renderer = std::make_unique<GameTechRenderer>();
 	auto controller = std::make_unique<KeyboardMouseController>(*window->GetKeyboard(), *window->GetMouse());
-
+	auto joystick = std::make_unique<UnixCode::SDLJoystick>(0);
 
 	auto game = std::make_unique<TutorialGame>(renderer.get(), controller.get());
 

@@ -14,6 +14,7 @@ namespace NCL::UnixCode {
     }
 
     SDLWindow::SDLWindow(const WindowInitialisation& initData) : Window() {
+        SDL_Init(SDL_INIT_EVERYTHING);
         // Use a borderless window. Most modern games do this
         // for seamless alt-tabbing
         sdlWindow = SDL_CreateWindow(

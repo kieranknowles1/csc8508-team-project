@@ -36,6 +36,8 @@ namespace NCL {
             RightStickY,
         };
 
+        virtual ~JoystickController() = default;
+
     protected:
         // Get the value of a button or analogue input
         // Implementations should return 0 if the button does not exist
