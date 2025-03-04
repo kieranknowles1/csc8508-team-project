@@ -399,7 +399,7 @@ Wanderer* TutorialGame::AddWandererToWorld() {
 
 	wanderer->GetRenderObject()->SetColour(Vector4(1, 0, 0, 1));
 
-	wanderer->SetOffset();
+	//gwanderer->SetOffset();
 
 	world->AddGameObject(wanderer);
 	

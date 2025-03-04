@@ -11,7 +11,7 @@ namespace NCL {
 			~Wanderer();
 
 			void Update(float dt);
-			void SetOffset();
+			//void SetOffset();
 
 		private:
 			void PlayerNear();
@@ -19,7 +19,6 @@ namespace NCL {
 
 			NavMesh* navMesh;
 			std::vector<btVector3> curPath = {};
-			btVector3 navOffset;
 
 			StateMachine* stateMachine;
 			void canSeePlayer();
