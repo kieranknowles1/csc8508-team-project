@@ -66,7 +66,7 @@ namespace NCL::CSC8503 {
 
         // Scoreboard
         int players = 5;
-        int columns = 2;
+        int columns = 3;
 
         Vector4 scoreboardColor = Vector4(0.1f, 0.1f, 0.1f, 0.7f);
         Vector4 boxColor = Vector4(0.0f, 0.0f, 0.0f, 0.7f);
@@ -103,15 +103,32 @@ namespace NCL::CSC8503 {
                 );
 
                 if (row == 0) {
-                    std::string text = (col == 0) ? "User:" : "Score:";
+                    std::string text;
+                    if (col == 0) {
+                        text = "User:";
+                    }
+                    else if (col == 1) {
+                        text = "Colour:";
+                    }
+                    else {
+                        text = "Score:";
+                    }
                     AddUITextElement({ textPosition, textColor, text, true });
                 }
-                else if (row > players ) {
-					std::string text = (col == 0) ? " ": " ";
-					AddUITextElement({ textPosition, textColor, text, true });
+                else if (row > players) {
+                    AddUITextElement({ textPosition, textColor, "", true });
                 }
                 else {
-                    std::string text = (col == 0) ? "Player " + std::to_string(row) : "0";
+                    std::string text;
+                    if (col == 0) {
+                        text = "Player " + std::to_string(row);
+                    }
+                    else if (col == 1) {
+                        text = "Red";
+                    }
+                    else {
+                        text = "0";
+                    }
                     AddUITextElement({ textPosition, textColor, text, true });
                 }
             }
