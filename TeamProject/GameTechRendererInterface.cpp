@@ -88,8 +88,19 @@ namespace NCL::CSC8503 {
                 // Add main box
                 AddUIElement({ position, boxSize, boxColor, nullptr, true });
 
-				// Add text
-				AddUITextElement({ position, textColor, "Temp", true});
+                // Add text
+                Vector2 textPosition = Vector2(
+                    position.x - boxSize.x / 2.0f + 0.01f, // Slightly offset to the left
+					position.y + (boxSize.y * 0.25f) // Slightly offset to the bottom
+                );
+
+                if (row == 0) {
+                    std::string text = (col == 0) ? "User:" : "Score:";
+                    AddUITextElement({ textPosition, textColor, text, true });
+                }
+                else {
+                    AddUITextElement({ textPosition, textColor, "", true });
+                }
             }
         }
     }
