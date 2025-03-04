@@ -49,13 +49,56 @@ using namespace NCL::CSC8503;
 //	std::cout << "\tSequence Number: " << deltaTypeConverted->GetSequenceNumber() << std::endl;
 //}
 
+class MainMenuScreen : public PushdownState {
+	int selection = 0;
+
+	PushdownResult OnUpdate(float dt, PushdownState** newState) override {
+
+	}
+};
+
 class PauseScreen : public PushdownState {
+	int selection = 0;
+
 	PushdownResult OnUpdate(float dt, PushdownState** newState) override {
 		if (Window::GetKeyboard()->KeyPressed(NCL::KeyCodes::U)) {
 			return PushdownResult::Pop;
 		}
+		Debug::Print("Press U to unpause the game!", Vector2(20, 20), Vector4(0, 0, 0, 1));
+		//return PushdownResult::NoChange;
+		//Debug::Print("Press U to unpause the game!", Vector2(10, 10), Vector4(0, 0, 0, 1));
+
+		const std::string resumeGame = "Resume";
+		const std::string exitGame = "Exit";
+
+		bool inMenu = true;
+
+		std::string menuItems[2] = { resumeGame, exitGame };
+
+		if (inMenu) {
+			if (NCL::Window::GetKeyboard()->KeyPressed(NCL::KeyCodes::DOWN)) {
+				selection = std::min(1, selection + 1);
+			}
+			if (NCL::Window::GetKeyboard()->KeyPressed(NCL::KeyCodes::UP)) {
+				selection = std::max(0, selection - 1);
+			}
+			if (NCL::Window::GetKeyboard()->KeyPressed(NCL::KeyCodes::RETURN)) {
+				const std::string pauseSelection = menuItems[selection];
+
+				if (pauseSelection == "Resume") {
+					return PushdownResult::Pop;
+				} //Add an else function here to return to main menu
+				inMenu = false;
+			}
+
+			for (int i = 0; i < 2; i++) {
+				std::string currentItem = menuItems[i];
+				if (i == selection) currentItem = currentItem + " <";
+				Debug::Print(currentItem, Vector2(1, 50 + (10 * i)));
+			}
+		}
+
 		return PushdownResult::NoChange;
-		Debug::Print("Press U to unpause the game!", Vector2(10, 10), Vector4(0, 0, 0, 1));
 	}
 	void OnAwake() override {
 	}
@@ -146,7 +189,6 @@ std::unique_ptr<Window> createWindow(const Config& config) {
 
 int main(int argc, char** argv) {
 	PushdownMachine machine(new GameScreen());
-
 	auto config = Config("user-config.jsonc", "default-config.jsonc");
 
 	auto window = createWindow(config);
@@ -176,6 +218,9 @@ int main(int argc, char** argv) {
 		float dt = window->GetTimer().GetTimeDeltaSeconds();
 
 		if (inMenu) {
+
+			//Try showing the FMod logo here
+
 			if (NCL::Window::GetKeyboard()->KeyPressed(NCL::KeyCodes::DOWN)) {
 				selection = std::min(2, selection + 1);
 			}
@@ -202,6 +247,8 @@ int main(int argc, char** argv) {
 		}
 		else {
 			machine.Update(dt);
+			//Add a GetState function to PushdownMachine/PushdownState to return the screen it's on, and if it's on PauseScreen
+			//Pause the game->UpdateGame
 		}
 
 		window->SetTitle("Gametech frame time:" + std::to_string(1000.0f * dt));
