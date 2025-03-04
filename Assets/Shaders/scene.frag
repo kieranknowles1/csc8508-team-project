@@ -20,7 +20,7 @@ in Vertex
 {
 	vec4 colour;
 	vec2 texCoord;
-	vec4 shadowProj;
+	//vec4 shadowProj; removing this so it doesn't get flagged for now
 	vec3 normal;
 	vec3 worldPos;
 	vec3 tangent; //added for normal mapping
