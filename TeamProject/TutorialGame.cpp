@@ -94,7 +94,8 @@ void TutorialGame::UpdateGame(float dt) {
 	// Check for collisions
 	CheckCollisions();
 
-	UpdatePlayer(dt);
+	if (playerController) UpdatePlayer(dt);
+
 	profiler.startSection("Update Audio");
 	audioEngine.Update(&world->GetMainCamera());
 
@@ -152,22 +153,24 @@ void TutorialGame::UpdateKeys() {
 	if (controller->GetDigital(DebugFreeCam)) {
 		freeCam = !freeCam;
 	}
-	if (controller->GetDigital(ThirdPerson)) {
-		thirdPerson = !thirdPerson;
-		playerController->SetThirdPerson(thirdPerson);
-	}
 
-	if (controller->GetDigital(WorldRollRight)) {
+	if (playerController) {
+		if (controller->GetDigital(ThirdPerson)) {
+			thirdPerson = !thirdPerson;
+			playerController->SetThirdPerson(thirdPerson);
+		}
+		if (controller->GetDigital(WorldRollRight)) {
 			playerController->rollRight();
-	}
-	if (controller->GetDigital(WorldRollLeft)) {
+		}
+		if (controller->GetDigital(WorldRollLeft)) {
 			playerController->rollLeft();
-	}
-	if (controller->GetDigital(WorldPitchUp)) {
+		}
+		if (controller->GetDigital(WorldPitchUp)) {
 			playerController->pitchUp();
-	}
-	if (controller->GetDigital(WorldPitchDown)) {
+		}
+		if (controller->GetDigital(WorldPitchDown)) {
 			playerController->pitchDown();
+		}
 	}
 
 	if (Window::GetKeyboard()->KeyPressed(KeyCodes::F5)) {

@@ -22,6 +22,12 @@ namespace NCL {
 
 		const int MAX_PLAYERS = 8;
 
+		enum class GameMode {
+			SINGLEPLAYER,
+			HOST_GAME,
+			JOIN_GAME
+		};
+
 		class TutorialGame {
 		private:
 			static TutorialGame* instance;
@@ -73,6 +79,7 @@ namespace NCL {
 
 			virtual void UpdateGame(float dt);
 			void LoadWorldFromFile(int levelNum);
+			void JoinGame(bool host) {};
 
 		protected:
 			void InitialiseAssets();
@@ -83,6 +90,8 @@ namespace NCL {
 
 			void InitWorld();
 			void ResetWorld();
+
+			void SetupHost() {};
 
 			/**
 			 * @brief Initialise the network object and run it.
@@ -155,7 +164,7 @@ namespace NCL {
 			PerspectiveCamera* mainCamera;
 			PlayerObject* player;
 			GameObject* gun;
-			PlayerController* playerController;
+			PlayerController* playerController = nullptr;
 			bool freeCam = false;
 			bool thirdPerson = false;
 			Vector4 playerColour = Vector4(1, 0.8, 1, 1);
