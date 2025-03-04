@@ -185,7 +185,7 @@ void PlayerController::Shoot() {
         float smallestDist = INFINITY;
         for (int i = 0; i < callback.m_collisionObjects.size(); i++) { // loop all hits
             GameObject* hit = static_cast<GameObject*>(callback.m_collisionObjects[i]->getUserPointer());
-            if (!hit->getIsPaintball()) { // ignore paintballs
+            if (!hit->getIsPaintball() && hit!=player && hit!=gun) { // ignore paintballs
                 btVector3 posHit = callback.m_hitPointWorld[i];
                 float distance = btPlayerPos.distance(posHit);
                 if (distance < smallestDist){ // find closest valid hit
