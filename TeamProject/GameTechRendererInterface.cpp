@@ -6,6 +6,7 @@
 #include <CSC8503CoreClasses/GameWorld.h>
 #include <CSC8503CoreClasses/GameObject.h>
 #include <CSC8503CoreClasses/RenderObject.h>
+#include <CSC8503CoreClasses/Debug.h>
 
 namespace NCL::CSC8503 {
 	GameTechRendererInterface::GameTechRendererInterface(Window* window)
@@ -35,59 +36,62 @@ namespace NCL::CSC8503 {
 		});
 	}
 
-	void GameTechRendererInterface::initUi()
-	{
-		Vector2 screenCenter = Vector2(0.5f, 0.5f);
-		Vector4 crosshairColor = Vector4(1, 1, 1, 1); // White crosshair
+    void GameTechRendererInterface::initUi()
+    {
+        Vector2 screenCenter = Vector2(0.5f, 0.5f);
+        Vector4 crosshairColor = Vector4(1, 1, 1, 1); // White crosshair
 
-		float lineLength = 0.02f; // Length of the crosshair lines
-		float lineThickness = 0.0025f; // Thickness of each line
-		float horizontalLineThickness = 0.0035f;
-		float horizontalLineLength = 0.015f;
-		float gapSize = 0.0005f; // Gap between the lines
+        float lineLength = 0.02f; // Length of the crosshair lines
+        float lineThickness = 0.0025f; // Thickness of each line
+        float horizontalLineThickness = 0.0035f;
+        float horizontalLineLength = 0.015f;
+        float gapSize = 0.0005f; // Gap between the lines
 
+        // Crosshair
+        // Left line
+        AddUIElement({ Vector2(screenCenter.x - gapSize - lineLength, screenCenter.y),
+            Vector2(horizontalLineLength, horizontalLineThickness), crosshairColor });
 
-		// Crosshair
-		// Left line
-		AddUIElement({ Vector2(screenCenter.x - gapSize - lineLength, screenCenter.y),
-			Vector2(horizontalLineLength, horizontalLineThickness), crosshairColor });
+        // Right line
+        AddUIElement({ Vector2(screenCenter.x + gapSize + lineLength, screenCenter.y),
+            Vector2(horizontalLineLength, horizontalLineThickness), crosshairColor });
 
-		// Right line
-		AddUIElement({ Vector2(screenCenter.x + gapSize + lineLength, screenCenter.y),
-			Vector2(horizontalLineLength, horizontalLineThickness), crosshairColor });
+        // Top line
+        AddUIElement({ Vector2(screenCenter.x, screenCenter.y + gapSize + lineLength),
+            Vector2(lineThickness, lineLength), crosshairColor });
 
-		// Top line
-		AddUIElement({ Vector2(screenCenter.x, screenCenter.y + gapSize + lineLength),
-			Vector2(lineThickness, lineLength), crosshairColor });
+        // Bottom line
+        AddUIElement({ Vector2(screenCenter.x, screenCenter.y - gapSize - lineLength),
+            Vector2(lineThickness, lineLength), crosshairColor });
 
-		// Bottom line
-		AddUIElement({ Vector2(screenCenter.x, screenCenter.y - gapSize - lineLength),
-			Vector2(lineThickness, lineLength), crosshairColor });
+        // Scoreboard
+        Vector4 scoreboardColor = Vector4(0.1f, 0.1f, 0.1f, 0.7f);
+        Vector4 boxColor = Vector4(0.0f, 0.0f, 0.0f, 0.7f);
+        Vector4 borderColor = Vector4(0.5f, 0.5f, 0.5f, 0.7f); // Highlight color for borders
+        Vector4 textColor = Vector4(0.0f, 0.0f, 0.0f, 1.0f); // Black text color
+        Vector2 totalSize = Vector2(0.7f, 0.7f);
+        Vector2 boxSize = Vector2(totalSize.x / 2.0f, totalSize.y / 10.0f); // 2 columns, 10 rows (1 title row + 9 data rows)
+        float borderThickness = 0.005f; // Thickness of the border
 
-		//Scoreboard
-		Vector4 scoreboardColor = Vector4(0.1f, 0.1f, 0.1f, 0.7f);
-		Vector4 boxColor = Vector4(0.2f, 0.2f, 0.2f, 0.7f);
-		Vector4 borderColor = Vector4(0.5f, 0.5f, 0.5f, 0.7f); // Highlight color for borders
-		Vector4 textColor = Vector4(0.0f, 0.0f, 0.0f, 1.0f); // White text color
-		Vector2 totalSize = Vector2(0.7f, 0.7f);
-		Vector2 boxSize = Vector2(totalSize.x, totalSize.y / 9.0f); // 1 column, 9 rows
-		float borderThickness = 0.005f; // Thickness of the border
+        AddUIElement({ screenCenter, totalSize, scoreboardColor, nullptr, true });
 
-		AddUIElement({ screenCenter, totalSize, scoreboardColor, nullptr, true });
+        for (int row = 0; row < 10; ++row) {
+            for (int col = 0; col < 2; ++col) {
+                Vector2 position = Vector2(
+                    screenCenter.x - totalSize.x / 2.0f + boxSize.x / 2.0f + col * boxSize.x,
+                    screenCenter.y - totalSize.y / 2.0f + boxSize.y / 2.0f + row * boxSize.y
+                );
 
-		for (int row = 0; row < 9; ++row) {
-			Vector2 position = Vector2(
-				screenCenter.x,
-				screenCenter.y - totalSize.y / 2.0f + boxSize.y / 2.0f + row * boxSize.y
-			);
+                // Add border
+                AddUIElement({ position, boxSize + Vector2(borderThickness, borderThickness), borderColor, nullptr, true });
 
-			// Add border
-			AddUIElement({ position, boxSize + Vector2(borderThickness, borderThickness), borderColor, nullptr, true});
+                // Add main box
+                AddUIElement({ position, boxSize, boxColor, nullptr, true });
 
-			// Add main box
-			AddUIElement({ position, boxSize, boxColor, nullptr, true});
-
-		}
-	}
+				// Add text
+				AddUITextElement({ position, textColor, "Temp", true});
+            }
+        }
+    }
 
 }

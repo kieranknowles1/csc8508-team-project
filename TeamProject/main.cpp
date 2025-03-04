@@ -66,7 +66,7 @@ class GameScreen : public PushdownState {
 		pauseReminder -= dt;
 
 		if (pauseReminder < 0) {
-			Debug::Print("Press P to pause the game!", Vector2(20, 20), Vector4(0, 0, 0, 1));
+			//Debug::Print("Press P to pause the game!", Vector2(20, 20), Vector4(0, 0, 0, 1));
 		}
 		if (Window::GetKeyboard()->KeyPressed(NCL::KeyCodes::P)) {
 			pauseReminder = 0;
@@ -196,8 +196,8 @@ int main(int argc, char** argv) {
 
 			for (int i = 0; i < 3; i++) {
 				std::string currentItem = menuItems[i];
-				if (i == selection) currentItem = currentItem + " <";
-				Debug::Print(currentItem, Vector2(1, 50 + (10 * i)));
+				if (i == selection) currentItem = "> " + currentItem + " <";
+				Debug::Print(currentItem, Vector2(0.35f, 0.4f + (0.1f * i)));
 			}
 		}
 		else {

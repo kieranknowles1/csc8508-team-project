@@ -31,6 +31,12 @@ namespace NCL::CSC8503 {
 		bool isScoreboard = false;
 	};
 
+	struct UITextElement {
+		Maths::Vector2 position;
+		Maths::Vector4 color;
+		std::string text;
+		bool isScoreboard = false;
+	};
 
 	class GameTechRendererInterface
 	{
@@ -74,6 +80,10 @@ namespace NCL::CSC8503 {
 			uiElements.push_back(element);
 		}
 
+		void AddUITextElement(const UITextElement& element) {
+			uiTextElements.push_back(element);
+		}
+
 		void ToggleScoreboard() {
 			showScoreboard = !showScoreboard;
 		}
@@ -85,13 +95,14 @@ namespace NCL::CSC8503 {
 		//adding bools to toggle post processing. Must be accessible from the specific renderer
 		bool hdrOn = true;
 		bool vignetteOn = false;
-		bool showScoreboard = false;
 		float vignettePulse = 0;
 		Window* window;
 		Camera* camera = nullptr;
 		std::vector<UIElement> uiElements;
+		std::vector<UITextElement> uiTextElements;
 		std::vector<RenderObject*> frameObjects;
 		DecalSystem decalSystem;
+		bool showScoreboard = false;
 	};
 }
 
