@@ -48,7 +48,7 @@ GameTechRenderer::GameTechRenderer() : OGLRenderer(*Window::GetWindow()) {
 	//Set up the light properties
 	lightColour = Vector4(0.8f, 0.8f, 0.5f, 1.0f); 
 	lightRadius = 1000.0f; 
-	lightPosition = Vector3(-200.0f, 60.0f, -200.0f); 
+	lightPosition = Vector3(-200.0f, 60.0f, -200.0f); //60.0f
 
 	//Skybox!
 	skyboxShader = std::make_unique<OGLShader>("skybox.vert", "skybox.frag");
@@ -90,7 +90,7 @@ GameTechRenderer::GameTechRenderer() : OGLRenderer(*Window::GetWindow()) {
 	combineShader = new OGLShader("texturevert.glsl", "combinefrag.glsl");
 
 	lightSphere = new OGLMesh(); 
-	lightSphere = LoadMesh("Sphere.msh"); //does this need to be uploaded to GPU?
+	lightSphere = LoadMesh("Sphere.msh"); //Load mesh takes care of upload to GPU itself
 
 	///set some shaders here
 
@@ -297,11 +297,11 @@ void GameTechRenderer::RenderFrame() {
 
 	//////deferred rendering version:
 	glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
-	RenderShadowMap();
+	//RenderShadowMap();
 	FillBuffers();
 	DrawPointLights();
 	CombineBuffers();
-	RenderPostProcessing();
+	RenderPostProcessing(); 
 }
 
 void GameTechRenderer::RenderShadowMap() {
@@ -780,12 +780,13 @@ void GameTechRenderer::RenderUI() {
 void GameTechRenderer::RenderPostProcessing() { 
 	//if (vignetteOn) {
 	//	GLuint buff = (hdrOn ? BFBO : 0);
-		glBindFramebuffer(GL_FRAMEBUFFER, 0); //unbind hdrFBO and set BFBO   
+		glBindFramebuffer(GL_FRAMEBUFFER, BFBO); //unbind hdrFBO and set BFBO   
 		glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT); //BFBO has neither depth nor stencil attachment
 		glDisable(GL_CULL_FACE);
 		glDisable(GL_BLEND);
 		glDisable(GL_DEPTH_TEST);
 		UseShader(*vignetteShader); 
+		glUniform1i(glGetUniformLocation(vignetteShader->GetProgramID(), "vignetteOn"), GetVignetteOn());
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, hdrTex); //hdrTex currently holds raw scene
 		glUniform1i(glGetUniformLocation(vignetteShader->GetProgramID(), "diffuseTex"), 0); 
@@ -798,20 +799,21 @@ void GameTechRenderer::RenderPostProcessing() {
 		glUniform1f(glGetUniformLocation(vignetteShader->GetProgramID(), "time"), vignettePulse);  
 		BindMesh(*fullscreenQuad); //simply a quad
 		DrawBoundMesh(); //finished rendering into BTex now, ready to unbind to draw quad straight to screen next:
-	//}
+	//} 
 	//if (hdrOn) {
-		glBindFramebuffer(GL_FRAMEBUFFER, 0);
-		GLuint tex = (vignetteOn ? BTex : hdrTex);
+		glBindFramebuffer(GL_FRAMEBUFFER, 0); 
+		//GLuint tex = (vignetteOn ? BTex : hdrTex);
 		glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 		glDisable(GL_CULL_FACE);
 		glDisable(GL_BLEND);
 		glDisable(GL_DEPTH_TEST);
 		UseShader(*hdrShader);
+		glUniform1i(glGetUniformLocation(hdrShader->GetProgramID(), "hdrOn"), GetHDROn()); //send bool to shader so it knows whether to output scene with or without post processing
 		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, tex);//BTex would hold vignetted scene. (tonemapping should be done pretty much last)
+		glBindTexture(GL_TEXTURE_2D, BTex);//BTex would hold vignetted scene. (tonemapping should be done pretty much last)
 		glUniform1i(glGetUniformLocation(hdrShader->GetProgramID(), "hdrTex"), 0);
 		BindMesh(*fullscreenQuad);
-		DrawBoundMesh();
+		DrawBoundMesh(); 
 	//}
 	
 }
@@ -916,12 +918,13 @@ void GameTechRenderer::DrawPointLights() {
 
 	glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
 
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	//glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
 void GameTechRenderer::CombineBuffers() {//basically final post processing output. Don't need to update matrices as fullscreen quad is not transformed at all
-	glBindFramebuffer(GL_FRAMEBUFFER, hdrFBO); 
-	UseShader(*combineShader);
+	glBindFramebuffer(GL_FRAMEBUFFER, hdrFBO); //new context instead of back buffer => may need to redefine some matrices/ variables maybe hdrFBO 
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT); //without this line, output is just black 
+	UseShader(*combineShader); 
 	glUniform1i(glGetUniformLocation(combineShader->GetProgramID(), "diffuseTex"), 0);
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, bufferColourTex);
@@ -936,5 +939,6 @@ void GameTechRenderer::CombineBuffers() {//basically final post processing outpu
 
 	BindMesh(*fullscreenQuad);
 	DrawBoundMesh();
+	glBindFramebuffer(GL_FRAMEBUFFER, 0); //hdrTex should now hold full deferred lighting rendered scene 
 
 }

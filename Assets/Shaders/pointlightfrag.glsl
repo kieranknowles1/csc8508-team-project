@@ -1,7 +1,7 @@
 #version 330 core 
 
 uniform sampler2D depthTex; //need the depth texture to get world space position of fragment light covers
-uniform sampler2D normTex;
+uniform sampler2D normTex; //do we need to use layout locations again?
 
 uniform vec2 pixelSize;
 uniform vec3 cameraPos;
@@ -33,7 +33,7 @@ void main(void) {
     vec3 viewDir  = normalize(cameraPos - worldPos);
     vec3 halfDir  = normalize(incident + viewDir);
 
-    float lambert    = clamp(dot(incident, normal), 0.0, 1.0);
+    float lambert    = clamp(dot(incident, normal), 0.0, 1.0); //do lighting calculations need to change to account for floating point textures?
     float rFactor    = clamp(dot(halfDir, normal), 0.0, 1.0);
     float specFactor = clamp(dot(halfDir, normal), 0.0, 1.0);
     specFactor       = pow(specFactor, 80.0); 

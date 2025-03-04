@@ -6,6 +6,7 @@ uniform float windowSizey;
 uniform vec3 effectColour;
 uniform float intensity = 1.0f;
 uniform float time;
+uniform bool vignetteOn = false;
 
 in Vertex {
    vec2 texCoord;
@@ -15,6 +16,11 @@ in Vertex {
 
    void main(void) { 
      vec3 texColour = texture(diffuseTex, IN.texCoord).rgb; //sample the framebuffer texture 
+     if (!vignetteOn) { //if vignette not enabled, simply return the scene without performing any post processing
+        fragColor.rgb = texColour;
+        fragColor.a = 1;
+        return;
+        }
      fragColor.rgb = texColour;
      //add vignette:
      //need to change fragment colour (brightness and colour) based on distance from screen centre
