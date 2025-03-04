@@ -212,8 +212,6 @@ int main(int argc, char** argv) {
 		//machine.Update(dt);
 
 		renderer->drawFrame(dt);
-		//renderer->Update(dt);
-		//renderer->Render();
 		machine.Update(dt);
 
 
