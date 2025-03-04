@@ -118,7 +118,7 @@ void PlayerController::UpdateMovement(float dt) {
         btVector3 normal = FindFloorNormal();
         float dotProduct = normal.dot(upDirection.absolute());
         if (fabs(dotProduct <= 1)) {
-            movement += (jumpHeight * FindFloorNormal());
+            movement += (jumpHeight * normal);
         }
         else {
             movement += (jumpHeight * upDirection);

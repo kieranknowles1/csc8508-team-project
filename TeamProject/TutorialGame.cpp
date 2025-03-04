@@ -298,7 +298,7 @@ void TutorialGame::InitBullet() {
 	solver = new btSequentialImpulseConstraintSolver();
 
 	bulletWorld = new btDiscreteDynamicsWorld(dispatcher, broadphase, solver, collisionConfig);
-	bulletWorld->setGravity(btVector3(00.0f, -30.0f, 0));
+	bulletWorld->setGravity(btVector3(0.0f, 0.0f, 0.0f));
 	bulletDebug = new BulletDebug();
 	bulletWorld->setDebugDrawer(bulletDebug);
 }
