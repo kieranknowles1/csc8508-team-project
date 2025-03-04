@@ -25,6 +25,7 @@ GameTechRenderer::GameTechRenderer() : OGLRenderer(*Window::GetWindow()), GameTe
 	shadowShader = std::make_unique<OGLShader>("shadow.vert", "shadow.frag");
 	sceneShader = std::make_unique<OGLShader>("scene.vert", "scene.frag");
 	decalShader = std::make_unique<OGLShader>("decal.vert", "decal.frag");
+	decalBlendShader = std::make_unique<OGLShader>("texturevert.glsl", "decalBlend.frag");
 	uiShader = std::make_unique<OGLShader>("ui.vert", "ui.frag");
 
 	glGenTextures(1, &shadowTex);
@@ -201,13 +202,18 @@ void GameTechRenderer::RenderFrame() {
 	glClearColor(1, 1, 1, 1);
 	RenderShadowMap();
 	//Set up to render into framebuffer
-	if (hdrOn || vignetteOn) {
-		glBindFramebuffer(GL_FRAMEBUFFER, hdrFBO);
-		glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
-	}
-	//
+	glBindFramebuffer(GL_FRAMEBUFFER, hdrFBO);
+	glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+
+	
+	
+	
 	RenderSkybox();
 	RenderCamera();
+
+	// Render Decals to it's own buffer
+	RenderDecals();
+
 	glDisable(GL_CULL_FACE); //Todo - text indices are going the wrong way...
 	glDisable(GL_BLEND);
 	glDisable(GL_DEPTH_TEST);
@@ -215,11 +221,39 @@ void GameTechRenderer::RenderFrame() {
 	NewRenderLines();
 	NewRenderTextures();
 	NewRenderText();
-	RenderDecals();
+
+	// Blend decals onto the scene using a fullscreen quad
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+	UseShader(*decalBlendShader);
+
+	// Bind decal texture
+	GLuint decalTextureLocation = glGetUniformLocation(decalBlendShader->GetProgramID(), "decalTexture");
+	//glUniform1i(decalTextureLocation, 0);
+
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, decalSystem.GetDecalTexture());
+
+	glActiveTexture(GL_TEXTURE1);
+	glBindTexture(GL_TEXTURE_2D, hdrTex);
+	glUniform1i(glGetUniformLocation(decalBlendShader->GetProgramID(), "sceneTexture"), 1);
+
+	// Render fullscreen quad to apply decals over the scene
+	//RenderFullScreenQuad();
+	glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+	glDisable(GL_CULL_FACE);
+	glDisable(GL_BLEND);
+	glDisable(GL_DEPTH_TEST);
+	BindMesh(*unitQuad);
+	DrawBoundMesh();
+
 	glDisable(GL_BLEND);
 	glEnable(GL_DEPTH_TEST);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-	RenderPostProcessing();
+	//RenderPostProcessing();
 	RenderUI();
 }
 
@@ -670,15 +704,43 @@ void GameTechRenderer::RenderQuad() {
 	glBindVertexArray(0);
 }
 
+void GameTechRenderer::RenderFullScreenQuad() {
+	if (fullscreenQuadVAO == 0) {
+		float quadVertices[] = {
+			// positions   // texCoords
+			-1.0f,  1.0f,  0.0f, 1.0f,
+			-1.0f, -1.0f,  0.0f, 0.0f,
+			 1.0f, -1.0f,  1.0f, 0.0f,
+			-1.0f,  1.0f,  0.0f, 1.0f,
+			 1.0f, -1.0f,  1.0f, 0.0f,
+			 1.0f,  1.0f,  1.0f, 1.0f
+		};
+		glGenVertexArrays(1, &fullscreenQuadVAO);
+		glGenBuffers(1, &fullscreenQuadVBO);
+		glBindVertexArray(fullscreenQuadVAO);
+		glBindBuffer(GL_ARRAY_BUFFER, fullscreenQuadVAO);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(quadVertices), quadVertices, GL_STATIC_DRAW);
+		glEnableVertexAttribArray(0);
+		glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0);
+		glEnableVertexAttribArray(1);
+		glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)(2 * sizeof(float)));
+	}
+	glBindVertexArray(fullscreenQuadVAO);
+	glDrawArrays(GL_TRIANGLES, 0, 6);
+	glBindVertexArray(0);
+}
+
+
 void GameTechRenderer::RenderDecals() {
+	// Bind the decal FBO to keep decal rendering separate from the main scene
+	glBindFramebuffer(GL_FRAMEBUFFER, decalSystem.GetDecalFBO());
+	glClearColor(0, 0, 0, 0);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // clear the decal FBO
+
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 	UseShader(*decalShader);
-
-	// Get the uniform locations for the decal shader
-	GLuint decalTextureLocation = glGetUniformLocation(decalShader->GetProgramID(), "decalTexture");
-	glUniform1i(decalTextureLocation, 0);
 
 	GLuint alphaFadeLocation = glGetUniformLocation(decalShader->GetProgramID(), "alphaFade");
 	GLuint decalColorLocation = glGetUniformLocation(decalShader->GetProgramID(), "decalColor");
@@ -712,12 +774,8 @@ void GameTechRenderer::RenderDecals() {
 		RenderQuad();
 	}
 
+	// Unbind the FBO
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
-	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, decalSystem.GetDecalTexture());
-
-	glUniform1i(decalTextureLocation, 0);
 
 	glDisable(GL_BLEND);
 }

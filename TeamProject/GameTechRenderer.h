@@ -40,6 +40,7 @@ namespace NCL {
 
 			void RenderDecals();
 			void RenderQuad();
+			void RenderFullScreenQuad();
 			void RenderUI();
 
 			void LoadSkybox();
@@ -71,6 +72,7 @@ namespace NCL {
 
 			// Decal stuff
 			std::unique_ptr<OGLShader> decalShader;
+			std::unique_ptr<OGLShader> decalBlendShader;
 			GLuint decalQuadVAO = 0;
 			GLuint decalQuadVBO = 0;
 			GLuint fullscreenQuadVAO = 0;
