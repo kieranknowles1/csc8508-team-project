@@ -65,25 +65,33 @@ namespace NCL::CSC8503 {
             Vector2(lineThickness, lineLength), crosshairColor });
 
         // Scoreboard
+        int players = 5;
+        int columns = 2;
+
         Vector4 scoreboardColor = Vector4(0.1f, 0.1f, 0.1f, 0.7f);
         Vector4 boxColor = Vector4(0.0f, 0.0f, 0.0f, 0.7f);
         Vector4 borderColor = Vector4(0.5f, 0.5f, 0.5f, 0.7f); // Highlight color for borders
         Vector4 textColor = Vector4(0.0f, 0.0f, 0.0f, 1.0f); // Black text color
         Vector2 totalSize = Vector2(0.7f, 0.7f);
-        Vector2 boxSize = Vector2(totalSize.x / 2.0f, totalSize.y / 10.0f); // 2 columns, 10 rows (1 title row + 9 data rows)
+        Vector2 boxSize = Vector2(totalSize.x / columns, totalSize.y / 9); // 3 columns, 9 rows (1 title row + 8 data rows)
         float borderThickness = 0.005f; // Thickness of the border
 
         AddUIElement({ screenCenter, totalSize, scoreboardColor, nullptr, true });
 
-        for (int row = 0; row < 10; ++row) {
-            for (int col = 0; col < 2; ++col) {
+        for (int row = 0; row < 9; ++row) {
+            Vector2 rowPosition = Vector2(
+                screenCenter.x,
+                screenCenter.y - (totalSize.y / 2.0f) + (boxSize.y / 2.0f) + (row * boxSize.y)
+            );
+
+            // Add row border
+            AddUIElement({ rowPosition, Vector2(totalSize.x, boxSize.y) + Vector2(borderThickness, borderThickness), borderColor, nullptr, true });
+
+            for (int col = 0; col < columns; ++col) {
                 Vector2 position = Vector2(
                     screenCenter.x - totalSize.x / 2.0f + boxSize.x / 2.0f + col * boxSize.x,
                     screenCenter.y - totalSize.y / 2.0f + boxSize.y / 2.0f + row * boxSize.y
                 );
-
-                // Add border
-                AddUIElement({ position, boxSize + Vector2(borderThickness, borderThickness), borderColor, nullptr, true });
 
                 // Add main box
                 AddUIElement({ position, boxSize, boxColor, nullptr, true });
@@ -91,18 +99,22 @@ namespace NCL::CSC8503 {
                 // Add text
                 Vector2 textPosition = Vector2(
                     position.x - boxSize.x / 2.0f + 0.01f, // Slightly offset to the left
-					position.y + (boxSize.y * 0.25f) // Slightly offset to the bottom
+                    position.y + (boxSize.y * 0.25f) // Slightly offset to the bottom
                 );
 
                 if (row == 0) {
                     std::string text = (col == 0) ? "User:" : "Score:";
                     AddUITextElement({ textPosition, textColor, text, true });
                 }
+                else if (row > players ) {
+					std::string text = (col == 0) ? " ": " ";
+					AddUITextElement({ textPosition, textColor, text, true });
+                }
                 else {
-                    AddUITextElement({ textPosition, textColor, "", true });
+                    std::string text = (col == 0) ? "Player " + std::to_string(row) : "0";
+                    AddUITextElement({ textPosition, textColor, text, true });
                 }
             }
         }
     }
-
 }
