@@ -16,6 +16,7 @@
 #include <btBulletCollisionCommon.h>
 #include "DecalSystem.h"
 #include "Shoot.h"
+#include "Paintball.h"
 
 
 namespace NCL {
@@ -23,15 +24,12 @@ namespace NCL {
 
 		class PlayerController {
 		public:
-			PlayerController(PlayerObject* playerIn, GameObject* gunIn, const Controller* c, Camera* cam, btDiscreteDynamicsWorld* bulletWorldIn, GameWorld* worldIn, ResourceManager* resourceManager, DecalSystem& decalSys) {
+			PlayerController(PlayerObject* playerIn, GameObject* gunIn, const Controller* c, Camera* cam, btDiscreteDynamicsWorld* bulletWorldIn) {
 				player = playerIn;
 				gun = gunIn;
 				controller = c;
 				camera = cam;
 				bulletWorld = bulletWorldIn;
-				world = worldIn;
-				this->resourceManager = resourceManager;
-				decalSystem = &decalSys;
 				Initialise();
 			}
 			~PlayerController() {};
@@ -112,11 +110,6 @@ namespace NCL {
 			float shotCooldown = 0.075f;
 			float bulletSpeed = 1000.0f;
 			btVector3 gunCameraOffset = btVector3(1.3, -0.7, -1.2);
-			btVector3 bulletCameraOffset = btVector3(1.0, -0.5, -3.0);
-			float decalRadius = 8.0f;
-			float alphaFade = 1.0f;
-			btVector4 decalColor = btVector4(1.0f, 0.0f, 0.0f, 1.0f);
-			std::string decalTexturePath = "paintball_splash_red.png";
 
 			//Rotation Variables
 			float rotateTime = 0.5f;
@@ -161,7 +154,6 @@ namespace NCL {
 			btVector3 btPlayerPos;
 			btTransform transformGun;
 			btVector3 btGunPos;
-			ResourceManager* resourceManager;
 			GameWorld* world;
 			float shotTimer = 0;
 			bool collision = false;
@@ -170,8 +162,7 @@ namespace NCL {
 			btIDebugDraw* debugDrawer;
 			bool onIce = false;
 			btVector3 previousVelocity;
-			std::shared_ptr<NCL::Rendering::Texture> pngTexture = nullptr;
-			Shoot* shoot;
+			Shoot* shoot = nullptr;
 
 			Vector2 getDirectionalInput() const;
 			void Initialise();
@@ -182,26 +173,13 @@ namespace NCL {
 			bool CheckCeling();
 			btVector3 FindFloorNormal();
 			void SetGunTransform();
-			void Shoot();
-			void ShootBullet(btQuaternion bulletRotation, btVector3 hitPoint);
+			void ShootFunc();
 			void Rotate(bool positive, bool rolling);
 			btVector3 CalculateUpDirection(float dt);
 			btVector3 CalculateForwardFromYaw();
 			btVector3 CalculateRightFromYaw();
-
-			// decal system
-			DecalSystem* decalSystem;
 		};
 	};
 
-	// Paintball class derived from GameObject
-	class Paintball : public GameObject {
-	public:
-		void OnCollisionEnter(const CollisionInfo& collisionInfo) override;
-		void Initialise(GameObject* playerIn) {
-			player = playerIn;
-		}
-	private:
-		GameObject* player;
-	};
+
 }
