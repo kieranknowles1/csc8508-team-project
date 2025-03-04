@@ -22,7 +22,7 @@ bool NavMesh::LoadFromFile(const std::string& filename) {
     for (int i = 0; i < numVertices; ++i) {
         float x, y, z;
         file >> x >> y >> z;
-        vertices[i] = btVector3(x, y, z);
+        vertices[i] = btVector3(x * scale, y * scale, z * scale);
     }
 
     // Load triangle indices

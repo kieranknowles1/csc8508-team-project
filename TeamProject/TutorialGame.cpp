@@ -79,7 +79,7 @@ void TutorialGame::UpdateGame(float dt) {
 	if (navMesh && navMeshDebug) {
 		visualiseNavMesh();
 		if (wanderer) {
-			wanderer->Update(dt);
+			//wanderer->Update(dt);f
 		}
 	}
 
@@ -277,11 +277,11 @@ void TutorialGame::InitWorld() {
 	InitBullet();
 	audioEngine.Init();
 
-	navMeshDebug = false;
+	navMeshDebug = true;
 	if (navMeshDebug) {
 		freeCam = true;
 		navMesh = new NavMesh(bulletWorld);
-		navMesh->LoadFromFile("Assets/Meshes/NavMeshes/smalltest.navmesh");
+		navMesh->LoadFromFile("Assets/Meshes/NavMeshes/initiallevel.navmesh");
 	}
 
 	if (loadFromLevel) {
@@ -323,9 +323,10 @@ void TutorialGame::InitWorld() {
 	AddCapsuleToWorld(Vector3(70, 15, -20), 8.0f, 4.0f, 4.0f);
 	AddCapsuleToWorld(Vector3(-20, 15, 12), 6.0f, 5.0f, 8.0f);
 
-	AddTurretToWorld();
+	
 	InitPlayer();
-	if (navMeshDebug) AddWandererToWorld();
+	AddTurretToWorld();
+	//if (navMeshDebug) AddWandererToWorld();
 }
 
 void TutorialGame::InitPlayer() {

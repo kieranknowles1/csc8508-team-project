@@ -48,4 +48,5 @@ private:
     int GetTriangleContainingPoint(const btVector3& point);
     std::vector<int> GetNeighbors(int triangleIndex);
     bool PointInTriangle(const btVector3& p, const btVector3& a, const btVector3& b, const btVector3& c);
+    float scale = 20.0f;
 };
