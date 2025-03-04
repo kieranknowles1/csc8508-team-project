@@ -66,13 +66,13 @@ class GameScreen : public PushdownState {
 		pauseReminder -= dt;
 
 		if (pauseReminder < 0) {
-			Debug::Print("Press P to pause the game!", Vector2(0.1f, 0.1f), Vector4(0, 0, 0, 1));
+			Debug::Print("Press P to pause the game!", Vector2(20, 20), Vector4(0, 0, 0, 1));
 		}
 		if (Window::GetKeyboard()->KeyPressed(NCL::KeyCodes::P)) {
 			pauseReminder = 0;
 			*newState = new PauseScreen();
+			std::cout << "Game entered pause state \n";
 			return PushdownResult::Push;
-			//std::cout << "Game entered pause state \n";
 		}
 		if (Window::GetKeyboard()->KeyPressed(NCL::KeyCodes::RCONTROL)) {
 			Debug::Print("Going back to main menu", Vector2(0.1f, 0.3f), Vector4(0, 0, 0, 1));
@@ -173,6 +173,7 @@ int main(int argc, char** argv) {
 	std::string menuItems[3] = { singleplayer, hostGame, joinGame };
 
 	while (window->UpdateWindow() && !Window::GetKeyboard()->KeyDown(KeyCodes::ESCAPE)) {
+		float dt = window->GetTimer().GetTimeDeltaSeconds();
 
 		if (inMenu) {
 			if (NCL::Window::GetKeyboard()->KeyPressed(NCL::KeyCodes::DOWN)) {
@@ -199,9 +200,9 @@ int main(int argc, char** argv) {
 				Debug::Print(currentItem, Vector2(1, 50 + (10 * i)));
 			}
 		}
-
-
-		float dt = window->GetTimer().GetTimeDeltaSeconds();
+		else {
+			machine.Update(dt);
+		}
 
 		window->SetTitle("Gametech frame time:" + std::to_string(1000.0f * dt));
 		//if (!paused) {
@@ -213,7 +214,6 @@ int main(int argc, char** argv) {
 
 		renderer->Update(dt);
 		renderer->Render();
-		machine.Update(dt);
 
 
 		Debug::UpdateRenderables(dt);
