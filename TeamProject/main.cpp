@@ -4,7 +4,6 @@
 #include <NCLCoreClasses/GameTimer.h>
 #include <CSC8503CoreClasses/Debug.h>
 
-#include "GameTechRenderer.h"
 #include "TutorialGame.h"
 #include "NavMesh.h"
 #include "Config.h"
@@ -13,6 +12,19 @@
 //#include "MainMenuState.h"
 
 #include "Multiplayer/GamePacketHandlers.hpp"
+
+#ifndef __PROSPERO__
+#include "GameTechRenderer.h"
+#else
+#include "GameTechAGCRenderer.h"
+#include "PS5Core/PS5Window.h"
+
+size_t sceUserMainThreadStackSize = 2 * 1024 * 1024;
+extern const char sceUserMainThreadName[] = "TeamProjectGameMain";
+int sceUserMainThreadPriority = SCE_KERNEL_PRIO_FIFO_DEFAULT;
+size_t sceLibcHeapSize = 256 * 1024 * 1024;
+#endif // !__PROSPERO__
+
 
 using namespace NCL;
 using namespace NCL::CSC8503;
@@ -133,6 +145,7 @@ protected:
 
 
 std::unique_ptr<Window> createWindow(const Config& config) {
+#ifndef __PROSPERO__
 	WindowInitialisation options = {
 		.width = config.get<uint32_t>("windowWidth"),
 		.height = config.get<uint32_t>("windowHeight"),
@@ -142,10 +155,30 @@ std::unique_ptr<Window> createWindow(const Config& config) {
 
 	std::unique_ptr<Window> window(Window::CreateGameWindow(options));
 	if (!window || !window->HasInitialised()) {
-		throw std::runtime_error("Window failed to initialise!");
+		return nullptr;
 	}
 
 	return window;
+#else
+	return std::make_unique<PS5::PS5Window>("TeamProject", 1920, 1080);
+#endif // !__PROSPERO__
+}
+
+std::unique_ptr<GameTechRendererInterface> createRenderer() {
+#ifndef __PROSPERO__
+	return std::make_unique<GameTechRenderer>();
+#else
+	return std::make_unique<GameTechAGCRenderer>();
+#endif // !__PROSPERO__
+}
+
+Controller* createController(Window* window) {
+#ifndef __PROSPERO__
+	return new KeyboardMouseController(*window->GetKeyboard(), *window->GetMouse());
+#else
+	return ((PS5::PS5Window*)window)->GetController();
+#endif // !__PROSPERO__
+
 }
 
 /*int main(int argc, char** argv) {
@@ -180,8 +213,8 @@ std::unique_ptr<Window> createWindow(const Config& config) {
 
 		renderer->Update(dt);
 		renderer->Render();
-		
-		
+
+
 		Debug::UpdateRenderables(dt);
 	}
 }*/
@@ -197,11 +230,12 @@ int main(int argc, char** argv) {
 	window->ShowOSPointer(false);
 	window->LockMouseToWindow(true);
 
-	auto renderer = std::make_unique<GameTechRenderer>();
-	auto controller = std::make_unique<KeyboardMouseController>(*window->GetKeyboard(), *window->GetMouse());
+	auto renderer = createRenderer();
+	auto controller = createController(window.get());
 
 
 	auto game = std::make_unique<TutorialGame>(renderer.get(), controller.get());
+
 
 	// Clear delta time to exclude start up time
 	window->GetTimer().GetTimeDeltaSeconds();
