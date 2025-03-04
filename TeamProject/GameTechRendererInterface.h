@@ -34,7 +34,10 @@ namespace NCL::CSC8503 {
 	class GameTechRendererInterface
 	{
 	public:
+		virtual void drawFrame(float dt) = 0;
+
 		GameTechRendererInterface(Window* window);
+		virtual ~GameTechRendererInterface() = default;
 
 		virtual Rendering::Mesh* LoadMesh(const std::string& name) = 0;
 		virtual Rendering::Texture*	LoadTexture(const std::string& name) = 0;
