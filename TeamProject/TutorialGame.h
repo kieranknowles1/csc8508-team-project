@@ -164,7 +164,7 @@ namespace NCL {
 			PerspectiveCamera* mainCamera;
 			PlayerObject* player;
 			GameObject* gun;
-			PlayerController* playerController;
+			PlayerController* playerController = nullptr;
 			bool freeCam = false;
 			bool thirdPerson = false;
 			Vector4 playerColour = Vector4(1, 0.8, 1, 1);
