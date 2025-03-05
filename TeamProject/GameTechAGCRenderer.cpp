@@ -24,7 +24,7 @@ const int BINDLESS_BUFFER_COUNT		= 128;
 const size_t LINE_STRIDE = sizeof(Vector4) + sizeof(Vector4); 
 const size_t TEXT_STRIDE = sizeof(Vector2) + sizeof(Vector2) + sizeof(Vector4);
 
-GameTechAGCRenderer::GameTechAGCRenderer() : AGCRenderer(*Window::GetWindow()), GameTechRendererInterface(Window::GetWindow()) {
+GameTechAGCRenderer::GameTechAGCRenderer(Window* window) : AGCRenderer(window), GameTechRendererInterface(window) {
 	SceError error = SCE_OK;
 	bindlessTextures = (sce::Agc::Core::Texture*)allocator.Allocate(BINDLESS_TEX_COUNT * sizeof(sce::Agc::Core::Texture), sce::Agc::Alignment::kBuffer);
 	sce::Agc::Core::BufferSpec texSpec;
@@ -86,7 +86,7 @@ GameTechAGCRenderer::GameTechAGCRenderer() : AGCRenderer(*Window::GetWindow()), 
 	shadowTarget	= CreateDepthBufferTarget(SHADOW_SIZE, SHADOW_SIZE);
 	shadowMap		= CreateFrameBufferTextureSlot("Shadowmap");
 
-	screenTarget	= CreateColourBufferTarget(Window::GetWindow()->GetScreenSize().x, Window::GetWindow()->GetScreenSize().y, true);
+	screenTarget	= CreateColourBufferTarget(window->GetScreenSize().x, window->GetScreenSize().y, true);
 	screenTex		= CreateFrameBufferTextureSlot("Screen");
 
 	error = sce::Agc::Core::translate(screenTex->GetAGCPointer(), &screenTarget, sce::Agc::Core::RenderTargetComponent::kData);
@@ -190,7 +190,7 @@ void GameTechAGCRenderer::WriteRenderPassConstants() {
 	frameData.cameraPos = camera->GetPosition();
 
 	frameData.viewMatrix = camera->BuildViewMatrix();
-	frameData.projMatrix = camera->BuildProjectionMatrix(hostWindow.GetScreenAspect());
+	frameData.projMatrix = camera->BuildProjectionMatrix(hostWindow->GetScreenAspect());
 
 	frameData.viewProjMatrix = frameData.projMatrix * frameData.viewMatrix;
 

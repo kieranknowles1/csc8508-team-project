@@ -30,7 +30,7 @@ namespace NCL {
 			public NCL::CSC8503::GameTechRendererInterface
 		{
 		public:
-			GameTechAGCRenderer();
+			GameTechAGCRenderer(Window* window);
 			~GameTechAGCRenderer();
 
 			virtual Mesh*		LoadMesh(const std::string& name)				override;

@@ -229,7 +229,7 @@ Controller* createController(Window* window) {
 
 
 int main(int argc, char** argv) {
-	auto config = Config("user-config.jsonc", "default-config.jsonc");
+	auto config = Config("user-config.jsonc", Assets::DEFAULTCONFIG);
 	bool quickStart = config.get<bool>("quickStart");
 
 	auto window = createWindow(config);
