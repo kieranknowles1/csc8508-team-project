@@ -7,7 +7,6 @@
 #include "PhysicsObject.h"
 #include "CollisionInfo.h"
 
-
 #include <btBulletDynamicsCommon.h>
 #include <btBulletCollisionCommon.h>
 
@@ -53,6 +52,8 @@ public:
 		return camRotOffset;
 	}
 
+	void Rotate(bool positive, bool rolling, float yaw);
+
 	char getType() {
 		return collisionType;
 	}
@@ -72,7 +73,6 @@ public:
 	btVector3 getCollisionPoint() {
 		return collisionPoint;
 	}
-	void Rotate(bool positive, bool rolling, float yaw);
 
 	/**
 	 * @brief Get the state of the player (usually alive or dead).
@@ -81,8 +81,6 @@ public:
 	inline PlayerState GetState() { return state; }
 
 private:
-
-
 
 	//Player Variables
 	float gravityScale = 400.0f;
@@ -106,7 +104,6 @@ private:
 	float rotateTimer = 0.0f;
 	bool rotationChanging = false;
 
-	void CalculateDirections(float dt);
 	btVector3 CalculateRightDirection(btVector3 upDir);
 	btVector3 CalculateForwardDirection(btVector3 upDir, btVector3 rightDir);
 	btVector3 CalculateUpDirection(float dt);

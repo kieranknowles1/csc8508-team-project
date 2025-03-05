@@ -141,19 +141,29 @@ namespace NCL {
 			bool onIce = false;
 			btVector3 previousVelocity;
 			std::shared_ptr<NCL::Rendering::Texture> pngTexture = nullptr;
+			btVector3 forward;
+			btVector3 up;
+			btVector3 right;
+			btVector3 movement;
 
 			Vector2 getDirectionalInput() const;
 			void Initialise();
 			void HandleShooting(float dt);
 			void HandleCrouching(float dt);
 			void HandleSliding(float dt);
-			void HandleTypes();
+			void SpecialTypeCalculations();
 			bool CheckCeling();
 			btVector3 FindFloorNormal();
 			void SetGunTransform();
 			void Shoot();
 			void ShootBullet(btQuaternion bulletRotation, btVector3 hitPoint);
 			void GetAllDirections();
+			void HandleYaw();
+			void RotationCalculations();
+			void CameraMovement();
+			void GroundNormalCalculations();
+			void MovementCalculations(float dt);
+			void HandleJumping();
 
 			// decal system
 			DecalSystem* decalSystem;

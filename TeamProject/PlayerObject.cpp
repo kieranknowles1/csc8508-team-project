@@ -70,11 +70,13 @@ void PlayerObject::OnCollisionStay(const CollisionInfo& collision){
 	}
 }
 
+
 void PlayerObject::updateGravity(float dt) {
 	btVector3 movement = this->GetPhysicsObject()->GetRigidBody()->getLinearVelocity();
 	movement += upDirection * -(gravityScale * dt);
 	this->GetPhysicsObject()->GetRigidBody()->setLinearVelocity(movement);
 }
+
 
 // world rotate things
 void PlayerObject::Rotate(bool positive, bool rolling, float yaw) {
