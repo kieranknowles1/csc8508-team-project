@@ -36,6 +36,7 @@ namespace NCL::CSC8503 {
 		});
 	}
 
+
     void GameTechRendererInterface::initUi()
     {
         Vector2 screenCenter = Vector2(0.5f, 0.5f);
@@ -64,8 +65,13 @@ namespace NCL::CSC8503 {
         AddUIElement({ Vector2(screenCenter.x, screenCenter.y - gapSize - lineLength),
             Vector2(lineThickness, lineLength), crosshairColor });
 
+		AddPlayerData({ "Player 1", "Red", 4 });
+		AddPlayerData({ "Player 2", "Blue", 8 });
+		AddPlayerData({ "Player 3", "Green", 2 });
+		AddPlayerData({ "Player 4", "Yellow", 11 });
+
         // Scoreboard
-        int players = 5;
+		int players = playerData.size();
         int columns = 3;
 
         Vector4 scoreboardColor = Vector4(0.1f, 0.1f, 0.1f, 0.7f);
@@ -102,6 +108,7 @@ namespace NCL::CSC8503 {
                     position.y + (boxSize.y * 0.25f) // Slightly offset to the bottom
                 );
 
+				//title row
                 if (row == 0) {
                     std::string text;
                     if (col == 0) {
@@ -115,19 +122,21 @@ namespace NCL::CSC8503 {
                     }
                     AddUITextElement({ textPosition, textColor, text, true });
                 }
+				// Empty row
                 else if (row > players) {
                     AddUITextElement({ textPosition, textColor, "", true });
                 }
+				// Data rows
                 else {
                     std::string text;
                     if (col == 0) {
-                        text = "Player " + std::to_string(row);
+                        text = playerData[row-1].name;
                     }
                     else if (col == 1) {
-                        text = "Red";
+                        text = playerData[row-1].color;
                     }
                     else {
-                        text = "0";
+                        text = std::to_string(playerData[row-1].score);
                     }
                     AddUITextElement({ textPosition, textColor, text, true });
                 }

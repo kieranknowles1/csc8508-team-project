@@ -38,6 +38,12 @@ namespace NCL::CSC8503 {
 		bool isScoreboard = false;
 	};
 
+	struct PlayerData {
+		std::string name;
+		std::string color;
+		int score;
+	};
+
 	class GameTechRendererInterface
 	{
 	public:
@@ -84,6 +90,10 @@ namespace NCL::CSC8503 {
 			uiTextElements.push_back(element);
 		}
 
+		void AddPlayerData(const PlayerData& data) {
+			playerData.push_back(data);
+		}
+
 		void ToggleScoreboard() {
 			showScoreboard = !showScoreboard;
 		}
@@ -100,6 +110,7 @@ namespace NCL::CSC8503 {
 		Camera* camera = nullptr;
 		std::vector<UIElement> uiElements;
 		std::vector<UITextElement> uiTextElements;
+		std::vector<PlayerData> playerData;
 		std::vector<RenderObject*> frameObjects;
 		DecalSystem decalSystem;
 		bool showScoreboard = false;
