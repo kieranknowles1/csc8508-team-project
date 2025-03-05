@@ -1,5 +1,7 @@
 #pragma once
 
+#include <memory>
+
 class Network;
 
 namespace Lobbies {
@@ -19,10 +21,17 @@ namespace Lobbies {
 
 		/**
 		 * @brief Fetch the user's ID.
-		 * @return The ID of the user.
 		 */
 		inline unsigned int GetUserID() const { return m_userID; }
 
+		/**
+		 * @brief Serialize this object.
+		 */
+		std::unique_ptr<char[]> Serialize() {
+			std::unique_ptr<char[]> data = std::make_unique<char[]>(sizeof(m_userID));
+			std::memcpy(data.get(), &m_userID, sizeof(unsigned int));
+			return data;
+		}
 
 	private:
 		unsigned int m_userID = -1;
