@@ -277,7 +277,7 @@ void TutorialGame::InitWorld() {
 	InitBullet();
 	audioEngine.Init();
 
-	navMeshDebug = true;
+	navMeshDebug = false;
 	if (navMeshDebug) {
 		freeCam = true;
 		navMesh = new NavMesh(bulletWorld);
@@ -399,7 +399,7 @@ Wanderer* TutorialGame::AddWandererToWorld() {
 
 	wanderer->GetRenderObject()->SetColour(Vector4(1, 0, 0, 1));
 
-	//gwanderer->SetOffset();
+	wanderer->InitPosAndOffset();
 
 	world->AddGameObject(wanderer);
 	

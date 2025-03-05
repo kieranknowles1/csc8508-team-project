@@ -42,8 +42,8 @@ void Wanderer::Update(float dt) {
 	stateMachine->Update(dt);
 
 	btTransform trans = GetTransform();
-	if (FollowPath(dt)) {
-		btVector3 newPos = newPathPoint;
+	if (FollowPath(dt, player)) {
+		btVector3 newPos = curPathPoint + offset;
 		trans.setOrigin(newPos);
 		btRigidBody* body = physicsObject->GetRigidBody();
 		body->setWorldTransform(trans);
@@ -55,17 +55,18 @@ void Wanderer::Update(float dt) {
 	}
 }
 
-/*void Wanderer::SetOffset() {
+void Wanderer::InitPosAndOffset() {
 	btCollisionShape* shape = GetPhysicsObject()->GetRigidBody()->getCollisionShape();
 	btCapsuleShape* capsule = static_cast<btCapsuleShape*>(shape);
 	float halfHeight = capsule->getHalfHeight();
-	navOffset = btVector3(0, halfHeight * 2, 0);
+	offset = btVector3(0, halfHeight * 2, 0);
 	btTransform trans = GetTransform();
-	btVector3 newPos = trans.getOrigin() + navOffset;
+	curPathPoint = trans.getOrigin();
+	btVector3 newPos = trans.getOrigin() + offset;
 	trans.setOrigin(newPos);
 	btRigidBody* body = physicsObject->GetRigidBody();
 	body->setWorldTransform(trans);
-}*/
+}
 
 void Wanderer::canSeePlayer() {
 	if (!player) return;
