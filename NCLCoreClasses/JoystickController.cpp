@@ -53,6 +53,14 @@ namespace NCL {
         case DigitalControl::DebugFreeCam: return buttonPressed(Button::PadRight, true, true);
         case DigitalControl::DebugReloadWorld: return buttonPressed(Button::PadLeft, true, true);
         case DigitalControl::DebugShowProfiling: return buttonPressed(Button::PadDown, true, true);
+
+        case DigitalControl::MenuDown: return buttonPressed(Button::PadDown, false, true);
+        case DigitalControl::MenuUp: return buttonPressed(Button::PadUp, false, true);
+        case DigitalControl::MenuConfirm: return buttonPressed(Button::A, false, true);
+        case DigitalControl::Pause: case DigitalControl::Unpause:
+            return buttonPressed(Button::Select, false, true);
+        case DigitalControl::PauseQuit: return buttonPressed(Button::Select, true, true);
+
         default:
             assert(false);
         }

@@ -17,11 +17,10 @@ namespace NCL {
             PadRight,
             Select,
             Start,
+            // L2 and R2 are triggers
             L1,
-            L2,
             L3,
             R1,
-            R2,
             R3,
 
             // Steam deck back buttons, don't assume these are present

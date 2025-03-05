@@ -31,16 +31,30 @@ namespace NCL::UnixCode {
         using enum JoystickController::Button;
         switch (button) {
             case A: return SDL_CONTROLLER_BUTTON_A;
-            default: return SDL_CONTROLLER_BUTTON_Y; // TODO
+            case B: return SDL_CONTROLLER_BUTTON_B;
+            case X: return SDL_CONTROLLER_BUTTON_X;
+            case Y: return SDL_CONTROLLER_BUTTON_Y;
+            case Select: return SDL_CONTROLLER_BUTTON_BACK;
+            case Start: return SDL_CONTROLLER_BUTTON_START;
+            case L3: return SDL_CONTROLLER_BUTTON_LEFTSTICK;
+            case R3: return SDL_CONTROLLER_BUTTON_RIGHTSTICK;
+            case L1: return SDL_CONTROLLER_BUTTON_LEFTSHOULDER;
+            case R1: return SDL_CONTROLLER_BUTTON_RIGHTSHOULDER;
+            case PadUp: return SDL_CONTROLLER_BUTTON_DPAD_UP;
+            case PadDown: return SDL_CONTROLLER_BUTTON_DPAD_DOWN;
+            case PadLeft: return SDL_CONTROLLER_BUTTON_DPAD_LEFT;
+            case PadRight: return SDL_CONTROLLER_BUTTON_DPAD_RIGHT;
+            case DeckR4: return SDL_CONTROLLER_BUTTON_PADDLE1;
+            case DeckR5: return SDL_CONTROLLER_BUTTON_PADDLE2;
+            case DeckL4: return SDL_CONTROLLER_BUTTON_PADDLE3;
+            case DeckL5: return SDL_CONTROLLER_BUTTON_PADDLE4;
+            default: assert(false);
         }
     }
 
     bool SDLJoystick::internalButtonPressed(Button button)
     {
         auto sdl = toSdl(button);
-        if (button == Button::A) {
-            std::cout << (SDL_GameControllerGetButton(stick, sdl) ? "y" : "n") << std::endl;
-        }
         return SDL_GameControllerGetButton(stick, sdl);
     }
 
