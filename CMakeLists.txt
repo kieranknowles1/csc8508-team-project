@@ -81,7 +81,6 @@ if (NOT PS5_BUILD)
     add_subdirectory(OpenGLRendering)
 else()
     add_subdirectory(PS5Core)
-    add_subdirectory(PS5Starter)
 endif()
 add_subdirectory(Network)
 add_subdirectory(TeamProject) # Working title

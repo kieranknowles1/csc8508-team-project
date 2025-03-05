@@ -172,17 +172,6 @@ void TutorialGame::UpdateKeys() {
 			playerController->pitchDown();
 		}
 	}
-
-	if (Window::GetKeyboard()->KeyPressed(KeyCodes::F5)) {
-		bool toggleHDR = renderer->GetHDROn();
-		toggleHDR = !toggleHDR;
-		renderer->SetHDROn(toggleHDR);
-	}
-	if (Window::GetKeyboard()->KeyPressed(KeyCodes::F6)) {
-		bool toggleVignette = renderer->GetVignetteOn();
-		toggleVignette = !toggleVignette;
-		renderer->SetVignetteOn(toggleVignette);
-	}
 }
 
 void TutorialGame::ThirdPersonControls() {

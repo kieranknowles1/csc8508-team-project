@@ -34,7 +34,10 @@ namespace NCL::CSC8503 {
 	class GameTechRendererInterface
 	{
 	public:
+		virtual void drawFrame(float dt) = 0;
+
 		GameTechRendererInterface(Window* window);
+		virtual ~GameTechRendererInterface() = default;
 
 		virtual Rendering::Mesh* LoadMesh(const std::string& name) = 0;
 		virtual Rendering::Texture*	LoadTexture(const std::string& name) = 0;
@@ -79,7 +82,7 @@ namespace NCL::CSC8503 {
 	protected:
 		//adding bools to toggle post processing. Must be accessible from the specific renderer
 		bool hdrOn = true;
-		bool vignetteOn = false;
+		bool vignetteOn = true;
 		float vignettePulse = 0;
 		Window* window;
 		Camera* camera = nullptr;

@@ -27,7 +27,7 @@ struct PS5Shader {
 namespace NCL::PS5 {
 	class AGCRenderer : public NCL::Rendering::RendererBase {
 	public:
-		AGCRenderer(Window& w);
+		AGCRenderer(Window* w);
 		~AGCRenderer();
 
 		const MemoryAllocator& GetAllocator() const {
