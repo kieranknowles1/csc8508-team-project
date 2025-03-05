@@ -10,9 +10,12 @@ bool PushdownMachine::Update(float dt) {
 		switch (result) {
 		case PushdownState::Pop: {
 			activeState->OnSleep();
-			delete activeState;
+			if (activeState != initialState) {
+				delete activeState;
+			}
 			stateStack.pop();
 			if (stateStack.empty()) {
+				activeState = nullptr;
 				return false;
 			}
 			else {

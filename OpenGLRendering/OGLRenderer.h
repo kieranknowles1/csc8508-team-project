@@ -35,7 +35,7 @@ namespace NCL::Rendering {
 	class OGLRenderer : public RendererBase	{
 	public:
 		friend class OGLRenderer;
-		OGLRenderer(Window& w);
+		OGLRenderer(Window* w);
 		~OGLRenderer();
 
 		void OnWindowResize(int w, int h)	override;
