@@ -46,7 +46,7 @@ GameTechRenderer::GameTechRenderer() : OGLRenderer(*Window::GetWindow()) {
 	glClearColor(1, 1, 1, 1);
 
 	//Set up the light properties
-	lightColour = Vector4(0.8f, 0.8f, 0.5f, 1.0f); 
+	lightColour = Vector4(1.0f, 0.0f, 0.0f, 1.0f); //0.8f, 0.8f, 0.5f, 1.0f 
 	lightRadius = 1000.0f; 
 	lightPosition = Vector3(-200.0f, 60.0f, -200.0f); //60.0f
 
@@ -103,7 +103,7 @@ GameTechRenderer::GameTechRenderer() : OGLRenderer(*Window::GetWindow()) {
 
 	GenerateScreenTexture(bufferDepthTex, true);
 	GenerateScreenTexture(bufferColourTex);
-	GenerateScreenTexture(bufferNormalTex);
+	GenerateScreenTexture(bufferNormalTex, false); 
 	GenerateScreenTexture(lightDiffuseTex);
 	GenerateScreenTexture(lightSpecularTex);
 
@@ -115,7 +115,7 @@ GameTechRenderer::GameTechRenderer() : OGLRenderer(*Window::GetWindow()) {
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, bufferDepthTex, 0);
 	glDrawBuffers(2, buffers);
 
-	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {//check attachment success
+	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE || !bufferColourTex || !bufferNormalTex || !bufferDepthTex ) {//check attachment success
 		return;
 	}
 
@@ -125,7 +125,7 @@ GameTechRenderer::GameTechRenderer() : OGLRenderer(*Window::GetWindow()) {
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, lightSpecularTex, 0);
 	glDrawBuffers(2, buffers);
 
-	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
+	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE || !lightDiffuseTex || ! lightSpecularTex) {
 		return;
 	}
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -818,20 +818,20 @@ void GameTechRenderer::RenderPostProcessing() {
 	
 }
 
-void GameTechRenderer::GenerateScreenTexture(GLuint& into, bool depth) {
+void GameTechRenderer::GenerateScreenTexture(GLuint& into, bool depth) { //lighting does not appear to like floating point textures
 	glGenTextures(1, &into);
-	glBindTexture(GL_TEXTURE_2D, into);
+	glBindTexture(GL_TEXTURE_2D, into); //apparently with multiple render targets, all attachments must be same size
 
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 
-	GLuint format = depth ? GL_DEPTH_COMPONENT24 : GL_RGBA16F; //originally GL_RGBA8 
+	GLuint format = depth ? GL_DEPTH_COMPONENT24 : GL_RGBA8; //originally GL_RGBA8  16F RGBA8 seems to (mostly) work, 16F does not because deferred rendering likes 32 bits maybe
 	GLuint type = depth ? GL_DEPTH_COMPONENT : GL_RGBA;
-	GLuint datatype = depth ? GL_UNSIGNED_BYTE : GL_FLOAT;
+	//GLuint datatype = depth ? GL_UNSIGNED_BYTE : GL_FLOAT; 
 
-	glTexImage2D(GL_TEXTURE_2D, 0, format, windowSize.x, windowSize.y, 0, type, datatype, NULL); //for now replacing GL_UNSIGNED_BYTE with datatype
+	glTexImage2D(GL_TEXTURE_2D, 0, format, windowSize.x, windowSize.y, 0, type, GL_UNSIGNED_BYTE, NULL); //for now replacing GL_UNSIGNED_BYTE with datatype 
 	glBindTexture(GL_TEXTURE_2D, 0);
 }
 
@@ -865,7 +865,7 @@ void GameTechRenderer::FillBuffers() { //basically draws unlit scene
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
-void GameTechRenderer::DrawPointLights() {
+void GameTechRenderer::DrawPointLights() { //current state: lightSpecularTex not rendering properly I think and also doesn't like floating point textures
 	glBindFramebuffer(GL_FRAMEBUFFER, pointLightFBO);
 	UseShader(*pointlightShader);
 
