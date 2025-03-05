@@ -186,7 +186,18 @@ std::unique_ptr<GameTechRendererInterface> createRenderer(Window* window) {
 
 Controller* createController(Window* window) {
 #ifndef __PROSPERO__
-	return new KeyboardMouseController(*window->GetKeyboard(), *window->GetMouse());
+	auto keyboard = new KeyboardMouseController(*window->GetKeyboard(), *window->GetMouse());
+	#ifdef CSC_USE_SDL2
+		auto joystick = new UnixCode::SDLJoystick(0);
+		if (joystick->initOk()) {
+			return new HybridController(
+				std::unique_ptr<Controller>(keyboard),
+				std::unique_ptr<Controller>(joystick)
+			);
+		}
+		delete joystick;
+	#endif
+	return keyboard;
 #else
 	return ((PS5::PS5Window*)window)->GetController();
 #endif // !__PROSPERO__
