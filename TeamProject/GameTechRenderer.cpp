@@ -52,15 +52,6 @@ GameTechRenderer::GameTechRenderer() : OGLRenderer(*Window::GetWindow()), GameTe
 	lightRadius = 1000.0f;
 	lightPosition = Vector3(-200.0f, 60.0f, -200.0f);
 
-	//Skybox!
-	skyboxShader = std::make_unique<OGLShader>("skybox.vert", "skybox.frag");
-	skyboxMesh = std::make_unique<OGLMesh>();
-	skyboxMesh->SetVertexPositions({Vector3(-1, 1,-1), Vector3(-1,-1,-1) , Vector3(1,-1,-1) , Vector3(1,1,-1) });
-	skyboxMesh->SetVertexIndices({ 0,1,2,2,3,0 });
-	skyboxMesh->UploadToGPU();
-
-	LoadSkybox();
-
 	glGenVertexArrays(1, &lineVAO);
 	glGenVertexArrays(1, &textVAO);
 
@@ -155,47 +146,6 @@ GameTechRenderer::~GameTechRenderer() {
 	delete vignetteShader;
 }
 
-void GameTechRenderer::LoadSkybox() {
-	std::string filenames[6] = {
-		"Cubemap/skyrender0004.png",
-		"Cubemap/skyrender0001.png",
-		"Cubemap/skyrender0003.png",
-		"Cubemap/skyrender0006.png",
-		"Cubemap/skyrender0002.png",
-		"Cubemap/skyrender0005.png"
-	};
-
-	uint32_t width[6]	 = { 0 };
-	uint32_t height[6]	 = { 0 };
-	uint32_t channels[6] = { 0 };
-	uint32_t flags[6]		 = { 0 };
-
-	vector<char*> texData(6, nullptr);
-
-	for (int i = 0; i < 6; ++i) {
-		TextureLoader::LoadTexture(filenames[i], texData[i], width[i], height[i], channels[i], flags[i]);
-		if (i > 0 && (width[i] != width[0] || height[0] != height[0])) {
-			std::cout << __FUNCTION__ << " cubemap input textures don't match in size?\n";
-			return;
-		}
-	}
-	glGenTextures(1, &skyboxTex);
-	glBindTexture(GL_TEXTURE_CUBE_MAP, skyboxTex);
-
-	GLenum type = channels[0] == 4 ? GL_RGBA : GL_RGB;
-
-	for (int i = 0; i < 6; ++i) {
-		glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB, width[i], height[i], 0, type, GL_UNSIGNED_BYTE, texData[i]);
-		stbi_image_free(texData[i]);
-	}
-
-	glTexParameterf(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-	glTexParameterf(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-
-	glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
-}
-
 void GameTechRenderer::RenderFrame() {
 	glEnable(GL_CULL_FACE);
 	glClearColor(1, 1, 1, 1);
@@ -206,7 +156,6 @@ void GameTechRenderer::RenderFrame() {
 		glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 	}
 	//
-	RenderSkybox();
 	RenderCamera();
 	glDisable(GL_CULL_FACE); //Todo - text indices are going the wrong way...
 	glDisable(GL_BLEND);
@@ -260,35 +209,6 @@ void GameTechRenderer::RenderShadowMap() {
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);// 0
 
 	glCullFace(GL_BACK);
-}
-
-void GameTechRenderer::RenderSkybox() {
-	glDisable(GL_CULL_FACE);
-	glDisable(GL_BLEND);
-	glDisable(GL_DEPTH_TEST);
-
-	Matrix4 viewMatrix = camera->BuildViewMatrix();
-	Matrix4 projMatrix = camera->BuildProjectionMatrix(hostWindow.GetScreenAspect());
-
-	UseShader(*skyboxShader);
-
-	int projLocation = glGetUniformLocation(skyboxShader->GetProgramID(), "projMatrix");
-	int viewLocation = glGetUniformLocation(skyboxShader->GetProgramID(), "viewMatrix");
-	int texLocation  = glGetUniformLocation(skyboxShader->GetProgramID(), "cubeTex");
-
-	glUniformMatrix4fv(projLocation, 1, false, (float*)&projMatrix);
-	glUniformMatrix4fv(viewLocation, 1, false, (float*)&viewMatrix);
-
-	glUniform1i(texLocation, 0);
-	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_CUBE_MAP, skyboxTex);
-
-	BindMesh(*skyboxMesh);
-	DrawBoundMesh();
-
-	glEnable(GL_CULL_FACE);
-	glEnable(GL_BLEND);
-	glEnable(GL_DEPTH_TEST);
 }
 
 void GameTechRenderer::RenderCamera() {

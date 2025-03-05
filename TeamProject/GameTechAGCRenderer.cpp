@@ -37,8 +37,6 @@ GameTechAGCRenderer::GameTechAGCRenderer() : AGCRenderer(*Window::GetWindow()), 
 	error = sce::Agc::Core::initialize(&arrayBuffer, &buffSpec);
 	bufferCount = 1; //We skip over index 0, makes some selection logic easier later
 
-	skyboxTexture = (AGCTexture*)LoadTexture("Skybox.dds");
-
 	unitQuad = Mesh::Quad<AGCMesh>(1.0f);
 	unitQuad->UploadToGPU(this);
 	halfUnitQuad = Mesh::Quad<AGCMesh>(0.5f);
@@ -55,9 +53,6 @@ GameTechAGCRenderer::GameTechAGCRenderer() : AGCRenderer(*Window::GetWindow()), 
 
 	shadowVertexShader	= new AGCShader("Shadow_vv.ags", allocator);
 	shadowPixelShader	= new AGCShader("Shadow_p.ags", allocator);
-
-	skyboxVertexShader	= new AGCShader("Skybox_vv.ags", allocator);
-	skyboxPixelShader	= new AGCShader("Skybox_p.ags" , allocator);
 
 	debugLineVertexShader	= new AGCShader("DebugLine_vv.ags", allocator);
 	debugLinePixelShader	= new AGCShader("DebugLine_p.ags" , allocator);
@@ -163,8 +158,6 @@ void GameTechAGCRenderer::RenderFrame() {
 	UpdateObjectList();
 	//Step 4: Go through the geometry and darw it to a shadow map
 	ShadowmapPass();
-	//Step 5: Draw a skybox to our main scene render target
-	SkyboxPass();
 	//Step 6: Draw the scene to our main scene render target
 	MainRenderPass();
 	//Step 7: Draw the debug data to the main scene render target
@@ -252,37 +245,6 @@ void GameTechAGCRenderer::DrawObjects() {
 			instanceCount++;
 		}
 	}
-}
-
-void GameTechAGCRenderer::SkyboxPass() {
-	frameContext->setShaders(nullptr, skyboxVertexShader->GetAGCPointer(), skyboxPixelShader->GetAGCPointer(), sce::Agc::UcPrimitiveType::Type::kTriList);
-
-	sce::Agc::CxViewport viewPort;
-	sce::Agc::Core::setViewport(&viewPort, SCREENWIDTH, SCREENHEIGHT, 0, 0, -1.0f, 1.0f);
-	frameContext->m_sb.setState(viewPort);
-
-	sce::Agc::CxRenderTargetMask rtMask = sce::Agc::CxRenderTargetMask().init().setMask(0, 0xFF);
-	frameContext->m_sb.setState(rtMask);
-	frameContext->m_sb.setState(screenTarget);
-
-	frameContext->m_sb.setState(depthTarget);
-
-	sce::Agc::CxDepthStencilControl depthControl;
-	depthControl.init();
-	depthControl.setDepth(sce::Agc::CxDepthStencilControl::Depth::kDisable);
-	depthControl.setDepthFunction(sce::Agc::CxDepthStencilControl::DepthFunction::kAlways);
-	depthControl.setDepthWrite(sce::Agc::CxDepthStencilControl::DepthWrite::kDisable);
-	frameContext->m_sb.setState(depthControl);
-
-	frameContext->m_bdr.getStage(sce::Agc::ShaderType::kGs)
-		.setConstantBuffers(0, 1, &currentFrame->constantBuffer);
-
-	frameContext->m_bdr.getStage(sce::Agc::ShaderType::kPs)
-		.setSamplers(0, 1, &defaultSampler)
-		.setTextures(1, 1, skyboxTexture->GetAGCPointer());
-
-	unitQuad->BindVertexBuffers(frameContext->m_bdr.getStage(sce::Agc::ShaderType::kGs));
-	DrawBoundMesh(*frameContext, *unitQuad);
 }
 
 void GameTechAGCRenderer::ShadowmapPass() {

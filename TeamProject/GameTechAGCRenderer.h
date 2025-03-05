@@ -55,7 +55,6 @@ namespace NCL {
 			void RenderDebugText();
 
 			void ShadowmapPass();
-			void SkyboxPass();
 			void MainRenderPass();
 
 			void UiPass();
@@ -143,8 +142,6 @@ namespace NCL {
 
 			sce::Agc::Core::Buffer arrayBuffer;
 
-			NCL::PS5::AGCTexture* skyboxTexture;
-
 			NCL::PS5::AGCShader* skinningCompute;
 
 			NCL::PS5::AGCShader* defaultVertexShader;
@@ -155,9 +152,6 @@ namespace NCL {
 
 			NCL::PS5::AGCShader* shadowVertexShader;
 			NCL::PS5::AGCShader* shadowPixelShader;
-
-			NCL::PS5::AGCShader* skyboxVertexShader;
-			NCL::PS5::AGCShader* skyboxPixelShader;
 
 			NCL::PS5::AGCShader* debugLineVertexShader;
 			NCL::PS5::AGCShader* debugLinePixelShader;
