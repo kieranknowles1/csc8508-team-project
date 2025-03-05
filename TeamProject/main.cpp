@@ -230,6 +230,7 @@ Controller* createController(Window* window) {
 
 int main(int argc, char** argv) {
 	auto config = Config("user-config.jsonc", "default-config.jsonc");
+	bool quickStart = config.get<bool>("quickStart");
 
 	auto window = createWindow(config);
 	//bool paused = false;
@@ -269,7 +270,7 @@ int main(int argc, char** argv) {
 			if (controller->GetDigital(Controller::DigitalControl::MenuUp)) {
 				selection = std::max(0, selection - 1);
 			}
-			if (controller->GetDigital(Controller::DigitalControl::MenuConfirm)) {
+			if (controller->GetDigital(Controller::DigitalControl::MenuConfirm) || quickStart) {
 				GameMode mode = static_cast<GameMode>(selection);
 
 				if (mode == GameMode::SINGLEPLAYER) {
