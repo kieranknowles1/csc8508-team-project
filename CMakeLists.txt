@@ -14,21 +14,13 @@ if (PS5_BUILD)
     set(PS5_SCE_MODULE ${CMAKE_SOURCE_DIR}/../sce_module CACHE STRING "Location of the `sce_module` directory")
 
     set(FMOD_SDK_PATH "C:/Program Files (x86)/FMOD SoundSystem/FMOD Studio API PS5/api" CACHE STRING "Path to the FMOD SDK")
-    set(FMOD_DLL "${FMOD_SDK_PATH}/core/lib/libfmod.prx")
-    set(FMOD_STUDIO_DLL "${FMOD_SDK_PATH}/studio/lib/libfmodstudio.prx")
     set(PS5_SDK_TOOLS "C:/Program Files (x86)/SCE/Prospero SDKs/10.000/host_tools/bin")
 else()
     set(FMOD_SDK_PATH "C:/Program Files (x86)/FMOD SoundSystem/FMOD Studio API Windows/api" CACHE STRING "Path to the FMOD SDK")
-    set(FMOD_DLL "${FMOD_SDK_PATH}/core/lib/x64/fmod.dll")
-    set(FMOD_STUDIO_DLL "${FMOD_SDK_PATH}/studio/lib/x64/fmodstudio.dll")
 endif()
 
 if (USE_SDL2)
     add_definitions(-DCSC_USE_SDL2)
-endif()
-
-if (PS5_BUILD)
-    add_compile_definitions("USEAGC")
 endif()
 
 if(NOT CMAKE_VS_PLATFORM_NAME)
@@ -77,7 +69,6 @@ include_directories(
 )
 
 add_subdirectory(NCLCoreClasses)
-# TODO: Can we do this on PS5 as well?
 if (NOT PS5_BUILD)
     add_subdirectory(MeshCompiler)
 else()
@@ -89,7 +80,6 @@ if (NOT PS5_BUILD)
     add_subdirectory(OpenGLRendering)
 else()
     add_subdirectory(PS5Core)
-    add_subdirectory(PS5Starter)
 endif()
 add_subdirectory(Network)
 add_subdirectory(TeamProject) # Working title

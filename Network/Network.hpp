@@ -4,6 +4,7 @@
 #include <array>
 #include <thread>
 #include <mutex>
+#include <functional>
 
 #include <./enet/enet.h>
 
@@ -67,24 +68,93 @@ public:
 	 * Starts a new thread. The thread handles sending and receiving of packets.
 	 */
 	void Start();
+
+	/**
+	 * @brief Stop and join the execution thread.
+	 * 
+	 * Sets network state to OFF
+	 */
 	void Stop();
+
+	/**
+	 * @brief Closes the host.
+	 * 
+	 * Cleans up enet objects. Calls Stop() first.
+	 */
 	void Close();
+
+	/**
+	 * @brief Connect to another ENetHost.
+	 * @param destination The address of the endpoint to connect to.
+	 */
 	void ConnectTo(const ENetAddress* destination);
 
-	void Send(Packet::Packet packet);
-	Packet::Packet Fetch();
+	/**
+	 * @brief Queue a Packet to be send next tick via Broadcasting.
+	 * Is threadsafe.
+	 * @param packet The packet to send.
+	 */
+	void Send(std::shared_ptr<Packet::Packet> packet);
 
+	/**
+	 * @brief Assign which function to call upon receiving a connect packet.
+	 * 
+	 * Passes ENetPeer* incase the callback function requires it.
+	 * 
+	 * @param callback The function to call.
+	 */
+	inline void SetConnectCallback(std::function<void(ENetPeer*)> callback) { m_connectCallback = callback; }
+
+	/**
+	 * @brief Fetch a packet from the buffer.
+	 * 
+	 * Fetch from the buffer. The buffer is updated every tick. Is threadsafe.
+	 * 
+	 * @return The next packet in the buffer. Empty packet if no packet exists.
+	 */
+	std::shared_ptr<Packet::Packet> Fetch();
+
+	/**
+	 * @brief Get the current state of the network.
+	 * Is Threadsafe.
+	 * @return 
+	 */
 	NetworkState GetState() {
 		std::lock_guard<std::mutex> lock(m_stateMut);
 		return m_state;
 	}
 
-protected:
-	void Run();				// Function the thread runs.
-	void Tick(float dt);	// Tick the server (when to receive and send).
-	void SendAll();			// Queue all the packets to be sent. Packets will send on next enet flush.
+	/**
+	 * @brief Get the number of external connections.
+	 * @return int representing the number of external connections.
+	 */
+	int GetConnectionCount() const { return m_connections - 1; }
 
-	void SetErrored();	// Set the server into an errored state.
+
+protected:
+	/**
+	 * @brief The entry point for the thread for sending and receiving packets.
+	 */
+	void Run();
+
+	/**
+	 * @brief Step forward by dt.
+	 * 
+	 * If enough time has elapsed the server will fetch and send packets based
+	 * on the NETWORK_RATE.
+	 */
+	void Tick(float dt);
+
+	/**
+	 * @brief Sends all queued packets.
+	 * Broadcasts to all connections.
+	 */
+	void SendAll();
+
+	/**
+	 * @brief Set the network into an errored state.
+	 */
+	void SetErrored();
 
 private:
 	bool ConnectPeer();
@@ -98,7 +168,7 @@ private:
 	NetworkState m_state = NetworkState::CLOSED;
 
 	Packet::PacketBuffer m_receiveBuffer = Packet::PacketBuffer(BUFFER_SIZE);
-	std::vector<Packet::Packet> m_sendBuffer = std::vector<Packet::Packet>(BUFFER_SIZE);
+	std::vector<std::shared_ptr<Packet::Packet>> m_sendBuffer = std::vector<std::shared_ptr<Packet::Packet>>(BUFFER_SIZE);
 	int m_numPackets = 0;
 	
 	float m_elapsedTime = 0;
@@ -109,4 +179,5 @@ private:
 	int m_maxConnections;
 
 	ENetHost* m_host = nullptr;
+	std::function<void(ENetPeer*)> m_connectCallback;
 };

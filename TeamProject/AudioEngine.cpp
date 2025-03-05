@@ -2,7 +2,7 @@
 #include "Assets.h"
 
 #ifdef __PROSPERO__
-#include "agc.h"
+#include <kernel.h>
 #endif // __PROSPERO__
 
 
@@ -134,6 +134,18 @@ void CAudioEngine::SetChannel3dPosition(int nChannelId, const NCL::Maths::Vector
 
     FMOD_VECTOR position = VectorToFmod(vPosition);
     CAudioEngine::ErrorCheck(tFoundIt->second->set3DAttributes(&position, NULL));
+}
+
+void CAudioEngine::Set3dListenerAndOrientation(const NCL::Maths::Vector3& vPosition, const NCL::Maths::Vector3& vLook, const NCL::Maths::Vector3& vUp) {
+    FMOD_VECTOR fmodPosition = VectorToFmod(vPosition);
+    FMOD_VECTOR fmodLook = VectorToFmod(vLook);
+    FMOD_VECTOR fmodUp = VectorToFmod(vUp);
+
+    FMOD_VECTOR fmodVelocity = { 0.0f, 0.0f, 0.0f }; // Velocity is usually needed for Doppler effect, but we don't have it here
+
+    if (sgpImplementation && sgpImplementation->mpSystem) {
+        sgpImplementation->mpSystem->set3DListenerAttributes(0, &fmodPosition, &fmodVelocity, &fmodLook, &fmodUp);
+    }
 }
 
 //Sets the volume of an FMod channel

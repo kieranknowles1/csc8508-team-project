@@ -16,6 +16,7 @@ bool NavEntity::FollowPath(float dt, GameObject* player) {
 
 	btVector3 nextPoint = path[nextNode];
 
+
 	float dist = curPathPoint.distance(nextPoint);
 	btVector3 dir = nextPoint - curPathPoint;
 	btVector3 toPoint = (dir.length2() == 0) ? btVector3(0, 0, 0) : dir.normalized();

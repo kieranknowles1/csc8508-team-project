@@ -105,7 +105,8 @@ static void convert(std::string_view source, std::string_view target) {
 	write(fs, mesh.GetVertexCount());
 	write(fs, mesh.GetIndexCount());
 	auto chunkCountOff = fs.tellp();
-	write(fs, 0); // Will be filled later
+	write(fs, 0); // Will be filled later, chunk count
+	write(fs, mesh.getBoundingRadius());
 
 	int chunksWritten = 0;
 	writeOptionalChunk(chunksWritten, fs, MshLoader::GeometryChunkTypes::VPositions, mesh.GetPositionData(), mesh.GetVertexCount());

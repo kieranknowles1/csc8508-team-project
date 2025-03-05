@@ -30,6 +30,7 @@ macro(process_file)
         add_custom_command(
             OUTPUT ${${outvar}}
             COMMAND "${PS5_SDK_TOOLS}/prospero-wave-psslc" ${file} -o ${${outvar}}
+            DEPENDS ${file}
         )
     else()
         set(${outvar} ${file})
