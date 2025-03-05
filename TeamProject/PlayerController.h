@@ -162,7 +162,6 @@ namespace NCL {
 			btIDebugDraw* debugDrawer;
 			bool onIce = false;
 			btVector3 previousVelocity;
-			Shoot* shoot = nullptr;
 
 			Vector2 getDirectionalInput() const;
 			void Initialise();
@@ -173,7 +172,7 @@ namespace NCL {
 			bool CheckCeling();
 			btVector3 FindFloorNormal();
 			void SetGunTransform();
-			void ShootFunc();
+			void FireShot();
 			void Rotate(bool positive, bool rolling);
 			btVector3 CalculateUpDirection(float dt);
 			btVector3 CalculateForwardFromYaw();

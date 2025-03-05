@@ -21,7 +21,6 @@ std::ostream& operator<<(std::ostream& os, const btQuaternion& vec) {
 void PlayerController::Initialise() {
     rb = player->GetPhysicsObject()->GetRigidBody();
     debugDrawer = bulletWorld->getDebugDrawer();
-    shoot = Shoot::GetInstance();
 }
 
 btVector3 GetEulerAngles(btQuaternion quat) {
@@ -154,7 +153,7 @@ void PlayerController::SetGunTransform() {
 
 void PlayerController::HandleShooting(float dt) {
     if (controller->GetDigital(Controller::DigitalControl::Fire) && shotTimer >= shotCooldown) {
-        ShootFunc();
+        FireShot();
         shotTimer = 0.0f;
     }
     else {
@@ -163,8 +162,7 @@ void PlayerController::HandleShooting(float dt) {
 }
 
 
-
-void PlayerController::ShootFunc() {
+void PlayerController::FireShot() {
     // Convert camera pitch & yaw to radians
     float pitchRadians = Maths::DegreesToRadians(camera->GetPitch());
     float yawRadians = Maths::DegreesToRadians(yaw);
@@ -174,10 +172,8 @@ void PlayerController::ShootFunc() {
     btMatrix3x3 rotationMatrix(bulletRotation);
     btVector3 forwardDir = rotationMatrix * btVector3(0, 0, -1);
 
-   shoot->ShootBulletPlayer(camera->GetPosition(), forwardDir,bulletRotation);
+   Shoot::GetInstance()->ShootBulletPlayer(camera->GetPosition(), forwardDir, bulletRotation);
 }
-
-
 
 
 //transitions states between standing and crouching
