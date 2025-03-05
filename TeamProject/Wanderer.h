@@ -21,7 +21,7 @@ namespace NCL {
 			std::vector<btVector3> curPath = {};
 
 			StateMachine* stateMachine;
-			void canSeePlayer();
+			void UpdatePlayerDistance();
 			float senseDistance = 100.0f;
 			float playerDist = 100.0f;
 			btVector3 offset;

@@ -12,7 +12,7 @@
 #include "NavMesh.h"
 #include "Profiler.h"
 #include "Wanderer.h"
-
+#include "Network/Network.hpp"
 
 #include <btBulletDynamicsCommon.h>
 
@@ -20,12 +20,20 @@ namespace NCL {
 	namespace CSC8503 {
 		class BulletDebug;
 
+		const int MAX_PLAYERS = 8;
+
+		enum class GameMode {
+			SINGLEPLAYER,
+			HOST_GAME,
+			JOIN_GAME
+		};
+
 		class TutorialGame {
 		private:
 			static TutorialGame* instance;
 
 		public:
-			// Physics update frequency, in hertz
+			// Physics update frequency, in seconds.
 			const static constexpr float PHYSICS_PERIOD = 1.0f / 60.0f;
 
 			static TutorialGame* getInstance() {
@@ -33,17 +41,45 @@ namespace NCL {
 				return instance;
 			}
 
+			ResourceManager* GetResourceManager() {
+				return resourceManager.get();
+			}
+			/**
+			 * @brief Get the Network Instance of the Server.
+			 * @return Returns a pointer to the server instance. Returns
+			 * nullptr if there isn't one.
+			 */
+			inline static Network* GetServerInstance() { return server; }
+
+			/**
+			 * @brief Get the Network Instance of the Client.
+			 * @return Returns a pointer to the client instance. Returns
+			 * nullptr if there isn't one.
+			 */
+			inline static Network* GetClientInstance() { return client; }
+
 			// Remove an object at the end of this frame. Use during update to avoid removing
 			// from containers while iterating
 			// It is the caller's responsibility to ensure there are no dangling references from other objects
+			//
+			// No-op if called multiple times on the same object
+			//
+			// Deletion process:
+			// - delayedRemoveObject - adds to graveyard and sets `deleted` flag
+			// - deleted flag - suppresses render & updates, instructs objects to remove their references
+			// - clearGraveyard - after 2 frames in the graveyard, to ensure everything has had at least 1 update call, delete the object for good
 			void delayedRemoveObject(GameObject* obj) {
-				objectGraveyard.push_back(obj);
+				if (obj->isDeleted()) return;
+				obj->setDeleted();
+				earlyGraveyard.push_back(obj);
 			}
 
-			TutorialGame(GameTechRendererInterface* renderer, GameWorld* world, Controller* controller);
+			TutorialGame(GameTechRendererInterface* renderer, Controller* controller);
 			~TutorialGame();
 
 			virtual void UpdateGame(float dt);
+			void LoadWorldFromFile(int levelNum);
+			void JoinGame(bool host) {};
 
 		protected:
 			void InitialiseAssets();
@@ -51,7 +87,27 @@ namespace NCL {
 			void InitCamera();
 			void UpdateKeys();
 			void ThirdPersonControls();
+
 			void InitWorld();
+			void ResetWorld();
+
+			void SetupHost() {};
+
+			/**
+			 * @brief Initialise the network object and run it.
+			 * @param host Whether the network should be the host server.
+			 */
+			void InitNetwork(bool host = false);
+
+			/**
+			 * @brief Connect to a host game at the given address.
+			 *
+			 * Connection resolution is handled by packet response.
+			 *
+			 * @param address ENetAddress of the servers location.
+			 */
+			void ConnectToServer(ENetAddress& address);
+
 
 
 			void UpdatePlayer(float dt);
@@ -72,8 +128,9 @@ namespace NCL {
 			Profiler profiler;
 
 			GameTechRendererInterface* renderer;
-			GameWorld* world;
-			std::vector<GameObject*> objectGraveyard;
+			std::unique_ptr<GameWorld> world;
+			std::vector<GameObject*> earlyGraveyard; // Added this frame
+			std::vector<GameObject*> lateGraveyard; // Added previous frame
 			void clearGraveyard();
 
 			Controller* controller;
@@ -88,7 +145,6 @@ namespace NCL {
 			}
 
 			GameObject* objClosest = nullptr;
-
 
 			/* bullet physics stuff here */
 			btDiscreteDynamicsWorld* bulletWorld = nullptr;
@@ -108,7 +164,7 @@ namespace NCL {
 			PerspectiveCamera* mainCamera;
 			PlayerObject* player;
 			GameObject* gun;
-			PlayerController* playerController;
+			PlayerController* playerController = nullptr;
 			bool freeCam = false;
 			bool thirdPerson = false;
 			Vector4 playerColour = Vector4(1, 0.8, 1, 1);
@@ -130,6 +186,13 @@ namespace NCL {
 
 			Wanderer* wanderer;
 			Wanderer* AddWandererToWorld();
+
+			//post processing time variable effects
+			float pulse = 0;
+
+		private:
+			inline static Network* client = nullptr;
+			inline static Network* server = nullptr;
 		};
 	}
 }

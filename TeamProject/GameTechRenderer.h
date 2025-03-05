@@ -11,7 +11,6 @@
 #include "OGLTexture.h"
 #include "OGLMesh.h"
 
-#include "GameWorld.h"
 #include "GameTechRendererInterface.h"
 
 namespace NCL {
@@ -22,8 +21,13 @@ namespace NCL {
 			: public OGLRenderer
 			, public GameTechRendererInterface {
 		public:
-			GameTechRenderer(GameWorld* world);
-			~GameTechRenderer();
+			void drawFrame(float dt) override {
+				Update(dt);
+				Render();
+			}
+
+			GameTechRenderer();
+			~GameTechRenderer() override;
 
 			Mesh* LoadMesh(const std::string& name) override;
 			Texture* LoadTexture(const std::string& name) override;
@@ -35,40 +39,47 @@ namespace NCL {
 
 			void RenderFrame()	override;
 
-			GameWorld*	gameWorld;
-
-			void BuildObjectList();
-			void SortObjectList();
 			void RenderShadowMap();
-			void RenderCamera(); 
+			void RenderCamera();
 			void RenderSkybox();
-			void InitCrosshair(); //InitCrosshair and RenderCrosshair Ameya added for crosshair
-			void RenderCrosshair();
+
+			void RenderDecals();
+			void RenderQuad();
+			void RenderUI();
 
 			void LoadSkybox();
 
 			void SetDebugStringBufferSizes(size_t newVertCount);
 			void SetDebugLineBufferSizes(size_t newVertCount);
 
-			std::vector<const RenderObject*> activeObjects;
-
+			std::unique_ptr<OGLShader> uiShader;
 			std::unique_ptr<OGLShader> sceneShader;
 			std::unique_ptr<OGLShader> debugShader;
 			std::unique_ptr<OGLShader> skyboxShader;
 			std::unique_ptr<OGLMesh> skyboxMesh;
-			std::unique_ptr<OGLMesh> debugTexMesh;
+
+			// 1.0f size quad, for HDR
+			std::unique_ptr<OGLMesh> unitQuad;
+			// 0.5f size quad, for sprites
+			std::unique_ptr<OGLMesh> halfUnitQuad;
 			GLuint		skyboxTex;
 
 			GLuint crosshairVAO;
 			GLuint crosshairVBO;
 			GLuint crosshairEBO;
-			std::unique_ptr<OGLShader> crosshairShader; //This line Ameya added for crosshair
 
 			//shadow mapping things
 			std::unique_ptr<OGLShader> shadowShader;
 			GLuint		shadowTex;
 			GLuint		shadowFBO;
 			Matrix4     shadowMatrix;
+
+			// Decal stuff
+			std::unique_ptr<OGLShader> decalShader;
+			GLuint decalQuadVAO = 0;
+			GLuint decalQuadVBO = 0;
+			GLuint fullscreenQuadVAO = 0;
+			GLuint fullscreenQuadVBO = 0;
 
 			Vector4		lightColour;
 			float		lightRadius;
@@ -95,8 +106,13 @@ namespace NCL {
 			GLuint hdrTex;
 			GLuint hdrFBO;
 			GLuint hdrDepthTex;
-			OGLMesh* hdrQuad;
 			OGLShader* hdrShader;
+			GLuint BTex;
+			GLuint BFBO;
+			OGLShader* vignetteShader;
+			GLuint BDepthTex;
+			void RenderPostProcessing();
+
 		};
 	}
 }

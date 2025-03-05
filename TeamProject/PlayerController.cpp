@@ -21,6 +21,7 @@ std::ostream& operator<<(std::ostream& os, const btQuaternion& vec) {
 void PlayerController::Initialise() {
     rb = player->GetPhysicsObject()->GetRigidBody();
     debugDrawer = bulletWorld->getDebugDrawer();
+    pngTexture = resourceManager->getTextures().get(decalTexturePath);
 }
 
 btVector3 GetEulerAngles(btQuaternion quat) {
@@ -111,15 +112,13 @@ void PlayerController::UpdateMovement(float dt) {
         movement += rb->getLinearVelocity();
     }
 
-    movement += upDirection * -(gravityScale * dt);
-
     // jump input
     if (controller->GetDigital(Controller::DigitalControl::Jump) && player->getCollided() && inAirTime <= 0) {
-        audioEngine.PlaySounds("jump.wav", NCL::Maths::Vector3(player->GetTransform().getOrigin()), 0.0f);
+        audioEngine.PlaySounds("jump.wav", camera->GetPosition(), 0.0f);
         btVector3 normal = FindFloorNormal();
         float dotProduct = normal.dot(upDirection.absolute());
         if (fabs(dotProduct <= 1)) {
-            movement += (jumpHeight * FindFloorNormal());
+            movement += (jumpHeight * normal);
         }
         else {
             movement += (jumpHeight * upDirection);
@@ -175,28 +174,33 @@ void PlayerController::Shoot() {
     btMatrix3x3 rotationMatrix(bulletRotation);
 
     btVector3 forwardDir = rotationMatrix * btVector3(0, 0, -1);
-    btVector3 forwardPos = (btPlayerPos + (forwardDir * 10000));
-    btCollisionWorld::AllHitsRayResultCallback callback(btPlayerPos, forwardPos);
-    bulletWorld->rayTest(btPlayerPos, forwardPos, callback);
+    btVector3 forwardPos = (camera->GetPosition() + (forwardDir * 10000));
+    btCollisionWorld::AllHitsRayResultCallback callback(camera->GetPosition(), forwardPos);
+    bulletWorld->rayTest(camera->GetPosition(), forwardPos, callback);
+    
     btVector3 hitPoint = btVector3();
+	btVector3 hitNormal = btVector3(0, 1, 0); // Default normal (up)
 
     if (callback.hasHit()) {
         GameObject* hitObj = nullptr;
         float smallestDist = INFINITY;
         for (int i = 0; i < callback.m_collisionObjects.size(); i++) { // loop all hits
             GameObject* hit = static_cast<GameObject*>(callback.m_collisionObjects[i]->getUserPointer());
-            if (!hit->getIsPaintball() && hit!=player && hit!=gun) { // ignore paintballs
+            if (!hit->getIsPaintball() && hit != player && hit != gun) { // ignore paintballs
                 btVector3 posHit = callback.m_hitPointWorld[i];
                 float distance = btPlayerPos.distance(posHit);
                 if (distance < smallestDist){ // find closest valid hit
                     smallestDist = distance;
                     hitPoint = posHit;
+					hitNormal = callback.m_hitNormalWorld[i]; // Get the normal of the hit
                     hitObj = hit;
                 }
             }
         }
+
         if (hitObj != nullptr) { // hit an object of some kind
-            hitObj->GetRenderObject()->SetColour(hitObj->GetRenderObject()->GetColour() * Vector4(1.05f, 0.95f, 0.95f, 1.0f));
+         	DecalSystem::Decal decal = { hitPoint, hitNormal, decalRadius, pngTexture,alphaFade,decalColor };
+            decalSystem->ApplyDecal(decal); // Apply the decal using the hit position and normal
         }
     }
     ShootBullet(bulletRotation, hitPoint);
@@ -302,9 +306,7 @@ btVector3 PlayerController::FindFloorNormal() {
     else {
         return upDirection;
     }
-
 }
-
 
 //transitions states between standing and sliding, also handles physics for while sliding
 void PlayerController::HandleSliding(float dt) {
@@ -425,6 +427,9 @@ void PlayerController::CalculateDirections(float dt) {
     rightDirection = CalculateRightDirection(upDirection);
     forwardDirection = CalculateForwardDirection(upDirection, rightDirection);
     player->setUpDirection(upDirection);
+
+    //Update FMod listener each frame so audio is correctly positioned
+    audioEngine.Set3dListenerAndOrientation(camera->GetPosition(), forwardDirection, upDirection);
 }
 
 btVector3 PlayerController::CalculateUpDirection(float dt) {

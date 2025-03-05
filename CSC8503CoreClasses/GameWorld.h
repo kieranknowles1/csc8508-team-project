@@ -19,7 +19,7 @@ namespace NCL {
 			void ClearAndErase();
 
 			void AddGameObject(GameObject* o);
-			void RemoveGameObject(GameObject* o, bool andDelete = false);
+			void RemoveGameObject(GameObject* o);
 
 			PerspectiveCamera& GetMainCamera()  {
 				return mainCamera;

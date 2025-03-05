@@ -38,7 +38,7 @@ Wanderer::~Wanderer() {
 
 void Wanderer::Update(float dt) {
 
-	canSeePlayer();
+	UpdatePlayerDistance();
 	stateMachine->Update(dt);
 
 	btTransform trans = GetTransform();
@@ -68,7 +68,7 @@ void Wanderer::InitPosAndOffset() {
 	body->setWorldTransform(trans);
 }
 
-void Wanderer::canSeePlayer() {
+void Wanderer::UpdatePlayerDistance() {
 	if (!player) return;
 
 	btTransform trans = GetTransform();
