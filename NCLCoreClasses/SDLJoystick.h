@@ -13,6 +13,9 @@ namespace NCL::UnixCode {
         bool initOk() { return ok; }
 
     protected:
+        // TODO: Don't hardcode this
+        int deadzone = 4096;
+
         bool internalButtonPressed(Button button) override;
         float internalAnalogueValue(Analogue analogue) override;
 

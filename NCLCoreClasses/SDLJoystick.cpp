@@ -58,8 +58,24 @@ namespace NCL::UnixCode {
         return SDL_GameControllerGetButton(stick, sdl);
     }
 
+    SDL_GameControllerAxis toSdlAxis(JoystickController::Analogue axis) {
+        using enum JoystickController::Analogue;
+        switch (axis) {
+            case LeftStickX: return SDL_CONTROLLER_AXIS_LEFTX;
+            case LeftStickY: return SDL_CONTROLLER_AXIS_LEFTY;
+            case RightStickX: return SDL_CONTROLLER_AXIS_RIGHTX;
+            case RightStickY: return SDL_CONTROLLER_AXIS_RIGHTY;
+            case L2: return SDL_CONTROLLER_AXIS_TRIGGERLEFT;
+            case R2: return SDL_CONTROLLER_AXIS_TRIGGERRIGHT;
+            default: assert(false);
+        }
+    }
+
     float SDLJoystick::internalAnalogueValue(Analogue analogue)
     {
-        return 0.0f;
+        auto sdl = toSdlAxis(analogue);
+        int raw = SDL_GameControllerGetAxis(stick, sdl);
+        if (std::abs(raw) < deadzone) return 0;
+        return float(raw) / 32868;
     }
 }

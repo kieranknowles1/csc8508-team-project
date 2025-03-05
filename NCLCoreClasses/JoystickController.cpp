@@ -26,9 +26,9 @@ namespace NCL {
         case AnalogueControl::MoveForward:
             return -analogueState(Analogue::LeftStickY);
         case AnalogueControl::LookX:
-            return analogueState(Analogue::RightStickX);
+            return analogueState(Analogue::RightStickX) * lookSensitivity;
         case AnalogueControl::LookY:
-            return analogueState(Analogue::RightStickY);
+            return analogueState(Analogue::RightStickY) * lookSensitivity;
         default:
             assert(false);
         }
