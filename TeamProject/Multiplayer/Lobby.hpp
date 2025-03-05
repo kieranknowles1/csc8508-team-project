@@ -68,12 +68,17 @@ namespace Lobbies {
 		 * 
 		 * @param hostID The User who is in charge of the lobby.
 		 */
-		Lobby(User hostUser, int maxSize);
+		Lobby(int maxSize);
+
+
+		/**
+		* Assign what user is in charge of the lobby.
+		*/
+		inline void SetHost(User hostUser) { m_hostUser.emplace(hostUser); }
+
 
 		/**
 		 * Fetch the maximum size of the lobby.
-		 * 
-		 * @return The maximum size of the lobby.
 		 */
 		inline int GetLobbySize() const { return m_maxSize; }
 
@@ -124,7 +129,7 @@ namespace Lobbies {
 		inline bool SetUserColor(User user, TeamColor color) { return m_userColors[static_cast<uint8_t>(color)].SetUser(user); }
 
 	private:
-		User m_hostUser;
+		std::optional<User> m_hostUser;
 		const int m_maxSize;
 
 		std::array<UserColor, 8> m_userColors;

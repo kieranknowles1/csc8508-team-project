@@ -7,8 +7,7 @@ namespace Lobbies {
 		return true;
 	}
 
-
-	Lobby::Lobby(User hostUser, int maxSize) : m_hostUser(hostUser), m_maxSize(maxSize) {
+	Lobby::Lobby(int maxSize) : m_maxSize(maxSize) {
 		uint8_t value = 0;
 		std::generate(m_userColors.begin(), m_userColors.end(), [&value] {
 			return UserColor(static_cast<TeamColor>(value++));
