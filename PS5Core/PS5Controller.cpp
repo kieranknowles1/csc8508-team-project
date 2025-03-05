@@ -87,6 +87,14 @@ bool PS5Controller::GetDigital(DigitalControl button) const
 	case DigitalControl::DebugFreeCam: return buttonPressed(SCE_PAD_BUTTON_LEFT, true, true);
 	case DigitalControl::DebugReloadWorld: return buttonPressed(SCE_PAD_BUTTON_DOWN, true, true);
 	case DigitalControl::DebugShowProfiling: return buttonPressed(SCE_PAD_BUTTON_RIGHT, true, true);
+
+	case DigitalControl::MenuDown: return buttonPressed(SCE_PAD_BUTTON_DOWN, false, true);
+	case DigitalControl::MenuUp: return buttonPressed(SCE_PAD_BUTTON_UP, false, true);
+	case DigitalControl::MenuConfirm: return buttonPressed(SCE_PAD_BUTTON_CROSS, false, true);
+	case DigitalControl::Pause: case DigitalControl::Unpause:
+		return buttonPressed(SCE_PAD_BUTTON_START, false, true);
+	case DigitalControl::PauseQuit: return buttonPressed(SCE_PAD_BUTTON_OPTIONS, true, true);
+
 	default:
 		assert(false);
 	}

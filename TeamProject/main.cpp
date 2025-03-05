@@ -72,8 +72,12 @@ class MainMenuScreen : public PushdownState {
 class PauseScreen : public PushdownState {
 	int selection = 0;
 
+public:
+	PauseScreen(Controller* controller) : controller(controller) {}
+	Controller* controller;
+
 	PushdownResult OnUpdate(float dt, PushdownState** newState) override {
-		if (Window::GetKeyboard()->KeyPressed(NCL::KeyCodes::U)) {
+		if (controller->GetDigital(Controller::DigitalControl::Unpause)) {
 			return PushdownResult::Pop;
 		}
 		Debug::Print("Press U to unpause the game!", Vector2(20, 20), Vector4(0, 0, 0, 1));
@@ -88,13 +92,13 @@ class PauseScreen : public PushdownState {
 		std::string menuItems[2] = { resumeGame, exitGame };
 
 		if (inMenu) {
-			if (NCL::Window::GetKeyboard()->KeyPressed(NCL::KeyCodes::DOWN)) {
+			if (controller->GetDigital(Controller::DigitalControl::MenuDown)) {
 				selection = std::min(1, selection + 1);
 			}
-			if (NCL::Window::GetKeyboard()->KeyPressed(NCL::KeyCodes::UP)) {
+			if (controller->GetDigital(Controller::DigitalControl::MenuUp)) {
 				selection = std::max(0, selection - 1);
 			}
-			if (NCL::Window::GetKeyboard()->KeyPressed(NCL::KeyCodes::RETURN)) {
+			if (controller->GetDigital(Controller::DigitalControl::MenuConfirm)) {
 				const std::string pauseSelection = menuItems[selection];
 
 				if (pauseSelection == "Resume") {
@@ -117,19 +121,23 @@ class PauseScreen : public PushdownState {
 };
 
 class GameScreen : public PushdownState {
+public:
+	GameScreen(Controller* controller) : controller(controller) {}
+	Controller* controller;
+
 	PushdownResult OnUpdate(float dt, PushdownState** newState) override {
 		pauseReminder -= dt;
 
 		if (pauseReminder < 0) {
 			Debug::Print("Press P to pause the game!", Vector2(20, 20), Vector4(0, 0, 0, 1));
 		}
-		if (Window::GetKeyboard()->KeyPressed(NCL::KeyCodes::P)) {
+		if (controller->GetDigital(Controller::DigitalControl::Pause)) {
 			pauseReminder = 0;
-			*newState = new PauseScreen();
+			*newState = new PauseScreen(controller);
 			std::cout << "Game entered pause state \n";
 			return PushdownResult::Push;
 		}
-		if (Window::GetKeyboard()->KeyPressed(NCL::KeyCodes::RCONTROL)) {
+		if (controller->GetDigital(Controller::DigitalControl::PauseQuit)) {
 			Debug::Print("Going back to main menu", Vector2(0.1f, 0.3f), Vector4(0, 0, 0, 1));
 			return PushdownResult::Pop;
 		}
@@ -164,11 +172,11 @@ std::unique_ptr<Window> createWindow(const Config& config) {
 #endif // !__PROSPERO__
 }
 
-std::unique_ptr<GameTechRendererInterface> createRenderer() {
+std::unique_ptr<GameTechRendererInterface> createRenderer(Window* window) {
 #ifndef __PROSPERO__
-	return std::make_unique<GameTechRenderer>();
+	return std::make_unique<GameTechRenderer>(window);
 #else
-	return std::make_unique<GameTechAGCRenderer>();
+	return std::make_unique<GameTechAGCRenderer>(window);
 #endif // !__PROSPERO__
 }
 
@@ -221,8 +229,8 @@ Controller* createController(Window* window) {
 
 
 int main(int argc, char** argv) {
-	PushdownMachine machine(new GameScreen());
-	auto config = Config("user-config.jsonc", "default-config.jsonc");
+	auto config = Config("user-config.jsonc", Assets::DEFAULTCONFIG);
+	bool quickStart = config.get<bool>("quickStart");
 
 	auto window = createWindow(config);
 	//bool paused = false;
@@ -230,8 +238,9 @@ int main(int argc, char** argv) {
 	window->ShowOSPointer(false);
 	window->LockMouseToWindow(true);
 
-	auto renderer = createRenderer();
+	auto renderer = createRenderer(window.get());
 	auto controller = createController(window.get());
+	PushdownMachine machine(new GameScreen(controller));
 
 
 	auto game = std::make_unique<TutorialGame>(renderer.get(), controller);
@@ -248,20 +257,20 @@ int main(int argc, char** argv) {
 
 	std::string menuItems[3] = { singleplayer, hostGame, joinGame };
 
-	while (window->UpdateWindow() && !Window::GetKeyboard()->KeyDown(KeyCodes::ESCAPE)) {
+	while (window->UpdateWindow() && !window->GetKeyboard()->KeyPressed(KeyCodes::ESCAPE)) {
 		float dt = window->GetTimer().GetTimeDeltaSeconds();
 
 		if (inMenu) {
 
 			//Try showing the FMod logo here
 
-			if (NCL::Window::GetKeyboard()->KeyPressed(NCL::KeyCodes::DOWN)) {
+			if (controller->GetDigital(Controller::DigitalControl::MenuDown)) {
 				selection = std::min(2, selection + 1);
 			}
-			if (NCL::Window::GetKeyboard()->KeyPressed(NCL::KeyCodes::UP)) {
+			if (controller->GetDigital(Controller::DigitalControl::MenuUp)) {
 				selection = std::max(0, selection - 1);
 			}
-			if (NCL::Window::GetKeyboard()->KeyPressed(NCL::KeyCodes::RETURN)) {
+			if (controller->GetDigital(Controller::DigitalControl::MenuConfirm) || quickStart) {
 				GameMode mode = static_cast<GameMode>(selection);
 
 				if (mode == GameMode::SINGLEPLAYER) {
@@ -280,21 +289,18 @@ int main(int argc, char** argv) {
 			}
 		}
 		else {
-			machine.Update(dt);
+			if (!machine.Update(dt)) {
+				inMenu = true;
+			}
 			//Add a GetState function to PushdownMachine/PushdownState to return the screen it's on, and if it's on PauseScreen
 			//Pause the game->UpdateGame
 		}
 
 		window->SetTitle("Gametech frame time:" + std::to_string(1000.0f * dt));
-		//if (!paused) {
-		//	game->UpdateGame(dt);
-		//}
 
 		game->UpdateGame(dt);
-		//machine.Update(dt);
 
 		renderer->drawFrame(dt);
-		machine.Update(dt);
 
 
 		Debug::UpdateRenderables(dt);

@@ -26,7 +26,7 @@ namespace NCL {
 				Render();
 			}
 
-			GameTechRenderer();
+			GameTechRenderer(Window* window);
 			~GameTechRenderer() override;
 
 			Mesh* LoadMesh(const std::string& name) override;

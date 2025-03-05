@@ -43,7 +43,14 @@ public:
 		DebugReloadWorld,
 		DebugBulletOverlay,
 		DebugShowProfiling,
-		DebugFreeCam
+		DebugFreeCam,
+
+		Pause,
+		PauseQuit,
+		Unpause,
+		MenuUp,
+		MenuDown,
+		MenuConfirm
 	};
 
 	Controller() {
