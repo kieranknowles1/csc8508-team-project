@@ -82,7 +82,7 @@ namespace NCL::CSC8503 {
 	protected:
 		//adding bools to toggle post processing. Must be accessible from the specific renderer
 		bool hdrOn = true;
-		bool vignetteOn = true;
+		bool vignetteOn = false;
 		float vignettePulse = 0;
 		Window* window;
 		Camera* camera = nullptr;
