@@ -35,6 +35,12 @@ public:
 		return upDirection;
 	}
 
+	void setUpDirection(btVector3 target) {
+		upDirection = target;
+		targetWorldRotation = target;
+		oldWorldRotation = target;
+	}
+
 	btVector3 getRightDirection() {
 		return rightDirection;
 	}
