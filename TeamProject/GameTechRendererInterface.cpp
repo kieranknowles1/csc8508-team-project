@@ -70,6 +70,10 @@ namespace NCL::CSC8503 {
 		AddPlayerData({ "Player 3", "Green", 2 });
 		AddPlayerData({ "Player 4", "Yellow", 11 });
 
+        std::sort(playerData.begin(), playerData.end(), [](const PlayerData& a, const PlayerData& b) {
+            return a.score > b.score;
+            });
+
         // Scoreboard
 		int players = playerData.size();
         int columns = 3;
@@ -122,6 +126,9 @@ namespace NCL::CSC8503 {
                     }
                     AddUITextElement({ textPosition, textColor, text, true });
                 }
+
+                // needs to be moved to renderer? player data is constantly changing,
+                // so outputting data can't be in init
 				// Empty row
                 else if (row > players) {
                     AddUITextElement({ textPosition, textColor, "", true });

@@ -638,11 +638,6 @@ void GameTechRenderer::RenderUI() {
 		Vector2 pos = UITextElement.position;
 		Vector4 color = UITextElement.color;
 		std::string text = UITextElement.text;
-		// Set uniform values
-		//glUniform2fv(positionLocation, 1, (float*)&pos);
-		//glUniform2fv(sizeLocation, 1, (float*)&size);
-		//glUniform4fv(colorLocation, 1, (float*)&color);
-		// Render text
 		Debug::Print(text, pos, color);
 	}
 
