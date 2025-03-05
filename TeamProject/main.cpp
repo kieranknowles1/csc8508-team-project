@@ -16,6 +16,7 @@
 
 #ifdef CSC_USE_SDL2
 #include "SDLJoystick.h"
+#include "HybridController.h"
 #endif
 
 using namespace NCL;
@@ -160,8 +161,11 @@ int main(int argc, char** argv) {
 	window->LockMouseToWindow(true);
 
 	auto renderer = std::make_unique<GameTechRenderer>();
-	auto controller = std::make_unique<KeyboardMouseController>(*window->GetKeyboard(), *window->GetMouse());
-	auto joystick = std::make_unique<UnixCode::SDLJoystick>(0);
+	std::unique_ptr<Controller> kb = std::make_unique<KeyboardMouseController>(*window->GetKeyboard(), *window->GetMouse());
+	std::unique_ptr<Controller> joystick = std::make_unique<UnixCode::SDLJoystick>(0);
+	auto controller = std::make_unique<HybridController>(
+		std::move(kb), std::move(joystick)
+	);
 
 	auto game = std::make_unique<TutorialGame>(renderer.get(), controller.get());
 
@@ -178,6 +182,7 @@ int main(int argc, char** argv) {
 
 	while (window->UpdateWindow() && !Window::GetKeyboard()->KeyDown(KeyCodes::ESCAPE)) {
 		float dt = window->GetTimer().GetTimeDeltaSeconds();
+		controller->Update(dt);
 
 		if (inMenu) {
 			if (NCL::Window::GetKeyboard()->KeyPressed(NCL::KeyCodes::DOWN)) {

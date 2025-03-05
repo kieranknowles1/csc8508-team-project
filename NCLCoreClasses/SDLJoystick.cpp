@@ -16,6 +16,8 @@ namespace NCL::UnixCode {
 
         const char* name = SDL_GameControllerName(stick);
         std::cout << "Using joystick " << name << std::endl;
+
+        ok = true;
     }
 
     SDLJoystick::~SDLJoystick()
@@ -25,9 +27,21 @@ namespace NCL::UnixCode {
         }
     }
 
+    SDL_GameControllerButton toSdl(JoystickController::Button button) {
+        using enum JoystickController::Button;
+        switch (button) {
+            case A: return SDL_CONTROLLER_BUTTON_A;
+            default: return SDL_CONTROLLER_BUTTON_Y; // TODO
+        }
+    }
+
     bool SDLJoystick::internalButtonPressed(Button button)
     {
-        return false;
+        auto sdl = toSdl(button);
+        if (button == Button::A) {
+            std::cout << (SDL_GameControllerGetButton(stick, sdl) ? "y" : "n") << std::endl;
+        }
+        return SDL_GameControllerGetButton(stick, sdl);
     }
 
     float SDLJoystick::internalAnalogueValue(Analogue analogue)

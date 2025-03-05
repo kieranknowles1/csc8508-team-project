@@ -1,7 +1,9 @@
 #pragma once
 
+#include "Controller.h"
+
 namespace NCL {
-    class JoystickController {
+    class JoystickController : public Controller {
     public:
         // Joypad buttons, using their XBOX/Steam Deck names & positions
         enum class Button {
@@ -26,7 +28,9 @@ namespace NCL {
             DeckL4,
             DeckL5,
             DeckR4,
-            DeckR5
+            DeckR5,
+
+            Max
         };
 
         enum class Analogue {
@@ -34,14 +38,47 @@ namespace NCL {
             LeftStickY,
             RightStickX,
             RightStickY,
+
+            L2,
+            R2,
+
+            Max
         };
 
         virtual ~JoystickController() = default;
 
+        void Update(float dt) override;
+		float GetAnalogue(AnalogueControl control) const override;
+		bool GetDigital(DigitalControl button) const override;
+
     protected:
+		// If this button is pressed, listen to debug inputs and ignore others
+		Button DebugMask = Button::L1;
+		float fireThreshold = 0.5f;
+		float lookSensitivity = 2.0f;
+
         // Get the value of a button or analogue input
         // Implementations should return 0 if the button does not exist
         virtual bool internalButtonPressed(Button button) = 0;
         virtual float internalAnalogueValue(Analogue analogue) = 0;
+
+        bool buttonPressed(Button button, bool isDebug = false, bool thisFrame = false) const {
+            bool debugMask = buttonStates[(int)DebugMask];
+            if (debugMask != isDebug) return false;
+
+
+            bool current = buttonStates[(int)button];
+            if (!thisFrame) return current;
+            bool previous = previousButtonStates[(int)button];
+            return current && !previous;
+        }
+
+        float analogueState(Analogue axis) const {
+            return analogueStates[(int)axis];
+        }
+
+        std::array<bool, (int)Button::Max> buttonStates;
+        std::array<bool, (int)Button::Max> previousButtonStates;
+        std::array<float, (int)Analogue::Max> analogueStates;
     };
 }

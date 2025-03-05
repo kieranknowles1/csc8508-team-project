@@ -10,10 +10,13 @@ namespace NCL::UnixCode {
         SDLJoystick(int id);
         ~SDLJoystick() override;
 
+        bool initOk() { return ok; }
+
     protected:
         bool internalButtonPressed(Button button) override;
         float internalAnalogueValue(Analogue analogue) override;
 
         SDL_GameController* stick = nullptr;
+        bool ok = false;
     };
 }
