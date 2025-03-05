@@ -1,5 +1,7 @@
 #pragma once
 
+#include <array>
+
 #include "Controller.h"
 
 namespace NCL {
