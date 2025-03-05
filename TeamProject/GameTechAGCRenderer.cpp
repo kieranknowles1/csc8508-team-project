@@ -486,6 +486,10 @@ void GameTechAGCRenderer::RenderDebugText() {
 		.setDepthWrite(sce::Agc::CxDepthStencilControl::DepthWrite::kDisable);
 	frameContext->m_sb.setState(depthControl);
 
+	sce::Agc::CxPrimitiveSetup primSetup;
+	primSetup.init().setCullFace(sce::Agc::CxPrimitiveSetup::CullFace::kNone);
+	frameContext->m_sb.setState(primSetup);
+
 	sce::Agc::CxBlendControl blendControl;
 	blendControl.init();
 	blendControl.setBlend(sce::Agc::CxBlendControl::Blend::kEnable)
