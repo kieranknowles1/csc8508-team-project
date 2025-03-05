@@ -34,17 +34,13 @@ btVector3 GetEulerAngles(btQuaternion quat) {
 void PlayerController::UpdateMovement(float dt) {
     transformPlayer = rb->getWorldTransform();
     btPlayerPos = transformPlayer.getOrigin();
-
+    GetAllDirections();
     HandleShooting(dt);
 
-    // yaw is fully local
     yaw = fmod(yaw - controller->GetAnalogue(Controller::AnalogueControl::LookX) + 360.0f, 360.0f);
     camera->SetYaw(yaw);
-
-    //camera offset for rotation
     btVector3 rot = GetEulerAngles(camRotOffset);
     camera->setRotation(rot);
-
     HandleTypes();
 
     //sliding/floor detection
@@ -126,6 +122,7 @@ void PlayerController::UpdateMovement(float dt) {
         player->setCollided(0);
         inAirTime = 0.2f;
     }
+
     previousVelocity = rb->getLinearVelocity();
     rb->setLinearVelocity(movement);
     rb->activate();
@@ -161,7 +158,6 @@ void PlayerController::HandleShooting(float dt) {
         shotTimer += dt;
     }
 }
-
 
 
 void PlayerController::Shoot() {
@@ -412,115 +408,14 @@ void PlayerController::HandleTypes() {
 }
 
 
-// world rotate things
-void PlayerController::Rotate(bool positive, bool rolling) {
-    if (rotationChanging) return;
-    btVector3 rightDirections = (rolling ? CalculateForwardFromYaw() : CalculateRightFromYaw());
-    btQuaternion pitchQuat(rightDirections, Maths::DegreesToRadians(positive ? 90 : -90));
-    targetWorldRotation = quatRotate(pitchQuat, upDirection);
-    targetcamRotOffset = pitchQuat * oldcamRotOffset; // Apply rotation correctly
-    rotationChanging = true;
-}
-
-void PlayerController::CalculateDirections(float dt) {
-    upDirection = CalculateUpDirection(dt);
-    rightDirection = CalculateRightDirection(upDirection);
-    forwardDirection = CalculateForwardDirection(upDirection, rightDirection);
-    player->setUpDirection(upDirection);
+void PlayerController::GetAllDirections() {
+    upDirection = player->getUpDirection();
+    rightDirection = player->getForwardDirection();
+    forwardDirection = player->getRightDirection();
+    camRotOffset = player->getCamOffset();
 
     //Update FMod listener each frame so audio is correctly positioned
     audioEngine.Set3dListenerAndOrientation(camera->GetPosition(), forwardDirection, upDirection);
-}
-
-btVector3 PlayerController::CalculateUpDirection(float dt) {
-
-    btVector3 upDir;
-    if (!rotationChanging) {
-        upDir = targetWorldRotation;
-        camRotOffset = targetcamRotOffset;
-
-    }else if (rotateTimer <= rotateTime && rotationChanging) {
-        rotateTimer += dt;
-        upDir = lerp(oldWorldRotation, targetWorldRotation,  rotateTimer/rotateTime);
-        camRotOffset = (oldcamRotOffset.slerp(targetcamRotOffset, rotateTimer / rotateTime));
-    }
-    else {
-        upDir = targetWorldRotation;
-        camRotOffset = targetcamRotOffset;
-        oldcamRotOffset = targetcamRotOffset;
-        oldWorldRotation = targetWorldRotation;
-        rotationChanging = false;
-        rotateTimer = 0.0f;
-    }
-    upDir.normalize();
-    return upDir;
-}
-
-btVector3 PlayerController::CalculateRightDirection(btVector3 upDir) {
-    btVector3 forward = btVector3(0, 0, 1);
-    if (fabs(upDir.dot(forward)) > 0.999f) {
-        forward = btVector3(0, 1, 0);
-    }
-    btVector3 rightDirection = upDir.cross(forward);
-    rightDirection.normalize();
-  //  std::cout << rightDirection << std::endl;
-    return rightDirection;
-}
-
-btVector3 PlayerController::CalculateForwardDirection(btVector3 upDir,btVector3 rightDir) {
-    btVector3 forwardDirection = rightDir.cross(upDir);
-    forwardDirection.normalize();
-    return forwardDirection;
-}
-
-btVector3 PlayerController::CalculateForwardFromYaw() {
-    int snappedYaw = static_cast<int>((yaw + 45) / 90) * 90 % 360;
-    btVector3 forwd = btVector3(0, 0, 0);
-    switch (snappedYaw) {
-    case 0: {
-        forwd = btVector3(0, 0, 1);
-        break;
-    }
-    case 90: {
-        forwd = btVector3(1, 0, 0);
-        break;
-    }
-    case 180: {
-        forwd = btVector3(0, 0, -1);
-        break;
-    }
-    case 270: {
-        forwd = btVector3(-1, 0, 0);
-        break;
-    }
-    }
-    btVector3 baseForward = quatRotate(oldcamRotOffset, forwd);
-    return baseForward;
-}
-
-btVector3 PlayerController::CalculateRightFromYaw() {
-    int snappedYaw = static_cast<int>((yaw + 45) / 90) * 90 % 360;
-    btVector3 right = btVector3(0, 0, 0);
-    switch (snappedYaw) {
-    case 0: {
-        right = btVector3(1, 0, 0);
-        break;
-    }
-    case 90: {
-        right = btVector3(0, 0, -1);
-        break;
-    }
-    case 180: {
-        right = btVector3(-1, 0, 0);
-        break;
-    }
-    case 270: {
-        right = btVector3(0, 0, 1);
-        break;
-    }
-    }
-    btVector3 baseForward = quatRotate(oldcamRotOffset, right);
-    return baseForward;
 }
 
 Vector2 PlayerController::getDirectionalInput() const
