@@ -13,7 +13,7 @@ using namespace PS5;
 
 const uint32_t DCB_SIZE = 1024 * 1024; //10KB command buffer storage
 
-AGCRenderer::AGCRenderer(Window& w) : RendererBase(w){
+AGCRenderer::AGCRenderer(Window* w) : RendererBase(w){
 	SceError error = sce::Agc::init();
 
 	videoHandle = sceVideoOutOpen(SCE_USER_SERVICE_USER_ID_SYSTEM, SCE_VIDEO_OUT_BUS_TYPE_MAIN, 0, NULL);

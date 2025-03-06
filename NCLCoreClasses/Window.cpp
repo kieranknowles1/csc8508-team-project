@@ -18,25 +18,16 @@
 using namespace NCL;
 using namespace Rendering;
 
-Window*		Window::window		= nullptr;
-Keyboard*	Window::keyboard	= nullptr;
-Mouse*		Window::mouse		= nullptr;
-GameTimer	Window::timer;
-
 Window::Window()	{
-	window		= this;
+	
 }
 
 Window::~Window()	{
 	delete keyboard;keyboard= nullptr;
 	delete mouse;	mouse	= nullptr;
-	window = nullptr;
 }
 
 Window* Window::CreateGameWindow(const WindowInitialisation& init) {
-	if (window) {
-		return nullptr;
-	}
 #if defined(CSC_USE_SDL2)
   return new UnixCode::SDLWindow(init);
 #elif defined(_WIN32)

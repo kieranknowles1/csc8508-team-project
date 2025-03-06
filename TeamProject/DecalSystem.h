@@ -4,7 +4,6 @@
 
 #include <Vector.h>
 #include "Maths.h"
-#include <OGLTexture.h>
 #include "Texture.h"
 #include "btBulletDynamicsCommon.h"
 
