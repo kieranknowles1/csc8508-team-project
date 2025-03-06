@@ -147,9 +147,15 @@ void Network::SendAll() {
 	Packet::PacketRegister* packetRegister = Packet::PacketRegister::GetRegister();
 
 	for (int i = 0; i < m_numPackets; i++) {
-		Packet::PacketHandler* handler = packetRegister->GetHandler(m_sendBuffer[i].get()->GetType());
-		ENetPacket* packet = handler->ToENetPacket(m_sendBuffer[i]);
-		enet_host_broadcast(m_host, m_sendBuffer[i].get()->GetChannel(), packet);
+		Packet::PacketHandler* handler = packetRegister->GetHandler(m_sendBuffer[i].first.get()->GetType());
+		ENetPacket* packet = handler->ToENetPacket(m_sendBuffer[i].first);
+
+		if (m_sendBuffer[i].second == nullptr) {
+			enet_host_broadcast(m_host, m_sendBuffer[i].first.get()->GetChannel(), packet);
+		}
+		else {
+			enet_peer_send(m_sendBuffer[i].second, m_sendBuffer[i].first.get()->GetChannel(), packet);
+		}
 	}
 	m_numPackets = 0;
 }
