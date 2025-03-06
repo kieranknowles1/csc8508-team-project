@@ -14,7 +14,7 @@ namespace Lobbies {
 			});
 	}
 
-	bool Lobby::AddUser(const User& user) {
+	bool Lobby::AddUser(User user) {
 		if (m_players.size() >= m_maxSize) return false;
 		m_players.insert(std::make_pair(user.GetUserID(), user));
 		return true;

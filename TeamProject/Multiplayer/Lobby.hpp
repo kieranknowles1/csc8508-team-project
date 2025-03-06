@@ -47,8 +47,6 @@ namespace Lobbies {
 
 		/**
 		 * @brief Get the user in control.
-		 * 
-		 * @return std::optional container. If there is a user assigned, it will be inside.
 		 */
 		inline std::optional<User> GetUser() const { return m_assigned; }
 
@@ -87,7 +85,7 @@ namespace Lobbies {
 		 * @param user The user to insert.
 		 * @return true if the user was added, otherwise false.
 		 */
-		bool AddUser(const User& user);
+		bool AddUser(User user);
 
 		/**
 		 * @brief Remove a user from the lobby.
