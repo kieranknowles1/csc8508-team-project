@@ -5,6 +5,7 @@
 
 #include "Network/Network.hpp"
 #include "PlayerObject.h"
+#include "User.hpp"
 
 
 namespace Packet {
@@ -18,9 +19,8 @@ namespace Packet {
 		POSITION = CUSTOM_TYPE + 1,
 		PLAYER_STATE_CHANGE = CUSTOM_TYPE + 2,
 		OBJECT_CHANGE_GRAVITY = CUSTOM_TYPE + 3,
-		LOBBY_START = CUSTOM_TYPE + 4,
-		LOBBY_JOIN = CUSTOM_TYPE + 5,
-		START_GAME = CUSTOM_TYPE + 6,
+		START_GAME = CUSTOM_TYPE + 4,
+		USER_INFORMATION = CUSTOM_TYPE + 5
 	};
 
 
@@ -127,21 +127,30 @@ namespace Packet {
 
 
 	/**
-	 * @brief Objet Change Gravity Packet class.
-	 * 
-	 * Used to change the direction of an objects gravity.
-	 * Changes the up vector of the object.
+	 * @brief Packet used to start the game simultaneously for everyone in the
+	 * lobby.
 	 */
-	class ObjectChangeGravity : public Packet {
+	class StartGame : public Packet {
 	public:
-		ObjectChangeGravity(int objectID, const btVector3& upDirection, int sequenceNum) :
-			Packet(static_cast<Type>(PacketType::OBJECT_CHANGE_GRAVITY), static_cast<int>(Channel::UNSEQUENCED), sequenceNum),
-			m_objectID(objectID), m_upVector(upDirection)
+		StartGame(int sequenceNum) :
+			Packet(static_cast<Type>(PacketType::START_GAME), static_cast<int>(Channel::RELIABLE), sequenceNum) {}
+	};
+
+
+	/**
+	 * @brief Packet for sending user information.
+	 * 
+	 * Translation packet for User Objects (serialising and de-serialising).
+	 */
+	class UserInformation : public Packet {
+	public:
+		UserInformation(Lobbies::User user, int sequenceNum) :
+			Packet(static_cast<Type>(PacketType::USER_INFORMATION), static_cast<int>(Channel::RELIABLE), sequenceNum),
+			m_user(user)
 		{}
 
 	private:
-		int m_objectID;
-		btVector3 m_upVector;
+		Lobbies::User m_user;
 	};
 }
 

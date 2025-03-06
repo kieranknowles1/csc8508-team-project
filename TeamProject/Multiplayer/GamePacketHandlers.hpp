@@ -42,4 +42,24 @@ namespace Packet {
 		std::shared_ptr<Packet> Translate(const ENetPacket* packet) const override;
 		ENetPacket* ToENetPacket(const std::shared_ptr<Packet> packet) const override;
 	};
+
+
+	class StartGamePacketHandler : public PacketHandler {
+	public:
+		StartGamePacketHandler() : PacketHandler(static_cast<Type>(PacketType::START_GAME)) {}
+
+		void Handle(const std::shared_ptr<Packet> packet) override;
+		std::shared_ptr<Packet> Translate(const ENetPacket* packet) const override;
+		ENetPacket* ToENetPacket(const std::shared_ptr<Packet> packet) const override;
+	};
+
+
+	class UserInformationPacketHandler : public PacketHandler {
+	public:
+		UserInformationPacketHandler() : PacketHandler(static_cast<Type>(PacketType::USER_INFORMATION)) {}
+
+		void Handle(const std::shared_ptr<Packet> packet) override;
+		std::shared_ptr<Packet> Translate(const ENetPacket* packet) const override;
+		ENetPacket* ToENetPacket(const std::shared_ptr<Packet> packet) const override;
+	};
 }
