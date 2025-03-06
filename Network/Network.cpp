@@ -67,9 +67,15 @@ void Network::ConnectTo(const ENetAddress* destination) {
 }
 
 
-void Network::Send(std::shared_ptr<Packet::Packet> packet) {
+void Network::Broadcast(std::shared_ptr<Packet::Packet> packet) {
 	std::lock_guard<std::mutex> lock(m_sendMut);
-	m_sendBuffer[m_numPackets++] = packet;
+	m_sendBuffer[m_numPackets++] = std::pair(packet, nullptr);
+}
+
+
+void Network::Send(std::shared_ptr<Packet::Packet> packet, ENetPeer* peer) {
+	std::lock_guard<std::mutex> lock(m_sendMut);
+	m_sendBuffer[m_numPackets++] = std::pair(packet, peer);
 }
 
 

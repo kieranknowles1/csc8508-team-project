@@ -94,7 +94,17 @@ public:
 	 * Is threadsafe.
 	 * @param packet The packet to send.
 	 */
-	void Send(std::shared_ptr<Packet::Packet> packet);
+	void Broadcast(std::shared_ptr<Packet::Packet> packet);
+
+
+	/**
+	 * @brief Send a Packet to a specific Peer.
+	 * Is threadsafe.
+	 * @param packet - The packet to send
+	 * @param destination - The Peer to send the packet to.
+	 */
+	void Send(std::shared_ptr<Packet::Packet> packet, ENetPeer* destination);
+
 
 	/**
 	 * @brief Assign which function to call upon receiving a connect packet.
@@ -147,7 +157,6 @@ protected:
 
 	/**
 	 * @brief Sends all queued packets.
-	 * Broadcasts to all connections.
 	 */
 	void SendAll();
 
@@ -168,7 +177,7 @@ private:
 	NetworkState m_state = NetworkState::CLOSED;
 
 	Packet::PacketBuffer m_receiveBuffer = Packet::PacketBuffer(BUFFER_SIZE);
-	std::vector<std::shared_ptr<Packet::Packet>> m_sendBuffer = std::vector<std::shared_ptr<Packet::Packet>>(BUFFER_SIZE);
+	std::vector<std::pair<std::shared_ptr<Packet::Packet>, ENetPeer*>> m_sendBuffer = std::vector<std::pair<std::shared_ptr<Packet::Packet>, ENetPeer*>>(BUFFER_SIZE);
 	int m_numPackets = 0;
 	
 	float m_elapsedTime = 0;
