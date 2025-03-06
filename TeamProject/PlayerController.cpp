@@ -34,20 +34,10 @@ btVector3 GetEulerAngles(btQuaternion quat) {
 void PlayerController::UpdateMovement(float dt) {
     transformPlayer = rb->getWorldTransform();
     btPlayerPos = transformPlayer.getOrigin();
-
+    GetAllDirections();
     HandleShooting(dt);
-
-    // yaw is fully local
-    yaw = fmod(yaw - controller->GetAnalogue(Controller::AnalogueControl::LookX) + 360.0f, 360.0f);
-    camera->SetYaw(yaw);
-
-    //camera offset for rotation
-    btVector3 rot = GetEulerAngles(camRotOffset);
-    camera->setRotation(rot);
-
-    HandleTypes();
-
-    //sliding/floor detection
+    HandleYaw();
+    SpecialTypeCalculations();
     HandleSliding(dt);
     HandleCrouching(dt);
 
@@ -55,81 +45,17 @@ void PlayerController::UpdateMovement(float dt) {
         player->setCollided(0);
         inAirTime -= dt;
     }
-
     if ((isSliding||slideTransition) && !isCrouching) return;
 
-    //player rotation
-    btQuaternion playerYaw = btQuaternion(btVector3(0, 1, 0), Maths::DegreesToRadians(yaw));
-    btQuaternion finalRotation = camRotOffset * playerYaw;
-    transformPlayer.setRotation(finalRotation);
-    rb->setWorldTransform(transformPlayer);
+    RotationCalculations();
+    CameraMovement();
+    GroundNormalCalculations();
+    MovementCalculations(dt);
+    HandleJumping();
 
-    //camera follows player, lowers if crouching
-    btTransform transformPlayerMotion;
-    player->GetPhysicsObject()->GetMotionState()->getWorldTransform(transformPlayerMotion);
-    btVector3 playerCamPos = transformPlayerMotion.getOrigin();
-    playerCamPos += upDirection * (isCrouching ? std::lerp(cameraHeight, crouchHeight, btMin(currentCrouchingTimer / crouchingTime, 1.0f)) : std::lerp(crouchHeight, cameraHeight, btMin(currentStandingTimer / crouchingTime, 1.0f)));
-    if (!slideTransition && !thirdPerson) {
-        camera->SetPosition(playerCamPos);
-        SetGunTransform();
-    }
-
-    //finds player forward and right vectors
-    btMatrix3x3 rotationMatrix(finalRotation);
-    btVector3 forward = rotationMatrix * btVector3(0, 0, -1);
-    btVector3 up = rotationMatrix * btVector3(0, 1, 0);
-    btVector3 right = rotationMatrix * btVector3(1, 0, 0);
-
-    //if on ground, movement based on floor angle
-    if (player->getCollided() > 0) {
-        btVector3 groundNormal = FindFloorNormal();
-        if (groundNormal != btVector3(0, 0, 0)) {
-            float cosAngleThreshold = cos(btRadians(50.0f));
-            float dotProduct = groundNormal.dot(upDirection.absolute());
-            if (fabs(dotProduct) >= cosAngleThreshold && fabs(dotProduct) <= 1.0f) {
-                btVector3 slopeForward = forward - (forward.dot(groundNormal)) * groundNormal;
-                slopeForward.normalize();
-                btVector3 slopeRight = right - (right.dot(groundNormal)) * groundNormal;
-                slopeRight.normalize();
-                if (slopeForward.length2() > SIMD_EPSILON && slopeRight.length2() > SIMD_EPSILON) {
-                    forward = slopeForward;
-                    right = slopeRight;
-                }
-            }
-        }
-    }
-
-    //movement based on all the multipliers combined
-    Vector2 directionalInput = getDirectionalInput();
-    bool sprinting = controller->GetDigital(Controller::DigitalControl::Sprint);
-    float forwardMovement = directionalInput.y;
-    float moveMulti = playerSpeed * (sprinting ? sprintMulti : 1) * (isCrouching ? crouchMulti : 1) * (player->getCollided() <= 0 ? airMulti : 1);
-    forwardMovement *= (forwardMovement <= 0) ? backwardsMulti : 1;
-    btVector3 movement = (right * directionalInput.x * strafeMulti * moveMulti ) +(forward * forwardMovement * moveMulti);
-
-    if (player->getCollided() <= 0 || onIce) {
-        movement *= (airMulti*dt);
-        movement += rb->getLinearVelocity();
-    }
-
-    // jump input
-    if (controller->GetDigital(Controller::DigitalControl::Jump) && player->getCollided() && inAirTime <= 0) {
-        audioEngine.PlaySounds("jump.wav", camera->GetPosition(), 0.0f);
-        btVector3 normal = FindFloorNormal();
-        float dotProduct = normal.dot(upDirection.absolute());
-        if (fabs(dotProduct <= 1)) {
-            movement += (jumpHeight * normal);
-        }
-        else {
-            movement += (jumpHeight * upDirection);
-        }
-        player->setCollided(0);
-        inAirTime = 0.2f;
-    }
     previousVelocity = rb->getLinearVelocity();
     rb->setLinearVelocity(movement);
     rb->activate();
-
 }
 
 
@@ -161,7 +87,6 @@ void PlayerController::HandleShooting(float dt) {
         shotTimer += dt;
     }
 }
-
 
 
 void PlayerController::Shoot() {
@@ -362,7 +287,7 @@ void PlayerController::HandleSliding(float dt) {
     }
 }
 
-void PlayerController::HandleTypes() {
+void PlayerController::SpecialTypeCalculations() {
     switch (player->getType())
     {
     case 'D': //Default
@@ -411,116 +336,101 @@ void PlayerController::HandleTypes() {
     player->resetType();
 }
 
-
-// world rotate things
-void PlayerController::Rotate(bool positive, bool rolling) {
-    if (rotationChanging) return;
-    btVector3 rightDirections = (rolling ? CalculateForwardFromYaw() : CalculateRightFromYaw());
-    btQuaternion pitchQuat(rightDirections, Maths::DegreesToRadians(positive ? 90 : -90));
-    targetWorldRotation = quatRotate(pitchQuat, upDirection);
-    targetcamRotOffset = pitchQuat * oldcamRotOffset; // Apply rotation correctly
-    rotationChanging = true;
+void PlayerController::HandleYaw() {
+    yaw = fmod(yaw - controller->GetAnalogue(Controller::AnalogueControl::LookX) + 360.0f, 360.0f);
+    camera->SetYaw(yaw);
+    btVector3 rot = GetEulerAngles(camRotOffset);
+    camera->setRotation(rot);
 }
 
-void PlayerController::CalculateDirections(float dt) {
-    upDirection = CalculateUpDirection(dt);
-    rightDirection = CalculateRightDirection(upDirection);
-    forwardDirection = CalculateForwardDirection(upDirection, rightDirection);
-    player->setUpDirection(upDirection);
+void PlayerController::RotationCalculations() {
+    //player rotation based on yaw
+    btQuaternion playerYaw = btQuaternion(btVector3(0, 1, 0), Maths::DegreesToRadians(yaw));
+    btQuaternion finalRotation = camRotOffset * playerYaw;
+    transformPlayer.setRotation(finalRotation);
+    rb->setWorldTransform(transformPlayer);
+    //finds player forward and right vectors
+    btMatrix3x3 rotationMatrix(finalRotation);
+    forward = rotationMatrix * btVector3(0, 0, -1);
+    up = rotationMatrix * btVector3(0, 1, 0);
+    right = rotationMatrix * btVector3(1, 0, 0);
+
+};
+
+//camera follows player, lowers if crouching, don't change if third person
+void PlayerController::CameraMovement() {
+    btTransform transformPlayerMotion;
+    player->GetPhysicsObject()->GetMotionState()->getWorldTransform(transformPlayerMotion);
+    btVector3 playerCamPos = transformPlayerMotion.getOrigin();
+    playerCamPos += upDirection * (isCrouching ? std::lerp(cameraHeight, crouchHeight, btMin(currentCrouchingTimer / crouchingTime, 1.0f)) : std::lerp(crouchHeight, cameraHeight, btMin(currentStandingTimer / crouchingTime, 1.0f)));
+    if (!slideTransition && !thirdPerson) {
+        camera->SetPosition(playerCamPos);
+        SetGunTransform();
+    }
+};
+
+//if on ground, movement based on floor angle
+void PlayerController::GroundNormalCalculations() {
+    if (player->getCollided() > 0) {
+        btVector3 groundNormal = FindFloorNormal();
+        if (groundNormal != btVector3(0, 0, 0)) {
+            float cosAngleThreshold = cos(btRadians(50.0f));
+            float dotProduct = groundNormal.dot(upDirection.absolute());
+            if (fabs(dotProduct) >= cosAngleThreshold && fabs(dotProduct) <= 1.0f) {
+                btVector3 slopeForward = forward - (forward.dot(groundNormal)) * groundNormal;
+                slopeForward.normalize();
+                btVector3 slopeRight = right - (right.dot(groundNormal)) * groundNormal;
+                slopeRight.normalize();
+                if (slopeForward.length2() > SIMD_EPSILON && slopeRight.length2() > SIMD_EPSILON) {
+                    forward = slopeForward;
+                    right = slopeRight;
+                }
+            }
+        }
+    }
+};
+
+//movement based on all the multipliers combined
+void PlayerController::MovementCalculations(float dt) {
+    Vector2 directionalInput = getDirectionalInput();
+    bool sprinting = controller->GetDigital(Controller::DigitalControl::Sprint);
+    float forwardMovement = directionalInput.y;
+    float moveMulti = playerSpeed * (sprinting ? sprintMulti : 1) * (isCrouching ? crouchMulti : 1) * (player->getCollided() <= 0 ? airMulti : 1);
+    forwardMovement *= (forwardMovement <= 0) ? backwardsMulti : 1;
+    movement = (right * directionalInput.x * strafeMulti * moveMulti) + (forward * forwardMovement * moveMulti);
+
+    if (player->getCollided() <= 0 || onIce) {
+        movement *= (airMulti * dt);
+        movement += rb->getLinearVelocity();
+    }
+};
+
+
+void PlayerController::HandleJumping() {
+    if (controller->GetDigital(Controller::DigitalControl::Jump) && player->getCollided() && inAirTime <= 0) {
+        audioEngine.PlaySounds("jump.wav", camera->GetPosition(), 0.0f);
+        btVector3 normal = FindFloorNormal();
+        float dotProduct = normal.dot(upDirection.absolute());
+        if (fabs(dotProduct <= 1)) {
+            movement += (jumpHeight * normal);
+        }
+        else {
+            movement += (jumpHeight * upDirection);
+        }
+        player->setCollided(0);
+        inAirTime = 0.2f;
+    }
+};
+
+
+void PlayerController::GetAllDirections() {
+    upDirection = player->getUpDirection();
+    rightDirection = player->getForwardDirection();
+    forwardDirection = player->getRightDirection();
+    camRotOffset = player->getCamOffset();
 
     //Update FMod listener each frame so audio is correctly positioned
     audioEngine.Set3dListenerAndOrientation(camera->GetPosition(), forwardDirection, upDirection);
-}
-
-btVector3 PlayerController::CalculateUpDirection(float dt) {
-
-    btVector3 upDir;
-    if (!rotationChanging) {
-        upDir = targetWorldRotation;
-        camRotOffset = targetcamRotOffset;
-
-    }else if (rotateTimer <= rotateTime && rotationChanging) {
-        rotateTimer += dt;
-        upDir = lerp(oldWorldRotation, targetWorldRotation,  rotateTimer/rotateTime);
-        camRotOffset = (oldcamRotOffset.slerp(targetcamRotOffset, rotateTimer / rotateTime));
-    }
-    else {
-        upDir = targetWorldRotation;
-        camRotOffset = targetcamRotOffset;
-        oldcamRotOffset = targetcamRotOffset;
-        oldWorldRotation = targetWorldRotation;
-        rotationChanging = false;
-        rotateTimer = 0.0f;
-    }
-    upDir.normalize();
-    return upDir;
-}
-
-btVector3 PlayerController::CalculateRightDirection(btVector3 upDir) {
-    btVector3 forward = btVector3(0, 0, 1);
-    if (fabs(upDir.dot(forward)) > 0.999f) {
-        forward = btVector3(0, 1, 0);
-    }
-    btVector3 rightDirection = upDir.cross(forward);
-    rightDirection.normalize();
-  //  std::cout << rightDirection << std::endl;
-    return rightDirection;
-}
-
-btVector3 PlayerController::CalculateForwardDirection(btVector3 upDir,btVector3 rightDir) {
-    btVector3 forwardDirection = rightDir.cross(upDir);
-    forwardDirection.normalize();
-    return forwardDirection;
-}
-
-btVector3 PlayerController::CalculateForwardFromYaw() {
-    int snappedYaw = static_cast<int>((yaw + 45) / 90) * 90 % 360;
-    btVector3 forwd = btVector3(0, 0, 0);
-    switch (snappedYaw) {
-    case 0: {
-        forwd = btVector3(0, 0, 1);
-        break;
-    }
-    case 90: {
-        forwd = btVector3(1, 0, 0);
-        break;
-    }
-    case 180: {
-        forwd = btVector3(0, 0, -1);
-        break;
-    }
-    case 270: {
-        forwd = btVector3(-1, 0, 0);
-        break;
-    }
-    }
-    btVector3 baseForward = quatRotate(oldcamRotOffset, forwd);
-    return baseForward;
-}
-
-btVector3 PlayerController::CalculateRightFromYaw() {
-    int snappedYaw = static_cast<int>((yaw + 45) / 90) * 90 % 360;
-    btVector3 right = btVector3(0, 0, 0);
-    switch (snappedYaw) {
-    case 0: {
-        right = btVector3(1, 0, 0);
-        break;
-    }
-    case 90: {
-        right = btVector3(0, 0, -1);
-        break;
-    }
-    case 180: {
-        right = btVector3(-1, 0, 0);
-        break;
-    }
-    case 270: {
-        right = btVector3(0, 0, 1);
-        break;
-    }
-    }
-    btVector3 baseForward = quatRotate(oldcamRotOffset, right);
-    return baseForward;
 }
 
 Vector2 PlayerController::getDirectionalInput() const
