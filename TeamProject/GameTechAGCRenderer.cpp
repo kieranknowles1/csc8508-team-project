@@ -18,11 +18,28 @@ using namespace PS5;
 const int SHADOW_SIZE		= 8192;
 const int FRAMES_IN_FLIGHT	= 2;
 
-const int BINDLESS_TEX_COUNT		= 128; 
+const int BINDLESS_TEX_COUNT		= 128;
 const int BINDLESS_BUFFER_COUNT		= 128;
 
-const size_t LINE_STRIDE = sizeof(Vector4) + sizeof(Vector4); 
+const size_t LINE_STRIDE = sizeof(Vector4) + sizeof(Vector4);
 const size_t TEXT_STRIDE = sizeof(Vector2) + sizeof(Vector2) + sizeof(Vector4);
+
+void NCL::CSC8503::GameTechAGCRenderer::createBuffer(const std::string& name, sce::Agc::CxRenderTarget* outTarget, PS5::AGCTexture** outTexture, sce::Agc::Core::Sampler* optionalSampler)
+{
+	*outTarget = CreateColourBufferTarget(window->GetScreenSize().x, window->GetScreenSize().y, true);
+	*outTexture = CreateFrameBufferTextureSlot(name);
+
+	auto error = sce::Agc::Core::translate(screenTex->GetAGCPointer(), &screenTarget, sce::Agc::Core::RenderTargetComponent::kData);
+	checkError(error);
+
+	if (optionalSampler) {
+		optionalSampler->init().setXyFilterMode(
+			sce::Agc::Core::Sampler::FilterMode::kPoint,
+			sce::Agc::Core::Sampler::FilterMode::kPoint
+		)
+			.setMipFilterMode(sce::Agc::Core::Sampler::MipFilterMode::kPoint);
+	}
+}
 
 GameTechAGCRenderer::GameTechAGCRenderer(Window* window) : AGCRenderer(window), GameTechRendererInterface(window) {
 	SceError error = SCE_OK;
@@ -67,7 +84,7 @@ GameTechAGCRenderer::GameTechAGCRenderer(Window* window) : AGCRenderer(window), 
 
 	allFrames = new FrameData[FRAMES_IN_FLIGHT];
 	for (int i = 0; i < FRAMES_IN_FLIGHT; ++i) {
-		
+
 		{//We store scene object matrices etc in a big UBO
 			allFrames[i].data.dataStart = (char*)allocator.Allocate(1024 * 1024 * 64, sce::Agc::Alignment::kBuffer);
 			allFrames[i].data.data = allFrames[i].data.dataStart;
@@ -86,10 +103,9 @@ GameTechAGCRenderer::GameTechAGCRenderer(Window* window) : AGCRenderer(window), 
 	shadowTarget	= CreateDepthBufferTarget(SHADOW_SIZE, SHADOW_SIZE);
 	shadowMap		= CreateFrameBufferTextureSlot("Shadowmap");
 
-	screenTarget	= CreateColourBufferTarget(window->GetScreenSize().x, window->GetScreenSize().y, true);
-	screenTex		= CreateFrameBufferTextureSlot("Screen");
-
-	error = sce::Agc::Core::translate(screenTex->GetAGCPointer(), &screenTarget, sce::Agc::Core::RenderTargetComponent::kData);
+	createBuffer(
+		"Screen", &screenTarget, &screenTex, nullptr
+	);
 
 	shadowSampler.init()
 		.setXyFilterMode(
@@ -174,12 +190,12 @@ void GameTechAGCRenderer::RenderFrame() {
 	UiPass();
 	//Step 8: Draw the main scene render target to the screen with a compute shader
 	DisplayRenderPass(); //Puts our scene on screen, uses a compute
-	
+
 	currentFrameIndex = (currentFrameIndex + 1) % FRAMES_IN_FLIGHT;
 }
 
 /*
-This method builds a struct that 
+This method builds a struct that
 
 */
 void GameTechAGCRenderer::WriteRenderPassConstants() {
@@ -308,7 +324,7 @@ void GameTechAGCRenderer::ShadowmapPass() {
 
 	frameContext->m_sb.setState(depthControl);
 
-	frameContext->m_bdr.getStage(sce::Agc::ShaderType::kGs)	
+	frameContext->m_bdr.getStage(sce::Agc::ShaderType::kGs)
 		.setConstantBuffers(0, 1, &currentFrame->constantBuffer)
 		.setBuffers(0, 1, &currentFrame->objectBuffer)
 		.setBuffers(1, 1, &arrayBuffer);
@@ -497,7 +513,7 @@ void GameTechAGCRenderer::RenderDebugText() {
 		.setColorSourceMultiplier(sce::Agc::CxBlendControl::ColorSourceMultiplier::kSrcAlpha)
 		.setColorDestMultiplier(sce::Agc::CxBlendControl::ColorDestMultiplier::kOneMinusSrcAlpha)
 		.setColorBlendFunc(sce::Agc::CxBlendControl::ColorBlendFunc::kAdd);
-	
+
 	frameContext->m_sb.setState(blendControl);
 
 	char* dataPos = currentFrame->data.dataStart + currentFrame->debugTextOffset;

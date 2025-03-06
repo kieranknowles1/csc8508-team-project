@@ -37,6 +37,10 @@ namespace NCL {
 			virtual Texture*	LoadTexture(const std::string& name)			override;
 
 		protected:
+			void checkError(SceError err) {
+				assert(err == SCE_OK);
+			}
+
 			void drawFrame(float dt) override {
 				Update(dt);
 				Render();
@@ -170,6 +174,8 @@ namespace NCL {
 			sce::Agc::CxDepthRenderTarget		shadowTarget;
 			NCL::PS5::AGCTexture*				shadowMap; //ptr into bindless array
 			sce::Agc::Core::Sampler				shadowSampler;
+
+			void createBuffer(const std::string& name, sce::Agc::CxRenderTarget* outTarget, PS5::AGCTexture** outTexture, sce::Agc::Core::Sampler* optionalSampler);
 
 			sce::Agc::CxRenderTarget			screenTarget;
 			NCL::PS5::AGCTexture*				screenTex; //ptr into bindless array
