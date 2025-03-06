@@ -13,6 +13,11 @@
 
 #include "Multiplayer/GamePacketHandlers.hpp"
 
+#ifdef CSC_USE_SDL2
+#include "SDLJoystick.h"
+#include "HybridController.h"
+#endif
+
 #ifndef __PROSPERO__
 #include "GameTechRenderer.h"
 #else
@@ -24,7 +29,6 @@ extern const char sceUserMainThreadName[] = "TeamProjectGameMain";
 int sceUserMainThreadPriority = SCE_KERNEL_PRIO_FIFO_DEFAULT;
 size_t sceLibcHeapSize = 256 * 1024 * 1024;
 #endif // !__PROSPERO__
-
 
 using namespace NCL;
 using namespace NCL::CSC8503;
@@ -182,7 +186,18 @@ std::unique_ptr<GameTechRendererInterface> createRenderer(Window* window) {
 
 Controller* createController(Window* window) {
 #ifndef __PROSPERO__
-	return new KeyboardMouseController(*window->GetKeyboard(), *window->GetMouse());
+	auto keyboard = new KeyboardMouseController(*window->GetKeyboard(), *window->GetMouse());
+	#ifdef CSC_USE_SDL2
+		auto joystick = new UnixCode::SDLJoystick(0);
+		if (joystick->initOk()) {
+			return new HybridController(
+				std::unique_ptr<Controller>(keyboard),
+				std::unique_ptr<Controller>(joystick)
+			);
+		}
+		delete joystick;
+	#endif
+	return keyboard;
 #else
 	return ((PS5::PS5Window*)window)->GetController();
 #endif // !__PROSPERO__
@@ -259,6 +274,7 @@ int main(int argc, char** argv) {
 
 	while (window->UpdateWindow() && !window->GetKeyboard()->KeyPressed(KeyCodes::ESCAPE)) {
 		float dt = window->GetTimer().GetTimeDeltaSeconds();
+		controller->Update(dt);
 
 		if (inMenu) {
 

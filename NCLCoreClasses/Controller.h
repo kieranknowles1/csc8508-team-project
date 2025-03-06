@@ -34,7 +34,7 @@ public:
 		Sprint,
 		Crouch,
 		ThirdPerson,
-		
+
 		WorldRollLeft,
 		WorldRollRight,
 		WorldPitchUp,
@@ -46,6 +46,7 @@ public:
 		DebugFreeCam,
 
 		Pause,
+		// TODO: Do we need this one?
 		PauseQuit,
 		Unpause,
 		MenuUp,

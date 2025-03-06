@@ -37,52 +37,26 @@ namespace NCL {
 			void SetThirdPerson(bool thirdPersonIn) {
 				thirdPerson = thirdPersonIn;
 			};
-			void setTargetWorldRotation(btVector3 worldRotationIn) {
-				if (rotationChanging) return;
-				oldWorldRotation = upDirection;
-				targetWorldRotation = worldRotationIn;
-				rotateTimer = 0.0f;
-				rotationChanging = true;
-			}
-
-			btVector3 getUpDirection() {
-				return upDirection;
-			}
-
-			btVector3 getRightDirection() {
-				return rightDirection;
-			}
-
-			btVector3 getForwardDirection() {
-				return forwardDirection;
-			}
 
 			float getYaw() {
 				return yaw;
 			}
-			btQuaternion getCamOffset() {
-				return camRotOffset;
-			}
 
 			void rollRight() {
-				Rotate(true, true);
+				player->Rotate(true, true,yaw);
 			}
 
 			void rollLeft() {
-				Rotate(false, true);
+				player->Rotate(false, true,yaw);
 			}
 
 			void pitchUp() {
-				Rotate(true, false);
+				player->Rotate(true, false,yaw);
 			}
 
 			void pitchDown() {
-				Rotate(false, false);
+				player->Rotate(false, false,yaw);
 			}
-
-			void CalculateDirections(float dt);
-			btVector3 CalculateRightDirection(btVector3 upDir);
-			btVector3 CalculateForwardDirection(btVector3 upDir, btVector3 rightDir);
 
 		private:
 
@@ -117,14 +91,11 @@ namespace NCL {
 			//Special Types Variables
 			float bouncePadHeight = 5000.0f;
 
-			btQuaternion camRotOffset = btQuaternion::getIdentity();
-			btQuaternion oldcamRotOffset = btQuaternion::getIdentity();
-			btQuaternion targetcamRotOffset = btQuaternion::getIdentity();
-			btVector3 targetWorldRotation = btVector3(0, 1, 0);
-			btVector3 oldWorldRotation = btVector3(0, 1, 0);
+
 			btVector3 upDirection;
 			btVector3 rightDirection;
 			btVector3 forwardDirection;
+			btQuaternion camRotOffset;
 			float rotateTimer = 0.0f;
 			bool rotationChanging = false;
 			bool thirdPerson = false;
@@ -163,12 +134,18 @@ namespace NCL {
 			bool onIce = false;
 			btVector3 previousVelocity;
 
+			btVector3 forward;
+			btVector3 up;
+			btVector3 right;
+			btVector3 movement;
+
+
 			Vector2 getDirectionalInput() const;
 			void Initialise();
 			void HandleShooting(float dt);
 			void HandleCrouching(float dt);
 			void HandleSliding(float dt);
-			void HandleTypes();
+			void SpecialTypeCalculations();
 			bool CheckCeling();
 			btVector3 FindFloorNormal();
 			void SetGunTransform();
@@ -177,6 +154,7 @@ namespace NCL {
 			btVector3 CalculateUpDirection(float dt);
 			btVector3 CalculateForwardFromYaw();
 			btVector3 CalculateRightFromYaw();
+
 		};
 	};
 

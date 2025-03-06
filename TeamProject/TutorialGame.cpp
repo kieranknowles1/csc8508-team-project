@@ -123,7 +123,6 @@ void TutorialGame::UpdateGame(float dt) {
 
 void TutorialGame::UpdatePlayer(float dt) {
 
-	playerController->CalculateDirections(dt);
 	// Press F for freeCam, press G for thirdPerson
 	if (freeCam) {
 		//freeCam Movement
@@ -179,7 +178,7 @@ void TutorialGame::UpdateKeys() {
 void TutorialGame::ThirdPersonControls() {
 	btTransform transformPlayer = player->GetPhysicsObject()->GetRigidBody()->getWorldTransform();
 	btQuaternion playerRotation1(btVector3(0, 1, 0), Maths::DegreesToRadians(playerController->getYaw()));
-	btMatrix3x3 rotationMatrix(playerController->getCamOffset() * playerRotation1);
+	btMatrix3x3 rotationMatrix(player->getCamOffset() * playerRotation1);
 	btVector3 forward = rotationMatrix * btVector3(0,0,-1);
 	btVector3 upwards = rotationMatrix * btVector3(0, 1, 0);
 	float camHeight = 10.0f;

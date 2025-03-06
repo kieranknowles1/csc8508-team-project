@@ -9,6 +9,7 @@ set(SOURCES
     PlayerController.cpp
     PlayerController.h
     PlayerObject.h
+    PlayerObject.cpp
     Turret.h
     Turret.cpp
 	BWHelperFunctions.h
