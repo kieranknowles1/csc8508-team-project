@@ -302,7 +302,11 @@ void TutorialGame::LoadWorldFromFile(int levelNum) {
 	levelImporter = new LevelImporter(resourceManager.get(), world.get(), bulletWorld);
 	levelImporter->LoadLevel(levelNum);
 	InitPlayer();
+	navMeshDebug = true;
 	if (navMeshDebug) {
+		freeCam = true;
+		navMesh = new NavMesh(bulletWorld);
+		navMesh->LoadFromFile("Assets/Meshes/NavMeshes/initiallevel.navmesh");
 		AddTurretToWorld();
 		AddWandererToWorld();
 	}
@@ -317,13 +321,6 @@ void TutorialGame::ResetWorld() {
 void TutorialGame::InitWorld() {
 	InitBullet();
 	audioEngine.Init();
-
-	navMeshDebug = false;
-	if (navMeshDebug) {
-		freeCam = true;
-		navMesh = new NavMesh(bulletWorld);
-		navMesh->LoadFromFile("Assets/Meshes/NavMeshes/initiallevel.navmesh");
-	}
 }
 
 void TutorialGame::InitNetwork(bool host) {
@@ -394,7 +391,9 @@ Turret* TutorialGame::AddTurretToWorld() {
 }
 
 Wanderer* TutorialGame::AddWandererToWorld() {
-	Wanderer* wanderer = new Wanderer(player, navMesh);
+	GameObject* wGun = AddCubeToWorld(Vector3(10, 2, 20), Vector3(0.6, 0.6, 1.6), 0, false);
+
+	Wanderer* wanderer = new Wanderer(player, navMesh, wGun);
 
 	float height = 4.0f;
 	float radius = 2.0f;

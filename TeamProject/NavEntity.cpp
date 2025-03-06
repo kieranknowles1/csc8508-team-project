@@ -31,7 +31,7 @@ bool NavEntity::FollowPath(float dt, GameObject* player) {
 		}
 		else {
 			float remainder = speed - dist;
-			btVector3 remainderDir = ((path[nextNode] - nextPoint).normalize()) * remainder;
+			btVector3 remainderDir = ((path[nextNode] - nextPoint).length2() == 0 ? btVector3(0, 0, 0) : ((path[nextNode] - nextPoint).normalize())) * remainder;
 			newPathPoint = nextPoint + remainderDir;
 		}
 	}

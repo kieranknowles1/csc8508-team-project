@@ -7,7 +7,7 @@ namespace NCL {
 		class StateMachine;
 		class Wanderer : public NavEntity {
 		public:
-			Wanderer(GameObject* p, NavMesh* nav);
+			Wanderer(GameObject* p, NavMesh* nav, GameObject* g);
 			~Wanderer();
 
 			void Update(float dt);
@@ -16,6 +16,7 @@ namespace NCL {
 		private:
 			void PlayerNear();
 			void PlayerFar();
+			void SetGunTransform();
 
 			NavMesh* navMesh;
 			std::vector<btVector3> curPath = {};
@@ -27,6 +28,7 @@ namespace NCL {
 			btVector3 offset;
 
 			GameObject* player;
+			GameObject* gun;
 		};
 	}
 }

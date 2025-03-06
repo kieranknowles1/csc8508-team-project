@@ -8,8 +8,8 @@
 using namespace NCL;
 using namespace CSC8503;
 
-Wanderer::Wanderer(GameObject* p, NavMesh* mesh) :
-	player(p), navMesh(mesh) {
+Wanderer::Wanderer(GameObject* p, NavMesh* mesh, GameObject* g) :
+	player(p), navMesh(mesh), gun(g) {
 	stateMachine = new StateMachine();
 
 	State* playerNear = new State([&](float dt)-> void {
@@ -53,6 +53,11 @@ void Wanderer::Update(float dt) {
 		curPath = navMesh->FindPath(curPathPoint, navMesh->GetRandomPointInNavMesh());
 		NewPath(curPath);
 	}
+	SetGunTransform();
+	btVector3 vec = GetTransform().getOrigin();
+	std::cout << "Player: (" << vec.x() << ", " << vec.y() << ", " << vec.z() << ")" << std::endl;
+	vec = gun->GetTransform().getOrigin();
+	std::cout << "Gun: (" << vec.x() << ", " << vec.y() << ", " << vec.z() << ")" << std::endl;
 }
 
 void Wanderer::InitPosAndOffset() {
@@ -82,8 +87,23 @@ void Wanderer::UpdatePlayerDistance() {
 
 void Wanderer::PlayerNear() {
 	GetRenderObject()->SetColour(Vector4(1, 0, 0, 1));
+	gun->GetRenderObject()->SetColour(Vector4(1, 0, 0, 1));
 }
 
 void Wanderer::PlayerFar() {
 	GetRenderObject()->SetColour(Vector4(0, 1, 0, 1));
+	gun->GetRenderObject()->SetColour(Vector4(0, 1, 0, 1));
+}
+
+void Wanderer::SetGunTransform() {
+	btTransform gunTransform = gun->GetTransform();
+	btTransform wTransform = GetTransform();
+	btMatrix3x3 wRotation = wTransform.getBasis();
+	btVector3 wPos = wTransform.getOrigin();
+	btMatrix3x3 rotationMatrix(wRotation);
+	btVector3 forwardDir = rotationMatrix * btVector3(0, 0, -1);
+	btVector3 forwardPos = wPos + (forwardDir * btVector3(1.3, -0.7, -1.2));
+	gunTransform.setOrigin(forwardPos);
+	btRigidBody* gunBody = gun->GetPhysicsObject()->GetRigidBody();
+	gunBody->setWorldTransform(gunTransform);
 }
