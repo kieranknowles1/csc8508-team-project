@@ -150,10 +150,13 @@ namespace NCL {
 			btVector3 FindFloorNormal();
 			void SetGunTransform();
 			void FireShot();
-			void Rotate(bool positive, bool rolling);
-			btVector3 CalculateUpDirection(float dt);
-			btVector3 CalculateForwardFromYaw();
-			btVector3 CalculateRightFromYaw();
+			void GetAllDirections();
+			void HandleYaw();
+			void RotationCalculations();
+			void CameraMovement();
+			void GroundNormalCalculations();
+			void MovementCalculations(float dt);
+			void HandleJumping();
 
 		};
 	};
