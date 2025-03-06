@@ -43,9 +43,9 @@ namespace Lobbies {
 		 * @brief Serialize this object.
 		 */
 		std::unique_ptr<char[]> Serialize() {
-			std::unique_ptr<char[]> data = std::make_unique<char[]>(sizeof(const unsigned int) + (sizeof(char) * (m_name.length() + 1)));
+			std::unique_ptr<char[]> data = std::make_unique<char[]>(sizeof(const unsigned int) + (m_name.length() + 1));
 			std::memcpy(data.get(), &m_userID, sizeof(const unsigned int));
-			std::memcpy(data.get() + sizeof(const unsigned int), m_name.c_str(), sizeof(char) * (m_name.length() + 1));
+			std::memcpy(data.get() + sizeof(const unsigned int), m_name.c_str(), m_name.length() + 1);
 			return data;
 		}
 
@@ -56,8 +56,7 @@ namespace Lobbies {
 		static User Deserialize(const char* data) {
 			unsigned int userID;
 			
-			// Using whole length to make sure buffer size is sufficient.
-			std::unique_ptr<char[]> name = std::make_unique<char[]>(strlen(data));
+			std::unique_ptr<char[]> name = std::make_unique<char[]>(strlen(data + sizeof(unsigned int)) + 1);
 
 			memcpy(&userID, data, sizeof(unsigned int));
 			memcpy(name.get(), data + sizeof(unsigned int), strlen(data + sizeof(unsigned int)) + 1);

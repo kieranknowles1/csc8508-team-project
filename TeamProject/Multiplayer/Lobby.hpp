@@ -68,12 +68,10 @@ namespace Lobbies {
 		 */
 		Lobby(int maxSize);
 
-
 		/**
 		* Assign what user is in charge of the lobby.
 		*/
 		inline void SetHost(User hostUser) { m_hostUser.emplace(hostUser); }
-
 
 		/**
 		 * Fetch the maximum size of the lobby.
