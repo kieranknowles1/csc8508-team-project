@@ -103,6 +103,7 @@ namespace NCL::CSC8503 {
 
 		// TODO: Proper UI class
 		void initUi();
+		void Scoreboard();
 
 	protected:
 		//adding bools to toggle post processing. Must be accessible from the specific renderer
@@ -117,6 +118,7 @@ namespace NCL::CSC8503 {
 		std::vector<RenderObject*> frameObjects;
 		DecalSystem decalSystem;
 		bool showScoreboard = false;
+		Maths::Vector2 screenCenter = Maths::Vector2(0.5f, 0.5f);
 	};
 }
 

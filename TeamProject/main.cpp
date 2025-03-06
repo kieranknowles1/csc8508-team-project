@@ -312,6 +312,10 @@ int main(int argc, char** argv) {
 			//Pause the game->UpdateGame
 		}
 
+		if (window->GetKeyboard()->KeyPressed(KeyCodes::TAB)) {
+			renderer->ToggleScoreboard();
+		}
+
 		window->SetTitle("Gametech frame time:" + std::to_string(1000.0f * dt));
 
 		game->UpdateGame(dt);
