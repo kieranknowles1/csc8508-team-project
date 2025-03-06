@@ -76,10 +76,9 @@ namespace NCL {
 
 			// Decal stuff
 			std::unique_ptr<OGLShader> decalShader;
+			std::unique_ptr<OGLShader> decalBlendShader;
 			GLuint decalQuadVAO = 0;
 			GLuint decalQuadVBO = 0;
-			GLuint fullscreenQuadVAO = 0;
-			GLuint fullscreenQuadVBO = 0;
 
 			Vector4		lightColour;
 			float		lightRadius;
