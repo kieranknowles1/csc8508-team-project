@@ -210,14 +210,6 @@ void GameTechRenderer::RenderFrame() {
 	// Render Decals to it's own buffer
 	RenderDecals();
 
-	glDisable(GL_CULL_FACE); //Todo - text indices are going the wrong way...
-	glDisable(GL_BLEND);
-	glDisable(GL_DEPTH_TEST);
-	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-	NewRenderLines();
-	NewRenderTextures();
-	NewRenderText();
-
 	// Blend decals onto the scene using a fullscreen quad
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -247,9 +239,6 @@ void GameTechRenderer::RenderFrame() {
 	glBindTexture(GL_TEXTURE_2D, decalSystem.GetDecalDepthTexture());
 	glUniform1i(glGetUniformLocation(decalBlendShader->GetProgramID(), "decalDepthTexture"), 3);
 
-	// Render fullscreen quad to apply decals over the scene
-	RenderFullScreenQuad();
-
 	glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 	glDisable(GL_CULL_FACE);
 	glDisable(GL_BLEND);
@@ -262,6 +251,14 @@ void GameTechRenderer::RenderFrame() {
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	//RenderPostProcessing();
 	RenderUI();
+
+	glDisable(GL_CULL_FACE); //Todo - text indices are going the wrong way...
+	glDisable(GL_BLEND);
+	glDisable(GL_DEPTH_TEST);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	NewRenderLines();
+	NewRenderTextures();
+	NewRenderText();
 }
 
 void GameTechRenderer::RenderShadowMap() {
@@ -710,33 +707,6 @@ void GameTechRenderer::RenderQuad() {
 	glDrawArrays(GL_TRIANGLES, 0, 6);
 	glBindVertexArray(0);
 }
-
-void GameTechRenderer::RenderFullScreenQuad() {
-	if (fullscreenQuadVAO == 0) {
-		float quadVertices[] = {
-			// positions   // texCoords
-			-1.0f,  1.0f,  0.0f, 1.0f,
-			-1.0f, -1.0f,  0.0f, 0.0f,
-			 1.0f, -1.0f,  1.0f, 0.0f,
-			-1.0f,  1.0f,  0.0f, 1.0f,
-			 1.0f, -1.0f,  1.0f, 0.0f,
-			 1.0f,  1.0f,  1.0f, 1.0f
-		};
-		glGenVertexArrays(1, &fullscreenQuadVAO);
-		glGenBuffers(1, &fullscreenQuadVBO);
-		glBindVertexArray(fullscreenQuadVAO);
-		glBindBuffer(GL_ARRAY_BUFFER, fullscreenQuadVAO);
-		glBufferData(GL_ARRAY_BUFFER, sizeof(quadVertices), quadVertices, GL_STATIC_DRAW);
-		glEnableVertexAttribArray(0);
-		glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0);
-		glEnableVertexAttribArray(1);
-		glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)(2 * sizeof(float)));
-	}
-	glBindVertexArray(fullscreenQuadVAO);
-	glDrawArrays(GL_TRIANGLES, 0, 6);
-	glBindVertexArray(0);
-}
-
 
 void GameTechRenderer::RenderDecals() {
 	// Bind the decal FBO to keep decal rendering separate from the main scene
