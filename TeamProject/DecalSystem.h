@@ -29,8 +29,6 @@ namespace NCL {
 
 			unsigned int GetDecalTexture() const { return decalTexture; }
 			unsigned int GetDecalFBO() const { return decalFBO; }
-			unsigned int GetDecalDepthTexture() const { return decalDepthTexture; }
-
 			const std::vector<Decal>& GetDecals() const { return decals; }
 
 			void ClearDecalsFromWorld() { decals.clear(); }
@@ -38,7 +36,6 @@ namespace NCL {
 		private:
 			unsigned int decalFBO;
 			unsigned int decalTexture;
-			unsigned int decalDepthTexture;
 
 			int textureWidth;
 			int textureHeight;

@@ -217,6 +217,11 @@ void GameTechRenderer::RenderFrame() {
 
 	UseShader(*decalBlendShader);
 
+	// Send near and far plane uniforms to decalBlend shader
+	// To conver non-linear depth to linear depth for accurate depth testing
+	glUniform1f(glGetUniformLocation(decalBlendShader->GetProgramID(), "nearPlane"), camera->GetNearPlane());
+	glUniform1f(glGetUniformLocation(decalBlendShader->GetProgramID(), "farPlane"), camera->GetFarPlane());
+
 	GLuint decalTextureLocation = glGetUniformLocation(decalBlendShader->GetProgramID(), "decalTexture");
 	glUniform1i(decalTextureLocation, 0);
 
@@ -233,11 +238,6 @@ void GameTechRenderer::RenderFrame() {
 	glActiveTexture(GL_TEXTURE2);
 	glBindTexture(GL_TEXTURE_2D, hdrDepthTex);
 	glUniform1i(glGetUniformLocation(decalBlendShader->GetProgramID(), "depthTexture"), 2);
-
-	// Bind the decal depth texture
-	glActiveTexture(GL_TEXTURE3);
-	glBindTexture(GL_TEXTURE_2D, decalSystem.GetDecalDepthTexture());
-	glUniform1i(glGetUniformLocation(decalBlendShader->GetProgramID(), "decalDepthTexture"), 3);
 
 	glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 	glDisable(GL_CULL_FACE);
@@ -730,8 +730,20 @@ void GameTechRenderer::RenderDecals() {
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	glEnable(GL_DEPTH_TEST); // Enable depth testing
+	//glDepthFunc(GL_LEQUAL); // Use LEQUAL to ensure correct depth testing for decals
+	glDepthFunc(GL_ALWAYS);
 
 	UseShader(*decalShader);
+
+	// Send near and far plane uniforms to decalBlend shader
+	// To conver non-linear depth to linear depth for accurate depth testing
+	glUniform1f(glGetUniformLocation(decalShader->GetProgramID(), "nearPlane"), camera->GetNearPlane());
+	glUniform1f(glGetUniformLocation(decalShader->GetProgramID(), "farPlane"), camera->GetFarPlane());
+
+	GLuint decalTextureLocation = glGetUniformLocation(decalShader->GetProgramID(), "depthTexture");
+	glActiveTexture(GL_TEXTURE1);
+	glBindTexture(GL_TEXTURE_2D, hdrDepthTex);
+	glUniform1i(decalTextureLocation, 1);
 
 	GLuint alphaFadeLocation = glGetUniformLocation(decalShader->GetProgramID(), "alphaFade");
 	GLuint decalColorLocation = glGetUniformLocation(decalShader->GetProgramID(), "decalColor");
@@ -739,9 +751,13 @@ void GameTechRenderer::RenderDecals() {
 	GLuint modelMatrixLocation = glGetUniformLocation(decalShader->GetProgramID(), "modelMatrix");
 	GLuint viewProjMatrixLocation = glGetUniformLocation(decalShader->GetProgramID(), "viewProjMatrix");
 
+	glUniform1i(glGetUniformLocation(decalShader->GetProgramID(), "screenWidth"), windowSize.x);
+	glUniform1i(glGetUniformLocation(decalShader->GetProgramID(), "screenHeight"), windowSize.y);
+
 	for (const auto& decal : decalSystem.GetDecals()) {
 		// Create a rotation matrix to orient the decal based on the normal of the surface it is projected onto
 		Matrix4 rotationMatrix = Matrix::RotationFromNormal(decal.normal);
+		Debug::DrawLine(decal.position, decal.position + decal.normal, Vector4(0, 1, 0, 1));
 
 		Matrix4 modelMatrix = Matrix::Translation(Vector3(decal.position)) *
 							  rotationMatrix *
@@ -769,6 +785,7 @@ void GameTechRenderer::RenderDecals() {
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
 	glDisable(GL_BLEND);
+	glDepthFunc(GL_LEQUAL);
 }
 
 void GameTechRenderer::RenderPostProcessing() {
