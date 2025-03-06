@@ -174,17 +174,6 @@ void TutorialGame::UpdateKeys() {
 			playerController->pitchDown();
 		}
 	}
-
-	if (Window::GetKeyboard()->KeyPressed(KeyCodes::F5)) {
-		bool toggleHDR = renderer->GetHDROn();
-		toggleHDR = !toggleHDR;
-		renderer->SetHDROn(toggleHDR);
-	}
-	if (Window::GetKeyboard()->KeyPressed(KeyCodes::F6)) {
-		bool toggleVignette = renderer->GetVignetteOn();
-		toggleVignette = !toggleVignette;
-		renderer->SetVignetteOn(toggleVignette);
-	}
 }
 
 void TutorialGame::ThirdPersonControls() {
@@ -204,7 +193,7 @@ void TutorialGame::ThirdPersonControls() {
 void TutorialGame::visualiseNavMesh() {
 	navMesh->VisualiseNavMesh();
 
-	btVector3 startPoint(94, 0.5833334, 26);
+	/*btVector3 startPoint(94, 0.5833334, 26);
 	btVector3 endPoint(68, 0.5833334, 34);
 
 	btIDebugDraw* debugDrawer = bulletWorld->getDebugDrawer();
@@ -215,7 +204,7 @@ void TutorialGame::visualiseNavMesh() {
 
 	// Find path and draw it
 	std::vector<btVector3> path = navMesh->FindPath(startPoint, endPoint);
-	//navMesh->DebugDrawPath(path);
+	//navMesh->DebugDrawPath(path);*/
 }
 
 
@@ -315,8 +304,15 @@ void TutorialGame::LoadWorldFromFile(int levelNum) {
 	levelImporter = new LevelImporter(resourceManager.get(), world.get(), bulletWorld);
 	levelImporter->LoadLevel(levelNum);
 	InitPlayer();
+
 	Shoot::GetInstance()->Initialise(bulletWorld,resourceManager.get(), world.get(), renderer->GetDecalSystem());
 	Shoot::GetInstance()->InitShotMasks(player, gun);
+
+	if (navMeshDebug) {
+		AddTurretToWorld();
+		AddWandererToWorld();
+	}
+
 }
 
 void TutorialGame::ResetWorld() {
@@ -333,12 +329,7 @@ void TutorialGame::InitWorld() {
 	if (navMeshDebug) {
 		freeCam = true;
 		navMesh = new NavMesh(bulletWorld);
-		navMesh->LoadFromFile("Assets/Meshes/NavMeshes/smalltest.navmesh");
-	}
-
-	if (navMeshDebug) {
-		AddTurretToWorld();
-		AddWandererToWorld();
+		navMesh->LoadFromFile("Assets/Meshes/NavMeshes/initiallevel.navmesh");
 	}
 }
 
@@ -428,7 +419,7 @@ Wanderer* TutorialGame::AddWandererToWorld() {
 
 	wanderer->GetRenderObject()->SetColour(Vector4(1, 0, 0, 1));
 
-	wanderer->SetOffset();
+	wanderer->InitPosAndOffset();
 
 	world->AddGameObject(wanderer);
 

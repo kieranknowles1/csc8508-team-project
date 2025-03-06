@@ -36,17 +36,17 @@ using std::string;
 static void APIENTRY DebugCallback(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar *message, const void *userParam);
 #endif;
 
-OGLRenderer::OGLRenderer(Window& w) : RendererBase(w)	{
+OGLRenderer::OGLRenderer(Window* w) : RendererBase(w)	{
 	initState = false;
 #if defined(CSC_USE_SDL2)
   InitWithSDL2(w);
 #elif defined(_WIN32)
-	InitWithWin32(w);
+	InitWithWin32(*w);
 #endif
 	boundMesh		= nullptr;
 	activeShader	= nullptr;
 
-	windowSize = w.GetScreenSize();
+	windowSize = w->GetScreenSize();
 }
 
 OGLRenderer::~OGLRenderer()	{

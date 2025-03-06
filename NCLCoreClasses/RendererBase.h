@@ -19,7 +19,7 @@ namespace NCL::Rendering {
 	public:
 		friend class NCL::Window;
 
-		RendererBase(Window& w);
+		RendererBase(Window* w);
 		virtual ~RendererBase();
 
 		virtual bool HasInitialised() const {return true;}
@@ -47,7 +47,7 @@ namespace NCL::Rendering {
 		virtual void OnWindowDetach() {}; //Most renderers won't care about this
 
 	protected:	
-		Window& hostWindow;
+		Window* hostWindow;
 
 		Vector2i windowSize;
 	};
