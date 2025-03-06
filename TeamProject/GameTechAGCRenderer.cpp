@@ -29,7 +29,7 @@ void NCL::CSC8503::GameTechAGCRenderer::createBuffer(const std::string& name, sc
 	*outTarget = CreateColourBufferTarget(window->GetScreenSize().x, window->GetScreenSize().y, true);
 	*outTexture = CreateFrameBufferTextureSlot(name);
 
-	auto error = sce::Agc::Core::translate(screenTex->GetAGCPointer(), &screenTarget, sce::Agc::Core::RenderTargetComponent::kData);
+	auto error = sce::Agc::Core::translate((*outTexture)->GetAGCPointer(), outTarget, sce::Agc::Core::RenderTargetComponent::kData);
 	checkError(error);
 
 	if (optionalSampler) {
@@ -82,6 +82,9 @@ GameTechAGCRenderer::GameTechAGCRenderer(Window* window) : AGCRenderer(window), 
 	debugTextVertexShader	= new AGCShader("DebugText_vv.ags", allocator);
 	debugTextPixelShader	= new AGCShader("DebugText_p.ags" , allocator);
 
+	postVertexShader = std::make_unique<AGCShader>("post_vv.ags", allocator);
+	postPassthroughShader = std::make_unique<AGCShader>("passthrough_p.ags", allocator);
+
 	allFrames = new FrameData[FRAMES_IN_FLIGHT];
 	for (int i = 0; i < FRAMES_IN_FLIGHT; ++i) {
 
@@ -103,9 +106,8 @@ GameTechAGCRenderer::GameTechAGCRenderer(Window* window) : AGCRenderer(window), 
 	shadowTarget	= CreateDepthBufferTarget(SHADOW_SIZE, SHADOW_SIZE);
 	shadowMap		= CreateFrameBufferTextureSlot("Shadowmap");
 
-	createBuffer(
-		"Screen", &screenTarget, &screenTex, nullptr
-	);
+	createBuffer("Scene", &sceneTarget, &sceneTexture, &sceneSampler);
+	createBuffer("Screen", &screenTarget, &screenTex, nullptr);
 
 	shadowSampler.init()
 		.setXyFilterMode(
@@ -183,12 +185,17 @@ void GameTechAGCRenderer::RenderFrame() {
 	SkyboxPass();
 	//Step 6: Draw the scene to our main scene render target
 	MainRenderPass();
-	//Step 7: Draw the debug data to the main scene render target
+
+	// Step 7: Apply post processing to the scene buffer
+	PostProcessPass();
+
+	//Step 8: Draw UI to the post-processed scene
+	UiPass();
 	UpdateDebugData();
 	RenderDebugLines();
 	RenderDebugText();
-	UiPass();
-	//Step 8: Draw the main scene render target to the screen with a compute shader
+
+	//Step 9: Draw the main scene render target to the screen with a compute shader
 	DisplayRenderPass(); //Puts our scene on screen, uses a compute
 
 	currentFrameIndex = (currentFrameIndex + 1) % FRAMES_IN_FLIGHT;
@@ -279,7 +286,7 @@ void GameTechAGCRenderer::SkyboxPass() {
 
 	sce::Agc::CxRenderTargetMask rtMask = sce::Agc::CxRenderTargetMask().init().setMask(0, 0xFF);
 	frameContext->m_sb.setState(rtMask);
-	frameContext->m_sb.setState(screenTarget);
+	frameContext->m_sb.setState(sceneTarget);
 
 	frameContext->m_sb.setState(depthTarget);
 
@@ -354,7 +361,7 @@ void GameTechAGCRenderer::MainRenderPass() {
 
 	sce::Agc::CxRenderTargetMask rtMask = sce::Agc::CxRenderTargetMask().init().setMask(0, 0xFF);
 	frameContext->m_sb.setState(rtMask);
-	frameContext->m_sb.setState(screenTarget);
+	frameContext->m_sb.setState(sceneTarget);
 
 	frameContext->m_sb.setState(depthTarget);
 
@@ -412,6 +419,33 @@ void GameTechAGCRenderer::UiPass() {
 
 	halfUnitQuad->BindVertexBuffers(frameContext->m_bdr.getStage(sce::Agc::ShaderType::kGs));
 	DrawBoundMeshInstanced(*frameContext, *halfUnitQuad, uiElements.size());
+}
+
+void GameTechAGCRenderer::PostProcessPass()
+{
+	// Just do a passthrough for testing
+	frameContext->setShaders(nullptr, postVertexShader->GetAGCPointer(), postPassthroughShader->GetAGCPointer(), sce::Agc::UcPrimitiveType::Type::kTriList);
+	sce::Agc::CxViewport viewPort;
+	sce::Agc::Core::setViewport(&viewPort, SCREENWIDTH, SCREENHEIGHT, 0, 0, -1.0f, 1.0f);
+	frameContext->m_sb.setState(viewPort);
+
+	sce::Agc::CxRenderTargetMask rtMask = sce::Agc::CxRenderTargetMask().init().setMask(0, 0xFF);
+	frameContext->m_sb.setState(rtMask);
+	frameContext->m_sb.setState(screenTarget);
+
+	sce::Agc::CxDepthStencilControl depthControl;
+	depthControl.init();
+	depthControl.setDepth(sce::Agc::CxDepthStencilControl::Depth::kDisable);
+	depthControl.setDepthFunction(sce::Agc::CxDepthStencilControl::DepthFunction::kAlways);
+	depthControl.setDepthWrite(sce::Agc::CxDepthStencilControl::DepthWrite::kDisable);
+	frameContext->m_sb.setState(depthControl);
+
+	frameContext->m_bdr.getStage(sce::Agc::ShaderType::kPs)
+		.setSamplers(0, 1, &sceneSampler)
+		.setTextures(0, 1, sceneTexture->GetAGCPointer());
+
+	unitQuad->BindVertexBuffers(frameContext->m_bdr.getStage(sce::Agc::ShaderType::kGs));
+	DrawBoundMesh(*frameContext, *unitQuad);
 }
 
 void GameTechAGCRenderer::UpdateDebugData() {

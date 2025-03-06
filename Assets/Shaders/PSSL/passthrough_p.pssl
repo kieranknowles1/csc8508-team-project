@@ -1,0 +1,16 @@
+#include "ShaderConstants.psslh"
+
+Texture2D<float4> texture : register(t0);
+SamplerState sampler : register(s0);
+
+struct VS_OUTPUT
+{
+    float4 position : S_POSITION;
+    float2 uv : TEXCOORD0;
+};
+
+[CxxSymbol("Passthrough::ps")]
+float4 main(VS_OUTPUT vertex) : S_TARGET_OUTPUT
+{
+    return texture.Sample(sampler, vertex.uv);
+}
