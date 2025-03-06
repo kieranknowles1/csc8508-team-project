@@ -39,7 +39,7 @@ static void APIENTRY DebugCallback(GLenum source, GLenum type, GLuint id, GLenum
 OGLRenderer::OGLRenderer(Window* w) : RendererBase(w)	{
 	initState = false;
 #if defined(CSC_USE_SDL2)
-  InitWithSDL2(w);
+  InitWithSDL2(*w);
 #elif defined(_WIN32)
 	InitWithWin32(*w);
 #endif
