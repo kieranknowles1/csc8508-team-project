@@ -62,7 +62,9 @@ void Shoot::SpawnBulletMesh(btVector3 startPos, btVector3 dir, btQuaternion rota
     ));
     paintball->GetRenderObject()->SetIsFlat(true);
     paintball->SetPhysicsObject(new PhysicsObject(paintball));
-    paintball->GetRenderObject()->SetColour(Vector4(rand() % 2, rand() % 2, rand() % 2, 1));
+    paintballColor = btVector4(rand() % 2, rand() % 2, rand() % 2, 1);
+	Vector4 paintballColorVec4(paintballColor.getX(), paintballColor.getY(), paintballColor.getZ(), paintballColor.getW());
+    paintball->GetRenderObject()->SetColour(paintballColorVec4);
 
     btCollisionShape* shape = new btSphereShape(1.0f);
     shape->setMargin(0.01f);
@@ -80,6 +82,11 @@ void Shoot::SpawnBulletMesh(btVector3 startPos, btVector3 dir, btQuaternion rota
 
 void Shoot::SpawnDecal(ShotInfo* shotinfo) {
     if (shotinfo->hitObj != nullptr) {
+		// Choose a random decal texture
+		int randomIndex = rand() % decalTextures.size();
+		std::shared_ptr<NCL::Rendering::Texture> pngTexture = decalTextures[randomIndex];
+        decalColor = paintballColor;
+
         DecalSystem::Decal decal = { shotinfo->hitPos, shotinfo->hitNormal, decalRadius, pngTexture,alphaFade,decalColor };
         decalSystem->ApplyDecal(decal); // Apply the decal using the hit position and normal
     }
