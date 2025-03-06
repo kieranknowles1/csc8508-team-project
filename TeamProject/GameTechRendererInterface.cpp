@@ -74,7 +74,7 @@ namespace NCL::CSC8503 {
     }
 
     void GameTechRendererInterface::Scoreboard() {
-
+        
         Maths::Vector4 scoreboardColor = Vector4(0.1f, 0.1f, 0.1f, 0.7f);
         Maths::Vector4 boxColor = Vector4(0.0f, 0.0f, 0.0f, 0.7f);
         Maths::Vector4 borderColor = Vector4(0.5f, 0.5f, 0.5f, 0.7f); // Highlight color for borders
