@@ -173,7 +173,7 @@ namespace NCL {
 			NCL::PS5::AGCShader* gammaCompute;
 
 			std::unique_ptr<PS5::AGCShader> postVertexShader;
-			std::unique_ptr<PS5::AGCShader> postPassthroughShader;
+			std::unique_ptr<PS5::AGCShader> postPixelShader;
 
 			sce::Agc::CxDepthRenderTarget		shadowTarget;
 			NCL::PS5::AGCTexture*				shadowMap; //ptr into bindless array

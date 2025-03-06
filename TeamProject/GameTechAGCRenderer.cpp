@@ -83,7 +83,7 @@ GameTechAGCRenderer::GameTechAGCRenderer(Window* window) : AGCRenderer(window), 
 	debugTextPixelShader	= new AGCShader("DebugText_p.ags" , allocator);
 
 	postVertexShader = std::make_unique<AGCShader>("post_vv.ags", allocator);
-	postPassthroughShader = std::make_unique<AGCShader>("passthrough_p.ags", allocator);
+	postPixelShader = std::make_unique<AGCShader>("post_p.ags", allocator);
 
 	allFrames = new FrameData[FRAMES_IN_FLIGHT];
 	for (int i = 0; i < FRAMES_IN_FLIGHT; ++i) {
@@ -226,6 +226,10 @@ void GameTechAGCRenderer::WriteRenderPassConstants() {
 		Matrix::View(frameData.lightPosition, Vector3(0, 0, 0), Vector3(0, 1, 0));
 
 	frameData.shadowID = shadowMap->GetAssetID();
+
+	frameData.vingetteSettings.color = Vector3(0, 0, 0);
+	frameData.vingetteSettings.intensity = 2.0f;
+	frameData.vingetteSettings.pulse = vignettePulse;
 
 	currentFrame->data.WriteData<ShaderConstants>(frameData); //Let's start filling up our frame data!
 
@@ -423,8 +427,7 @@ void GameTechAGCRenderer::UiPass() {
 
 void GameTechAGCRenderer::PostProcessPass()
 {
-	// Just do a passthrough for testing
-	frameContext->setShaders(nullptr, postVertexShader->GetAGCPointer(), postPassthroughShader->GetAGCPointer(), sce::Agc::UcPrimitiveType::Type::kTriList);
+	frameContext->setShaders(nullptr, postVertexShader->GetAGCPointer(), postPixelShader->GetAGCPointer(), sce::Agc::UcPrimitiveType::Type::kTriList);
 	sce::Agc::CxViewport viewPort;
 	sce::Agc::Core::setViewport(&viewPort, SCREENWIDTH, SCREENHEIGHT, 0, 0, -1.0f, 1.0f);
 	frameContext->m_sb.setState(viewPort);
@@ -441,6 +444,7 @@ void GameTechAGCRenderer::PostProcessPass()
 	frameContext->m_sb.setState(depthControl);
 
 	frameContext->m_bdr.getStage(sce::Agc::ShaderType::kPs)
+		.setConstantBuffers(0, 1, &currentFrame->constantBuffer)
 		.setSamplers(0, 1, &sceneSampler)
 		.setTextures(0, 1, sceneTexture->GetAGCPointer());
 
