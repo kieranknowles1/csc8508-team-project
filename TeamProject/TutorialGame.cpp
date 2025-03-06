@@ -307,11 +307,14 @@ void TutorialGame::LoadWorldFromFile(int levelNum) {
 	Shoot::GetInstance()->Initialise(bulletWorld,resourceManager.get(), world.get(), renderer->GetDecalSystem());
 	Shoot::GetInstance()->InitShotMasks(player, gun);
 
+	navMeshDebug = true;
 	if (navMeshDebug) {
+		freeCam = true;
+		navMesh = new NavMesh(bulletWorld);
+		navMesh->LoadFromFile("Assets/Meshes/NavMeshes/initiallevel.navmesh");
 		AddTurretToWorld();
 		AddWandererToWorld();
 	}
-
 }
 
 void TutorialGame::ResetWorld() {
@@ -323,13 +326,6 @@ void TutorialGame::ResetWorld() {
 void TutorialGame::InitWorld() {
 	InitBullet();
 	audioEngine.Init();
-
-	navMeshDebug = false;
-	if (navMeshDebug) {
-		freeCam = true;
-		navMesh = new NavMesh(bulletWorld);
-		navMesh->LoadFromFile("Assets/Meshes/NavMeshes/initiallevel.navmesh");
-	}
 }
 
 void TutorialGame::InitNetwork(bool host) {

@@ -1,5 +1,6 @@
 #pragma once
 #include "GameObject.h"
+#include "Shoot.h"
 
 namespace NCL {
 	namespace CSC8503 {

@@ -31,7 +31,7 @@ bool NavEntity::FollowPath(float dt, GameObject* player) {
 		}
 		else {
 			float remainder = speed - dist;
-			btVector3 remainderDir = ((path[nextNode] - nextPoint).normalize()) * remainder;
+			btVector3 remainderDir = ((path[nextNode] - nextPoint).length2() == 0 ? btVector3(0, 0, 0) : ((path[nextNode] - nextPoint).normalize())) * remainder;
 			newPathPoint = nextPoint + remainderDir;
 		}
 	}
@@ -43,23 +43,7 @@ bool NavEntity::FollowPath(float dt, GameObject* player) {
 float NavEntity::YAdjust(btVector3 pos, GameObject* player) {
 	btVector3 upPos = pos + btVector3(0, 5.0f, 0);
 	btVector3 downPos = pos + btVector3(0, -10000.0f, 0);
-	btCollisionWorld::AllHitsRayResultCallback callback(upPos, downPos);
-	float smallestDist = INFINITY;
-	btVector3 hitPoint = btVector3();
-	if (callback.hasHit()) {
-		GameObject* hitObj = nullptr;
-		for (int i = 0; i < callback.m_collisionObjects.size(); i++) { // loop all hits
-			GameObject* hit = static_cast<GameObject*>(callback.m_collisionObjects[i]->getUserPointer());
-			if (!hit->getIsPaintball() && hit != player) { // ignore paintballs
-				btVector3 posHit = callback.m_hitPointWorld[i];
-				float distance = pos.distance(posHit);
-				if (distance < smallestDist) { // find closest valid hit
-					smallestDist = distance;
-					hitPoint = posHit;
-					hitObj = hit;
-				}
-			}
-		}
-	}
-	return smallestDist;
+	btVector3 direction = (downPos - upPos).normalized();
+	ShotInfo* rayResult = Shoot::GetInstance()->RayClosest(upPos, direction);
+	return pos.distance(rayResult->hitPos);
 }
