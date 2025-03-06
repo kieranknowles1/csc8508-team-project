@@ -46,7 +46,7 @@ GameTechRenderer::GameTechRenderer() : OGLRenderer(*Window::GetWindow()) {
 	glClearColor(1, 1, 1, 1);
 
 	//Set up the light properties
-	lightColour = Vector4(1.0f, 0.0f, 0.0f, 1.0f); //0.8f, 0.8f, 0.5f, 1.0f 
+	lightColour = Vector4(0.8f, 0.8f, 0.5f, 1.0f); //0.8f, 0.8f, 0.5f, 1.0f 
 	lightRadius = 1000.0f; 
 	lightPosition = Vector3(-200.0f, 60.0f, -200.0f); //60.0f
 
@@ -820,18 +820,18 @@ void GameTechRenderer::RenderPostProcessing() {
 
 void GameTechRenderer::GenerateScreenTexture(GLuint& into, bool depth) { //lighting does not appear to like floating point textures
 	glGenTextures(1, &into);
-	glBindTexture(GL_TEXTURE_2D, into); //apparently with multiple render targets, all attachments must be same size
+	glBindTexture(GL_TEXTURE_2D, into); //apparently with multiple render targets, all attachments must be same size. What happens when textures to store normals are 16F?
 
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 
-	GLuint format = depth ? GL_DEPTH_COMPONENT24 : GL_RGBA8; //originally GL_RGBA8  16F RGBA8 seems to (mostly) work, 16F does not because deferred rendering likes 32 bits maybe
+	GLuint format = depth ? GL_DEPTH_COMPONENT24 : GL_RGBA16F; //originally GL_RGBA8  16F RGBA8 seems to (mostly) work, 16F does not because deferred rendering likes 32 bits maybe
 	GLuint type = depth ? GL_DEPTH_COMPONENT : GL_RGBA;
-	//GLuint datatype = depth ? GL_UNSIGNED_BYTE : GL_FLOAT; 
+	GLuint datatype = depth ? GL_UNSIGNED_BYTE : GL_FLOAT; 
 
-	glTexImage2D(GL_TEXTURE_2D, 0, format, windowSize.x, windowSize.y, 0, type, GL_UNSIGNED_BYTE, NULL); //for now replacing GL_UNSIGNED_BYTE with datatype 
+	glTexImage2D(GL_TEXTURE_2D, 0, format, windowSize.x, windowSize.y, 0, type, datatype, NULL); //for now replacing GL_UNSIGNED_BYTE with datatype 
 	glBindTexture(GL_TEXTURE_2D, 0);
 }
 
@@ -922,7 +922,7 @@ void GameTechRenderer::DrawPointLights() { //current state: lightSpecularTex not
 }
 
 void GameTechRenderer::CombineBuffers() {//basically final post processing output. Don't need to update matrices as fullscreen quad is not transformed at all
-	glBindFramebuffer(GL_FRAMEBUFFER, hdrFBO); //new context instead of back buffer => may need to redefine some matrices/ variables maybe hdrFBO 
+	glBindFramebuffer(GL_FRAMEBUFFER, hdrFBO); 
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT); //without this line, output is just black 
 	UseShader(*combineShader); 
 	glUniform1i(glGetUniformLocation(combineShader->GetProgramID(), "diffuseTex"), 0);

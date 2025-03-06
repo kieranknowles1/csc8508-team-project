@@ -1,6 +1,6 @@
 #version 400 core
 
-#include "include/vert/texscale.glsl"
+#include "include/vert/texscale.glsl" 
 
 uniform mat4 modelMatrix 	= mat4(1.0f);
 uniform mat4 viewMatrix 	= mat4(1.0f);
@@ -44,7 +44,7 @@ void main(void)
 	OUT.worldPos 	= ( modelMatrix * vec4 ( position ,1)). xyz ;
 	OUT.normal 		= normalize ( normalMatrix * normalize ( normal ));
 	OUT.tangent     = normalize ( normalMatrix * normalize ( tangent.xyz)); //calculate tangent for normal mapping
-	OUT.binormal    = cross ( OUT.tangent, OUT.normal) * OUT.tangent; //calculate the binormal for normal mapping
+	OUT.binormal    = cross ( OUT.tangent, OUT.normal) * tangent.w; //calculate the binormal for normal mapping
 	OUT.colour		= objectColour;
 	gl_Position		= mvp * vec4(position, 1.0);
 }

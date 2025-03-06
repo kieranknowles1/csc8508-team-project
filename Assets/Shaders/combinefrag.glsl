@@ -16,6 +16,7 @@ void main(void) {
 
      fragColour.xyz  = diffuse * 0.1; //ambient
      fragColour.xyz += diffuse * light; //lambert
-     fragColour.xyz += specular;
+     fragColour.xyz += specular; 
+    // fragColour.rgb = pow(fragColour.rgb, vec3(1.0 / 2.2f)); //gamma correction, maybe should be in another shader. Probably should be done last   
      fragColour.a    = 1.0;
 }

@@ -21,11 +21,6 @@ in Vertex {
 out vec4 fragColour[2];
 
 void main(void)   { 
-    /*mat3 TBN = mat3(normalize(IN.tangent), normalize(IN.binormal), normalize(IN.normal));
-
-	vec3 normal = texture2D(normalTex, IN.texCoord).rgb * 2.0 - 1.0; //just this from deferred rendering initially
-	normal      = normalize(TBN * normalize(normal));*/
-	
 
 	if(isFlat){
 		fragColour[0] = IN.colour;
@@ -35,19 +30,22 @@ void main(void)   {
 
 	vec4 albedo = IN.colour;
 	if(hasTexture) {
-	 albedo *= texture2D(diffuseTex, IN.texCoord); //added the 2D
+	 albedo *= texture2D(diffuseTex, IN.texCoord);
+	 //albedo.rgb = pow(albedo.rgb, vec3(2.2));  //added to transform textures into linear space to later be gamma corrected
 	}
 
-	vec3 normal = IN.normal.xyz; //if no normal map then use the vertex normals
-
+	vec3 vecnormal = IN.normal.xyz; //if no normal map then use the vertex normals
 	vec3 mapnormal;
-	 if(hasNormalMap) { //this version of normal calculations is more in line with scene.frag
-	    mat3 TBN = mat3 (normalize(IN.tangent), normalize(IN.binormal), normalize(IN.normal));
-		mapnormal = texture2D(normalTex, IN.texCoord).rgb * 2.0 - 1.0; //added the 2D part
-		mapnormal = normalize(TBN * normalize(mapnormal)); //changed (mapnormal * 2.0 - 1.0) to just mapnormal 
-	    normal = mapnormal;
+	 if(hasNormalMap) { 
+	    mat3 TBN = mat3 (normalize(IN.tangent),normalize(IN.binormal), normalize(IN.normal));
+		mapnormal = texture2D(normalTex, IN.texCoord).rgb * 2.0 - 1.0; 
+		mapnormal = normalize(TBN * normalize(mapnormal));
+	    vecnormal = mapnormal; //the * 2.0 - 1.0 part converts from the texture space of 0.0 to 1.0 over to vector coordinates ranging from -1.0 to 1.0 so this part is still required
 	}
 
+	albedo.a = 1;
 	fragColour[0] = albedo; //all the (non-lighting) colour information goes into here
-	fragColour[1] = vec4(normal.xyz * 0.5 + 0.5, 1.0); 
+	fragColour[1] = vec4(vecnormal.xyz * 0.5 + 0.5, 1.0); //(THE *0.5 + 0.5) may be unneccessary for floating point textures but not sure yet
 	}
+
+	

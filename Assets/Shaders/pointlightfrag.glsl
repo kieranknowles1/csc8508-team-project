@@ -1,7 +1,7 @@
 #version 330 core 
 
 uniform sampler2D depthTex; //need the depth texture to get world space position of fragment light covers
-uniform sampler2D normTex; //do we need to use layout locations again?
+uniform sampler2D normTex; 
 
 uniform vec2 pixelSize;
 uniform vec3 cameraPos;
