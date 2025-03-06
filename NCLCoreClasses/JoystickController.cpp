@@ -58,8 +58,8 @@ namespace NCL {
         case DigitalControl::MenuUp: return buttonPressed(Button::PadUp, false, true);
         case DigitalControl::MenuConfirm: return buttonPressed(Button::A, false, true);
         case DigitalControl::Pause: case DigitalControl::Unpause:
-            return buttonPressed(Button::Select, false, true);
-        case DigitalControl::PauseQuit: return buttonPressed(Button::Select, true, true);
+            return buttonPressed(Button::Start, false, true);
+        case DigitalControl::PauseQuit: return buttonPressed(Button::Start, true, true);
 
         default:
             assert(false);

@@ -17,6 +17,7 @@ namespace NCL {
             PadDown,
             PadLeft,
             PadRight,
+            // Not usable on PS5
             Select,
             Start,
             // L2 and R2 are triggers
@@ -31,7 +32,13 @@ namespace NCL {
             DeckR4,
             DeckR5,
 
-            Max
+            Max,
+
+            // Aliases, to account for different layouts
+            PsCross = A,
+            PsCircle = B,
+            PsSquare = X,
+            PsTriangle = Y,
         };
 
         enum class Analogue {
@@ -61,6 +68,7 @@ namespace NCL {
         // Get the value of a button or analogue input
         // Implementations should return 0 if the button does not exist
         virtual bool internalButtonPressed(Button button) = 0;
+        // Value between -1.0f and 1.0f
         virtual float internalAnalogueValue(Analogue analogue) = 0;
 
         bool buttonPressed(Button button, bool isDebug = false, bool thisFrame = false) const {

@@ -22,6 +22,47 @@ PS5Controller::~PS5Controller(void) {
 	scePadClose(padHandle);
 }
 
+void PS5Controller::Update(float dt) {
+	int ret = scePadReadState(padHandle, &data);
+	if (ret != SCE_OK) {
+		std::cerr << "Failed to read input" << std::endl;
+	}
+	JoystickController::Update(dt);
+}
+
+ScePadButtonDataOffset toSce(JoystickController::Button button) {
+	using enum JoystickController::Button;
+	switch (button)
+	{
+	case PsCross: return SCE_PAD_BUTTON_CROSS;
+	case PsCircle: return SCE_PAD_BUTTON_CIRCLE;
+	case PsSquare: return SCE_PAD_BUTTON_SQUARE;
+	case PsTriangle: return SCE_PAD_BUTTON_TRIANGLE;
+	case PadUp: return SCE_PAD_BUTTON_UP;
+	case PadDown: return SCE_PAD_BUTTON_DOWN;
+	case PadLeft: return SCE_PAD_BUTTON_LEFT;
+	case PadRight: return SCE_PAD_BUTTON_RIGHT;
+	case Start: return SCE_PAD_BUTTON_START;
+	case L1: return SCE_PAD_BUTTON_L1;
+	case L3: return SCE_PAD_BUTTON_L3;
+	case R1: return SCE_PAD_BUTTON_R1;
+	case R3: return SCE_PAD_BUTTON_R3;
+	case Select:
+	case DeckL4:
+	case DeckL5:
+	case DeckR4:
+	case DeckR5:
+		return (ScePadButtonDataOffset)0; // Not present, will fail bitwise AND
+	default: assert(false);
+	}
+}
+
+bool NCL::PS5::PS5Controller::internalButtonPressed(Button button)
+{
+	auto sce = toSce(button);
+	return (data.buttons & sce) != 0;
+}
+
 float ConvertAxis(uint8_t rawValue, uint8_t deadZone) {
 	if (std::abs(rawValue - 128) <= deadZone) {
 		return 0.0f;
@@ -29,73 +70,21 @@ float ConvertAxis(uint8_t rawValue, uint8_t deadZone) {
 	return (rawValue / 128.0f) - 1.0f;
 }
 
-void PS5Controller::Update(float dt) {
-	lastFrameData = data;
-	int ret = scePadReadState(padHandle, &data);
-	if (ret != SCE_OK) {
-		std::cerr << "Failed to read input" << std::endl;
-	}
+float triggerValue(uint8_t raw) {
+	return float(raw) / 256.0f;
 }
 
-bool PS5Controller::buttonPressed(ScePadButtonDataOffset button, bool isDebug, bool thisFrame) const {
-	bool debugMask = data.buttons & DebugMask ? true : false;
-	if (debugMask != isDebug) return false;
-
-
-	bool current = data.buttons & button ? true : false;
-	if (!thisFrame) return current;
-	bool previous = lastFrameData.buttons & button ? true : false;
-	return current && !previous;
-}
-
-float PS5Controller::GetAnalogue(AnalogueControl control) const
+float NCL::PS5::PS5Controller::internalAnalogueValue(Analogue analogue)
 {
-	switch (control)
+	using enum JoystickController::Analogue;
+	switch (analogue)
 	{
-	case AnalogueControl::MoveSidestep:
-		return ConvertAxis(data.leftStick.x, padInfo.stickInfo.deadZoneLeft);
-	case AnalogueControl::MoveUpDown:
-		if (buttonPressed(SCE_PAD_BUTTON_UP)) return 1.0f;
-		return buttonPressed(SCE_PAD_BUTTON_DOWN) ? -1.0f : 0.0f;
-	case AnalogueControl::MoveForward:
-		return -ConvertAxis(data.leftStick.y, padInfo.stickInfo.deadZoneLeft);
-	case AnalogueControl::LookX:
-		return ConvertAxis(data.rightStick.x, padInfo.stickInfo.deadZoneRight) * lookSensitivity;
-	case AnalogueControl::LookY:
-		return ConvertAxis(data.rightStick.y, padInfo.stickInfo.deadZoneRight) * lookSensitivity;
-	default:
-		assert(false);
-	}
-}
-
-bool PS5Controller::GetDigital(DigitalControl button) const
-{
-	switch (button)
-	{
-	case DigitalControl::Fire: return data.analogButtons.r2 >= fireThreshold;
-	case DigitalControl::Jump: return buttonPressed(SCE_PAD_BUTTON_CROSS);
-	case DigitalControl::Sprint: return buttonPressed(SCE_PAD_BUTTON_L3);
-	case DigitalControl::Crouch: return buttonPressed(SCE_PAD_BUTTON_CIRCLE);
-	case DigitalControl::ThirdPerson: return buttonPressed(SCE_PAD_BUTTON_R1, false, true);
-
-	case DigitalControl::WorldRollLeft: return buttonPressed(SCE_PAD_BUTTON_LEFT, false, true);
-	case DigitalControl::WorldRollRight: return buttonPressed(SCE_PAD_BUTTON_RIGHT, false, true);
-	case DigitalControl::WorldPitchUp: return buttonPressed(SCE_PAD_BUTTON_UP, false, true);
-	case DigitalControl::WorldPitchDown: return buttonPressed(SCE_PAD_BUTTON_DOWN, false, true);
-
-	case DigitalControl::DebugBulletOverlay: return buttonPressed(SCE_PAD_BUTTON_UP, true, true);
-	case DigitalControl::DebugFreeCam: return buttonPressed(SCE_PAD_BUTTON_LEFT, true, true);
-	case DigitalControl::DebugReloadWorld: return buttonPressed(SCE_PAD_BUTTON_DOWN, true, true);
-	case DigitalControl::DebugShowProfiling: return buttonPressed(SCE_PAD_BUTTON_RIGHT, true, true);
-
-	case DigitalControl::MenuDown: return buttonPressed(SCE_PAD_BUTTON_DOWN, false, true);
-	case DigitalControl::MenuUp: return buttonPressed(SCE_PAD_BUTTON_UP, false, true);
-	case DigitalControl::MenuConfirm: return buttonPressed(SCE_PAD_BUTTON_CROSS, false, true);
-	case DigitalControl::Pause: case DigitalControl::Unpause:
-		return buttonPressed(SCE_PAD_BUTTON_START, false, true);
-	case DigitalControl::PauseQuit: return buttonPressed(SCE_PAD_BUTTON_OPTIONS, true, true);
-
-	default:
-		assert(false);
+	case LeftStickX: return ConvertAxis(data.leftStick.x, padInfo.stickInfo.deadZoneLeft);
+	case LeftStickY: return ConvertAxis(data.leftStick.y, padInfo.stickInfo.deadZoneLeft);
+	case RightStickX: return ConvertAxis(data.rightStick.x, padInfo.stickInfo.deadZoneRight);
+	case RightStickY: return  ConvertAxis(data.rightStick.y, padInfo.stickInfo.deadZoneRight);
+	case L2: return triggerValue(data.analogButtons.l2);
+	case R2: return triggerValue(data.analogButtons.r2);
+	default: assert(false);
 	}
 }
