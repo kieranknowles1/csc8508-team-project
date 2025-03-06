@@ -33,7 +33,7 @@ void main(void) {
     vec3 viewDir  = normalize(cameraPos - worldPos);
     vec3 halfDir  = normalize(incident + viewDir);
 
-    float lambert    = clamp(dot(incident, normal), 0.0, 1.0); //do lighting calculations need to change to account for floating point textures?
+    float lambert    = clamp(dot(incident, normal), 0.0, 1.0); 
     float rFactor    = clamp(dot(halfDir, normal), 0.0, 1.0);
     float specFactor = clamp(dot(halfDir, normal), 0.0, 1.0);
     specFactor       = pow(specFactor, 80.0); 
