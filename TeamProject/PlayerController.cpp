@@ -1,6 +1,6 @@
 #include "PlayerController.h"
 #include "AudioEngine.h"
-#include "TutorialGame.h"
+
 
 using namespace NCL;
 using namespace CSC8503;
@@ -21,7 +21,6 @@ std::ostream& operator<<(std::ostream& os, const btQuaternion& vec) {
 void PlayerController::Initialise() {
     rb = player->GetPhysicsObject()->GetRigidBody();
     debugDrawer = bulletWorld->getDebugDrawer();
-    pngTexture = resourceManager->getTextures().get(decalTexturePath);
 }
 
 btVector3 GetEulerAngles(btQuaternion quat) {
@@ -80,7 +79,7 @@ void PlayerController::SetGunTransform() {
 
 void PlayerController::HandleShooting(float dt) {
     if (controller->GetDigital(Controller::DigitalControl::Fire) && shotTimer >= shotCooldown) {
-        Shoot();
+        FireShot();
         shotTimer = 0.0f;
     }
     else {
@@ -89,7 +88,8 @@ void PlayerController::HandleShooting(float dt) {
 }
 
 
-void PlayerController::Shoot() {
+
+void PlayerController::FireShot() {
     // Convert camera pitch & yaw to radians
     float pitchRadians = Maths::DegreesToRadians(camera->GetPitch());
     float yawRadians = Maths::DegreesToRadians(yaw);
@@ -97,73 +97,9 @@ void PlayerController::Shoot() {
     btQuaternion pitchQuat(btVector3(1, 0, 0), pitchRadians);
     btQuaternion bulletRotation = camRotOffset * yawQuat * pitchQuat;
     btMatrix3x3 rotationMatrix(bulletRotation);
-
     btVector3 forwardDir = rotationMatrix * btVector3(0, 0, -1);
-    btVector3 forwardPos = (camera->GetPosition() + (forwardDir * 10000));
-    btCollisionWorld::AllHitsRayResultCallback callback(camera->GetPosition(), forwardPos);
-    bulletWorld->rayTest(camera->GetPosition(), forwardPos, callback);
-    
-    btVector3 hitPoint = btVector3();
-	btVector3 hitNormal = btVector3(0, 1, 0); // Default normal (up)
 
-    if (callback.hasHit()) {
-        GameObject* hitObj = nullptr;
-        float smallestDist = INFINITY;
-        for (int i = 0; i < callback.m_collisionObjects.size(); i++) { // loop all hits
-            GameObject* hit = static_cast<GameObject*>(callback.m_collisionObjects[i]->getUserPointer());
-            if (!hit->getIsPaintball() && hit != player && hit != gun) { // ignore paintballs
-                btVector3 posHit = callback.m_hitPointWorld[i];
-                float distance = btPlayerPos.distance(posHit);
-                if (distance < smallestDist){ // find closest valid hit
-                    smallestDist = distance;
-                    hitPoint = posHit;
-					hitNormal = callback.m_hitNormalWorld[i]; // Get the normal of the hit
-                    hitObj = hit;
-                }
-            }
-        }
-
-        if (hitObj != nullptr) { // hit an object of some kind
-         	DecalSystem::Decal decal = { hitPoint, hitNormal, decalRadius, pngTexture,alphaFade,decalColor };
-            decalSystem->ApplyDecal(decal); // Apply the decal using the hit position and normal
-        }
-    }
-    ShootBullet(bulletRotation, hitPoint);
-}
-
-void PlayerController::ShootBullet(btQuaternion bulletRotation ,btVector3 hitPoint) {
-
-    btMatrix3x3 rotationMatrix(bulletRotation);
-    btVector3 adjustedOffset = rotationMatrix * bulletCameraOffset;
-    btVector3 bulletPos = camera->GetPosition() + adjustedOffset;
-    btVector3 shorDirection = (hitPoint - bulletPos).normalize();
-
-    Paintball* paintball = new Paintball();
-    paintball->Initialise(player);
-    Vector3 bulletSize(0.25f, 0.25f, 0.25f);
-    paintball->setInitialPosition(bulletPos);
-    paintball->setRenderScale(bulletSize);
-    paintball->SetRenderObject(new RenderObject(
-        paintball,
-        resourceManager->getMeshes().get("Sphere.msh"),
-        nullptr
-    ));
-    paintball->GetRenderObject()->SetIsFlat(true);
-    paintball->SetPhysicsObject(new PhysicsObject(paintball));
-    paintball->GetRenderObject()->SetColour(Vector4(rand() % 2, rand() % 2, rand() % 2, 1));
-
-    btCollisionShape* shape = new btSphereShape(1.0f);
-    shape->setMargin(0.01f);
-    paintball->GetPhysicsObject()->InitBulletPhysics(bulletWorld, shape, 1.0f);
-    world->AddGameObject(paintball);
-    btVector3 playerVelocity = rb->getLinearVelocity();
-    btVector3 bulletVelocity = playerVelocity + (shorDirection * bulletSpeed);
-
-    // Apply impulse
-    paintball->setIsPaintball(true);
-    paintball->GetPhysicsObject()->GetRigidBody()->setGravity(btVector3(0, 0, 0));
-    paintball->GetPhysicsObject()->GetRigidBody()->applyCentralImpulse(bulletVelocity);
-    paintball->GetPhysicsObject()->GetRigidBody()->activate();
+   Shoot::GetInstance()->ShootBulletPlayer(camera->GetPosition(), forwardDir, bulletRotation);
 }
 
 
@@ -438,11 +374,4 @@ Vector2 PlayerController::getDirectionalInput() const
     Vector2 raw(controller->GetAnalogue(Controller::AnalogueControl::MoveSidestep), controller->GetAnalogue(Controller::AnalogueControl::MoveForward));
     float magnitude = Vector::Length(raw);
     return magnitude <= 1.0f ? raw : raw / magnitude;
-}
-
-void NCL::Paintball::OnCollisionEnter(const CollisionInfo &collisionInfo)
-{
-    if (collisionInfo.otherObject == player) return;
-
-    TutorialGame::getInstance()->delayedRemoveObject(this);
 }

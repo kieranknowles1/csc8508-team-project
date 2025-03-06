@@ -7,6 +7,7 @@
 #include "GameTechRendererInterface.h"
 #include "BulletDebug.h"
 #include <CSC8503CoreClasses/Debug.h>
+#include "Shoot.h"
 
 #include "Window.h"
 
@@ -32,6 +33,7 @@ TutorialGame::TutorialGame(GameTechRendererInterface* renderer, Controller* cont
 
 	loadFromLevel = true;
 	resourceManager = std::make_unique<ResourceManager>(renderer);
+	new Shoot();
 	InitialiseAssets();
 	InitCamera();
 	InitWorld();
@@ -301,10 +303,15 @@ void TutorialGame::LoadWorldFromFile(int levelNum) {
 	levelImporter = new LevelImporter(resourceManager.get(), world.get(), bulletWorld);
 	levelImporter->LoadLevel(levelNum);
 	InitPlayer();
+
+	Shoot::GetInstance()->Initialise(bulletWorld,resourceManager.get(), world.get(), renderer->GetDecalSystem());
+	Shoot::GetInstance()->InitShotMasks(player, gun);
+
 	if (navMeshDebug) {
 		AddTurretToWorld();
 		AddWandererToWorld();
 	}
+
 }
 
 void TutorialGame::ResetWorld() {
@@ -360,7 +367,7 @@ void TutorialGame::InitPlayer() {
 	player->GetPhysicsObject()->GetRigidBody()->setFriction(0.0f);
 	player->GetPhysicsObject()->GetRigidBody()->setDamping(0.0, 0);
 	gun = AddCubeToWorld(Vector3(10, 2, 20), Vector3(0.6, 0.6, 1.6), 0, false);
-	playerController = new PlayerController(player, gun, controller, mainCamera, bulletWorld, world.get(), resourceManager.get(), renderer->GetDecalSystem());
+	playerController = new PlayerController(player, gun, controller, mainCamera, bulletWorld);
 	player->GetRenderObject()->SetColour(Vector4(playerColour));
 
 }
