@@ -8,6 +8,14 @@
 #include "Colors.h"
 
 namespace Lobbies {
+	enum class LobbyAction {
+		JOIN,
+		CREATE,
+		LEAVE
+	};
+
+
+
 	/**
 	 * @brief Color Selection Class.
 	 * 

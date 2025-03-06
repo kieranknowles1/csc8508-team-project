@@ -6,7 +6,9 @@
 #include "Network/Network.hpp"
 #include "PlayerObject.h"
 #include "User.hpp"
+#include "Lobby.hpp"
 
+using namespace Lobbies;
 
 namespace Packet {
 	/**
@@ -20,7 +22,9 @@ namespace Packet {
 		PLAYER_STATE_CHANGE = CUSTOM_TYPE + 2,
 		OBJECT_CHANGE_GRAVITY = CUSTOM_TYPE + 3,
 		START_GAME = CUSTOM_TYPE + 4,
-		USER_INFORMATION = CUSTOM_TYPE + 5
+		USER_INFO = CUSTOM_TYPE + 5,
+		ASSIGN_HOST = CUSTOM_TYPE + 6,
+		REQUEST_USERID = CUSTOM_TYPE + 7
 	};
 
 
@@ -115,10 +119,13 @@ namespace Packet {
 	 */
 	class PlayerChangeStatePacket : public Packet {
 	public:
-		PlayerChangeStatePacket(int playerID, const PlayerState& state, int sequenceNum) :
-			Packet(static_cast<Type>(PacketType::PLAYER_STATE_CHANGE), static_cast<int>(Channel::UNSEQUENCED), sequenceNum),
+		PlayerChangeStatePacket(int playerID, const PlayerState& state) :
+			Packet(static_cast<Type>(PacketType::PLAYER_STATE_CHANGE), static_cast<int>(Channel::UNSEQUENCED), 0),
 			m_playerID(playerID), m_newState(state)
 		{}
+
+		int GetPlayerID() const { return m_playerID; }
+		PlayerState GetState() const { return m_newState; }
 
 	private:
 		int m_playerID;
@@ -127,30 +134,83 @@ namespace Packet {
 
 
 	/**
-	 * @brief Packet used to start the game simultaneously for everyone in the
-	 * lobby.
+	 * @brief A simple packet to be broadcast to all players simultaneously to
+	 * start the game.
 	 */
-	class StartGame : public Packet {
+	class StartGamePacket : public Packet {
 	public:
-		StartGame(int sequenceNum) :
-			Packet(static_cast<Type>(PacketType::START_GAME), static_cast<int>(Channel::RELIABLE), sequenceNum) {}
+		StartGamePacket() :
+			Packet(static_cast<Type>(PacketType::START_GAME), static_cast<uint8_t>(Channel::RELIABLE), 0)
+		{}
 	};
 
 
 	/**
-	 * @brief Packet for sending user information.
-	 * 
-	 * Translation packet for User Objects (serialising and de-serialising).
+	 * @brief A packet for assigning the host of a lobby.
 	 */
-	class UserInformation : public Packet {
+	class AssignHostPacket : public Packet {
 	public:
-		UserInformation(Lobbies::User user, int sequenceNum) :
-			Packet(static_cast<Type>(PacketType::USER_INFORMATION), static_cast<int>(Channel::RELIABLE), sequenceNum),
-			m_user(user)
+		/**
+		 * @brief Constructor for AssignHostPacket.
+		 * @param hostID The ID of the host user.
+		 * @param destination - If nullptr, will broadcast.
+		 */
+		AssignHostPacket(int hostID, ENetPeer* destination = nullptr) :
+			Packet(static_cast<Type>(PacketType::ASSIGN_HOST), static_cast<uint8_t>(Channel::UNSEQUENCED), 0),
+			m_hostID(hostID), m_peer(destination)
 		{}
 
+		int GetHostID() const { return m_hostID; }
+		ENetPeer* GetPeer() const { return m_peer; }
+
 	private:
-		Lobbies::User m_user;
+		const int m_hostID;
+		ENetPeer* m_peer; // Only used when sending direct. Is not translated.
+	};
+
+
+	/**
+	 * @brief A packet for sending user data over the network.
+	 * 
+	 * How the packet is handled depends upon the LobbyAction provided.
+	 * JOIN - Adds the user to the local lobby.
+	 * CREATE - Usually a response from a RequestUserIDPacket
+	 * LEAVE - Removes the user from the local lobby.
+	 */
+	class UserInfoPacket : public Packet {
+	public:
+		UserInfoPacket(User user, LobbyAction action) :
+			Packet(static_cast<Type>(PacketType::USER_INFO), static_cast<uint8_t>(Channel::RELIABLE), 0),
+			m_user(user), m_action(action)
+		{}
+
+		User GetUser() const { return m_user; }
+		LobbyAction GetAction() const { return m_action; }
+
+	private:
+		const User m_user;
+		const LobbyAction m_action;
+	};
+
+
+	/**
+	 * @brief A simple packet for requesting a unique user id from the server.
+	 */
+	class RequestUserIDPacket : public Packet {
+	public:
+		/**
+		 * @brief Constructor for RequestUserIDPacket.
+		 * @param destination - nullptr for broadcasting, otherwise, direct.
+		 */
+		RequestUserIDPacket(ENetPeer* destination) :
+			Packet(static_cast<Type>(PacketType::REQUEST_USERID), static_cast<uint8_t>(Channel::UNSEQUENCED), 0),
+			m_peer(destination)
+		{}
+
+		ENetPeer* GetPeer() const { return m_peer; }
+
+	private:
+		ENetPeer* m_peer;
 	};
 }
 
