@@ -51,7 +51,7 @@ namespace Lobbies {
 
 		/**
 		 * @brief Convert raw byte data into a User object. 
-		 * @param data A byte buffer that MUST BE NULL TERMINATED.
+		 * @param data - A byte buffer that MUST BE NULL TERMINATED.
 		 */
 		static User Deserialize(const char* data) {
 			unsigned int userID;
