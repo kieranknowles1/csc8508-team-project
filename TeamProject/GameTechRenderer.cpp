@@ -18,7 +18,7 @@ using namespace CSC8503;
 
 Matrix4 biasMatrix = Matrix::Translation(Vector3(0.5f, 0.5f, 0.5f)) * Matrix::Scale(Vector3(0.5f, 0.5f, 0.5f));
 
-GameTechRenderer::GameTechRenderer() : OGLRenderer(*Window::GetWindow()), GameTechRendererInterface(Window::GetWindow()) {
+GameTechRenderer::GameTechRenderer(Window* window) : OGLRenderer(window), GameTechRendererInterface(window) {
 	glEnable(GL_DEPTH_TEST);
 
 	debugShader = std::make_unique<OGLShader>("Debug.vert", "Debug.frag");
@@ -309,7 +309,7 @@ void GameTechRenderer::RenderSkybox() {
 	glDisable(GL_DEPTH_TEST);
 
 	Matrix4 viewMatrix = camera->BuildViewMatrix();
-	Matrix4 projMatrix = camera->BuildProjectionMatrix(hostWindow.GetScreenAspect());
+	Matrix4 projMatrix = camera->BuildProjectionMatrix(hostWindow->GetScreenAspect());
 
 	UseShader(*skyboxShader);
 
@@ -334,7 +334,7 @@ void GameTechRenderer::RenderSkybox() {
 
 void GameTechRenderer::RenderCamera() {
 	Matrix4 viewMatrix = camera->BuildViewMatrix();
-	Matrix4 projMatrix = camera->BuildProjectionMatrix(hostWindow.GetScreenAspect());
+	Matrix4 projMatrix = camera->BuildProjectionMatrix(hostWindow->GetScreenAspect());
 
 	UseShader(*sceneShader);
 	int projLocation	= glGetUniformLocation(sceneShader->GetProgramID(), "projMatrix");
@@ -428,7 +428,7 @@ void GameTechRenderer::NewRenderLines() {
 	}
 
 	Matrix4 viewMatrix = camera->BuildViewMatrix();
-	Matrix4 projMatrix = camera->BuildProjectionMatrix(hostWindow.GetScreenAspect());
+	Matrix4 projMatrix = camera->BuildProjectionMatrix(hostWindow->GetScreenAspect());
 
 	Matrix4 viewProj  = projMatrix * viewMatrix;
 
@@ -780,7 +780,7 @@ void GameTechRenderer::RenderDecals() {
 		// Projection matrix is required because decals require projection from world space onto a surface,
 		// which is done by projecting the decal onto the surface using the normal of the surface.
 		Matrix4 viewMatrix = camera->BuildViewMatrix();
-		Matrix4 projMatrix = camera->BuildProjectionMatrix(hostWindow.GetScreenAspect());
+		Matrix4 projMatrix = camera->BuildProjectionMatrix(hostWindow->GetScreenAspect());
 		Matrix4 viewProjMatrix = projMatrix * viewMatrix;
 
 		glUniform1f(alphaFadeLocation, decal.alphaFade);

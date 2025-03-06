@@ -21,8 +21,13 @@ namespace NCL {
 			: public OGLRenderer
 			, public GameTechRendererInterface {
 		public:
-			GameTechRenderer();
-			~GameTechRenderer();
+			void drawFrame(float dt) override {
+				Update(dt);
+				Render();
+			}
+
+			GameTechRenderer(Window* window);
+			~GameTechRenderer() override;
 
 			Mesh* LoadMesh(const std::string& name) override;
 			Texture* LoadTexture(const std::string& name) override;

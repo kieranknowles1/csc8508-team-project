@@ -42,6 +42,5 @@ PS5Window::~PS5Window(void) {
 }
 
 bool PS5Window::InternalUpdate() {
-	testController->Update(1.0f);
 	return true;
 }

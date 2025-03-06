@@ -3,7 +3,7 @@
 layout (location = 0) in vec2 aPos;      // 2D position in normalized device coordinates (NDC)
 layout (location = 1) in vec2 aTexCoord; // Texture coordinates
 
-out vec2 TexCoord; // Pass texture coordinates to fragment shader
+out vec2 texCoord; // Pass texture coordinates to fragment shader
 out vec4 Color;    // Pass color to fragment shader
 
 uniform vec2 position; // Normalized screen-space position (0 to 1)
@@ -15,6 +15,6 @@ void main() {
     vec2 scaledPos = (aPos * size) + position;
     gl_Position = vec4(scaledPos * 2.0 - 1.0, 0.0, 1.0);
     
-    TexCoord = aTexCoord;
+    texCoord = aTexCoord;
     Color = color;
 }

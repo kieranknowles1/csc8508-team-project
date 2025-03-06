@@ -25,18 +25,23 @@ namespace NCL {
 	namespace CSC8503 {
 		class RenderObject;
 
-		class GameTechAGCRenderer : 
+		class GameTechAGCRenderer :
 			public NCL::PS5::AGCRenderer,
-			public NCL::CSC8503::GameTechRendererInterface	
+			public NCL::CSC8503::GameTechRendererInterface
 		{
 		public:
-			GameTechAGCRenderer();
+			GameTechAGCRenderer(Window* window);
 			~GameTechAGCRenderer();
 
 			virtual Mesh*		LoadMesh(const std::string& name)				override;
 			virtual Texture*	LoadTexture(const std::string& name)			override;
 
 		protected:
+			void drawFrame(float dt) override {
+				Update(dt);
+				Render();
+			}
+
 			void RenderFrame()	override;
 			void UpdateObjectList();
 
@@ -45,7 +50,7 @@ namespace NCL {
 			void WriteRenderPassConstants();
 			void DrawObjects();
 			void UpdateDebugData();
-			
+
 			void RenderDebugLines();
 			void RenderDebugText();
 
@@ -65,7 +70,7 @@ namespace NCL {
 			all of the data required by the frame. We can then make Buffers out of this at any
 			offset we want to send to our shaders - in this case we're going to use one bug allocation
 			to hold both the constants used by shaders, as well as all of the debug vertices, and object
-			matrices. No fancy suballocations here, the allocator is as simple as it gets - it just 
+			matrices. No fancy suballocations here, the allocator is as simple as it gets - it just
 			advances or 'bumps' a pointer along. Perfect for recording a frame's data to memory!
 			*/
 			struct BumpAllocator {

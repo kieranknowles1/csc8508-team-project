@@ -15,6 +15,7 @@ https://research.ncl.ac.uk/game/
 #include "Mouse.h"
 
 #include "Vector.h"
+#include "GameTimer.h"
 
 #include <nlohmann/json.hpp>
 
@@ -60,11 +61,6 @@ namespace NCL {
 	public:
 		static Window* CreateGameWindow(const WindowInitialisation& init);
 
-		static void DestroyGameWindow() {
-			delete window;
-			window = nullptr;
-		}
-
 		bool		IsMinimised() const { return minimised;	 }
 
 		bool		UpdateWindow();
@@ -92,11 +88,9 @@ namespace NCL {
 		virtual void	SetConsolePosition(int x, int y) {};
 		virtual void	ShowConsole(bool state) {};
 
-		static const Keyboard*	 GetKeyboard() { return keyboard; }
-		static const Mouse*		 GetMouse() { return mouse; }
-		static const GameTimer&	 GetTimer() { return timer; }
-
-		static Window*	const GetWindow() { return window; }
+		const Keyboard* GetKeyboard() { return keyboard; }
+		const Mouse* GetMouse() { return mouse; }
+		const GameTimer& GetTimer() { return timer; }
 
 		void SetWindowEventHandler(const WindowEventHandler& e) {
 			eventHandler = e;
@@ -119,10 +113,9 @@ namespace NCL {
 
 		std::string			windowTitle;
 
-		static Window*		window;
-		static Keyboard*	keyboard;
-		static Mouse*		mouse;
+		Keyboard* keyboard;
+		Mouse* mouse;
 
-		static GameTimer	timer;
+		GameTimer timer;
 	};
 }
