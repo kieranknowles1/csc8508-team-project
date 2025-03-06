@@ -35,7 +35,7 @@ public:
 
 		// set special type collision
 		collisionType = collisionInfo.otherObject->getType();
-		if (collisionInfo.otherObject->getType() == 'J' || collisionInfo.otherObject->getType() == 'S') {
+		if (collisionInfo.otherObject->getType() == GameObject::Type::JumpPad || collisionInfo.otherObject->getType() == GameObject::Type::Slime) {
 			collisionNormal = collisionInfo.contactNormal;
 			collisionPoint = collisionInfo.contactPointA;
 		}
@@ -77,7 +77,7 @@ public:
 		}
 		// set special type collision
 		collisionType = collision.otherObject->getType();
-		if (collision.otherObject->getType() == 'J' || collision.otherObject->getType() == 'S') {
+		if (collision.otherObject->getType() == GameObject::Type::JumpPad || collision.otherObject->getType() == GameObject::Type::Slime) {
 			collisionNormal = collision.contactNormal;
 			collisionPoint = collision.contactPointA;
 		}
@@ -89,11 +89,11 @@ public:
 		this->GetPhysicsObject()->GetRigidBody()->setLinearVelocity(movement);
 	}
 
-	char getType() {
+	Type getCollisionType() {
 		return collisionType;
 	}
-	void resetType() {
-		collisionType = 'N'; //type None
+	void resetCollisionType() {
+		collisionType = GameObject::Type::Default;
 	}
 	void setCollided(int collidedIn) {
 		collided = collidedIn;
@@ -125,6 +125,6 @@ private:
 	btVector3 collisionNormal = btVector3(0, 1, 0);
 	btVector3 collisionPoint = btVector3(0, 0, 0);
 	std::list<GameObject*> collidedObjects;
-	char collisionType;
+	Type collisionType;
 	PlayerState state;
 };
