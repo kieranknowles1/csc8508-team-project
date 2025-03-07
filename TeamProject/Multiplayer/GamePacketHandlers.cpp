@@ -216,12 +216,13 @@ namespace Packet {
 
 #pragma region AssignHostPacketHandler
 	void AssignHostPacketHandler::Handle(const std::shared_ptr<Packet> packet) {
-	
+		const AssignHostPacket* hostPacket = std::static_pointer_cast<AssignHostPacket>(packet).get();
+		std::optional<Lobby>& lobby = TutorialGame::GetLobby();
+		if (lobby.has_value()) lobby->SetHost(hostPacket->GetHostID());
 	}
 
 	std::shared_ptr<Packet> AssignHostPacketHandler::Translate(const ENetEvent* event) const {
 		return std::make_shared<Packet>();
-
 	}
 
 	ENetPacket* AssignHostPacketHandler::ToENetPacket(const std::shared_ptr<Packet> packet) const {
