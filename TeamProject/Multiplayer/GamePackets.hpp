@@ -201,6 +201,7 @@ namespace Packet {
 		/**
 		 * @brief Constructor for RequestUserIDPacket.
 		 * @param destination - nullptr for broadcasting, otherwise, direct.
+		 * Used for responding.
 		 */
 		RequestUserIDPacket(ENetPeer* destination) :
 			Packet(static_cast<Type>(PacketType::REQUEST_USERID), static_cast<uint8_t>(Channel::UNSEQUENCED), 0),
