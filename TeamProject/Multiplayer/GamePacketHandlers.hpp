@@ -9,7 +9,7 @@ namespace Packet {
 		DeltaPacketHandler() : PacketHandler(static_cast<Type>(PacketType::DELTA)) {}
 
 		void Handle(const std::shared_ptr<Packet> packet) override;
-		std::shared_ptr<Packet> Translate(const ENetPacket* packet) const override;
+		std::shared_ptr<Packet> Translate(const ENetEvent* event) const override;
 		ENetPacket* ToENetPacket(const std::shared_ptr<Packet> packet) const override;
 	};
 
@@ -19,7 +19,7 @@ namespace Packet {
 		PositionPacketHandler() : PacketHandler(static_cast<Type>(PacketType::POSITION)) {}
 
 		void Handle(const std::shared_ptr<Packet> packet) override;
-		std::shared_ptr<Packet> Translate(const ENetPacket* packet) const override;
+		std::shared_ptr<Packet> Translate(const ENetEvent* event) const override;
 		ENetPacket* ToENetPacket(const std::shared_ptr<Packet> packet) const override;
 	};
 
@@ -29,7 +29,7 @@ namespace Packet {
 		PlayerStateChangePacketHandler() : PacketHandler(static_cast<Type>(PacketType::PLAYER_STATE_CHANGE)) {}
 
 		void Handle(const std::shared_ptr<Packet> packet) override;
-		std::shared_ptr<Packet> Translate(const ENetPacket* packet) const override;
+		std::shared_ptr<Packet> Translate(const ENetEvent* event) const override;
 		ENetPacket* ToENetPacket(const std::shared_ptr<Packet> packet) const override;
 	};
 
@@ -39,7 +39,7 @@ namespace Packet {
 		ObjectChangeGravityPacketHandler() : PacketHandler(static_cast<Type>(PacketType::OBJECT_CHANGE_GRAVITY)) {}
 
 		void Handle(const std::shared_ptr<Packet> packet) override;
-		std::shared_ptr<Packet> Translate(const ENetPacket* packet) const override;
+		std::shared_ptr<Packet> Translate(const ENetEvent* event) const override;
 		ENetPacket* ToENetPacket(const std::shared_ptr<Packet> packet) const override;
 	};
 
@@ -49,7 +49,7 @@ namespace Packet {
 		StartGamePacketHandler() : PacketHandler(static_cast<Type>(PacketType::START_GAME)) {}
 
 		void Handle(const std::shared_ptr<Packet> packet) override;
-		std::shared_ptr<Packet> Translate(const ENetPacket* packet) const override;
+		std::shared_ptr<Packet> Translate(const ENetEvent* event) const override;
 		ENetPacket* ToENetPacket(const std::shared_ptr<Packet> packet) const override;
 	};
 
@@ -59,7 +59,7 @@ namespace Packet {
 		AssignHostPacketHandler() : PacketHandler(static_cast<Type>(PacketType::ASSIGN_HOST)) {}
 
 		void Handle(const std::shared_ptr<Packet> packet) override;
-		std::shared_ptr<Packet> Translate(const ENetPacket* packet) const override;
+		std::shared_ptr<Packet> Translate(const ENetEvent* event) const override;
 		ENetPacket* ToENetPacket(const std::shared_ptr<Packet> packet) const override;
 	};
 
@@ -69,7 +69,7 @@ namespace Packet {
 		UserInfoPacketHandler() : PacketHandler(static_cast<Type>(PacketType::USER_INFO)) {}
 
 		void Handle(const std::shared_ptr<Packet> packet) override;
-		std::shared_ptr<Packet> Translate(const ENetPacket* packet) const override;
+		std::shared_ptr<Packet> Translate(const ENetEvent* event) const override;
 		ENetPacket* ToENetPacket(const std::shared_ptr<Packet> packet) const override;
 	};
 
@@ -79,7 +79,7 @@ namespace Packet {
 		RequestUserIDPacketHandler() : PacketHandler(static_cast<Type>(PacketType::REQUEST_USERID)) {}
 
 		void Handle(const std::shared_ptr<Packet> packet) override;
-		std::shared_ptr<Packet> Translate(const ENetPacket* packet) const override;
+		std::shared_ptr<Packet> Translate(const ENetEvent* event) const override;
 		ENetPacket* ToENetPacket(const std::shared_ptr<Packet> packet) const override;
 	};
 }

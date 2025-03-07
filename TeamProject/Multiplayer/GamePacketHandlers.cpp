@@ -14,7 +14,8 @@ namespace Packet {
 		object->GetPhysicsObject()->GetRigidBody()->setAngularVelocity(deltaPacket->GetAngularVelocity());
 	}
 	
-	std::shared_ptr<Packet> DeltaPacketHandler::Translate(const ENetPacket* packet) const {
+	std::shared_ptr<Packet> DeltaPacketHandler::Translate(const ENetEvent* event) const {
+		ENetPacket* packet = event->packet;
 		Type type;
 		uint8_t channel;
 		uint32_t sequenceNumber;
@@ -95,7 +96,8 @@ namespace Packet {
 		body->getWorldTransform().setRotation(positionPacket->GetOrientation());
 	}
 
-	std::shared_ptr<Packet> PositionPacketHandler::Translate(const ENetPacket* packet) const {
+	std::shared_ptr<Packet> PositionPacketHandler::Translate(const ENetEvent* event) const {
+		ENetPacket* packet = event->packet;
 		Type type;
 		uint8_t channel;
 		uint32_t sequenceNumber;
@@ -171,7 +173,7 @@ namespace Packet {
 
 	}
 
-	std::shared_ptr<Packet> PlayerStateChangePacketHandler::Translate(const ENetPacket* packet) const {
+	std::shared_ptr<Packet> PlayerStateChangePacketHandler::Translate(const ENetEvent* event) const {
 		return std::make_shared<Packet>();
 	}
 
@@ -186,7 +188,7 @@ namespace Packet {
 
 	}
 
-	std::shared_ptr<Packet> ObjectChangeGravityPacketHandler::Translate(const ENetPacket* packet) const {
+	std::shared_ptr<Packet> ObjectChangeGravityPacketHandler::Translate(const ENetEvent* event) const {
 		return std::make_shared<Packet>();
 	}
 
@@ -201,7 +203,7 @@ namespace Packet {
 	
 	}
 
-	std::shared_ptr<Packet> StartGamePacketHandler::Translate(const ENetPacket* packet) const {
+	std::shared_ptr<Packet> StartGamePacketHandler::Translate(const ENetEvent* event) const {
 		return std::make_shared<Packet>();
 
 	}
@@ -217,7 +219,7 @@ namespace Packet {
 	
 	}
 
-	std::shared_ptr<Packet> AssignHostPacketHandler::Translate(const ENetPacket* packet) const {
+	std::shared_ptr<Packet> AssignHostPacketHandler::Translate(const ENetEvent* event) const {
 		return std::make_shared<Packet>();
 
 	}
@@ -233,7 +235,7 @@ namespace Packet {
 	
 	}
 
-	std::shared_ptr<Packet> UserInfoPacketHandler::Translate(const ENetPacket* packet) const {
+	std::shared_ptr<Packet> UserInfoPacketHandler::Translate(const ENetEvent* event) const {
 		return std::make_shared<Packet>();
 
 	}
@@ -249,7 +251,7 @@ namespace Packet {
 	
 	}
 
-	std::shared_ptr<Packet> RequestUserIDPacketHandler::Translate(const ENetPacket* packet) const {
+	std::shared_ptr<Packet> RequestUserIDPacketHandler::Translate(const ENetEvent* event) const {
 		return std::make_shared<Packet>();
 
 	}

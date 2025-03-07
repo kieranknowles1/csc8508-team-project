@@ -134,7 +134,7 @@ void Network::Tick(float dt) {
 				DisconnectPeer();
 				break;
 			case ENET_EVENT_TYPE_RECEIVE:
-				HandleIncomingPacket(event.packet);
+				HandleIncomingPacket(&event);
 				break;
 			}
 			enet_packet_destroy(event.packet);
@@ -176,13 +176,14 @@ bool Network::ConnectPeer() {
 }
 
 
-void Network::HandleIncomingPacket(ENetPacket* packet) {
+void Network::HandleIncomingPacket(ENetEvent* event) {
+	ENetPacket* packet = event->packet;
 	Packet::Type packetType;
 	memcpy(&packetType, packet->data, sizeof(Packet::Type));
 
 	Packet::PacketRegister* packetRegister = Packet::PacketRegister::GetRegister();
 	Packet::PacketHandler* packetHandler = packetRegister->GetHandler(packetType);
-	std::shared_ptr<Packet::Packet> translated = packetHandler->Translate(packet);
+	std::shared_ptr<Packet::Packet> translated = packetHandler->Translate(event);
 
 	m_receiveBuffer.Insert(translated);
 }

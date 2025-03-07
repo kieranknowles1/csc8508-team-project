@@ -167,7 +167,7 @@ protected:
 
 private:
 	bool ConnectPeer();
-	void HandleIncomingPacket(ENetPacket* packet);
+	void HandleIncomingPacket(ENetEvent* event);
 	void DisconnectPeer();
 
 	std::thread m_networkThread;

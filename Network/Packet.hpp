@@ -83,10 +83,10 @@ namespace Packet {
 
 		/**
 		 * @brief Convert the ENet packet into a Packet type.
-		 * @param packet the received ENetPacket.
-		 * @return Pointer to the created packet.
+		 * @param event - The received ENetEvent containing the packet.
+		 * @return Pointer to the translated packet.
 		 */
-		virtual std::shared_ptr<Packet> Translate(const ENetPacket* packet) const = 0;
+		virtual std::shared_ptr<Packet> Translate(const ENetEvent* event) const = 0;
 
 		/**
 		 * @brief Creates an ENet Packet.
