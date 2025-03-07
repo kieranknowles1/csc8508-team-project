@@ -174,6 +174,10 @@ void LevelImporter::HandleTypes(GameObject* obj) {
         obj->GetRenderObject()->SetDefaultTexture(resourceManager->getTextures().get("ground_0031_color_1k.jpg"));
         obj->GetRenderObject()->SetNormal(resourceManager->getTextures().get("ground_0031_normal_opengl_1k.png"));
         break;
+    case GameObject::Type::PointLight:
+        obj->GetRenderObject()->SetColour(Vector4(10.0f, 10.0f, 10.0f, 1));
+        obj->GetRenderObject()->SetDefaultTexture(nullptr);
+        obj->GetRenderObject()->SetNormal(nullptr);
     default:
         break;
     }
