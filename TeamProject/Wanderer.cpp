@@ -13,22 +13,36 @@ Wanderer::Wanderer(GameObject* p, NavMesh* mesh) :
 	stateMachine = new StateMachine();
 
 	State* playerNear = new State([&](float dt)-> void {
-		this->PlayerNear();
+		this->PlayerNear(dt);
 	});
 
 	State* playerFar = new State([&](float dt)-> void {
-		this->PlayerFar();
+		this->PlayerFar(dt);
 	});
 
 	stateMachine->AddState(playerFar);
 	stateMachine->AddState(playerNear);
 
 	stateMachine->AddTransition(new StateTransition(playerFar, playerNear, [&]()->bool {
-		return playerDist <= senseDistance;
+		if (playerDist <= senseDistance) {
+			GetRenderObject()->SetColour(Vector4(1, 0, 0, 1));
+			return true;
+		}
+		else {
+			return false;
+		}
 		}));
 
 	stateMachine->AddTransition(new StateTransition(playerNear, playerFar, [&]()->bool {
-		return playerDist > senseDistance;
+		if (playerDist > senseDistance + 30.0f) {
+			GetRenderObject()->SetColour(Vector4(0, 1, 0, 1));
+			curPath = navMesh->FindPath(curPathPoint, navMesh->GetRandomPointInNavMesh());
+			NewPath(curPath);
+			return true;
+		}
+		else {
+			return false;
+		}
 		}));
 }
 
@@ -41,18 +55,7 @@ void Wanderer::Update(float dt) {
 	UpdatePlayerDistance();
 	stateMachine->Update(dt);
 
-	btTransform trans = GetTransform();
-	if (FollowPath(dt, player)) {
-		btVector3 newPos = curPathPoint + offset;
-		trans.setOrigin(newPos);
-		btRigidBody* body = physicsObject->GetRigidBody();
-		body->setWorldTransform(trans);
-		navMesh->DebugDrawPath(curPath);
-	}
-	else {
-		curPath = navMesh->FindPath(curPathPoint, navMesh->GetRandomPointInNavMesh());
-		NewPath(curPath);
-	}
+
 }
 
 void Wanderer::InitPosAndOffset() {
@@ -80,10 +83,21 @@ void Wanderer::UpdatePlayerDistance() {
 	playerDist = wl.distance(pl);
 }
 
-void Wanderer::PlayerNear() {
-	GetRenderObject()->SetColour(Vector4(1, 0, 0, 1));
+void Wanderer::PlayerNear(float dt) {
+	
 }
 
-void Wanderer::PlayerFar() {
-	GetRenderObject()->SetColour(Vector4(0, 1, 0, 1));
+void Wanderer::PlayerFar(float dt) {
+	btTransform trans = GetTransform();
+	if (FollowPath(dt, player)) {
+		btVector3 newPos = curPathPoint + offset;
+		trans.setOrigin(newPos);
+		btRigidBody* body = physicsObject->GetRigidBody();
+		body->setWorldTransform(trans);
+		navMesh->DebugDrawPath(curPath);
+	}
+	else {
+		curPath = navMesh->FindPath(curPathPoint, navMesh->GetRandomPointInNavMesh());
+		NewPath(curPath);
+	}
 }

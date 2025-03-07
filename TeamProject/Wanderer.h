@@ -14,8 +14,8 @@ namespace NCL {
 			void InitPosAndOffset();
 
 		private:
-			void PlayerNear();
-			void PlayerFar();
+			void PlayerNear(float dt);
+			void PlayerFar(float dt);
 
 			NavMesh* navMesh;
 			std::vector<btVector3> curPath = {};

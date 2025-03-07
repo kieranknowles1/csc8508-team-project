@@ -94,6 +94,30 @@ int NavMesh::GetTriangleContainingPoint(const btVector3& point) {
     return -1;
 }
 
+float NavMesh::GetYFromPoint(float x, float z) {
+    btVector3 pointXZ(x, 0, z);  // Ignore Y for triangle search
+
+    for (size_t i = 0; i < triangles.size(); ++i) {
+        const Triangle& tri = triangles[i];
+
+        // Project triangle vertices onto the XZ plane
+        const btVector3& A = vertices[tri.v1];
+        const btVector3& B = vertices[tri.v2];
+        const btVector3& C = vertices[tri.v3];
+
+        btVector3 aXZ(A.x(), 0, A.z());
+        btVector3 bXZ(B.x(), 0, B.z());
+        btVector3 cXZ(C.x(), 0, C.z());
+
+        if (PointInTriangle(pointXZ, aXZ, bXZ, cXZ)) {
+            return GetBarycentricInterpolatedY(A, B, C, x, z);
+        }
+    }
+
+    std::cerr << "WARNING: No triangle found for (" << x << ", " << z << "). Returning default Y = 0.\n";
+    return 0.0f;  // Return 0 or a default height if no triangle is found
+}
+
 // Get the neighbors of a given triangle
 std::vector<int> NavMesh::GetNeighbors(int triangleIndex) {
     std::vector<int> neighbors;
@@ -326,4 +350,26 @@ std::vector<btVector3> NavMesh::ApplyFunnelAlgorithm(const btVector3& start, con
 
     smoothPath.push_back(end);  // End at the actual end position
     return smoothPath;
+}
+
+float NavMesh::GetBarycentricInterpolatedY(const btVector3& A, const btVector3& B, const btVector3& C, float x, float z) {
+    btVector3 P(x, 0, z); // XZ input, ignore Y
+
+    // Compute Barycentric coordinates
+    btVector3 v0 = C - A;
+    btVector3 v1 = B - A;
+    btVector3 v2 = P - A;
+
+    float d00 = v0.dot(v0);
+    float d01 = v0.dot(v1);
+    float d11 = v1.dot(v1);
+    float d20 = v2.dot(v0);
+    float d21 = v2.dot(v1);
+
+    float denom = d00 * d11 - d01 * d01;
+    float u = (d11 * d20 - d01 * d21) / denom;
+    float v = (d00 * d21 - d01 * d20) / denom;
+    float w = 1 - u - v;
+
+    return w * A.y() + u * C.y() + v * B.y();
 }
