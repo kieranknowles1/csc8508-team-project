@@ -40,7 +40,7 @@ namespace NCL {
 			void InitShotMasks(GameObject* playerIn, GameObject* gunIn) {
 				player = playerIn; gun = gunIn;
 			};
-			ShotInfo* RayClosest(btVector3 startPos, btVector3 dir);
+			ShotInfo* RayClosest(btVector3 startPos, btVector3 dir, GameObject* ignore = nullptr);
 			ShotInfo* ShootBulletPlayer(btVector3 startPos, btVector3 dir,btQuaternion rotation);
 
 		private:

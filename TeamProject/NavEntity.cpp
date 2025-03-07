@@ -10,7 +10,7 @@ void NavEntity::NewPath(std::vector<btVector3> newPath) {
 	curPathPoint = path[0];
 }
 
-bool NavEntity::FollowPath(float dt, GameObject* player) {
+bool NavEntity::FollowPath(float dt) {
 	
 	if (nextNode == -1) return false;
 
@@ -35,15 +35,18 @@ bool NavEntity::FollowPath(float dt, GameObject* player) {
 			newPathPoint = nextPoint + remainderDir;
 		}
 	}
-	curPathPoint.setY(curPathPoint.getY() - YAdjust(curPathPoint, player));
+	std::cout << "old" << curPathPoint.getY() << std::endl;
+	curPathPoint.setY(curPathPoint.getY() - YAdjust(curPathPoint));
+	std::cout << "new" << curPathPoint.getY() << std::endl;
 	curPathPoint = newPathPoint;
 	return true;
 }
 
-float NavEntity::YAdjust(btVector3 pos, GameObject* player) {
-	btVector3 upPos = pos + btVector3(0, 5.0f, 0);
+float NavEntity::YAdjust(btVector3 pos) {
+	btVector3 upPos = pos + btVector3(0, 10.0f, 0);
 	btVector3 downPos = pos + btVector3(0, -10000.0f, 0);
 	btVector3 direction = (downPos - upPos).normalized();
-	ShotInfo* rayResult = Shoot::GetInstance()->RayClosest(upPos, direction);
+	ShotInfo* rayResult = Shoot::GetInstance()->RayClosest(upPos, direction, this);
+	std::cout << pos.distance(rayResult->hitPos) << std::endl;
 	return pos.distance(rayResult->hitPos);
 }

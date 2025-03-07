@@ -4,7 +4,7 @@ using namespace NCL;
 using namespace CSC8503;
 
 
-ShotInfo* Shoot::RayClosest(btVector3 startPos, btVector3 dir) {
+ShotInfo* Shoot::RayClosest(btVector3 startPos, btVector3 dir, GameObject* ignore) {
 	dir.normalize();
     btVector3 shotPos = (startPos + (dir * 10000));
     btCollisionWorld::AllHitsRayResultCallback callback(startPos, shotPos);
@@ -19,6 +19,9 @@ ShotInfo* Shoot::RayClosest(btVector3 startPos, btVector3 dir) {
         for (int i = 0; i < callback.m_collisionObjects.size(); i++) { // loop all hits
             GameObject* hit = static_cast<GameObject*>(callback.m_collisionObjects[i]->getUserPointer());
             if (!hit->getIsPaintball() && hit != player && hit != gun) { // ignore paintballs
+                if (ignore) {
+                    if (hit == ignore) continue;
+                }
                 btVector3 posHit = callback.m_hitPointWorld[i];
                 float distance = startPos.distance(posHit);
                 if (distance < smallestDist) { // find closest valid hit

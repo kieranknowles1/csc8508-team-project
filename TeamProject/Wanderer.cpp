@@ -35,10 +35,10 @@ Wanderer::Wanderer(GameObject* p, NavMesh* mesh) :
 
 	stateMachine->AddTransition(new StateTransition(playerNear, playerFar, [&]()->bool {
 		if (playerDist > senseDistance + 30.0f) {
-			GetRenderObject()->SetColour(Vector4(0, 1, 0, 1));
+			/*GetRenderObject()->SetColour(Vector4(0, 1, 0, 1));
 			curPath = navMesh->FindPath(curPathPoint, navMesh->GetRandomPointInNavMesh());
 			NewPath(curPath);
-			return true;
+			return true;*/
 		}
 		else {
 			return false;
@@ -54,6 +54,19 @@ void Wanderer::Update(float dt) {
 
 	UpdatePlayerDistance();
 	stateMachine->Update(dt);
+
+	btTransform trans = GetTransform();
+	if (FollowPath(dt)) {
+		btVector3 newPos = curPathPoint + offset;
+		trans.setOrigin(newPos);
+		btRigidBody* body = physicsObject->GetRigidBody();
+		body->setWorldTransform(trans);
+		navMesh->DebugDrawPath(curPath);
+	}
+	else {
+		curPath = navMesh->FindPath(curPathPoint, navMesh->GetRandomPointInNavMesh());
+		NewPath(curPath);
+	}
 
 }
 
@@ -87,8 +100,8 @@ void Wanderer::PlayerNear(float dt) {
 }
 
 void Wanderer::PlayerFar(float dt) {
-	btTransform trans = GetTransform();
-	if (FollowPath(dt, player)) {
+	/*btTransform trans = GetTransform();
+	if (FollowPath(dt)) {
 		btVector3 newPos = curPathPoint + offset;
 		trans.setOrigin(newPos);
 		btRigidBody* body = physicsObject->GetRigidBody();
@@ -98,5 +111,5 @@ void Wanderer::PlayerFar(float dt) {
 	else {
 		curPath = navMesh->FindPath(curPathPoint, navMesh->GetRandomPointInNavMesh());
 		NewPath(curPath);
-	}
+	}*/
 }

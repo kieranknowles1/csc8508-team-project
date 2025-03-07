@@ -12,11 +12,11 @@ namespace NCL {
 		protected:
 
 			void NewPath(std::vector<btVector3> newPath);
-			bool FollowPath(float dt, GameObject* player);
+			bool FollowPath(float dt);
 			btVector3 newPathPoint;
 			btVector3 curPathPoint;
 		private:
-			float YAdjust(btVector3 pos, GameObject* player);
+			float YAdjust(btVector3 pos);
 
 			float speed = 0.5;
 
