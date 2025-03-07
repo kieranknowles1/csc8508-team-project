@@ -295,8 +295,22 @@ namespace Packet {
 	}
 
 	std::shared_ptr<Packet> UserInfoPacketHandler::Translate(const ENetEvent* event) const {
-		return std::make_shared<Packet>();
+		ENetPacket* packet = event->packet;
+		Type type;
+		uint8_t channel;
+		uint32_t sequenceNumber;
+		
+		size_t offset = sizeof(Type) + sizeof(uint8_t) + sizeof(uint32_t);
 
+		GetBaseData(packet, &type, &channel, &sequenceNumber);
+
+		LobbyAction action;
+		memcpy(&action, packet->data + packet->dataLength - 1, sizeof(LobbyAction));
+
+		char* data = (char*)(packet->data);
+		User user = User::Deserialize(data);
+
+		return std::make_shared<UserInfoPacket>(user, action);
 	}
 
 	ENetPacket* UserInfoPacketHandler::ToENetPacket(const std::shared_ptr<Packet> packet) const {
