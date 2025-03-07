@@ -37,8 +37,8 @@ Wanderer::Wanderer(GameObject* p, NavMesh* mesh) :
 		if (playerDist > senseDistance + 30.0f) {
 			/*GetRenderObject()->SetColour(Vector4(0, 1, 0, 1));
 			curPath = navMesh->FindPath(curPathPoint, navMesh->GetRandomPointInNavMesh());
-			NewPath(curPath);
-			return true;*/
+			NewPath(curPath);*/
+			return true;
 		}
 		else {
 			return false;
