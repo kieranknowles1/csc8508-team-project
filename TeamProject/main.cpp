@@ -290,7 +290,7 @@ int main(int argc, char** argv) {
 				GameMode mode = static_cast<GameMode>(selection);
 
 				if (mode == GameMode::SINGLEPLAYER) {
-					game->LoadWorldFromFile(8);
+					game->LoadWorldFromFile(9);
 				}
 				else {
 					game->JoinGame(mode == GameMode::HOST_GAME);

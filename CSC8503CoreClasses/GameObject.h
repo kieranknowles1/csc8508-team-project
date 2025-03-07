@@ -15,19 +15,19 @@ namespace NCL::CSC8503 {
 	class GameObject	{
 	public:
 		enum class Type : uint8_t {
-			Default = 'D',
-			JumpPad = 'J',
-			Slime = 'S',
-			Ice = 'I',
+			Default,
+			JumpPad,
+			Slime,
+			Ice,
 		};
 
 		// TODO: Types are being stored as integers
-		//NLOHMANN_JSON_SERIALIZE_ENUM(Type, {
-		//	{Type::Normal, "D"},
-		//	{Type::JumpPad, "J"},
-		//	{Type::Slime, "S"},
-		//	{Type::Ice, "I"}
-		//})
+		/*NLOHMANN_JSON_SERIALIZE_ENUM(Type, {
+			{Type::Normal, "D"},
+			{Type::JumpPad, "J"},
+			{Type::Slime, "S"},
+			{Type::Ice, "I"}
+		})*/
 
 		GameObject(const std::string& name = "");
 		virtual ~GameObject();
