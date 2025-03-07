@@ -123,16 +123,8 @@ GameTechAGCRenderer::~GameTechAGCRenderer()	{
 
 Mesh* GameTechAGCRenderer::LoadMesh(const std::string& name) {
 	AGCMesh* m = new AGCMesh();
-
-	if (name.find(".gltf") != std::string::npos) {
-		bool a = true;
-	}
-	else if (name.find(".msh") != std::string::npos) {
-		MshLoader::LoadMesh(name, *m);
-	}
-
+	MshLoader::LoadMesh(name, *m);
 	m->UploadToGPU(this);
-
 	return m;
 }
 
@@ -227,6 +219,7 @@ void GameTechAGCRenderer::WriteRenderPassConstants() {
 
 	frameData.shadowID = shadowMap->GetAssetID();
 
+	frameData.vingetteSettings.enabled = vignetteOn;
 	frameData.vingetteSettings.color = Vector3(0, 0, 0);
 	frameData.vingetteSettings.intensity = 2.0f;
 	frameData.vingetteSettings.pulse = vignettePulse;

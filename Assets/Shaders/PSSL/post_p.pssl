@@ -15,15 +15,17 @@ struct VS_OUTPUT
 [CxxSymbol("Passthrough::ps")]
 float4 main(VS_OUTPUT vertex) : S_TARGET_OUTPUT
 {
-    float4 orig = texture.Sample(sampler, vertex.uv);
+    float4 result = texture.Sample(sampler, vertex.uv);
 
-    float3 vingette = applyVingette(
-        orig.rgb,
-        vertex.uv,
-        Constants.vingetteSettings.intensity,
-        Constants.vingetteSettings.color,
-        Constants.vingetteSettings.pulse,
-    );
+    if (Constants.vingetteSettings.enabled) {
+        result.rgb = applyVingette(
+            result.rgb,
+            vertex.uv,
+            Constants.vingetteSettings.intensity,
+            Constants.vingetteSettings.color,
+            Constants.vingetteSettings.pulse,
+        );
+    }
 
-    return float4(vingette, 1.0f);
+    return result;
 }
