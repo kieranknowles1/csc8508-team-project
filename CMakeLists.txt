@@ -1,6 +1,7 @@
-cmake_minimum_required(VERSION 3.30.0 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.28.0 FATAL_ERROR)
 
 set(CMAKE_SYSTEM_VERSION 10.0 CACHE STRING "" FORCE)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 project(CSC8508)
 
@@ -21,10 +22,6 @@ endif()
 
 if (USE_SDL2)
     add_definitions(-DCSC_USE_SDL2)
-endif()
-
-if (PS5_BUILD)
-    add_compile_definitions("USEAGC")
 endif()
 
 if(NOT CMAKE_VS_PLATFORM_NAME)
@@ -73,7 +70,6 @@ include_directories(
 )
 
 add_subdirectory(NCLCoreClasses)
-# TODO: Can we do this on PS5 as well?
 if (NOT PS5_BUILD)
     add_subdirectory(MeshCompiler)
 else()
@@ -85,7 +81,6 @@ if (NOT PS5_BUILD)
     add_subdirectory(OpenGLRendering)
 else()
     add_subdirectory(PS5Core)
-    add_subdirectory(PS5Starter)
 endif()
 add_subdirectory(Network)
 add_subdirectory(TeamProject) # Working title

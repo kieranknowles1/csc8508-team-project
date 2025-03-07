@@ -9,6 +9,7 @@
 #include "./Shaders/PSSL/Interop.h"				//Always include this before any PSSL headers
 #include "./Shaders/PSSL/ShaderConstants.psslh"
 #include "./Shaders/PSSL/TechObject.psslh"
+#include "./Shaders/PSSL/UIObject.psslh"
 
 namespace NCL {
 	namespace Rendering {
@@ -24,18 +25,23 @@ namespace NCL {
 	namespace CSC8503 {
 		class RenderObject;
 
-		class GameTechAGCRenderer : 
+		class GameTechAGCRenderer :
 			public NCL::PS5::AGCRenderer,
-			public NCL::CSC8503::GameTechRendererInterface	
+			public NCL::CSC8503::GameTechRendererInterface
 		{
 		public:
-			GameTechAGCRenderer();
+			GameTechAGCRenderer(Window* window);
 			~GameTechAGCRenderer();
 
 			virtual Mesh*		LoadMesh(const std::string& name)				override;
 			virtual Texture*	LoadTexture(const std::string& name)			override;
 
 		protected:
+			void drawFrame(float dt) override {
+				Update(dt);
+				Render();
+			}
+
 			void RenderFrame()	override;
 			void UpdateObjectList();
 
@@ -44,13 +50,15 @@ namespace NCL {
 			void WriteRenderPassConstants();
 			void DrawObjects();
 			void UpdateDebugData();
-			
+
 			void RenderDebugLines();
 			void RenderDebugText();
 
 			void ShadowmapPass();
 			void SkyboxPass();
 			void MainRenderPass();
+
+			void UiPass();
 
 			void DisplayRenderPass();
 
@@ -62,7 +70,7 @@ namespace NCL {
 			all of the data required by the frame. We can then make Buffers out of this at any
 			offset we want to send to our shaders - in this case we're going to use one bug allocation
 			to hold both the constants used by shaders, as well as all of the debug vertices, and object
-			matrices. No fancy suballocations here, the allocator is as simple as it gets - it just 
+			matrices. No fancy suballocations here, the allocator is as simple as it gets - it just
 			advances or 'bumps' a pointer along. Perfect for recording a frame's data to memory!
 			*/
 			struct BumpAllocator {
@@ -97,6 +105,7 @@ namespace NCL {
 			struct FrameData {
 				sce::Agc::Core::Buffer constantBuffer;
 				sce::Agc::Core::Buffer objectBuffer;
+				sce::Agc::Core::Buffer uiBuffer;
 
 				sce::Agc::Core::Buffer debugLineBuffer;
 				sce::Agc::Core::Buffer debugTextBuffer;
@@ -105,6 +114,7 @@ namespace NCL {
 
 				int globalDataOffset	= 0;	//Where does the global data start in the buffer?
 				int objectStateOffset	= 0;	//Where does the object states start?
+				int uiOffset = 0;
 				int debugLinesOffset	= 0;	//Where do the debug lines start?
 				int debugTextOffset		= 0;	//Where do the debug text verts start?
 
@@ -121,7 +131,8 @@ namespace NCL {
 			FrameData* currentFrame;
 			int currentFrameIndex;
 
-			NCL::PS5::AGCMesh* quadMesh;
+			std::unique_ptr<PS5::AGCMesh> unitQuad;
+			std::unique_ptr<PS5::AGCMesh> halfUnitQuad;
 
 			sce::Agc::Core::Texture*	bindlessTextures;
 			sce::Agc::Core::Buffer*		bindlessBuffers;
@@ -138,6 +149,9 @@ namespace NCL {
 
 			NCL::PS5::AGCShader* defaultVertexShader;
 			NCL::PS5::AGCShader* defaultPixelShader;
+
+			std::unique_ptr<PS5::AGCShader> uiVertexShader;
+			std::unique_ptr<PS5::AGCShader> uiPixelShader;
 
 			NCL::PS5::AGCShader* shadowVertexShader;
 			NCL::PS5::AGCShader* shadowPixelShader;

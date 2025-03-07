@@ -7,5 +7,8 @@
     // One of "None", "Exclusive", "Borderless"
     // If borderless, then windowWidth and height should match your display
     // resolution
-    "fullscreen": "None"
+    "fullscreen": "None",
+
+    // Immediately start the game, without showing the main menu
+    "quickStart": false
 }

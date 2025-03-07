@@ -13,7 +13,7 @@ using namespace PS5;
 
 const uint32_t DCB_SIZE = 1024 * 1024; //10KB command buffer storage
 
-AGCRenderer::AGCRenderer(Window& w) : RendererBase(w){
+AGCRenderer::AGCRenderer(Window* w) : RendererBase(w){
 	SceError error = sce::Agc::init();
 
 	videoHandle = sceVideoOutOpen(SCE_USER_SERVICE_USER_ID_SYSTEM, SCE_VIDEO_OUT_BUS_TYPE_MAIN, 0, NULL);
@@ -261,43 +261,5 @@ void AGCRenderer::CreateTriangle(AGCMesh* m) {
 		Vector2(0.5, 1.0),
 		Vector2(1.0, 0.0),
 		Vector2(0.0, 0.0)
-	});
-}
-
-void AGCRenderer::CreateQuad(AGCMesh* m) {
-	m->SetVertexPositions({
-		Vector3(-1, -1, 0),
-		Vector3(1, -1, 0),
-		Vector3(-1, 1, 0),
-
-		Vector3(-1, 1, 0),
-		Vector3(1, 1, 0),
-		Vector3(1, -1, 0)
-	});
-
-	m->SetVertexTextureCoords({
-		Vector2(0, 0),
-		Vector2(1, 0),
-		Vector2(0, 1),
-
-		Vector2(0, 1),
-		Vector2(1, 1),
-		Vector2(1, 0)
-	});
-
-	m->SetVertexNormals({
-		Vector3(0, 0, -1),
-		Vector3(0, 0, -1),
-		Vector3(0, 0, -1),
-
-		Vector3(0, 0, -1),
-		Vector3(0, 0, -1),
-		Vector3(0, 0, -1),
-	});
-
-
-	m->SetVertexIndices({
-		0,1,2,
-		3,4,5
 	});
 }

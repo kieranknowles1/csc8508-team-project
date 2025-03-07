@@ -27,7 +27,7 @@ struct PS5Shader {
 namespace NCL::PS5 {
 	class AGCRenderer : public NCL::Rendering::RendererBase {
 	public:
-		AGCRenderer(Window& w);
+		AGCRenderer(Window* w);
 		~AGCRenderer();
 
 		const MemoryAllocator& GetAllocator() const {
@@ -45,7 +45,6 @@ namespace NCL::PS5 {
 		void DrawBoundMesh(sce::Agc::Core::BasicContext& context, AGCMesh& m);
 		void DrawBoundMeshInstanced(sce::Agc::Core::BasicContext& context, AGCMesh& m, uint32_t instanceCount);
 		void CreateTriangle(AGCMesh* m);
-		void CreateQuad(AGCMesh* m);
 
 		sce::Agc::CxDepthRenderTarget	CreateDepthBufferTarget(uint32_t width, uint32_t height);
 		sce::Agc::CxDepthRenderTarget	CreateDepthBufferTarget(sce::Agc::Core::DepthRenderTargetSpec& spec);

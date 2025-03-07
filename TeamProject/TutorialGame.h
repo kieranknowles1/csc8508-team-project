@@ -22,6 +22,12 @@ namespace NCL {
 
 		const int MAX_PLAYERS = 8;
 
+		enum class GameMode {
+			SINGLEPLAYER,
+			HOST_GAME,
+			JOIN_GAME
+		};
+
 		class TutorialGame {
 		private:
 			static TutorialGame* instance;
@@ -35,6 +41,9 @@ namespace NCL {
 				return instance;
 			}
 
+			ResourceManager* GetResourceManager() {
+				return resourceManager.get();
+			}
 			/**
 			 * @brief Get the Network Instance of the Server.
 			 * @return Returns a pointer to the server instance. Returns
@@ -69,6 +78,8 @@ namespace NCL {
 			~TutorialGame();
 
 			virtual void UpdateGame(float dt);
+			void LoadWorldFromFile(int levelNum);
+			void JoinGame(bool host) {};
 
 		protected:
 			void InitialiseAssets();
@@ -76,7 +87,11 @@ namespace NCL {
 			void InitCamera();
 			void UpdateKeys();
 			void ThirdPersonControls();
+
 			void InitWorld();
+			void ResetWorld();
+
+			void SetupHost() {};
 
 			/**
 			 * @brief Initialise the network object and run it.
@@ -92,6 +107,8 @@ namespace NCL {
 			 * @param address ENetAddress of the servers location.
 			 */
 			void ConnectToServer(ENetAddress& address);
+
+
 
 			void UpdatePlayer(float dt);
 
@@ -129,7 +146,6 @@ namespace NCL {
 
 			GameObject* objClosest = nullptr;
 
-
 			/* bullet physics stuff here */
 			btDiscreteDynamicsWorld* bulletWorld = nullptr;
 			btBroadphaseInterface* broadphase = nullptr;
@@ -148,7 +164,7 @@ namespace NCL {
 			PerspectiveCamera* mainCamera;
 			PlayerObject* player;
 			GameObject* gun;
-			PlayerController* playerController;
+			PlayerController* playerController = nullptr;
 			bool freeCam = false;
 			bool thirdPerson = false;
 			Vector4 playerColour = Vector4(1, 0.8, 1, 1);

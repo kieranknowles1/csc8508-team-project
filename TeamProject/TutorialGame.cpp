@@ -7,6 +7,7 @@
 #include "GameTechRendererInterface.h"
 #include "BulletDebug.h"
 #include <CSC8503CoreClasses/Debug.h>
+#include "Shoot.h"
 
 #include "Window.h"
 
@@ -32,7 +33,10 @@ TutorialGame::TutorialGame(GameTechRendererInterface* renderer, Controller* cont
 
 	loadFromLevel = true;
 	resourceManager = std::make_unique<ResourceManager>(renderer);
+	new Shoot();
 	InitialiseAssets();
+	InitCamera();
+	InitWorld();
 }
 
 /*
@@ -44,9 +48,6 @@ for this module, even in the coursework, but you can add it if you like!
 */
 void TutorialGame::InitialiseAssets() {
 	defaultTexture = resourceManager->getTextures().get("checkerboard.png");
-
-	InitCamera();
-	InitWorld();
 }
 
 TutorialGame::~TutorialGame()	{
@@ -58,6 +59,7 @@ TutorialGame::~TutorialGame()	{
 
 	if (server != nullptr) delete server;
 	if (client != nullptr) delete client;
+
 }
 
 static bool BulletRaycast(btDynamicsWorld* world, const btVector3& start, const btVector3& end, btCollisionWorld::ClosestRayResultCallback& resultCallback) {
@@ -94,7 +96,8 @@ void TutorialGame::UpdateGame(float dt) {
 	// Check for collisions
 	CheckCollisions();
 
-	UpdatePlayer(dt);
+	if (playerController) UpdatePlayer(dt);
+
 	profiler.startSection("Update Audio");
 	audioEngine.Update(&world->GetMainCamera());
 
@@ -103,11 +106,16 @@ void TutorialGame::UpdateGame(float dt) {
 	bulletWorld->debugDrawWorld();
 	renderer->collectFrameObjects(world.get());
 
+	profiler.startSection("Render Decals");
+	// Fade decal after sometime - @Kieran: Didn't forget to call the Update function this time :)
+	renderer->GetDecalSystem().Update(dt);
+
 	profiler.endFrame();
 	if (showProfiling) {
 		profiler.printTimes();
 	}
 
+	
 	//post processing time variable effect:
 	pulse += dt;
 	renderer->SetVignettePulse(pulse);
@@ -115,7 +123,6 @@ void TutorialGame::UpdateGame(float dt) {
 
 void TutorialGame::UpdatePlayer(float dt) {
 
-	playerController->CalculateDirections(dt);
 	// Press F for freeCam, press G for thirdPerson
 	if (freeCam) {
 		//freeCam Movement
@@ -147,40 +154,31 @@ void TutorialGame::UpdateKeys() {
 	if (controller->GetDigital(DebugFreeCam)) {
 		freeCam = !freeCam;
 	}
-	if (controller->GetDigital(ThirdPerson)) {
-		thirdPerson = !thirdPerson;
-		playerController->SetThirdPerson(thirdPerson);
-	}
 
-	if (controller->GetDigital(WorldRollRight)) {
+	if (playerController) {
+		if (controller->GetDigital(ThirdPerson)) {
+			thirdPerson = !thirdPerson;
+			playerController->SetThirdPerson(thirdPerson);
+		}
+		if (controller->GetDigital(WorldRollRight)) {
 			playerController->rollRight();
-	}
-	if (controller->GetDigital(WorldRollLeft)) {
+		}
+		if (controller->GetDigital(WorldRollLeft)) {
 			playerController->rollLeft();
-	}
-	if (controller->GetDigital(WorldPitchUp)) {
+		}
+		if (controller->GetDigital(WorldPitchUp)) {
 			playerController->pitchUp();
-	}
-	if (controller->GetDigital(WorldPitchDown)) {
+		}
+		if (controller->GetDigital(WorldPitchDown)) {
 			playerController->pitchDown();
-	}
-
-	if (Window::GetKeyboard()->KeyPressed(KeyCodes::F5)) { 
-		bool toggleHDR = renderer->GetHDROn();  
-		toggleHDR = !toggleHDR; 
-		renderer->SetHDROn(toggleHDR); 
-	} 
-	if (Window::GetKeyboard()->KeyPressed(KeyCodes::F6)) {
-		bool toggleVignette = renderer->GetVignetteOn();
-		toggleVignette = !toggleVignette;
-		renderer->SetVignetteOn(toggleVignette);
+		}
 	}
 }
 
 void TutorialGame::ThirdPersonControls() {
 	btTransform transformPlayer = player->GetPhysicsObject()->GetRigidBody()->getWorldTransform();
 	btQuaternion playerRotation1(btVector3(0, 1, 0), Maths::DegreesToRadians(playerController->getYaw()));
-	btMatrix3x3 rotationMatrix(playerController->getCamOffset() * playerRotation1);
+	btMatrix3x3 rotationMatrix(player->getCamOffset() * playerRotation1);
 	btVector3 forward = rotationMatrix * btVector3(0,0,-1);
 	btVector3 upwards = rotationMatrix * btVector3(0, 1, 0);
 	float camHeight = 10.0f;
@@ -194,7 +192,7 @@ void TutorialGame::ThirdPersonControls() {
 void TutorialGame::visualiseNavMesh() {
 	navMesh->VisualiseNavMesh();
 
-	btVector3 startPoint(94, 0.5833334, 26);
+	/*btVector3 startPoint(94, 0.5833334, 26);
 	btVector3 endPoint(68, 0.5833334, 34);
 
 	btIDebugDraw* debugDrawer = bulletWorld->getDebugDrawer();
@@ -205,7 +203,7 @@ void TutorialGame::visualiseNavMesh() {
 
 	// Find path and draw it
 	std::vector<btVector3> path = navMesh->FindPath(startPoint, endPoint);
-	//navMesh->DebugDrawPath(path);
+	//navMesh->DebugDrawPath(path);*/
 }
 
 
@@ -266,6 +264,16 @@ void TutorialGame::clearGraveyard() {
 	std::swap(earlyGraveyard, lateGraveyard);
 }
 
+
+void TutorialGame::InitCamera() {
+	mainCamera->SetFieldOfVision(90);
+	world->GetMainCamera().SetNearPlane(0.1f);
+	world->GetMainCamera().SetFarPlane(5000.0f);
+	world->GetMainCamera().SetPitch(-15.0f);
+	world->GetMainCamera().SetYaw(315.0f);
+	world->GetMainCamera().SetPosition(Vector3(-60, 40, 60));
+}
+
 void TutorialGame::DestroyBullet() {
 	delete bulletWorld;
 	delete bulletDebug;
@@ -283,23 +291,36 @@ void TutorialGame::InitBullet() {
 	solver = new btSequentialImpulseConstraintSolver();
 
 	bulletWorld = new btDiscreteDynamicsWorld(dispatcher, broadphase, solver, collisionConfig);
-	bulletWorld->setGravity(btVector3(00.0f, -30.0f, 0));
+	bulletWorld->setGravity(btVector3(0.0f, 0.0f, 0.0f));
 	bulletDebug = new BulletDebug();
 	bulletWorld->setDebugDrawer(bulletDebug);
 }
 
-void TutorialGame::InitCamera() {
-	mainCamera->SetFieldOfVision(90);
-	world->GetMainCamera().SetNearPlane(0.1f);
-	world->GetMainCamera().SetFarPlane(5000.0f);
-	world->GetMainCamera().SetPitch(-15.0f);
-	world->GetMainCamera().SetYaw(315.0f);
-	world->GetMainCamera().SetPosition(Vector3(-60, 40, 60));
+void TutorialGame::LoadWorldFromFile(int levelNum) {
+	ResetWorld();
+	InitWorld();
+
+	levelImporter = new LevelImporter(resourceManager.get(), world.get(), bulletWorld);
+	levelImporter->LoadLevel(levelNum);
+	InitPlayer();
+
+	Shoot::GetInstance()->Initialise(bulletWorld,resourceManager.get(), world.get(), renderer->GetDecalSystem());
+	Shoot::GetInstance()->InitShotMasks(player, gun);
+
+	if (navMeshDebug) {
+		AddTurretToWorld();
+		AddWandererToWorld();
+	}
+
+}
+
+void TutorialGame::ResetWorld() {
+	DestroyBullet();
+	world->ClearAndErase();
+	renderer->GetDecalSystem().ClearDecalsFromWorld();
 }
 
 void TutorialGame::InitWorld() {
-	DestroyBullet();
-	world->ClearAndErase();
 	InitBullet();
 	audioEngine.Init();
 
@@ -307,59 +328,15 @@ void TutorialGame::InitWorld() {
 	if (navMeshDebug) {
 		freeCam = true;
 		navMesh = new NavMesh(bulletWorld);
-		navMesh->LoadFromFile("Assets/Meshes/NavMeshes/smalltest.navmesh");
-	}
-
-	if (loadFromLevel) {
-		levelImporter = new LevelImporter(resourceManager.get(), world.get(), bulletWorld);
-		levelImporter->LoadLevel(8);
-		InitPlayer();
-		return;
-	}
-
-	//floors
-	AddFloorToWorld(Vector3(0, 0, 0), Vector3(500, 2, 500), Vector3(0, 0, 0));
-	AddFloorToWorld(Vector3(498.5, -21.75, 0), Vector3(500, 2, 500), Vector3(0, 0, -5));
-	AddFloorToWorld(Vector3(996, -43.6, 0), Vector3(500, 2, 500), Vector3(0, 0, 0));
-
-	//walls
-	AddFloorToWorld(Vector3(1245, 206, 0), Vector3(2, 500, 500), Vector3(0, 0, 0));
-	AddFloorToWorld(Vector3(996, 206, 249), Vector3(500, 500, 2), Vector3(0, 0, 0));
-	AddFloorToWorld(Vector3(996, 206, -249), Vector3(500, 500, 2), Vector3(0, 0, 0));
-	AddFloorToWorld(Vector3(498, 206, 249), Vector3(500, 500, 2), Vector3(0, 0, 0));
-	AddFloorToWorld(Vector3(498, 206, -249), Vector3(500, 500, 2), Vector3(0, 0, 0));
-	AddFloorToWorld(Vector3(-2, 206, 249), Vector3(500, 500, 2), Vector3(0, 0, 0));
-	AddFloorToWorld(Vector3(-2, 206, -249), Vector3(500, 500, 2), Vector3(0, 0, 0));
-	AddFloorToWorld(Vector3(-248, 206, 0), Vector3(2, 500, 500), Vector3(0, 0, 0));
-
-	// Use this as a reference to create more cube objects
-	AddCubeToWorld(Vector3(0, 30, 0), Vector3(5, 5, 5), 1.0f);
-	AddCubeToWorld(Vector3(500, 30, 0), Vector3(10, 10, 10), 5.0f);
-	AddCubeToWorld(Vector3(20, 30, 50), Vector3(7, 7, 7), 4.0f);
-	AddCubeToWorld(Vector3(120, 30, -20), Vector3(5, 5, 5), 1.0f);
-	AddCubeToWorld(Vector3(100, 8, 100), Vector3(30, 2,30), 0.0f);
-
-	// Use this as a reference to create more sphere objects
-	AddSphereToWorld(Vector3(10, 30, 0), 5.0f, 4.0f);
-	AddSphereToWorld(Vector3(-30, 30, 0), 7.0f, 8.0f);
-	AddSphereToWorld(Vector3(300, 30, -40), 9.0f, 16.0f);
-
-	// Use this as a reference to create more capsule objects
-	AddCapsuleToWorld(Vector3(20, 15, 0), 4.0f, 2.0f, 2.0f);
-	AddCapsuleToWorld(Vector3(70, 15, -20), 8.0f, 4.0f, 4.0f);
-	AddCapsuleToWorld(Vector3(-20, 15, 12), 6.0f, 5.0f, 8.0f);
-
-	InitPlayer();
-	if (navMeshDebug) {
-		AddTurretToWorld();
-		AddWandererToWorld();
+		navMesh->LoadFromFile("Assets/Meshes/NavMeshes/initiallevel.navmesh");
 	}
 }
 
 void TutorialGame::InitNetwork(bool host) {
+
 	ENetAddress clientAddress;
 	client = new Network(&clientAddress, 1);
-	
+
 	if (host) {
 		ENetAddress serverAddress;
 		serverAddress.host = ENET_HOST_ANY;
@@ -371,6 +348,7 @@ void TutorialGame::InitNetwork(bool host) {
 
 
 void TutorialGame::ConnectToServer(ENetAddress& address) {
+	// FIXME
 	if (client == nullptr) return;
 	client->ConnectTo(&address);
 }
@@ -389,7 +367,7 @@ void TutorialGame::InitPlayer() {
 	player->GetPhysicsObject()->GetRigidBody()->setFriction(0.0f);
 	player->GetPhysicsObject()->GetRigidBody()->setDamping(0.0, 0);
 	gun = AddCubeToWorld(Vector3(10, 2, 20), Vector3(0.6, 0.6, 1.6), 0, false);
-	playerController = new PlayerController(player, gun, controller, mainCamera, bulletWorld, world.get(), resourceManager.get());
+	playerController = new PlayerController(player, gun, controller, mainCamera, bulletWorld);
 	player->GetRenderObject()->SetColour(Vector4(playerColour));
 
 }
@@ -440,10 +418,10 @@ Wanderer* TutorialGame::AddWandererToWorld() {
 
 	wanderer->GetRenderObject()->SetColour(Vector4(1, 0, 0, 1));
 
-	wanderer->SetOffset();
+	wanderer->InitPosAndOffset();
 
 	world->AddGameObject(wanderer);
-	
+
 	this->wanderer = wanderer;
 	return wanderer;
 }

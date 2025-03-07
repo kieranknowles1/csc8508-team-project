@@ -1,4 +1,5 @@
 set(SOURCES
+    main.cpp
     BulletDebug.cpp
     BulletDebug.h
     GameTechRendererInterface.cpp
@@ -8,6 +9,7 @@ set(SOURCES
     PlayerController.cpp
     PlayerController.h
     PlayerObject.h
+    PlayerObject.cpp
     Turret.h
     Turret.cpp
 	BWHelperFunctions.h
@@ -26,6 +28,8 @@ set(SOURCES
 	AudioEngine.cpp
     Config.h
     Config.cpp
+    DecalSystem.h
+    DecalSystem.cpp
     PushdownState.h
     PushdownMachine.cpp
     PushdownMachine.h
@@ -41,6 +45,10 @@ set(SOURCES
     Multiplayer/User.hpp
 	Wanderer.h
 	Wanderer.cpp
+    Shoot.cpp
+    Shoot.h
+    Paintball.h
+    Paintball.cpp
 )
 
 set(ASSET_ROOT "${CMAKE_SOURCE_DIR}/Assets")
@@ -74,36 +82,23 @@ set(ASSETS
 
 if(NOT PS5_BUILD)
     list(APPEND SOURCES
-        main.cpp
         GameTechRenderer.cpp
         GameTechRenderer.h
     )
-    add_executable(${PROJECT_NAME} ${SOURCES})
 else()
-    # There is quite a bit of extra work for PS5 builds,
-    # so this is split into PS5Starter where we link against
-    # the main game statically
-    add_library(${PROJECT_NAME} STATIC ${SOURCES})
+    list(APPEND SOURCES
+        GameTechAGCRenderer.h
+        GameTechAGCRenderer.cpp
+    )
 endif()
-copy_assets(${RUNTIME_ASSET_PATH} ${ASSET_ROOT} ${PROJECT_NAME} ${ASSETS})
 
-set_target_properties(${PROJECT_NAME} PROPERTIES
-    INTERPROCEDURAL_OPTIMIZATION_RELEASE "TRUE"
-)
+add_executable(${PROJECT_NAME} ${SOURCES})
+copy_assets(${RUNTIME_ASSET_PATH} ${ASSET_ROOT} ${PROJECT_NAME} ${ASSETS})
 
 ################################################################################
 # Compile definitions
 ################################################################################
-if(MSVC)
-    target_compile_definitions(${PROJECT_NAME} PRIVATE
-        "UNICODE;"
-        "_UNICODE"
-        "WIN32_LEAN_AND_MEAN"
-        "_WINSOCKAPI_"
-        "_WINSOCK2API_"
-        "_WINSOCK_DEPRECATED_NO_WARNINGS"
-    )
-endif()
+target_include_directories(${PROJECT_NAME} PUBLIC ${BULLET_INCLUDE_DIRS})
 
 target_precompile_headers(${PROJECT_NAME} PRIVATE
     <vector>
@@ -125,12 +120,21 @@ target_precompile_headers(${PROJECT_NAME} PRIVATE
     "../NCLCoreClasses/GameTimer.h"
 )
 
+set_target_properties(${PROJECT_NAME} PROPERTIES
+    INTERPROCEDURAL_OPTIMIZATION_RELEASE "TRUE"
+	VS_DEBUGGER_WORKING_DIRECTORY "$(SolutionDir)"
+)
 ################################################################################
 # Dependencies
 ################################################################################
 if(MSVC)
     # Required for enet
     target_link_libraries(${PROJECT_NAME} PUBLIC "Winmm.lib")
+
+    target_compile_options(${PROJECT_NAME} PRIVATE
+        ${DEFAULT_CXX_DEBUG_INFORMATION_FORMAT};
+        ${DEFAULT_CXX_EXCEPTION_HANDLING};
+    )
 endif()
 
 set(INCLUDE_DIRECTORIES
@@ -146,10 +150,11 @@ target_include_directories(${PROJECT_NAME} PRIVATE ${INCLUDE_DIRECTORIES}>)
 
 target_link_libraries(${PROJECT_NAME} PUBLIC NCLCoreClasses)
 target_link_libraries(${PROJECT_NAME} PUBLIC CSC8503CoreClasses)
+target_link_libraries(${PROJECT_NAME} PUBLIC NetworkLib)
 if(NOT PS5_BUILD)
     target_link_libraries(${PROJECT_NAME} PUBLIC OpenGLRendering)
-    # TODO: PS5 Support
-    target_link_libraries(${PROJECT_NAME} PUBLIC NetworkLib)
+else()
+    target_link_libraries(${PROJECT_NAME} PUBLIC PS5Core)
 endif()
 target_link_libraries(${PROJECT_NAME} PUBLIC ${BULLET_LIBRARIES})
 target_link_libraries(${PROJECT_NAME} PUBLIC nlohmann_json::nlohmann_json)
@@ -159,6 +164,46 @@ fmod_copy_libs(${PROJECT_NAME})
 
 target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_SOURCE_DIR})
 target_include_directories(${PROJECT_NAME} PUBLIC ${BULLET_INCLUDE_DIRS})
+
+set(SCE_MODULES
+    libc.prx
+    libSceFace.prx
+    libSceFaceTracker.prx
+    libSceFontGsm.prx
+    libSceJobManager.prx
+    libSceJobManager_nosubmission.prx
+    libSceNpCppWebApi.prx
+    libScePfs.prx
+)
+
+set(SCE_DEPENDENCIES
+    SceAgcDriver_stub_weak
+    SceAgc_stub_weak
+    SceVideoOut_stub_weak
+    SceAgc_debug_nosubmission
+    SceAgcCore_debug_nosubmission
+    SceAgcGpuAddress_debug_nosubmission
+
+    ScePad_stub_weak
+    SceUserService_stub_weak
+    SceNpUtility_stub_weak
+    SceCommonDialog_stub_weak
+    SceNetCtlApDialog_stub_weak
+    SceNetCtlAp_stub_weak
+    SceNetCtl_stub_weak
+    SceNet_stub_weak
+    ScePosix_stub_weak
+)
+
+if(PS5_BUILD)
+    target_link_libraries(${PROJECT_NAME} PUBLIC ${SCE_DEPENDENCIES})
+
+    foreach(file ${SCE_MODULES})
+        file(COPY ${PS5_SCE_MODULE}/${file} DESTINATION ${CMAKE_BINARY_DIR}/sce_module/)
+    endforeach()
+endif()
+
+include_directories(${COMPILE_ASSET_ROOT})
 
 if(WIN32)
     set_target_properties(${PROJECT_NAME} PROPERTIES

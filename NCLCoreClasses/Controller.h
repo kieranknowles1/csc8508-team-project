@@ -34,7 +34,7 @@ public:
 		Sprint,
 		Crouch,
 		ThirdPerson,
-		
+
 		WorldRollLeft,
 		WorldRollRight,
 		WorldPitchUp,
@@ -43,7 +43,15 @@ public:
 		DebugReloadWorld,
 		DebugBulletOverlay,
 		DebugShowProfiling,
-		DebugFreeCam
+		DebugFreeCam,
+
+		Pause,
+		// TODO: Do we need this one?
+		PauseQuit,
+		Unpause,
+		MenuUp,
+		MenuDown,
+		MenuConfirm
 	};
 
 	Controller() {
