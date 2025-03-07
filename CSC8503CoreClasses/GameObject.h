@@ -14,7 +14,7 @@ namespace NCL::CSC8503 {
 
 	class GameObject	{
 	public:
-		enum class Type : uint8_t {
+		enum class Type {
 			Default,
 			JumpPad,
 			Slime,
