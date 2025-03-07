@@ -19,6 +19,7 @@ namespace NCL::CSC8503 {
 			JumpPad,
 			Slime,
 			Ice,
+			PointLight
 		};
 
 		// TODO: Types are being stored as integers
