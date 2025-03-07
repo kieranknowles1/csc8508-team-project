@@ -755,8 +755,12 @@ void GameTechRenderer::RenderDecals() {
 	glUniform1i(glGetUniformLocation(decalShader->GetProgramID(), "screenHeight"), windowSize.y);
 
 	for (const auto& decal : decalSystem.GetDecals()) {
+		// Get the random angle of rotation for the decal
+		float randomRotAngle = decal.rotation;
+
 		// Create a rotation matrix to orient the decal based on the normal of the surface it is projected onto
-		Matrix4 rotationMatrix = Matrix::RotationFromNormal(decal.normal);
+		Matrix4 rotationMatrix = Matrix::RotationAroundNormal(decal.normal, randomRotAngle);
+
 		Matrix4 modelMatrix = Matrix::Translation(Vector3(decal.position)) *
 							  rotationMatrix *
 							  Matrix::Scale(Vector3(decal.radius, decal.radius, decal.radius));

@@ -35,7 +35,11 @@ namespace NCL {
 			static Shoot* GetInstance() { return instance; }
 			void Initialise(btDiscreteDynamicsWorld* bulletWorldIn, ResourceManager* resourceManagerIn, GameWorld* worldIn, DecalSystem& decalSystemIn) {
 				bulletWorld = bulletWorldIn; this->resourceManager = resourceManagerIn; world = worldIn; decalSystem = &decalSystemIn;
-				pngTexture = resourceManager->getTextures().get(decalTexturePath);
+				
+				decalTextures.push_back(resourceManager->getTextures().get(decalTexturePath));
+				decalTextures.push_back(resourceManager->getTextures().get(decalTexturePath2));
+				decalTextures.push_back(resourceManager->getTextures().get(decalTexturePath3));
+				decalTextures.push_back(resourceManager->getTextures().get(decalTexturePath4));
 			};
 			void InitShotMasks(GameObject* playerIn, GameObject* gunIn) {
 				player = playerIn; gun = gunIn;
@@ -47,13 +51,16 @@ namespace NCL {
 			//Shot Variables
 			float bulletSpeed = 1000.0f;
 			btVector3 bulletCameraOffset = btVector3(1.0, -0.5, -3.0);
+			btVector4 paintballColor = btVector4(1.0f, 0.0f, 0.0f, 1.0f);
 
 			//Decal Variables
 			float decalRadius = 8.0f;
 			float alphaFade = 1.0f;
-			btVector4 decalColor = btVector4(1.0f, 0.0f, 0.0f, 1.0f);
-			std::string decalTexturePath = "paintball_splash_red.png";
 
+			std::string decalTexturePath = "paintball_splash_1.png";
+			std::string decalTexturePath2 = "paintball_splash_2.png";
+			std::string decalTexturePath3 = "paintball_splash_3.png";
+			std::string decalTexturePath4 = "paintball_splash_4.png";
 
 			void SpawnBulletMesh(btVector3 startPos, btVector3 dir, btQuaternion bulletRotation, ShotInfo* rayInfo);
 			void SpawnDecal(ShotInfo* shotinfo);
@@ -64,7 +71,8 @@ namespace NCL {
 			ResourceManager* resourceManager;
 			GameWorld* world;
 			DecalSystem* decalSystem;
-			std::shared_ptr<NCL::Rendering::Texture> pngTexture = nullptr;
+
+			std::vector<std::shared_ptr<NCL::Rendering::Texture>> decalTextures;
 		};
 	}
 }
