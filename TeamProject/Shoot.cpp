@@ -85,9 +85,14 @@ void Shoot::SpawnDecal(ShotInfo* shotinfo) {
 		// Choose a random decal texture
 		int randomIndex = rand() % decalTextures.size();
 		std::shared_ptr<NCL::Rendering::Texture> pngTexture = decalTextures[randomIndex];
+
+		// Use the same color for the decal as the paintball
         decalColor = paintballColor;
 
-        DecalSystem::Decal decal = { shotinfo->hitPos, shotinfo->hitNormal, decalRadius, pngTexture,alphaFade,decalColor };
+		// Generate a random rotation angle for the decal
+        decalRotation = decalSystem->RandomizeDecalRotation();
+
+        DecalSystem::Decal decal = { shotinfo->hitPos, decalRotation, shotinfo->hitNormal, decalRadius, pngTexture,alphaFade,decalColor };
         decalSystem->ApplyDecal(decal); // Apply the decal using the hit position and normal
     }
 }

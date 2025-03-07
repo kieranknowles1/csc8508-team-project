@@ -2,6 +2,7 @@
 #include "ResourceManager.h"
 #include <iostream>
 #include <glad/gl.h>
+#include <random>
 
 using namespace NCL::Rendering;
 using namespace NCL::CSC8503;
@@ -62,4 +63,13 @@ void DecalSystem::Update(float dt)
 			++it;
 		}
 	}
+}
+
+float DecalSystem::RandomizeDecalRotation()
+{
+	std::random_device rd;
+	std::mt19937 gen(rd());
+	std::uniform_real_distribution<float> angleDis(0.0f, 360.0f);
+
+	return angleDis(gen);
 }

@@ -14,6 +14,7 @@ namespace NCL {
 		public:
 			struct Decal {
 				btVector3 position;
+				float rotation;
 				btVector3 normal;
 				float radius;
 				std::shared_ptr<Rendering::Texture> texture;
@@ -26,6 +27,7 @@ namespace NCL {
 
 			void ApplyDecal(Decal& decal);
 			void Update(float dt);
+			float RandomizeDecalRotation();
 
 			unsigned int GetDecalTexture() const { return decalTexture; }
 			unsigned int GetDecalFBO() const { return decalFBO; }
