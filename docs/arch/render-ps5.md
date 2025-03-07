@@ -7,7 +7,11 @@ graph LR
 
     DecalBuffer
     HdrBuffer
-    VingetteBuffer
-    UiBuffer
-    UiBuffer-->ScreenOut
+
+    SceneBuffer-->PostProcess
+    subgraph PostProcess
+        Vingette
+    end
+    PostProcess-->ScreenOut
+    Ui-->ScreenOut
 ```
