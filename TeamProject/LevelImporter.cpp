@@ -154,21 +154,21 @@ void LevelImporter::AddObjectToWorld(ObjectData* data) {
 void LevelImporter::HandleTypes(GameObject* obj) {
     switch (obj->getType())
     {
-    case 'D':    // Default
+    case GameObject::Type::Default:
         break;
-    case 'J':   // Jump-Pads
+    case GameObject::Type::JumpPad:
         obj->GetRenderObject()->SetColour(Vector4(0.3f, 0.3f, 0.3f, 1));
         obj->GetRenderObject()->SetTexScaleMultiplier(0.0025f);
         obj->GetRenderObject()->SetDefaultTexture(resourceManager->getTextures().get("metal_0082_ao_1k.jpg"));
         obj->GetRenderObject()->SetNormal(resourceManager->getTextures().get("metal_0082_normal_opengl_1k.png"));
         break;
-    case 'S':   // Slime
+    case GameObject::Type::Slime:
         obj->GetRenderObject()->SetColour(Vector4(0, 1, 0, 1));
         obj->GetRenderObject()->SetTexScaleMultiplier(0.0025f);
         obj->GetRenderObject()->SetDefaultTexture(resourceManager->getTextures().get("others_0001_color_1k.jpg"));
         obj->GetRenderObject()->SetNormal(resourceManager->getTextures().get("others_0001_normal_opengl_1k.png"));
         break;
-    case 'I':   // Ice
+    case GameObject::Type::Ice:
         obj->GetRenderObject()->SetColour(Vector4(1, 2.0f, 2.0f, 1));
         obj->GetRenderObject()->SetTexScaleMultiplier(0.005f);
         obj->GetRenderObject()->SetDefaultTexture(resourceManager->getTextures().get("ground_0031_color_1k.jpg"));

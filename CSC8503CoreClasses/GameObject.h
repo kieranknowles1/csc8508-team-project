@@ -1,6 +1,7 @@
 #pragma once
 
 #include <unordered_map>
+#include <nlohmann/json.hpp>
 
 #include "PhysicsObject.h"
 #include "btBulletDynamicsCommon.h"
@@ -13,6 +14,21 @@ namespace NCL::CSC8503 {
 
 	class GameObject	{
 	public:
+		enum class Type : uint8_t {
+			Default = 'D',
+			JumpPad = 'J',
+			Slime = 'S',
+			Ice = 'I',
+		};
+
+		// TODO: Types are being stored as integers
+		//NLOHMANN_JSON_SERIALIZE_ENUM(Type, {
+		//	{Type::Normal, "D"},
+		//	{Type::JumpPad, "J"},
+		//	{Type::Slime, "S"},
+		//	{Type::Ice, "I"}
+		//})
+
 		GameObject(const std::string& name = "");
 		virtual ~GameObject();
 
@@ -111,10 +127,10 @@ namespace NCL::CSC8503 {
 		bool getIsPaintball() {
 			return paintball;
 		}
-		void setType(char typeIn) {
+		void setType(Type typeIn) {
 			type = typeIn;
 		}
-		char getType() {
+		Type getType() {
 			return type;
 		}
 
@@ -136,7 +152,7 @@ namespace NCL::CSC8503 {
 		bool paintball = false;
 		int			worldID;
 		std::string	name;
-		char type;
+		Type type;
 
 		Vector3 renderScale = Vector3(1, 1, 1); // Only affects rendering, not physics
 		btVector3 initialPosition;
