@@ -191,7 +191,6 @@ namespace NCL {
 			float pulse = 0;
 
 		private:
-			inline static Network* client = nullptr;
 			inline static Network* server = nullptr;
 		};
 	}
