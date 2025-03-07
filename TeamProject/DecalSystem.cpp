@@ -2,13 +2,12 @@
 #include "ResourceManager.h"
 #include <iostream>
 #include <glad/gl.h>
-#include <random>
 
 using namespace NCL::Rendering;
 using namespace NCL::CSC8503;
 
-DecalSystem::DecalSystem(int width, int height) 
-	: decayRate(0.1f), textureWidth(width), textureHeight(height)
+DecalSystem::DecalSystem(int width, int height)
+    : decayRate(0.1f), textureWidth(width), textureHeight(height), gen(std::random_device{}()), angleDis(0.0f, 360.0f), indexDist(0, 0)
 {
 #ifndef __PROSPERO__
 	// Create an empty texture to store the applied decals
@@ -65,11 +64,18 @@ void DecalSystem::Update(float dt)
 	}
 }
 
-float DecalSystem::RandomizeDecalRotation()
+float DecalSystem::GetRandomRotation()
 {
-	std::random_device rd;
-	std::mt19937 gen(rd());
-	std::uniform_real_distribution<float> angleDis(0.0f, 360.0f);
+    return angleDis(gen);
+}
 
-	return angleDis(gen);
+std::shared_ptr<NCL::Rendering::Texture> DecalSystem::PickRandomDecal(const std::vector<std::shared_ptr<NCL::Rendering::Texture>>& decalsArr)
+{
+    if (decalsArr.empty()) {
+        return nullptr;
+    }
+
+    indexDist = std::uniform_int_distribution<int>(0, decalsArr.size() - 1);
+
+    return decalsArr[indexDist(gen)];
 }

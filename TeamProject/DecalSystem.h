@@ -1,6 +1,7 @@
 #pragma once
 
 #include <vector>
+#include <random>
 
 #include <Vector.h>
 #include "Maths.h"
@@ -27,7 +28,8 @@ namespace NCL {
 
 			void ApplyDecal(Decal& decal);
 			void Update(float dt);
-			float RandomizeDecalRotation();
+			float GetRandomRotation();
+            std::shared_ptr<NCL::Rendering::Texture> PickRandomDecal(const std::vector<std::shared_ptr<NCL::Rendering::Texture>>& decalsArr);
 
 			unsigned int GetDecalTexture() const { return decalTexture; }
 			unsigned int GetDecalFBO() const { return decalFBO; }
@@ -45,6 +47,10 @@ namespace NCL {
 			float decayRate;
 
 			std::vector<Decal> decals;
+
+            std::mt19937 gen;
+            std::uniform_real_distribution<float> angleDis;
+            std::uniform_int_distribution<int> indexDist;
 		};
 	}
 }

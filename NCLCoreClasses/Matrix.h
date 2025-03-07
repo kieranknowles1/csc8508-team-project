@@ -421,7 +421,7 @@ namespace NCL::Maths {
             const Vector3& normal,
             float angleInDegrees
         ) {
-			// Normalise the normal vector
+            // Normalise the normal vector
 			Vector3 normalizedNormal = Vector::Normalise(normal);
 
             // Convert angle to radian

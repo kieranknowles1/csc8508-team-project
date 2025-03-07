@@ -56,8 +56,6 @@ namespace NCL {
 			//Decal Variables
 			float decalRadius = 8.0f;
 			float alphaFade = 1.0f;
-			float decalRotation = 0.0f;
-			btVector4 decalColor = btVector4(1.0f, 0.0f, 0.0f, 1.0f);
 
 			std::string decalTexturePath = "paintball_splash_1.png";
 			std::string decalTexturePath2 = "paintball_splash_2.png";

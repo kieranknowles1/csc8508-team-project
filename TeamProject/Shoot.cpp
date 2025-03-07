@@ -83,14 +83,13 @@ void Shoot::SpawnBulletMesh(btVector3 startPos, btVector3 dir, btQuaternion rota
 void Shoot::SpawnDecal(ShotInfo* shotinfo) {
     if (shotinfo->hitObj != nullptr) {
 		// Choose a random decal texture
-		int randomIndex = rand() % decalTextures.size();
-		std::shared_ptr<NCL::Rendering::Texture> pngTexture = decalTextures[randomIndex];
+        std::shared_ptr<NCL::Rendering::Texture> pngTexture = decalSystem->PickRandomDecal(decalTextures);
 
 		// Use the same color for the decal as the paintball
-        decalColor = paintballColor;
+        btVector4 decalColor = paintballColor;
 
 		// Generate a random rotation angle for the decal
-        decalRotation = decalSystem->RandomizeDecalRotation();
+        float decalRotation = decalSystem->GetRandomRotation();
 
         DecalSystem::Decal decal = { shotinfo->hitPos, decalRotation, shotinfo->hitNormal, decalRadius, pngTexture,alphaFade,decalColor };
         decalSystem->ApplyDecal(decal); // Apply the decal using the hit position and normal
