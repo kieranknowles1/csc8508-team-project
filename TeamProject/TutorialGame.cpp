@@ -54,10 +54,6 @@ TutorialGame::~TutorialGame()	{
 	audioEngine.Shutdown();
 
 	delete playerController;
-
-	if (server != nullptr) delete server;
-	if (client != nullptr) delete client;
-
 }
 
 static bool BulletRaycast(btDynamicsWorld* world, const btVector3& start, const btVector3& end, btCollisionWorld::ClosestRayResultCallback& resultCallback) {
@@ -339,24 +335,11 @@ void TutorialGame::InitWorld() {
 }
 
 void TutorialGame::InitNetwork(bool host) {
-
-	ENetAddress clientAddress;
-	client = new Network(&clientAddress, 1);
-
-	if (host) {
-		ENetAddress serverAddress;
-		serverAddress.host = ENET_HOST_ANY;
-		serverAddress.port = DEFAULT_PORT;
-
-		server = new Network(&serverAddress, MAX_PLAYERS);
-	}
 }
 
 
 void TutorialGame::ConnectToServer(ENetAddress& address) {
 	// FIXME
-	if (client == nullptr) return;
-	client->ConnectTo(&address);
 }
 
 

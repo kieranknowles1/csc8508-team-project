@@ -13,6 +13,7 @@
 #include "Profiler.h"
 #include "Wanderer.h"
 #include "Network/Network.hpp"
+#include "Multiplayer/Lobby.hpp"
 
 #include <btBulletDynamicsCommon.h>
 
@@ -46,17 +47,15 @@ namespace NCL {
 			}
 			/**
 			 * @brief Get the Network Instance of the Server.
-			 * @return Returns a pointer to the server instance. Returns
-			 * nullptr if there isn't one.
+			 * @return 
 			 */
-			inline static Network* GetServerInstance() { return server; }
+			inline static std::optional<Network>& GetServerInstance() { return server; }
 
 			/**
-			 * @brief Get the Network Instance of the Client.
-			 * @return Returns a pointer to the client instance. Returns
-			 * nullptr if there isn't one.
+			 * @brief Get the lobby instance.
 			 */
-			inline static Network* GetClientInstance() { return client; }
+			inline static std::optional<Lobbies::Lobby>& GetLobby() { return lobby; }
+
 
 			// Remove an object at the end of this frame. Use during update to avoid removing
 			// from containers while iterating
@@ -191,7 +190,8 @@ namespace NCL {
 			float pulse = 0;
 
 		private:
-			inline static Network* server = nullptr;
+			inline static std::optional<Network> server = std::optional<Network>();
+			inline static std::optional<Lobbies::Lobby> lobby = std::optional<Lobbies::Lobby>();
 		};
 	}
 }
