@@ -12,6 +12,9 @@ License: MIT (see LICENSE file at the top of the source tree)
 #include <shader/shader_reflection.h>
 #include "agc/error.h"
 
+#include "../Assets/Shaders/PSSL/Interop.h"
+#include "../Assets/Shaders/PSSL/ShaderConstants.psslh"
+
 using namespace NCL;
 using namespace PS5;
 
@@ -31,6 +34,27 @@ AGCShader::AGCShader(const std::string& filename, MemoryAllocator& allocator) {
 		const void* program = sceShaderGetProgram(binaryHandle);
 
 		SceError error = sce::Agc::createShader(&binary, const_cast<void*>(header), program);
+
+#ifndef _NDEBUG
+		// Check that ShaderConstants is the same size in CPP and HLSL
+		auto meta = sceShaderGetMetadataSection(binaryHandle);
+
+		auto resourceList = sceShaderGetResourceList(meta);
+		auto resource = sceShaderGetFirstResource(meta, resourceList);
+		while (resource) {
+			auto type = sceShaderGetResourceClass(meta, resource);
+			std::string_view name(sceShaderGetResourceName(meta, resource));
+
+			if (type == SceShaderResourceClass::SceShaderCb && name == "constants") {
+				auto type = sceShaderGetResourceType(meta, resource);
+				auto size = sceShaderGetStructSize(meta, type);
+				
+				assert(size == sizeof(ShaderConstants));
+			}
+
+			resource = sceShaderGetNextResource(meta, resource);
+		}
+#endif // !_NDEBUG
 	}
 	delete fileData;
 //	return shader;

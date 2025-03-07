@@ -1,3 +1,8 @@
+// https://learn.microsoft.com/en-us/windows/win32/direct3dhlsl/dx-graphics-hlsl-packing-rules
+// Note that HLSL packs structs such that data does not cross any 16-byte boundaries
+// The layout of these structs must match between CPP and HLSL, there is a check
+// for this in debug builds
+
 struct VingetteSettings {
 	float intensity;
 	float3 color;
