@@ -187,4 +187,60 @@ namespace Packet {
 	}
 
 
+
+	void StartGamePacketHandler::Handle(const std::shared_ptr<Packet> packet) {
+	
+	}
+
+	std::shared_ptr<Packet> StartGamePacketHandler::Translate(const ENetPacket* packet) const {
+		return std::make_shared<Packet>();
+
+	}
+
+	ENetPacket* StartGamePacketHandler::ToENetPacket(const std::shared_ptr<Packet> packet) const {
+		return nullptr;
+	}
+
+
+	void AssignHostPacketHandler::Handle(const std::shared_ptr<Packet> packet) {
+	
+	}
+
+	std::shared_ptr<Packet> AssignHostPacketHandler::Translate(const ENetPacket* packet) const {
+		return std::make_shared<Packet>();
+
+	}
+
+	ENetPacket* AssignHostPacketHandler::ToENetPacket(const std::shared_ptr<Packet> packet) const {
+		return nullptr;
+	}
+
+
+	void UserInfoPacketHandler::Handle(const std::shared_ptr<Packet> packet) {
+	
+	}
+
+	std::shared_ptr<Packet> UserInfoPacketHandler::Translate(const ENetPacket* packet) const {
+		return std::make_shared<Packet>();
+
+	}
+
+	ENetPacket* UserInfoPacketHandler::ToENetPacket(const std::shared_ptr<Packet> packet) const {
+		return nullptr;
+	}
+
+
+	void RequestUserIDPacketHandler::Handle(const std::shared_ptr<Packet> packet) {
+	
+	}
+
+	std::shared_ptr<Packet> RequestUserIDPacketHandler::Translate(const ENetPacket* packet) const {
+		return std::make_shared<Packet>();
+
+	}
+
+	ENetPacket* RequestUserIDPacketHandler::ToENetPacket(const std::shared_ptr<Packet> packet) const {
+		return nullptr;
+	}
+
 }
