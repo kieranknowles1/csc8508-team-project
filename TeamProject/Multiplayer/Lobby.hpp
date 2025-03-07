@@ -8,7 +8,7 @@
 #include "Colors.h"
 
 namespace Lobbies {
-	enum class LobbyAction {
+	enum class LobbyAction : uint8_t {
 		JOIN,
 		CREATE,
 		LEAVE
