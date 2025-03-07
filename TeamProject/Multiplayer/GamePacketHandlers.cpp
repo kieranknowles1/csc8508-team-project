@@ -222,11 +222,55 @@ namespace Packet {
 	}
 
 	std::shared_ptr<Packet> AssignHostPacketHandler::Translate(const ENetEvent* event) const {
-		return std::make_shared<Packet>();
+		ENetPacket* packet = event->packet;
+		Type type;
+		uint8_t channel;
+		uint32_t sequenceNumber;
+		
+		int hostID;
+		size_t offset = sizeof(Type) + sizeof(uint8_t) + sizeof(uint32_t);
+
+		GetBaseData(packet, &type, &channel, &sequenceNumber);
+
+		memcpy(&hostID, packet->data + offset, sizeof(int));
+		offset += sizeof(int);
+
+		return std::make_shared<AssignHostPacket>(hostID, event->peer);
 	}
 
 	ENetPacket* AssignHostPacketHandler::ToENetPacket(const std::shared_ptr<Packet> packet) const {
-		return nullptr;
+		char* buffer = new char[
+			sizeof(Type),
+			sizeof(uint8_t),
+			sizeof(uint32_t),
+			sizeof(int)
+		];
+		
+		AssignHostPacket assignHostPacket = (*static_cast<AssignHostPacket*>(packet.get()));
+		size_t offset = 0;
+
+		Type type = assignHostPacket.GetType();
+		memcpy(buffer, &type, sizeof(Type));
+		offset = offset + sizeof(Type);
+
+		uint8_t channel = assignHostPacket.GetChannel();
+		memcpy(buffer + offset, &channel, sizeof(uint8_t));
+		offset = offset + sizeof(uint8_t);
+
+		uint32_t sequenceNumber = assignHostPacket.GetSequenceNumber();
+		memcpy(buffer + offset, &sequenceNumber, sizeof(uint32_t));
+		offset = offset + sizeof(uint32_t);
+
+		int hostID = assignHostPacket.GetHostID();
+		memcpy(buffer + offset, &hostID, sizeof(int));
+		offset = offset + sizeof(int);
+
+		int packetFlags = 0;
+		if (channel == static_cast<int>(Channel::RELIABLE)) packetFlags = ENET_PACKET_FLAG_RELIABLE;
+		else if (channel == static_cast<int>(Channel::UNSEQUENCED)) packetFlags = ENET_PACKET_FLAG_UNSEQUENCED;
+
+		ENetPacket* enetPacket = enet_packet_create(buffer, offset, packetFlags);
+		return enetPacket;
 	}
 #pragma endregion AssignHostPacketHandler
 
