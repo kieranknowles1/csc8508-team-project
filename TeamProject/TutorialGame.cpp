@@ -412,7 +412,7 @@ Wanderer* TutorialGame::AddWandererToWorld() {
 	physicsObject->InitBulletPhysics(bulletWorld, shape, 0);
 	wanderer->SetPhysicsObject(physicsObject);
 
-	wanderer->GetRenderObject()->SetColour(Vector4(1, 0, 0, 1));
+	wanderer->GetRenderObject()->SetColour(Vector4(0, 1, 0, 1));
 
 	wanderer->InitPosAndOffset();
 

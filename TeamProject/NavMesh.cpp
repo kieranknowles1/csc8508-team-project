@@ -198,8 +198,23 @@ std::vector<btVector3> NavMesh::FindPath(const btVector3& start, const btVector3
         }
     }
 
+    std::vector<btVector3> path;
+
+    int current = endTri;
+    while (cameFrom.count(current)) {
+        const Triangle& tri = triangles[current];
+
+        // Add triangle center to path
+        path.push_back((vertices[tri.v1] + vertices[tri.v2] + vertices[tri.v3]) / 3);
+        current = cameFrom[current];
+    }
+    path.insert(path.begin(), end);
+    path.push_back(start);  // Add start point
+    std::reverse(path.begin(), path.end());
+    return path;
+
     // Reconstruct triangle path
-    std::vector<int> trianglePath;
+    /*std::vector<int> trianglePath;
     int current = endTri;
     while (cameFrom.count(current)) {
         trianglePath.push_back(current);
@@ -208,11 +223,13 @@ std::vector<btVector3> NavMesh::FindPath(const btVector3& start, const btVector3
     trianglePath.push_back(startTri);
     std::reverse(trianglePath.begin(), trianglePath.end());
 
+
+
     // Extract portals (shared edges)
     std::vector<std::pair<btVector3, btVector3>> portals = ExtractPortals(trianglePath);
 
     // Apply Funnel Algorithm to optimize the path
-    return ApplyFunnelAlgorithm(start, end, portals);
+    return ApplyFunnelAlgorithm(start, end, portals);*/
 }
 
 

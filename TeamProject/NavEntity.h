@@ -18,7 +18,7 @@ namespace NCL {
 		private:
 			float YAdjust(btVector3 pos, GameObject* player);
 
-			float speed = 1;
+			float speed = 0.5;
 
 			std::vector<btVector3> path = {};
 			int nextNode = -1;

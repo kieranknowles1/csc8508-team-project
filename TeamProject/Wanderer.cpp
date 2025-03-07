@@ -55,7 +55,6 @@ void Wanderer::Update(float dt) {
 	UpdatePlayerDistance();
 	stateMachine->Update(dt);
 
-
 }
 
 void Wanderer::InitPosAndOffset() {
