@@ -56,6 +56,15 @@ namespace NCL {
 			 */
 			inline static std::optional<Lobbies::Lobby>& GetLobby() { return lobby; }
 
+			/**
+			 * @brief Get the user object for this player.
+			 */
+			inline static std::optional<Lobbies::User>& GetUser() { return user; }
+
+			/**
+			 * @brief Set the user object for this player.
+			 */
+			inline static void SetUser(User newUser) { user.emplace(newUser); }
 
 			// Remove an object at the end of this frame. Use during update to avoid removing
 			// from containers while iterating
@@ -192,6 +201,7 @@ namespace NCL {
 		private:
 			inline static std::optional<Network> server = std::optional<Network>();
 			inline static std::optional<Lobbies::Lobby> lobby = std::optional<Lobbies::Lobby>();
+			inline static std::optional<Lobbies::User> user = std::optional<Lobbies::User>();
 		};
 	}
 }
