@@ -73,6 +73,8 @@ set(Windowing_and_Input
     "Controller.h"
 	"KeyboardMouseController.cpp"
     "KeyboardMouseController.h"
+    JoystickController.h
+    JoystickController.cpp
 )
 source_group("Windowing and Input" FILES ${Windowing_and_Input})
 
@@ -93,6 +95,8 @@ set(Windowing_and_Input_SDL2
     SDLMouse.h
     SDLWindow.cpp
     SDLWindow.h
+    SDLJoystick.h
+    SDLJoystick.cpp
 )
 source_group("Windowing and Input\\SDL2" FILES ${Windowing_and_Input__Win32})
 

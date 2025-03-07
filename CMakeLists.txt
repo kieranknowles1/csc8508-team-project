@@ -1,6 +1,7 @@
-cmake_minimum_required(VERSION 3.30.0 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.28.0 FATAL_ERROR)
 
 set(CMAKE_SYSTEM_VERSION 10.0 CACHE STRING "" FORCE)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 project(CSC8508)
 
