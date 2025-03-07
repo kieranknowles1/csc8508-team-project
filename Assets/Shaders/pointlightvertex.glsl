@@ -1,4 +1,4 @@
-#version 330 core //vertex shader to draw light volumes to screen
+#version 400 core
 
 uniform mat4 modelMatrix;
 uniform mat4 viewMatrix;

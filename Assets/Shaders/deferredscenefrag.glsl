@@ -1,4 +1,4 @@
-#version 330 core //Basically like scene.frag but without the lighting calculations
+#version 400 core
 
 uniform sampler2D diffuseTex;
 uniform sampler2D normalTex;

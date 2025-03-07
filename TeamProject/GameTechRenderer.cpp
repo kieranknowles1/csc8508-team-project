@@ -871,38 +871,38 @@ void GameTechRenderer::DrawScene() { //the basic rendering for the scene, curren
 	RenderSkybox();
     RenderCamera();
 	// Render Decals to it's own buffer ///////////// COULD ALSO TRY CLEARING, RENDERING DECALS INTO THE SCREEN AND THEN BINDING BACK TO BUFFERFBO
-	/*RenderDecals(); //THIS COMMENTED OUT SECTION IS THE decal implementation. IF THIS IS COMMENTED OUT, SCENE LOOKS MOSTLY NORMAL. IF INCLUDED, LOOKS WEIRD
+	RenderDecals(); //THIS COMMENTED OUT SECTION IS THE decal implementation. IF THIS IS COMMENTED OUT, SCENE LOOKS MOSTLY NORMAL. IF INCLUDED, LOOKS WEIRD
 	
 	// Blend decals onto the scene using a fullscreen quad
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-	//glBindFramebuffer(GL_FRAMEBUFFER, 0); //////// Why unbind to 0? COMMENTING THIS OUT AT LEAST ALLOWS THE UI TO RENDER PROPERLY
+	////glBindFramebuffer(GL_FRAMEBUFFER, 0); //////// Why unbind to 0? COMMENTING THIS OUT AT LEAST ALLOWS THE UI TO RENDER PROPERLY
 
 	UseShader(*decalBlendShader);
 
-	// Send near and far plane uniforms to decalBlend shader
-	// To conver non-linear depth to linear depth for accurate depth testing
+	//// Send near and far plane uniforms to decalBlend shader
+	//// To conver non-linear depth to linear depth for accurate depth testing
 	glUniform1f(glGetUniformLocation(decalBlendShader->GetProgramID(), "nearPlane"), camera->GetNearPlane());
 	glUniform1f(glGetUniformLocation(decalBlendShader->GetProgramID(), "farPlane"), camera->GetFarPlane());
 
 	GLuint decalTextureLocation = glGetUniformLocation(decalBlendShader->GetProgramID(), "decalTexture");
 	glUniform1i(decalTextureLocation, 0);
 
-	// Bind the decal texture
+	//// Bind the decal texture
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, decalSystem.GetDecalTexture());
 
-	// Bind the scene texture
+	//// Bind the scene texture
 	glActiveTexture(GL_TEXTURE1);
 	glBindTexture(GL_TEXTURE_2D, bufferColourTex); //was hdrTex. Can probably use bufferColourTex as long as lighting not required 
 	glUniform1i(glGetUniformLocation(decalBlendShader->GetProgramID(), "sceneTexture"), 1);
 
-	// Bind depth texture
+	//// Bind depth texture
 	glActiveTexture(GL_TEXTURE2);
 	glBindTexture(GL_TEXTURE_2D, bufferDepthTex); //was hdrDepthTex. 
 	glUniform1i(glGetUniformLocation(decalBlendShader->GetProgramID(), "depthTexture"), 2);
 
-	//glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT); //Commenting this out at least lets the skybox appear
+	////glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT); //Commenting this out at least lets the skybox appear
 	glDisable(GL_CULL_FACE);
 	glDisable(GL_BLEND);
 	glDisable(GL_DEPTH_TEST);
@@ -911,7 +911,7 @@ void GameTechRenderer::DrawScene() { //the basic rendering for the scene, curren
 
 	glDisable(GL_BLEND);
 	glEnable(GL_DEPTH_TEST);
-	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	//glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	//RenderPostProcessing();
 	RenderUI();
 
