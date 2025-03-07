@@ -56,12 +56,12 @@ public:
 	}
 
 	Type getCollisionType() {
+		return collisionType;
+	}
 
 	void Rotate(bool positive, bool rolling, float yaw);
 
 
-		return collisionType;
-	}
 	void resetCollisionType() {
 		collisionType = GameObject::Type::Default;
 	}
