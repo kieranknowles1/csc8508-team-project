@@ -4,7 +4,7 @@ using namespace NCL;
 using namespace CSC8503;
 
 
-ShotInfo* Shoot::RayClosest(btVector3 startPos, btVector3 dir) {
+std::optional<ShotInfo> Shoot::RayClosest(btVector3 startPos, btVector3 dir) {
 	dir.normalize();
     btVector3 shotPos = (startPos + (dir * 10000));
     btCollisionWorld::AllHitsRayResultCallback callback(startPos, shotPos);
@@ -29,16 +29,18 @@ ShotInfo* Shoot::RayClosest(btVector3 startPos, btVector3 dir) {
                 }
             }
         }
-        ShotInfo* shotInfo = new ShotInfo(hitObj, hitPoint, hitNormal);
-        return shotInfo;
+        return std::make_optional<ShotInfo>(hitObj, hitPoint, hitNormal);
     }
-    return nullptr;
+    return std::nullopt;
 }
 
-ShotInfo* Shoot::ShootBulletPlayer(btVector3 startPos, btVector3 dir, btQuaternion rotation) {
-    ShotInfo* rayInfo = RayClosest(startPos, dir);
-    SpawnBulletMesh(startPos, dir, rotation, rayInfo);
-    SpawnDecal(rayInfo);
+std::optional<ShotInfo> Shoot::ShootBulletPlayer(btVector3 startPos, btVector3 dir, btQuaternion rotation) {
+    auto rayInfo = RayClosest(startPos, dir);
+    // Don't have Rust style and_then until C++23 :(
+    if (rayInfo.has_value()) {
+        SpawnBulletMesh(startPos, dir, rotation, &rayInfo.value());
+        SpawnDecal(&rayInfo.value());
+    }
     return rayInfo;
 
 }
