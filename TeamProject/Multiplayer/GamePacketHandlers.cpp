@@ -204,8 +204,7 @@ namespace Packet {
 	}
 
 	std::shared_ptr<Packet> StartGamePacketHandler::Translate(const ENetEvent* event) const {
-		return std::make_shared<Packet>();
-
+		return std::make_shared<StartGamePacket>();
 	}
 
 	ENetPacket* StartGamePacketHandler::ToENetPacket(const std::shared_ptr<Packet> packet) const {
@@ -277,7 +276,22 @@ namespace Packet {
 
 #pragma region UserInfoPacketHandler
 	void UserInfoPacketHandler::Handle(const std::shared_ptr<Packet> packet) {
-	
+		const UserInfoPacket* userInfo = std::static_pointer_cast<UserInfoPacket>(packet).get();
+		std::optional<Lobby>& lobby = TutorialGame::GetLobby();
+
+		if (!lobby.has_value()) return;
+
+		switch (userInfo->GetAction()) {
+		case LobbyAction::CREATE:
+			TutorialGame::SetUser(userInfo->GetUser());
+			break;
+		case LobbyAction::JOIN:
+			lobby.value().AddUser(userInfo->GetUser());
+			break;
+		case LobbyAction::LEAVE:
+			lobby.value().RemoveUser(userInfo->GetUser());
+			break;
+		}
 	}
 
 	std::shared_ptr<Packet> UserInfoPacketHandler::Translate(const ENetEvent* event) const {
