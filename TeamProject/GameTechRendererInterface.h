@@ -22,7 +22,7 @@ namespace NCL::CSC8503 {
 	class GameWorld;
 	class RenderObject;
 
-	struct UIElement {
+	struct UiSprite {
 		// TODO: Need a UV field
 		Maths::Vector2 position;
 		Maths::Vector2 size;
@@ -30,6 +30,21 @@ namespace NCL::CSC8503 {
 		std::shared_ptr<Rendering::Texture> texture;
 	};
 
+    class UiElement {
+        bool enabled = true;
+
+    public:
+        virtual void render(std::vector<UiSprite>& sprites) = 0;
+    };
+
+    class Crosshair : public UiElement {
+    public:
+        void render(std::vector<UiSprite>& sprites) override {
+            // TODO: Move Crosshair code into its own file Crosshair.h
+            // TODO: The render function should just generate a bunch of sprites for
+            // the crosshair and add them to the sprites vector
+        }
+    };
 
 	class GameTechRendererInterface
 	{
@@ -72,10 +87,6 @@ namespace NCL::CSC8503 {
 			vignettePulse = dt;
 		}
 
-		void AddUIElement(const UIElement& element) {
-			uiElements.push_back(element);
-		}
-
 		// TODO: Proper UI class
 		void initUi();
 
@@ -86,8 +97,9 @@ namespace NCL::CSC8503 {
 		float vignettePulse = 0;
 		Window* window;
 		Camera* camera = nullptr;
-		std::vector<UIElement> uiElements;
+		std::vector<UiElement*> uiElements;
 		std::vector<RenderObject*> frameObjects;
+        std::vector<UiSprite> frameSprites;
 		DecalSystem decalSystem;
 	};
 }
