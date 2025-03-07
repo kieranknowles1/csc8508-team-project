@@ -4,6 +4,8 @@
 #include "Multiplayer/GamePacketHandlers.hpp"
 
 namespace Packet {
+
+#pragma region DeltaPacketHandler
 	void DeltaPacketHandler::Handle(const std::shared_ptr<Packet> packet) {
 		const DeltaPacket* deltaPacket = std::static_pointer_cast<DeltaPacket>(packet).get();
 		GameObject* object = GameObject::GetGameObjectByID(deltaPacket->GetTargetID());
@@ -80,8 +82,10 @@ namespace Packet {
 		ENetPacket* enetPacket = enet_packet_create(buffer, offset, packetFlags);
 		return enetPacket;
 	}
+#pragma endregion DeltaPacketHandler
 
 
+#pragma region PositonPacketHandler
 	void PositionPacketHandler::Handle(const std::shared_ptr<Packet> packet) {
 		const PositionPacket* positionPacket = std::static_pointer_cast<PositionPacket>(packet).get();
 		GameObject* targetObject = GameObject::GetGameObjectByID(positionPacket->GetTargetID());
@@ -159,8 +163,10 @@ namespace Packet {
 		ENetPacket* enetPacket = enet_packet_create(buffer, offset, packetFlags);
 		return enetPacket;
 	}
+#pragma endregion PositonPacketHandler
 
 
+#pragma region PlayerStateChangePacketHandler
 	void PlayerStateChangePacketHandler::Handle(const std::shared_ptr<Packet> packet) {
 
 	}
@@ -172,8 +178,10 @@ namespace Packet {
 	ENetPacket* PlayerStateChangePacketHandler::ToENetPacket(const std::shared_ptr<Packet> packet) const {
 		return nullptr;
 	}
+#pragma endregion PlayerStateChangePacketHandler
 
 
+#pragma region ObjectChangeGravityPacketHandler
 	void ObjectChangeGravityPacketHandler::Handle(const std::shared_ptr<Packet> packet) {
 
 	}
@@ -185,9 +193,10 @@ namespace Packet {
 	ENetPacket* ObjectChangeGravityPacketHandler::ToENetPacket(const std::shared_ptr<Packet> packet) const {
 		return nullptr;
 	}
+#pragma endregion ObjectChangeGravityPacketHandler
 
 
-
+#pragma region StartGamePacketHandler
 	void StartGamePacketHandler::Handle(const std::shared_ptr<Packet> packet) {
 	
 	}
@@ -200,8 +209,10 @@ namespace Packet {
 	ENetPacket* StartGamePacketHandler::ToENetPacket(const std::shared_ptr<Packet> packet) const {
 		return nullptr;
 	}
+#pragma endregion StartGamePacketHandler
 
 
+#pragma region AssignHostPacketHandler
 	void AssignHostPacketHandler::Handle(const std::shared_ptr<Packet> packet) {
 	
 	}
@@ -214,8 +225,10 @@ namespace Packet {
 	ENetPacket* AssignHostPacketHandler::ToENetPacket(const std::shared_ptr<Packet> packet) const {
 		return nullptr;
 	}
+#pragma endregion AssignHostPacketHandler
 
 
+#pragma region UserInfoPacketHandler
 	void UserInfoPacketHandler::Handle(const std::shared_ptr<Packet> packet) {
 	
 	}
@@ -228,8 +241,10 @@ namespace Packet {
 	ENetPacket* UserInfoPacketHandler::ToENetPacket(const std::shared_ptr<Packet> packet) const {
 		return nullptr;
 	}
+#pragma endregion UserInfoPacketHandler
 
 
+#pragma region RequestUserIDPacketHandler
 	void RequestUserIDPacketHandler::Handle(const std::shared_ptr<Packet> packet) {
 	
 	}
@@ -242,5 +257,5 @@ namespace Packet {
 	ENetPacket* RequestUserIDPacketHandler::ToENetPacket(const std::shared_ptr<Packet> packet) const {
 		return nullptr;
 	}
-
+#pragma endregion RequestUserIDPacketHandler
 }
