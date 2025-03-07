@@ -10,7 +10,6 @@ using namespace CSC8503;
 
 Wanderer::Wanderer(GameObject* p, NavMesh* mesh) :
 	player(p), navMesh(mesh) {
-	navOffset = btVector3(0, 0, 0);
 	stateMachine = new StateMachine();
 
 	State* playerNear = new State([&](float dt)-> void {
@@ -43,26 +42,27 @@ void Wanderer::Update(float dt) {
 	stateMachine->Update(dt);
 
 	btTransform trans = GetTransform();
-	if (FollowPath(trans.getOrigin() - navOffset, dt)) {
-		btVector3 newPos = pathPoint + navOffset;
+	if (FollowPath(dt, player)) {
+		btVector3 newPos = curPathPoint + offset;
 		trans.setOrigin(newPos);
 		btRigidBody* body = physicsObject->GetRigidBody();
 		body->setWorldTransform(trans);
 		navMesh->DebugDrawPath(curPath);
 	}
 	else {
-		curPath = navMesh->FindPath(GetTransform().getOrigin() - navOffset, navMesh->GetRandomPointInNavMesh());
+		curPath = navMesh->FindPath(curPathPoint, navMesh->GetRandomPointInNavMesh());
 		NewPath(curPath);
 	}
 }
 
-void Wanderer::SetOffset() {
+void Wanderer::InitPosAndOffset() {
 	btCollisionShape* shape = GetPhysicsObject()->GetRigidBody()->getCollisionShape();
 	btCapsuleShape* capsule = static_cast<btCapsuleShape*>(shape);
 	float halfHeight = capsule->getHalfHeight();
-	navOffset = btVector3(0, halfHeight * 2, 0);
+	offset = btVector3(0, halfHeight * 2, 0);
 	btTransform trans = GetTransform();
-	btVector3 newPos = trans.getOrigin() + navOffset;
+	curPathPoint = trans.getOrigin();
+	btVector3 newPos = trans.getOrigin() + offset;
 	trans.setOrigin(newPos);
 	btRigidBody* body = physicsObject->GetRigidBody();
 	body->setWorldTransform(trans);

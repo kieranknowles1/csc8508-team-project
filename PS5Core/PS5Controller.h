@@ -6,34 +6,23 @@ Contact:richgdavison@gmail.com
 License: MIT (see LICENSE file at the top of the source tree)
 *//////////////////////////////////////////////////////////////////////////////
 #pragma once
-#include "Controller.h"
 #include "pad.h"
 
+#include "JoystickController.h"
+
 namespace NCL::PS5 {
-	class PS5Controller : public Controller {
+	class PS5Controller : public JoystickController {
 	public:
 		PS5Controller(SceUserServiceUserId id);
 		virtual ~PS5Controller(void);
 
 		void Update(float dt) override;
-		float GetAnalogue(AnalogueControl control) const override;
-		bool GetDigital(DigitalControl button) const override;
-	private:
-		// If this button is pressed, listen to debug inputs and ignore others
-		ScePadButtonDataOffset DebugMask = SCE_PAD_BUTTON_L1;
-		float fireThreshold = 127.0f;
-		float lookSensitivity = 2.0f;
-
-		/**
-		Is a button pressed?
-		isDebug - If true, enable only when DebugMask is held. Otherwise disable when DebugMask is held
-		thisFrame - If true, register this input for a single frame only. Otherwise register for as long as the button is held
-		*/
-		bool buttonPressed(ScePadButtonDataOffset button, bool isDebug = false, bool thisFrame = false) const;
-
+	protected:
 		uint32_t padHandle;
 		ScePadControllerInformation padInfo;
 		ScePadData data;
-		ScePadData lastFrameData;
+
+		bool internalButtonPressed(Button button) override;
+		float internalAnalogueValue(Analogue analogue) override;
 	};
 }

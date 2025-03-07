@@ -23,6 +23,7 @@ DecalSystem::DecalSystem(int width, int height)
 	glGenFramebuffers(1, &decalFBO);
 	glBindFramebuffer(GL_FRAMEBUFFER, decalFBO);
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, decalTexture, 0);
+	//glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, decalDepthTexture, 0);
 
 	// Check if FBO is complete
 	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {

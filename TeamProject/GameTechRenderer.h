@@ -21,8 +21,13 @@ namespace NCL {
 			: public OGLRenderer
 			, public GameTechRendererInterface {
 		public:
-			GameTechRenderer();
-			~GameTechRenderer();
+			void drawFrame(float dt) override {
+				Update(dt);
+				Render();
+			}
+
+			GameTechRenderer(Window* window);
+			~GameTechRenderer() override;
 
 			Mesh* LoadMesh(const std::string& name) override;
 			Texture* LoadTexture(const std::string& name) override;
@@ -71,10 +76,9 @@ namespace NCL {
 
 			// Decal stuff
 			std::unique_ptr<OGLShader> decalShader;
+			std::unique_ptr<OGLShader> decalBlendShader;
 			GLuint decalQuadVAO = 0;
 			GLuint decalQuadVBO = 0;
-			GLuint fullscreenQuadVAO = 0;
-			GLuint fullscreenQuadVBO = 0;
 
 			Vector4		lightColour;
 			float		lightRadius;
