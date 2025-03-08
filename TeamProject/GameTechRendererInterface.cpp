@@ -33,6 +33,7 @@ namespace NCL::CSC8503 {
 
 			frameObjects.emplace_back(render);
 		});
+		lights = world->GetLights();
 	}
 
 	void GameTechRendererInterface::initUi()

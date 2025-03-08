@@ -1,5 +1,5 @@
 #include "LevelImporter.h"
-
+#include "PointLight.h"
 #include <nlohmann/json.hpp>
 
 using namespace NCL;
@@ -178,6 +178,7 @@ void LevelImporter::HandleTypes(GameObject* obj) {
         obj->GetRenderObject()->SetColour(Vector4(10.0f, 10.0f, 10.0f, 1));
         obj->GetRenderObject()->SetDefaultTexture(nullptr);
         obj->GetRenderObject()->SetNormal(nullptr);
+        world->AddPointLight(new PointLight(obj->GetPhysicsObject()->GetRigidBody()->getWorldTransform().getOrigin(), 700, btVector4(1, 1, 1, 1)));
     default:
         break;
     }

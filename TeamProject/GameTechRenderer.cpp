@@ -5,6 +5,7 @@
 #include "TextureLoader.h"
 #include "MshLoader.h"
 #include "ResourceManager.h"
+#include "PointLight.h"
 
 #include "Debug.h"
 
@@ -52,7 +53,6 @@ GameTechRenderer::GameTechRenderer(Window* window) : OGLRenderer(window), GameTe
 	lightColour = Vector4(0.8f, 0.8f, 0.5f, 1.0f);
 	lightRadius = 1000.0f;
 	lightPosition = Vector3(-200.0f, 60.0f, -200.0f);
-
 	//Skybox!
 	skyboxShader = std::make_unique<OGLShader>("skybox.vert", "skybox.frag");
 	skyboxMesh = std::make_unique<OGLMesh>();
@@ -991,6 +991,11 @@ void GameTechRenderer::DrawPointLights() {
 	glUniformMatrix4fv(glGetUniformLocation(pointlightShader->GetProgramID(), "projMatrix"), 1, false, (float*)&projMatrix);
 	//now send the lights to the shader: (We currently don't have a light class and therefore have to set each of the properties per light here or as currently set in constructor)
 	//for multiple lights, iterate over them here. For now, just one light:
+	for (PointLight* light : lights) {
+		light->worldPosition;
+		light->colour;
+		light->radius;
+	};
 	glUniform3fv(glGetUniformLocation(pointlightShader->GetProgramID(), "lightPos"), 1, (float*)&lightPosition);
 	glUniform4fv(glGetUniformLocation(pointlightShader->GetProgramID(), "lightColour"), 1, (float*)&lightColour);
 	glUniform1f(glGetUniformLocation(pointlightShader->GetProgramID(), "lightRadius"), lightRadius);
