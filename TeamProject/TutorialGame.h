@@ -66,6 +66,21 @@ namespace NCL {
 			 */
 			inline static void SetUser(Lobbies::User newUser) { user.emplace(newUser); }
 
+			/**
+			 * @brief Increment user id by 1, generating a new unique ID.
+			 */
+			inline static int GenerateUserID() { USER_ID++; return USER_ID; }
+
+			/**
+			 * @brief Used to automatically increment the userID from received
+			 * UserInfoPackets.
+			 * 
+			 * Helps guarantee unique user ID's if in future we allow users to
+			 * take control of the server.
+			 */
+			inline static void UpdateUserID(int id) { if (id > USER_ID) USER_ID = id; }
+
+
 			// Remove an object at the end of this frame. Use during update to avoid removing
 			// from containers while iterating
 			// It is the caller's responsibility to ensure there are no dangling references from other objects
@@ -202,6 +217,7 @@ namespace NCL {
 			inline static std::optional<Network> server = std::optional<Network>();
 			inline static std::optional<Lobbies::Lobby> lobby = std::optional<Lobbies::Lobby>();
 			inline static std::optional<Lobbies::User> user = std::optional<Lobbies::User>();
+			inline static int USER_ID = 0;
 		};
 	}
 }

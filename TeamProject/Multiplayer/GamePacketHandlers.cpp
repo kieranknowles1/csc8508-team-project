@@ -278,6 +278,7 @@ namespace Packet {
 	void UserInfoPacketHandler::Handle(const std::shared_ptr<Packet> packet) {
 		const UserInfoPacket* userInfo = std::static_pointer_cast<UserInfoPacket>(packet).get();
 		std::optional<Lobby>& lobby = TutorialGame::GetLobby();
+		TutorialGame::UpdateUserID(userInfo->GetUser().GetUserID());
 
 		if (!lobby.has_value()) return;
 
@@ -358,7 +359,13 @@ namespace Packet {
 
 #pragma region RequestUserIDPacketHandler
 	void RequestUserIDPacketHandler::Handle(const std::shared_ptr<Packet> packet) {
-	
+		const RequestUserIDPacket* request = std::static_pointer_cast<RequestUserIDPacket>(packet).get();
+
+		int newUserID = TutorialGame::GenerateUserID();
+		User newUser(newUserID);
+		
+		std::shared_ptr<UserInfoPacket> infoPacket = std::make_shared<UserInfoPacket>(newUser, LobbyAction::CREATE);
+		TutorialGame::GetServerInstance().value().Send(infoPacket, request->GetPeer());
 	}
 
 	std::shared_ptr<Packet> RequestUserIDPacketHandler::Translate(const ENetEvent* event) const {
