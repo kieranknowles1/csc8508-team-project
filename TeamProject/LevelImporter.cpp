@@ -150,8 +150,21 @@ void LevelImporter::AddObjectToWorld(ObjectData* data) {
     HandleTypes(cube);
 }
 
+btVector4 LevelImporter::LightColour() {
+    switch (lightCount) {
+    case 0: return btVector4(1.0f, 0.0f, 0.0f, 1.0f); // Red
+    case 1: return btVector4(0.0f, 1.0f, 0.0f, 1.0f); // Green
+    case 2: return btVector4(0.0f, 0.0f, 1.0f, 1.0f); // Blue
+    case 3: return btVector4(0.0f, 1.0f, 1.0f, 1.0f); // Cyan
+    case 4: return btVector4(1.0f, 0.0f, 1.0f, 1.0f); // Magenta
+    case 5: return btVector4(1.0f, 1.0f, 0.0f, 1.0f); // Yellow
+    default: return btVector4(1.0f, 1.0f, 1.0f, 1.0f); // White (fallback, shouldn't be hit)
+    }
+}
+
 
 void LevelImporter::HandleTypes(GameObject* obj) {
+    btVector4 colourLight = LightColour();
     switch (obj->getType())
     {
     case GameObject::Type::Default:
@@ -175,10 +188,15 @@ void LevelImporter::HandleTypes(GameObject* obj) {
         obj->GetRenderObject()->SetNormal(resourceManager->getTextures().get("ground_0031_normal_opengl_1k.png"));
         break;
     case GameObject::Type::PointLight:
-        obj->GetRenderObject()->SetColour(Vector4(10.0f, 10.0f, 10.0f, 1));
         obj->GetRenderObject()->SetDefaultTexture(nullptr);
         obj->GetRenderObject()->SetNormal(nullptr);
-        world->AddPointLight(new PointLight(obj->GetPhysicsObject()->GetRigidBody()->getWorldTransform().getOrigin(), 700, btVector4(1, 1, 1, 1)));
+        world->AddPointLight(new PointLight(obj->GetPhysicsObject()->GetRigidBody()->getWorldTransform().getOrigin(), 1000, colourLight));
+        colourLight *= 10;
+        colourLight.setW(1.0f);
+        obj->GetRenderObject()->SetColour(colourLight);
+        lightCount++;
+        break;
+
     default:
         break;
     }
