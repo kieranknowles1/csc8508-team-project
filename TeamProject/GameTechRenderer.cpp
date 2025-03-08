@@ -992,15 +992,20 @@ void GameTechRenderer::DrawPointLights() {
 	//now send the lights to the shader: (We currently don't have a light class and therefore have to set each of the properties per light here or as currently set in constructor)
 	//for multiple lights, iterate over them here. For now, just one light:
 	for (PointLight* light : lights) {
-		light->worldPosition;
-		light->colour;
-		light->radius;
+		btVector3 lightPosition = light->worldPosition; 
+		btVector4 lightColour   = light->colour;
+		float     lightRadius   = light->radius;
+		glUniform3fv(glGetUniformLocation(pointlightShader->GetProgramID(), "lightPos"), 1, (float*)&lightPosition);
+		glUniform4fv(glGetUniformLocation(pointlightShader->GetProgramID(), "lightColour"), 1, (float*)&lightColour);
+		glUniform1f(glGetUniformLocation(pointlightShader->GetProgramID(), "lightRadius"), lightRadius);
+		BindMesh(*lightSphere);
+		DrawBoundMesh();
 	};
-	glUniform3fv(glGetUniformLocation(pointlightShader->GetProgramID(), "lightPos"), 1, (float*)&lightPosition);
+	/*glUniform3fv(glGetUniformLocation(pointlightShader->GetProgramID(), "lightPos"), 1, (float*)&lightPosition);
 	glUniform4fv(glGetUniformLocation(pointlightShader->GetProgramID(), "lightColour"), 1, (float*)&lightColour);
 	glUniform1f(glGetUniformLocation(pointlightShader->GetProgramID(), "lightRadius"), lightRadius);
 	BindMesh(*lightSphere);
-	DrawBoundMesh();
+	DrawBoundMesh();*/
 
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	glCullFace(GL_BACK);
