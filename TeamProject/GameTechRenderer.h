@@ -108,12 +108,15 @@ namespace NCL {
 			OGLMesh* lightSphere;
 			GLuint bufferFBO;
 			GLuint pointLightFBO;
+			GLuint pointLightFBO2;
 			void GenerateScreenTexture(GLuint& into, bool depth = false); //added
 			GLuint bufferDepthTex;
 			GLuint bufferColourTex;
 			GLuint bufferNormalTex;
 			GLuint lightDiffuseTex;
 			GLuint lightSpecularTex;
+			GLuint lightDiffuseTex2;
+			GLuint lightSpecularTex2;
 			void FillBuffers();
 			void DrawPointLights();
 			void CombineBuffers();
