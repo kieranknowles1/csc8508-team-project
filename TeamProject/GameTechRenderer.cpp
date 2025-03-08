@@ -747,7 +747,7 @@ void GameTechRenderer::RenderDecals() {
 	// Rebinding the FBO is necessary because the depth buffer is copied from the scene FBO
 	glBindFramebuffer(GL_FRAMEBUFFER, decalSystem.GetDecalFBO());
 
-	glClearColor(0, 0, 0, 0);
+	glClearColor(0, 0, 0, 0); //Clearing here with a = 1 removes all colour and textures. Not clearing also removes all textures. Not really sure what this does
 	// Not clearing the depth buffer because it was copied from the scene FBO
 	// This is to ensure that the decals are projected onto the correct surfaces
 	glClear(GL_COLOR_BUFFER_BIT); // clear the decal FBO
@@ -805,8 +805,7 @@ void GameTechRenderer::RenderDecals() {
 	}
 
 	// Unbind the FBO
-	//glBindFramebuffer(GL_FRAMEBUFFER, 0);
-	glBindFramebuffer(GL_FRAMEBUFFER, 0); ///try rendering back into the correct FBO 
+	glBindFramebuffer(GL_FRAMEBUFFER, 0); 
 
 	glDisable(GL_BLEND);
 	glDepthFunc(GL_LEQUAL);
@@ -873,12 +872,12 @@ void GameTechRenderer::DrawScene() { //the basic rendering for the scene, curren
 	glBindFramebuffer(GL_FRAMEBUFFER, bufferFBO);
 
 	glEnable(GL_CULL_FACE);
-	glClearColor(1, 1, 1, 0); 
+	glClearColor(1, 1, 1, 0); //doesn't seem to change anything regardless of alpha
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	RenderSkybox();
     RenderCamera();
-	// Render Decals to it's own buffer ///////////// COULD ALSO TRY CLEARING, RENDERING DECALS INTO THE SCREEN AND THEN BINDING BACK TO BUFFERFBO
-	RenderDecals(); //THIS COMMENTED OUT SECTION IS THE decal implementation. IF THIS IS COMMENTED OUT, SCENE LOOKS MOSTLY NORMAL. IF INCLUDED, LOOKS WEIRD
+	// Render Decals to it's own buffer 
+	RenderDecals(); 
 	
 	glBindFramebuffer(GL_FRAMEBUFFER, hdrFBO);
 	// Blend decals onto the scene using a fullscreen quad
@@ -890,7 +889,7 @@ void GameTechRenderer::DrawScene() { //the basic rendering for the scene, curren
 
 	//// Send near and far plane uniforms to decalBlend shader
 	//// To conver non-linear depth to linear depth for accurate depth testing
-	/*glUniform1f(glGetUniformLocation(decalBlendShader->GetProgramID(), "nearPlane"), camera->GetNearPlane());
+	/*glUniform1f(glGetUniformLocation(decalBlendShader->GetProgramID(), "nearPlane"), camera->GetNearPlane()); //DO THESE TWO LINES STILL DO ANYTHING?
 	glUniform1f(glGetUniformLocation(decalBlendShader->GetProgramID(), "farPlane"), camera->GetFarPlane());*/
 
 	GLuint decalTextureLocation = glGetUniformLocation(decalBlendShader->GetProgramID(), "decalTexture");
@@ -906,16 +905,16 @@ void GameTechRenderer::DrawScene() { //the basic rendering for the scene, curren
 	glUniform1i(glGetUniformLocation(decalBlendShader->GetProgramID(), "sceneTexture"), 1);
 
 	////// Bind depth texture
-	//glActiveTexture(GL_TEXTURE2);
-	//glBindTexture(GL_TEXTURE_2D, bufferDepthTex); //was hdrDepthTex. 
-	//glUniform1i(glGetUniformLocation(decalBlendShader->GetProgramID(), "depthTexture"), 2);
+	/*glActiveTexture(GL_TEXTURE2); //DO THESE 3 LINES STILL DO ANYTHING?
+	glBindTexture(GL_TEXTURE_2D, bufferDepthTex); //was hdrDepthTex. 
+	glUniform1i(glGetUniformLocation(decalBlendShader->GetProgramID(), "depthTexture"), 2);*/
 
 	////glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT); //Commenting this out at least lets the skybox appear
 	glDisable(GL_CULL_FACE);
 	glDisable(GL_BLEND);
 	glDisable(GL_DEPTH_TEST);
 	BindMesh(*unitQuad);
-	DrawBoundMesh(); /////////////////////*/
+	DrawBoundMesh(); 
 
 
 	glDisable(GL_CULL_FACE); //Todo - text indices are going the wrong way...
@@ -1005,7 +1004,7 @@ void GameTechRenderer::DrawPointLights() {
 }
 
 void GameTechRenderer::CombineBuffers() {//basically final post processing output. Don't need to update matrices as fullscreen quad is not transformed at all
-	glBindFramebuffer(GL_FRAMEBUFFER, bufferFBO); 
+	glBindFramebuffer(GL_FRAMEBUFFER, bufferFBO); //swapped hdrFBO with bufferFBO to allow decals to work
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT); //without this line, output is just black 
 	UseShader(*combineShader); 
 	glUniform1i(glGetUniformLocation(combineShader->GetProgramID(), "diffuseTex"), 0);
