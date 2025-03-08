@@ -34,36 +34,36 @@ using namespace NCL;
 using namespace NCL::CSC8503;
 
 
-//void TestPacketHandlers() {
-//	btVector3 linear;
-//	btVector3 angular;
-//
-//	Packet::DeltaPacketHandler deltaHandler;
-//	Packet::PacketRegister::Register(&deltaHandler);
-//
-//	std::shared_ptr<Packet::DeltaPacket> testDeltaPacket = std::make_shared<Packet::DeltaPacket>(10, btVector3(1, 2, 3), btVector3(4, 2, 7), 5);
-//	linear = testDeltaPacket->GetLinearVelocity();
-//	angular = testDeltaPacket->GetAngularVelocity();
-//
-//
-//	std::cout << "Test Delta Packet Initial Data:\n";
-//	std::cout << "\tObjectID: " << testDeltaPacket->GetTargetID() << std::endl;
-//	std::cout << "\tLinear Velocity: " << linear.x() << ", " << linear.y() << ", " << linear.z() << std::endl;
-//	std::cout << "\tAngular Velocity: " << angular.x() << ", " << angular.y() << ", " << angular.z() << std::endl;
-//	std::cout << "\tSequence Number: " << testDeltaPacket->GetSequenceNumber() << std::endl;
-//
-//	ENetPacket* deltaENetPacket = deltaHandler.ToENetPacket(testDeltaPacket);
-//	std::shared_ptr<Packet::Packet> testDeltaPacketReturned = deltaHandler.Translate(deltaENetPacket);
-//	std::shared_ptr<Packet::DeltaPacket> deltaTypeConverted = std::static_pointer_cast<Packet::DeltaPacket>(testDeltaPacketReturned);
-//	linear = deltaTypeConverted->GetLinearVelocity();
-//	angular = deltaTypeConverted->GetAngularVelocity();
-//
-//	std::cout << "Test Delta Packet Returned Data:\n";
-//	std::cout << "\tObjectID: " << deltaTypeConverted->GetTargetID() << std::endl;
-//	std::cout << "\tLinear Velocity: " << linear.x() << ", " << linear.y() << ", " << linear.z() << std::endl;
-//	std::cout << "\tAngular Velocity: " << angular.x() << ", " << angular.y() << ", " << angular.z() << std::endl;
-//	std::cout << "\tSequence Number: " << deltaTypeConverted->GetSequenceNumber() << std::endl;
-//}
+void TestPacketHandlers() {
+
+	Packet::UserInfoPacketHandler infoHandler;
+	Packet::PacketRegister::Register(&infoHandler);
+
+	Lobbies::User user = Lobbies::User(4, "Ricky Mc.Pickle");
+	std::shared_ptr<Packet::UserInfoPacket> testInfoPacket = std::make_shared<Packet::UserInfoPacket>(user, Lobbies::LobbyAction::LEAVE);
+	Lobbies::User originalUser = testInfoPacket->GetUser();
+	Lobbies::LobbyAction originalAction = testInfoPacket->GetAction();
+
+
+	std::cout << "Test User Info Packet Initial Data:\n";
+	std::cout << "\tUser ID: " << originalUser.GetUserID() << std::endl;
+	std::cout << "\tDisplay Name: " << originalUser.GetDisplayName() << std::endl;
+	std::cout << "\tAction Number: " << (int) originalAction << std::endl;
+
+	ENetPacket* userInfoENetPacket = infoHandler.ToENetPacket(testInfoPacket);
+	ENetEvent event;
+	event.packet = userInfoENetPacket;
+
+	std::shared_ptr<Packet::Packet> infoPacketReturned = infoHandler.Translate(&event);
+	std::shared_ptr<Packet::UserInfoPacket> infoPacketConverted = std::static_pointer_cast<Packet::UserInfoPacket>(infoPacketReturned);
+	Lobbies::User translatedUser = infoPacketConverted->GetUser();
+	Lobbies::LobbyAction translatedAction = infoPacketConverted->GetAction();
+
+	std::cout << "Test User Info Packet Initial Data:\n";
+	std::cout << "\tUser ID: " << translatedUser.GetUserID() << std::endl;
+	std::cout << "\tDisplay Name: " << translatedUser.GetDisplayName() << std::endl;
+	std::cout << "\tAction Number: " << (int) translatedAction << std::endl;
+}
 
 class MainMenuScreen : public PushdownState {
 	int selection = 0;

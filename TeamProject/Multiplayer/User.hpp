@@ -41,11 +41,16 @@ namespace Lobbies {
 
 		/**
 		 * @brief Serialize this object.
+		 * 
+		 * This object returns a dynamically allocated raw pointer as enet
+		 * expects a raw pointer, of which it takes control of.
+		 * 
+		 * IF NOT USING WITH ENET, YOU MUST FREE THIS POINTER.
 		 */
-		std::unique_ptr<char[]> Serialize() {
-			std::unique_ptr<char[]> data = std::make_unique<char[]>(sizeof(const unsigned int) + (m_name.length() + 1));
-			std::memcpy(data.get(), &m_userID, sizeof(const unsigned int));
-			std::memcpy(data.get() + sizeof(const unsigned int), m_name.c_str(), m_name.length() + 1);
+		char* Serialize() {
+			char* data = new char[sizeof(const unsigned int) + (m_name.length() + 1)];
+			std::memcpy(data, &m_userID, sizeof(const unsigned int));
+			std::memcpy(data + sizeof(const unsigned int), m_name.c_str(), m_name.length() + 1);
 			return data;
 		}
 
@@ -61,6 +66,10 @@ namespace Lobbies {
 			memcpy(&userID, data, sizeof(unsigned int));
 			memcpy(name.get(), data + sizeof(unsigned int), strlen(data + sizeof(unsigned int)) + 1);
 			return User(userID, std::string(name.get()));
+		}
+
+		size_t Size() {
+			return sizeof(unsigned int) + (m_name.length() + 1);
 		}
 
 	private:

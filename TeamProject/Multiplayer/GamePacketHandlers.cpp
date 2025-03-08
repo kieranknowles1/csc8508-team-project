@@ -307,14 +307,51 @@ namespace Packet {
 		LobbyAction action;
 		memcpy(&action, packet->data + packet->dataLength - 1, sizeof(LobbyAction));
 
-		char* data = (char*)(packet->data);
+		char* data = (char*)(packet->data + sizeof(Type) + sizeof(uint8_t) + sizeof(uint32_t));
 		User user = User::Deserialize(data);
 
 		return std::make_shared<UserInfoPacket>(user, action);
 	}
 
 	ENetPacket* UserInfoPacketHandler::ToENetPacket(const std::shared_ptr<Packet> packet) const {
-		return nullptr;
+		UserInfoPacket userInfo = (*static_cast<UserInfoPacket*>(packet.get()));
+
+		char* buffer = new char[
+			sizeof(Type),
+			sizeof(uint8_t),
+			sizeof(uint32_t),
+			sizeof(userInfo.GetUser().Size()),
+			sizeof(uint8_t)
+		];
+		size_t offset = 0;
+
+		Type type = userInfo.GetType();
+		memcpy(buffer, &type, sizeof(Type));
+		offset = offset + sizeof(Type);
+
+		uint8_t channel = userInfo.GetChannel();
+		memcpy(buffer + offset, &channel, sizeof(uint8_t));
+		offset = offset + sizeof(uint8_t);
+
+		uint32_t sequenceNumber = userInfo.GetSequenceNumber();
+		memcpy(buffer + offset, &sequenceNumber, sizeof(uint32_t));
+		offset = offset + sizeof(uint32_t);
+
+		char* userData = userInfo.GetUser().Serialize();
+		memcpy(buffer + offset, userData, userInfo.GetUser().Size());
+		offset = offset + userInfo.GetUser().Size();
+
+		uint8_t action = static_cast<uint8_t>(userInfo.GetAction());
+		memcpy(buffer + offset, &action, sizeof(uint8_t));
+		offset = offset + sizeof(uint8_t);
+
+		int packetFlags = 0;
+		if (channel == static_cast<int>(Channel::RELIABLE)) packetFlags = ENET_PACKET_FLAG_RELIABLE;
+		else if (channel == static_cast<int>(Channel::UNSEQUENCED)) packetFlags = ENET_PACKET_FLAG_UNSEQUENCED;
+
+		ENetPacket* enetPacket = enet_packet_create(buffer, offset, packetFlags);
+		enetPacket->dataLength = offset;
+		return enetPacket;
 	}
 #pragma endregion UserInfoPacketHandler
 
