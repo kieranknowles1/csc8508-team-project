@@ -92,7 +92,7 @@ GameTechRenderer::GameTechRenderer(Window* window) : OGLRenderer(window), GameTe
 
 	glGenFramebuffers(1, &bufferFBO);
 	glGenFramebuffers(1, &pointLightFBO);
-	glGenFramebuffers(1, &pointLightFBO2);
+
 	GLenum buffers[2] = {
 	GL_COLOR_ATTACHMENT0,
 	GL_COLOR_ATTACHMENT1 
@@ -101,12 +101,9 @@ GameTechRenderer::GameTechRenderer(Window* window) : OGLRenderer(window), GameTe
 	GenerateScreenTexture(bufferDepthTex, true);
 	GenerateScreenTexture(bufferColourTex);
 	GenerateScreenTexture(bufferNormalTex, false); 
+
 	GenerateScreenTexture(lightDiffuseTex);
 	GenerateScreenTexture(lightSpecularTex);
-
-	GenerateScreenTexture(lightDiffuseTex2);
-	GenerateScreenTexture(lightSpecularTex2);
-
 	//attach textures to FBOS:
 	//first pass:
 	glBindFramebuffer(GL_FRAMEBUFFER, bufferFBO);
@@ -121,21 +118,14 @@ GameTechRenderer::GameTechRenderer(Window* window) : OGLRenderer(window), GameTe
 
 	//second pass:
 	glBindFramebuffer(GL_FRAMEBUFFER, pointLightFBO);
-	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, lightDiffuseTex2, 0);
-	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, lightSpecularTex2, 0);
-	glDrawBuffers(2, buffers);
-
-	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE || !lightDiffuseTex2 || ! lightSpecularTex2) {
-		return;
-	}
-	glBindFramebuffer(GL_FRAMEBUFFER, pointLightFBO2);
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, lightDiffuseTex, 0);
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, lightSpecularTex, 0);
 	glDrawBuffers(2, buffers);
 
-	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE || !lightDiffuseTex || !lightSpecularTex) {
+	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE || !lightDiffuseTex || ! lightSpecularTex) {
 		return;
 	}
+
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	//not enabling depth test etc here as this is done in the rendering functions
 
@@ -219,14 +209,11 @@ GameTechRenderer::~GameTechRenderer() {
 	delete lightSphere;
 	glDeleteFramebuffers(1, &bufferFBO);
 	glDeleteFramebuffers(1, &pointLightFBO);
-	glDeleteFramebuffers(1, &pointLightFBO2);
 	glDeleteTextures(1, &bufferColourTex);
 	glDeleteTextures(1, &bufferNormalTex);
 	glDeleteTextures(1, &bufferDepthTex);
 	glDeleteTextures(1, &lightDiffuseTex);
 	glDeleteTextures(1, &lightSpecularTex);
-	glDeleteTextures(1, &lightDiffuseTex2);
-	glDeleteTextures(1, &lightSpecularTex2);
 	glDeleteTextures(1, &hdrTex);
 	glDeleteFramebuffers(1, &hdrFBO);
 	glDeleteTextures(1, &BTex);
@@ -1003,9 +990,7 @@ void GameTechRenderer::DrawPointLights() {
 	glUniformMatrix4fv(glGetUniformLocation(pointlightShader->GetProgramID(), "viewMatrix"), 1, false, (float*)&viewMatrix);
 	glUniformMatrix4fv(glGetUniformLocation(pointlightShader->GetProgramID(), "projMatrix"), 1, false, (float*)&projMatrix);
 
-	glBindFramebuffer(GL_FRAMEBUFFER, pointLightFBO2);
 	glClearColor(0, 0, 0, 1); //set to black so that it doesn't interfere with additive blending for light
-	glClear(GL_COLOR_BUFFER_BIT);
 	glBlendFunc(GL_ONE, GL_ONE);
 	glCullFace(GL_FRONT);
 	glDepthFunc(GL_ALWAYS);
@@ -1028,46 +1013,24 @@ void GameTechRenderer::DrawPointLights() {
 	glUniformMatrix4fv(glGetUniformLocation(pointlightShader->GetProgramID(), "viewMatrix"), 1, false, (float*)&viewMatrix);
 	glUniformMatrix4fv(glGetUniformLocation(pointlightShader->GetProgramID(), "projMatrix"), 1, false, (float*)&projMatrix);
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
-	int count = 0;
+
+	BindMesh(*lightSphere);
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_ONE, GL_ONE);
+	glEnable(GL_CULL_FACE);
+	glDisable(GL_DEPTH_TEST);
+
+	glBindFramebuffer(GL_FRAMEBUFFER, pointLightFBO);
 
 	for (PointLight* light : lights) {
-		if (count % 2 == 0) {
-			glBindFramebuffer(GL_FRAMEBUFFER, pointLightFBO);
-			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-			//glClearColor(0, 0, 0, 1);
-			glUniform1i(glGetUniformLocation(pointlightShader->GetProgramID(), "diffuseTexLight"), 2);
-			glActiveTexture(GL_TEXTURE2);
-			glBindTexture(GL_TEXTURE_2D, lightDiffuseTex);
+		UseShader(*pointlightShader);
 
-			glUniform1i(glGetUniformLocation(pointlightShader->GetProgramID(), "specularTexLight"), 3);
-			glActiveTexture(GL_TEXTURE3);
-			glBindTexture(GL_TEXTURE_2D, lightSpecularTex);
-		}
-		else {
-
-			glBindFramebuffer(GL_FRAMEBUFFER, pointLightFBO2);
-			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-			//glClearColor(0, 0, 0, 1);
-			glUniform1i(glGetUniformLocation(pointlightShader->GetProgramID(), "diffuseTexLight"), 2);
-			glActiveTexture(GL_TEXTURE2);
-			glBindTexture(GL_TEXTURE_2D, lightDiffuseTex2);
-
-			glUniform1i(glGetUniformLocation(pointlightShader->GetProgramID(), "specularTexLight"), 3);
-			glActiveTexture(GL_TEXTURE3);
-			glBindTexture(GL_TEXTURE_2D, lightSpecularTex2);
-		}
 		glUniform3fv(glGetUniformLocation(pointlightShader->GetProgramID(), "lightPos"), 1, (float*)&light->worldPosition);
 		glUniform4fv(glGetUniformLocation(pointlightShader->GetProgramID(), "lightColour"), 1, (float*)&light->colour);
 		glUniform1f(glGetUniformLocation(pointlightShader->GetProgramID(), "lightRadius"), light->radius);
-		BindMesh(*lightSphere);
+
 		DrawBoundMesh();
-		count++;
 	};
-	/*glUniform3fv(glGetUniformLocation(pointlightShader->GetProgramID(), "lightPos"), 1, (float*)&lightPosition);
-	glUniform4fv(glGetUniformLocation(pointlightShader->GetProgramID(), "lightColour"), 1, (float*)&lightColour);
-	glUniform1f(glGetUniformLocation(pointlightShader->GetProgramID(), "lightRadius"), lightRadius);
-	BindMesh(*lightSphere);
-	DrawBoundMesh();*/
 
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	glCullFace(GL_BACK);
@@ -1094,14 +1057,6 @@ void GameTechRenderer::CombineBuffers() {//basically final post processing outpu
 	glUniform1i(glGetUniformLocation(combineShader->GetProgramID(), "specularLight"), 2); 
 	glActiveTexture(GL_TEXTURE2);
 	glBindTexture(GL_TEXTURE_2D, lightSpecularTex);
-
-	glUniform1i(glGetUniformLocation(combineShader->GetProgramID(), "diffuseLight2"), 3);
-	glActiveTexture(GL_TEXTURE3);
-	glBindTexture(GL_TEXTURE_2D, lightDiffuseTex2);
-
-	glUniform1i(glGetUniformLocation(combineShader->GetProgramID(), "specularLight2"), 4);
-	glActiveTexture(GL_TEXTURE4);
-	glBindTexture(GL_TEXTURE_2D, lightSpecularTex2);
 
 
 	BindMesh(*fullscreenQuad);
