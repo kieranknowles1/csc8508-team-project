@@ -277,6 +277,7 @@ void GameTechRenderer::RenderFrame() {
 	DrawPointLights();
 	CombineBuffers();
 	RenderPostProcessing(); 
+	RenderUI();
 }
 
 void GameTechRenderer::RenderShadowMap() {
@@ -646,6 +647,11 @@ void GameTechRenderer::SetDebugLineBufferSizes(size_t newVertCount) {
 }
 
 void GameTechRenderer::RenderUI() {
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	glEnable(GL_BLEND);
+	glDisable(GL_DEPTH_TEST);
+	glBlendFunc(GL_SRC_ALPHA, GL_ZERO);
+	//RenderPostProcessing();
 	UseShader(*uiShader);
 
 	// Get uniform locations once and store them
@@ -655,9 +661,6 @@ void GameTechRenderer::RenderUI() {
 	int hasTextureLocation = glGetUniformLocation(uiShader->GetProgramID(), "hasTexture");
 	int textureLocation = glGetUniformLocation(uiShader->GetProgramID(), "mainTex");
 
-	glDisable(GL_DEPTH_TEST); // UI should always be on top
-	glEnable(GL_BLEND);
-	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 	for (const auto& uiElement : uiElements) {
 		Vector2 pos = uiElement.position;
@@ -776,6 +779,13 @@ void GameTechRenderer::RenderDecals() {
 	glUniform1i(glGetUniformLocation(decalShader->GetProgramID(), "screenWidth"), windowSize.x);
 	glUniform1i(glGetUniformLocation(decalShader->GetProgramID(), "screenHeight"), windowSize.y);
 
+	// Projection matrix is required because decals require projection from world space onto a surface,
+	// which is done by projecting the decal onto the surface using the normal of the surface.
+	Matrix4 viewMatrix = camera->BuildViewMatrix();
+	Matrix4 projMatrix = camera->BuildProjectionMatrix(hostWindow->GetScreenAspect());
+	Matrix4 viewProjMatrix = projMatrix * viewMatrix;
+	glUniformMatrix4fv(viewProjMatrixLocation, 1, false, (float*)&viewProjMatrix);
+
 	for (const auto& decal : decalSystem.GetDecals()) {
 		// Create a rotation matrix to orient the decal based on the normal of the surface it is projected onto
 		Matrix4 rotationMatrix = Matrix::RotationFromNormal(decal.normal);
@@ -783,16 +793,9 @@ void GameTechRenderer::RenderDecals() {
 							  rotationMatrix *
 							  Matrix::Scale(Vector3(decal.radius, decal.radius, decal.radius));
 
-		// Projection matrix is required because decals require projection from world space onto a surface,
-		// which is done by projecting the decal onto the surface using the normal of the surface.
-		Matrix4 viewMatrix = camera->BuildViewMatrix();
-		Matrix4 projMatrix = camera->BuildProjectionMatrix(hostWindow->GetScreenAspect());
-		Matrix4 viewProjMatrix = projMatrix * viewMatrix;
-
 		glUniform1f(alphaFadeLocation, decal.alphaFade);
 		glUniform4fv(decalColorLocation, 1, (float*)&decal.color);
 		glUniformMatrix4fv(modelMatrixLocation, 1, false, (float*)&modelMatrix);
-		glUniformMatrix4fv(viewProjMatrixLocation, 1, false, (float*)&viewProjMatrix);
 
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, ((OGLTexture*)decal.texture.get())->GetObjectID());
@@ -803,7 +806,7 @@ void GameTechRenderer::RenderDecals() {
 
 	// Unbind the FBO
 	//glBindFramebuffer(GL_FRAMEBUFFER, 0);
-	glBindFramebuffer(GL_FRAMEBUFFER, bufferFBO); ///try rendering back into the correct FBO 
+	glBindFramebuffer(GL_FRAMEBUFFER, 0); ///try rendering back into the correct FBO 
 
 	glDisable(GL_BLEND);
 	glDepthFunc(GL_LEQUAL);
@@ -819,7 +822,7 @@ void GameTechRenderer::RenderPostProcessing() {
 	    UseShader(*vignetteShader);
 	    glUniform1i(glGetUniformLocation(vignetteShader->GetProgramID(), "vignetteOn"), GetVignetteOn());
 		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, hdrTex); //hdrTex currently holds raw scene
+		glBindTexture(GL_TEXTURE_2D, bufferColourTex); //hdrTex currently holds raw scene
 		glUniform1i(glGetUniformLocation(vignetteShader->GetProgramID(), "diffuseTex"), 0);
 		glUniform1f(glGetUniformLocation(vignetteShader->GetProgramID(), "windowSizex"), windowSize.x);
 		glUniform1f(glGetUniformLocation(vignetteShader->GetProgramID(), "windowSizey"), windowSize.y);
@@ -866,13 +869,18 @@ void GameTechRenderer::GenerateScreenTexture(GLuint& into, bool depth) {
 }
 
 void GameTechRenderer::DrawScene() { //the basic rendering for the scene, currently not including shadows. 
+	
+	glBindFramebuffer(GL_FRAMEBUFFER, bufferFBO);
+
 	glEnable(GL_CULL_FACE);
-	glClearColor(1, 1, 1, 1); 
+	glClearColor(1, 1, 1, 0); 
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	RenderSkybox();
     RenderCamera();
 	// Render Decals to it's own buffer ///////////// COULD ALSO TRY CLEARING, RENDERING DECALS INTO THE SCREEN AND THEN BINDING BACK TO BUFFERFBO
 	RenderDecals(); //THIS COMMENTED OUT SECTION IS THE decal implementation. IF THIS IS COMMENTED OUT, SCENE LOOKS MOSTLY NORMAL. IF INCLUDED, LOOKS WEIRD
 	
+	glBindFramebuffer(GL_FRAMEBUFFER, hdrFBO);
 	// Blend decals onto the scene using a fullscreen quad
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -882,8 +890,8 @@ void GameTechRenderer::DrawScene() { //the basic rendering for the scene, curren
 
 	//// Send near and far plane uniforms to decalBlend shader
 	//// To conver non-linear depth to linear depth for accurate depth testing
-	glUniform1f(glGetUniformLocation(decalBlendShader->GetProgramID(), "nearPlane"), camera->GetNearPlane());
-	glUniform1f(glGetUniformLocation(decalBlendShader->GetProgramID(), "farPlane"), camera->GetFarPlane());
+	/*glUniform1f(glGetUniformLocation(decalBlendShader->GetProgramID(), "nearPlane"), camera->GetNearPlane());
+	glUniform1f(glGetUniformLocation(decalBlendShader->GetProgramID(), "farPlane"), camera->GetFarPlane());*/
 
 	GLuint decalTextureLocation = glGetUniformLocation(decalBlendShader->GetProgramID(), "decalTexture");
 	glUniform1i(decalTextureLocation, 0);
@@ -897,10 +905,10 @@ void GameTechRenderer::DrawScene() { //the basic rendering for the scene, curren
 	glBindTexture(GL_TEXTURE_2D, bufferColourTex); //was hdrTex. Can probably use bufferColourTex as long as lighting not required 
 	glUniform1i(glGetUniformLocation(decalBlendShader->GetProgramID(), "sceneTexture"), 1);
 
-	//// Bind depth texture
-	glActiveTexture(GL_TEXTURE2);
-	glBindTexture(GL_TEXTURE_2D, bufferDepthTex); //was hdrDepthTex. 
-	glUniform1i(glGetUniformLocation(decalBlendShader->GetProgramID(), "depthTexture"), 2);
+	////// Bind depth texture
+	//glActiveTexture(GL_TEXTURE2);
+	//glBindTexture(GL_TEXTURE_2D, bufferDepthTex); //was hdrDepthTex. 
+	//glUniform1i(glGetUniformLocation(decalBlendShader->GetProgramID(), "depthTexture"), 2);
 
 	////glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT); //Commenting this out at least lets the skybox appear
 	glDisable(GL_CULL_FACE);
@@ -909,11 +917,6 @@ void GameTechRenderer::DrawScene() { //the basic rendering for the scene, curren
 	BindMesh(*unitQuad);
 	DrawBoundMesh(); /////////////////////*/
 
-	glDisable(GL_BLEND);
-	glEnable(GL_DEPTH_TEST);
-	//glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-	//RenderPostProcessing();
-	RenderUI();
 
 	glDisable(GL_CULL_FACE); //Todo - text indices are going the wrong way...
 	glDisable(GL_BLEND);
@@ -1002,12 +1005,12 @@ void GameTechRenderer::DrawPointLights() {
 }
 
 void GameTechRenderer::CombineBuffers() {//basically final post processing output. Don't need to update matrices as fullscreen quad is not transformed at all
-	glBindFramebuffer(GL_FRAMEBUFFER, hdrFBO); 
+	glBindFramebuffer(GL_FRAMEBUFFER, bufferFBO); 
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT); //without this line, output is just black 
 	UseShader(*combineShader); 
 	glUniform1i(glGetUniformLocation(combineShader->GetProgramID(), "diffuseTex"), 0);
 	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, bufferColourTex);
+	glBindTexture(GL_TEXTURE_2D, hdrTex);
 
 	glUniform1i(glGetUniformLocation(combineShader->GetProgramID(), "diffuseLight"), 1);
 	glActiveTexture(GL_TEXTURE1);
