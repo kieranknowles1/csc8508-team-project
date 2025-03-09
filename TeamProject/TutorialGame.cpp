@@ -587,7 +587,7 @@ GameObject* TutorialGame::AddSphereToWorld(const Vector3& position, float radius
 void TutorialGame::JoinGame(bool host) {
     std::cout << "Determining Address...\n";
     ENetAddress address;
-    enet_address_set_host(&address, host ? "0.0.0.0" : "127.0.0.1");
+    enet_address_set_host(&address, host ? "0.0.0.0" : "0.0.0.0");
     address.port = host ? DEFAULT_PORT : 0;
 
     std::cout << "Starting server...\n";

@@ -128,6 +128,7 @@ void Network::Tick(float dt) {
             std::cout << "Packet received!\n";
             switch (event.type) {
             case ENET_EVENT_TYPE_CONNECT:
+                std::cout << "CONNECTION RECEIVED!\n";
                 if (!ConnectPeer()) enet_peer_disconnect(event.peer, 0);
                 else if (m_connectCallback != nullptr) m_connectCallback(event.peer);
                 break;
@@ -164,6 +165,8 @@ void Network::SendAll() {
         if (m_sendBuffer[i].second == nullptr) {
             std::cout << "[Network] Broadcasting Packet.\n";
             enet_host_broadcast(m_host, m_sendBuffer[i].first.get()->GetChannel(), packet);
+            std::cout << "Num clients: " << &m_host->peers[0] << std::endl;
+            enet_host_flush(m_host);
         }
         else {
             std::cout << "[Network] Directly Sending Packet.\n";
