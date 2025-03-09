@@ -600,10 +600,20 @@ void TutorialGame::JoinGame(bool host) {
 
     Packet::UserInfoPacketHandler* infoHandler = new Packet::UserInfoPacketHandler();
     Packet::PacketRegister::Register(infoHandler);
-    std::cout << "RequestUserInfo Type: " << (int) Packet::PacketType::REQUEST_USERID << std::endl;
 
-    std::cout << "Making Request...\n";
-    std::shared_ptr<Packet::RequestUserIDPacket> request = std::make_shared<Packet::RequestUserIDPacket>(nullptr);
-    std::cout << "Sending Request...\n";
-    server.value().Broadcast(request);
+    if (!host) {
+        ENetAddress dest;
+        enet_address_set_host(&dest, "192.168.0.15");
+        dest.port = DEFAULT_PORT;
+
+        server->ConnectTo(&dest);
+
+        std::cout << "Making Request...\n";
+        std::shared_ptr<Packet::RequestUserIDPacket> request = std::make_shared<Packet::RequestUserIDPacket>(nullptr);
+        std::cout << "Sending Request...\n";
+        server.value().Broadcast(request);
+    }
+    else {
+        user.emplace(GenerateUserID());
+    }
 }
