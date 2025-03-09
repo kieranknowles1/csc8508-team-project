@@ -123,9 +123,8 @@ void Network::Tick(float dt) {
         SendAll();
 
         ENetEvent event;
-        int x = enet_host_service(m_host, &event, 100);
 
-        while (enet_host_service(m_host, &event, 100) > 0) {
+        while (enet_host_service(m_host, &event, 1) > 0) {
             std::cout << "Packet received!\n";
             switch (event.type) {
             case ENET_EVENT_TYPE_CONNECT:
