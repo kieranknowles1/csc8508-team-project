@@ -960,11 +960,15 @@ void GameTechRenderer::DrawPointLights() {
 	UseShader(*pointlightShader);
 	glClearColor(0, 0, 0, 1); //set to black so that it doesn't interfere with additive blending for light
 	glClear(GL_COLOR_BUFFER_BIT);
-	glBlendFunc(GL_ONE, GL_ONE);
+
 	glCullFace(GL_FRONT);
 	glDepthFunc(GL_ALWAYS);
 	glDepthMask(GL_FALSE);
-	glEnable(GL_DEPTH_TEST);
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_ONE, GL_ONE);
+	glEnable(GL_CULL_FACE);
+	glDisable(GL_DEPTH_TEST);
+
 	glUniform1i(glGetUniformLocation(pointlightShader->GetProgramID(), "depthTex"), 0);
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, bufferDepthTex);
@@ -974,70 +978,32 @@ void GameTechRenderer::DrawPointLights() {
 	glBindTexture(GL_TEXTURE_2D, bufferNormalTex);
 
 	int cameraLocation = glGetUniformLocation(sceneShader->GetProgramID(), "cameraPos");
-
 	Vector3 camPos = camera->GetPosition();
 	glUniform3fv(cameraLocation, 1, &camPos.x);
-
 	glUniform2f(glGetUniformLocation(pointlightShader->GetProgramID(), "pixelSize"), 1.0f / windowSize.x, 1.0f / windowSize.y);
 
 	//using the same proj and view matrices from RenderCamera(): 
 	Matrix4 viewMatrix = camera->BuildViewMatrix();
 	Matrix4 projMatrix = camera->BuildProjectionMatrix(hostWindow->GetScreenAspect());
-
 	Matrix4 invViewProj = Matrix::Inverse(projMatrix * viewMatrix); // trying to take inverse of projview matrix
+
 	glUniformMatrix4fv(glGetUniformLocation(pointlightShader->GetProgramID(), "inverseProjView"), 1, false, (float*)&invViewProj);
 	//update shader matrices here (don't need to set model matrices though as this will be taken care of in vertex shader):
 	glUniformMatrix4fv(glGetUniformLocation(pointlightShader->GetProgramID(), "viewMatrix"), 1, false, (float*)&viewMatrix);
 	glUniformMatrix4fv(glGetUniformLocation(pointlightShader->GetProgramID(), "projMatrix"), 1, false, (float*)&projMatrix);
-
-	glClearColor(0, 0, 0, 1); //set to black so that it doesn't interfere with additive blending for light
-	glBlendFunc(GL_ONE, GL_ONE);
-	glCullFace(GL_FRONT);
-	glDepthFunc(GL_ALWAYS);
-	glDepthMask(GL_FALSE);
-	glEnable(GL_DEPTH_TEST);
-
-	glUniform1i(glGetUniformLocation(pointlightShader->GetProgramID(), "depthTex"), 0);
-	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, bufferDepthTex);
-
-	glUniform1i(glGetUniformLocation(pointlightShader->GetProgramID(), "normTex"), 1);
-	glActiveTexture(GL_TEXTURE1);
-	glBindTexture(GL_TEXTURE_2D, bufferNormalTex);
-
-
-	glUniform3fv(cameraLocation, 1, &camPos.x);
-	glUniform2f(glGetUniformLocation(pointlightShader->GetProgramID(), "pixelSize"), 1.0f / windowSize.x, 1.0f / windowSize.y);
-	glUniformMatrix4fv(glGetUniformLocation(pointlightShader->GetProgramID(), "inverseProjView"), 1, false, (float*)&invViewProj);
-	//update shader matrices here (don't need to set model matrices though as this will be taken care of in vertex shader):
-	glUniformMatrix4fv(glGetUniformLocation(pointlightShader->GetProgramID(), "viewMatrix"), 1, false, (float*)&viewMatrix);
-	glUniformMatrix4fv(glGetUniformLocation(pointlightShader->GetProgramID(), "projMatrix"), 1, false, (float*)&projMatrix);
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
 	BindMesh(*lightSphere);
-	glEnable(GL_BLEND);
-	glBlendFunc(GL_ONE, GL_ONE);
-	glEnable(GL_CULL_FACE);
-	glDisable(GL_DEPTH_TEST);
-
-	glBindFramebuffer(GL_FRAMEBUFFER, pointLightFBO);
 
 	for (PointLight* light : lights) {
-		UseShader(*pointlightShader);
-
 		glUniform3fv(glGetUniformLocation(pointlightShader->GetProgramID(), "lightPos"), 1, (float*)&light->worldPosition);
 		glUniform4fv(glGetUniformLocation(pointlightShader->GetProgramID(), "lightColour"), 1, (float*)&light->colour);
 		glUniform1f(glGetUniformLocation(pointlightShader->GetProgramID(), "lightRadius"), light->radius);
-
 		DrawBoundMesh();
 	};
 
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	glCullFace(GL_BACK);
 	glDepthFunc(GL_LEQUAL);
-
 	glDepthMask(GL_TRUE);
-
 	glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
 
 }
