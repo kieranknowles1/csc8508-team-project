@@ -13,6 +13,8 @@
 
 #include "Window.h"
 
+#include <chrono>
+
 using namespace NCL;
 using namespace CSC8503;
 
@@ -123,6 +125,10 @@ void TutorialGame::UpdateGame(float dt) {
         else {
             isPackets = false;
         }
+    }
+
+    if (user.has_value()) {
+        std::cout << "User ID: " << user->GetUserID() << std::endl;
     }
     
     //post processing time variable effect:
@@ -587,7 +593,8 @@ GameObject* TutorialGame::AddSphereToWorld(const Vector3& position, float radius
 void TutorialGame::JoinGame(bool host) {
     std::cout << "Determining Address...\n";
     ENetAddress address;
-    enet_address_set_host(&address, host ? "0.0.0.0" : "0.0.0.0");
+    //enet_address_set_host(&address, host ? "0.0.0.0" : ".0.0.1");
+    address.host = ENET_HOST_ANY;
     address.port = host ? DEFAULT_PORT : 0;
 
     std::cout << "Starting server...\n";
@@ -607,6 +614,9 @@ void TutorialGame::JoinGame(bool host) {
         dest.port = DEFAULT_PORT;
 
         server->ConnectTo(&dest);
+
+        using namespace std::chrono_literals;
+        std::this_thread::sleep_for(1000ms);
 
         std::cout << "Making Request...\n";
         std::shared_ptr<Packet::RequestUserIDPacket> request = std::make_shared<Packet::RequestUserIDPacket>(nullptr);
