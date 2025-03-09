@@ -29,7 +29,7 @@ namespace NCL {
 			GameTechRenderer(Window* window);
 			~GameTechRenderer() override;
 
-			Mesh* LoadMesh(const std::string& name) override;
+			OGLMesh* LoadMesh(const std::string& name) override; /////WAS Mesh* instead of OGLMesh*
 			Texture* LoadTexture(const std::string& name) override;
 
 		protected:
@@ -101,10 +101,29 @@ namespace NCL {
 			GLuint textTexVBO;
 			size_t textCount = 0;
 
+			//Deferred rendering additions:
+			OGLShader* deferredsceneShader;
+			OGLShader* pointlightShader;
+			OGLShader* combineShader;
+			OGLMesh* lightSphere;
+			GLuint bufferFBO;
+			GLuint pointLightFBO;
+			void GenerateScreenTexture(GLuint& into, bool depth = false); //added
+			GLuint bufferDepthTex;
+			GLuint bufferColourTex;
+			GLuint bufferNormalTex;
+			GLuint lightDiffuseTex;
+			GLuint lightSpecularTex;
+			void FillBuffers();
+			void DrawPointLights();
+			void CombineBuffers();
+			void DrawScene(); 
+
 			//Post processing additions:
 			GLuint hdrTex;
 			GLuint hdrFBO;
 			GLuint hdrDepthTex;
+			OGLMesh* fullscreenQuad;  
 			OGLShader* hdrShader;
 			GLuint BTex;
 			GLuint BFBO;

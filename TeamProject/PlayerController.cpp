@@ -223,13 +223,15 @@ void PlayerController::HandleSliding(float dt) {
     }
 }
 
+
 void PlayerController::SpecialTypeCalculations() {
-    switch (player->getType())
+       switch (player->getCollisionType())
+
     {
-    case 'D': //Default
+    case GameObject::Type::Default:
         onIce = false;
         break;
-    case 'J': {//Jump-pads
+    case GameObject::Type::JumpPad: {
         btVector3 normal = player->getCollisionNormal();
         float dotProduct = normal.dot(upDirection.absolute());
         btVector3 movement = btVector3(0, 0, 0);
@@ -239,8 +241,7 @@ void PlayerController::SpecialTypeCalculations() {
         inAirTime = 0.2f;
         rb->applyCentralImpulse(movement);
         break;
-    }
-    case 'S': { // Slime
+    } case GameObject::Type::Slime: {
         if (inAirTime <= 0) {
             btVector3 normal = player->getCollisionNormal();
             float dampening = 0.85f;
@@ -262,14 +263,14 @@ void PlayerController::SpecialTypeCalculations() {
         }
         break;
     }
-    case 'I': {// Ice
+    case GameObject::Type::Ice: {
         onIce = true;
         break;
     }
     default:
         break;
     }
-    player->resetType();
+    player->resetCollisionType();
 }
 
 void PlayerController::HandleYaw() {
