@@ -369,12 +369,37 @@ namespace Packet {
 	}
 
 	std::shared_ptr<Packet> RequestUserIDPacketHandler::Translate(const ENetEvent* event) const {
-		return std::make_shared<Packet>();
-
+		return std::make_shared<RequestUserIDPacket>(event->peer);
 	}
 
 	ENetPacket* RequestUserIDPacketHandler::ToENetPacket(const std::shared_ptr<Packet> packet) const {
-		return nullptr;
+		UserInfoPacket userInfo = (*static_cast<UserInfoPacket*>(packet.get()));
+
+		char* buffer = new char[
+			sizeof(Type),
+			sizeof(uint8_t),
+			sizeof(uint32_t)
+		];
+		size_t offset = 0;
+
+		Type type = userInfo.GetType();
+		memcpy(buffer, &type, sizeof(Type));
+		offset = offset + sizeof(Type);
+
+		uint8_t channel = userInfo.GetChannel();
+		memcpy(buffer + offset, &channel, sizeof(uint8_t));
+		offset = offset + sizeof(uint8_t);
+
+		uint32_t sequenceNumber = userInfo.GetSequenceNumber();
+		memcpy(buffer + offset, &sequenceNumber, sizeof(uint32_t));
+		offset = offset + sizeof(uint32_t);
+
+		int packetFlags = 0;
+		if (channel == static_cast<int>(Channel::RELIABLE)) packetFlags = ENET_PACKET_FLAG_RELIABLE;
+		else if (channel == static_cast<int>(Channel::UNSEQUENCED)) packetFlags = ENET_PACKET_FLAG_UNSEQUENCED;
+
+		ENetPacket* enetPacket = enet_packet_create(buffer, offset, packetFlags);
+		return enetPacket;
 	}
 #pragma endregion RequestUserIDPacketHandler
 }
