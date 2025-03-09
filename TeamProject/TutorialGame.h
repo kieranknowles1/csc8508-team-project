@@ -102,7 +102,7 @@ namespace NCL {
 
             virtual void UpdateGame(float dt);
             void LoadWorldFromFile(int levelNum);
-            void JoinGame(bool host) {};
+            void JoinGame(bool host);
 
         protected:
             void InitialiseAssets();

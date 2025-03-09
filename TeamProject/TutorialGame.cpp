@@ -6,6 +6,8 @@
 #include "AudioEngine.h"
 #include "GameTechRendererInterface.h"
 #include "BulletDebug.h"
+#include "Multiplayer/GamePackets.hpp"
+#include "Multiplayer/GamePacketHandlers.hpp"
 #include <CSC8503CoreClasses/Debug.h>
 #include "Shoot.h"
 
@@ -111,6 +113,17 @@ void TutorialGame::UpdateGame(float dt) {
         profiler.printTimes();
     }
 
+    // Rudementry packet updating.
+    bool isPackets = true;
+    while (isPackets && server.has_value()) {
+        std::shared_ptr<Packet::Packet> packet = server->Fetch();
+        if (packet.get() != nullptr) {
+            Packet::PacketRegister::GetHandler(packet->GetType())->Handle(packet);
+        }
+        else {
+            isPackets = false;
+        }
+    }
     
     //post processing time variable effect:
     pulse += dt;
@@ -568,4 +581,29 @@ GameObject* TutorialGame::AddSphereToWorld(const Vector3& position, float radius
     world->AddGameObject(sphere);
 
     return sphere;
+}
+
+
+void TutorialGame::JoinGame(bool host) {
+    std::cout << "Determining Address...\n";
+    ENetAddress address;
+    enet_address_set_host(&address, host ? "0.0.0.0" : "127.0.0.1");
+    address.port = host ? DEFAULT_PORT : 0;
+
+    std::cout << "Starting server...\n";
+    server.emplace(&address, MAX_PLAYERS);
+    server.value().Start();
+
+    std::cout << "Creating packet handlers...\n";
+    Packet::RequestUserIDPacketHandler* requestHandler = new Packet::RequestUserIDPacketHandler();
+    Packet::PacketRegister::Register(requestHandler);
+
+    Packet::UserInfoPacketHandler* infoHandler = new Packet::UserInfoPacketHandler();
+    Packet::PacketRegister::Register(infoHandler);
+    std::cout << "RequestUserInfo Type: " << (int) Packet::PacketType::REQUEST_USERID << std::endl;
+
+    std::cout << "Making Request...\n";
+    std::shared_ptr<Packet::RequestUserIDPacket> request = std::make_shared<Packet::RequestUserIDPacket>(nullptr);
+    std::cout << "Sending Request...\n";
+    server.value().Broadcast(request);
 }

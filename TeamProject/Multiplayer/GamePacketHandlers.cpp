@@ -285,6 +285,7 @@ namespace Packet {
         switch (userInfo->GetAction()) {
         case LobbyAction::CREATE:
             TutorialGame::SetUser(userInfo->GetUser());
+            std::cout << "User has been set\n";
             break;
         case LobbyAction::JOIN:
             lobby.value().AddUser(userInfo->GetUser());
@@ -359,6 +360,7 @@ namespace Packet {
 
 #pragma region RequestUserIDPacketHandler
     void RequestUserIDPacketHandler::Handle(const std::shared_ptr<Packet> packet) {
+        std::cout << "Handling User ID Request\n";
         const RequestUserIDPacket* request = std::static_pointer_cast<RequestUserIDPacket>(packet).get();
 
         int newUserID = TutorialGame::GenerateUserID();
@@ -373,7 +375,7 @@ namespace Packet {
     }
 
     ENetPacket* RequestUserIDPacketHandler::ToENetPacket(const std::shared_ptr<Packet> packet) const {
-        UserInfoPacket userInfo = (*static_cast<UserInfoPacket*>(packet.get()));
+        RequestUserIDPacket request = (*static_cast<RequestUserIDPacket*>(packet.get()));
 
         char* buffer = new char[
             sizeof(Type),
@@ -382,15 +384,15 @@ namespace Packet {
         ];
         size_t offset = 0;
 
-        Type type = userInfo.GetType();
+        Type type = request.GetType();
         memcpy(buffer, &type, sizeof(Type));
         offset = offset + sizeof(Type);
 
-        uint8_t channel = userInfo.GetChannel();
+        uint8_t channel = request.GetChannel();
         memcpy(buffer + offset, &channel, sizeof(uint8_t));
         offset = offset + sizeof(uint8_t);
 
-        uint32_t sequenceNumber = userInfo.GetSequenceNumber();
+        uint32_t sequenceNumber = request.GetSequenceNumber();
         memcpy(buffer + offset, &sequenceNumber, sizeof(uint32_t));
         offset = offset + sizeof(uint32_t);
 

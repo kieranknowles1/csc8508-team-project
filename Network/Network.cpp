@@ -83,9 +83,10 @@ std::shared_ptr<Packet::Packet> Network::Fetch() {
     std::shared_ptr<Packet::Packet> fetched;
     do {
         fetched = m_receiveBuffer.Pop();
+        if (fetched.get() == nullptr) return fetched;
     } while (
         fetched.get()->GetSequenceNumber() < m_lastMaxSequence
-        && (fetched.get()->GetChannel() != static_cast<int>(Channel::RELIABLE) || fetched.get()->GetChannel() != static_cast<int>(Channel::UNSEQUENCED))
+        || (fetched.get()->GetChannel() != static_cast<int>(Channel::RELIABLE) || fetched.get()->GetChannel() != static_cast<int>(Channel::UNSEQUENCED))
     );
     return fetched;
 }
@@ -125,6 +126,7 @@ void Network::Tick(float dt) {
         int x = enet_host_service(m_host, &event, 100);
 
         while (enet_host_service(m_host, &event, 100) > 0) {
+            std::cout << "Packet received!\n";
             switch (event.type) {
             case ENET_EVENT_TYPE_CONNECT:
                 if (!ConnectPeer()) enet_peer_disconnect(event.peer, 0);
@@ -134,6 +136,7 @@ void Network::Tick(float dt) {
                 DisconnectPeer();
                 break;
             case ENET_EVENT_TYPE_RECEIVE:
+                std::cout << "Handling packet...\n";
                 HandleIncomingPacket(&event);
                 break;
             }
@@ -144,20 +147,32 @@ void Network::Tick(float dt) {
 
 
 void Network::SendAll() {
+    std::cout << "[Network] Sending All Packets...\n";
     Packet::PacketRegister* packetRegister = Packet::PacketRegister::GetRegister();
 
     for (int i = 0; i < m_numPackets; i++) {
+        std::cout << "[Network] Fetching Handler...\n";
         Packet::PacketHandler* handler = packetRegister->GetHandler(m_sendBuffer[i].first.get()->GetType());
+        std::cout << "[Network] Translating...\n";
+        
+        std::cout << "Handler Addr: " << handler << std::endl;
+        std::cout << "Packet Type: " << m_sendBuffer[i].first->GetType() << std::endl;
+
         ENetPacket* packet = handler->ToENetPacket(m_sendBuffer[i].first);
 
+        std::cout << "[Network] Translation Complete.\n";
+
         if (m_sendBuffer[i].second == nullptr) {
+            std::cout << "[Network] Broadcasting Packet.\n";
             enet_host_broadcast(m_host, m_sendBuffer[i].first.get()->GetChannel(), packet);
         }
         else {
+            std::cout << "[Network] Directly Sending Packet.\n";
             enet_peer_send(m_sendBuffer[i].second, m_sendBuffer[i].first.get()->GetChannel(), packet);
         }
     }
     m_numPackets = 0;
+    std::cout << "[Network] Sending Complete.\n";
 }
 
 
