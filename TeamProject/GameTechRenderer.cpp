@@ -5,6 +5,7 @@
 #include "TextureLoader.h"
 #include "MshLoader.h"
 #include "ResourceManager.h"
+#include "PointLight.h"
 
 #include "Debug.h"
 
@@ -23,7 +24,7 @@ GameTechRenderer::GameTechRenderer(Window* window) : OGLRenderer(window), GameTe
 
 	debugShader = std::make_unique<OGLShader>("Debug.vert", "Debug.frag");
 	shadowShader = std::make_unique<OGLShader>("shadow.vert", "shadow.frag");
-	sceneShader = std::make_unique<OGLShader>("scene.vert", "scene.frag");
+	sceneShader = std::make_unique<OGLShader>("scene.vert", "deferredscenefrag.glsl");
 	decalShader = std::make_unique<OGLShader>("decal.vert", "decal.frag");
 	decalBlendShader = std::make_unique<OGLShader>("texturevert.glsl", "decalBlend.frag");
 	uiShader = std::make_unique<OGLShader>("ui.vert", "ui.frag");
@@ -52,7 +53,6 @@ GameTechRenderer::GameTechRenderer(Window* window) : OGLRenderer(window), GameTe
 	lightColour = Vector4(0.8f, 0.8f, 0.5f, 1.0f);
 	lightRadius = 1000.0f;
 	lightPosition = Vector3(-200.0f, 60.0f, -200.0f);
-
 	//Skybox!
 	skyboxShader = std::make_unique<OGLShader>("skybox.vert", "skybox.frag");
 	skyboxMesh = std::make_unique<OGLMesh>();
@@ -92,6 +92,7 @@ GameTechRenderer::GameTechRenderer(Window* window) : OGLRenderer(window), GameTe
 
 	glGenFramebuffers(1, &bufferFBO);
 	glGenFramebuffers(1, &pointLightFBO);
+
 	GLenum buffers[2] = {
 	GL_COLOR_ATTACHMENT0,
 	GL_COLOR_ATTACHMENT1 
@@ -100,9 +101,9 @@ GameTechRenderer::GameTechRenderer(Window* window) : OGLRenderer(window), GameTe
 	GenerateScreenTexture(bufferDepthTex, true);
 	GenerateScreenTexture(bufferColourTex);
 	GenerateScreenTexture(bufferNormalTex, false); 
+
 	GenerateScreenTexture(lightDiffuseTex);
 	GenerateScreenTexture(lightSpecularTex);
-
 	//attach textures to FBOS:
 	//first pass:
 	glBindFramebuffer(GL_FRAMEBUFFER, bufferFBO);
@@ -124,6 +125,7 @@ GameTechRenderer::GameTechRenderer(Window* window) : OGLRenderer(window), GameTe
 	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE || !lightDiffuseTex || ! lightSpecularTex) {
 		return;
 	}
+
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	//not enabling depth test etc here as this is done in the rendering functions
 
@@ -212,7 +214,6 @@ GameTechRenderer::~GameTechRenderer() {
 	glDeleteTextures(1, &bufferDepthTex);
 	glDeleteTextures(1, &lightDiffuseTex);
 	glDeleteTextures(1, &lightSpecularTex);
-
 	glDeleteTextures(1, &hdrTex);
 	glDeleteFramebuffers(1, &hdrFBO);
 	glDeleteTextures(1, &BTex);
@@ -957,13 +958,16 @@ void GameTechRenderer::FillBuffers() { //draws unlit scene
 void GameTechRenderer::DrawPointLights() { 
 	glBindFramebuffer(GL_FRAMEBUFFER, pointLightFBO);
 	UseShader(*pointlightShader);
-
 	glClearColor(0, 0, 0, 1); //set to black so that it doesn't interfere with additive blending for light
 	glClear(GL_COLOR_BUFFER_BIT);
-	glBlendFunc(GL_ONE, GL_ONE);
+
 	glCullFace(GL_FRONT);
 	glDepthFunc(GL_ALWAYS);
 	glDepthMask(GL_FALSE);
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_ONE, GL_ONE);
+	glEnable(GL_CULL_FACE);
+	glDisable(GL_DEPTH_TEST);
 
 	glUniform1i(glGetUniformLocation(pointlightShader->GetProgramID(), "depthTex"), 0);
 	glActiveTexture(GL_TEXTURE0);
@@ -974,35 +978,32 @@ void GameTechRenderer::DrawPointLights() {
 	glBindTexture(GL_TEXTURE_2D, bufferNormalTex);
 
 	int cameraLocation = glGetUniformLocation(sceneShader->GetProgramID(), "cameraPos");
-
 	Vector3 camPos = camera->GetPosition();
 	glUniform3fv(cameraLocation, 1, &camPos.x);
-
 	glUniform2f(glGetUniformLocation(pointlightShader->GetProgramID(), "pixelSize"), 1.0f / windowSize.x, 1.0f / windowSize.y);
 
 	//using the same proj and view matrices from RenderCamera(): 
 	Matrix4 viewMatrix = camera->BuildViewMatrix();
 	Matrix4 projMatrix = camera->BuildProjectionMatrix(hostWindow->GetScreenAspect());
-
 	Matrix4 invViewProj = Matrix::Inverse(projMatrix * viewMatrix); // trying to take inverse of projview matrix
+
 	glUniformMatrix4fv(glGetUniformLocation(pointlightShader->GetProgramID(), "inverseProjView"), 1, false, (float*)&invViewProj);
 	//update shader matrices here (don't need to set model matrices though as this will be taken care of in vertex shader):
 	glUniformMatrix4fv(glGetUniformLocation(pointlightShader->GetProgramID(), "viewMatrix"), 1, false, (float*)&viewMatrix);
 	glUniformMatrix4fv(glGetUniformLocation(pointlightShader->GetProgramID(), "projMatrix"), 1, false, (float*)&projMatrix);
-	//now send the lights to the shader: (We currently don't have a light class and therefore have to set each of the properties per light here or as currently set in constructor)
-	//for multiple lights, iterate over them here. For now, just one light:
-	glUniform3fv(glGetUniformLocation(pointlightShader->GetProgramID(), "lightPos"), 1, (float*)&lightPosition);
-	glUniform4fv(glGetUniformLocation(pointlightShader->GetProgramID(), "lightColour"), 1, (float*)&lightColour);
-	glUniform1f(glGetUniformLocation(pointlightShader->GetProgramID(), "lightRadius"), lightRadius);
 	BindMesh(*lightSphere);
-	DrawBoundMesh();
+
+	for (PointLight* light : lights) {
+		glUniform3fv(glGetUniformLocation(pointlightShader->GetProgramID(), "lightPos"), 1, (float*)&light->worldPosition);
+		glUniform4fv(glGetUniformLocation(pointlightShader->GetProgramID(), "lightColour"), 1, (float*)&light->colour);
+		glUniform1f(glGetUniformLocation(pointlightShader->GetProgramID(), "lightRadius"), light->radius);
+		DrawBoundMesh();
+	};
 
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	glCullFace(GL_BACK);
 	glDepthFunc(GL_LEQUAL);
-
 	glDepthMask(GL_TRUE);
-
 	glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
 
 }
@@ -1022,6 +1023,7 @@ void GameTechRenderer::CombineBuffers() {//basically final post processing outpu
 	glUniform1i(glGetUniformLocation(combineShader->GetProgramID(), "specularLight"), 2); 
 	glActiveTexture(GL_TEXTURE2);
 	glBindTexture(GL_TEXTURE_2D, lightSpecularTex);
+
 
 	BindMesh(*fullscreenQuad);
 	DrawBoundMesh();

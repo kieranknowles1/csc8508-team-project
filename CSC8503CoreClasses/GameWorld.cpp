@@ -39,6 +39,14 @@ void GameWorld::RemoveGameObject(GameObject* o) {
 	worldStateCounter++;
 }
 
+void GameWorld::AddPointLight(PointLight* p) {
+	lights.emplace_back(p);
+}
+
+void GameWorld::RemovePointLight(PointLight* p) {
+	lights.erase(std::remove(lights.begin(), lights.end(), p), lights.end());
+}
+
 void GameWorld::GetObjectIterators(
 	GameObjectIterator& first,
 	GameObjectIterator& last) const {
