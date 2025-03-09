@@ -6,7 +6,6 @@ uniform sampler2D normTex;
 uniform sampler2D diffuseTexLight; 
 uniform sampler2D specularTexLight; 
 
-uniform vec2 pixelSize;
 uniform vec3 cameraPos;
 
 uniform float lightRadius;
@@ -17,8 +16,12 @@ uniform mat4 inverseProjView;
 out vec4 diffuseOutput;
 out vec4 specularOutput;
 
+in Vertex {
+   vec2 texCoord;
+   }IN;
+
 void main(void) {
-    vec2  texCoord   = vec2(gl_FragCoord.xy * pixelSize);
+    vec2  texCoord   = IN.texCoord;
     float depth      = texture(depthTex, texCoord.xy).r;
     vec3  ndcPos     = vec3(texCoord, depth) * 2.0 - 1.0;
     vec4  invClipPos = inverseProjView * vec4(ndcPos, 1.0);
@@ -26,10 +29,13 @@ void main(void) {
 
     float dist       = length(lightPos - worldPos);
     float atten      = 1.0 - clamp(dist / lightRadius, 0.0, 1.0);
-
+    vec4 diffuseOut;
+    vec4 specularOut;
     if (atten == 0.0) {
-        discard;
-    }
+      diffuseOut = texture(diffuseTexLight,texCoord.xy);
+      specularOut = texture(specularTexLight,texCoord.xy);
+    
+    }else{
 
     vec3 normal   = normalize(texture(normTex, texCoord.xy).xyz * 2.0 - 1.0);
     vec3 incident = normalize(lightPos - worldPos);
@@ -44,11 +50,12 @@ void main(void) {
 
     vec4 diffuseCalculated =  vec4(attenuated * lambert, 1.0);
     vec4 specularCalculated =  vec4(attenuated * specFactor * 0.33, 1.0);
-    vec4 diffuseOut = texture(diffuseTexLight,texCoord.xy) + diffuseCalculated;
-    vec4 specularOut = texture(specularTexLight,texCoord.xy) +  specularCalculated;
-
-//    diffuseOut.a = min(diffuseOut.a,1);
-//    specularOut.a = min(specularOut.a,1);
+    diffuseOut = texture(diffuseTexLight,texCoord.xy) + diffuseCalculated;
+    specularOut = texture(specularTexLight,texCoord.xy) +  specularCalculated;
+    
+    }
+    diffuseOut = min(diffuseOut,vec4(1,1,1,1));
+    specularOut = min(specularOut,vec4(1,1,1,1));
     diffuseOutput    = diffuseOut;
     specularOutput   = specularOut;
 }

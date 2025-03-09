@@ -87,8 +87,13 @@ GameTechRenderer::GameTechRenderer(Window* window) : OGLRenderer(window), GameTe
 	pointlightShader = new OGLShader("pointlightvertex.glsl", "pointlightfrag.glsl");
 	combineShader = new OGLShader("texturevert.glsl", "combinefrag.glsl");
 
-	lightSphere = new OGLMesh(); 
-	lightSphere = LoadMesh("Sphere.msh"); //Load mesh takes care of upload to GPU itself
+
+	lightSphere = new OGLMesh();
+	lightSphere->SetVertexPositions({ Vector3(-1, 1,0), Vector3(-1,-1,0) , Vector3(1,-1,0) , Vector3(1,1,0) });
+	lightSphere->SetVertexTextureCoords({ Vector2(0, 1), Vector2(0,0) , Vector2(1,0) , Vector2(1,1) });
+	lightSphere->SetVertexIndices({ 0,1,2,2,3,0 });
+	lightSphere->UploadToGPU();
+
 
 	glGenFramebuffers(1, &bufferFBO);
 	glGenFramebuffers(1, &pointLightFBO);
@@ -973,11 +978,11 @@ void GameTechRenderer::DrawPointLights() {
 	UseShader(*pointlightShader);
 	glClearColor(0, 0, 0, 1); //set to black so that it doesn't interfere with additive blending for light
 	glClear(GL_COLOR_BUFFER_BIT);
-	glBlendFunc(GL_ONE, GL_ONE);
-	glCullFace(GL_FRONT);
-	glDepthFunc(GL_ALWAYS);
-	glDepthMask(GL_FALSE);
-	glEnable(GL_DEPTH_TEST);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	glCullFace(GL_BACK);
+	glDepthFunc(GL_LEQUAL);
+
+	glDepthMask(GL_TRUE);
 	glUniform1i(glGetUniformLocation(pointlightShader->GetProgramID(), "depthTex"), 0);
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, bufferDepthTex);
@@ -1006,11 +1011,11 @@ void GameTechRenderer::DrawPointLights() {
 	glBindFramebuffer(GL_FRAMEBUFFER, pointLightFBO2);
 	glClearColor(0, 0, 0, 1); //set to black so that it doesn't interfere with additive blending for light
 	glClear(GL_COLOR_BUFFER_BIT);
-	glBlendFunc(GL_ONE, GL_ONE);
-	glCullFace(GL_FRONT);
-	glDepthFunc(GL_ALWAYS);
-	glDepthMask(GL_FALSE);
-	glEnable(GL_DEPTH_TEST);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	glCullFace(GL_BACK);
+	glDepthFunc(GL_LEQUAL);
+	glDepthMask(GL_TRUE);
+
 
 	glUniform1i(glGetUniformLocation(pointlightShader->GetProgramID(), "depthTex"), 0);
 	glActiveTexture(GL_TEXTURE0);
@@ -1033,8 +1038,13 @@ void GameTechRenderer::DrawPointLights() {
 	for (PointLight* light : lights) {
 		if (count % 2 == 0) {
 			glBindFramebuffer(GL_FRAMEBUFFER, pointLightFBO);
-			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-			//glClearColor(0, 0, 0, 1);
+			glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+			glClearColor(0, 0, 0, 1);
+			glCullFace(GL_BACK);
+			glDepthFunc(GL_LEQUAL);
+
+			glDepthMask(GL_TRUE);
+			glClear(GL_COLOR_BUFFER_BIT);
 			glUniform1i(glGetUniformLocation(pointlightShader->GetProgramID(), "diffuseTexLight"), 2);
 			glActiveTexture(GL_TEXTURE2);
 			glBindTexture(GL_TEXTURE_2D, lightDiffuseTex);
@@ -1046,8 +1056,13 @@ void GameTechRenderer::DrawPointLights() {
 		else {
 
 			glBindFramebuffer(GL_FRAMEBUFFER, pointLightFBO2);
-			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-			//glClearColor(0, 0, 0, 1);
+			glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+			glClearColor(0, 0, 0, 1);
+			glCullFace(GL_BACK);
+			glDepthFunc(GL_LEQUAL);
+
+			glDepthMask(GL_TRUE);
+			glClear(GL_COLOR_BUFFER_BIT);
 			glUniform1i(glGetUniformLocation(pointlightShader->GetProgramID(), "diffuseTexLight"), 2);
 			glActiveTexture(GL_TEXTURE2);
 			glBindTexture(GL_TEXTURE_2D, lightDiffuseTex2);

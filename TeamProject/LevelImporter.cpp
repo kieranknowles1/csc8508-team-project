@@ -191,7 +191,7 @@ void LevelImporter::HandleTypes(GameObject* obj) {
        
         obj->GetRenderObject()->SetDefaultTexture(nullptr);
         obj->GetRenderObject()->SetNormal(nullptr);
-        world->AddPointLight(new PointLight(obj->GetPhysicsObject()->GetRigidBody()->getWorldTransform().getOrigin(), 850, colourLight));
+        world->AddPointLight(new PointLight(obj->GetPhysicsObject()->GetRigidBody()->getWorldTransform().getOrigin(), 900, colourLight));
         colourLight *= 10;
         colourLight.setW(1.0f);
         obj->GetRenderObject()->SetColour(colourLight);
