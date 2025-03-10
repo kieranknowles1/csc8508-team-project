@@ -38,6 +38,20 @@ namespace NCL::CSC8503 {
 			scoreboardTextElements.push_back(element);
 		}
 
+		std::string TeamColorToString(TeamColor color) {
+			switch (color) {
+			case TeamColor::BLUE: return "Blue";
+			case TeamColor::GREEN: return "Green";
+			case TeamColor::RED: return "Red";
+			case TeamColor::YELLOW: return "Yellow";
+			case TeamColor::CYAN: return "Cyan";
+			case TeamColor::PURPLE: return "Purple";
+			case TeamColor::PINK: return "Pink";
+			case TeamColor::ORANGE: return "Orange";
+			default: return "Unknown";
+			}
+		}
+
 	private:
 		void SortPlayers();
 		void UpdateTextValues();

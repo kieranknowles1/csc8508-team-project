@@ -51,7 +51,6 @@ namespace NCL::CSC8503 {
 
         Maths::Vector2 boxSize = Maths::Vector2(totalSize.x / columns, totalSize.y / 9);
 
-        // Use an instance of GameTechRendererInterface to call AddUIElement
         AddUIElement({ screenCenter, totalSize, scoreboardColor, nullptr, true });
 
         for (int row = 0; row < 9; ++row) {
@@ -93,8 +92,6 @@ namespace NCL::CSC8503 {
                     AddUITextElement({ textPosition, textColor, text, true });
                 }
 
-                // needs to be moved to renderer? player data is constantly changing,
-                // so outputting data can't be in init
                 // Empty row
                 else if (row > players) {
                     AddUITextElement({ textPosition, textColor, "", true });
@@ -119,6 +116,10 @@ namespace NCL::CSC8503 {
 
 
     void Scoreboard::UpdateTextValues() {
-
+        for (int i = 0; i < players.size() * 3; i += 3) {
+			scoreboardTextElements[i].text = players.at(i).user.GetDisplayName();
+			scoreboardTextElements[i + 1].text = TeamColorToString(players.at(i).color);
+			scoreboardTextElements[i + 2].text = std::to_string(players.at(i).score);
+        }
     }
 }
