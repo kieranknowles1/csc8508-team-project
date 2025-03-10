@@ -34,6 +34,8 @@ TutorialGame::TutorialGame(GameTechRendererInterface* renderer, Controller* cont
     loadFromLevel = true;
     resourceManager = std::make_unique<ResourceManager>(renderer);
     new Shoot();
+    new Respawn();
+
     InitialiseAssets();
     InitCamera();
     InitWorld();
@@ -133,7 +135,6 @@ void TutorialGame::UpdatePlayer(float dt) {
         }
     }
     resourceManager->update(dt);
-    player->updateGravity(dt);
 }
 
 void TutorialGame::UpdateKeys() {
@@ -298,7 +299,17 @@ void TutorialGame::LoadWorldFromFile(int levelNum) {
 
     levelImporter = new LevelImporter(resourceManager.get(), world.get(), bulletWorld);
     levelImporter->LoadLevel(levelNum);
-    InitPlayer();
+
+    RespawnPoint* respawnPoint = Respawn::GetInstance()->GetRespawn(0);
+    player = InitPlayer(respawnPoint->position,respawnPoint->orientation);
+    player->SetPlayerID(0);
+    playerController = new PlayerController(player, gun, controller, mainCamera, bulletWorld);
+
+    for (int i = 1; i < 8; i++) {
+        RespawnPoint* newRespawnPoint = Respawn::GetInstance()->GetRespawn(i);
+        PlayerObject* newPlayer = InitPlayer(newRespawnPoint->position, newRespawnPoint->orientation);
+        newPlayer->SetPlayerID(i);
+    }
 
     Shoot::GetInstance()->Initialise(bulletWorld,resourceManager.get(), world.get(), renderer->GetDecalSystem());
     Shoot::GetInstance()->InitShotMasks(player, gun);
@@ -337,22 +348,19 @@ void TutorialGame::ConnectToServer(ENetAddress& address) {
 }
 
 
-void TutorialGame::InitPlayer() {
-    if (loadFromLevel) {
-        player = AddPlayerCapsuleToWorld(Vector3(0, 100, 30), 4.0f, 2.0f, 10.0f);
-    }else {
-        player = AddPlayerCapsuleToWorld(Vector3(10, 5, 20), 4.0f, 2.0f, 10.0f);
-    }
+PlayerObject* TutorialGame::InitPlayer(btVector3 position, btVector3 upDir) {
+    PlayerObject* newPlayer = new PlayerObject();
+    newPlayer = AddPlayerCapsuleToWorld(position, 7.0f, 3.5f, 10.0f);
     // Keep us from clipping when falling too fast
-    player->GetPhysicsObject()->GetRigidBody()->setCcdMotionThreshold(1.0f);
-    player->GetPhysicsObject()->GetRigidBody()->setCcdSweptSphereRadius(0.4f);
-    player->GetPhysicsObject()->GetRigidBody()->setAngularFactor(0);
-    player->GetPhysicsObject()->GetRigidBody()->setFriction(0.0f);
-    player->GetPhysicsObject()->GetRigidBody()->setDamping(0.0, 0);
-    gun = AddCubeToWorld(Vector3(10, 2, 20), Vector3(0.6, 0.6, 1.6), 0, false);
-    playerController = new PlayerController(player, gun, controller, mainCamera, bulletWorld);
-    player->GetRenderObject()->SetColour(Vector4(playerColour));
-
+    newPlayer->GetPhysicsObject()->GetRigidBody()->setCcdMotionThreshold(1.0f);
+    newPlayer->GetPhysicsObject()->GetRigidBody()->setCcdSweptSphereRadius(0.4f);
+    newPlayer->GetPhysicsObject()->GetRigidBody()->setAngularFactor(0);
+    newPlayer->GetPhysicsObject()->GetRigidBody()->setFriction(0.0f);
+    newPlayer->GetPhysicsObject()->GetRigidBody()->setDamping(0.0, 0);
+  
+    newPlayer->GetRenderObject()->SetColour(Vector4(playerColour));
+    newPlayer->setUpDirection(upDir);
+    return newPlayer;
 }
 
 Turret* TutorialGame::AddTurretToWorld() {
@@ -463,7 +471,8 @@ PlayerObject* TutorialGame::AddPlayerCapsuleToWorld(const Vector3& position, flo
 
     // Initializing the physics object for the capsule
     capsule->GetPhysicsObject()->InitBulletPhysics(bulletWorld, shape, inverseMass);
-
+    GameObject* newGun = AddCubeToWorld(Vector3(10, 2, 20), Vector3(0.6, 0.6, 1.6), 0, false);
+    capsule->setGun(newGun);
     world->AddGameObject(capsule);
 
     return capsule;
