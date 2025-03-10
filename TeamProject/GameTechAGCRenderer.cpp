@@ -24,20 +24,20 @@ const int BINDLESS_BUFFER_COUNT		= 128;
 const size_t LINE_STRIDE = sizeof(Vector4) + sizeof(Vector4);
 const size_t TEXT_STRIDE = sizeof(Vector2) + sizeof(Vector2) + sizeof(Vector4);
 
-void NCL::CSC8503::GameTechAGCRenderer::createBuffer(const std::string& name, sce::Agc::CxRenderTarget* outTarget, PS5::AGCTexture** outTexture, sce::Agc::Core::Sampler* optionalSampler)
+GameTechAGCRenderer::FrameBuffer GameTechAGCRenderer::createBuffer(const std::string& name)
 {
-	*outTarget = CreateColourBufferTarget(window->GetScreenSize().x, window->GetScreenSize().y, true);
-	*outTexture = CreateFrameBufferTextureSlot(name);
+	FrameBuffer buf;
+	buf.target = CreateColourBufferTarget(window->GetScreenSize().x, window->GetScreenSize().y, true);
+	buf.texture = CreateFrameBufferTextureSlot(name);
 
-	checkError(sce::Agc::Core::translate((*outTexture)->GetAGCPointer(), outTarget, sce::Agc::Core::RenderTargetComponent::kData));
+	checkError(sce::Agc::Core::translate(buf.texture->GetAGCPointer(), &buf.target, sce::Agc::Core::RenderTargetComponent::kData));
 
-	if (optionalSampler) {
-		optionalSampler->init().setXyFilterMode(
-			sce::Agc::Core::Sampler::FilterMode::kPoint,
-			sce::Agc::Core::Sampler::FilterMode::kPoint
-		)
-			.setMipFilterMode(sce::Agc::Core::Sampler::MipFilterMode::kPoint);
-	}
+	buf.sampler.init().setXyFilterMode(
+		sce::Agc::Core::Sampler::FilterMode::kPoint,
+		sce::Agc::Core::Sampler::FilterMode::kPoint
+	).setMipFilterMode(sce::Agc::Core::Sampler::MipFilterMode::kPoint);
+
+	return buf;
 }
 
 GameTechAGCRenderer::GameTechAGCRenderer(Window* window) : AGCRenderer(window), GameTechRendererInterface(window) {
@@ -104,8 +104,8 @@ GameTechAGCRenderer::GameTechAGCRenderer(Window* window) : AGCRenderer(window), 
 	shadowTarget	= CreateDepthBufferTarget(SHADOW_SIZE, SHADOW_SIZE);
 	shadowMap		= CreateFrameBufferTextureSlot("Shadowmap");
 
-	createBuffer("Scene", &sceneTarget, &sceneTexture, &sceneSampler);
-	createBuffer("Screen", &screenTarget, &screenTex, nullptr);
+	sceneBuffer = createBuffer("Scene");
+	screenBuffer = createBuffer("Screen");
 
 	shadowSampler.init()
 		.setXyFilterMode(
@@ -281,7 +281,7 @@ void GameTechAGCRenderer::SkyboxPass() {
 
 	sce::Agc::CxRenderTargetMask rtMask = sce::Agc::CxRenderTargetMask().init().setMask(0, 0xFF);
 	frameContext->m_sb.setState(rtMask);
-	frameContext->m_sb.setState(sceneTarget);
+	frameContext->m_sb.setState(sceneBuffer.target);
 
 	frameContext->m_sb.setState(depthTarget);
 
@@ -356,7 +356,7 @@ void GameTechAGCRenderer::MainRenderPass() {
 
 	sce::Agc::CxRenderTargetMask rtMask = sce::Agc::CxRenderTargetMask().init().setMask(0, 0xFF);
 	frameContext->m_sb.setState(rtMask);
-	frameContext->m_sb.setState(sceneTarget);
+	frameContext->m_sb.setState(sceneBuffer.target);
 
 	frameContext->m_sb.setState(depthTarget);
 
@@ -397,7 +397,7 @@ void GameTechAGCRenderer::UiPass() {
 
 	sce::Agc::CxRenderTargetMask rtMask = sce::Agc::CxRenderTargetMask().init().setMask(0, 0xFF);
 	frameContext->m_sb.setState(rtMask);
-	frameContext->m_sb.setState(screenTarget);
+	frameContext->m_sb.setState(screenBuffer.target);
 
 	frameContext->m_sb.setState(depthTarget);
 
@@ -425,7 +425,7 @@ void GameTechAGCRenderer::PostProcessPass()
 
 	sce::Agc::CxRenderTargetMask rtMask = sce::Agc::CxRenderTargetMask().init().setMask(0, 0xFF);
 	frameContext->m_sb.setState(rtMask);
-	frameContext->m_sb.setState(screenTarget);
+	frameContext->m_sb.setState(screenBuffer.target);
 
 	sce::Agc::CxDepthStencilControl depthControl;
 	depthControl.init();
@@ -436,8 +436,8 @@ void GameTechAGCRenderer::PostProcessPass()
 
 	frameContext->m_bdr.getStage(sce::Agc::ShaderType::kPs)
 		.setConstantBuffers(0, 1, &currentFrame->constantBuffer)
-		.setSamplers(0, 1, &sceneSampler)
-		.setTextures(0, 1, sceneTexture->GetAGCPointer());
+		.setSamplers(0, 1, &sceneBuffer.sampler)
+		.setTextures(0, 1, sceneBuffer.texture->GetAGCPointer());
 
 	unitQuad->BindVertexBuffers(frameContext->m_bdr.getStage(sce::Agc::ShaderType::kGs));
 	DrawBoundMesh(*frameContext, *unitQuad);
@@ -484,7 +484,7 @@ void GameTechAGCRenderer::DisplayRenderPass() {
 	checkError(sce::Agc::Core::translate(&outputTex, &backBuffers[currentSwap].renderTarget, sce::Agc::Core::RenderTargetComponent::kData));
 
 	frameContext->m_bdr.getStage(sce::Agc::ShaderType::kCs)
-		.setTextures(0, 1, screenTex->GetAGCPointer())
+		.setTextures(0, 1, screenBuffer.texture->GetAGCPointer())
 		.setRwTextures(1, 1, &outputTex);
 	uint32_t xDims = (outputTex.getWidth() + 7) / 8;
 	uint32_t yDims = (outputTex.getHeight() + 7) / 8;

@@ -179,14 +179,16 @@ namespace NCL {
 			NCL::PS5::AGCTexture*				shadowMap; //ptr into bindless array
 			sce::Agc::Core::Sampler				shadowSampler;
 
-			void createBuffer(const std::string& name, sce::Agc::CxRenderTarget* outTarget, PS5::AGCTexture** outTexture, sce::Agc::Core::Sampler* optionalSampler);
+			struct FrameBuffer {
+				sce::Agc::CxRenderTarget target;
+				PS5::AGCTexture* texture;
+				sce::Agc::Core::Sampler sampler;
+			};
 
-			sce::Agc::CxRenderTarget sceneTarget;
-			NCL::PS5::AGCTexture* sceneTexture;
-			sce::Agc::Core::Sampler sceneSampler;
+			FrameBuffer createBuffer(const std::string& name);
 
-			sce::Agc::CxRenderTarget			screenTarget;
-			NCL::PS5::AGCTexture*				screenTex; //ptr into bindless array
+			FrameBuffer sceneBuffer;
+			FrameBuffer screenBuffer;
 
 			std::vector<SkinningJob> frameJobs;
 		};
