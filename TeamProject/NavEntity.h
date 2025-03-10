@@ -15,6 +15,7 @@ namespace NCL {
 			bool FollowPath(float dt);
 			btVector3 newPathPoint;
 			btVector3 curPathPoint;
+			btVector3 yAdjustedPoint;
 		private:
 			float YAdjust(btVector3 pos);
 

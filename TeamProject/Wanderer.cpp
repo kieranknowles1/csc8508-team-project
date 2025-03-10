@@ -57,7 +57,7 @@ void Wanderer::Update(float dt) {
 
 	btTransform trans = GetTransform();
 	if (FollowPath(dt)) {
-		btVector3 newPos = curPathPoint + offset;
+		btVector3 newPos = yAdjustedPoint + offset;
 		trans.setOrigin(newPos);
 		btRigidBody* body = physicsObject->GetRigidBody();
 		body->setWorldTransform(trans);
