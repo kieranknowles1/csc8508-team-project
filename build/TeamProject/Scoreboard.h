@@ -14,10 +14,10 @@ namespace NCL::CSC8503 {
 		struct Player {
 			Lobbies::User user;
 			TeamColor color;
-			unsigned int score;
+			int score;
 		};
 
-		std::unordered_map<unsigned int, Player> players;
+		std::unordered_map<unsigned int, struct Player> players;
 
 		void AddPlayer(Lobbies::User user);
 		void SetColor(Lobbies::User user);
