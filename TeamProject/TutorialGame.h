@@ -14,6 +14,8 @@
 #include "Wanderer.h"
 #include "Network/Network.hpp"
 #include "Multiplayer/Lobby.hpp"
+#include <memory>
+#include "Crosshair.h"
 
 #include <btBulletDynamicsCommon.h>
 
@@ -113,6 +115,8 @@ namespace NCL {
 
             void InitWorld();
             void ResetWorld();
+
+            void InitUI();
 
             void SetupHost() {};
 
@@ -218,6 +222,8 @@ namespace NCL {
             inline static std::optional<Lobbies::Lobby> lobby = std::optional<Lobbies::Lobby>();
             inline static std::optional<Lobbies::User> user = std::optional<Lobbies::User>();
             inline static int USER_ID = 0;
+
+            std::unique_ptr<Crosshair> crosshair;
         };
     }
 }

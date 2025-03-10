@@ -10,9 +10,8 @@
 namespace NCL::CSC8503 {
 	GameTechRendererInterface::GameTechRendererInterface(Window* window)
 		: window(window)
-		, decalSystem(window->GetScreenSize().x, window->GetScreenSize().y)
+        , decalSystem(window->GetScreenSize().x, window->GetScreenSize().y)
 	{
-		initUi();
 	}
 
 	void GameTechRendererInterface::collectFrameObjects(GameWorld* world)
@@ -41,10 +40,4 @@ namespace NCL::CSC8503 {
         }
 		lights = world->GetLights();
 	}
-
-	void GameTechRendererInterface::initUi()
-	{
-        uiElements.push_back(new Crosshair());
-	}
-
 }

@@ -38,15 +38,6 @@ namespace NCL::CSC8503 {
         virtual void render(std::vector<UiSprite>& sprites) = 0;
     };
 
-    class Crosshair : public UiElement {
-    public:
-        void render(std::vector<UiSprite>& sprites) override {
-            // TODO: Move Crosshair code into its own file Crosshair.h
-            // TODO: The render function should just generate a bunch of sprites for
-            // the crosshair and add them to the sprites vector
-        }
-    };
-
 	class GameTechRendererInterface
 	{
 	public:
@@ -88,8 +79,9 @@ namespace NCL::CSC8503 {
 			vignettePulse = dt;
 		}
 
-		// TODO: Proper UI class
-		void initUi();
+        void AddUiElement(UiElement* elem) {
+            uiElements.push_back(elem);
+        }
 
 	protected:
 		//adding bools to toggle post processing. Must be accessible from the specific renderer

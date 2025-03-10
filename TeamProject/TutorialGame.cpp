@@ -328,6 +328,11 @@ void TutorialGame::InitWorld() {
     }
 }
 
+void TutorialGame::InitUI() {
+    crosshair = std::make_unique<Crosshair>();
+    renderer->AddUiElement(crosshair.get());
+}
+
 void TutorialGame::InitNetwork(bool host) {
 }
 
