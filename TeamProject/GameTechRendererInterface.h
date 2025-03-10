@@ -4,6 +4,7 @@
 #include <string>
 #include <vector>
 #include <memory>
+#include "PointLight.h"
 
 #include <NCLCoreClasses/Vector.h>
 
@@ -116,6 +117,7 @@ namespace NCL::CSC8503 {
 		std::vector<UITextElement> uiTextElements;
 		std::vector<PlayerData> playerData;
 		std::vector<RenderObject*> frameObjects;
+		std::vector<PointLight*> lights;
 		DecalSystem decalSystem;
 		bool showScoreboard = false;
 		Maths::Vector2 screenCenter = Maths::Vector2(0.5f, 0.5f);

@@ -5,6 +5,7 @@
 #include "TextureLoader.h"
 #include "MshLoader.h"
 #include "ResourceManager.h"
+#include "PointLight.h"
 
 #include "Debug.h"
 
@@ -23,7 +24,7 @@ GameTechRenderer::GameTechRenderer(Window* window) : OGLRenderer(window), GameTe
 
 	debugShader = std::make_unique<OGLShader>("Debug.vert", "Debug.frag");
 	shadowShader = std::make_unique<OGLShader>("shadow.vert", "shadow.frag");
-	sceneShader = std::make_unique<OGLShader>("scene.vert", "scene.frag");
+	sceneShader = std::make_unique<OGLShader>("scene.vert", "deferredscenefrag.glsl");
 	decalShader = std::make_unique<OGLShader>("decal.vert", "decal.frag");
 	decalBlendShader = std::make_unique<OGLShader>("texturevert.glsl", "decalBlend.frag");
 	uiShader = std::make_unique<OGLShader>("ui.vert", "ui.frag");
@@ -52,7 +53,6 @@ GameTechRenderer::GameTechRenderer(Window* window) : OGLRenderer(window), GameTe
 	lightColour = Vector4(0.8f, 0.8f, 0.5f, 1.0f);
 	lightRadius = 1000.0f;
 	lightPosition = Vector3(-200.0f, 60.0f, -200.0f);
-
 	//Skybox!
 	skyboxShader = std::make_unique<OGLShader>("skybox.vert", "skybox.frag");
 	skyboxMesh = std::make_unique<OGLMesh>();
@@ -80,8 +80,63 @@ GameTechRenderer::GameTechRenderer(Window* window) : OGLRenderer(window), GameTe
 	SetDebugStringBufferSizes(10000);
 	SetDebugLineBufferSizes(1000);
 
-	//Post processing additions:
+	/////////InitCrosshair(); //This line Ameya added for crosshair THINK THIS CAN BE REMOVED, NOT SURE YET IF INITUI REPLACES IT ANYWHERE
+
+	//Deferred rendering additions:
+	deferredsceneShader = new OGLShader("scene.vert", "deferredscenefrag.glsl");
+	pointlightShader = new OGLShader("pointlightvertex.glsl", "pointlightfrag.glsl");
+	combineShader = new OGLShader("texturevert.glsl", "combinefrag.glsl");
+
+	lightSphere = new OGLMesh(); 
+	lightSphere = LoadMesh("Sphere.msh"); //Load mesh takes care of upload to GPU itself
+
+	glGenFramebuffers(1, &bufferFBO);
+	glGenFramebuffers(1, &pointLightFBO);
+
+	GLenum buffers[2] = {
+	GL_COLOR_ATTACHMENT0,
+	GL_COLOR_ATTACHMENT1 
+	};
+
+	GenerateScreenTexture(bufferDepthTex, true);
+	GenerateScreenTexture(bufferColourTex);
+	GenerateScreenTexture(bufferNormalTex, false); 
+
+	GenerateScreenTexture(lightDiffuseTex);
+	GenerateScreenTexture(lightSpecularTex);
+	//attach textures to FBOS:
+	//first pass:
+	glBindFramebuffer(GL_FRAMEBUFFER, bufferFBO);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, bufferColourTex, 0);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, bufferNormalTex, 0);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, bufferDepthTex, 0);
+	glDrawBuffers(2, buffers);
+
+	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE || !bufferColourTex || !bufferNormalTex || !bufferDepthTex ) {//check attachment success
+		return;
+	}
+
+	//second pass:
+	glBindFramebuffer(GL_FRAMEBUFFER, pointLightFBO);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, lightDiffuseTex, 0);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, lightSpecularTex, 0);
+	glDrawBuffers(2, buffers);
+
+	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE || !lightDiffuseTex || ! lightSpecularTex) {
+		return;
+	}
+
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	//not enabling depth test etc here as this is done in the rendering functions
+
+	//Post processing additions: 
 	hdrShader = new OGLShader("texturevert.glsl", "hdrfrag.glsl");
+	
+	fullscreenQuad = new OGLMesh();
+	fullscreenQuad->SetVertexPositions({ Vector3(-1, 1,0), Vector3(-1,-1,0) , Vector3(1,-1,0) , Vector3(1,1,0) }); 
+	fullscreenQuad->SetVertexTextureCoords({ Vector2(0, 1), Vector2(0,0) , Vector2(1,0) , Vector2(1,1) }); 
+	fullscreenQuad->SetVertexIndices({ 0,1,2,2,3,0 }); 
+	fullscreenQuad->UploadToGPU(); 
 
 	vignetteShader = new OGLShader("texturevert.glsl", "vignettefrag.glsl");
 
@@ -120,7 +175,7 @@ GameTechRenderer::GameTechRenderer(Window* window) : OGLRenderer(window), GameTe
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, windowSize.x, windowSize.y, 0, GL_RGBA, GL_FLOAT, NULL);//making this one floating point as well. Will assume that values maintained even if final output is clamped
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, windowSize.x, windowSize.y, 0, GL_RGBA, GL_FLOAT, NULL);//making this one floating point as well
 
 	glGenTextures(1, &BDepthTex); //set up depth stencil test
 	glBindTexture(GL_TEXTURE_2D, BDepthTex);
@@ -148,10 +203,22 @@ GameTechRenderer::~GameTechRenderer() {
 	glDeleteTextures(1, &shadowTex);
 	glDeleteFramebuffers(1, &shadowFBO);
 
+	delete deferredsceneShader;
+	delete pointlightShader;
+	delete combineShader;
+	delete lightSphere;
+	glDeleteFramebuffers(1, &bufferFBO);
+	glDeleteFramebuffers(1, &pointLightFBO);
+	glDeleteTextures(1, &bufferColourTex);
+	glDeleteTextures(1, &bufferNormalTex);
+	glDeleteTextures(1, &bufferDepthTex);
+	glDeleteTextures(1, &lightDiffuseTex);
+	glDeleteTextures(1, &lightSpecularTex);
 	glDeleteTextures(1, &hdrTex);
 	glDeleteFramebuffers(1, &hdrFBO);
 	glDeleteTextures(1, &BTex);
 	glDeleteFramebuffers(1, &BFBO);
+	delete fullscreenQuad; //only mesh that needs to be deleted as others are std::make_unique<OGLMesh>
 	delete hdrShader;
 	delete vignetteShader;
 }
@@ -198,67 +265,20 @@ void GameTechRenderer::LoadSkybox() {
 }
 
 void GameTechRenderer::RenderFrame() {
-	glEnable(GL_CULL_FACE);
+	/*glEnable(GL_CULL_FACE); //this line and one below are included in draw scene. Only thing missing is shadows
 	glClearColor(1, 1, 1, 1);
-	RenderShadowMap();
+	RenderShadowMap();*/
 	//Set up to render into framebuffer
-	glBindFramebuffer(GL_FRAMEBUFFER, hdrFBO);
-	glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
-	RenderSkybox();
-	RenderCamera();
+	//THE ABOVE FEW LINES HAVE BEEN LEFT TO SHOW HOW SHADOWS WERE ORIGINALLY HANDLED
 
-	// Render Decals to it's own buffer
-	RenderDecals();
-
-	// Blend decals onto the scene using a fullscreen quad
-	glEnable(GL_BLEND);
-	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
-	UseShader(*decalBlendShader);
-
-	// Send near and far plane uniforms to decalBlend shader
-	// To conver non-linear depth to linear depth for accurate depth testing
-	glUniform1f(glGetUniformLocation(decalBlendShader->GetProgramID(), "nearPlane"), camera->GetNearPlane());
-	glUniform1f(glGetUniformLocation(decalBlendShader->GetProgramID(), "farPlane"), camera->GetFarPlane());
-
-	GLuint decalTextureLocation = glGetUniformLocation(decalBlendShader->GetProgramID(), "decalTexture");
-	glUniform1i(decalTextureLocation, 0);
-
-	// Bind the decal texture
-	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, decalSystem.GetDecalTexture());
-
-	// Bind the scene texture
-	glActiveTexture(GL_TEXTURE1);
-	glBindTexture(GL_TEXTURE_2D, hdrTex);
-	glUniform1i(glGetUniformLocation(decalBlendShader->GetProgramID(), "sceneTexture"), 1);
-
-	// Bind depth texture
-	glActiveTexture(GL_TEXTURE2);
-	glBindTexture(GL_TEXTURE_2D, hdrDepthTex);
-	glUniform1i(glGetUniformLocation(decalBlendShader->GetProgramID(), "depthTexture"), 2);
-
-	glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
-	glDisable(GL_CULL_FACE);
-	glDisable(GL_BLEND);
-	glDisable(GL_DEPTH_TEST);
-	BindMesh(*unitQuad);
-	DrawBoundMesh();
-
-	glDisable(GL_BLEND);
-	glEnable(GL_DEPTH_TEST);
-	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-	//RenderPostProcessing();
+	//////deferred rendering version:
+	glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
+	//RenderShadowMap();
+	FillBuffers();
+	DrawPointLights();
+	CombineBuffers();
+	RenderPostProcessing(); 
 	RenderUI();
-
-	glDisable(GL_CULL_FACE); //Todo - text indices are going the wrong way...
-	glDisable(GL_BLEND);
-	glDisable(GL_DEPTH_TEST);
-	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-	NewRenderLines();
-	NewRenderTextures();
-	NewRenderText();
 }
 
 void GameTechRenderer::RenderShadowMap() {
@@ -295,7 +315,7 @@ void GameTechRenderer::RenderShadowMap() {
 
 	glViewport(0, 0, windowSize.x, windowSize.y);
 	glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);// 0
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
 	glCullFace(GL_BACK);
 }
@@ -333,24 +353,26 @@ void GameTechRenderer::RenderCamera() {
 	Matrix4 viewMatrix = camera->BuildViewMatrix();
 	Matrix4 projMatrix = camera->BuildProjectionMatrix(hostWindow->GetScreenAspect());
 
-	UseShader(*sceneShader);
-	int projLocation	= glGetUniformLocation(sceneShader->GetProgramID(), "projMatrix");
-	int viewLocation	= glGetUniformLocation(sceneShader->GetProgramID(), "viewMatrix");
-	int modelLocation	= glGetUniformLocation(sceneShader->GetProgramID(), "modelMatrix");
-	int colourLocation  = glGetUniformLocation(sceneShader->GetProgramID(), "objectColour");
-	int hasVColLocation = glGetUniformLocation(sceneShader->GetProgramID(), "hasVertexColours");
-	int hasTexLocation  = glGetUniformLocation(sceneShader->GetProgramID(), "hasTexture");
-	int shadowLocation  = glGetUniformLocation(sceneShader->GetProgramID(), "shadowMatrix");
-	int hasFlatLocation = glGetUniformLocation(sceneShader->GetProgramID(), "isFlat");
-	int hasNormalLocation = glGetUniformLocation(sceneShader->GetProgramID(), "hasNormalMap");
-	int texRepeatingLocation = glGetUniformLocation(sceneShader->GetProgramID(), "texRepeating");
-	int texScaleLocation = glGetUniformLocation(sceneShader->GetProgramID(), "texScale");
+	UseShader(*deferredsceneShader); //changed all sceneShader to deferredsceneShader
+	int projLocation	= glGetUniformLocation(deferredsceneShader->GetProgramID(), "projMatrix");
+	int viewLocation	= glGetUniformLocation(deferredsceneShader->GetProgramID(), "viewMatrix");
+	int modelLocation	= glGetUniformLocation(deferredsceneShader->GetProgramID(), "modelMatrix");
+	int colourLocation  = glGetUniformLocation(deferredsceneShader->GetProgramID(), "objectColour");
+	int hasVColLocation = glGetUniformLocation(deferredsceneShader->GetProgramID(), "hasVertexColours");
+	int hasTexLocation  = glGetUniformLocation(deferredsceneShader->GetProgramID(), "hasTexture");
+	int shadowLocation  = glGetUniformLocation(deferredsceneShader->GetProgramID(), "shadowMatrix");
+	int hasFlatLocation = glGetUniformLocation(deferredsceneShader->GetProgramID(), "isFlat");
+	int hasNormalLocation = glGetUniformLocation(deferredsceneShader->GetProgramID(), "hasNormalMap");
+	int texRepeatingLocation = glGetUniformLocation(deferredsceneShader->GetProgramID(), "texRepeating");
+	int texScaleLocation = glGetUniformLocation(deferredsceneShader->GetProgramID(), "texScale");
 
-	int lightPosLocation	= glGetUniformLocation(sceneShader->GetProgramID(), "lightPos");
+	/*
+	int lightPosLocation	= glGetUniformLocation(sceneShader->GetProgramID(), "lightPos"); Lighting to be deferred
 	int lightColourLocation = glGetUniformLocation(sceneShader->GetProgramID(), "lightColour");
 	int lightRadiusLocation = glGetUniformLocation(sceneShader->GetProgramID(), "lightRadius");
+	*/
 
-	int cameraLocation = glGetUniformLocation(sceneShader->GetProgramID(), "cameraPos");
+	int cameraLocation = glGetUniformLocation(deferredsceneShader->GetProgramID(), "cameraPos"); //changing this to deferredsceneShader
 
 	Vector3 camPos = camera->GetPosition();
 	glUniform3fv(cameraLocation, 1, &camPos.x);
@@ -358,20 +380,22 @@ void GameTechRenderer::RenderCamera() {
 	glUniformMatrix4fv(projLocation, 1, false, (float*)&projMatrix);
 	glUniformMatrix4fv(viewLocation, 1, false, (float*)&viewMatrix);
 
+	/*
 	glUniform3fv(lightPosLocation, 1, (float*)&lightPosition);
 	glUniform4fv(lightColourLocation, 1, (float*)&lightColour);
-	glUniform1f(lightRadiusLocation, lightRadius);
+	glUniform1f(lightRadiusLocation, lightRadius);*/
 
-	int shadowTexLocation = glGetUniformLocation(sceneShader->GetProgramID(), "shadowTex");
-	glUniform1i(shadowTexLocation, 1);
+	//int shadowTexLocation = glGetUniformLocation(sceneShader->GetProgramID(), "shadowTex"); Also temporarily removing shadows
+	//glUniform1i(shadowTexLocation, 1);
 
 	//TODO - PUT IN FUNCTION
-	glActiveTexture(GL_TEXTURE0 + 1);
-	glBindTexture(GL_TEXTURE_2D, shadowTex);
+	//glActiveTexture(GL_TEXTURE0 + 1); TEMPORARILY REMOVED THESE TWO LINES
+	//glBindTexture(GL_TEXTURE_2D, shadowTex);
 
 	for (const auto&i : frameObjects) {
-		if ((*i).GetDefaultTexture()) {
-			BindTextureToShader(*(OGLTexture*)(*i).GetDefaultTexture(), "mainTex", 0);
+
+		if ((*i).GetDefaultTexture()) { 
+			BindTextureToShader(*(OGLTexture*)(*i).GetDefaultTexture(), "diffuseTex", 0); //was maintTex for scenefrag. Using diffuseTex for deferredscenefrag
 			//figure out scale of object:
 			Vector3 scale = i->getParent()->getRenderScale() * i->GetTexScaleMultiplier();
 			glUniform3fv(texScaleLocation, 1, scale.array);
@@ -379,8 +403,8 @@ void GameTechRenderer::RenderCamera() {
 		}
 
 		//normal map capabilities added:
-		if ((*i).GetNormalMap()) {
-			BindTextureToShader(*(OGLTexture*)(*i).GetNormalMap(), "normalTex", 2); //need a shader that utilises normal maps, has a uniform sampler2D called "normalTex" in texture unit 2
+		if ((*i).GetNormalMap()) { //changed texture unit to 1 instead of 2 while there are no shadows
+			BindTextureToShader(*(OGLTexture*)(*i).GetNormalMap(), "normalTex", 1); //need a shader that utilises normal maps, has a uniform sampler2D called "normalTex" in texture unit 2
 		}
 
 		//Matrix4 modelMatrix = (*i).GetTransform()->GetMatrix();
@@ -389,8 +413,8 @@ void GameTechRenderer::RenderCamera() {
 		modelMatrix = modelMatrix * Matrix::Scale(i->getParent()->getRenderScale());
 		glUniformMatrix4fv(modelLocation, 1, false, (float*)&modelMatrix);
 
-		Matrix4 fullShadowMat = shadowMatrix * modelMatrix;
-		glUniformMatrix4fv(shadowLocation, 1, false, (float*)&fullShadowMat);
+		//Matrix4 fullShadowMat = shadowMatrix * modelMatrix; //TEMPORARILY REMOVING SHADOWS
+		//glUniformMatrix4fv(shadowLocation, 1, false, (float*)&fullShadowMat);
 
 		Vector4 colour = i->GetColour();
 		glUniform4fv(colourLocation, 1, &colour.x);
@@ -410,7 +434,7 @@ void GameTechRenderer::RenderCamera() {
 	}
 }
 
-Mesh* GameTechRenderer::LoadMesh(const std::string& name) {
+OGLMesh* GameTechRenderer::LoadMesh(const std::string& name) {///changed this to return OGLMesh* instead of Mesh*
 	OGLMesh* mesh = new OGLMesh();
 	MshLoader::LoadMesh(name, *mesh);
 	mesh->SetPrimitiveType(GeometryPrimitive::Triangles);
@@ -624,6 +648,11 @@ void GameTechRenderer::SetDebugLineBufferSizes(size_t newVertCount) {
 }
 
 void GameTechRenderer::RenderUI() {
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	glEnable(GL_BLEND);
+	glDisable(GL_DEPTH_TEST);
+	glBlendFunc(GL_SRC_ALPHA, GL_ZERO);
+	//RenderPostProcessing();
 	UseShader(*uiShader);
 
 	// Get uniform locations once and store them
@@ -633,9 +662,6 @@ void GameTechRenderer::RenderUI() {
 	int hasTextureLocation = glGetUniformLocation(uiShader->GetProgramID(), "hasTexture");
 	int textureLocation = glGetUniformLocation(uiShader->GetProgramID(), "mainTex");
 
-	glDisable(GL_DEPTH_TEST); // UI should always be on top
-	glEnable(GL_BLEND);
-	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 	for (const auto& uiElement : uiElements) {
 		
@@ -729,7 +755,7 @@ void GameTechRenderer::RenderDecals() {
 	glBindFramebuffer(GL_FRAMEBUFFER, decalSystem.GetDecalFBO());
 
 	// Copy the scene depth buffer to the decal FBO
-	glBindFramebuffer(GL_READ_FRAMEBUFFER, hdrFBO);
+	glBindFramebuffer(GL_READ_FRAMEBUFFER, bufferFBO); //was hdrFBO. Depth can now come from bufferFBO
 	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, decalSystem.GetDecalFBO());
 	glBlitFramebuffer(0, 0, windowSize.x, windowSize.y, // Read buffer (scene)
 					  0, 0, windowSize.x, windowSize.y, // Write buffer (decals)
@@ -738,7 +764,7 @@ void GameTechRenderer::RenderDecals() {
 	// Rebinding the FBO is necessary because the depth buffer is copied from the scene FBO
 	glBindFramebuffer(GL_FRAMEBUFFER, decalSystem.GetDecalFBO());
 
-	glClearColor(0, 0, 0, 0);
+	glClearColor(0, 0, 0, 0); //Clearing here with a = 1 removes all colour and textures. Not clearing also removes all textures. Not really sure what this does
 	// Not clearing the depth buffer because it was copied from the scene FBO
 	// This is to ensure that the decals are projected onto the correct surfaces
 	glClear(GL_COLOR_BUFFER_BIT); // clear the decal FBO
@@ -746,7 +772,7 @@ void GameTechRenderer::RenderDecals() {
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	glEnable(GL_DEPTH_TEST); // Enable depth testing
-	//glDepthFunc(GL_LEQUAL); // Use LEQUAL to ensure correct depth testing for decals
+	//glDepthFunc(GL_LEQUAL); // Use LEQUAL to ensure correct depth testing for decals SHOULD THIS BE COMMENTED OR UNCOMMENTED
 	glDepthFunc(GL_ALWAYS);
 
 	UseShader(*decalShader);
@@ -758,7 +784,7 @@ void GameTechRenderer::RenderDecals() {
 
 	GLuint decalTextureLocation = glGetUniformLocation(decalShader->GetProgramID(), "depthTexture");
 	glActiveTexture(GL_TEXTURE1);
-	glBindTexture(GL_TEXTURE_2D, hdrDepthTex);
+	glBindTexture(GL_TEXTURE_2D, bufferDepthTex); //was hdrDepthTex. 
 	glUniform1i(decalTextureLocation, 1);
 
 	GLuint alphaFadeLocation = glGetUniformLocation(decalShader->GetProgramID(), "alphaFade");
@@ -770,23 +796,27 @@ void GameTechRenderer::RenderDecals() {
 	glUniform1i(glGetUniformLocation(decalShader->GetProgramID(), "screenWidth"), windowSize.x);
 	glUniform1i(glGetUniformLocation(decalShader->GetProgramID(), "screenHeight"), windowSize.y);
 
+	// Projection matrix is required because decals require projection from world space onto a surface,
+	// which is done by projecting the decal onto the surface using the normal of the surface.
+	Matrix4 viewMatrix = camera->BuildViewMatrix();
+	Matrix4 projMatrix = camera->BuildProjectionMatrix(hostWindow->GetScreenAspect());
+	Matrix4 viewProjMatrix = projMatrix * viewMatrix;
+	glUniformMatrix4fv(viewProjMatrixLocation, 1, false, (float*)&viewProjMatrix);
+
 	for (const auto& decal : decalSystem.GetDecals()) {
+		// Get the random angle of rotation for the decal
+		float randomRotAngle = decal.rotation;
+
 		// Create a rotation matrix to orient the decal based on the normal of the surface it is projected onto
-		Matrix4 rotationMatrix = Matrix::RotationFromNormal(decal.normal);
+		Matrix4 rotationMatrix = Matrix::RotationAroundNormal(decal.normal, randomRotAngle);
+
 		Matrix4 modelMatrix = Matrix::Translation(Vector3(decal.position)) *
 							  rotationMatrix *
 							  Matrix::Scale(Vector3(decal.radius, decal.radius, decal.radius));
 
-		// Projection matrix is required because decals require projection from world space onto a surface,
-		// which is done by projecting the decal onto the surface using the normal of the surface.
-		Matrix4 viewMatrix = camera->BuildViewMatrix();
-		Matrix4 projMatrix = camera->BuildProjectionMatrix(hostWindow->GetScreenAspect());
-		Matrix4 viewProjMatrix = projMatrix * viewMatrix;
-
 		glUniform1f(alphaFadeLocation, decal.alphaFade);
 		glUniform4fv(decalColorLocation, 1, (float*)&decal.color);
 		glUniformMatrix4fv(modelMatrixLocation, 1, false, (float*)&modelMatrix);
-		glUniformMatrix4fv(viewProjMatrixLocation, 1, false, (float*)&viewProjMatrix);
 
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, ((OGLTexture*)decal.texture.get())->GetObjectID());
@@ -796,47 +826,222 @@ void GameTechRenderer::RenderDecals() {
 	}
 
 	// Unbind the FBO
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	glBindFramebuffer(GL_FRAMEBUFFER, 0); 
 
 	glDisable(GL_BLEND);
 	glDepthFunc(GL_LEQUAL);
 }
 
 void GameTechRenderer::RenderPostProcessing() {
-	if (vignetteOn) {
-		GLuint buff = (hdrOn ? BFBO : 0);
-		glBindFramebuffer(GL_FRAMEBUFFER, buff); //unbind hdrFBO and set BFBO
-		glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT); //BFBO has neither depth nor stencil attachment
-		glDisable(GL_CULL_FACE);
-		glDisable(GL_BLEND);
-		glDisable(GL_DEPTH_TEST);
-		UseShader(*vignetteShader);
+	//Vignette post processing:
+	    glBindFramebuffer(GL_FRAMEBUFFER, BFBO); //unbind hdrFBO and set BFBO   
+	    glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+	    glDisable(GL_CULL_FACE);
+	    glDisable(GL_BLEND);
+	    glDisable(GL_DEPTH_TEST);
+	    UseShader(*vignetteShader);
+	    glUniform1i(glGetUniformLocation(vignetteShader->GetProgramID(), "vignetteOn"), GetVignetteOn());
 		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, hdrTex); //hdrTex currently holds raw scene
+		glBindTexture(GL_TEXTURE_2D, bufferColourTex); //hdrTex currently holds raw scene
 		glUniform1i(glGetUniformLocation(vignetteShader->GetProgramID(), "diffuseTex"), 0);
-		glUniform1f(glGetUniformLocation(vignetteShader->GetProgramID(), "windowSizex"), windowSize.x);
-		glUniform1f(glGetUniformLocation(vignetteShader->GetProgramID(), "windowSizey"), windowSize.y);
+		glUniform2f(glGetUniformLocation(vignetteShader->GetProgramID(), "windowSize"), windowSize.x, windowSize.y);
 		Vector3 VignetteColour = Vector3(0.0, 0.0, 0.0); //different colours appear more intense at a given intensity (green)
 		float vignetteIntensity = 2.0f; //Recommendation: vary Intensity between 0.8 and 3
 		glUniform3fv(glGetUniformLocation(vignetteShader->GetProgramID(), "effectColour"), 1, (float*)&VignetteColour);
 		glUniform1f(glGetUniformLocation(vignetteShader->GetProgramID(), "intensity"), vignetteIntensity);
+
 		glUniform1f(glGetUniformLocation(vignetteShader->GetProgramID(), "time"), vignettePulse);
-		BindMesh(*unitQuad); //simply a quad
+		BindMesh(*fullscreenQuad); //simply a quad   
 		DrawBoundMesh(); //finished rendering into BTex now, ready to unbind to draw quad straight to screen next:
-	}
-	if (hdrOn) {
-		glBindFramebuffer(GL_FRAMEBUFFER, 0);
-		GLuint tex = (vignetteOn ? BTex : hdrTex);
+		//HDR post processing:
+		glBindFramebuffer(GL_FRAMEBUFFER, 0); //was 0, now trying rendering back into hdrFBO
 		glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 		glDisable(GL_CULL_FACE);
 		glDisable(GL_BLEND);
 		glDisable(GL_DEPTH_TEST);
 		UseShader(*hdrShader);
+		glUniform1i(glGetUniformLocation(hdrShader->GetProgramID(), "hdrOn"), GetHDROn()); //send bool to shader so it knows whether to output scene with or without post processing
 		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, tex);//BTex would hold vignetted scene. (tonemapping should be done pretty much last)
+		glBindTexture(GL_TEXTURE_2D, BTex);//BTex holds vignetted processed scene (whether applied or not). (tonemapping should be done pretty much last)
 		glUniform1i(glGetUniformLocation(hdrShader->GetProgramID(), "hdrTex"), 0);
-		BindMesh(*unitQuad);
+		BindMesh(*fullscreenQuad); //using unitQuad instead of fullscreen quad
 		DrawBoundMesh();
-	}
+	
+
+}
+
+void GameTechRenderer::GenerateScreenTexture(GLuint& into, bool depth) {  
+	glGenTextures(1, &into);
+	glBindTexture(GL_TEXTURE_2D, into); 
+
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+
+	GLuint format = depth ? GL_DEPTH_COMPONENT24 : GL_RGBA16F; //using floating point textures to allow HDR rendering 
+	GLuint type = depth ? GL_DEPTH_COMPONENT : GL_RGBA; 
+	GLuint datatype = depth ? GL_UNSIGNED_BYTE : GL_FLOAT;  
+
+	glTexImage2D(GL_TEXTURE_2D, 0, format, windowSize.x, windowSize.y, 0, type, datatype, NULL); 
+	glBindTexture(GL_TEXTURE_2D, 0);
+}
+
+void GameTechRenderer::DrawScene() { //the basic rendering for the scene, currently not including shadows. 
+	
+	glBindFramebuffer(GL_FRAMEBUFFER, bufferFBO);
+
+	glEnable(GL_CULL_FACE);
+	glClearColor(1, 1, 1, 0); //doesn't seem to change anything regardless of alpha
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	RenderSkybox();
+    RenderCamera();
+	// Render Decals to it's own buffer 
+	RenderDecals(); 
+	
+	glBindFramebuffer(GL_FRAMEBUFFER, hdrFBO);
+	// Blend decals onto the scene using a fullscreen quad
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	////glBindFramebuffer(GL_FRAMEBUFFER, 0); //////// Why unbind to 0? COMMENTING THIS OUT AT LEAST ALLOWS THE UI TO RENDER PROPERLY
+
+	UseShader(*decalBlendShader);
+
+	//// Send near and far plane uniforms to decalBlend shader
+	//// To conver non-linear depth to linear depth for accurate depth testing
+	/*glUniform1f(glGetUniformLocation(decalBlendShader->GetProgramID(), "nearPlane"), camera->GetNearPlane()); //DO THESE TWO LINES STILL DO ANYTHING?
+	glUniform1f(glGetUniformLocation(decalBlendShader->GetProgramID(), "farPlane"), camera->GetFarPlane());*/
+
+	GLuint decalTextureLocation = glGetUniformLocation(decalBlendShader->GetProgramID(), "decalTexture");
+	glUniform1i(decalTextureLocation, 0);
+
+	//// Bind the decal texture
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, decalSystem.GetDecalTexture());
+
+	//// Bind the scene texture
+	glActiveTexture(GL_TEXTURE1);
+	glBindTexture(GL_TEXTURE_2D, bufferColourTex); //was hdrTex. Can probably use bufferColourTex as long as lighting not required 
+	glUniform1i(glGetUniformLocation(decalBlendShader->GetProgramID(), "sceneTexture"), 1);
+
+	////// Bind depth texture
+	/*glActiveTexture(GL_TEXTURE2); //DO THESE 3 LINES STILL DO ANYTHING?
+	glBindTexture(GL_TEXTURE_2D, bufferDepthTex); //was hdrDepthTex. 
+	glUniform1i(glGetUniformLocation(decalBlendShader->GetProgramID(), "depthTexture"), 2);*/
+
+	////glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT); //Commenting this out at least lets the skybox appear
+	glDisable(GL_CULL_FACE);
+	glDisable(GL_BLEND);
+	glDisable(GL_DEPTH_TEST);
+	BindMesh(*unitQuad);
+	DrawBoundMesh(); 
+
+
+	glDisable(GL_CULL_FACE); //Todo - text indices are going the wrong way...
+	glDisable(GL_BLEND);
+	glDisable(GL_DEPTH_TEST);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	NewRenderLines();
+	NewRenderTextures();
+	NewRenderText();
+
+    /*glDisable(GL_CULL_FACE); //Todo - text indices are going the wrong way...  //before merge conflicts, this line would have come immediately after renderCamera()
+    glDisable(GL_BLEND);
+    glDisable(GL_DEPTH_TEST);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    NewRenderLines();
+    NewRenderTextures();
+    NewRenderText();
+    glDisable(GL_BLEND);
+    glEnable(GL_DEPTH_TEST);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    RenderUI();*/
+}
+
+void GameTechRenderer::FillBuffers() { //draws unlit scene 
+    //bind the framebuffer to store unlit scene
+	glBindFramebuffer(GL_FRAMEBUFFER, bufferFBO); //We will draw the whole scene into bufferFBO for now including the skybox 
+	glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT); 
+	 
+	//draw scene:
+	DrawScene(); //perhaps don't need to draw whole scene but just what will be affected by lighting i.e. skybox will not
+
+	//Unbind the framebuffer:
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+}
+
+void GameTechRenderer::DrawPointLights() { 
+	glBindFramebuffer(GL_FRAMEBUFFER, pointLightFBO);
+	UseShader(*pointlightShader);
+	glClearColor(0, 0, 0, 1); //set to black so that it doesn't interfere with additive blending for light
+	glClear(GL_COLOR_BUFFER_BIT);
+
+	glCullFace(GL_FRONT);
+	glDepthFunc(GL_ALWAYS);
+	glDepthMask(GL_FALSE);
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_ONE, GL_ONE);
+	glEnable(GL_CULL_FACE);
+	glDisable(GL_DEPTH_TEST);
+
+	glUniform1i(glGetUniformLocation(pointlightShader->GetProgramID(), "depthTex"), 0);
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, bufferDepthTex);
+
+	glUniform1i(glGetUniformLocation(pointlightShader->GetProgramID(), "normTex"), 1);
+	glActiveTexture(GL_TEXTURE1);
+	glBindTexture(GL_TEXTURE_2D, bufferNormalTex);
+
+	int cameraLocation = glGetUniformLocation(sceneShader->GetProgramID(), "cameraPos");
+	Vector3 camPos = camera->GetPosition();
+	glUniform3fv(cameraLocation, 1, &camPos.x);
+	glUniform2f(glGetUniformLocation(pointlightShader->GetProgramID(), "pixelSize"), 1.0f / windowSize.x, 1.0f / windowSize.y);
+
+	//using the same proj and view matrices from RenderCamera(): 
+	Matrix4 viewMatrix = camera->BuildViewMatrix();
+	Matrix4 projMatrix = camera->BuildProjectionMatrix(hostWindow->GetScreenAspect());
+	Matrix4 invViewProj = Matrix::Inverse(projMatrix * viewMatrix); // trying to take inverse of projview matrix
+
+	glUniformMatrix4fv(glGetUniformLocation(pointlightShader->GetProgramID(), "inverseProjView"), 1, false, (float*)&invViewProj);
+	//update shader matrices here (don't need to set model matrices though as this will be taken care of in vertex shader):
+	glUniformMatrix4fv(glGetUniformLocation(pointlightShader->GetProgramID(), "viewMatrix"), 1, false, (float*)&viewMatrix);
+	glUniformMatrix4fv(glGetUniformLocation(pointlightShader->GetProgramID(), "projMatrix"), 1, false, (float*)&projMatrix);
+	BindMesh(*lightSphere);
+
+	for (PointLight* light : lights) {
+		glUniform3fv(glGetUniformLocation(pointlightShader->GetProgramID(), "lightPos"), 1, (float*)&light->worldPosition);
+		glUniform4fv(glGetUniformLocation(pointlightShader->GetProgramID(), "lightColour"), 1, (float*)&light->colour);
+		glUniform1f(glGetUniformLocation(pointlightShader->GetProgramID(), "lightRadius"), light->radius);
+		DrawBoundMesh();
+	};
+
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	glCullFace(GL_BACK);
+	glDepthFunc(GL_LEQUAL);
+	glDepthMask(GL_TRUE);
+	glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
+
+}
+
+void GameTechRenderer::CombineBuffers() {//basically final post processing output. Don't need to update matrices as fullscreen quad is not transformed at all
+	glBindFramebuffer(GL_FRAMEBUFFER, bufferFBO); //swapped hdrFBO with bufferFBO to allow decals to work
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT); //without this line, output is just black 
+	UseShader(*combineShader); 
+	glUniform1i(glGetUniformLocation(combineShader->GetProgramID(), "diffuseTex"), 0);
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, hdrTex);
+
+	glUniform1i(glGetUniformLocation(combineShader->GetProgramID(), "diffuseLight"), 1);
+	glActiveTexture(GL_TEXTURE1);
+	glBindTexture(GL_TEXTURE_2D, lightDiffuseTex);
+
+	glUniform1i(glGetUniformLocation(combineShader->GetProgramID(), "specularLight"), 2); 
+	glActiveTexture(GL_TEXTURE2);
+	glBindTexture(GL_TEXTURE_2D, lightSpecularTex);
+
+
+	BindMesh(*fullscreenQuad);
+	DrawBoundMesh();
+	glBindFramebuffer(GL_FRAMEBUFFER, 0); //hdrTex should now hold full deferred lighting rendered scene 
 
 }

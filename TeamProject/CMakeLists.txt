@@ -51,6 +51,7 @@ set(SOURCES
     Shoot.h
     Paintball.h
     Paintball.cpp
+    PointLight.h
 )
 
 set(ASSET_ROOT "${CMAKE_SOURCE_DIR}/Assets")

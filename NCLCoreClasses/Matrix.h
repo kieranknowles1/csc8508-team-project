@@ -414,16 +414,40 @@ namespace NCL::Maths {
         }
 
         // https://gamedev.stackexchange.com/questions/22204/from-normal-to-rotation-matrix
-        inline Matrix4 RotationFromNormal(
-            const Vector3& normal
+        // https://stackoverflow.com/questions/42358356/rodrigues-formula-for-vector-rotation
+        // This function computes the rotation matrix for rotating a vector by a given angle 
+        // around a specified axis using Rodrigues' rotation formula.
+        inline Matrix4 RotationAroundNormal(
+            const Vector3& normal,
+            float angleInDegrees
         ) {
-            Vector3 tan0 = Vector::Normalise(Vector::Cross(normal, Vector3(1, 0, 0)));
-            Vector3 tan1 = Vector::Normalise(Vector::Cross(normal, tan0));
+            // Normalise the normal vector
+			Vector3 normalizedNormal = Vector::Normalise(normal);
+
+            // Convert angle to radian
+			float angleInRadians = Maths::DegreesToRadians(angleInDegrees);
+
+            // Pre-compute cos and sin of the angle
+			float cosAngle = cos(angleInRadians);
+			float sinAngle = sin(angleInRadians);
+
+			// Find a vector that is not parallel to normal
+            Vector3 up = (fabs(normal.y) > 0.99f) ? Vector3(0, 0, 1) : Vector3(0, 1, 0);
+            Vector3 right = Vector::Normalise(Vector::Cross(up, normalizedNormal));
+            Vector3 upCorrected = Vector::Cross(normalizedNormal, right);
+
+            // Apply rotation around the normal (Z-axis rotation in the local space)
+			Vector3 rotatedRight = right * cosAngle + upCorrected * sinAngle;
+			Vector3 rotatedUp = upCorrected * cosAngle - right * sinAngle;
+
+            // Rotation matrix components using Rodrigues' rotation formula
             Matrix4 mat;
-            mat.SetColumn(0, Vector4(tan0, 0));
-            mat.SetColumn(1, Vector4(tan1, 0));
-            mat.SetColumn(2, Vector4(normal, 0));
-            mat.SetColumn(3, Vector4(0, 0, 0, 1));
+
+            mat.SetColumn(0, Vector4(rotatedRight, 0.0f));
+            mat.SetColumn(1, Vector4(rotatedUp, 0.0f));
+            mat.SetColumn(2, Vector4(normalizedNormal, 0.0f));
+            mat.SetColumn(3, Vector4(0.0f, 0.0f, 0.0f, 1.0f));
+
             return mat;
         }
     }

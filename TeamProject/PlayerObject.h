@@ -20,6 +20,7 @@ enum class PlayerState {
 // Player class derived from GameObject
 class PlayerObject : public GameObject {
 public:
+
 	void Update(float dt) override;
 
 	void OnCollisionEnter(const CollisionInfo& collisionInfo) override;
@@ -32,6 +33,7 @@ public:
 
 	btVector3 getUpDirection() {
 		return upDirection;
+
 	}
 
 	void setUpDirection(btVector3 target) {
@@ -44,6 +46,7 @@ public:
 		return rightDirection;
 	}
 
+
 	btVector3 getForwardDirection() {
 		return forwardDirection;
 	}
@@ -52,13 +55,15 @@ public:
 		return camRotOffset;
 	}
 
-	void Rotate(bool positive, bool rolling, float yaw);
-
-	char getType() {
+	Type getCollisionType() {
 		return collisionType;
 	}
-	void resetType() {
-		collisionType = 'N'; //type None
+
+	void Rotate(bool positive, bool rolling, float yaw);
+
+
+	void resetCollisionType() {
+		collisionType = GameObject::Type::Default;
 	}
 	void setCollided(int collidedIn) {
 		collided = collidedIn;
@@ -90,7 +95,7 @@ private:
 	btVector3 collisionNormal = btVector3(0, 1, 0);
 	btVector3 collisionPoint = btVector3(0, 0, 0);
 	std::list<GameObject*> collidedObjects;
-	char collisionType;
+	Type collisionType;
 	PlayerState state;
 
 	btQuaternion camRotOffset = btQuaternion::getIdentity();
