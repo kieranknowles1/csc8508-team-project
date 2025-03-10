@@ -29,8 +29,7 @@ void NCL::CSC8503::GameTechAGCRenderer::createBuffer(const std::string& name, sc
 	*outTarget = CreateColourBufferTarget(window->GetScreenSize().x, window->GetScreenSize().y, true);
 	*outTexture = CreateFrameBufferTextureSlot(name);
 
-	auto error = sce::Agc::Core::translate((*outTexture)->GetAGCPointer(), outTarget, sce::Agc::Core::RenderTargetComponent::kData);
-	checkError(error);
+	checkError(sce::Agc::Core::translate((*outTexture)->GetAGCPointer(), outTarget, sce::Agc::Core::RenderTargetComponent::kData));
 
 	if (optionalSampler) {
 		optionalSampler->init().setXyFilterMode(
@@ -42,16 +41,15 @@ void NCL::CSC8503::GameTechAGCRenderer::createBuffer(const std::string& name, sc
 }
 
 GameTechAGCRenderer::GameTechAGCRenderer(Window* window) : AGCRenderer(window), GameTechRendererInterface(window) {
-	SceError error = SCE_OK;
 	bindlessTextures = (sce::Agc::Core::Texture*)allocator.Allocate(BINDLESS_TEX_COUNT * sizeof(sce::Agc::Core::Texture), sce::Agc::Alignment::kBuffer);
 	sce::Agc::Core::BufferSpec texSpec;
 	texSpec.initAsRegularBuffer(bindlessTextures, sizeof(sce::Agc::Core::Texture), BINDLESS_TEX_COUNT);
-	error = sce::Agc::Core::initialize(&textureBuffer, &texSpec);
+	checkError(sce::Agc::Core::initialize(&textureBuffer, &texSpec));
 
 	bindlessBuffers = (sce::Agc::Core::Buffer*)allocator.Allocate(BINDLESS_BUFFER_COUNT * sizeof(sce::Agc::Core::Buffer), sce::Agc::Alignment::kBuffer);
 	sce::Agc::Core::BufferSpec buffSpec;
 	buffSpec.initAsRegularBuffer(bindlessBuffers, sizeof(sce::Agc::Core::Buffer), BINDLESS_BUFFER_COUNT);
-	error = sce::Agc::Core::initialize(&arrayBuffer, &buffSpec);
+	checkError(sce::Agc::Core::initialize(&arrayBuffer, &buffSpec));
 	bufferCount = 1; //We skip over index 0, makes some selection logic easier later
 
 	skyboxTexture = (AGCTexture*)LoadTexture("Skybox.dds");
@@ -95,7 +93,7 @@ GameTechAGCRenderer::GameTechAGCRenderer(Window* window) : AGCRenderer(window), 
 			sce::Agc::Core::BufferSpec bufSpec;
 			bufSpec.initAsConstantBuffer(allFrames[i].data.dataStart, sizeof(ShaderConstants));
 
-			SceError error = sce::Agc::Core::initialize(&allFrames[i].constantBuffer, &bufSpec);
+			checkError(sce::Agc::Core::initialize(&allFrames[i].constantBuffer, &bufSpec));
 		}
 	}
 	currentFrameIndex = 0;
@@ -483,10 +481,7 @@ void GameTechAGCRenderer::DisplayRenderPass() {
 	sce::Agc::DispatchModifier modifier = gammaCompute->GetAGCPointer()->m_specials->m_dispatchModifier;
 
 	sce::Agc::Core::Texture outputTex; //Alias for our framebuffer tex;
-	SceError error = sce::Agc::Core::translate(&outputTex, &backBuffers[currentSwap].renderTarget, sce::Agc::Core::RenderTargetComponent::kData);
-	if (error != SCE_OK) {
-		std::cerr << "Error displaying render pass" << std::endl;
-	}
+	checkError(sce::Agc::Core::translate(&outputTex, &backBuffers[currentSwap].renderTarget, sce::Agc::Core::RenderTargetComponent::kData));
 
 	frameContext->m_bdr.getStage(sce::Agc::ShaderType::kCs)
 		.setTextures(0, 1, screenTex->GetAGCPointer())
@@ -513,7 +508,7 @@ void GameTechAGCRenderer::RenderDebugLines() {
 
 	sce::Agc::Core::BufferSpec bufSpec;
 	bufSpec.initAsRegularBuffer(dataPos, LINE_STRIDE, dataCount);
-	SceError error = sce::Agc::Core::initialize(&currentFrame->debugLineBuffer, &bufSpec);
+	checkError(sce::Agc::Core::initialize(&currentFrame->debugLineBuffer, &bufSpec));
 
 	frameContext->m_bdr.getStage(sce::Agc::ShaderType::kGs)
 		.setConstantBuffers(0, 1, &currentFrame->constantBuffer)
@@ -552,7 +547,7 @@ void GameTechAGCRenderer::RenderDebugText() {
 
 	sce::Agc::Core::BufferSpec bufSpec;
 	bufSpec.initAsRegularBuffer(dataPos, TEXT_STRIDE, dataCount);
-	SceError error = sce::Agc::Core::initialize(&currentFrame->debugTextBuffer, &bufSpec);
+	checkError(sce::Agc::Core::initialize(&currentFrame->debugTextBuffer, &bufSpec));
 
 	frameContext->m_bdr.getStage(sce::Agc::ShaderType::kGs)
 		.setConstantBuffers(0, 1, &currentFrame->constantBuffer)
@@ -603,7 +598,7 @@ void GameTechAGCRenderer::UpdateObjectList() {
 				bufSpec.initAsRegularBuffer(vertexData, vertexSize, vertexCount);
 
 				sce::Agc::Core::Buffer vBuffer;
-				SceError error = sce::Agc::Core::initialize(&vBuffer, &bufSpec);
+				checkError(sce::Agc::Core::initialize(&vBuffer, &bufSpec));
 
 				uint32_t bufferID = bufferCount++;
 				b = new AGCBuffer(vBuffer, vertexData);
