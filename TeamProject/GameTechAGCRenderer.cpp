@@ -354,7 +354,7 @@ void GameTechAGCRenderer::MainRenderPass() {
 	frameContext->m_sb.setState(backBuffers[currentSwap].targetMask);
 	frameContext->m_sb.setState(backBuffers[currentSwap].renderTarget);
 
-	sce::Agc::CxRenderTargetMask rtMask = sce::Agc::CxRenderTargetMask().init().setMask(0, 0xFF);
+	sce::Agc::CxRenderTargetMask rtMask = sce::Agc::CxRenderTargetMask().init().setMask(0, 0xFF).setMask(1, 0xff);
 	frameContext->m_sb.setState(rtMask);
 	frameContext->m_sb.setState(sceneBuffer.target);
 
@@ -573,13 +573,10 @@ void GameTechAGCRenderer::UpdateObjectList() {
 		state.colour = g->GetColour();
 		state.texRepeats = g->GetTexRepeating();
 		state.texScale = g->getParent()->getRenderScale() * g->GetTexScaleMultiplier();
-		state.index[0] = 0; //Default Texture
-		state.index[1] = 0; //Skinning buffer
+		state.skinningIndex = NULLTEX;
 
 		Texture* t = g->GetDefaultTexture();
-		if (t) {
-			state.index[0] = t->GetAssetID();
-		}
+		state.texIndex = t ? t->GetAssetID() : NULLTEX;
 
 		AGCMesh* m = (AGCMesh*)g->GetMesh();
 		if (m && m->GetJointCount() > 0) {//It's a skeleton mesh, need to update transformed vertices buffer
@@ -607,7 +604,7 @@ void GameTechAGCRenderer::UpdateObjectList() {
 
 				bindlessBuffers[bufferID] = vBuffer;
 			}
-			state.index[1] = b->GetAssetID();
+			state.skinningIndex = b->GetAssetID();
 
 			frameJobs.push_back({ g, b->GetAssetID() });
 		}

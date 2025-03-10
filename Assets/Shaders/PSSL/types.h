@@ -14,7 +14,8 @@
 struct ObjectState {
 		matrix modelMatrix;
 		float4 colour;
-		int index[4];
+		int texIndex = NULLTEX;
+		int skinningIndex = NULLTEX;
 		bool texRepeats;
 		float3 texScale;
 };
@@ -23,7 +24,7 @@ struct UiState {
     float4 colour;
     float2 position;
     float2 size;
-    int texture;
+    int texture = NULLTEX;
 };
 
 struct VS_OUTPUT

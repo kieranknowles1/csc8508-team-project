@@ -31,7 +31,7 @@ VS_OUTPUT main(uint vertID : S_VERTEX_ID, uint objID : S_SRT_DATA, uint instance
 
 	Output.Position = TransformWorldToClip(position);
 	Output.Colour	= s.colour;
-	Output.texID	= s.index[0];
+	Output.texID	= s.texIndex;
 
 	Output.ShadowClip = mul(Constants.shadowMatrix, position);
 
