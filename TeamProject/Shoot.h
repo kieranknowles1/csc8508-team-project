@@ -1,5 +1,7 @@
 #pragma once
 
+#include <optional>
+
 #include "ResourceManager.h"
 #include "Vector.h"
 #include "Matrix.h"
@@ -23,7 +25,7 @@ namespace NCL {
 			ShotInfo(GameObject* hitObjIn, btVector3 hitPosIn, btVector3 hitNormalIn) {
 				hitObj = hitObjIn; hitPos = hitPosIn; hitNormal = hitNormalIn;
 			};
-			
+
 			GameObject* hitObj;
 			btVector3 hitPos;
 			btVector3 hitNormal;
@@ -35,7 +37,7 @@ namespace NCL {
 			static Shoot* GetInstance() { return instance; }
 			void Initialise(btDiscreteDynamicsWorld* bulletWorldIn, ResourceManager* resourceManagerIn, GameWorld* worldIn, DecalSystem& decalSystemIn) {
 				bulletWorld = bulletWorldIn; this->resourceManager = resourceManagerIn; world = worldIn; decalSystem = &decalSystemIn;
-				
+
 				decalTextures.push_back(resourceManager->getTextures().get(decalTexturePath));
 				decalTextures.push_back(resourceManager->getTextures().get(decalTexturePath2));
 				decalTextures.push_back(resourceManager->getTextures().get(decalTexturePath3));
@@ -44,8 +46,8 @@ namespace NCL {
 			void InitShotMasks(GameObject* playerIn, GameObject* gunIn) {
 				player = playerIn; gun = gunIn;
 			};
-			ShotInfo* RayClosest(btVector3 startPos, btVector3 dir);
-			ShotInfo* ShootBulletPlayer(btVector3 startPos, btVector3 dir,btQuaternion rotation);
+			std::optional<ShotInfo> RayClosest(btVector3 startPos, btVector3 dir);
+			std::optional<ShotInfo> ShootBulletPlayer(btVector3 startPos, btVector3 dir,btQuaternion rotation);
 
 		private:
 			//Shot Variables

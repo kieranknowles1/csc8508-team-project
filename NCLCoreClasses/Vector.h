@@ -12,6 +12,7 @@ https://research.ncl.ac.uk/game/
 #include <cstdint>
 
 #include <LinearMath/btVector3.h>
+#include <btBulletDynamicsCommon.h>
 
 namespace NCL::Maths {
 
@@ -142,6 +143,13 @@ namespace NCL::Maths {
         }
         T& operator[](int i) {
             return ((T*)this)[i];
+        }
+        // Implicit conversion operators to/from btVector3
+        operator btVector4() const {
+            return btVector4(x, y, z,w);
+        }
+
+        VectorTemplate<T, 4>(const btVector4& bullet) : x(bullet.x()), y(bullet.y()), z(bullet.z()), w(bullet.w()) {
         }
     };
 

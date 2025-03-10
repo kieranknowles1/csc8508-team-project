@@ -39,6 +39,7 @@ namespace NCL::CSC8503 {
             // TODO: Handle enabled/disabled
             elem->render(frameSprites);
         }
+		lights = world->GetLights();
 	}
 
 	void GameTechRendererInterface::initUi()

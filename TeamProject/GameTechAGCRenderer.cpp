@@ -18,11 +18,28 @@ using namespace PS5;
 const int SHADOW_SIZE		= 8192;
 const int FRAMES_IN_FLIGHT	= 2;
 
-const int BINDLESS_TEX_COUNT		= 128; 
+const int BINDLESS_TEX_COUNT		= 128;
 const int BINDLESS_BUFFER_COUNT		= 128;
 
-const size_t LINE_STRIDE = sizeof(Vector4) + sizeof(Vector4); 
+const size_t LINE_STRIDE = sizeof(Vector4) + sizeof(Vector4);
 const size_t TEXT_STRIDE = sizeof(Vector2) + sizeof(Vector2) + sizeof(Vector4);
+
+void NCL::CSC8503::GameTechAGCRenderer::createBuffer(const std::string& name, sce::Agc::CxRenderTarget* outTarget, PS5::AGCTexture** outTexture, sce::Agc::Core::Sampler* optionalSampler)
+{
+	*outTarget = CreateColourBufferTarget(window->GetScreenSize().x, window->GetScreenSize().y, true);
+	*outTexture = CreateFrameBufferTextureSlot(name);
+
+	auto error = sce::Agc::Core::translate((*outTexture)->GetAGCPointer(), outTarget, sce::Agc::Core::RenderTargetComponent::kData);
+	checkError(error);
+
+	if (optionalSampler) {
+		optionalSampler->init().setXyFilterMode(
+			sce::Agc::Core::Sampler::FilterMode::kPoint,
+			sce::Agc::Core::Sampler::FilterMode::kPoint
+		)
+			.setMipFilterMode(sce::Agc::Core::Sampler::MipFilterMode::kPoint);
+	}
+}
 
 GameTechAGCRenderer::GameTechAGCRenderer(Window* window) : AGCRenderer(window), GameTechRendererInterface(window) {
 	SceError error = SCE_OK;
@@ -44,30 +61,33 @@ GameTechAGCRenderer::GameTechAGCRenderer(Window* window) : AGCRenderer(window), 
 	halfUnitQuad = Mesh::Quad<AGCMesh>(0.5f);
 	halfUnitQuad->UploadToGPU(this);
 
-	skinningCompute = new AGCShader("Skinning_c.ags", allocator);
-	gammaCompute	= new AGCShader("Gamma_c.ags", allocator);
+	skinningCompute = std::make_unique<AGCShader>("Skinning_c.ags", allocator);
+	gammaCompute	= std::make_unique<AGCShader>("Gamma_c.ags", allocator);
 
-	defaultVertexShader = new AGCShader("Tech_vv.ags", allocator);
-	defaultPixelShader  = new AGCShader("Tech_p.ags"  , allocator);
+	defaultVertexShader = std::make_unique<AGCShader>("Tech_vv.ags", allocator);
+	defaultPixelShader  = std::make_unique<AGCShader>("Tech_p.ags"  , allocator);
 
 	uiVertexShader = std::make_unique<AGCShader>("UI_vv.ags", allocator);
 	uiPixelShader = std::make_unique<AGCShader>("UI_p.ags", allocator);
 
-	shadowVertexShader	= new AGCShader("Shadow_vv.ags", allocator);
-	shadowPixelShader	= new AGCShader("Shadow_p.ags", allocator);
+	shadowVertexShader	= std::make_unique<AGCShader>("Shadow_vv.ags", allocator);
+	shadowPixelShader	= std::make_unique<AGCShader>("Shadow_p.ags", allocator);
 
-	skyboxVertexShader	= new AGCShader("Skybox_vv.ags", allocator);
-	skyboxPixelShader	= new AGCShader("Skybox_p.ags" , allocator);
+	skyboxVertexShader	= std::make_unique<AGCShader>("Skybox_vv.ags", allocator);
+	skyboxPixelShader	= std::make_unique<AGCShader>("Skybox_p.ags" , allocator);
 
-	debugLineVertexShader	= new AGCShader("DebugLine_vv.ags", allocator);
-	debugLinePixelShader	= new AGCShader("DebugLine_p.ags" , allocator);
+	debugLineVertexShader	= std::make_unique<AGCShader>("DebugLine_vv.ags", allocator);
+	debugLinePixelShader	= std::make_unique<AGCShader>("DebugLine_p.ags" , allocator);
 
-	debugTextVertexShader	= new AGCShader("DebugText_vv.ags", allocator);
-	debugTextPixelShader	= new AGCShader("DebugText_p.ags" , allocator);
+	debugTextVertexShader	= std::make_unique<AGCShader>("DebugText_vv.ags", allocator);
+	debugTextPixelShader	= std::make_unique<AGCShader>("DebugText_p.ags" , allocator);
+
+	postVertexShader = std::make_unique<AGCShader>("post_vv.ags", allocator);
+	postPixelShader = std::make_unique<AGCShader>("post_p.ags", allocator);
 
 	allFrames = new FrameData[FRAMES_IN_FLIGHT];
 	for (int i = 0; i < FRAMES_IN_FLIGHT; ++i) {
-		
+
 		{//We store scene object matrices etc in a big UBO
 			allFrames[i].data.dataStart = (char*)allocator.Allocate(1024 * 1024 * 64, sce::Agc::Alignment::kBuffer);
 			allFrames[i].data.data = allFrames[i].data.dataStart;
@@ -86,10 +106,8 @@ GameTechAGCRenderer::GameTechAGCRenderer(Window* window) : AGCRenderer(window), 
 	shadowTarget	= CreateDepthBufferTarget(SHADOW_SIZE, SHADOW_SIZE);
 	shadowMap		= CreateFrameBufferTextureSlot("Shadowmap");
 
-	screenTarget	= CreateColourBufferTarget(window->GetScreenSize().x, window->GetScreenSize().y, true);
-	screenTex		= CreateFrameBufferTextureSlot("Screen");
-
-	error = sce::Agc::Core::translate(screenTex->GetAGCPointer(), &screenTarget, sce::Agc::Core::RenderTargetComponent::kData);
+	createBuffer("Scene", &sceneTarget, &sceneTexture, &sceneSampler);
+	createBuffer("Screen", &screenTarget, &screenTex, nullptr);
 
 	shadowSampler.init()
 		.setXyFilterMode(
@@ -105,16 +123,8 @@ GameTechAGCRenderer::~GameTechAGCRenderer()	{
 
 Mesh* GameTechAGCRenderer::LoadMesh(const std::string& name) {
 	AGCMesh* m = new AGCMesh();
-
-	if (name.find(".gltf") != std::string::npos) {
-		bool a = true;
-	}
-	else if (name.find(".msh") != std::string::npos) {
-		MshLoader::LoadMesh(name, *m);
-	}
-
+	MshLoader::LoadMesh(name, *m);
 	m->UploadToGPU(this);
-
 	return m;
 }
 
@@ -167,19 +177,24 @@ void GameTechAGCRenderer::RenderFrame() {
 	SkyboxPass();
 	//Step 6: Draw the scene to our main scene render target
 	MainRenderPass();
-	//Step 7: Draw the debug data to the main scene render target
+
+	// Step 7: Apply post processing to the scene buffer
+	PostProcessPass();
+
+	//Step 8: Draw UI to the post-processed scene
+	UiPass();
 	UpdateDebugData();
 	RenderDebugLines();
 	RenderDebugText();
-	UiPass();
-	//Step 8: Draw the main scene render target to the screen with a compute shader
+
+	//Step 9: Draw the main scene render target to the screen with a compute shader
 	DisplayRenderPass(); //Puts our scene on screen, uses a compute
-	
+
 	currentFrameIndex = (currentFrameIndex + 1) % FRAMES_IN_FLIGHT;
 }
 
 /*
-This method builds a struct that 
+This method builds a struct that
 
 */
 void GameTechAGCRenderer::WriteRenderPassConstants() {
@@ -203,6 +218,11 @@ void GameTechAGCRenderer::WriteRenderPassConstants() {
 		Matrix::View(frameData.lightPosition, Vector3(0, 0, 0), Vector3(0, 1, 0));
 
 	frameData.shadowID = shadowMap->GetAssetID();
+
+	frameData.vingetteSettings.enabled = vignetteOn;
+	frameData.vingetteSettings.color = Vector3(0, 0, 0);
+	frameData.vingetteSettings.intensity = 2.0f;
+	frameData.vingetteSettings.pulse = vignettePulse;
 
 	currentFrame->data.WriteData<ShaderConstants>(frameData); //Let's start filling up our frame data!
 
@@ -263,7 +283,7 @@ void GameTechAGCRenderer::SkyboxPass() {
 
 	sce::Agc::CxRenderTargetMask rtMask = sce::Agc::CxRenderTargetMask().init().setMask(0, 0xFF);
 	frameContext->m_sb.setState(rtMask);
-	frameContext->m_sb.setState(screenTarget);
+	frameContext->m_sb.setState(sceneTarget);
 
 	frameContext->m_sb.setState(depthTarget);
 
@@ -308,7 +328,7 @@ void GameTechAGCRenderer::ShadowmapPass() {
 
 	frameContext->m_sb.setState(depthControl);
 
-	frameContext->m_bdr.getStage(sce::Agc::ShaderType::kGs)	
+	frameContext->m_bdr.getStage(sce::Agc::ShaderType::kGs)
 		.setConstantBuffers(0, 1, &currentFrame->constantBuffer)
 		.setBuffers(0, 1, &currentFrame->objectBuffer)
 		.setBuffers(1, 1, &arrayBuffer);
@@ -338,7 +358,7 @@ void GameTechAGCRenderer::MainRenderPass() {
 
 	sce::Agc::CxRenderTargetMask rtMask = sce::Agc::CxRenderTargetMask().init().setMask(0, 0xFF);
 	frameContext->m_sb.setState(rtMask);
-	frameContext->m_sb.setState(screenTarget);
+	frameContext->m_sb.setState(sceneTarget);
 
 	frameContext->m_sb.setState(depthTarget);
 
@@ -396,6 +416,33 @@ void GameTechAGCRenderer::UiPass() {
 
 	halfUnitQuad->BindVertexBuffers(frameContext->m_bdr.getStage(sce::Agc::ShaderType::kGs));
 	DrawBoundMeshInstanced(*frameContext, *halfUnitQuad, uiElements.size());
+}
+
+void GameTechAGCRenderer::PostProcessPass()
+{
+	frameContext->setShaders(nullptr, postVertexShader->GetAGCPointer(), postPixelShader->GetAGCPointer(), sce::Agc::UcPrimitiveType::Type::kTriList);
+	sce::Agc::CxViewport viewPort;
+	sce::Agc::Core::setViewport(&viewPort, SCREENWIDTH, SCREENHEIGHT, 0, 0, -1.0f, 1.0f);
+	frameContext->m_sb.setState(viewPort);
+
+	sce::Agc::CxRenderTargetMask rtMask = sce::Agc::CxRenderTargetMask().init().setMask(0, 0xFF);
+	frameContext->m_sb.setState(rtMask);
+	frameContext->m_sb.setState(screenTarget);
+
+	sce::Agc::CxDepthStencilControl depthControl;
+	depthControl.init();
+	depthControl.setDepth(sce::Agc::CxDepthStencilControl::Depth::kDisable);
+	depthControl.setDepthFunction(sce::Agc::CxDepthStencilControl::DepthFunction::kAlways);
+	depthControl.setDepthWrite(sce::Agc::CxDepthStencilControl::DepthWrite::kDisable);
+	frameContext->m_sb.setState(depthControl);
+
+	frameContext->m_bdr.getStage(sce::Agc::ShaderType::kPs)
+		.setConstantBuffers(0, 1, &currentFrame->constantBuffer)
+		.setSamplers(0, 1, &sceneSampler)
+		.setTextures(0, 1, sceneTexture->GetAGCPointer());
+
+	unitQuad->BindVertexBuffers(frameContext->m_bdr.getStage(sce::Agc::ShaderType::kGs));
+	DrawBoundMesh(*frameContext, *unitQuad);
 }
 
 void GameTechAGCRenderer::UpdateDebugData() {
@@ -497,7 +544,7 @@ void GameTechAGCRenderer::RenderDebugText() {
 		.setColorSourceMultiplier(sce::Agc::CxBlendControl::ColorSourceMultiplier::kSrcAlpha)
 		.setColorDestMultiplier(sce::Agc::CxBlendControl::ColorDestMultiplier::kOneMinusSrcAlpha)
 		.setColorBlendFunc(sce::Agc::CxBlendControl::ColorBlendFunc::kAdd);
-	
+
 	frameContext->m_sb.setState(blendControl);
 
 	char* dataPos = currentFrame->data.dataStart + currentFrame->debugTextOffset;

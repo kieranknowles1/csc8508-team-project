@@ -4,6 +4,7 @@
 #include <string>
 #include <vector>
 #include <memory>
+#include "PointLight.h"
 
 #include <NCLCoreClasses/Vector.h>
 
@@ -100,6 +101,7 @@ namespace NCL::CSC8503 {
 		std::vector<UiElement*> uiElements;
 		std::vector<RenderObject*> frameObjects;
         std::vector<UiSprite> frameSprites;
+		std::vector<PointLight*> lights;
 		DecalSystem decalSystem;
 	};
 }
