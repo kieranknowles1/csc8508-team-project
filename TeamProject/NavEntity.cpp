@@ -45,7 +45,12 @@ float NavEntity::YAdjust(btVector3 pos) {
 	btVector3 upPos = pos + btVector3(0, 5.0f, 0);
 	btVector3 downPos = pos + btVector3(0, -10000.0f, 0);
 	btVector3 direction = (downPos - upPos).normalized();
-	ShotInfo* rayResult = Shoot::GetInstance()->RayClosest(upPos, direction, this);
-	if (!rayResult) return 0;
+
+	std::optional<ShotInfo> rayResult = Shoot::GetInstance()->RayClosest(upPos, direction, this);
+
+	if (!rayResult.has_value()) {
+		return 0.0f;  // No hit detected
+	}
+
 	return (pos.getY() - rayResult->hitPos.getY());
 }
