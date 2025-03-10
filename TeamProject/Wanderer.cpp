@@ -92,8 +92,12 @@ void Wanderer::UpdatePlayerDistance() {
 	btVector3 wl = trans.getOrigin();
 	btVector3 pl = pTrans.getOrigin();
 
+	wl.setY(0);
+	pl.setY(0);
+
 	playerDist = wl.distance(pl);
 }
+
 
 void Wanderer::PlayerNear(float dt) {
 	
