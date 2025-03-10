@@ -148,29 +148,29 @@ namespace NCL {
 
 			sce::Agc::Core::Buffer arrayBuffer;
 
-			NCL::PS5::AGCTexture* skyboxTexture;
+			PS5::AGCTexture* skyboxTexture;
 
-			NCL::PS5::AGCShader* skinningCompute;
+			std::unique_ptr<PS5::AGCShader> skinningCompute;
 
-			NCL::PS5::AGCShader* defaultVertexShader;
-			NCL::PS5::AGCShader* defaultPixelShader;
+			std::unique_ptr<PS5::AGCShader> defaultVertexShader;
+			std::unique_ptr<PS5::AGCShader> defaultPixelShader;
 
 			std::unique_ptr<PS5::AGCShader> uiVertexShader;
 			std::unique_ptr<PS5::AGCShader> uiPixelShader;
 
-			NCL::PS5::AGCShader* shadowVertexShader;
-			NCL::PS5::AGCShader* shadowPixelShader;
+			std::unique_ptr<PS5::AGCShader> shadowVertexShader;
+			std::unique_ptr<PS5::AGCShader> shadowPixelShader;
 
-			NCL::PS5::AGCShader* skyboxVertexShader;
-			NCL::PS5::AGCShader* skyboxPixelShader;
+			std::unique_ptr<PS5::AGCShader> skyboxVertexShader;
+			std::unique_ptr<PS5::AGCShader> skyboxPixelShader;
 
-			NCL::PS5::AGCShader* debugLineVertexShader;
-			NCL::PS5::AGCShader* debugLinePixelShader;
+			std::unique_ptr<PS5::AGCShader> debugLineVertexShader;
+			std::unique_ptr<PS5::AGCShader> debugLinePixelShader;
 
-			NCL::PS5::AGCShader* debugTextVertexShader;
-			NCL::PS5::AGCShader* debugTextPixelShader;
+			std::unique_ptr<PS5::AGCShader> debugTextVertexShader;
+			std::unique_ptr<PS5::AGCShader> debugTextPixelShader;
 
-			NCL::PS5::AGCShader* gammaCompute;
+			std::unique_ptr<PS5::AGCShader> gammaCompute;
 
 			std::unique_ptr<PS5::AGCShader> postVertexShader;
 			std::unique_ptr<PS5::AGCShader> postPixelShader;

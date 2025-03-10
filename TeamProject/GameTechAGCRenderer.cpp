@@ -61,26 +61,26 @@ GameTechAGCRenderer::GameTechAGCRenderer(Window* window) : AGCRenderer(window), 
 	halfUnitQuad = Mesh::Quad<AGCMesh>(0.5f);
 	halfUnitQuad->UploadToGPU(this);
 
-	skinningCompute = new AGCShader("Skinning_c.ags", allocator);
-	gammaCompute	= new AGCShader("Gamma_c.ags", allocator);
+	skinningCompute = std::make_unique<AGCShader>("Skinning_c.ags", allocator);
+	gammaCompute	= std::make_unique<AGCShader>("Gamma_c.ags", allocator);
 
-	defaultVertexShader = new AGCShader("Tech_vv.ags", allocator);
-	defaultPixelShader  = new AGCShader("Tech_p.ags"  , allocator);
+	defaultVertexShader = std::make_unique<AGCShader>("Tech_vv.ags", allocator);
+	defaultPixelShader  = std::make_unique<AGCShader>("Tech_p.ags"  , allocator);
 
 	uiVertexShader = std::make_unique<AGCShader>("UI_vv.ags", allocator);
 	uiPixelShader = std::make_unique<AGCShader>("UI_p.ags", allocator);
 
-	shadowVertexShader	= new AGCShader("Shadow_vv.ags", allocator);
-	shadowPixelShader	= new AGCShader("Shadow_p.ags", allocator);
+	shadowVertexShader	= std::make_unique<AGCShader>("Shadow_vv.ags", allocator);
+	shadowPixelShader	= std::make_unique<AGCShader>("Shadow_p.ags", allocator);
 
-	skyboxVertexShader	= new AGCShader("Skybox_vv.ags", allocator);
-	skyboxPixelShader	= new AGCShader("Skybox_p.ags" , allocator);
+	skyboxVertexShader	= std::make_unique<AGCShader>("Skybox_vv.ags", allocator);
+	skyboxPixelShader	= std::make_unique<AGCShader>("Skybox_p.ags" , allocator);
 
-	debugLineVertexShader	= new AGCShader("DebugLine_vv.ags", allocator);
-	debugLinePixelShader	= new AGCShader("DebugLine_p.ags" , allocator);
+	debugLineVertexShader	= std::make_unique<AGCShader>("DebugLine_vv.ags", allocator);
+	debugLinePixelShader	= std::make_unique<AGCShader>("DebugLine_p.ags" , allocator);
 
-	debugTextVertexShader	= new AGCShader("DebugText_vv.ags", allocator);
-	debugTextPixelShader	= new AGCShader("DebugText_p.ags" , allocator);
+	debugTextVertexShader	= std::make_unique<AGCShader>("DebugText_vv.ags", allocator);
+	debugTextPixelShader	= std::make_unique<AGCShader>("DebugText_p.ags" , allocator);
 
 	postVertexShader = std::make_unique<AGCShader>("post_vv.ags", allocator);
 	postPixelShader = std::make_unique<AGCShader>("post_p.ags", allocator);

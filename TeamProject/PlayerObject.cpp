@@ -22,8 +22,8 @@ void PlayerObject::OnCollisionEnter(const CollisionInfo& collisionInfo){
 	}
 
 	// set special type collision
-	collisionType = collisionInfo.otherObject->getType();
-	if (collisionInfo.otherObject->getType() == 'J' || collisionInfo.otherObject->getType() == 'S') {
+    collisionType = collisionInfo.otherObject->getType();
+    if (collisionInfo.otherObject->getType() == GameObject::Type::JumpPad || collisionInfo.otherObject->getType() == GameObject::Type::Slime) {
 		collisionNormal = collisionInfo.contactNormal;
 		collisionPoint = collisionInfo.contactPointA;
 	}
@@ -63,8 +63,8 @@ void PlayerObject::OnCollisionStay(const CollisionInfo& collision){
 		}
 	}
 	// set special type collision
-	collisionType = collision.otherObject->getType();
-	if (collision.otherObject->getType() == 'J' || collision.otherObject->getType() == 'S') {
+    collisionType = collision.otherObject->getType();
+    if (collision.otherObject->getType() == GameObject::Type::JumpPad || collision.otherObject->getType() == GameObject::Type::Slime) {
 		collisionNormal = collision.contactNormal;
 		collisionPoint = collision.contactPointA;
 	}

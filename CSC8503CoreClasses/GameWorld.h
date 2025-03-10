@@ -1,5 +1,6 @@
 #pragma once
 #include <random>
+#include "../TeamProject/PointLight.h"
 
 #include <Camera.h>
 namespace NCL {
@@ -21,9 +22,13 @@ namespace NCL {
 			void AddGameObject(GameObject* o);
 			void RemoveGameObject(GameObject* o);
 
+			void AddPointLight(PointLight* p);
+			void RemovePointLight(PointLight* p);
+			std::vector<PointLight*> GetLights() { return lights; }
 			PerspectiveCamera& GetMainCamera()  {
 				return mainCamera;
 			}
+
 
 			virtual void UpdateWorld(float dt);
 
@@ -39,6 +44,7 @@ namespace NCL {
 
 		protected:
 			std::vector<GameObject*> gameObjects;
+			std::vector<PointLight*> lights;
 
 			PerspectiveCamera mainCamera;
 

@@ -4,7 +4,7 @@ using namespace NCL;
 using namespace CSC8503;
 
 
-ShotInfo* Shoot::RayClosest(btVector3 startPos, btVector3 dir) {
+std::optional<ShotInfo> Shoot::RayClosest(btVector3 startPos, btVector3 dir) {
 	dir.normalize();
     btVector3 shotPos = (startPos + (dir * 10000));
     btCollisionWorld::AllHitsRayResultCallback callback(startPos, shotPos);
@@ -29,16 +29,18 @@ ShotInfo* Shoot::RayClosest(btVector3 startPos, btVector3 dir) {
                 }
             }
         }
-        ShotInfo* shotInfo = new ShotInfo(hitObj, hitPoint, hitNormal);
-        return shotInfo;
+        return std::make_optional<ShotInfo>(hitObj, hitPoint, hitNormal);
     }
-    return nullptr;
+    return std::nullopt;
 }
 
-ShotInfo* Shoot::ShootBulletPlayer(btVector3 startPos, btVector3 dir, btQuaternion rotation) {
-    ShotInfo* rayInfo = RayClosest(startPos, dir);
-    SpawnBulletMesh(startPos, dir, rotation, rayInfo);
-    SpawnDecal(rayInfo);
+std::optional<ShotInfo> Shoot::ShootBulletPlayer(btVector3 startPos, btVector3 dir, btQuaternion rotation) {
+    auto rayInfo = RayClosest(startPos, dir);
+    // Don't have Rust style and_then until C++23 :(
+    if (rayInfo.has_value()) {
+        SpawnBulletMesh(startPos, dir, rotation, &rayInfo.value());
+        SpawnDecal(&rayInfo.value());
+    }
     return rayInfo;
 
 }
@@ -62,7 +64,9 @@ void Shoot::SpawnBulletMesh(btVector3 startPos, btVector3 dir, btQuaternion rota
     ));
     paintball->GetRenderObject()->SetIsFlat(true);
     paintball->SetPhysicsObject(new PhysicsObject(paintball));
-    paintball->GetRenderObject()->SetColour(Vector4(rand() % 2, rand() % 2, rand() % 2, 1));
+    paintballColor = btVector4(rand() % 2, rand() % 2, rand() % 2, 1);
+	Vector4 paintballColorVec4(paintballColor.getX(), paintballColor.getY(), paintballColor.getZ(), paintballColor.getW());
+    paintball->GetRenderObject()->SetColour(paintballColorVec4);
 
     btCollisionShape* shape = new btSphereShape(1.0f);
     shape->setMargin(0.01f);
@@ -80,7 +84,16 @@ void Shoot::SpawnBulletMesh(btVector3 startPos, btVector3 dir, btQuaternion rota
 
 void Shoot::SpawnDecal(ShotInfo* shotinfo) {
     if (shotinfo->hitObj != nullptr) {
-        DecalSystem::Decal decal = { shotinfo->hitPos, shotinfo->hitNormal, decalRadius, pngTexture,alphaFade,decalColor };
+		// Choose a random decal texture
+        std::shared_ptr<NCL::Rendering::Texture> pngTexture = decalSystem->PickRandomDecal(decalTextures);
+
+		// Use the same color for the decal as the paintball
+        btVector4 decalColor = paintballColor;
+
+		// Generate a random rotation angle for the decal
+        float decalRotation = decalSystem->GetRandomRotation();
+
+        DecalSystem::Decal decal = { shotinfo->hitPos, decalRotation, shotinfo->hitNormal, decalRadius, pngTexture,alphaFade,decalColor };
         decalSystem->ApplyDecal(decal); // Apply the decal using the hit position and normal
     }
 }
