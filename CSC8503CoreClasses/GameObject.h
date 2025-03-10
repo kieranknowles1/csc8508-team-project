@@ -6,6 +6,7 @@
 #include "PhysicsObject.h"
 #include "btBulletDynamicsCommon.h"
 #include "CollisionInfo.h"
+#include "../TeamProject/PointLight.h"
 
 namespace NCL::CSC8503 {
 	class NetworkObject;
@@ -21,14 +22,6 @@ namespace NCL::CSC8503 {
 			Ice,
 			PointLight
 		};
-
-		// TODO: Types are being stored as integers
-		/*NLOHMANN_JSON_SERIALIZE_ENUM(Type, {
-			{Type::Normal, "D"},
-			{Type::JumpPad, "J"},
-			{Type::Slime, "S"},
-			{Type::Ice, "I"}
-		})*/
 
 		GameObject(const std::string& name = "");
 		virtual ~GameObject();
@@ -140,6 +133,13 @@ namespace NCL::CSC8503 {
 			return nullptr;
 		}
 
+		void attachLight(PointLight* lightIn) {
+			light = lightIn;
+		}
+		PointLight* getLight() {
+			return light;
+		}
+
 		void setDeleted() { deleted = true; }
 		bool isDeleted() { return deleted; }
 	protected:
@@ -160,5 +160,7 @@ namespace NCL::CSC8503 {
 		btQuaternion initialRotation = btQuaternion(0, 0, 0);
 
 		inline static std::unordered_map<int, GameObject*> objects;
+
+		PointLight* light = nullptr;
 	};
 }
