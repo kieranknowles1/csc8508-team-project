@@ -106,9 +106,19 @@ namespace NCL {
 			};
 
 			struct FrameData {
+				template <typename T>
+				struct UniformArray {
+					sce::Agc::Core::Buffer buffer;
+					char* start;
+
+					void begin(FrameData* frame);
+					void end(FrameData* frame);
+				};
+
+				UniformArray<ObjectState> objects;
+				UniformArray<UiState> ui;
+
 				sce::Agc::Core::Buffer constantBuffer;
-				sce::Agc::Core::Buffer objectBuffer;
-				sce::Agc::Core::Buffer uiBuffer;
 
 				sce::Agc::Core::Buffer debugLineBuffer;
 				sce::Agc::Core::Buffer debugTextBuffer;
@@ -116,8 +126,6 @@ namespace NCL {
 				BumpAllocator data;
 
 				int globalDataOffset	= 0;	//Where does the global data start in the buffer?
-				int objectStateOffset	= 0;	//Where does the object states start?
-				int uiOffset = 0;
 				int debugLinesOffset	= 0;	//Where do the debug lines start?
 				int debugTextOffset		= 0;	//Where do the debug text verts start?
 
@@ -196,5 +204,5 @@ namespace NCL {
 
 			std::vector<SkinningJob> frameJobs;
 		};
-	}
+}
 }

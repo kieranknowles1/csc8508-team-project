@@ -160,10 +160,7 @@ void GameTechAGCRenderer::RenderFrame() {
 	currentFrame->data.Reset();
 
 	currentFrame->globalDataOffset	= 0;
-	currentFrame->objectStateOffset = sizeof(ShaderConstants);
-	currentFrame->debugLinesOffset = 0;
 	currentFrame->debugTextOffset	= 0;
-	currentFrame->uiOffset = 0;
 	currentFrame->textVertCount		= 0;
 	currentFrame->lineVertCount		= 0;
 
@@ -227,7 +224,6 @@ void GameTechAGCRenderer::WriteRenderPassConstants() {
 	currentFrame->data.WriteData<ShaderConstants>(frameData); //Let's start filling up our frame data!
 
 	currentFrame->data.AlignData(128);
-	currentFrame->objectStateOffset = currentFrame->data.bytesWritten;
 }
 
 void GameTechAGCRenderer::DrawObjects() {
@@ -330,7 +326,7 @@ void GameTechAGCRenderer::ShadowmapPass() {
 
 	frameContext->m_bdr.getStage(sce::Agc::ShaderType::kGs)
 		.setConstantBuffers(0, 1, &currentFrame->constantBuffer)
-		.setBuffers(0, 1, &currentFrame->objectBuffer)
+		.setBuffers(0, 1, &currentFrame->objects.buffer)
 		.setBuffers(1, 1, &arrayBuffer);
 
 	frameContext->m_bdr.getStage(sce::Agc::ShaderType::kPs)
@@ -378,7 +374,7 @@ void GameTechAGCRenderer::MainRenderPass() {
 
 	frameContext->m_bdr.getStage(sce::Agc::ShaderType::kGs)
 		.setConstantBuffers(0, 1, &currentFrame->constantBuffer)
-		.setBuffers(0, 1, &currentFrame->objectBuffer)
+		.setBuffers(0, 1, &currentFrame->objects.buffer)
 		.setBuffers(1, 1, &arrayBuffer);
 
 	frameContext->m_bdr.getStage(sce::Agc::ShaderType::kPs)
@@ -410,7 +406,7 @@ void GameTechAGCRenderer::UiPass() {
 	frameContext->m_sb.setState(depthControl);
 
 	frameContext->m_bdr.getStage(sce::Agc::ShaderType::kGs)
-		.setBuffers(0, 1, &currentFrame->uiBuffer);
+		.setBuffers(0, 1, &currentFrame->ui.buffer);
 	frameContext->m_bdr.getStage(sce::Agc::ShaderType::kPs)
 		.setBuffers(0, 1, &textureBuffer)
 		.setSamplers(0, 1, &defaultSampler);
@@ -456,8 +452,6 @@ void GameTechAGCRenderer::UpdateDebugData() {
 		currentFrame->textVertCount += Debug::GetDebugFont()->GetVertexCountForString(s.data);
 	}
 	currentFrame->lineVertCount = (int)lines.size() * 2;
-
-	currentFrame->debugLinesOffset = currentFrame->data.bytesWritten;
 
 	currentFrame->data.WriteData((void*)lines.data(), (size_t)currentFrame->lineVertCount * LINE_STRIDE);
 
@@ -566,7 +560,7 @@ void GameTechAGCRenderer::RenderDebugText() {
 }
 
 void GameTechAGCRenderer::UpdateObjectList() {
-	char* dataPos = currentFrame->data.data;
+	currentFrame->objects.begin(currentFrame);
 	for (auto g : frameObjects) {
 		ObjectState state;
 		Matrix4 transMatrix;
@@ -617,12 +611,9 @@ void GameTechAGCRenderer::UpdateObjectList() {
 		}
 		currentFrame->data.WriteData<ObjectState>(state);
 	}
-	sce::Agc::Core::BufferSpec bufSpec;
-	bufSpec.initAsRegularBuffer(dataPos, sizeof(ObjectState), frameObjects.size());
-	sce::Agc::Core::initialize(&currentFrame->objectBuffer, &bufSpec);
+	currentFrame->objects.end(currentFrame);
 
-	currentFrame->uiOffset = currentFrame->data.bytesWritten;
-	char* uiDataPos = currentFrame->data.data;
+	currentFrame->ui.begin(currentFrame);
 	for (auto& ui : uiElements) {
 		UiState state;
 		state.colour = ui.color;
@@ -631,8 +622,21 @@ void GameTechAGCRenderer::UpdateObjectList() {
 		state.texture = ui.texture != nullptr ? ui.texture->GetAssetID() : NULLTEX;
 		currentFrame->data.WriteData(state);
 	}
+	currentFrame->ui.end(currentFrame);
+}
 
-	sce::Agc::Core::BufferSpec uiBufSpec;
-	uiBufSpec.initAsRegularBuffer(uiDataPos, sizeof(UiState), uiElements.size());
-	sce::Agc::Core::initialize(&currentFrame->uiBuffer, &uiBufSpec);
+template<typename T>
+inline void GameTechAGCRenderer::FrameData::UniformArray<T>::begin(FrameData* frame)
+{
+	start = frame->data.data;
+}
+
+template<typename T>
+inline void GameTechAGCRenderer::FrameData::UniformArray<T>::end(FrameData* frame)
+{
+	sce::Agc::Core::BufferSpec spec;
+	auto bytesWritten = frame->data.data - start;
+	auto elemsWritten = bytesWritten / sizeof(T);
+	spec.initAsRegularBuffer(start, sizeof(T), elemsWritten);
+	sce::Agc::Core::initialize(&buffer, &spec);
 }
