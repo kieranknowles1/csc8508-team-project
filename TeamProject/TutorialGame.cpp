@@ -300,6 +300,7 @@ void TutorialGame::LoadWorldFromFile(int levelNum) {
     levelImporter = new LevelImporter(resourceManager.get(), world.get(), bulletWorld);
     levelImporter->LoadLevel(levelNum);
     InitPlayer();
+    crosshair->SetActive(true);
 
     Shoot::GetInstance()->Initialise(bulletWorld,resourceManager.get(), world.get(), renderer->GetDecalSystem());
     Shoot::GetInstance()->InitShotMasks(player, gun);
@@ -358,7 +359,6 @@ void TutorialGame::InitPlayer() {
     gun = AddCubeToWorld(Vector3(10, 2, 20), Vector3(0.6, 0.6, 1.6), 0, false);
     playerController = new PlayerController(player, gun, controller, mainCamera, bulletWorld);
     player->GetRenderObject()->SetColour(Vector4(playerColour));
-
 }
 
 Turret* TutorialGame::AddTurretToWorld() {

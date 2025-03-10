@@ -1,5 +1,6 @@
 // Crosshair.cpp
 #include "Crosshair.h"
+
 using namespace NCL::Maths;
 
 void Crosshair::render(std::vector<UiSprite>& sprites) {

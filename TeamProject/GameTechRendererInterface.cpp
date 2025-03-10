@@ -35,8 +35,9 @@ namespace NCL::CSC8503 {
 
         frameSprites.clear();
         for (auto elem : uiElements) {
-            // TODO: Handle enabled/disabled
-            elem->render(frameSprites);
+            if (elem->IsActive()) {
+                elem->render(frameSprites);
+            }
         }
 		lights = world->GetLights();
 	}

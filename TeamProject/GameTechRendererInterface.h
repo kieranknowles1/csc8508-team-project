@@ -35,8 +35,16 @@ namespace NCL::CSC8503 {
     public:
         virtual void render(std::vector<UiSprite>& sprites) = 0;
 
-    private:
-        bool enabled = true;
+        bool IsActive() const {
+            return enabled;
+        }
+
+        void SetActive(bool active) {
+            enabled = active;
+        }
+
+    protected:
+        bool enabled = false;
     };
 
 	class GameTechRendererInterface
@@ -49,6 +57,11 @@ namespace NCL::CSC8503 {
 
 		virtual Rendering::Mesh* LoadMesh(const std::string& name) = 0;
 		virtual Rendering::Texture*	LoadTexture(const std::string& name) = 0;
+
+        // Get UI Elements
+        std::vector<UiElement*> GetUiElements() {
+            return uiElements;
+        }
 
 		bool GetHDROn() const {
 			return hdrOn;
