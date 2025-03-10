@@ -16,6 +16,7 @@
 namespace NCL {
 	namespace CSC8503 {
 		class RenderObject;
+		class Scoreboard;
 
 		class GameTechRenderer
 			: public OGLRenderer

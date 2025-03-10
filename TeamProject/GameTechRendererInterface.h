@@ -21,6 +21,7 @@ namespace NCL {
 namespace NCL::CSC8503 {
 	class GameWorld;
 	class RenderObject;
+	class Scoreboard;
 
 	struct UIElement {
 		// TODO: Need a UV field
@@ -103,7 +104,6 @@ namespace NCL::CSC8503 {
 
 		// TODO: Proper UI class
 		void initUi();
-		void Scoreboard();
 
 	protected:
 		//adding bools to toggle post processing. Must be accessible from the specific renderer
