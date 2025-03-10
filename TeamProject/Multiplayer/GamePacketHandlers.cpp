@@ -276,12 +276,16 @@ namespace Packet {
 
 #pragma region UserInfoPacketHandler
     void UserInfoPacketHandler::Handle(const std::shared_ptr<Packet> packet) {
+        std::cout << "Handing User Info Packet...\n";
+
         const UserInfoPacket* userInfo = std::static_pointer_cast<UserInfoPacket>(packet).get();
         std::optional<Lobby>& lobby = TutorialGame::GetLobby();
         TutorialGame::UpdateUserID(userInfo->GetUser().GetUserID());
 
+        std::cout << "Checking Lobby Value...\n";
         if (!lobby.has_value()) return;
 
+        std::cout << "Handling user info.\n";
         switch (userInfo->GetAction()) {
         case LobbyAction::CREATE:
             TutorialGame::SetUser(userInfo->GetUser());
@@ -289,9 +293,11 @@ namespace Packet {
             break;
         case LobbyAction::JOIN:
             lobby.value().AddUser(userInfo->GetUser());
+            std::cout << "User has joined.\n";
             break;
         case LobbyAction::LEAVE:
             lobby.value().RemoveUser(userInfo->GetUser());
+            std::cout << "User has left.\n";
             break;
         }
     }
@@ -367,7 +373,16 @@ namespace Packet {
         User newUser(newUserID);
         
         std::shared_ptr<UserInfoPacket> infoPacket = std::make_shared<UserInfoPacket>(newUser, LobbyAction::CREATE);
-        TutorialGame::GetServerInstance().value().Send(infoPacket, request->GetPeer());
+        TutorialGame::GetServerInstance()->Send(infoPacket, request->GetPeer());
+
+        // Insert into host lobby. Only server creator (host) receives Request packets.
+        TutorialGame::GetLobby()->AddUser(newUser);
+
+        // Send information about every user in the lobby.
+        for (User user : TutorialGame::GetLobby()->GetConnectedUsers()) {
+            infoPacket = std::make_shared<UserInfoPacket>(user, LobbyAction::JOIN);
+            TutorialGame::GetServerInstance()->Broadcast(infoPacket);
+        }
     }
 
     std::shared_ptr<Packet> RequestUserIDPacketHandler::Translate(const ENetEvent* event) const {

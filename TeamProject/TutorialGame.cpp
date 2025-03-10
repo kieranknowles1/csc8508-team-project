@@ -59,6 +59,8 @@ TutorialGame::~TutorialGame()	{
     DestroyBullet();
     audioEngine.Shutdown();
 
+    if (server.has_value()) server->Close();
+
     delete playerController;
 }
 
@@ -120,6 +122,7 @@ void TutorialGame::UpdateGame(float dt) {
     while (isPackets && server.has_value()) {
         std::shared_ptr<Packet::Packet> packet = server->Fetch();
         if (packet.get() != nullptr) {
+            std::cout << "PROCESSING PACKET.\n";
             Packet::PacketRegister::GetHandler(packet->GetType())->Handle(packet);
         }
         else {
@@ -129,6 +132,10 @@ void TutorialGame::UpdateGame(float dt) {
 
     if (user.has_value()) {
         std::cout << "User ID: " << user->GetUserID() << std::endl;
+    }
+
+    if (lobby.has_value()) {
+        std::cout << "Num Players in lobby: " << lobby->GetConnectedUsers().size() << std::endl;
     }
     
     //post processing time variable effect:
@@ -591,9 +598,11 @@ GameObject* TutorialGame::AddSphereToWorld(const Vector3& position, float radius
 
 
 void TutorialGame::JoinGame(bool host) {
+    lobby.emplace(MAX_PLAYERS);
+
     std::cout << "Determining Address...\n";
     ENetAddress address;
-    //enet_address_set_host(&address, host ? "0.0.0.0" : ".0.0.1");
+    enet_address_set_host(&address, host ? "0.0.0.0" : "127.0.0.1");
     address.host = ENET_HOST_ANY;
     address.port = host ? DEFAULT_PORT : 0;
 
@@ -610,7 +619,7 @@ void TutorialGame::JoinGame(bool host) {
 
     if (!host) {
         ENetAddress dest;
-        enet_address_set_host(&dest, "192.168.0.15");
+        enet_address_set_host(&dest, "127.0.0.1");
         dest.port = DEFAULT_PORT;
 
         server->ConnectTo(&dest);
@@ -625,5 +634,6 @@ void TutorialGame::JoinGame(bool host) {
     }
     else {
         user.emplace(GenerateUserID());
+        lobby->AddUser(user.value());
     }
 }

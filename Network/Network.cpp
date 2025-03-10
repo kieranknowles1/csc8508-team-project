@@ -64,6 +64,12 @@ void Network::Close() {
 
 void Network::ConnectTo(const ENetAddress* destination) {
     ENetPeer* peer = enet_host_connect(m_host, destination, static_cast<int>(Channel::CHANNEL_COUNT), 0);
+
+    //while (peer->state != ENET_PEER_STATE_CONNECTED) {
+    //    enet_host_service(m_host, nullptr, 0);
+    //    std::cout << "Connecting...\n";
+    //}
+    //std::cout << "Connection Successful.\n";
 }
 
 
@@ -81,14 +87,19 @@ void Network::Send(std::shared_ptr<Packet::Packet> packet, ENetPeer* peer) {
 
 std::shared_ptr<Packet::Packet> Network::Fetch() {
     std::shared_ptr<Packet::Packet> fetched;
-    do {
+
+    while (!m_receiveBuffer.IsEmpty()) {
         fetched = m_receiveBuffer.Pop();
-        if (fetched.get() == nullptr) return fetched;
-    } while (
-        fetched.get()->GetSequenceNumber() < m_lastMaxSequence
-        || (fetched.get()->GetChannel() != static_cast<int>(Channel::RELIABLE) || fetched.get()->GetChannel() != static_cast<int>(Channel::UNSEQUENCED))
-    );
-    return fetched;
+
+        if (fetched->GetSequenceNumber() > m_lastMaxSequence) m_lastMaxSequence = fetched->GetSequenceNumber();
+
+        if (fetched->GetSequenceNumber() > m_lastMaxSequence) return fetched;
+        if (fetched->GetChannel() == static_cast<uint8_t>(Channel::RELIABLE)) return fetched;
+        if (fetched->GetChannel() == static_cast<uint8_t>(Channel::UNSEQUENCED)) return fetched;
+
+        // Drop old packet.
+    }
+    return fetched; // Return an empty packet.
 }
 
 
@@ -129,8 +140,14 @@ void Network::Tick(float dt) {
             switch (event.type) {
             case ENET_EVENT_TYPE_CONNECT:
                 std::cout << "CONNECTION RECEIVED!\n";
-                if (!ConnectPeer()) enet_peer_disconnect(event.peer, 0);
-                else if (m_connectCallback != nullptr) m_connectCallback(event.peer);
+                if (!ConnectPeer()) {
+                    enet_peer_disconnect(event.peer, 0);
+                    std::cout << "Connection rejected.\n";
+                }
+                else if (m_connectCallback != nullptr) {
+                    m_connectCallback(event.peer);
+                }
+                std::cout << "Connection accepted!\n";
                 break;
             case ENET_EVENT_TYPE_DISCONNECT:
                 DisconnectPeer();
@@ -155,9 +172,6 @@ void Network::SendAll() {
         Packet::PacketHandler* handler = packetRegister->GetHandler(m_sendBuffer[i].first.get()->GetType());
         std::cout << "[Network] Translating...\n";
         
-        std::cout << "Handler Addr: " << handler << std::endl;
-        std::cout << "Packet Type: " << m_sendBuffer[i].first->GetType() << std::endl;
-
         ENetPacket* packet = handler->ToENetPacket(m_sendBuffer[i].first);
 
         std::cout << "[Network] Translation Complete.\n";
@@ -165,7 +179,6 @@ void Network::SendAll() {
         if (m_sendBuffer[i].second == nullptr) {
             std::cout << "[Network] Broadcasting Packet.\n";
             enet_host_broadcast(m_host, m_sendBuffer[i].first.get()->GetChannel(), packet);
-            std::cout << "Num clients: " << &m_host->peers[0] << std::endl;
             enet_host_flush(m_host);
         }
         else {
@@ -203,6 +216,7 @@ void Network::HandleIncomingPacket(ENetEvent* event) {
     std::shared_ptr<Packet::Packet> translated = packetHandler->Translate(event);
 
     m_receiveBuffer.Insert(translated);
+    std::cout << "Is Empty = " << (m_receiveBuffer.IsEmpty() ? "true" : "false") << std::endl;
 }
 
 
