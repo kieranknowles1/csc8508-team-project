@@ -139,6 +139,7 @@ GameTechRenderer::GameTechRenderer(Window* window) : OGLRenderer(window), GameTe
 	fullscreenQuad->UploadToGPU(); 
 
 	vignetteShader = new OGLShader("texturevert.glsl", "vignettefrag.glsl");
+	edgedetectShader = new OGLShader("texturevert.glsl", "edgedetectfrag.glsl");
 
  	//start setting up framebuffers for post processing:
 	//first generate the textures to store the rendered scene:
@@ -824,9 +825,22 @@ void GameTechRenderer::RenderDecals() {
 	glDepthFunc(GL_LEQUAL);
 }
 
-void GameTechRenderer::RenderPostProcessing() {
-	//Vignette post processing:
-	    glBindFramebuffer(GL_FRAMEBUFFER, BFBO); //unbind hdrFBO and set BFBO   
+void GameTechRenderer::RenderPostProcessing() { //gonna try putting edge detection first:
+        //Edge detection:
+	    glBindFramebuffer(GL_FRAMEBUFFER, BFBO);
+		glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+		glDisable(GL_CULL_FACE);
+		glDisable(GL_BLEND);
+		glDisable(GL_DEPTH_TEST);
+		UseShader(*edgedetectShader);
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, bufferColourTex); //currently holds the scene, gonna have to change up the vignette part to accomodate this
+		glUniform1i(glGetUniformLocation(edgedetectShader->GetProgramID(), "sceneTex"), 0);
+		glUniform2f(glGetUniformLocation(edgedetectShader->GetProgramID(), "windowSize"), windowSize.x, windowSize.y);
+		BindMesh(*fullscreenQuad);
+		DrawBoundMesh();
+	    //Vignette post processing:
+	    glBindFramebuffer(GL_FRAMEBUFFER, hdrFBO); //unbind hdrFBO and set BFBO    //was BFBO before adding edge detection
 	    glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 	    glDisable(GL_CULL_FACE);
 	    glDisable(GL_BLEND);
@@ -834,7 +848,7 @@ void GameTechRenderer::RenderPostProcessing() {
 	    UseShader(*vignetteShader);
 	    glUniform1i(glGetUniformLocation(vignetteShader->GetProgramID(), "vignetteOn"), GetVignetteOn());
 		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, bufferColourTex); //hdrTex currently holds raw scene
+		glBindTexture(GL_TEXTURE_2D, BTex); //hdrTex currently holds raw scene  //was bufferColourTex before adding edge detection
 		glUniform1i(glGetUniformLocation(vignetteShader->GetProgramID(), "diffuseTex"), 0);
 		glUniform2f(glGetUniformLocation(vignetteShader->GetProgramID(), "windowSize"), windowSize.x, windowSize.y);
 		Vector3 VignetteColour = Vector3(0.0, 0.0, 0.0); //different colours appear more intense at a given intensity (green)
@@ -854,7 +868,7 @@ void GameTechRenderer::RenderPostProcessing() {
 		UseShader(*hdrShader);
 		glUniform1i(glGetUniformLocation(hdrShader->GetProgramID(), "hdrOn"), GetHDROn()); //send bool to shader so it knows whether to output scene with or without post processing
 		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, BTex);//BTex holds vignetted processed scene (whether applied or not). (tonemapping should be done pretty much last)
+		glBindTexture(GL_TEXTURE_2D, hdrTex);//BTex holds vignetted processed scene (whether applied or not). (tonemapping should be done pretty much last) //was BTex before edge detection
 		glUniform1i(glGetUniformLocation(hdrShader->GetProgramID(), "hdrTex"), 0);
 		BindMesh(*fullscreenQuad); //using unitQuad instead of fullscreen quad
 		DrawBoundMesh();
