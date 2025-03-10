@@ -279,6 +279,14 @@ void GameTechRenderer::RenderFrame() {
 	CombineBuffers();
 	RenderPostProcessing(); 
 	RenderUI(); //Call this function when in game, this renders crosshair as of now
+
+	glDisable(GL_CULL_FACE); //Todo - text indices are going the wrong way...
+	glDisable(GL_BLEND);
+	glDisable(GL_DEPTH_TEST);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	NewRenderLines();
+	NewRenderTextures();
+	NewRenderText();
 }
 
 void GameTechRenderer::RenderShadowMap() {
@@ -828,8 +836,7 @@ void GameTechRenderer::RenderPostProcessing() {
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, bufferColourTex); //hdrTex currently holds raw scene
 		glUniform1i(glGetUniformLocation(vignetteShader->GetProgramID(), "diffuseTex"), 0);
-		glUniform1f(glGetUniformLocation(vignetteShader->GetProgramID(), "windowSizex"), windowSize.x);
-		glUniform1f(glGetUniformLocation(vignetteShader->GetProgramID(), "windowSizey"), windowSize.y);
+		glUniform2f(glGetUniformLocation(vignetteShader->GetProgramID(), "windowSize"), windowSize.x, windowSize.y);
 		Vector3 VignetteColour = Vector3(0.0, 0.0, 0.0); //different colours appear more intense at a given intensity (green)
 		float vignetteIntensity = 2.0f; //Recommendation: vary Intensity between 0.8 and 3
 		glUniform3fv(glGetUniformLocation(vignetteShader->GetProgramID(), "effectColour"), 1, (float*)&VignetteColour);
@@ -920,15 +927,6 @@ void GameTechRenderer::DrawScene() { //the basic rendering for the scene, curren
 	glDisable(GL_DEPTH_TEST);
 	BindMesh(*unitQuad);
 	DrawBoundMesh(); 
-
-
-	glDisable(GL_CULL_FACE); //Todo - text indices are going the wrong way...
-	glDisable(GL_BLEND);
-	glDisable(GL_DEPTH_TEST);
-	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-	NewRenderLines();
-	NewRenderTextures();
-	NewRenderText();
 
     /*glDisable(GL_CULL_FACE); //Todo - text indices are going the wrong way...  //before merge conflicts, this line would have come immediately after renderCamera()
     glDisable(GL_BLEND);
