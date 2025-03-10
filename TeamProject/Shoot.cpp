@@ -74,7 +74,7 @@ void Shoot::SpawnBulletMesh(btVector3 startPos, btVector3 dir, btQuaternion rota
     paintball->GetPhysicsObject()->InitBulletPhysics(bulletWorld, shape, 1.0f);
     world->AddGameObject(paintball);
 
-    PointLight* light = new PointLight(btVector3(0, 0, 0), 300, 0.75f, paintballColor);
+    PointLight* light = new PointLight(btVector3(0, 0, 0), 500, 0.75f, paintballColor);
     paintball->attachLight(light);
 
     btVector3 playerVelocity = player->GetPhysicsObject()->GetRigidBody()->getLinearVelocity();

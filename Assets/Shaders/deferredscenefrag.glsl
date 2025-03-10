@@ -29,7 +29,7 @@ void main(void)   {
 
 	vec4 albedo = IN.colour;
 	if(hasTexture) {
-	 albedo *= texture2D(diffuseTex, IN.texCoord);
+	 albedo *= texture(diffuseTex, IN.texCoord);
 	 //albedo.rgb = pow(albedo.rgb, vec3(2.2));  //added to transform textures into linear space to later be gamma corrected
 	}
 
@@ -37,14 +37,14 @@ void main(void)   {
 	vec3 mapnormal;
 	 if(hasNormalMap) { 
 	    mat3 TBN = mat3 (normalize(IN.tangent),normalize(IN.binormal), normalize(IN.normal));
-		mapnormal = texture2D(normalTex, IN.texCoord).rgb * 2.0 - 1.0; 
+		mapnormal = texture(normalTex, IN.texCoord).rgb * 2.0 - 1.0; 
 		mapnormal = normalize(TBN * normalize(mapnormal));
 	    vecnormal = mapnormal; //the * 2.0 - 1.0 part converts from the texture space of 0.0 to 1.0 over to vector coordinates ranging from -1.0 to 1.0 so this part is still required
 	}
 
 	albedo.a = 1;
 	fragColour[0] = albedo; //all the (non-lighting) colour information goes into here
-	fragColour[1] = vec4(vecnormal.xyz * 0.5, 1.0); //(THE *0.5 + 0.5) may be unneccessary for floating point textures
+	fragColour[1] = vec4(vecnormal.xyz * 0.5 + 0.5, 1.0); //(THE *0.5 + 0.5) may be unneccessary for floating point textures
 	}
 
 	

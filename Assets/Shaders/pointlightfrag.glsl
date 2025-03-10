@@ -9,7 +9,6 @@ uniform vec3 cameraPos;
 uniform float lightRadius;
 uniform vec3 lightPos;
 uniform vec4 lightColour;
-uniform float lightIntensity;
 uniform mat4 inverseProjView;
 
 out vec4 diffuseOutput;
@@ -40,6 +39,6 @@ void main(void) {
     specFactor       = pow(specFactor, 80.0); 
     vec3 attenuated  = lightColour.xyz * atten;
 
-    diffuseOutput    = vec4(attenuated * lambert, 1.0) * lightIntensity;
+    diffuseOutput    = vec4(attenuated * lambert, 1.0);
     specularOutput   = vec4(attenuated * specFactor * 0.33, 1.0);
 }

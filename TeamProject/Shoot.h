@@ -51,7 +51,7 @@ namespace NCL {
 
 		private:
 			//Shot Variables
-			float bulletSpeed = 2000.0f;
+			float bulletSpeed = 1000.0f;
 			btVector3 bulletCameraOffset = btVector3(1.0, -0.5, -3.0);
 			btVector4 paintballColor = btVector4(1.0f, 0.0f, 0.0f, 1.0f);
 
