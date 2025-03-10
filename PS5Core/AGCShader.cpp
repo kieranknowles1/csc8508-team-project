@@ -40,8 +40,7 @@ AGCShader::AGCShader(const std::string& filename, MemoryAllocator& allocator) {
 		auto meta = sceShaderGetMetadataSection(binaryHandle);
 
 		auto resourceList = sceShaderGetResourceList(meta);
-		auto resource = sceShaderGetFirstResource(meta, resourceList);
-		while (resource) {
+		for (auto resource = sceShaderGetFirstResource(meta, resourceList); resource != nullptr; resource = sceShaderGetNextResource(meta, resource)) {
 			auto type = sceShaderGetResourceClass(meta, resource);
 			std::string_view name(sceShaderGetResourceName(meta, resource));
 
@@ -51,8 +50,6 @@ AGCShader::AGCShader(const std::string& filename, MemoryAllocator& allocator) {
 				
 				assert(size == sizeof(ShaderConstants));
 			}
-
-			resource = sceShaderGetNextResource(meta, resource);
 		}
 #endif // !_NDEBUG
 	}
