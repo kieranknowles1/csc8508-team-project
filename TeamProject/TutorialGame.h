@@ -103,6 +103,11 @@ namespace NCL {
             virtual void UpdateGame(float dt);
             void LoadWorldFromFile(int levelNum);
             void JoinGame(bool host) {};
+            void ClearWorld();
+
+            GameWorld* getWorld() {
+                return world.get();
+            }
 
         protected:
             void InitialiseAssets();
@@ -112,7 +117,7 @@ namespace NCL {
             void ThirdPersonControls();
 
             void InitWorld();
-            void ResetWorld();
+            //void ResetWorld();
 
             void SetupHost() {};
 

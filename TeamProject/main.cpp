@@ -65,26 +65,19 @@ void TestPacketHandlers() {
     std::cout << "\tAction Number: " << (int) translatedAction << std::endl;
 }
 
-class MainMenuScreen : public PushdownState {
-    int selection = 0;
-
-    PushdownResult OnUpdate(float dt, PushdownState** newState) override {
-
-    }
-};
-
 class PauseScreen : public PushdownState {
     int selection = 0;
 
 public:
-    PauseScreen(Controller* controller) : controller(controller) {}
+    PauseScreen(Controller* controller, TutorialGame* game) : controller(controller), game(game) {}
     Controller* controller;
+    TutorialGame* game;
 
     PushdownResult OnUpdate(float dt, PushdownState** newState) override {
         if (controller->GetDigital(Controller::DigitalControl::Unpause)) {
             return PushdownResult::Pop;
         }
-        Debug::Print("Press U to unpause the game!", Vector2(20, 20), Vector4(0, 0, 0, 1));
+        Debug::Print("Press P to unpause the game!", Vector2(20, 20), Vector4(0, 0, 0, 1));
         //return PushdownResult::NoChange;
         //Debug::Print("Press U to unpause the game!", Vector2(10, 10), Vector4(0, 0, 0, 1));
 
@@ -107,7 +100,11 @@ public:
 
                 if (pauseSelection == "Resume") {
                     return PushdownResult::Pop;
-                } //Add an else function here to return to main menu
+                }
+                else {
+                    game->ClearWorld();
+                    return PushdownResult::Clear;
+                }
                 inMenu = false;
             }
 
@@ -126,18 +123,22 @@ public:
 
 class GameScreen : public PushdownState {
 public:
-    GameScreen(Controller* controller) : controller(controller) {}
+    GameScreen(Controller* controller, TutorialGame* game, std::string mode) : controller(controller), game(game), mode(mode) {}
     Controller* controller;
+    TutorialGame* game;
+    std::string mode;
 
     PushdownResult OnUpdate(float dt, PushdownState** newState) override {
         pauseReminder -= dt;
+
+        game->UpdateGame(dt);
 
         if (pauseReminder < 0) {
             Debug::Print("Press P to pause the game!", Vector2(20, 20), Vector4(0, 0, 0, 1));
         }
         if (controller->GetDigital(Controller::DigitalControl::Pause)) {
             pauseReminder = 0;
-            *newState = new PauseScreen(controller);
+            *newState = new PauseScreen(controller, game);
             std::cout << "Game entered pause state \n";
             return PushdownResult::Push;
         }
@@ -154,7 +155,56 @@ protected:
     float pauseReminder = 1;
 };
 
+class MainMenuScreen : public PushdownState {
+    int selection = 0;
+    bool inMenu;
+    TutorialGame* game;
+    Controller* controller;
+    std::string gameMode;
 
+public:
+    MainMenuScreen(Controller* controller, TutorialGame* game) : controller(controller), game(game), selection(0), inMenu(true) {}
+
+    PushdownResult OnUpdate(float dt, PushdownState** newState) override {
+
+        const std::string menuItems[3] = { "Singleplayer", "Host Game", "Join Game" };
+        
+        if (controller->GetDigital(Controller::DigitalControl::MenuDown)) {
+            selection = std::min(2, selection + 1);
+        }
+        if (controller->GetDigital(Controller::DigitalControl::MenuUp)) {
+            selection = std::max(0, selection - 1);
+        }
+        if (controller->GetDigital(Controller::DigitalControl::MenuConfirm)) {
+            GameMode mode = static_cast<GameMode>(selection);
+
+            if (mode == GameMode::SINGLEPLAYER) {
+                game->LoadWorldFromFile(9);
+                gameMode = "Singleplayer";
+            }
+            else {
+                game->JoinGame(mode == GameMode::HOST_GAME);
+                gameMode = "Multiplayer";
+            }
+
+            *newState = new GameScreen(controller, game, gameMode);
+            inMenu = false;
+            return PushdownResult::Push;
+        }
+
+        //Render menu
+        for (int i = 0; i < 3; i++) {
+            std::string currentItem = menuItems[i];
+            if (i == selection) currentItem += " <";
+            Debug::Print(currentItem, Vector2(1, 50 + (10 * i)));
+        }
+        return PushdownResult::NoChange;
+    }
+
+    void OnAwake() override {
+
+    }
+};
 
 std::unique_ptr<Window> createWindow(const Config& config) {
 #ifndef __PROSPERO__
@@ -243,7 +293,7 @@ Controller* createController(Window* window) {
 }*/
 
 
-int main(int argc, char** argv) {
+/*int main(int argc, char** argv) {
     auto config = Config("user-config.jsonc", Assets::DEFAULTCONFIG);
     bool quickStart = config.get<bool>("quickStart");
 
@@ -255,11 +305,12 @@ int main(int argc, char** argv) {
 
     auto renderer = createRenderer(window.get());
     auto controller = createController(window.get());
-    PushdownMachine machine(new GameScreen(controller));
+    //PushdownMachine machine(new GameScreen(controller));
 
 
     auto game = std::make_unique<TutorialGame>(renderer.get(), controller);
 
+    PushdownMachine machine(new GameScreen(controller, game.get(), "Singleplayer"));
 
     // Clear delta time to exclude start up time
     window->GetTimer().GetTimeDeltaSeconds();
@@ -319,6 +370,37 @@ int main(int argc, char** argv) {
         renderer->drawFrame(dt);
 
 
+        Debug::UpdateRenderables(dt);
+    }
+}*/
+
+int main(int argc, char** argv) {
+    auto config = Config("user-config.jsonc", Assets::DEFAULTCONFIG);
+    bool quickStart = config.get<bool>("quickStart");
+
+    auto window = createWindow(config);
+
+    window->ShowOSPointer(false);
+    window->LockMouseToWindow(true);
+
+    auto renderer = createRenderer(window.get());
+    auto controller = createController(window.get());
+
+    auto game = std::make_unique<TutorialGame>(renderer.get(), controller);
+
+    //PushdownMachine machine(new GameScreen(controller, game.get(), "Singleplayer"));
+    PushdownMachine machine(new MainMenuScreen(controller, game.get()));
+
+    // Clear delta time to exclude start up time
+    window->GetTimer().GetTimeDeltaSeconds();
+
+    while (window->UpdateWindow() && !window->GetKeyboard()->KeyPressed(KeyCodes::ESCAPE)) {
+        float dt = window->GetTimer().GetTimeDeltaSeconds();
+        controller->Update(dt);
+
+        machine.Update(dt);
+        renderer->collectFrameObjects(game->getWorld());
+        renderer->drawFrame(dt);
         Debug::UpdateRenderables(dt);
     }
 }
