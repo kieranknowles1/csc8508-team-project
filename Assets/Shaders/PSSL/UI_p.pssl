@@ -3,13 +3,6 @@
 RegularBuffer<sce::Agc::Core::Texture> textures : register(t0);
 SamplerState sampler : register(s0);
 
-struct VS_OUTPUT {
-    float4 position : S_POSITION;
-    float2 UV : TEXCOORD0;
-    float4 colour : TEXCOORD1;
-    int texId : TEXCOORD2;
-};
-
 float4 sampleTexture(int id, float2 uv) {
     if (id == NULLTEX) {
         return float4(1, 1, 1, 1);
@@ -21,7 +14,7 @@ float4 sampleTexture(int id, float2 uv) {
 }
 
 [CxxSymbol("UIShader::ps")]
-float4 main(VS_OUTPUT vertex) : S_TARGET_OUTPUT
+float4 main(UI_VS_OUTPUT vertex) : S_TARGET_OUTPUT
 {
     float4 texSample = sampleTexture(vertex.texId, vertex.UV);
     return texSample * vertex.colour;

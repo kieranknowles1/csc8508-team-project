@@ -5,15 +5,10 @@
 #include "Bindless.psslh"
 #include "Vertex.psslh"
 
-struct VS_OUTPUT
-{
-	float4 Position		: S_POSITION;
-};
-
 [CxxSymbol("TestShader::gs")]
-VS_OUTPUT main(uint vertID : S_VERTEX_ID, uint objID : S_SRT_DATA, uint instanceID : S_INSTANCE_ID)
+SHADOW_VS_OUTPUT main(uint vertID : S_VERTEX_ID, uint objID : S_SRT_DATA, uint instanceID : S_INSTANCE_ID)
 {
-	VS_OUTPUT Output;
+	SHADOW_VS_OUTPUT Output;
 
 	uint id = objID + instanceID;
 
