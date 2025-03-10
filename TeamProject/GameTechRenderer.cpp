@@ -278,7 +278,7 @@ void GameTechRenderer::RenderFrame() {
 	DrawPointLights();
 	CombineBuffers();
 	RenderPostProcessing(); 
-	RenderUI();
+	RenderUI(); //Call this function when in game, this renders crosshair as of now
 }
 
 void GameTechRenderer::RenderShadowMap() {
