@@ -1,4 +1,4 @@
-#include "UIObject.psslh"
+#include "types.h"
 
 RegularBuffer<sce::Agc::Core::Texture> textures : register(t0);
 SamplerState sampler : register(s0);

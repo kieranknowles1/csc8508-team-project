@@ -1,7 +1,7 @@
 #include "ShaderConstants.psslh"
 #include "VertexAttributes.psslh"
 #include "Skinning.psslh"
-#include "TechObject.psslh"
+#include "types.h"
 #include "Bindless.psslh"
 #include "Vertex.psslh"
 

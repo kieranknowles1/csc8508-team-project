@@ -1,4 +1,4 @@
-#include "UIObject.psslh"
+#include "types.h"
 #include "VertexAttributes.psslh"
 
 RegularBuffer<UiState> objects : register(t0);

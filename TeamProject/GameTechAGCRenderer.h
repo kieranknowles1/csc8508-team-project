@@ -6,10 +6,8 @@
 
 #include "../PS5Core/AGCBuffer.h"
 
-#include "./Shaders/PSSL/Interop.h"				//Always include this before any PSSL headers
 #include "./Shaders/PSSL/ShaderConstants.psslh"
-#include "./Shaders/PSSL/TechObject.psslh"
-#include "./Shaders/PSSL/UIObject.psslh"
+#include "Shaders/PSSL/types.h"
 
 namespace NCL {
 	namespace Rendering {

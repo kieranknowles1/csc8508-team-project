@@ -3,6 +3,8 @@
 // The layout of these structs must match between CPP and HLSL, there is a check
 // for this in debug builds
 
+#include "interop.h"
+
 struct VingetteSettings {
 	float intensity;
 	float3 color;
