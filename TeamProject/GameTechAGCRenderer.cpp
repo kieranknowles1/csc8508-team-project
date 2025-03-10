@@ -128,28 +128,28 @@ Mesh* GameTechAGCRenderer::LoadMesh(const std::string& name) {
 
 NCL::PS5::AGCTexture* GameTechAGCRenderer::CreateFrameBufferTextureSlot(const std::string& name) {
 	uint32_t index = textureMap.size();
-	AGCTexture* t = new AGCTexture(allocator);
-
-	textureMap.insert({ name, t });
+	auto t = std::make_unique<AGCTexture>(allocator);
 	t->SetAssetID(index);
 	bindlessTextures[t->GetAssetID()] = *t->GetAGCPointer();
 
-	return t;
+	auto ptr = t.get();
+	textureMap.insert({ name, std::move(t) });
+	return ptr;
 }
 
 Texture* GameTechAGCRenderer::LoadTexture(const std::string& name) {
 	auto found = textureMap.find(name);
 	if (found != textureMap.end()) {
-		return (Texture*)found->second;
+		return (Texture*)found->second.get();
 	}
-	AGCTexture* t = new AGCTexture(name, allocator);
-
+	auto t = std::make_unique<AGCTexture>(name, allocator);
 	t->SetAssetID(textureMap.size());
-	textureMap.insert({name, t});
-
 	bindlessTextures[t->GetAssetID()] = *t->GetAGCPointer();
 
-	return (Texture*)t;
+	auto ptr = t.get();
+	textureMap.insert({name, std::move(t)});
+
+	return ptr;
 }
 
 void GameTechAGCRenderer::RenderFrame() {

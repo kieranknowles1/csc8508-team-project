@@ -144,7 +144,7 @@ namespace NCL {
 			uint32_t bufferCount;
 
 			sce::Agc::Core::Buffer textureBuffer;
-			std::map<std::string, NCL::PS5::AGCTexture*> textureMap;
+			std::map<std::string, std::unique_ptr<PS5::AGCTexture>> textureMap;
 
 			sce::Agc::Core::Buffer arrayBuffer;
 
