@@ -1,0 +1,31 @@
+#include "ShaderConstants.psslh"
+#include "glinterop.h"
+
+#include "../include/post/vingette.glsl"
+
+Texture2D<float4> texture : register(t0);
+SamplerState sampler : register(s0);
+
+struct VS_OUTPUT
+{
+    float4 position : S_POSITION;
+    float2 uv : TEXCOORD0;
+};
+
+[CxxSymbol("Passthrough::ps")]
+float4 main(VS_OUTPUT vertex) : S_TARGET_OUTPUT
+{
+    float4 result = texture.Sample(sampler, vertex.uv);
+
+    if (Constants.vingetteSettings.enabled) {
+        result.rgb = applyVingette(
+            result.rgb,
+            vertex.uv,
+            Constants.vingetteSettings.intensity,
+            Constants.vingetteSettings.color,
+            Constants.vingetteSettings.pulse,
+        );
+    }
+
+    return result;
+}
