@@ -35,7 +35,7 @@ public:
     std::string meshName;
     std::string mainTextureName;
     std::string normalTextureName;
-    char type;
+    GameObject::Type type;
 };
 
 using namespace NCL;
@@ -52,11 +52,12 @@ public:
 
 private:
     void HandleTypes(GameObject* obj);
+    btVector4 LightColour();
     ResourceManager* resourceManager;
     GameWorld* world;
     btDiscreteDynamicsWorld* bulletWorld;
     std::vector<ObjectData*> objects;
-
+    int lightCount = 0;
     float scale = 20.0;
 
 };

@@ -1,6 +1,7 @@
 #version 330 core
 
 uniform sampler2D hdrTex;
+uniform bool hdrOn = true;
 
 in Vertex {
    vec2 texCoord;
@@ -10,6 +11,11 @@ in Vertex {
 
    void main(void) { 
      vec3 texColour = texture(hdrTex, IN.texCoord).rgb; //sample the framebuffer texture 
+     if (!hdrOn) {
+         fragColor.rgb = texColour;
+         fragColor.a = 1;
+         return;
+         }
 
      //apply Reinhardt tone mapping to convert HDR back to LDR: L/L+1
      vec3 tonemapColour = texColour / (texColour + vec3(1.0f)); 

@@ -6,8 +6,8 @@
 using namespace NCL::Rendering;
 using namespace NCL::CSC8503;
 
-DecalSystem::DecalSystem(int width, int height) 
-	: decayRate(0.1f), textureWidth(width), textureHeight(height)
+DecalSystem::DecalSystem(int width, int height)
+    : decayRate(0.1f), textureWidth(width), textureHeight(height), gen(std::random_device{}()), angleDis(0.0f, 360.0f), indexDist(0, 0)
 {
 #ifndef __PROSPERO__
 	// Create an empty texture to store the applied decals
@@ -23,6 +23,7 @@ DecalSystem::DecalSystem(int width, int height)
 	glGenFramebuffers(1, &decalFBO);
 	glBindFramebuffer(GL_FRAMEBUFFER, decalFBO);
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, decalTexture, 0);
+	//glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, decalDepthTexture, 0);
 
 	// Check if FBO is complete
 	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
@@ -61,4 +62,20 @@ void DecalSystem::Update(float dt)
 			++it;
 		}
 	}
+}
+
+float DecalSystem::GetRandomRotation()
+{
+    return angleDis(gen);
+}
+
+std::shared_ptr<NCL::Rendering::Texture> DecalSystem::PickRandomDecal(const std::vector<std::shared_ptr<NCL::Rendering::Texture>>& decalsArr)
+{
+    if (decalsArr.empty()) {
+        return nullptr;
+    }
+
+    indexDist = std::uniform_int_distribution<int>(0, decalsArr.size() - 1);
+
+    return decalsArr[indexDist(gen)];
 }
