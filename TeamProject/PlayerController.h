@@ -81,7 +81,7 @@ namespace NCL {
 			float slidingCameraBackwards = 2.5f;
 
 			//Gun Variables
-			float shotCooldown = 0.075f;
+			float shotCooldown = 0.15f;
 			float bulletSpeed = 1000.0f;
 			btVector3 gunCameraOffset = btVector3(1.3, -0.7, -1.2);
 

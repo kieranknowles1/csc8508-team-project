@@ -44,7 +44,7 @@ void main(void)   {
 
 	albedo.a = 1;
 	fragColour[0] = albedo; //all the (non-lighting) colour information goes into here
-	fragColour[1] = vec4(vecnormal.xyz * 0.5 + 0.5, 1.0); //(THE *0.5 + 0.5) may be unneccessary for floating point textures
+	fragColour[1] = vec4(vecnormal.xyz * 0.5, 1.0); //(THE *0.5 + 0.5) may be unneccessary for floating point textures
 	}
 
 	
