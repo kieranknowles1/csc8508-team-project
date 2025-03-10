@@ -32,10 +32,11 @@ namespace NCL::CSC8503 {
 	};
 
     class UiElement {
-        bool enabled = true;
-
     public:
         virtual void render(std::vector<UiSprite>& sprites) = 0;
+
+    private:
+        bool enabled = true;
     };
 
 	class GameTechRendererInterface
