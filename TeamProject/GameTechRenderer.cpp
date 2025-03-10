@@ -279,6 +279,14 @@ void GameTechRenderer::RenderFrame() {
 	CombineBuffers();
 	RenderPostProcessing(); 
 	RenderUI();
+
+	glDisable(GL_CULL_FACE); //Todo - text indices are going the wrong way...
+	glDisable(GL_BLEND);
+	glDisable(GL_DEPTH_TEST);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	NewRenderLines();
+	NewRenderTextures();
+	NewRenderText();
 }
 
 void GameTechRenderer::RenderShadowMap() {
@@ -919,15 +927,6 @@ void GameTechRenderer::DrawScene() { //the basic rendering for the scene, curren
 	glDisable(GL_DEPTH_TEST);
 	BindMesh(*unitQuad);
 	DrawBoundMesh(); 
-
-
-	glDisable(GL_CULL_FACE); //Todo - text indices are going the wrong way...
-	glDisable(GL_BLEND);
-	glDisable(GL_DEPTH_TEST);
-	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-	NewRenderLines();
-	NewRenderTextures();
-	NewRenderText();
 
     /*glDisable(GL_CULL_FACE); //Todo - text indices are going the wrong way...  //before merge conflicts, this line would have come immediately after renderCamera()
     glDisable(GL_BLEND);
