@@ -40,7 +40,5 @@ VS_OUTPUT main(uint vertID : S_VERTEX_ID, uint objID : S_SRT_DATA, uint instance
 	Output.tangent = mul(normMat, tangent).rgb;
 	Output.binormal = cross(Output.tangent, Output.normal) * tangent.w;
 
-	Output.ShadowClip = mul(Constants.shadowMatrix, position);
-
 	return Output;
 }

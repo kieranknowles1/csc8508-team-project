@@ -172,7 +172,7 @@ void GameTechAGCRenderer::RenderFrame() {
 	//Step 2: Walk the object list and build up the object set and required buffer memory
 	UpdateObjectList();
 	//Step 4: Go through the geometry and darw it to a shadow map
-	ShadowmapPass();
+	//ShadowmapPass();
 	//Step 5: Draw a skybox to our main scene render target
 	SkyboxPass();
 	//Step 6: Draw the scene to our main scene render target

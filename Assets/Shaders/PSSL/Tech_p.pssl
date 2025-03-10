@@ -2,7 +2,6 @@
 #include "types.h"
 
 SamplerState sampler			: register(s0);
-SamplerState shadowSampler		: register(s1);
 
 RegularBuffer<sce::Agc::Core::Texture> textures : register(t0);
 
@@ -21,31 +20,10 @@ PS_OUTPUT main(VS_OUTPUT vertex) : S_TARGET_OUTPUT
 	// Convert to (-1..1) range
 	float4 normSample = (normTex.Sample(sampler, vertex.UV) * 2.0f) - 1.0f;
 
-	//Shadow mapping
-	Texture2D<float> shadowTex = Texture2D<float>(textures[Constants.shadowID]);
-
-	float3 shadowNDC		= vertex.ShadowClip.xyz / vertex.ShadowClip.w;
-
-	shadowNDC.xy = (shadowNDC.xy * 0.5f) + float2(0.5f);
-	shadowNDC.y = 1.0f - shadowNDC.y;
-
-	float  shadowSample		= shadowTex.Sample(shadowSampler, shadowNDC.xy);
-
-	float shadow = 1.0f;
-	float offset        = -0.001f;
-
-	if(shadowNDC.x > 0.0f && shadowNDC.x < 1.0f &&
-       shadowNDC.y > 0.0f && shadowNDC.y < 1.0f &&
-	   shadowNDC.z > 0.0f && shadowNDC.z < 1.0f) {
-        if(shadowSample < shadowNDC.z + offset) {
-            shadow = 0.5f;
-        }
-    }
-
 	float3x3 tbn = float3x3(normalize(vertex.tangent), normalize(vertex.binormal), normalize(vertex.normal));
 
 	return {
-		texSample * float4(shadow,shadow,shadow,1),
+		texSample,
 		// Textures are stored as floats, and can contain negatives
 		float4(mul(tbn, normalize(normSample.rgb)), 1.0f)
 	};
