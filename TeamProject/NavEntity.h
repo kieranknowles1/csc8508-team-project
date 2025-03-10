@@ -16,10 +16,11 @@ namespace NCL {
 			btVector3 newPathPoint;
 			btVector3 curPathPoint;
 			btVector3 yAdjustedPoint;
-		private:
 			float YAdjust(btVector3 pos);
 
 			float speed = 0.5;
+		private:
+
 
 			std::vector<btVector3> path = {};
 			int nextNode = -1;

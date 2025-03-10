@@ -27,6 +27,12 @@ namespace NCL {
 			btVector3 offset;
 
 			GameObject* player;
+
+			float maxShootTimer = 5.0f;
+			float shootTimer;
+
+			float maxUpdatePlayerPathTimer = 2.0f;
+			float updateplayerPathTimer;
 		};
 	}
 }

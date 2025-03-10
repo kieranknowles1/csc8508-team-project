@@ -307,7 +307,7 @@ void TutorialGame::LoadWorldFromFile(int levelNum) {
 	Shoot::GetInstance()->Initialise(bulletWorld,resourceManager.get(), world.get(), renderer->GetDecalSystem());
 	Shoot::GetInstance()->InitShotMasks(player, gun);
 
-	navMeshDebug = true;
+	navMeshDebug = false;
 	if (navMeshDebug) {
 		freeCam = true;
 		navMesh = new NavMesh(bulletWorld);
