@@ -32,6 +32,13 @@ VS_OUTPUT main(uint vertID : S_VERTEX_ID, uint objID : S_SRT_DATA, uint instance
 	Output.Position = TransformWorldToClip(position);
 	Output.Colour	= s.colour;
 	Output.texID	= s.texIndex;
+	Output.normId = s.normalIndex;
+
+	float3x3 normMat = float3x3(s.normalMatrix);
+
+	Output.normal = mul(normMat, normal);
+	Output.tangent = mul(normMat, tangent).rgb;
+	Output.binormal = cross(Output.tangent, Output.normal) * tangent.w;
 
 	Output.ShadowClip = mul(Constants.shadowMatrix, position);
 

@@ -178,14 +178,20 @@ namespace NCL {
 			sce::Agc::Core::Sampler				shadowSampler;
 
 			struct FrameBuffer {
+				enum class Slot {
+					Color,
+					Normal,
+				};
+
 				sce::Agc::CxRenderTarget target;
 				PS5::AGCTexture* texture;
 				sce::Agc::Core::Sampler sampler;
 			};
 
-			FrameBuffer createBuffer(const std::string& name);
+			FrameBuffer createBuffer(const std::string& name, FrameBuffer::Slot slot);
 
 			FrameBuffer sceneBuffer;
+			FrameBuffer sceneNormalBuffer;
 			FrameBuffer screenBuffer;
 
 			std::vector<SkinningJob> frameJobs;

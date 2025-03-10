@@ -24,10 +24,11 @@ const int BINDLESS_BUFFER_COUNT		= 128;
 const size_t LINE_STRIDE = sizeof(Vector4) + sizeof(Vector4);
 const size_t TEXT_STRIDE = sizeof(Vector2) + sizeof(Vector2) + sizeof(Vector4);
 
-GameTechAGCRenderer::FrameBuffer GameTechAGCRenderer::createBuffer(const std::string& name)
+GameTechAGCRenderer::FrameBuffer GameTechAGCRenderer::createBuffer(const std::string& name, FrameBuffer::Slot slot)
 {
 	FrameBuffer buf;
 	buf.target = CreateColourBufferTarget(window->GetScreenSize().x, window->GetScreenSize().y, true);
+	buf.target.setSlot((int)slot);
 	buf.texture = CreateFrameBufferTextureSlot(name);
 
 	checkError(sce::Agc::Core::translate(buf.texture->GetAGCPointer(), &buf.target, sce::Agc::Core::RenderTargetComponent::kData));
@@ -104,8 +105,9 @@ GameTechAGCRenderer::GameTechAGCRenderer(Window* window) : AGCRenderer(window), 
 	shadowTarget	= CreateDepthBufferTarget(SHADOW_SIZE, SHADOW_SIZE);
 	shadowMap		= CreateFrameBufferTextureSlot("Shadowmap");
 
-	sceneBuffer = createBuffer("Scene");
-	screenBuffer = createBuffer("Screen");
+	sceneBuffer = createBuffer("Scene", FrameBuffer::Slot::Color);
+	sceneNormalBuffer = createBuffer("SceneNormal", FrameBuffer::Slot::Normal);
+	screenBuffer = createBuffer("Screen", FrameBuffer::Slot::Color);
 
 	shadowSampler.init()
 		.setXyFilterMode(
@@ -357,6 +359,7 @@ void GameTechAGCRenderer::MainRenderPass() {
 	sce::Agc::CxRenderTargetMask rtMask = sce::Agc::CxRenderTargetMask().init().setMask(0, 0xFF).setMask(1, 0xff);
 	frameContext->m_sb.setState(rtMask);
 	frameContext->m_sb.setState(sceneBuffer.target);
+	frameContext->m_sb.setState(sceneNormalBuffer.target);
 
 	frameContext->m_sb.setState(depthTarget);
 
@@ -569,6 +572,7 @@ void GameTechAGCRenderer::UpdateObjectList() {
 		Matrix4 transMatrix;
 		g->getParent()->GetTransform().getOpenGLMatrix((float*)&transMatrix);
 		state.modelMatrix = transMatrix * Matrix::Scale(g->getParent()->getRenderScale());
+		state.normalMatrix = Matrix::Transpose(Matrix::Inverse(state.modelMatrix));
 
 		state.colour = g->GetColour();
 		state.texRepeats = g->GetTexRepeating();
@@ -577,6 +581,9 @@ void GameTechAGCRenderer::UpdateObjectList() {
 
 		Texture* t = g->GetDefaultTexture();
 		state.texIndex = t ? t->GetAssetID() : NULLTEX;
+
+		Texture* normal = g->GetNormalMap();
+		state.normalIndex = normal ? normal->GetAssetID() : NULLTEX;
 
 		AGCMesh* m = (AGCMesh*)g->GetMesh();
 		if (m && m->GetJointCount() > 0) {//It's a skeleton mesh, need to update transformed vertices buffer

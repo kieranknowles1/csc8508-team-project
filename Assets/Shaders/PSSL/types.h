@@ -9,12 +9,14 @@
 
 #include "interop.h"
 
-#define NULLTEX -1
+#define NULLTEX 0
 
 struct ObjectState {
 		matrix modelMatrix;
+		matrix normalMatrix;
 		float4 colour;
 		int texIndex = NULLTEX;
+		int normalIndex = NULLTEX;
 		int skinningIndex = NULLTEX;
 		bool texRepeats;
 		float3 texScale;
@@ -33,8 +35,13 @@ struct VS_OUTPUT
 	float2 UV SLOT(TEXCOORD0);
 	float4 Colour SLOT(TEXCOORD1);
 	int	texID SLOT(TEXCOORD2);
+	int normId SLOT(TEXCOORD3);
 
-	float4 ShadowClip SLOT(TEXCOORD2);
+	float4 ShadowClip SLOT(TEXCOORD4);
+
+	float3 tangent;
+	float3 normal;
+	float3 binormal;
 };
 
 struct UI_VS_OUTPUT {
