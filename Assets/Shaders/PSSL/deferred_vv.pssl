@@ -1,0 +1,23 @@
+#include "ShaderConstants.psslh"
+#include "VertexAttributes.psslh"
+#include "types.h"
+
+RegularBuffer<LightState> objects : register(t0);
+
+float4 TransformWorldToClip(in float4 world) {
+	return mul(Constants.projMatrix,mul(Constants.viewMatrix,world));
+}
+
+[CxxSymbol("Deferred::gs")]
+DEFERRED_VS_OUTPUT main(uint vertId : S_VERTEX_ID, uint instanceId : S_INSTANCE_ID)
+{
+    DEFERRED_VS_OUTPUT output;
+    LightState state = objects[instanceId];
+
+    float3 worldPos = (Positions[vertId] * state.radius) + state.position;
+
+    output.position = TransformWorldToClip(float4(worldPos, 1.0f));
+
+    output.stateId = instanceId;
+    return output;
+}

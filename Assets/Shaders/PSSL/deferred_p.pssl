@@ -1,0 +1,18 @@
+#include "ShaderConstants.psslh"
+#include "types.h"
+
+RegularBuffer<LightState> objects : register(t0);
+
+Texture2D<float4> sceneColorTex : register(t1);
+SamplerState sceneColorSampler : register(s1);
+
+Texture2D<float4> sceneNormalTex : register(t2);
+SamplerState sceneNormalSampler : register(s2);
+
+[CxxSymbol("Deferred::ps")]
+float4 main(DEFERRED_VS_OUTPUT vertex) : S_TARGET_OUTPUT
+{
+	LightState state = objects[vertex.stateId];
+
+	return state.color;
+}

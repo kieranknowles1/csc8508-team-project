@@ -60,6 +60,7 @@ namespace NCL {
 			void MainRenderPass();
 
 			void UiPass();
+			void LightPass();
 			void PostProcessPass();
 
 			void DisplayRenderPass();
@@ -144,6 +145,7 @@ namespace NCL {
 
 			std::unique_ptr<PS5::AGCMesh> unitQuad;
 			std::unique_ptr<PS5::AGCMesh> halfUnitQuad;
+			PS5::AGCMesh* sphere;
 
 			sce::Agc::Core::Texture*	bindlessTextures;
 			sce::Agc::Core::Buffer*		bindlessBuffers;
@@ -175,6 +177,9 @@ namespace NCL {
 
 			std::unique_ptr<PS5::AGCShader> gammaCompute;
 
+			std::unique_ptr<PS5::AGCShader> deferredVertexShader;
+			std::unique_ptr<PS5::AGCShader> deferredPixelShader;
+
 			std::unique_ptr<PS5::AGCShader> postVertexShader;
 			std::unique_ptr<PS5::AGCShader> postPixelShader;
 
@@ -196,6 +201,9 @@ namespace NCL {
 
 			FrameBuffer sceneBuffer;
 			FrameBuffer sceneNormalBuffer;
+
+			FrameBuffer lightBuffer;
+
 			FrameBuffer screenBuffer;
 
 			std::vector<SkinningJob> frameJobs;

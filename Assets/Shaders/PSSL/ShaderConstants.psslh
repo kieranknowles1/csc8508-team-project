@@ -24,11 +24,8 @@ struct ShaderConstants
 	matrix inverseViewMatrix;
 	matrix inverseProjMatrix;
 
-	float3 lightPosition;
-	float  lightRadius;
-	float4 lightColour;
 	float3 cameraPos;
-	uint32_t shadowID;
+	int __pad;
 
 	VingetteSettings vingetteSettings;
 };

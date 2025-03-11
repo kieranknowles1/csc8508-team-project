@@ -66,6 +66,8 @@ GameTechAGCRenderer::GameTechAGCRenderer(Window* window) : AGCRenderer(window), 
 	halfUnitQuad = Mesh::Quad<AGCMesh>(0.5f);
 	halfUnitQuad->UploadToGPU(this);
 
+	sphere = (AGCMesh*)LoadMesh("Sphere.msh");
+
 	skinningCompute = std::make_unique<AGCShader>("Skinning_c.ags", allocator);
 	gammaCompute	= std::make_unique<AGCShader>("Gamma_c.ags", allocator);
 
@@ -83,6 +85,9 @@ GameTechAGCRenderer::GameTechAGCRenderer(Window* window) : AGCRenderer(window), 
 
 	debugTextVertexShader	= std::make_unique<AGCShader>("DebugText_vv.ags", allocator);
 	debugTextPixelShader	= std::make_unique<AGCShader>("DebugText_p.ags" , allocator);
+
+	deferredVertexShader = std::make_unique<AGCShader>("deferred_vv.ags", allocator);
+	deferredPixelShader = std::make_unique<AGCShader>("deferred_p.ags", allocator);
 
 	postVertexShader = std::make_unique<AGCShader>("post_vv.ags", allocator);
 	postPixelShader = std::make_unique<AGCShader>("post_p.ags", allocator);
@@ -107,11 +112,12 @@ GameTechAGCRenderer::GameTechAGCRenderer(Window* window) : AGCRenderer(window), 
 
 	sceneBuffer = createBuffer("Scene", FrameBuffer::Slot::Color);
 	sceneNormalBuffer = createBuffer("SceneNormal", FrameBuffer::Slot::Normal);
+	lightBuffer = createBuffer("Lights", FrameBuffer::Slot::Color);
 	screenBuffer = createBuffer("Screen", FrameBuffer::Slot::Color);
 }
 
 GameTechAGCRenderer::~GameTechAGCRenderer()	{
-
+	delete sphere;
 }
 
 Mesh* GameTechAGCRenderer::LoadMesh(const std::string& name) {
@@ -169,13 +175,14 @@ void GameTechAGCRenderer::RenderFrame() {
 	MainRenderPass();
 
 	// Step 7: Apply post processing to the scene buffer
+	LightPass();
 	PostProcessPass();
 
-	//Step 8: Draw UI to the post-processed scene
-	UiPass();
-	UpdateDebugData();
-	RenderDebugLines();
-	RenderDebugText();
+	////Step 8: Draw UI to the post-processed scene
+	//UiPass();
+	//UpdateDebugData();
+	//RenderDebugLines();
+	//RenderDebugText();
 
 	//Step 9: Draw the main scene render target to the screen with a compute shader
 	DisplayRenderPass(); //Puts our scene on screen, uses a compute
@@ -351,6 +358,45 @@ void GameTechAGCRenderer::UiPass() {
 	DrawBoundMeshInstanced(*frameContext, *halfUnitQuad, uiElements.size());
 }
 
+void GameTechAGCRenderer::LightPass()
+{
+	frameContext->setShaders(nullptr, deferredVertexShader->GetAGCPointer(), deferredPixelShader->GetAGCPointer(), sce::Agc::UcPrimitiveType::Type::kTriList);
+	useViewPort(frameContext, ScreenSize);
+
+	sce::Agc::CxRenderTargetMask rtMask;
+	rtMask.init().setMask(0, 0xff);
+	frameContext->m_sb.setState(rtMask).setState(lightBuffer.target);
+
+	sce::Agc::CxPrimitiveSetup primSetup;
+	primSetup.init().setCullFace(sce::Agc::CxPrimitiveSetup::CullFace::kNone);
+	frameContext->m_sb.setState(primSetup);
+
+	sce::Agc::CxDepthStencilControl depthControl;
+	depthControl.init().setDepth(sce::Agc::CxDepthStencilControl::Depth::kDisable).setDepthFunction(sce::Agc::CxDepthStencilControl::DepthFunction::kAlways);
+	frameContext->m_sb.setState(depthControl);
+
+	sce::Agc::CxBlendControl blendControl;
+	blendControl.init()
+		.setBlend(sce::Agc::CxBlendControl::Blend::kDisable)
+		.setAlphaBlendFunc(sce::Agc::CxBlendControl::AlphaBlendFunc::kAdd)
+		.setColorBlendFunc(sce::Agc::CxBlendControl::ColorBlendFunc::kAdd)
+		.setColorSourceMultiplier(sce::Agc::CxBlendControl::ColorSourceMultiplier::kOne)
+		.setColorDestMultiplier(sce::Agc::CxBlendControl::ColorDestMultiplier::kOne);
+
+	frameContext->m_bdr.getStage(sce::Agc::ShaderType::kGs)
+		.setConstantBuffers(0, 1, &currentFrame->constantBuffer)
+		.setBuffers(0, 1, &currentFrame->lights.buffer);
+
+	frameContext->m_bdr.getStage(sce::Agc::ShaderType::kPs)
+		.setConstantBuffers(0, 1, &currentFrame->constantBuffer)
+		.setBuffers(0, 1, &currentFrame->lights.buffer)
+		.setSamplers(1, 1, &sceneBuffer.sampler).setTextures(1, 1, sceneBuffer.texture->GetAGCPointer())
+		.setSamplers(2, 1, &sceneNormalBuffer.sampler).setTextures(2, 1, sceneNormalBuffer.texture->GetAGCPointer());
+
+	sphere->BindVertexBuffers(frameContext->m_bdr.getStage(sce::Agc::ShaderType::kGs));
+	DrawBoundMeshInstanced(*frameContext, *sphere, lights.size());
+}
+
 void GameTechAGCRenderer::PostProcessPass()
 {
 	frameContext->setShaders(nullptr, postVertexShader->GetAGCPointer(), postPixelShader->GetAGCPointer(), sce::Agc::UcPrimitiveType::Type::kTriList);
@@ -415,7 +461,8 @@ void GameTechAGCRenderer::DisplayRenderPass() {
 	checkError(sce::Agc::Core::translate(&outputTex, &backBuffers[currentSwap].renderTarget, sce::Agc::Core::RenderTargetComponent::kData));
 
 	frameContext->m_bdr.getStage(sce::Agc::ShaderType::kCs)
-		.setTextures(0, 1, screenBuffer.texture->GetAGCPointer())
+		//.setTextures(0, 1, screenBuffer.texture->GetAGCPointer())
+		.setTextures(0, 1, lightBuffer.texture->GetAGCPointer())
 		.setRwTextures(1, 1, &outputTex);
 	uint32_t xDims = (outputTex.getWidth() + 7) / 8;
 	uint32_t yDims = (outputTex.getHeight() + 7) / 8;
@@ -564,6 +611,7 @@ void GameTechAGCRenderer::UpdateObjectList() {
 		state.color = light->colour;
 		state.position = light->worldPosition;
 		state.radius = light->radius;
+		currentFrame->data.WriteData(state);
 	}
 	currentFrame->lights.end(currentFrame);
 }

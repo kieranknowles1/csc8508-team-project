@@ -55,12 +55,10 @@ struct UI_VS_OUTPUT {
     int texId SLOT(TEXCOORD2);
 };
 
-struct SHADOW_VS_OUTPUT
+struct DEFERRED_VS_OUTPUT
 {
-	float4 Position SLOT(POSITION);
-	float2 UV SLOT(TEXCOORD0);
-	float4 Colour SLOT(TEXCOORD1);
-	int	texID SLOT(TEXCOORD2);
+	float4 position SLOT(S_POSITION);
+	int stateId SLOT(TEXCOORD0);
 };
 
 #endif
