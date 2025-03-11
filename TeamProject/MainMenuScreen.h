@@ -38,11 +38,14 @@ public:
                 game->LoadWorldFromFile(9);
                 gameMode = "Singleplayer";
             }
-            else {
-                game->JoinGame(mode == GameMode::HOST_GAME);
+            else if (mode == GameMode::HOST_GAME) {
+                game->JoinGame(true);
                 gameMode = "Multiplayer";
             }
-
+            /*else {
+                game->JoinGame(mode == GameMode::HOST_GAME);
+                gameMode = "Multiplayer";
+            }*/
             *newState = new GameScreen(controller, game, gameMode);
             inMenu = false;
             return PushdownResult::Push;
@@ -55,6 +58,8 @@ public:
             Debug::Print(currentItem, Vector2(1, 50 + (10 * i))); //Replace with AddUIElement
         }
         return PushdownResult::NoChange;
+
+        //Add FMOD Logo here as well as the line "Audio Engine: FMOD Studio by Firelight Technologies Pty Ltd."
     }
 
     void OnAwake() override {

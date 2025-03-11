@@ -33,6 +33,7 @@ set(SOURCES
     MainMenuScreen.h
     GameScreen.h
     PauseScreen.h
+    LobbyScreen.h
     Colors.h
     Multiplayer/GamePackets.hpp
     Multiplayer/GamePacketHandlers.hpp
