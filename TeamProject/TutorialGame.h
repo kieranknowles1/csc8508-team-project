@@ -117,8 +117,6 @@ namespace NCL {
             void InitWorld();
             void ResetWorld();
 
-            void InitUI();
-
             void SetupHost() {};
 
             /**
@@ -224,7 +222,6 @@ namespace NCL {
             inline static std::optional<Lobbies::User> user = std::optional<Lobbies::User>();
             inline static int USER_ID = 0;
 
-            std::unique_ptr<Crosshair> crosshair;
         };
     }
 }

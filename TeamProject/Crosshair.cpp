@@ -19,7 +19,7 @@ void Crosshair::Animate(float dt)
 {
  
     if (!fired) {
-        pulse += dt;
+        pulse += dt*2.5f;
     }
     if (pulse > 0.2f) {
         pulse = 0.0f;
@@ -30,10 +30,10 @@ void Crosshair::Animate(float dt)
 
     // Animate the crosshair by setting each line's length to pulse
     // This will make the crosshair lines grow and shrink
-    lines[0].position.x = screenCenter.x + gapSize + (pulse * 0.03f);
-    lines[1].position.x = screenCenter.x - gapSize - (pulse * 0.03f);
-    lines[2].position.y = screenCenter.y - gapSize - (pulse * 0.03f);
-    lines[3].position.y = screenCenter.y + gapSize + (pulse * 0.03f);
+    lines[0].position.x = screenCenter.x + gapSize + (pulse * 0.02f);
+    lines[1].position.x = screenCenter.x - gapSize - (pulse * 0.02f);
+    lines[2].position.y = screenCenter.y - gapSize - (pulse * 0.02f);
+    lines[3].position.y = screenCenter.y + gapSize + (pulse * 0.02f);
 }
 
 void Crosshair::UpdateCrosshairData()

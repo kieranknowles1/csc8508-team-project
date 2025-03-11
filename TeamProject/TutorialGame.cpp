@@ -312,7 +312,7 @@ void TutorialGame::LoadWorldFromFile(int levelNum) {
         newPlayer->SetPlayerID(i);
     }
 
-    crosshair->SetActive(true);
+
 
     Shoot::GetInstance()->Initialise(bulletWorld,resourceManager.get(), world.get(), renderer->GetDecalSystem());
     Shoot::GetInstance()->InitShotMasks(player, gun);
@@ -343,10 +343,6 @@ void TutorialGame::InitWorld() {
 
 }
 
-void TutorialGame::InitUI() {
-    crosshair = std::make_unique<Crosshair>();
-    renderer->AddUiElement(crosshair.get());
-}
 
 void TutorialGame::InitNetwork(bool host) {
 }
