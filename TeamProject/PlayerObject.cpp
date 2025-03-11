@@ -7,6 +7,7 @@ void PlayerObject::Update(float dt) {
     upDirection = CalculateUpDirection(dt);
     rightDirection = CalculateRightDirection(upDirection);
     forwardDirection = CalculateForwardDirection(upDirection, rightDirection);
+    updateGravity(dt);
 }
 
 void PlayerObject::OnCollisionEnter(const CollisionInfo& collisionInfo){
@@ -179,6 +180,26 @@ btVector3 PlayerObject::CalculateForwardDirection(btVector3 upDir, btVector3 rig
     btVector3 forwardDirection = rightDir.cross(upDir);
     forwardDirection.normalize();
     return forwardDirection;
+}
+
+//attaches gun to the camera position/rotation
+void PlayerObject::SetGunTransform(float pitch, float yaw, btVector3 camPos) {
+    //float pitchRadians = Maths::DegreesToRadians(camera->GetPitch());
+    //float yawRadians = Maths::DegreesToRadians(camera->GetYaw());
+    float pitchRadians = Maths::DegreesToRadians(pitch);
+    float yawRadians = Maths::DegreesToRadians(yaw);
+    btQuaternion yawQuat(btVector3(0, 1, 0), yawRadians);
+    btQuaternion pitchQuat(btVector3(1, 0, 0), pitchRadians);
+    btQuaternion gunRotation = camRotOffset * yawQuat * pitchQuat; // Yaw first, then pitch
+
+    btMatrix3x3 rotationMatrixCam(gunRotation);
+    btVector3 adjustedOffset = rotationMatrixCam * gunCameraOffset; // Apply rotation to the offset
+
+    btTransform transformGun = gun->GetPhysicsObject()->GetRigidBody()->getWorldTransform();
+    transformGun.setOrigin(camPos + adjustedOffset);
+    transformGun.setRotation(gunRotation);
+
+    gun->GetPhysicsObject()->GetRigidBody()->setWorldTransform(transformGun);
 }
 
 
