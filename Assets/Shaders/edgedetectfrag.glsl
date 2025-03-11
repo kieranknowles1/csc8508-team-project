@@ -1,6 +1,7 @@
 #version 330 core
 
 uniform sampler2D sceneTex;
+//uniform sampler2D depthTex;
 
 uniform vec2 windowSize;
 
@@ -13,18 +14,41 @@ out vec4 fragColor;
 //could maybe use windowsize like in vignettefrag for offsets instead
 /*const*/ float offset_x = 1/windowSize.x; //do these have to be const floats?
 /*const*/ float offset_y = 1/windowSize.y; //(number of pixels in y axis)
-
+/*
 float kernel[9] = float[] ( //defines weightings of each pixel. Should add up to 1. If less than 1, scene darkens and if greater than 1 it brightens.
       1,  1, 1,             //here, they add up to zero to darken everything besides the edges which will be highlighted
-      1, -8, 1,
+      1, -8, 1,             //BLACKBOARDISH effect
       1,  1, 1
-);
+);*/
 
+/*float kernel[9] = float[] (
+       0, -1,  0,
+      -1,  5, -1,
+       0,  -1, 0
+       );*/
+
+/*float kernel[9] = float[] ( //this one looks too dark/doesn't render anything
+      1/9, 1/9, 1/9,
+      1/9, 1/9, 1/9,
+      1/9, 1/9, 1/9
+      );*/
+
+/*float kernel[9] = float[] (
+      -2, -1, 0, 
+      -1,  1, 1,
+       0,  1, 2
+       );*/
+
+float kernel[9] = float[] (
+     -1/18, -1/18, -1/18, 
+     -1/18,  5/2, -1/18,
+     -1/18, -1/18, -1/18
+     );
 //other kernels to try:  0, -1,  0      1/9, 1/9, 1/9,    -2, -1, 0,
 //                      -1,  5, -1      1/9, 1/9, 1/9,    -1,  1, 1,
 //                       0, -1,  0      1/9, 1/9, 1/9      0,  1, 2
 vec2 offsets[9] = vec2[] ( 
-      vec2(-offset_x, offset_y),  vec2(0.0f, offset_y),  vec2(offset_x, offset_y), 
+      vec2(-offset_x, offset_y),  vec2(0.0f, offset_y),  vec2(offset_x, offset_y), //each value is the offset in pixels from the centre pixel
       vec2(-offset_x, 0.0f),      vec2(0.0f, 0.0f),      vec2(offset_x, 0.0f),
       vec2(-offset_x, -offset_y), vec2(0.0f, -offset_y), vec2(offset_x, -offset_y)
       ); 
