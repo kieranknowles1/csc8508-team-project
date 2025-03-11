@@ -4,6 +4,7 @@
 #include <string>
 #include <vector>
 #include <memory>
+#include "PointLight.h"
 
 #include <NCLCoreClasses/Vector.h>
 
@@ -88,6 +89,7 @@ namespace NCL::CSC8503 {
 		Camera* camera = nullptr;
 		std::vector<UIElement> uiElements;
 		std::vector<RenderObject*> frameObjects;
+		std::vector<PointLight*> lights;
 		DecalSystem decalSystem;
 	};
 }

@@ -64,7 +64,7 @@ namespace NCL {
 			float playerSpeed = 80.0f;
 			float jumpHeight = 300.0f;
 			float gravityScale = 300.0f;
-			float cameraHeight = 3.0f;
+			float cameraHeight = 4.5f;
 
 			float sprintMulti = 2.0f;
 			float strafeMulti = 0.65f;
@@ -82,7 +82,6 @@ namespace NCL {
 
 			//Gun Variables
 			float shotCooldown = 0.075f;
-			float bulletSpeed = 1000.0f;
 			btVector3 gunCameraOffset = btVector3(1.3, -0.7, -1.2);
 
 			//Rotation Variables

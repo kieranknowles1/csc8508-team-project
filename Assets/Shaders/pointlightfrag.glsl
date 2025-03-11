@@ -1,4 +1,4 @@
-#version 330 core 
+#version 400 core
 
 uniform sampler2D depthTex; //need the depth texture to get world space position of fragment light covers
 uniform sampler2D normTex; 
@@ -9,6 +9,7 @@ uniform vec3 cameraPos;
 uniform float lightRadius;
 uniform vec3 lightPos;
 uniform vec4 lightColour;
+uniform float lightIntensity;
 uniform mat4 inverseProjView;
 
 out vec4 diffuseOutput;
@@ -24,7 +25,7 @@ void main(void) {
     float dist       = length(lightPos - worldPos);
     float atten      = 1.0 - clamp(dist / lightRadius, 0.0, 1.0);
 
-    if (atten == 0.0) {
+    if (atten <= 0.0) {
         discard;
     }
 
@@ -38,6 +39,7 @@ void main(void) {
     float specFactor = clamp(dot(halfDir, normal), 0.0, 1.0);
     specFactor       = pow(specFactor, 80.0); 
     vec3 attenuated  = lightColour.xyz * atten;
-    diffuseOutput    = vec4(attenuated * lambert, 1.0);
-    specularOutput   = vec4(attenuated * specFactor * 0.33, 1.0);
+
+    diffuseOutput    = vec4(attenuated * lambert, 1.0) * lightIntensity;
+    specularOutput   = vec4(attenuated * specFactor * 0.33, 1.0) * lightIntensity;
 }
