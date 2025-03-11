@@ -2,7 +2,7 @@
 
 #include <memory>
 #include <string>
-#include <string.h>
+#include <cstring>
 
 class Network;
 
