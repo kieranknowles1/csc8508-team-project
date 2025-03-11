@@ -52,6 +52,7 @@ set(SOURCES
     PointLight.h
     Crosshair.h
     Crosshair.cpp
+    Respawn.h
 )
 
 set(ASSET_ROOT "${CMAKE_SOURCE_DIR}/Assets")

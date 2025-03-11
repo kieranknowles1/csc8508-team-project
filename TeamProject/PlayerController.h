@@ -25,13 +25,13 @@ namespace NCL {
 
 		class PlayerController {
 		public:
-			PlayerController(PlayerObject* playerIn, GameObject* gunIn, const Controller* c, Camera* cam, btDiscreteDynamicsWorld* bulletWorldIn, Crosshair* crosshairIn) {
+			PlayerController(PlayerObject* playerIn, GameObject* gunIn, const Controller* c, Camera* cam, btDiscreteDynamicsWorld* bulletWorldIn, GameTechRendererInterface* rendererIn) {
 				player = playerIn;
 				gun = gunIn;
 				controller = c;
 				camera = cam;
 				bulletWorld = bulletWorldIn;
-                crosshair = crosshairIn;
+				renderer = rendererIn;
 				Initialise();
 			}
 			~PlayerController() {};
@@ -66,7 +66,7 @@ namespace NCL {
 			float playerSpeed = 80.0f;
 			float jumpHeight = 300.0f;
 			float gravityScale = 300.0f;
-			float cameraHeight = 3.0f;
+			float cameraHeight = 4.5f;
 
 			float sprintMulti = 2.0f;
 			float strafeMulti = 0.65f;
@@ -84,7 +84,6 @@ namespace NCL {
 
 			//Gun Variables
 			float shotCooldown = 0.075f;
-			float bulletSpeed = 1000.0f;
 			btVector3 gunCameraOffset = btVector3(1.3, -0.7, -1.2);
 
 			//Rotation Variables
@@ -108,6 +107,7 @@ namespace NCL {
 			btDiscreteDynamicsWorld* bulletWorld;
 			PlayerObject* player;
 			GameObject* gun;
+			GameTechRendererInterface* renderer;
 			const Controller* controller = nullptr;
 			Camera* camera = nullptr;
 			float yaw = 0;
@@ -161,6 +161,7 @@ namespace NCL {
 			void GroundNormalCalculations();
 			void MovementCalculations(float dt);
 			void HandleJumping();
+			void HandleHurtEffects();
 
 		};
 	};

@@ -20,7 +20,7 @@ namespace NCL::CSC8503 {
 		auto frustum = Frustum::FromViewProjMatrix(viewProjMatrix);
 
 		frameObjects.clear();
-
+		lights = world->GetLights();
 		world->OperateOnContents([&](GameObject* obj) {
 			if (!obj->IsActive()) return;
 			auto render = obj->GetRenderObject();
@@ -31,6 +31,11 @@ namespace NCL::CSC8503 {
 			if (!frustum.SphereInsideFrustum(obj->GetTransform().getOrigin(), bounds)) return;
 
 			frameObjects.emplace_back(render);
+			PointLight* objLight = obj->getLight();
+			if (objLight != nullptr) {
+				objLight->worldPosition = obj->GetTransform().getOrigin();
+				lights.push_back(objLight);
+			}
 		});
 
         frameSprites.clear();
