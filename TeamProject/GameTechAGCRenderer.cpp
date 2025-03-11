@@ -15,7 +15,6 @@ using namespace Rendering;
 using namespace CSC8503;
 using namespace PS5;
 
-const Vector2i ShadowSize(8192, 8192);
 const int FRAMES_IN_FLIGHT	= 2;
 
 const int BINDLESS_TEX_COUNT		= 128;
@@ -76,9 +75,6 @@ GameTechAGCRenderer::GameTechAGCRenderer(Window* window) : AGCRenderer(window), 
 	uiVertexShader = std::make_unique<AGCShader>("UI_vv.ags", allocator);
 	uiPixelShader = std::make_unique<AGCShader>("UI_p.ags", allocator);
 
-	shadowVertexShader	= std::make_unique<AGCShader>("Shadow_vv.ags", allocator);
-	shadowPixelShader	= std::make_unique<AGCShader>("Shadow_p.ags", allocator);
-
 	skyboxVertexShader	= std::make_unique<AGCShader>("Skybox_vv.ags", allocator);
 	skyboxPixelShader	= std::make_unique<AGCShader>("Skybox_p.ags" , allocator);
 
@@ -109,19 +105,9 @@ GameTechAGCRenderer::GameTechAGCRenderer(Window* window) : AGCRenderer(window), 
 
 	Debug::CreateDebugFont("PressStart2P.fnt", *LoadTexture("PressStart2P.png"));
 
-	shadowTarget	= CreateDepthBufferTarget(ShadowSize.x, ShadowSize.y);
-	shadowMap		= CreateFrameBufferTextureSlot("Shadowmap");
-
 	sceneBuffer = createBuffer("Scene", FrameBuffer::Slot::Color);
 	sceneNormalBuffer = createBuffer("SceneNormal", FrameBuffer::Slot::Normal);
 	screenBuffer = createBuffer("Screen", FrameBuffer::Slot::Color);
-
-	shadowSampler.init()
-		.setXyFilterMode(
-			sce::Agc::Core::Sampler::FilterMode::kPoint,	//magnification
-			sce::Agc::Core::Sampler::FilterMode::kPoint		//minificaction
-		)
-		.setMipFilterMode(sce::Agc::Core::Sampler::MipFilterMode::kPoint);
 }
 
 GameTechAGCRenderer::~GameTechAGCRenderer()	{
@@ -203,9 +189,6 @@ This method builds a struct that
 */
 void GameTechAGCRenderer::WriteRenderPassConstants() {
 	ShaderConstants frameData;
-	frameData.lightColour = Vector4(0.8f, 0.8f, 0.5f, 1.0f);
-	frameData.lightRadius = 1000.0f;
-	frameData.lightPosition = Vector3(-100.0f, 60.0f, -100.0f);
 	frameData.cameraPos = camera->GetPosition();
 
 	frameData.viewMatrix = camera->BuildViewMatrix();
@@ -218,10 +201,6 @@ void GameTechAGCRenderer::WriteRenderPassConstants() {
 	frameData.inverseProjMatrix = Matrix::Inverse(frameData.projMatrix);
 
 	frameData.orthoMatrix = Matrix::Orthographic(0.0f, 100.0f, 100.0f, 0.0f, -1.0f, 1.0f);
-	frameData.shadowMatrix = Matrix::Perspective(50.0f, 500.0f, 1.0f, 45.0f) *
-		Matrix::View(frameData.lightPosition, Vector3(0, 0, 0), Vector3(0, 1, 0));
-
-	frameData.shadowID = shadowMap->GetAssetID();
 
 	frameData.vingetteSettings.enabled = vignetteOn;
 	frameData.vingetteSettings.color = vignetteColour;
@@ -305,46 +284,6 @@ void GameTechAGCRenderer::SkyboxPass() {
 	DrawBoundMesh(*frameContext, *unitQuad);
 }
 
-void GameTechAGCRenderer::ShadowmapPass() {
-	sce::Agc::Toolkit::Result tk1 = sce::Agc::Toolkit::clearDepthRenderTargetCs(&frameContext->m_dcb, &shadowTarget);
-	sce::Agc::Toolkit::Result wat = frameContext->resetToolkitChangesAndSyncToGl2(tk1);
-
-	frameContext->setShaders(nullptr, shadowVertexShader->GetAGCPointer(), shadowPixelShader->GetAGCPointer(), sce::Agc::UcPrimitiveType::Type::kTriList);
-
-	useViewPort(frameContext, ShadowSize);
-
-	sce::Agc::CxRenderTargetMask rtMask = sce::Agc::CxRenderTargetMask().init().setMask(0, 0x0);
-	frameContext->m_sb.setState(rtMask);
-	frameContext->m_sb.setState(shadowTarget);
-
-	sce::Agc::CxDepthStencilControl depthControl;
-	depthControl
-		.init()
-		.setDepth(sce::Agc::CxDepthStencilControl::Depth::kEnable)
-		.setDepthFunction(sce::Agc::CxDepthStencilControl::DepthFunction::kLessEqual)
-		.setDepthWrite(sce::Agc::CxDepthStencilControl::DepthWrite::kEnable);
-
-	frameContext->m_sb.setState(depthControl);
-
-	frameContext->m_bdr.getStage(sce::Agc::ShaderType::kGs)
-		.setConstantBuffers(0, 1, &currentFrame->constantBuffer)
-		.setBuffers(0, 1, &currentFrame->objects.buffer)
-		.setBuffers(1, 1, &arrayBuffer);
-
-	frameContext->m_bdr.getStage(sce::Agc::ShaderType::kPs)
-		.setSamplers(0, 1, &defaultSampler)
-		.setBuffers(1, 1, &textureBuffer);
-
-	DrawObjects();
-
-	sce::Agc::Core::gpuSyncEvent(&frameContext->m_dcb, sce::Agc::Core::SyncWaitMode::kDrainGraphics, sce::Agc::Core::SyncCacheOp::kFlushCompressedDepthBufferForTexture);
-
-	const bool htileTC = (shadowTarget.getTextureCompatiblePlaneCompression() == sce::Agc::CxDepthRenderTarget::TextureCompatiblePlaneCompression::kEnable);
-	const sce::Agc::Core::MaintainCompression maintainCompression = htileTC ? sce::Agc::Core::MaintainCompression::kEnable : sce::Agc::Core::MaintainCompression::kDisable;
-
-	sce::Agc::Core::translate(&bindlessTextures[shadowMap->GetAssetID()], &shadowTarget, sce::Agc::Core::DepthRenderTargetComponent::kDepth, maintainCompression);
-}
-
 void GameTechAGCRenderer::MainRenderPass() {
 	frameContext->setShaders(nullptr, defaultVertexShader->GetAGCPointer(), defaultPixelShader->GetAGCPointer(), sce::Agc::UcPrimitiveType::Type::kTriList);
 
@@ -380,8 +319,7 @@ void GameTechAGCRenderer::MainRenderPass() {
 	frameContext->m_bdr.getStage(sce::Agc::ShaderType::kPs)
 		.setConstantBuffers(0, 1, &currentFrame->constantBuffer)
 		.setBuffers(0, 1, &textureBuffer)
-		.setSamplers(0, 1, &defaultSampler)
-		.setSamplers(1, 1, &shadowSampler);
+		.setSamplers(0, 1, &defaultSampler);
 	DrawObjects();
 }
 

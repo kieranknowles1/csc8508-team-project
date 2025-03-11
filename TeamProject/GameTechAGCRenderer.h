@@ -56,7 +56,6 @@ namespace NCL {
 			void RenderDebugLines();
 			void RenderDebugText();
 
-			void ShadowmapPass();
 			void SkyboxPass();
 			void MainRenderPass();
 
@@ -165,9 +164,6 @@ namespace NCL {
 			std::unique_ptr<PS5::AGCShader> uiVertexShader;
 			std::unique_ptr<PS5::AGCShader> uiPixelShader;
 
-			std::unique_ptr<PS5::AGCShader> shadowVertexShader;
-			std::unique_ptr<PS5::AGCShader> shadowPixelShader;
-
 			std::unique_ptr<PS5::AGCShader> skyboxVertexShader;
 			std::unique_ptr<PS5::AGCShader> skyboxPixelShader;
 
@@ -181,10 +177,6 @@ namespace NCL {
 
 			std::unique_ptr<PS5::AGCShader> postVertexShader;
 			std::unique_ptr<PS5::AGCShader> postPixelShader;
-
-			sce::Agc::CxDepthRenderTarget		shadowTarget;
-			NCL::PS5::AGCTexture*				shadowMap; //ptr into bindless array
-			sce::Agc::Core::Sampler				shadowSampler;
 
 			struct FrameBuffer {
 				enum class Slot {

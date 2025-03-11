@@ -14,7 +14,6 @@ struct VingetteSettings {
 
 struct ShaderConstants
 {
-	matrix shadowMatrix;
 	matrix orthoMatrix;
 
 	matrix viewProjMatrix;
