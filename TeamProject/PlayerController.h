@@ -18,6 +18,7 @@
 #include "Shoot.h"
 #include "Paintball.h"
 #include "Crosshair.h"
+#include <memory>
 
 
 namespace NCL {
@@ -25,13 +26,15 @@ namespace NCL {
 
 		class PlayerController {
 		public:
-			PlayerController(PlayerObject* playerIn, GameObject* gunIn, const Controller* c, Camera* cam, btDiscreteDynamicsWorld* bulletWorldIn, Crosshair* crosshairIn) {
+			PlayerController(PlayerObject* playerIn, GameObject* gunIn, const Controller* c, Camera* cam, btDiscreteDynamicsWorld* bulletWorldIn, GameTechRendererInterface* rendererIn) {
 				player = playerIn;
 				gun = gunIn;
 				controller = c;
 				camera = cam;
 				bulletWorld = bulletWorldIn;
-                crosshair = crosshairIn;
+				renderer = rendererIn;
+
+
 				Initialise();
 			}
 			~PlayerController() {};
@@ -94,8 +97,8 @@ namespace NCL {
 			float bouncePadHeight = 5000.0f;
 
 
-
-            Crosshair* crosshair;
+			GameTechRendererInterface* renderer;
+			std::unique_ptr<Crosshair> crosshair;
 			btVector3 upDirection;
 			btVector3 rightDirection;
 			btVector3 forwardDirection;

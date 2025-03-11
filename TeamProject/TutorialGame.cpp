@@ -134,10 +134,6 @@ void TutorialGame::UpdatePlayer(float dt) {
     }
     resourceManager->update(dt);
     player->updateGravity(dt);
-
-    if (crosshair) {
-        crosshair->Animate(dt);
-    }
 }
 
 void TutorialGame::UpdateKeys() {
@@ -302,10 +298,9 @@ void TutorialGame::LoadWorldFromFile(int levelNum) {
 
     levelImporter = new LevelImporter(resourceManager.get(), world.get(), bulletWorld);
     levelImporter->LoadLevel(levelNum);
-    InitUI();
     InitPlayer();
 
-    crosshair->SetActive(true);
+
 
     Shoot::GetInstance()->Initialise(bulletWorld,resourceManager.get(), world.get(), renderer->GetDecalSystem());
     Shoot::GetInstance()->InitShotMasks(player, gun);
@@ -335,10 +330,6 @@ void TutorialGame::InitWorld() {
     }
 }
 
-void TutorialGame::InitUI() {
-    crosshair = std::make_unique<Crosshair>();
-    renderer->AddUiElement(crosshair.get());
-}
 
 void TutorialGame::InitNetwork(bool host) {
 }
@@ -362,7 +353,7 @@ void TutorialGame::InitPlayer() {
     player->GetPhysicsObject()->GetRigidBody()->setFriction(0.0f);
     player->GetPhysicsObject()->GetRigidBody()->setDamping(0.0, 0);
     gun = AddCubeToWorld(Vector3(10, 2, 20), Vector3(0.6, 0.6, 1.6), 0, false);
-    playerController = new PlayerController(player, gun, controller, mainCamera, bulletWorld, crosshair.get());
+    playerController = new PlayerController(player, gun, controller, mainCamera, bulletWorld, renderer);
     player->GetRenderObject()->SetColour(Vector4(playerColour));
 }
 
