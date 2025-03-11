@@ -12,6 +12,7 @@
 #include "NavMesh.h"
 #include "Profiler.h"
 #include "Wanderer.h"
+#include "Respawn.h"
 #include "Network/Network.hpp"
 #include "Multiplayer/Lobby.hpp"
 
@@ -183,7 +184,7 @@ namespace NCL {
             void InitBullet(); // Initialises the Bullet physics world
 
             //Player things
-            void InitPlayer();
+            PlayerObject* InitPlayer(btVector3 position, btVector3 upDir);
             PerspectiveCamera* mainCamera;
             PlayerObject* player;
             GameObject* gun;
