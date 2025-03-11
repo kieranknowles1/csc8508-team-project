@@ -838,8 +838,7 @@ void GameTechRenderer::RenderPostProcessing() {
 		glBindTexture(GL_TEXTURE_2D, bufferColourTex); //hdrTex currently holds raw scene
 		glUniform1i(glGetUniformLocation(vignetteShader->GetProgramID(), "diffuseTex"), 0);
 		glUniform2f(glGetUniformLocation(vignetteShader->GetProgramID(), "windowSize"), windowSize.x, windowSize.y);
-		Vector3 VignetteColour = Vector3(0.05f, 0.0f, 0.0f); //different colours appear more intense at a given intensity (green)
-		glUniform3fv(glGetUniformLocation(vignetteShader->GetProgramID(), "effectColour"), 1, (float*)&VignetteColour);
+		glUniform3fv(glGetUniformLocation(vignetteShader->GetProgramID(), "effectColour"), 1, (float*)&vignetteColour);
 
 
 		glUniform1f(glGetUniformLocation(vignetteShader->GetProgramID(), "time"), vignettePulse);
