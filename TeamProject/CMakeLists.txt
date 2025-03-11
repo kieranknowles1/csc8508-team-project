@@ -31,6 +31,8 @@ set(SOURCES
     DecalSystem.h
     DecalSystem.cpp
     MainMenuScreen.h
+    GameScreen.h
+    PauseScreen.h
     Colors.h
     Multiplayer/GamePackets.hpp
     Multiplayer/GamePacketHandlers.hpp
