@@ -62,8 +62,6 @@ TutorialGame::~TutorialGame()	{
     audioEngine.Shutdown();
 
     if (server.has_value()) server->Close();
-
-    delete playerController;
 }
 
 static bool BulletRaycast(btDynamicsWorld* world, const btVector3& start, const btVector3& end, btCollisionWorld::ClosestRayResultCallback& resultCallback) {
@@ -326,7 +324,7 @@ void TutorialGame::LoadWorldFromFile(int levelNum) {
     RespawnPoint* respawnPoint = Respawn::GetInstance()->GetRespawn(0);
     player = InitPlayer(respawnPoint->position,respawnPoint->orientation);
     player->SetPlayerID(0);
-    playerController = new PlayerController(player, gun, controller, mainCamera, bulletWorld,renderer);
+    playerController = std::make_unique<PlayerController>(player, gun, controller, mainCamera, bulletWorld,renderer);
 
     for (int i = 1; i < 8; i++) {
         RespawnPoint* newRespawnPoint = Respawn::GetInstance()->GetRespawn(i);

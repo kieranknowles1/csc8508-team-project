@@ -191,7 +191,7 @@ namespace NCL {
             PerspectiveCamera* mainCamera;
             PlayerObject* player;
             GameObject* gun;
-            PlayerController* playerController = nullptr;
+            std::unique_ptr<PlayerController> playerController;
             bool freeCam = false;
             bool thirdPerson = false;
             Vector4 playerColour = Vector4(1, 0.8, 1, 1);
