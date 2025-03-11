@@ -123,7 +123,6 @@ void TutorialGame::UpdateGame(float dt) {
         profiler.printTimes();
     }
 
-    //post processing time variable effect:
     pulse += dt;
     renderer->SetVignettePulse(pulse);
 }
@@ -326,7 +325,7 @@ void TutorialGame::LoadWorldFromFile(int levelNum) {
     RespawnPoint* respawnPoint = Respawn::GetInstance()->GetRespawn(0);
     player = InitPlayer(respawnPoint->position,respawnPoint->orientation);
     player->SetPlayerID(0);
-    playerController = new PlayerController(player, gun, controller, mainCamera, bulletWorld);
+    playerController = new PlayerController(player, gun, controller, mainCamera, bulletWorld,renderer);
 
     for (int i = 1; i < 8; i++) {
         RespawnPoint* newRespawnPoint = Respawn::GetInstance()->GetRespawn(i);
@@ -360,6 +359,7 @@ void TutorialGame::InitWorld() {
         navMesh = new NavMesh(bulletWorld);
         navMesh->LoadFromFile("Assets/Meshes/NavMeshes/initiallevel.navmesh");
     }
+
 }
 
 

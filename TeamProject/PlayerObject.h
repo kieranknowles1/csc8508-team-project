@@ -105,6 +105,11 @@ public:
 	 * @return PlayerState Enum
 	 */
 	inline PlayerState GetState() { return state; }
+	
+	float GetMaxHealth() {
+		return maxHealth;
+	}
+	float health = 100.0f;
 
 	void setGun(GameObject* gunIn) { gun = gunIn; }
 	void SetGunTransform(float pitch, float yaw, btVector3 camPos);
@@ -114,6 +119,7 @@ private:
 	//Player Variables
 	float gravityScale = 400.0f;
 	float rotateTime = 0.5f;
+	float maxHealth = 100.0f;
 
 	unsigned int playerID;
 	int collided = 0;
@@ -136,10 +142,13 @@ private:
 	btVector3 gunCameraOffset = btVector3(1.3, -0.7, -1.2);
 	GameObject* gun;
 
+
 	btVector3 CalculateRightDirection(btVector3 upDir);
 	btVector3 CalculateForwardDirection(btVector3 upDir, btVector3 rightDir);
 	btVector3 CalculateUpDirection(float dt);
 	btVector3 CalculateForwardFromYaw(float yaw);
 	btVector3 CalculateRightFromYaw(float yaw);
+
+
 
 };

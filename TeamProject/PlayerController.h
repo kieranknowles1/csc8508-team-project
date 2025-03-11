@@ -24,12 +24,13 @@ namespace NCL {
 
 		class PlayerController {
 		public:
-			PlayerController(PlayerObject* playerIn, GameObject* gunIn, const Controller* c, Camera* cam, btDiscreteDynamicsWorld* bulletWorldIn) {
+			PlayerController(PlayerObject* playerIn, GameObject* gunIn, const Controller* c, Camera* cam, btDiscreteDynamicsWorld* bulletWorldIn, GameTechRendererInterface* rendererIn) {
 				player = playerIn;
 				gun = gunIn;
 				controller = c;
 				camera = cam;
 				bulletWorld = bulletWorldIn;
+				renderer = rendererIn;
 				Initialise();
 			}
 			~PlayerController() {};
@@ -103,6 +104,7 @@ namespace NCL {
 			btDiscreteDynamicsWorld* bulletWorld;
 			PlayerObject* player;
 			GameObject* gun;
+			GameTechRendererInterface* renderer;
 			const Controller* controller = nullptr;
 			Camera* camera = nullptr;
 			float yaw = 0;
@@ -156,6 +158,7 @@ namespace NCL {
 			void GroundNormalCalculations();
 			void MovementCalculations(float dt);
 			void HandleJumping();
+			void HandleHurtEffects();
 
 		};
 	};
