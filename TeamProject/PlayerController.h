@@ -17,6 +17,8 @@
 #include "DecalSystem.h"
 #include "Shoot.h"
 #include "Paintball.h"
+#include "Crosshair.h"
+#include <memory>
 
 
 namespace NCL {
@@ -31,6 +33,8 @@ namespace NCL {
 				camera = cam;
 				bulletWorld = bulletWorldIn;
 				renderer = rendererIn;
+
+
 				Initialise();
 			}
 			~PlayerController() {};
@@ -92,6 +96,8 @@ namespace NCL {
 			float bouncePadHeight = 5000.0f;
 
 
+			GameTechRendererInterface* renderer;
+			std::unique_ptr<Crosshair> crosshair;
 			btVector3 upDirection;
 			btVector3 rightDirection;
 			btVector3 forwardDirection;
@@ -104,7 +110,6 @@ namespace NCL {
 			btDiscreteDynamicsWorld* bulletWorld;
 			PlayerObject* player;
 			GameObject* gun;
-			GameTechRendererInterface* renderer;
 			const Controller* controller = nullptr;
 			Camera* camera = nullptr;
 			float yaw = 0;

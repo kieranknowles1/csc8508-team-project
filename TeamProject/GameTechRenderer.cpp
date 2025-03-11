@@ -671,7 +671,7 @@ void GameTechRenderer::RenderUI() {
 	int textureLocation = glGetUniformLocation(uiShader->GetProgramID(), "mainTex");
 
 
-	for (const auto& uiElement : uiElements) {
+	for (const auto& uiElement : frameSprites) {
 		Vector2 pos = uiElement.position;
 		Vector2 size = uiElement.size;
 		Vector4 color = uiElement.color;
