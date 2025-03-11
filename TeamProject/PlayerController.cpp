@@ -51,6 +51,7 @@ void PlayerController::UpdateMovement(float dt) {
     GroundNormalCalculations();
     MovementCalculations(dt);
     HandleJumping();
+    HandleHurtEffects();
 
     previousVelocity = rb->getLinearVelocity();
     rb->setLinearVelocity(movement);
@@ -359,6 +360,17 @@ void PlayerController::HandleJumping() {
     }
 };
 
+void PlayerController::HandleHurtEffects() {
+    float healthLossPercent = (player->GetMaxHealth() - player->health) / player->GetMaxHealth();
+    if (healthLossPercent <= 0.001f) {
+        renderer->SetVignetteOn(false);
+    }
+    else {
+        renderer->SetVignetteOn(true);
+        renderer->SetVignetteIntesnity((1.75f * healthLossPercent));
+    }
+
+}
 
 void PlayerController::GetAllDirections() {
     upDirection = player->getUpDirection();

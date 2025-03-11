@@ -111,8 +111,6 @@ void TutorialGame::UpdateGame(float dt) {
         profiler.printTimes();
     }
 
-    
-    //post processing time variable effect:
     pulse += dt;
     renderer->SetVignettePulse(pulse);
 }
@@ -326,6 +324,7 @@ void TutorialGame::InitWorld() {
         navMesh = new NavMesh(bulletWorld);
         navMesh->LoadFromFile("Assets/Meshes/NavMeshes/initiallevel.navmesh");
     }
+
 }
 
 void TutorialGame::InitNetwork(bool host) {
@@ -350,7 +349,7 @@ void TutorialGame::InitPlayer() {
     player->GetPhysicsObject()->GetRigidBody()->setFriction(0.0f);
     player->GetPhysicsObject()->GetRigidBody()->setDamping(0.0, 0);
     gun = AddCubeToWorld(Vector3(10, 2, 20), Vector3(0.6, 0.6, 1.6), 0, false);
-    playerController = new PlayerController(player, gun, controller, mainCamera, bulletWorld);
+    playerController = new PlayerController(player, gun, controller, mainCamera, bulletWorld,renderer);
     player->GetRenderObject()->SetColour(Vector4(playerColour));
 
 }

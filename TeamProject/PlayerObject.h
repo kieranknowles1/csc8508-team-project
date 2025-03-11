@@ -84,12 +84,18 @@ public:
 	 * @return PlayerState Enum
 	 */
 	inline PlayerState GetState() { return state; }
+	
+	float GetMaxHealth() {
+		return maxHealth;
+	}
+	float health = 100.0f;
 
 private:
 
 	//Player Variables
 	float gravityScale = 400.0f;
 	float rotateTime = 0.5f;
+	float maxHealth = 100.0f;
 
 	int collided = 0;
 	btVector3 collisionNormal = btVector3(0, 1, 0);
@@ -109,10 +115,13 @@ private:
 	float rotateTimer = 0.0f;
 	bool rotationChanging = false;
 
+
 	btVector3 CalculateRightDirection(btVector3 upDir);
 	btVector3 CalculateForwardDirection(btVector3 upDir, btVector3 rightDir);
 	btVector3 CalculateUpDirection(float dt);
 	btVector3 CalculateForwardFromYaw(float yaw);
 	btVector3 CalculateRightFromYaw(float yaw);
+
+
 
 };

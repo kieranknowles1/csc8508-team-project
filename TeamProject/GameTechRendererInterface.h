@@ -73,6 +73,11 @@ namespace NCL::CSC8503 {
 			vignettePulse = dt;
 		}
 
+		void SetVignetteIntesnity(float intensityIn) {
+			vignetteIntensity = intensityIn;
+		}
+
+
 		void AddUIElement(const UIElement& element) {
 			uiElements.push_back(element);
 		}
@@ -85,6 +90,7 @@ namespace NCL::CSC8503 {
 		bool hdrOn = true;
 		bool vignetteOn = false;
 		float vignettePulse = 0;
+		float vignetteIntensity = 0;
 		Window* window;
 		Camera* camera = nullptr;
 		std::vector<UIElement> uiElements;
