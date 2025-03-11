@@ -124,18 +124,12 @@ void TutorialGame::UpdateGame(float dt) {
     while (isPackets && server.has_value()) {
         std::shared_ptr<Packet::Packet> packet = server->Fetch();
         if (packet.get() != nullptr) {
-            std::cout << "PROCESSING PACKET.\n";
             Packet::PacketRegister::GetHandler(packet->GetType())->Handle(packet);
         }
         else {
             isPackets = false;
         }
     }
-
-    if (user.has_value()) {
-        std::cout << "User ID: " << user->GetUserID() << std::endl;
-    }
-
     if (lobby.has_value()) {
         std::cout << "Num Players in lobby: " << lobby->GetConnectedUsers().size() << std::endl;
     }
@@ -636,9 +630,7 @@ void TutorialGame::JoinGame(bool host) {
         using namespace std::chrono_literals;
         std::this_thread::sleep_for(1000ms);
 
-        std::cout << "Making Request...\n";
         std::shared_ptr<Packet::RequestUserIDPacket> request = std::make_shared<Packet::RequestUserIDPacket>(nullptr);
-        std::cout << "Sending Request...\n";
         server.value().Broadcast(request);
     }
     else {

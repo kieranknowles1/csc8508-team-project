@@ -136,24 +136,19 @@ void Network::Tick(float dt) {
         ENetEvent event;
 
         while (enet_host_service(m_host, &event, 1) > 0) {
-            std::cout << "Packet received!\n";
             switch (event.type) {
             case ENET_EVENT_TYPE_CONNECT:
-                std::cout << "CONNECTION RECEIVED!\n";
                 if (!ConnectPeer()) {
                     enet_peer_disconnect(event.peer, 0);
-                    std::cout << "Connection rejected.\n";
                 }
                 else if (m_connectCallback != nullptr) {
                     m_connectCallback(event.peer);
                 }
-                std::cout << "Connection accepted!\n";
                 break;
             case ENET_EVENT_TYPE_DISCONNECT:
                 DisconnectPeer();
                 break;
             case ENET_EVENT_TYPE_RECEIVE:
-                std::cout << "Handling packet...\n";
                 HandleIncomingPacket(&event);
                 break;
             }
@@ -164,30 +159,23 @@ void Network::Tick(float dt) {
 
 
 void Network::SendAll() {
-    std::cout << "[Network] Sending All Packets...\n";
     Packet::PacketRegister* packetRegister = Packet::PacketRegister::GetRegister();
 
     for (int i = 0; i < m_numPackets; i++) {
-        std::cout << "[Network] Fetching Handler...\n";
         Packet::PacketHandler* handler = packetRegister->GetHandler(m_sendBuffer[i].first.get()->GetType());
-        std::cout << "[Network] Translating...\n";
         
         ENetPacket* packet = handler->ToENetPacket(m_sendBuffer[i].first);
 
-        std::cout << "[Network] Translation Complete.\n";
 
         if (m_sendBuffer[i].second == nullptr) {
-            std::cout << "[Network] Broadcasting Packet.\n";
             enet_host_broadcast(m_host, m_sendBuffer[i].first.get()->GetChannel(), packet);
             enet_host_flush(m_host);
         }
         else {
-            std::cout << "[Network] Directly Sending Packet.\n";
             enet_peer_send(m_sendBuffer[i].second, m_sendBuffer[i].first.get()->GetChannel(), packet);
         }
     }
     m_numPackets = 0;
-    std::cout << "[Network] Sending Complete.\n";
 }
 
 
@@ -216,7 +204,6 @@ void Network::HandleIncomingPacket(ENetEvent* event) {
     std::shared_ptr<Packet::Packet> translated = packetHandler->Translate(event);
 
     m_receiveBuffer.Insert(translated);
-    std::cout << "Is Empty = " << (m_receiveBuffer.IsEmpty() ? "true" : "false") << std::endl;
 }
 
 
