@@ -360,6 +360,10 @@ void GameTechAGCRenderer::UiPass() {
 
 void GameTechAGCRenderer::LightPass()
 {
+	// Clear the FBO using a compute shader, waits for it to complete before continuing operations to avoid race conditions
+	auto result = sce::Agc::Toolkit::clearRenderTargetCs(&frameContext->m_dcb, &lightBuffer.target, sce::Agc::Toolkit::RenderTargetClearOp::kAuto);
+	frameContext->resetToolkitChangesAndSyncToGl2(result);
+
 	frameContext->setShaders(nullptr, deferredVertexShader->GetAGCPointer(), deferredPixelShader->GetAGCPointer(), sce::Agc::UcPrimitiveType::Type::kTriList);
 	useViewPort(frameContext, ScreenSize);
 
