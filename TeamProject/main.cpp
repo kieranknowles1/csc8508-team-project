@@ -259,6 +259,9 @@ int main(int argc, char** argv) {
     while (window->UpdateWindow() && !window->GetKeyboard()->KeyPressed(KeyCodes::ESCAPE)) {
         float dt = window->GetTimer().GetTimeDeltaSeconds();
         controller->Update(dt);
+        window->SetTitle("Gametech frame time:" + std::to_string(1000.0f * dt));
+
+        game->UpdateGame(dt);
 
         if (inMenu) {
 
@@ -274,7 +277,7 @@ int main(int argc, char** argv) {
                 GameMode mode = static_cast<GameMode>(selection);
 
                 if (mode == GameMode::SINGLEPLAYER) {
-                    game->LoadWorldFromFile(9);
+                    game->Start();
                 }
                 else {
                     game->JoinGame(mode == GameMode::HOST_GAME);
@@ -288,6 +291,7 @@ int main(int argc, char** argv) {
                 Debug::Print(currentItem, Vector2(1, 50 + (10 * i)));
             }
         }
+
         else {
             if (!machine.Update(dt)) {
                 inMenu = true;
@@ -296,9 +300,6 @@ int main(int argc, char** argv) {
             //Pause the game->UpdateGame
         }
 
-        window->SetTitle("Gametech frame time:" + std::to_string(1000.0f * dt));
-
-        game->UpdateGame(dt);
 
         renderer->drawFrame(dt);
 

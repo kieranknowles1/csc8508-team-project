@@ -200,7 +200,7 @@ namespace Packet {
 
 #pragma region StartGamePacketHandler
     void StartGamePacketHandler::Handle(const std::shared_ptr<Packet> packet) {
-    
+        TutorialGame::Start();
     }
 
     std::shared_ptr<Packet> StartGamePacketHandler::Translate(const ENetEvent* event) const {
@@ -208,7 +208,34 @@ namespace Packet {
     }
 
     ENetPacket* StartGamePacketHandler::ToENetPacket(const std::shared_ptr<Packet> packet) const {
-        return nullptr;
+        char* buffer = new char[
+            sizeof(Type),
+            sizeof(uint8_t),
+            sizeof(uint32_t),
+            sizeof(int)
+        ];
+        
+        AssignHostPacket assignHostPacket = (*static_cast<AssignHostPacket*>(packet.get()));
+        size_t offset = 0;
+
+        Type type = assignHostPacket.GetType();
+        memcpy(buffer, &type, sizeof(Type));
+        offset = offset + sizeof(Type);
+
+        uint8_t channel = assignHostPacket.GetChannel();
+        memcpy(buffer + offset, &channel, sizeof(uint8_t));
+        offset = offset + sizeof(uint8_t);
+
+        uint32_t sequenceNumber = assignHostPacket.GetSequenceNumber();
+        memcpy(buffer + offset, &sequenceNumber, sizeof(uint32_t));
+        offset = offset + sizeof(uint32_t);
+
+        int packetFlags = 0;
+        if (channel == static_cast<int>(Channel::RELIABLE)) packetFlags = ENET_PACKET_FLAG_RELIABLE;
+        else if (channel == static_cast<int>(Channel::UNSEQUENCED)) packetFlags = ENET_PACKET_FLAG_UNSEQUENCED;
+
+        ENetPacket* enetPacket = enet_packet_create(buffer, offset, packetFlags);
+        return enetPacket;
     }
 #pragma endregion StartGamePacketHandler
 
@@ -288,11 +315,13 @@ namespace Packet {
             TutorialGame::SetUser(userInfo->GetUser());
             break;
         case LobbyAction::JOIN:
-            lobby.value().AddUser(userInfo->GetUser());
+            lobby->AddUser(userInfo->GetUser());
             break;
         case LobbyAction::LEAVE:
-            lobby.value().RemoveUser(userInfo->GetUser());
+            lobby->RemoveUser(userInfo->GetUser());
             break;
+        case LobbyAction::SET_HOST:
+            lobby->SetHost(userInfo->GetUser());
         }
     }
 
@@ -367,6 +396,9 @@ namespace Packet {
         
         std::shared_ptr<UserInfoPacket> infoPacket = std::make_shared<UserInfoPacket>(newUser, LobbyAction::CREATE);
         TutorialGame::GetServerInstance()->Send(infoPacket, request->GetPeer());
+
+        std::shared_ptr<UserInfoPacket> hostPacket = std::make_shared<UserInfoPacket>(TutorialGame::GetUser().value(), LobbyAction::SET_HOST);
+        TutorialGame::GetServerInstance()->Send(hostPacket, request->GetPeer());
 
         // Insert into host lobby. Only server creator (host) receives Request packets.
         TutorialGame::GetLobby()->AddUser(newUser);

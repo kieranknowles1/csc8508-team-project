@@ -30,6 +30,12 @@ namespace NCL {
             JOIN_GAME
         };
 
+        enum class GameState {
+            IDLE,
+            ACTIVE
+        };
+
+
         class TutorialGame {
         private:
             static TutorialGame* instance;
@@ -46,6 +52,10 @@ namespace NCL {
             ResourceManager* GetResourceManager() {
                 return resourceManager.get();
             }
+
+            static void Start();
+
+
             /**
              * @brief Get the Network Instance of the Server.
              * @return 
@@ -131,6 +141,9 @@ namespace NCL {
              * @param address ENetAddress of the servers location.
              */
             void ConnectToServer(ENetAddress& address);
+
+            void StartMultiplayerGame();
+
             void CreateLocal();
             void InitPacketHandlers();
             void ExecuteIncomingPackets();
@@ -223,6 +236,7 @@ namespace NCL {
             inline static std::optional<Lobbies::User> user = std::optional<Lobbies::User>();
             inline static int USER_ID = 0;
 
+            GameState state = GameState::IDLE;
         };
     }
 }

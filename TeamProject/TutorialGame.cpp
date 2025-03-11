@@ -123,7 +123,20 @@ void TutorialGame::UpdateGame(float dt) {
     if (showProfiling) {
         profiler.printTimes();
     }
-    
+
+    if (state == GameState::IDLE) {
+        if (user.has_value() && lobby.has_value()) {
+            if (lobby->IsHost(user.value())) {
+                Debug::Print("Start Game <", Vector2(5, 80));
+                if (controller->GetDigital(Controller::DigitalControl::MenuConfirm)) {
+                    StartMultiplayerGame();
+                    state = GameState::ACTIVE;
+                }
+            }
+            Debug::Print("Connected: " + std::to_string(lobby->GetConnectedUsers().size()), Vector2(70, 80));
+        }
+    }
+
     //post processing time variable effect:
     pulse += dt;
     renderer->SetVignettePulse(pulse);
@@ -626,6 +639,9 @@ void TutorialGame::InitPacketHandlers() {
 
     Packet::UserInfoPacketHandler* infoHandler = new Packet::UserInfoPacketHandler();
     Packet::PacketRegister::Register(infoHandler);
+
+    Packet::StartGamePacketHandler* startGameHandler = new Packet::StartGamePacketHandler();
+    Packet::PacketRegister::Register(startGameHandler);
 }
 
 
@@ -647,5 +663,18 @@ void TutorialGame::JoinGame(bool host) {
     else {
         user.emplace(GenerateUserID());
         lobby->AddUser(user.value());
+        lobby->SetHost(user.value());
     }
+}
+
+
+void TutorialGame::StartMultiplayerGame() {
+    std::shared_ptr<Packet::StartGamePacket> startGame = std::make_shared<Packet::StartGamePacket>();
+    server->Broadcast(startGame);
+    Start();
+}
+
+
+void TutorialGame::Start() {
+    instance->LoadWorldFromFile(9);
 }
