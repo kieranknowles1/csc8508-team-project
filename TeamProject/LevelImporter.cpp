@@ -1,5 +1,6 @@
 #include "LevelImporter.h"
 #include "PointLight.h"
+#include "Respawn.h"
 #include <nlohmann/json.hpp>
 
 using namespace NCL;
@@ -188,7 +189,6 @@ void LevelImporter::HandleTypes(GameObject* obj) {
         obj->GetRenderObject()->SetNormal(resourceManager->getTextures().get("ground_0031_normal_opengl_1k.png"));
         break;
     case GameObject::Type::PointLight:
-       
         obj->GetRenderObject()->SetDefaultTexture(nullptr);
         obj->GetRenderObject()->SetNormal(nullptr);
         world->AddPointLight(new PointLight(obj->GetPhysicsObject()->GetRigidBody()->getWorldTransform().getOrigin(), 850,1, colourLight));
@@ -197,6 +197,14 @@ void LevelImporter::HandleTypes(GameObject* obj) {
         obj->GetRenderObject()->SetColour(colourLight);
         lightCount++;
         break;
+    case GameObject::Type::RespawnPoint:
+    {
+        btMatrix3x3 rotationMatrixCam(obj->GetTransform().getRotation());
+        btVector3 upwards = rotationMatrixCam * btVector3(0, 1, 0); // Apply rotation to the offset
+        RespawnPoint* respawnPoint = new RespawnPoint(obj->GetTransform().getOrigin(),upwards);
+        Respawn::GetInstance()->InsertRespawn(respawnPoint);
+        break;
+    }
 
     default:
         break;

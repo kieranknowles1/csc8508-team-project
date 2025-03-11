@@ -45,7 +45,6 @@ void PlayerController::UpdateMovement(float dt) {
         inAirTime -= dt;
     }
     if ((isSliding||slideTransition) && !isCrouching) return;
-
     RotationCalculations();
     CameraMovement();
     GroundNormalCalculations();
@@ -58,25 +57,6 @@ void PlayerController::UpdateMovement(float dt) {
     rb->activate();
 }
 
-
-//attaches gun to the camera position/rotation
-void PlayerController::SetGunTransform() {
-    float pitchRadians = Maths::DegreesToRadians(camera->GetPitch());
-    float yawRadians = Maths::DegreesToRadians(camera->GetYaw());
-    btQuaternion yawQuat(btVector3(0, 1, 0), yawRadians);
-    btQuaternion pitchQuat(btVector3(1, 0, 0), pitchRadians);
-    btQuaternion gunRotation = camRotOffset * yawQuat * pitchQuat; // Yaw first, then pitch
-
-    btMatrix3x3 rotationMatrixCam(gunRotation);
-    btVector3 adjustedOffset = rotationMatrixCam * gunCameraOffset; // Apply rotation to the offset
-
-    transformGun = gun->GetPhysicsObject()->GetRigidBody()->getWorldTransform();
-    btGunPos = camera->GetPosition() + adjustedOffset; // Offset from camera position
-    transformGun.setOrigin(btGunPos);
-    transformGun.setRotation(gunRotation);
-
-    gun->GetPhysicsObject()->GetRigidBody()->setWorldTransform(transformGun);
-}
 
 void PlayerController::HandleShooting(float dt) {
     if (controller->GetDigital(Controller::DigitalControl::Fire) && shotTimer >= shotCooldown) {
@@ -213,7 +193,7 @@ void PlayerController::HandleSliding(float dt) {
         playerPos += upDirection * std::lerp(isSliding ? cameraHeight : slidingCameraHeight, isSliding ? slidingCameraHeight : cameraHeight, slideFactor);
         if (!thirdPerson) {
             camera->SetPosition(playerPos);
-            SetGunTransform();
+            player->SetGunTransform(camera->GetPitch(), camera->GetYaw(), playerPos);
         }
         //CheckFloor(dt);
         btVector3 pastMovement = rb->getLinearVelocity();
@@ -303,7 +283,7 @@ void PlayerController::CameraMovement() {
     playerCamPos += upDirection * (isCrouching ? std::lerp(cameraHeight, crouchHeight, btMin(currentCrouchingTimer / crouchingTime, 1.0f)) : std::lerp(crouchHeight, cameraHeight, btMin(currentStandingTimer / crouchingTime, 1.0f)));
     if (!slideTransition && !thirdPerson) {
         camera->SetPosition(playerCamPos);
-        SetGunTransform();
+        player->SetGunTransform(camera->GetPitch(), camera->GetYaw(), playerCamPos);
     }
 };
 

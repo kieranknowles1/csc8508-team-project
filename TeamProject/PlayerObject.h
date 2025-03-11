@@ -21,6 +21,9 @@ enum class PlayerState {
 class PlayerObject : public GameObject {
 public:
 
+	inline unsigned int GetPlayerID() const { return playerID; }
+	void SetPlayerID(unsigned intplayerIDIn) {playerID = intplayerIDIn; }
+
 	void Update(float dt) override;
 
 	void OnCollisionEnter(const CollisionInfo& collisionInfo) override;
@@ -40,6 +43,24 @@ public:
 		upDirection = target;
 		targetWorldRotation = target;
 		oldWorldRotation = target;
+		btVector3 worldUp(0, 1, 0);
+
+		if (upDirection.fuzzyZero() || upDirection == worldUp) {
+			targetcamRotOffset = btQuaternion::getIdentity();
+		}
+		else if (upDirection == -worldUp) {
+			// Special case: If target is exactly opposite of worldUp
+			// Rotate 180 degrees around any perpendicular axis, e.g., X-axis (1,0,0)
+			targetcamRotOffset = btQuaternion(btVector3(1, 0, 0), SIMD_PI);
+		}
+		else {
+			// General case: Compute quaternion using cross product & dot product
+			btVector3 axis = worldUp.cross(upDirection);
+			if (axis.fuzzyZero()) axis = btVector3(1, 0, 0); // Fallback axis if needed
+			targetcamRotOffset = btQuaternion(axis.normalized(), std::acos(worldUp.dot(upDirection)));
+		}
+		oldcamRotOffset = targetcamRotOffset;
+		camRotOffset = targetcamRotOffset;
 	}
 
 	btVector3 getRightDirection() {
@@ -90,6 +111,9 @@ public:
 	}
 	float health = 100.0f;
 
+	void setGun(GameObject* gunIn) { gun = gunIn; }
+	void SetGunTransform(float pitch, float yaw, btVector3 camPos);
+
 private:
 
 	//Player Variables
@@ -97,6 +121,7 @@ private:
 	float rotateTime = 0.5f;
 	float maxHealth = 100.0f;
 
+	unsigned int playerID;
 	int collided = 0;
 	btVector3 collisionNormal = btVector3(0, 1, 0);
 	btVector3 collisionPoint = btVector3(0, 0, 0);
@@ -114,6 +139,8 @@ private:
 	btVector3 forwardDirection;
 	float rotateTimer = 0.0f;
 	bool rotationChanging = false;
+	btVector3 gunCameraOffset = btVector3(1.3, -0.7, -1.2);
+	GameObject* gun;
 
 
 	btVector3 CalculateRightDirection(btVector3 upDir);

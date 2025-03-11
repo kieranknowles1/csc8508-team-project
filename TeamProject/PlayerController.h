@@ -65,7 +65,7 @@ namespace NCL {
 			float playerSpeed = 80.0f;
 			float jumpHeight = 300.0f;
 			float gravityScale = 300.0f;
-			float cameraHeight = 3.0f;
+			float cameraHeight = 4.5f;
 
 			float sprintMulti = 2.0f;
 			float strafeMulti = 0.65f;
