@@ -15,8 +15,6 @@
 #include "Respawn.h"
 #include "Network/Network.hpp"
 #include "Multiplayer/Lobby.hpp"
-#include <memory>
-#include "Crosshair.h"
 
 #include <btBulletDynamicsCommon.h>
 

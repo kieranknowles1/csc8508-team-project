@@ -135,7 +135,6 @@ void TutorialGame::UpdatePlayer(float dt) {
         }
     }
     resourceManager->update(dt);
-    player->updateGravity(dt);
 }
 
 void TutorialGame::UpdateKeys() {
