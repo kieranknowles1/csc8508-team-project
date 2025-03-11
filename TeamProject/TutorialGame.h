@@ -48,7 +48,7 @@ namespace NCL {
             }
             /**
              * @brief Get the Network Instance of the Server.
-             * @return 
+             * @return
              */
             inline static std::optional<Network>& GetServerInstance() { return server; }
 
@@ -75,7 +75,7 @@ namespace NCL {
             /**
              * @brief Used to automatically increment the userID from received
              * UserInfoPackets.
-             * 
+             *
              * Helps guarantee unique user ID's if in future we allow users to
              * take control of the server.
              */
@@ -202,10 +202,6 @@ namespace NCL {
 
             //AI
             Turret* testTurret = nullptr;
-
-            //Level import
-            LevelImporter* levelImporter;
-            bool loadFromLevel;
 
             NavMesh* navMesh;
             bool navMeshDebug = false;

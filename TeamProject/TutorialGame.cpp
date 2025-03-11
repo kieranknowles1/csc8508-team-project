@@ -35,7 +35,6 @@ TutorialGame::TutorialGame(GameTechRendererInterface* renderer, Controller* cont
     world->GetMainCamera().SetController(controller);
     mainCamera = &world->GetMainCamera();
 
-    loadFromLevel = true;
     resourceManager = std::make_unique<ResourceManager>(renderer);
     new Shoot();
     new Respawn();
@@ -43,7 +42,7 @@ TutorialGame::TutorialGame(GameTechRendererInterface* renderer, Controller* cont
     InitialiseAssets();
     InitCamera();
     InitWorld();
-    
+
 }
 
 /*
@@ -123,7 +122,7 @@ void TutorialGame::UpdateGame(float dt) {
     if (showProfiling) {
         profiler.printTimes();
     }
-    
+
     //post processing time variable effect:
     pulse += dt;
     renderer->SetVignettePulse(pulse);
@@ -321,8 +320,8 @@ void TutorialGame::LoadWorldFromFile(int levelNum) {
     ResetWorld();
     InitWorld();
 
-    levelImporter = new LevelImporter(resourceManager.get(), world.get(), bulletWorld);
-    levelImporter->LoadLevel(levelNum);
+    LevelImporter levelImporter(resourceManager.get(), world.get(), bulletWorld);
+    levelImporter.LoadLevel(levelNum);
 
     RespawnPoint* respawnPoint = Respawn::GetInstance()->GetRespawn(0);
     player = InitPlayer(respawnPoint->position,respawnPoint->orientation);
@@ -375,7 +374,7 @@ PlayerObject* TutorialGame::InitPlayer(btVector3 position, btVector3 upDir) {
     newPlayer->GetPhysicsObject()->GetRigidBody()->setAngularFactor(0);
     newPlayer->GetPhysicsObject()->GetRigidBody()->setFriction(0.0f);
     newPlayer->GetPhysicsObject()->GetRigidBody()->setDamping(0.0, 0);
-  
+
     newPlayer->GetRenderObject()->SetColour(Vector4(playerColour));
     newPlayer->setUpDirection(upDir);
     return newPlayer;
