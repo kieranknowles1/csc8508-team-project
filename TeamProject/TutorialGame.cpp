@@ -303,11 +303,11 @@ void TutorialGame::LoadWorldFromFile(int levelNum) {
     Shoot::GetInstance()->Initialise(bulletWorld,resourceManager.get(), world.get(), renderer->GetDecalSystem());
     Shoot::GetInstance()->InitShotMasks(player, gun);
 
-	navMeshDebug = false;
+	navMeshDebug = true;
 	if (navMeshDebug) {
 		freeCam = true;
 		navMesh = new NavMesh(bulletWorld);
-		navMesh->LoadFromFile("Assets/Meshes/NavMeshes/initiallevel.navmesh");
+		navMesh->LoadFromFile("Assets/Meshes/NavMeshes/bottom.navmesh");
 		AddTurretToWorld();
 		AddWandererToWorld();
 	}
