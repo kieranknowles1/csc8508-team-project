@@ -13,8 +13,6 @@
 
 #include "Window.h"
 
-#include <chrono>
-
 using namespace NCL;
 using namespace CSC8503;
 
@@ -60,7 +58,7 @@ void TutorialGame::InitialiseAssets() {
 TutorialGame::~TutorialGame()	{
     instance = nullptr;
     DestroyBullet();
-    //audioEngine.Shutdown();
+    audioEngine.Shutdown();
 
     if (server.has_value()) server->Close();
 
@@ -108,7 +106,7 @@ void TutorialGame::UpdateGame(float dt) {
     if (playerController) UpdatePlayer(dt);
 
     profiler.startSection("Update Audio");
-    //audioEngine.Update(&world->GetMainCamera());
+    audioEngine.Update(&world->GetMainCamera());
 
     clearGraveyard();
     profiler.startSection("Prepare Render");
@@ -130,7 +128,6 @@ void TutorialGame::UpdateGame(float dt) {
                 Debug::Print("Start Game <", Vector2(5, 80));
                 if (controller->GetDigital(Controller::DigitalControl::MenuConfirm)) {
                     StartMultiplayerGame();
-                    state = GameState::ACTIVE;
                 }
             }
             Debug::Print("Connected: " + std::to_string(lobby->GetConnectedUsers().size()), Vector2(70, 80));
@@ -345,6 +342,7 @@ void TutorialGame::LoadWorldFromFile(int levelNum) {
 }
 
 void TutorialGame::ResetWorld() {
+    audioEngine.Shutdown();
     DestroyBullet();
     world->ClearAndErase();
     renderer->GetDecalSystem().ClearDecalsFromWorld();
@@ -352,7 +350,7 @@ void TutorialGame::ResetWorld() {
 
 void TutorialGame::InitWorld() {
     InitBullet();
-    //audioEngine.Init();
+    audioEngine.Init();
 
     navMeshDebug = false;
     if (navMeshDebug) {
@@ -660,6 +658,8 @@ void TutorialGame::StartMultiplayerGame() {
 
 
 void TutorialGame::Start() {
+    if (server.has_value()) instance->state = GameState::ACTIVE;
+
     instance->LoadWorldFromFile(9);
     
     if (!user.has_value()) user.emplace(GenerateUserID());
