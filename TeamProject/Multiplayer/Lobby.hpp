@@ -132,6 +132,17 @@ namespace Lobbies {
          */
         inline bool SetUserColor(User user, TeamColor color) { return m_userColors[static_cast<uint8_t>(color)].SetUser(user); }
 
+        /**
+         * @brief The number of players in the lobby.
+         */
+        inline std::vector<User> GetConnectedUsers() { 
+            std::vector<User> users;
+            for (std::pair<unsigned int, User> record : m_players) {
+                users.push_back(record.second);
+            }
+            return users;
+        }
+
     private:
         std::optional<User> m_hostUser;
         const int m_maxSize;
