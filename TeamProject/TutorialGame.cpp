@@ -364,8 +364,7 @@ void TutorialGame::InitWorld() {
 }
 
 PlayerObject* TutorialGame::InitPlayer(btVector3 position, btVector3 upDir) {
-    PlayerObject* newPlayer = new PlayerObject();
-    newPlayer = AddPlayerCapsuleToWorld(position, 7.0f, 3.5f, 10.0f);
+    PlayerObject* newPlayer = AddPlayerCapsuleToWorld(position, 7.0f, 3.5f, 10.0f);
     // Keep us from clipping when falling too fast
     newPlayer->GetPhysicsObject()->GetRigidBody()->setCcdMotionThreshold(1.0f);
     newPlayer->GetPhysicsObject()->GetRigidBody()->setCcdSweptSphereRadius(0.4f);
