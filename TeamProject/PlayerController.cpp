@@ -80,6 +80,7 @@ void PlayerController::SetGunTransform() {
 void PlayerController::HandleShooting(float dt) {
     if (controller->GetDigital(Controller::DigitalControl::Fire) && shotTimer >= shotCooldown) {
         FireShot();
+        crosshair->fire();
         shotTimer = 0.0f;
     }
     else {

@@ -18,6 +18,8 @@ public:
     void render(std::vector<UiSprite>& sprites) override;
     void Animate(float dt);
 
+    void fire();
+
 private:
     void UpdateCrosshairData();
 
@@ -31,4 +33,5 @@ private:
     // Pulse animation
     float pulse = 0.0f;
     std::array<CrosshairLine, 4> lines;
+    bool fired = false;
 };

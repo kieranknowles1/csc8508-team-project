@@ -13,21 +13,27 @@ void Crosshair::render(std::vector<UiSprite>& sprites) {
     }
 }
 
+
+void Crosshair::fire() { fired = false; }
 void Crosshair::Animate(float dt)
 {
-    pulse += dt;
+ 
+    if (!fired) {
+        pulse += dt;
+    }
     if (pulse > 0.2f) {
         pulse = 0.0f;
+        fired = true;
     }
 
 
 
     // Animate the crosshair by setting each line's length to pulse
     // This will make the crosshair lines grow and shrink
-    lines[0].position.x = screenCenter.x + gapSize + (pulse * 0.01f);
-    lines[1].position.x = screenCenter.x - gapSize - (pulse * 0.01f);
-    lines[2].position.y = screenCenter.y - gapSize - (pulse * 0.01f);
-    lines[3].position.y = screenCenter.y + gapSize + (pulse * 0.01f);
+    lines[0].position.x = screenCenter.x + gapSize + (pulse * 0.03f);
+    lines[1].position.x = screenCenter.x - gapSize - (pulse * 0.03f);
+    lines[2].position.y = screenCenter.y - gapSize - (pulse * 0.03f);
+    lines[3].position.y = screenCenter.y + gapSize + (pulse * 0.03f);
 }
 
 void Crosshair::UpdateCrosshairData()

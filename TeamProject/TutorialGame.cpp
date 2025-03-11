@@ -302,8 +302,9 @@ void TutorialGame::LoadWorldFromFile(int levelNum) {
 
     levelImporter = new LevelImporter(resourceManager.get(), world.get(), bulletWorld);
     levelImporter->LoadLevel(levelNum);
-    InitPlayer();
     InitUI();
+    InitPlayer();
+
     crosshair->SetActive(true);
 
     Shoot::GetInstance()->Initialise(bulletWorld,resourceManager.get(), world.get(), renderer->GetDecalSystem());
@@ -361,7 +362,7 @@ void TutorialGame::InitPlayer() {
     player->GetPhysicsObject()->GetRigidBody()->setFriction(0.0f);
     player->GetPhysicsObject()->GetRigidBody()->setDamping(0.0, 0);
     gun = AddCubeToWorld(Vector3(10, 2, 20), Vector3(0.6, 0.6, 1.6), 0, false);
-    playerController = new PlayerController(player, gun, controller, mainCamera, bulletWorld);
+    playerController = new PlayerController(player, gun, controller, mainCamera, bulletWorld, crosshair.get());
     player->GetRenderObject()->SetColour(Vector4(playerColour));
 }
 
