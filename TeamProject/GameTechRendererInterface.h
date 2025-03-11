@@ -34,6 +34,7 @@ namespace NCL::CSC8503 {
     class UiElement {
     public:
         virtual void render(std::vector<UiSprite>& sprites) = 0;
+        virtual void Animate(float dt) = 0;
 
         bool IsActive() const {
             return enabled;

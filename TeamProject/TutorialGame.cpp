@@ -37,7 +37,7 @@ TutorialGame::TutorialGame(GameTechRendererInterface* renderer, Controller* cont
     InitialiseAssets();
     InitCamera();
     InitWorld();
-    InitUI();
+    
 }
 
 /*
@@ -111,7 +111,6 @@ void TutorialGame::UpdateGame(float dt) {
     if (showProfiling) {
         profiler.printTimes();
     }
-
     
     //post processing time variable effect:
     pulse += dt;
@@ -135,6 +134,10 @@ void TutorialGame::UpdatePlayer(float dt) {
     }
     resourceManager->update(dt);
     player->updateGravity(dt);
+
+    if (crosshair) {
+        crosshair->Animate(dt);
+    }
 }
 
 void TutorialGame::UpdateKeys() {
@@ -300,6 +303,7 @@ void TutorialGame::LoadWorldFromFile(int levelNum) {
     levelImporter = new LevelImporter(resourceManager.get(), world.get(), bulletWorld);
     levelImporter->LoadLevel(levelNum);
     InitPlayer();
+    InitUI();
     crosshair->SetActive(true);
 
     Shoot::GetInstance()->Initialise(bulletWorld,resourceManager.get(), world.get(), renderer->GetDecalSystem());
