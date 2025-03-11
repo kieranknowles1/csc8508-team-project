@@ -209,9 +209,9 @@ namespace Packet {
 
     ENetPacket* StartGamePacketHandler::ToENetPacket(const std::shared_ptr<Packet> packet) const {
         char* buffer = new char[
-            sizeof(Type),
-            sizeof(uint8_t),
-            sizeof(uint32_t),
+            sizeof(Type) +
+            sizeof(uint8_t) +
+            sizeof(uint32_t) +
             sizeof(int)
         ];
         
@@ -266,9 +266,9 @@ namespace Packet {
 
     ENetPacket* AssignHostPacketHandler::ToENetPacket(const std::shared_ptr<Packet> packet) const {
         char* buffer = new char[
-            sizeof(Type),
-            sizeof(uint8_t),
-            sizeof(uint32_t),
+            sizeof(Type) +
+            sizeof(uint8_t) +
+            sizeof(uint32_t) +
             sizeof(int)
         ];
         
@@ -348,10 +348,10 @@ namespace Packet {
         UserInfoPacket userInfo = (*static_cast<UserInfoPacket*>(packet.get()));
 
         char* buffer = new char[
-            sizeof(Type),
-            sizeof(uint8_t),
-            sizeof(uint32_t),
-            sizeof(userInfo.GetUser().Size()),
+            sizeof(Type) +
+            sizeof(uint8_t) +
+            sizeof(uint32_t) +
+            sizeof(userInfo.GetUser().Size()) +
             sizeof(uint8_t)
         ];
         size_t offset = 0;
@@ -418,8 +418,8 @@ namespace Packet {
         RequestUserIDPacket request = (*static_cast<RequestUserIDPacket*>(packet.get()));
 
         char* buffer = new char[
-            sizeof(Type),
-            sizeof(uint8_t),
+            sizeof(Type) +
+            sizeof(uint8_t) +
             sizeof(uint32_t)
         ];
         size_t offset = 0;
