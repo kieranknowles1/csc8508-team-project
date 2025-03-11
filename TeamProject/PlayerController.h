@@ -93,7 +93,7 @@ namespace NCL {
 			float rotateTime = 0.5f;
 
 			//Special Types Variables
-			float bouncePadHeight = 5000.0f;
+			float bouncePadHeight = 7000.0f;
 
 
 			GameTechRendererInterface* renderer;
