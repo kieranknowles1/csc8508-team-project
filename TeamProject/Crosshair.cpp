@@ -11,6 +11,10 @@ void Crosshair::render(std::vector<UiSprite>& sprites) {
     for (const auto& line : lines) {
         sprites.push_back({ line.position, line.size, crosshairColor });
     }
+
+    // Add a small white point at the center of the crosshair
+    Vector2 dotSize = Vector2(0.003f, 0.003f);
+    sprites.push_back({ screenCenter, dotSize, crosshairColor });
 }
 
 

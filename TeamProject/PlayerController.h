@@ -110,7 +110,6 @@ namespace NCL {
 			btDiscreteDynamicsWorld* bulletWorld;
 			PlayerObject* player;
 			GameObject* gun;
-			GameTechRendererInterface* renderer;
 			const Controller* controller = nullptr;
 			Camera* camera = nullptr;
 			float yaw = 0;
