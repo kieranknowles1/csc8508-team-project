@@ -21,6 +21,9 @@ std::ostream& operator<<(std::ostream& os, const btQuaternion& vec) {
 void PlayerController::Initialise() {
     rb = player->GetPhysicsObject()->GetRigidBody();
     debugDrawer = bulletWorld->getDebugDrawer();
+    crosshair = std::make_unique<Crosshair>();
+    renderer->AddUiElement(crosshair.get());
+    crosshair->SetActive(true);
 }
 
 btVector3 GetEulerAngles(btQuaternion quat) {
@@ -35,6 +38,9 @@ void PlayerController::UpdateMovement(float dt) {
     btPlayerPos = transformPlayer.getOrigin();
     GetAllDirections();
     HandleShooting(dt);
+    if (crosshair) {
+        crosshair->Animate(dt);
+    }
     HandleYaw();
     SpecialTypeCalculations();
     HandleSliding(dt);
@@ -61,6 +67,7 @@ void PlayerController::UpdateMovement(float dt) {
 void PlayerController::HandleShooting(float dt) {
     if (controller->GetDigital(Controller::DigitalControl::Fire) && shotTimer >= shotCooldown) {
         FireShot();
+        crosshair->fire();
         shotTimer = 0.0f;
     }
     else {

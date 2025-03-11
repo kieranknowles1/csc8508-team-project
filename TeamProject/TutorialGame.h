@@ -222,6 +222,7 @@ namespace NCL {
             inline static std::optional<Lobbies::Lobby> lobby = std::optional<Lobbies::Lobby>();
             inline static std::optional<Lobbies::User> user = std::optional<Lobbies::User>();
             inline static int USER_ID = 0;
+
         };
     }
 }

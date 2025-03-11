@@ -50,6 +50,8 @@ set(SOURCES
     Paintball.h
     Paintball.cpp
     PointLight.h
+    Crosshair.h
+    Crosshair.cpp
     Respawn.h
 )
 

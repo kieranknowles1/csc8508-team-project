@@ -43,6 +43,7 @@ TutorialGame::TutorialGame(GameTechRendererInterface* renderer, Controller* cont
     InitialiseAssets();
     InitCamera();
     InitWorld();
+    
 }
 
 /*
@@ -122,7 +123,8 @@ void TutorialGame::UpdateGame(float dt) {
     if (showProfiling) {
         profiler.printTimes();
     }
-
+    
+    //post processing time variable effect:
     pulse += dt;
     renderer->SetVignettePulse(pulse);
 }
@@ -333,6 +335,8 @@ void TutorialGame::LoadWorldFromFile(int levelNum) {
         newPlayer->SetPlayerID(i);
     }
 
+
+
     Shoot::GetInstance()->Initialise(bulletWorld,resourceManager.get(), world.get(), renderer->GetDecalSystem());
     Shoot::GetInstance()->InitShotMasks(player, gun);
 
@@ -361,7 +365,6 @@ void TutorialGame::InitWorld() {
     }
 
 }
-
 
 PlayerObject* TutorialGame::InitPlayer(btVector3 position, btVector3 upDir) {
     PlayerObject* newPlayer = new PlayerObject();
