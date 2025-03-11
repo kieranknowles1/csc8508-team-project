@@ -131,6 +131,9 @@ namespace NCL {
              * @param address ENetAddress of the servers location.
              */
             void ConnectToServer(ENetAddress& address);
+            void CreateLocal();
+            void InitPacketHandlers();
+            void ExecuteIncomingPackets();
 
 
 

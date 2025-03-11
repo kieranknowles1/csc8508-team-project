@@ -73,6 +73,10 @@ static bool BulletRaycast(btDynamicsWorld* world, const btVector3& start, const 
 
 void TutorialGame::UpdateGame(float dt) {
     profiler.beginFrame();
+
+    profiler.startSection("Network Updates.");
+    ExecuteIncomingPackets();
+
     profiler.startSection("Physics");
     // Old
     //int substeps = std::floor(dt / PHYSICS_PERIOD);
@@ -119,7 +123,13 @@ void TutorialGame::UpdateGame(float dt) {
         profiler.printTimes();
     }
 
-    // Rudementry packet updating.
+    //post processing time variable effect:
+    pulse += dt;
+    renderer->SetVignettePulse(pulse);
+}
+
+
+void TutorialGame::ExecuteIncomingPackets() {
     bool isPackets = true;
     while (isPackets && server.has_value()) {
         std::shared_ptr<Packet::Packet> packet = server->Fetch();
@@ -130,13 +140,6 @@ void TutorialGame::UpdateGame(float dt) {
             isPackets = false;
         }
     }
-    if (lobby.has_value()) {
-        std::cout << "Num Players in lobby: " << lobby->GetConnectedUsers().size() << std::endl;
-    }
-    
-    //post processing time variable effect:
-    pulse += dt;
-    renderer->SetVignettePulse(pulse);
 }
 
 void TutorialGame::UpdatePlayer(float dt) {
@@ -357,14 +360,6 @@ void TutorialGame::InitWorld() {
         navMesh = new NavMesh(bulletWorld);
         navMesh->LoadFromFile("Assets/Meshes/NavMeshes/initiallevel.navmesh");
     }
-}
-
-void TutorialGame::InitNetwork(bool host) {
-}
-
-
-void TutorialGame::ConnectToServer(ENetAddress& address) {
-    // FIXME
 }
 
 
@@ -600,35 +595,48 @@ GameObject* TutorialGame::AddSphereToWorld(const Vector3& position, float radius
 }
 
 
-void TutorialGame::JoinGame(bool host) {
+void TutorialGame::CreateLocal() {
     lobby.emplace(MAX_PLAYERS);
+}
 
-    std::cout << "Determining Address...\n";
+
+void TutorialGame::InitNetwork(bool host) {
     ENetAddress address;
     enet_address_set_host(&address, host ? "0.0.0.0" : "127.0.0.1");
     address.host = ENET_HOST_ANY;
     address.port = host ? DEFAULT_PORT : 0;
 
-    std::cout << "Starting server...\n";
     server.emplace(&address, MAX_PLAYERS);
     server.value().Start();
+}
 
-    std::cout << "Creating packet handlers...\n";
+
+void TutorialGame::ConnectToServer(ENetAddress& address) {
+    server->ConnectTo(&address);
+    while (server->GetConnectionCount() < 1) continue;
+}
+
+
+void TutorialGame::InitPacketHandlers() {
     Packet::RequestUserIDPacketHandler* requestHandler = new Packet::RequestUserIDPacketHandler();
     Packet::PacketRegister::Register(requestHandler);
 
     Packet::UserInfoPacketHandler* infoHandler = new Packet::UserInfoPacketHandler();
     Packet::PacketRegister::Register(infoHandler);
+}
+
+
+void TutorialGame::JoinGame(bool host) {
+    CreateLocal();
+    InitPacketHandlers();
+    InitNetwork(host);
 
     if (!host) {
         ENetAddress dest;
         enet_address_set_host(&dest, "127.0.0.1");
         dest.port = DEFAULT_PORT;
 
-        server->ConnectTo(&dest);
-
-        using namespace std::chrono_literals;
-        std::this_thread::sleep_for(1000ms);
+        ConnectToServer(dest);
 
         std::shared_ptr<Packet::RequestUserIDPacket> request = std::make_shared<Packet::RequestUserIDPacket>(nullptr);
         server.value().Broadcast(request);
