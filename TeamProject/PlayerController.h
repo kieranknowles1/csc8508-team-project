@@ -78,7 +78,7 @@ namespace NCL {
 
 			float crouchingTime = 0.3f;
 			float crouchMulti = 0.4f;
-			float crouchHeight = 0.0f;
+			float crouchHeight = -1.0f;
 
 			float slidingTime = 0.25f;
 			float slidingAngle = 75.0f;
@@ -115,7 +115,7 @@ namespace NCL {
 			float yaw = 0;
 			bool crouchTransition = false;
 			float currentHeight;
-			float standingHeight = 4.0f;
+			float standingHeight = 6.5f;
 			float crouchingHeight = 2.0f;
 			float currentCrouchingTimer=0;
 			float currentStandingTimer=10.0f;
