@@ -623,6 +623,15 @@ void GameTechAGCRenderer::UpdateObjectList() {
 		currentFrame->data.WriteData(state);
 	}
 	currentFrame->ui.end(currentFrame);
+
+	currentFrame->lights.begin(currentFrame);
+	for (auto& light : lights) {
+		LightState state;
+		state.color = light->colour;
+		state.position = light->worldPosition;
+		state.radius = light->radius;
+	}
+	currentFrame->lights.end(currentFrame);
 }
 
 template<typename T>

@@ -117,6 +117,7 @@ namespace NCL {
 
 				UniformArray<ObjectState> objects;
 				UniformArray<UiState> ui;
+				UniformArray<LightState> lights;
 
 				sce::Agc::Core::Buffer constantBuffer;
 

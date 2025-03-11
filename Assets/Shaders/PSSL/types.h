@@ -29,6 +29,12 @@ struct UiState {
     int texture = NULLTEX;
 };
 
+struct LightState {
+	float radius;
+	float3 position;
+	float4 color;
+};
+
 struct VS_OUTPUT
 {
 	float4 Position SLOT(S_POSITION);
