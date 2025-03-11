@@ -33,7 +33,7 @@ TutorialGame::TutorialGame(GameTechRendererInterface* renderer, Controller* cont
 
     loadFromLevel = true;
     resourceManager = std::make_unique<ResourceManager>(renderer);
-    new Shoot();
+    new Shoot(); //Shoot and Respawn have new before them but are not being deleted to my knowledge
     new Respawn();
 
     InitialiseAssets();
