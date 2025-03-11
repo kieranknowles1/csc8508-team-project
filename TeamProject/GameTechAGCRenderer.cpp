@@ -15,7 +15,7 @@ using namespace Rendering;
 using namespace CSC8503;
 using namespace PS5;
 
-const int SHADOW_SIZE		= 8192;
+const Vector2i ShadowSize(8192, 8192);
 const int FRAMES_IN_FLIGHT	= 2;
 
 const int BINDLESS_TEX_COUNT		= 128;
@@ -39,6 +39,13 @@ GameTechAGCRenderer::FrameBuffer GameTechAGCRenderer::createBuffer(const std::st
 	).setMipFilterMode(sce::Agc::Core::Sampler::MipFilterMode::kPoint);
 
 	return buf;
+}
+
+void GameTechAGCRenderer::useViewPort(sce::Agc::Core::BasicContext* context, Vector2i size) const
+{
+	sce::Agc::CxViewport viewPort;
+	sce::Agc::Core::setViewport(&viewPort, size.x, size.y, 0, 0, -1.0f, 1.0f);
+	context->m_sb.setState(viewPort);
 }
 
 GameTechAGCRenderer::GameTechAGCRenderer(Window* window) : AGCRenderer(window), GameTechRendererInterface(window) {
@@ -102,7 +109,7 @@ GameTechAGCRenderer::GameTechAGCRenderer(Window* window) : AGCRenderer(window), 
 
 	Debug::CreateDebugFont("PressStart2P.fnt", *LoadTexture("PressStart2P.png"));
 
-	shadowTarget	= CreateDepthBufferTarget(SHADOW_SIZE, SHADOW_SIZE);
+	shadowTarget	= CreateDepthBufferTarget(ShadowSize.x, ShadowSize.y);
 	shadowMap		= CreateFrameBufferTextureSlot("Shadowmap");
 
 	sceneBuffer = createBuffer("Scene", FrameBuffer::Slot::Color);
@@ -272,10 +279,7 @@ void GameTechAGCRenderer::DrawObjects() {
 
 void GameTechAGCRenderer::SkyboxPass() {
 	frameContext->setShaders(nullptr, skyboxVertexShader->GetAGCPointer(), skyboxPixelShader->GetAGCPointer(), sce::Agc::UcPrimitiveType::Type::kTriList);
-
-	sce::Agc::CxViewport viewPort;
-	sce::Agc::Core::setViewport(&viewPort, SCREENWIDTH, SCREENHEIGHT, 0, 0, -1.0f, 1.0f);
-	frameContext->m_sb.setState(viewPort);
+	useViewPort(frameContext, ScreenSize);
 
 	sce::Agc::CxRenderTargetMask rtMask = sce::Agc::CxRenderTargetMask().init().setMask(0, 0xFF);
 	frameContext->m_sb.setState(rtMask);
@@ -307,9 +311,7 @@ void GameTechAGCRenderer::ShadowmapPass() {
 
 	frameContext->setShaders(nullptr, shadowVertexShader->GetAGCPointer(), shadowPixelShader->GetAGCPointer(), sce::Agc::UcPrimitiveType::Type::kTriList);
 
-	sce::Agc::CxViewport viewPort;
-	sce::Agc::Core::setViewport(&viewPort, SHADOW_SIZE, SHADOW_SIZE, 0, 0, -1.0f, 1.0f);
-	frameContext->m_sb.setState(viewPort);
+	useViewPort(frameContext, ShadowSize);
 
 	sce::Agc::CxRenderTargetMask rtMask = sce::Agc::CxRenderTargetMask().init().setMask(0, 0x0);
 	frameContext->m_sb.setState(rtMask);
@@ -346,9 +348,7 @@ void GameTechAGCRenderer::ShadowmapPass() {
 void GameTechAGCRenderer::MainRenderPass() {
 	frameContext->setShaders(nullptr, defaultVertexShader->GetAGCPointer(), defaultPixelShader->GetAGCPointer(), sce::Agc::UcPrimitiveType::Type::kTriList);
 
-	sce::Agc::CxViewport viewPort;
-	sce::Agc::Core::setViewport(&viewPort, SCREENWIDTH, SCREENHEIGHT, 0, 0, -1.0f, 1.0f);
-	frameContext->m_sb.setState(viewPort);
+	useViewPort(frameContext, ScreenSize);
 	frameContext->m_sb.setState(backBuffers[currentSwap].targetMask);
 	frameContext->m_sb.setState(backBuffers[currentSwap].renderTarget);
 
@@ -388,9 +388,7 @@ void GameTechAGCRenderer::MainRenderPass() {
 void GameTechAGCRenderer::UiPass() {
 	frameContext->setShaders(nullptr, uiVertexShader->GetAGCPointer(), uiPixelShader->GetAGCPointer(), sce::Agc::UcPrimitiveType::Type::kTriList);
 
-	sce::Agc::CxViewport viewPort;
-	sce::Agc::Core::setViewport(&viewPort, SCREENWIDTH, SCREENHEIGHT, 0, 0, -1.0f, 1.0f);
-	frameContext->m_sb.setState(viewPort);
+	useViewPort(frameContext, ScreenSize);
 	frameContext->m_sb.setState(backBuffers[currentSwap].targetMask);
 	frameContext->m_sb.setState(backBuffers[currentSwap].renderTarget);
 
@@ -418,9 +416,7 @@ void GameTechAGCRenderer::UiPass() {
 void GameTechAGCRenderer::PostProcessPass()
 {
 	frameContext->setShaders(nullptr, postVertexShader->GetAGCPointer(), postPixelShader->GetAGCPointer(), sce::Agc::UcPrimitiveType::Type::kTriList);
-	sce::Agc::CxViewport viewPort;
-	sce::Agc::Core::setViewport(&viewPort, SCREENWIDTH, SCREENHEIGHT, 0, 0, -1.0f, 1.0f);
-	frameContext->m_sb.setState(viewPort);
+	useViewPort(frameContext, ScreenSize);
 
 	sce::Agc::CxRenderTargetMask rtMask = sce::Agc::CxRenderTargetMask().init().setMask(0, 0xFF);
 	frameContext->m_sb.setState(rtMask);

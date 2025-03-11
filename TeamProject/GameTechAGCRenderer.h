@@ -199,6 +199,9 @@ namespace NCL {
 
 			FrameBuffer createBuffer(const std::string& name, FrameBuffer::Slot slot);
 
+			// Configure a viewport that takes up the requested size
+			void useViewPort(sce::Agc::Core::BasicContext* context, Vector2i size) const;
+
 			FrameBuffer sceneBuffer;
 			FrameBuffer sceneNormalBuffer;
 			FrameBuffer screenBuffer;
