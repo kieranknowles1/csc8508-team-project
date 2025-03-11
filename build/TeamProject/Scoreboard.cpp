@@ -11,7 +11,8 @@ namespace NCL::CSC8503 {
     }
 
     void Scoreboard::SetColor(Lobbies::User user) {
-        players.at(user.GetUserID()).color = TeamColor::GREEN;
+        m_userColors = Lobbies::Lobby::GetUserColors();
+        players.at(user.GetUserID()).color = m_userColors[user.GetUserID()];
     }
 
     void Scoreboard::SetScore() {
@@ -22,7 +23,7 @@ namespace NCL::CSC8503 {
 
     void Scoreboard::UpdateScoreboard() {
         SortPlayers();
-		UpdateTextValues();
+        UpdateTextValues();
     }
 
     void Scoreboard::SortPlayers() {
@@ -51,7 +52,7 @@ namespace NCL::CSC8503 {
 
         Maths::Vector2 boxSize = Maths::Vector2(totalSize.x / columns, totalSize.y / 9);
 
-        AddUIElement({ screenCenter, totalSize, scoreboardColor, nullptr, true });
+        this->renderer->AddUIElement({ screenCenter, totalSize, scoreboardColor, nullptr, true });
 
         for (int row = 0; row < 9; ++row) {
             Maths::Vector2 rowPosition = Vector2(
@@ -60,7 +61,7 @@ namespace NCL::CSC8503 {
             );
 
             // Add row border
-            AddUIElement({ rowPosition, Vector2(totalSize.x, boxSize.y) + Vector2(borderThickness, borderThickness), borderColor, nullptr, true });
+            this->renderer->AddUIElement({ rowPosition, Vector2(totalSize.x, boxSize.y) + Vector2(borderThickness, borderThickness), borderColor, nullptr, true });
 
             for (int col = 0; col < columns; ++col) {
                 Maths::Vector2 position = Vector2(
@@ -69,7 +70,7 @@ namespace NCL::CSC8503 {
                 );
 
                 // Add main box
-                AddUIElement({ position, boxSize, boxColor, nullptr, true });
+                this->renderer->AddUIElement({ position, boxSize, boxColor, nullptr, true });
 
                 // Add text
                 Maths::Vector2 textPosition = Vector2(
@@ -89,12 +90,12 @@ namespace NCL::CSC8503 {
                     else {
                         text = "Score:";
                     }
-                    AddUITextElement({ textPosition, textColor, text, true });
+                    this->renderer->AddUITextElement({ textPosition, textColor, text, true });
                 }
 
                 // Empty row
-                else if (row > players) {
-                    AddUITextElement({ textPosition, textColor, "", true });
+                else if (row > playerCount) {
+                    this->renderer->AddUITextElement({ textPosition, textColor, "", true });
                 }
                 // Data rows
                 else {
@@ -114,12 +115,11 @@ namespace NCL::CSC8503 {
         }
     }
 
-
     void Scoreboard::UpdateTextValues() {
         for (int i = 0; i < players.size() * 3; i += 3) {
-			scoreboardTextElements[i].text = players.at(i).user.GetDisplayName();
-			scoreboardTextElements[i + 1].text = TeamColorToString(players.at(i).color);
-			scoreboardTextElements[i + 2].text = std::to_string(players.at(i).score);
+            scoreboardTextElements[i].text = players.at(i / 3).user.GetDisplayName();
+            scoreboardTextElements[i + 1].text = TeamColorToString(players.at(i / 3).color);
+            scoreboardTextElements[i + 2].text = std::to_string(players.at(i / 3).score);
         }
     }
 }

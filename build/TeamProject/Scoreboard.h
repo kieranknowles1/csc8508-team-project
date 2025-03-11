@@ -5,18 +5,23 @@
 
 #include "Multiplayer/User.hpp"
 #include "GameTechRendererInterface.h"
+#include "Multiplayer/Lobby.hpp"
 
 namespace Lobbies {
 	class User;
+	class UserColor;
 }
+
 namespace NCL::CSC8503 {
 	class GameTechRendererInterface;
 	class Scoreboard {
 	public:
+		Scoreboard(GameTechRendererInterface* renderer) : renderer(renderer) {}
+		
 		struct Player {
 			Lobbies::User user;
 			TeamColor color;
-			int score;
+			int score = 0;
 		};
 
 		struct ScoreboardText {
@@ -53,9 +58,10 @@ namespace NCL::CSC8503 {
 		}
 
 	private:
+		GameTechRendererInterface* renderer;
 		void SortPlayers();
 		void UpdateTextValues();
-
+		std::array<TeamColor, 8> m_userColors;
 		std::vector<ScoreboardText> scoreboardTextElements;
 	};
 }
