@@ -50,10 +50,10 @@ LevelImporter::~LevelImporter() {
 }
 
 void LevelImporter::ClearObjects() {
-    for (auto obj : objects) {
-        delete obj;
-    }
-    objects.clear();
+    //for (auto obj : objects) {
+    //    delete obj;
+    //}
+    //objects.clear();
 }
 
 void LevelImporter::LoadLevel(int level) {

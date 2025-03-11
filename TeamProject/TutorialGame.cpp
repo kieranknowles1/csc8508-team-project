@@ -60,7 +60,7 @@ void TutorialGame::InitialiseAssets() {
 TutorialGame::~TutorialGame()	{
     instance = nullptr;
     DestroyBullet();
-    audioEngine.Shutdown();
+    //audioEngine.Shutdown();
 
     if (server.has_value()) server->Close();
 
@@ -108,7 +108,7 @@ void TutorialGame::UpdateGame(float dt) {
     if (playerController) UpdatePlayer(dt);
 
     profiler.startSection("Update Audio");
-    audioEngine.Update(&world->GetMainCamera());
+    //audioEngine.Update(&world->GetMainCamera());
 
     clearGraveyard();
     profiler.startSection("Prepare Render");
@@ -337,22 +337,6 @@ void TutorialGame::LoadWorldFromFile(int levelNum) {
     levelImporter = new LevelImporter(resourceManager.get(), world.get(), bulletWorld);
     levelImporter->LoadLevel(levelNum);
 
-    RespawnPoint* respawnPoint = Respawn::GetInstance()->GetRespawn(0);
-    player = InitPlayer(respawnPoint->position,respawnPoint->orientation);
-    player->SetPlayerID(0);
-    playerController = new PlayerController(player, gun, controller, mainCamera, bulletWorld,renderer);
-
-    for (int i = 1; i < 8; i++) {
-        RespawnPoint* newRespawnPoint = Respawn::GetInstance()->GetRespawn(i);
-        PlayerObject* newPlayer = InitPlayer(newRespawnPoint->position, newRespawnPoint->orientation);
-        newPlayer->SetPlayerID(i);
-    }
-
-
-
-    Shoot::GetInstance()->Initialise(bulletWorld,resourceManager.get(), world.get(), renderer->GetDecalSystem());
-    Shoot::GetInstance()->InitShotMasks(player, gun);
-
     if (navMeshDebug) {
         AddTurretToWorld();
         AddWandererToWorld();
@@ -368,7 +352,7 @@ void TutorialGame::ResetWorld() {
 
 void TutorialGame::InitWorld() {
     InitBullet();
-    audioEngine.Init();
+    //audioEngine.Init();
 
     navMeshDebug = false;
     if (navMeshDebug) {
@@ -677,4 +661,15 @@ void TutorialGame::StartMultiplayerGame() {
 
 void TutorialGame::Start() {
     instance->LoadWorldFromFile(9);
+    
+    if (!user.has_value()) user.emplace(GenerateUserID());
+
+    RespawnPoint* respawnPoint = Respawn::GetInstance()->GetRespawn(user->GetUserID() - 1);
+    instance->player = instance->InitPlayer(respawnPoint->position,respawnPoint->orientation);
+    instance->player->SetPlayerID(user->GetUserID() - 1);
+
+    instance->playerController = new PlayerController(instance->player, instance->gun, instance->controller, instance->mainCamera, instance->bulletWorld,instance->renderer);
+
+    Shoot::GetInstance()->Initialise(instance->bulletWorld,instance->resourceManager.get(), instance->world.get(), instance->renderer->GetDecalSystem());
+    Shoot::GetInstance()->InitShotMasks(instance->player, instance->gun);
 }
