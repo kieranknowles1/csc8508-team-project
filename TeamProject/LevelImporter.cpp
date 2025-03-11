@@ -51,7 +51,7 @@ LevelImporter::~LevelImporter() {
 
 void LevelImporter::ClearObjects() {
     for (auto obj : objects) {
-        delete obj;
+       delete obj;
     }
     objects.clear();
 }
@@ -110,9 +110,10 @@ void LevelImporter::AddObjectToWorld(ObjectData* data) {
 
 
     // Divide by 2 for half-size
-    btCompoundShape* compoundShape = new btCompoundShape();
+    btCompoundShape* compoundShape = nullptr;
     bool hasCollision = (data->colliderScale != btVector3(0,0,0));
     if (hasCollision) {
+        compoundShape = new btCompoundShape();
         btCollisionShape* boxShape = new btBoxShape(data->colliderScale * scale* data->scale / 2.0f);
         btTransform colliderOffset;
         colliderOffset.setIdentity();
