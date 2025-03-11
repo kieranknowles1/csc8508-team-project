@@ -73,6 +73,11 @@ namespace NCL::CSC8503 {
 			vignettePulse = dt;
 		}
 
+		void SetVignetteIntesnity(float intensityIn) {
+			vignetteIntensity = intensityIn;
+		}
+
+
 		void AddUIElement(const UIElement& element) {
 			uiElements.push_back(element);
 		}
@@ -81,10 +86,14 @@ namespace NCL::CSC8503 {
 		void initUi();
 
 	protected:
-		//adding bools to toggle post processing. Must be accessible from the specific renderer
+		// Post-processing settings
 		bool hdrOn = true;
+
 		bool vignetteOn = false;
 		float vignettePulse = 0;
+		float vignetteIntensity = 0;
+		btVector3 vignetteColour = btVector3(0.05f, 0.0f, 0.0f);
+
 		Window* window;
 		Camera* camera = nullptr;
 		std::vector<UIElement> uiElements;

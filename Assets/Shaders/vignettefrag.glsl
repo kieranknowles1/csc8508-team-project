@@ -5,7 +5,7 @@
 uniform sampler2D diffuseTex;
 uniform vec2 windowSize;
 uniform vec3 effectColour;
-uniform float intensity = 1.0f;
+uniform float vignetteIntensity;
 uniform float time;
 uniform bool vignetteOn = false;
 
@@ -23,6 +23,6 @@ void main(void) {
   }
 
   vec2 ndcPos = gl_FragCoord.xy / windowSize;
-  fragColor.rgb = applyVingette(original, ndcPos, intensity, effectColour, time);
+  fragColor.rgb = applyVingette(original, ndcPos, vignetteIntensity, effectColour, time);
   fragColor.a = 1.0f;
 }
