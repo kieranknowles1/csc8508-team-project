@@ -15,19 +15,23 @@ void Scoreboard::render(std::vector<UiText>& texts) {
 	
 }
 
-void Scoreboard::SetColor() {
-}
-
-void Scoreboard::SetScore() {
-}
-
 void Scoreboard::SortPlayers() {
-	std::sort(players.begin(), players.end(), [](const Player& a, const Player& b) {
-		return a.score > b.score; // Sort in descending order
+	std::vector<std::pair<unsigned int, Player>> playerVector(players.begin(), players.end());
+
+	// Sort the vector based on the player's score in descending order
+	std::sort(playerVector.begin(), playerVector.end(), [](const auto& a, const auto& b) {
+		return a.second.score > b.second.score;
 		});
+
+	// Clear the original map and insert the sorted players back into it
+	players.clear();
+	for (const auto& pair : playerVector) {
+		players.insert(pair);
+	}
 }
 
 void Scoreboard::UpdateScoreboardData() {
+	SortPlayers();
 	Vector2 boxSize = Vector2(scoreboardSize.x/columns, scoreboardSize.y/9);
 	
 	for (int i = 0; i < rows; i++) {
