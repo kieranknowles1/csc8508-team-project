@@ -840,6 +840,17 @@ void GameTechRenderer::RenderPostProcessing() { //gonna try putting edge detecti
 		glBindTexture(GL_TEXTURE_2D, bufferDepthTex);
 		glUniform1i(glGetUniformLocation(edgedetectShader->GetProgramID(), "depthTex"), 1);
 		glUniform2f(glGetUniformLocation(edgedetectShader->GetProgramID(), "windowSize"), windowSize.x, windowSize.y); 
+		glUniform1f(glGetUniformLocation(edgedetectShader->GetProgramID(), "nearPlane"), camera->GetNearPlane());
+		glUniform1f(glGetUniformLocation(edgedetectShader->GetProgramID(), "farPlane"), camera->GetFarPlane());
+		//using the same proj and view matrices from RenderCamera(): 
+		Matrix4 viewMatrix = camera->BuildViewMatrix();
+		Matrix4 projMatrix = camera->BuildProjectionMatrix(hostWindow->GetScreenAspect());
+		Matrix4 invProj = Matrix::Inverse(projMatrix); 
+		Matrix4 invView = Matrix::Inverse(viewMatrix);
+
+		glUniformMatrix4fv(glGetUniformLocation(edgedetectShader->GetProgramID(), "inverseProjMatrix"), 1, false, (float*)&invProj);
+		glUniformMatrix4fv(glGetUniformLocation(edgedetectShader->GetProgramID(), "inverseViewMatrix"), 1, false, (float*)&invView);
+
 		BindMesh(*fullscreenQuad);
 		DrawBoundMesh();
 	    //Vignette post processing:
@@ -860,6 +871,8 @@ void GameTechRenderer::RenderPostProcessing() { //gonna try putting edge detecti
 		glUniform1f(glGetUniformLocation(vignetteShader->GetProgramID(), "intensity"), vignetteIntensity);
 
 		glUniform1f(glGetUniformLocation(vignetteShader->GetProgramID(), "time"), vignettePulse);
+
+
 		BindMesh(*fullscreenQuad); //simply a quad   
 		DrawBoundMesh(); //finished rendering into BTex now, ready to unbind to draw quad straight to screen next:
 		//HDR post processing:
