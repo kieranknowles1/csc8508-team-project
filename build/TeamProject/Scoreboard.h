@@ -1,6 +1,5 @@
 #pragma once
 
-#include <unordered_map>
 #include <Colors.h>
 
 #include "Multiplayer/User.hpp"
@@ -13,6 +12,11 @@ using namespace NCL::Maths;
 struct ScoreboardBoxes {
 	Vector2 position;
 	Vector2 size;
+};
+
+struct ScoreboardText {
+	Vector2 position;
+	std::string text;
 };
 
 struct Player {
@@ -70,6 +74,7 @@ private:
 	Vector2 screenCenter = Vector2(0.5f, 0.5f);
 	Vector2 scoreboardSize = Vector2(0.7f, 0.7f);
 	std::array<ScoreboardBoxes, 27> boxes;
+	std::array<ScoreboardText, 27> Uitexts;
 	std::unordered_map<unsigned int, Player> players;
 	int columns = 3;
 	int rows = 9;

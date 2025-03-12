@@ -32,15 +32,15 @@ namespace NCL::CSC8503 {
 
 	struct UiText {
 		Maths::Vector2 position;
-		Maths::Vector4 color;
 		std::string text;
+		Maths::Vector4 color;
 	};
 
     class UiElement {
     public:
         virtual void render(std::vector<UiSprite>& sprites) = 0;
 		
-		virtual void render(std::vector<UiText>& texts) = 0;
+		virtual void render(std::vector<UiText>& Uitexts) = 0;
         
 		virtual void Animate(float dt) = 0;
 
