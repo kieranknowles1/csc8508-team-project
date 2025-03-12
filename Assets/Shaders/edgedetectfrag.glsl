@@ -51,18 +51,21 @@ vec3 calculateNormal(vec2 texCoord){
 }
 
 
-float thickness = 1.0f;
-vec2 offsets[9] = vec2[] (
-    vec2(-thickness * offset_x,  thickness * offset_y), vec2(0.0,  thickness * offset_y), vec2(thickness * offset_x,  thickness * offset_y),
-    vec2(-thickness * offset_x,  0.0),            vec2(0.0,  0.0),            vec2(thickness * offset_x,  0.0),
-    vec2(-thickness * offset_x, -thickness * offset_y), vec2(0.0, -thickness * offset_y), vec2(thickness * offset_x, -thickness * offset_y)
+
+vec2 offsets[25] = vec2[] (
+    vec2(-2.0 * offset_x,  2.0 * offset_y), vec2(-offset_x,  2.0 * offset_y), vec2(0.0,  2.0 * offset_y), vec2(offset_x,  2.0 * offset_y), vec2(2.0 * offset_x,  2.0 * offset_y),
+    vec2(-2.0 * offset_x,  offset_y),      vec2(-offset_x,  offset_y),      vec2(0.0,  offset_y),      vec2(offset_x,  offset_y),      vec2(2.0 * offset_x,  offset_y),
+    vec2(-2.0 * offset_x,  0.0),           vec2(-offset_x,  0.0),           vec2(0.0,  0.0),           vec2(offset_x,  0.0),           vec2(2.0 * offset_x,  0.0),
+    vec2(-2.0 * offset_x, -offset_y),      vec2(-offset_x, -offset_y),      vec2(0.0, -offset_y),      vec2(offset_x, -offset_y),      vec2(2.0 * offset_x, -offset_y),
+    vec2(-2.0 * offset_x, -2.0 * offset_y), vec2(-offset_x, -2.0 * offset_y), vec2(0.0, -2.0 * offset_y), vec2(offset_x, -2.0 * offset_y), vec2(2.0 * offset_x, -2.0 * offset_y)
 );
+
 
 
 void main(void) {
    vec4 colour = texture(sceneTex, IN.texCoord); //initially just render scene as is ////////
    vec3 normalWorld = calculateNormal(IN.texCoord);
-   for (int i = 0; i < 9; i++) {
+   for (int i = 0; i < 25; i++) {
        vec3 normalWorld2 =calculateNormal(IN.texCoord+offsets[i]); // check surrounding normals
        if(distance(normalWorld,normalWorld2) > 0.9f){ // normals are substantially different
            colour = vec4(0,0,0,1);
