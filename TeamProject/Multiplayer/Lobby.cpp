@@ -27,6 +27,4 @@ namespace Lobbies {
         }
         return total == m_players.size();
     }
-
-
 }

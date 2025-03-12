@@ -17,6 +17,8 @@
 #include "DecalSystem.h"
 #include "Shoot.h"
 #include "Paintball.h"
+#include "Crosshair.h"
+#include <memory>
 
 
 namespace NCL {
@@ -24,12 +26,15 @@ namespace NCL {
 
 		class PlayerController {
 		public:
-			PlayerController(PlayerObject* playerIn, GameObject* gunIn, const Controller* c, Camera* cam, btDiscreteDynamicsWorld* bulletWorldIn) {
+			PlayerController(PlayerObject* playerIn, GameObject* gunIn, const Controller* c, Camera* cam, btDiscreteDynamicsWorld* bulletWorldIn, GameTechRendererInterface* rendererIn) {
 				player = playerIn;
 				gun = gunIn;
 				controller = c;
 				camera = cam;
 				bulletWorld = bulletWorldIn;
+				renderer = rendererIn;
+
+
 				Initialise();
 			}
 			~PlayerController() {};
@@ -64,7 +69,7 @@ namespace NCL {
 			float playerSpeed = 80.0f;
 			float jumpHeight = 300.0f;
 			float gravityScale = 300.0f;
-			float cameraHeight = 3.0f;
+			float cameraHeight = 4.5f;
 
 			float sprintMulti = 2.0f;
 			float strafeMulti = 0.65f;
@@ -73,7 +78,7 @@ namespace NCL {
 
 			float crouchingTime = 0.3f;
 			float crouchMulti = 0.4f;
-			float crouchHeight = 0.0f;
+			float crouchHeight = -1.0f;
 
 			float slidingTime = 0.25f;
 			float slidingAngle = 75.0f;
@@ -82,7 +87,6 @@ namespace NCL {
 
 			//Gun Variables
 			float shotCooldown = 0.075f;
-			float bulletSpeed = 1000.0f;
 			btVector3 gunCameraOffset = btVector3(1.3, -0.7, -1.2);
 
 			//Rotation Variables
@@ -92,6 +96,8 @@ namespace NCL {
 			float bouncePadHeight = 5000.0f;
 
 
+			GameTechRendererInterface* renderer;
+			std::unique_ptr<Crosshair> crosshair;
 			btVector3 upDirection;
 			btVector3 rightDirection;
 			btVector3 forwardDirection;
@@ -109,7 +115,7 @@ namespace NCL {
 			float yaw = 0;
 			bool crouchTransition = false;
 			float currentHeight;
-			float standingHeight = 4.0f;
+			float standingHeight = 6.5f;
 			float crouchingHeight = 2.0f;
 			float currentCrouchingTimer=0;
 			float currentStandingTimer=10.0f;
@@ -157,6 +163,7 @@ namespace NCL {
 			void GroundNormalCalculations();
 			void MovementCalculations(float dt);
 			void HandleJumping();
+			void HandleHurtEffects();
 
 		};
 	};

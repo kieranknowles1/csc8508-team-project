@@ -279,6 +279,14 @@ void GameTechRenderer::RenderFrame() {
 	CombineBuffers();
 	RenderPostProcessing(); 
 	RenderUI();
+
+	glDisable(GL_CULL_FACE); //Todo - text indices are going the wrong way...
+	glDisable(GL_BLEND);
+	glDisable(GL_DEPTH_TEST);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	NewRenderLines();
+	NewRenderTextures();
+	NewRenderText();
 }
 
 void GameTechRenderer::RenderShadowMap() {
@@ -494,7 +502,7 @@ void GameTechRenderer::NewRenderText() {
 		BindTextureToShader(*t, "mainTex", 0);
 	}
 
-	Matrix4 proj = Matrix::Orthographic(0.0f, 1.0f, 1.0f, 0.0f, -1.0f, 1.0f, true);
+	Matrix4 proj = Matrix::Orthographic(0.0f, 100.0f, 100.0f, 0.0f, -1.0f, 1.0f);
 
 	int matSlot = glGetUniformLocation(debugShader->GetProgramID(), "viewProjMatrix");
 	glUniformMatrix4fv(matSlot, 1, false, (float*)proj.array);
@@ -513,7 +521,7 @@ void GameTechRenderer::NewRenderText() {
 	SetDebugStringBufferSizes(frameVertCount);
 
 	for (const auto& s : strings) {
-		float size = 0.25f;
+		float size = 20.0f;
 		Debug::GetDebugFont()->BuildVerticesForString(s.data, s.position, s.colour, size, debugTextPos, debugTextUVs, debugTextColours);
 	}
 
@@ -663,12 +671,7 @@ void GameTechRenderer::RenderUI() {
 	int textureLocation = glGetUniformLocation(uiShader->GetProgramID(), "mainTex");
 
 
-	for (const auto& uiElement : uiElements) {
-		
-		if (!showScoreboard && uiElement.isScoreboard) {
-			continue;
-		}
-		
+	for (const auto& uiElement : frameSprites) {
 		Vector2 pos = uiElement.position;
 		Vector2 size = uiElement.size;
 		Vector4 color = uiElement.color;
@@ -692,17 +695,6 @@ void GameTechRenderer::RenderUI() {
 		// Render UI quad
 		BindMesh(*halfUnitQuad);
 		DrawBoundMesh();
-	}
-
-	for (const auto& UITextElement : uiTextElements) {
-		if (!showScoreboard && UITextElement.isScoreboard) {
-			continue;
-		}
-		
-		Vector2 pos = UITextElement.position;
-		Vector4 color = UITextElement.color;
-		std::string text = UITextElement.text;
-		Debug::Print(text, pos, color);
 	}
 
 	glDisable(GL_BLEND);
@@ -841,14 +833,13 @@ void GameTechRenderer::RenderPostProcessing() {
 	    glDisable(GL_DEPTH_TEST);
 	    UseShader(*vignetteShader);
 	    glUniform1i(glGetUniformLocation(vignetteShader->GetProgramID(), "vignetteOn"), GetVignetteOn());
+		glUniform1f(glGetUniformLocation(vignetteShader->GetProgramID(), "vignetteIntensity"), vignetteIntensity);
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, bufferColourTex); //hdrTex currently holds raw scene
 		glUniform1i(glGetUniformLocation(vignetteShader->GetProgramID(), "diffuseTex"), 0);
 		glUniform2f(glGetUniformLocation(vignetteShader->GetProgramID(), "windowSize"), windowSize.x, windowSize.y);
-		Vector3 VignetteColour = Vector3(0.0, 0.0, 0.0); //different colours appear more intense at a given intensity (green)
-		float vignetteIntensity = 2.0f; //Recommendation: vary Intensity between 0.8 and 3
-		glUniform3fv(glGetUniformLocation(vignetteShader->GetProgramID(), "effectColour"), 1, (float*)&VignetteColour);
-		glUniform1f(glGetUniformLocation(vignetteShader->GetProgramID(), "intensity"), vignetteIntensity);
+		glUniform3fv(glGetUniformLocation(vignetteShader->GetProgramID(), "effectColour"), 1, (float*)&vignetteColour);
+
 
 		glUniform1f(glGetUniformLocation(vignetteShader->GetProgramID(), "time"), vignettePulse);
 		BindMesh(*fullscreenQuad); //simply a quad   
@@ -936,15 +927,6 @@ void GameTechRenderer::DrawScene() { //the basic rendering for the scene, curren
 	BindMesh(*unitQuad);
 	DrawBoundMesh(); 
 
-
-	glDisable(GL_CULL_FACE); //Todo - text indices are going the wrong way...
-	glDisable(GL_BLEND);
-	glDisable(GL_DEPTH_TEST);
-	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-	NewRenderLines();
-	NewRenderTextures();
-	NewRenderText();
-
     /*glDisable(GL_CULL_FACE); //Todo - text indices are going the wrong way...  //before merge conflicts, this line would have come immediately after renderCamera()
     glDisable(GL_BLEND);
     glDisable(GL_DEPTH_TEST);
@@ -1007,11 +989,11 @@ void GameTechRenderer::DrawPointLights() {
 	glUniformMatrix4fv(glGetUniformLocation(pointlightShader->GetProgramID(), "viewMatrix"), 1, false, (float*)&viewMatrix);
 	glUniformMatrix4fv(glGetUniformLocation(pointlightShader->GetProgramID(), "projMatrix"), 1, false, (float*)&projMatrix);
 	BindMesh(*lightSphere);
-
 	for (PointLight* light : lights) {
 		glUniform3fv(glGetUniformLocation(pointlightShader->GetProgramID(), "lightPos"), 1, (float*)&light->worldPosition);
 		glUniform4fv(glGetUniformLocation(pointlightShader->GetProgramID(), "lightColour"), 1, (float*)&light->colour);
 		glUniform1f(glGetUniformLocation(pointlightShader->GetProgramID(), "lightRadius"), light->radius);
+		glUniform1f(glGetUniformLocation(pointlightShader->GetProgramID(), "lightIntensity"), light->intensity);
 		DrawBoundMesh();
 	};
 

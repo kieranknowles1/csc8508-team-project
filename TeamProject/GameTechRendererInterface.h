@@ -22,29 +22,31 @@ namespace NCL {
 namespace NCL::CSC8503 {
 	class GameWorld;
 	class RenderObject;
-	class Scoreboard;
 
-	struct UIElement {
+	struct UiSprite {
 		// TODO: Need a UV field
 		Maths::Vector2 position;
 		Maths::Vector2 size;
 		Maths::Vector4 color;
 		std::shared_ptr<Rendering::Texture> texture;
-		bool isScoreboard = false;
 	};
 
-	struct UITextElement {
-		Maths::Vector2 position;
-		Maths::Vector4 color;
-		std::string text;
-		bool isScoreboard = false;
-	};
+    class UiElement {
+    public:
+        virtual void render(std::vector<UiSprite>& sprites) = 0;
+        virtual void Animate(float dt) = 0;
 
-	struct PlayerData {
-		std::string name;
-		std::string color;
-		int score;
-	};
+        bool IsActive() const {
+            return enabled;
+        }
+
+        void SetActive(bool active) {
+            enabled = active;
+        }
+
+    protected:
+        bool enabled = false;
+    };
 
 	class GameTechRendererInterface
 	{
@@ -56,6 +58,11 @@ namespace NCL::CSC8503 {
 
 		virtual Rendering::Mesh* LoadMesh(const std::string& name) = 0;
 		virtual Rendering::Texture*	LoadTexture(const std::string& name) = 0;
+
+        // Get UI Elements
+        std::vector<UiElement*> GetUiElements() {
+            return uiElements;
+        }
 
 		bool GetHDROn() const {
 			return hdrOn;
@@ -87,40 +94,29 @@ namespace NCL::CSC8503 {
 			vignettePulse = dt;
 		}
 
-		void AddUIElement(const UIElement& element) {
-			uiElements.push_back(element);
+        void AddUiElement(UiElement* elem) {
+            uiElements.push_back(elem);
+        }
+		void SetVignetteIntesnity(float intensityIn) {
+			vignetteIntensity = intensityIn;
 		}
-
-		void AddUITextElement(const UITextElement& element) {
-			uiTextElements.push_back(element);
-		}
-
-		void AddPlayerData(const PlayerData& data) {
-			playerData.push_back(data);
-		}
-
-		void ToggleScoreboard() {
-			showScoreboard = !showScoreboard;
-		}
-
-		// TODO: Proper UI class
-		void initUi();
 
 	protected:
-		//adding bools to toggle post processing. Must be accessible from the specific renderer
+		// Post-processing settings
 		bool hdrOn = true;
+
 		bool vignetteOn = false;
 		float vignettePulse = 0;
+		float vignetteIntensity = 0;
+		btVector3 vignetteColour = btVector3(0.05f, 0.0f, 0.0f);
+
 		Window* window;
 		Camera* camera = nullptr;
-		std::vector<UIElement> uiElements;
-		std::vector<UITextElement> uiTextElements;
-		std::vector<PlayerData> playerData;
+		std::vector<UiElement*> uiElements;
 		std::vector<RenderObject*> frameObjects;
+        std::vector<UiSprite> frameSprites;
 		std::vector<PointLight*> lights;
 		DecalSystem decalSystem;
-		bool showScoreboard = false;
-		Maths::Vector2 screenCenter = Maths::Vector2(0.5f, 0.5f);
 	};
 }
 

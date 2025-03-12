@@ -36,33 +36,17 @@ using namespace NCL::CSC8503;
 
 void TestPacketHandlers() {
 
-    Packet::UserInfoPacketHandler infoHandler;
+    Packet::RequestUserIDPacketHandler infoHandler;
     Packet::PacketRegister::Register(&infoHandler);
 
-    Lobbies::User user = Lobbies::User(4, "Ricky Mc.Pickle");
-    std::shared_ptr<Packet::UserInfoPacket> testInfoPacket = std::make_shared<Packet::UserInfoPacket>(user, Lobbies::LobbyAction::LEAVE);
-    Lobbies::User originalUser = testInfoPacket->GetUser();
-    Lobbies::LobbyAction originalAction = testInfoPacket->GetAction();
-
-
-    std::cout << "Test User Info Packet Initial Data:\n";
-    std::cout << "\tUser ID: " << originalUser.GetUserID() << std::endl;
-    std::cout << "\tDisplay Name: " << originalUser.GetDisplayName() << std::endl;
-    std::cout << "\tAction Number: " << (int) originalAction << std::endl;
+    std::shared_ptr<Packet::RequestUserIDPacket> testInfoPacket = std::make_shared<Packet::RequestUserIDPacket>(nullptr);
 
     ENetPacket* userInfoENetPacket = infoHandler.ToENetPacket(testInfoPacket);
     ENetEvent event;
     event.packet = userInfoENetPacket;
 
     std::shared_ptr<Packet::Packet> infoPacketReturned = infoHandler.Translate(&event);
-    std::shared_ptr<Packet::UserInfoPacket> infoPacketConverted = std::static_pointer_cast<Packet::UserInfoPacket>(infoPacketReturned);
-    Lobbies::User translatedUser = infoPacketConverted->GetUser();
-    Lobbies::LobbyAction translatedAction = infoPacketConverted->GetAction();
-
-    std::cout << "Test User Info Packet Initial Data:\n";
-    std::cout << "\tUser ID: " << translatedUser.GetUserID() << std::endl;
-    std::cout << "\tDisplay Name: " << translatedUser.GetDisplayName() << std::endl;
-    std::cout << "\tAction Number: " << (int) translatedAction << std::endl;
+    std::shared_ptr<Packet::RequestUserIDPacket> infoPacketConverted = std::static_pointer_cast<Packet::RequestUserIDPacket>(infoPacketReturned);
 }
 
 class MainMenuScreen : public PushdownState {
