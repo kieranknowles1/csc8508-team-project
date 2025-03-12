@@ -7,6 +7,7 @@
 #include "btBulletDynamicsCommon.h"
 #include "CollisionInfo.h"
 #include "../TeamProject/PointLight.h"
+#include "../TeamProject/Multiplayer/User.hpp"
 
 namespace NCL::CSC8503 {
 	class NetworkObject;
@@ -141,6 +142,16 @@ namespace NCL::CSC8503 {
 			return light;
 		}
 
+		int GetLastPacketSequence(uint8_t type) {
+			if (lastPacketUpdates.contains(type)) return lastPacketUpdates[type];
+			else return 0;
+		}
+
+		void UpdatePacketSequence(uint8_t type, int value) {
+			lastPacketUpdates[type] = value;
+		}
+
+
 		void setDeleted() { deleted = true; }
 		bool isDeleted() { return deleted; }
 	protected:
@@ -163,5 +174,8 @@ namespace NCL::CSC8503 {
 		inline static std::unordered_map<int, GameObject*> objects;
 
 		PointLight* light = nullptr;
+
+		std::optional<Lobbies::User> owner;
+		std::unordered_map<uint8_t, int> lastPacketUpdates; // uint8_t is the same type used in Packet::Type and PacketType
 	};
 }

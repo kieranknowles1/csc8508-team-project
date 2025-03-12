@@ -64,12 +64,6 @@ void Network::Close() {
 
 void Network::ConnectTo(const ENetAddress* destination) {
     ENetPeer* peer = enet_host_connect(m_host, destination, static_cast<int>(Channel::CHANNEL_COUNT), 0);
-
-    //while (peer->state != ENET_PEER_STATE_CONNECTED) {
-    //    enet_host_service(m_host, nullptr, 0);
-    //    std::cout << "Connecting...\n";
-    //}
-    //std::cout << "Connection Successful.\n";
 }
 
 
@@ -90,12 +84,12 @@ std::shared_ptr<Packet::Packet> Network::Fetch() {
 
     while (!m_receiveBuffer.IsEmpty()) {
         fetched = m_receiveBuffer.Pop();
+        return fetched;
+        //if (fetched->GetSequenceNumber() > m_lastMaxSequence) m_lastMaxSequence = fetched->GetSequenceNumber();
 
-        if (fetched->GetSequenceNumber() > m_lastMaxSequence) m_lastMaxSequence = fetched->GetSequenceNumber();
-
-        if (fetched->GetSequenceNumber() > m_lastMaxSequence) return fetched;
-        if (fetched->GetChannel() == static_cast<uint8_t>(Channel::RELIABLE)) return fetched;
-        if (fetched->GetChannel() == static_cast<uint8_t>(Channel::UNSEQUENCED)) return fetched;
+        //if (fetched->GetSequenceNumber() > m_lastMaxSequence) return fetched;
+        //if (fetched->GetChannel() == static_cast<uint8_t>(Channel::RELIABLE)) return fetched;
+        //if (fetched->GetChannel() == static_cast<uint8_t>(Channel::UNSEQUENCED)) return fetched;
 
         // Drop old packet.
     }

@@ -59,7 +59,7 @@ namespace Packet {
         /**
          * @brief Get the Angular Velocity of the Delta Packet.
          * 
-         * This is the current angular velocity of thet object on the server.
+         * This is the current angular velocity of the object on the server.
          * 
          * @return btVector3 containing the angular velocity.
          */

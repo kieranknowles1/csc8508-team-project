@@ -35,19 +35,19 @@ namespace Packet {
          * @brief Get the type of the packet.
          * @return Type of the packet.
          */
-        Type GetType() { return m_type; }
+        Type GetType() const { return m_type; }
 
         /**
          * @brief Get the channel this packet uses.
          * @return The channel number the packet uses.
          */
-        uint8_t GetChannel() { return m_channel; }
+        uint8_t GetChannel() const { return m_channel; }
 
         /**
          * @brief Get the sequence number of the packet.
          * @return Returns the sequence number of the packet.
          */
-        uint32_t GetSequenceNumber() { return m_sequenceNum; }
+        uint32_t GetSequenceNumber() const { return m_sequenceNum; }
 
         /**
          * @brief Override of the < operator for heap ordering.

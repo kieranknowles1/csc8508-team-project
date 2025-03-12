@@ -10,8 +10,13 @@ namespace Packet {
         const DeltaPacket* deltaPacket = std::static_pointer_cast<DeltaPacket>(packet).get();
         GameObject* object = GameObject::GetGameObjectByID(deltaPacket->GetTargetID());
 
-        object->GetPhysicsObject()->GetRigidBody()->setLinearVelocity(deltaPacket->GetLinearVelocity());
-        object->GetPhysicsObject()->GetRigidBody()->setAngularVelocity(deltaPacket->GetAngularVelocity());
+        // Check if last update was newer.
+        if (deltaPacket->GetSequenceNumber() > object->GetLastPacketSequence(deltaPacket->GetType())) {
+            object->GetPhysicsObject()->GetRigidBody()->setLinearVelocity(deltaPacket->GetLinearVelocity());
+            object->GetPhysicsObject()->GetRigidBody()->setAngularVelocity(deltaPacket->GetAngularVelocity());
+            object->UpdatePacketSequence(deltaPacket->GetType(), deltaPacket->GetSequenceNumber());
+        }
+        // Dropping old packets.
     }
     
     std::shared_ptr<Packet> DeltaPacketHandler::Translate(const ENetEvent* event) const {
@@ -92,8 +97,13 @@ namespace Packet {
         GameObject* targetObject = GameObject::GetGameObjectByID(positionPacket->GetTargetID());
         btRigidBody* body = targetObject->GetPhysicsObject()->GetRigidBody();
 
-        body->getWorldTransform().setOrigin(positionPacket->GetPosition());
-        body->getWorldTransform().setRotation(positionPacket->GetOrientation());
+        // Check if last update was newer.
+        if (positionPacket->GetSequenceNumber() > targetObject->GetLastPacketSequence(positionPacket->GetType())) {
+            body->getWorldTransform().setOrigin(positionPacket->GetPosition());
+            body->getWorldTransform().setRotation(positionPacket->GetOrientation());
+            targetObject->UpdatePacketSequence(positionPacket->GetType(), positionPacket->GetSequenceNumber());
+        }
+        // Dropping old packets.
     }
 
     std::shared_ptr<Packet> PositionPacketHandler::Translate(const ENetEvent* event) const {
