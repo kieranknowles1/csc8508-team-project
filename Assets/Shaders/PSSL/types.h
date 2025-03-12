@@ -1,13 +1,14 @@
 #ifndef PSSL_TYPES_H
 #define PSSL_TYPES_H
 
+#include "glinterop.h"
+#include "../include/types.h"
+
 #ifdef __cplusplus
 #define SLOT(slot)
 #else
 #define SLOT(slot) : slot
 #endif
-
-#include "interop.h"
 
 #define NULLTEX 0
 
@@ -27,12 +28,6 @@ struct UiState {
     float2 position;
     float2 size;
     int texture = NULLTEX;
-};
-
-struct LightState {
-	float radius;
-	float3 position;
-	float4 color;
 };
 
 struct VS_OUTPUT
@@ -61,4 +56,5 @@ struct DEFERRED_VS_OUTPUT
 	int stateId SLOT(TEXCOORD0);
 };
 
+#undef SLOT
 #endif
