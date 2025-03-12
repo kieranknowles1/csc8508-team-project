@@ -24,17 +24,25 @@ namespace NCL::CSC8503 {
 	class RenderObject;
 
 	struct UiSprite {
-		// TODO: Need a UV field
 		Maths::Vector2 position;
 		Maths::Vector2 size;
 		Maths::Vector4 color;
 		std::shared_ptr<Rendering::Texture> texture;
 	};
 
+	struct UiText {
+		Maths::Vector2 position;
+		Maths::Vector4 color;
+		std::string text;
+	};
+
     class UiElement {
     public:
         virtual void render(std::vector<UiSprite>& sprites) = 0;
-        virtual void Animate(float dt) = 0;
+		
+		virtual void render(std::vector<UiText>& texts) = 0;
+        
+		virtual void Animate(float dt) = 0;
 
         bool IsActive() const {
             return enabled;
@@ -115,6 +123,7 @@ namespace NCL::CSC8503 {
 		std::vector<UiElement*> uiElements;
 		std::vector<RenderObject*> frameObjects;
         std::vector<UiSprite> frameSprites;
+		std::vector<UiText> frameTexts;
 		std::vector<PointLight*> lights;
 		DecalSystem decalSystem;
 	};

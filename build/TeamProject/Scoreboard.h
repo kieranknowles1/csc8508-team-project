@@ -7,61 +7,41 @@
 #include "GameTechRendererInterface.h"
 #include "Multiplayer/Lobby.hpp"
 
-namespace Lobbies {
-	class User;
-	class UserColor;
-}
+using namespace NCL::Maths;
 
-namespace NCL::CSC8503 {
-	class GameTechRendererInterface;
-	class Scoreboard {
-	public:
-		Scoreboard(GameTechRendererInterface* renderer) : renderer(renderer) {}
-		
-		struct Player {
-			Lobbies::User user;
-			TeamColor color;
-			int score = 0;
-		};
 
-		struct ScoreboardText {
-			Maths::Vector2 position;
-			std::string text;
-			Maths::Vector4 color = Maths::Vector4(0, 0, 0, 1);
-			bool isScoreboard = false;
-		};
+struct ScoreboardBoxes {
+	Vector2 position;
+	Vector2 size;
+};
 
-		std::unordered_map<unsigned int, struct Player> players;
+struct Player {
+	std::string name;
+	int score = 0;
+	std::string color;
+};
 
-		void AddPlayer(Lobbies::User user);
-		void SetColor(Lobbies::User user);
-		void SetScore();
-		void UpdateScoreboard();
-		void InitScoreboardUI();
 
-		void AddScoreboardText(const ScoreboardText& element) {
-			scoreboardTextElements.push_back(element);
-		}
+class Scoreboard : public UiElement{
+public:
+	Scoreboard();
+	void render(std::vector<UiSprite>& sprites) override;
+	void render(std::vector<UiText>& texts) override;
 
-		std::string TeamColorToString(TeamColor color) {
-			switch (color) {
-			case TeamColor::BLUE: return "Blue";
-			case TeamColor::GREEN: return "Green";
-			case TeamColor::RED: return "Red";
-			case TeamColor::YELLOW: return "Yellow";
-			case TeamColor::CYAN: return "Cyan";
-			case TeamColor::PURPLE: return "Purple";
-			case TeamColor::PINK: return "Pink";
-			case TeamColor::ORANGE: return "Orange";
-			default: return "Unknown";
-			}
-		}
-
-	private:
-		GameTechRendererInterface* renderer;
-		void SortPlayers();
-		void UpdateTextValues();
-		std::array<TeamColor, 8> m_userColors;
-		std::vector<ScoreboardText> scoreboardTextElements;
+	void AddPlayer(Player playerData) {
+		players.push_back(playerData);
 	};
-}
+
+	void SetColor();
+	void SetScore();
+	void SortPlayers();
+	void UpdateScoreboardData();
+
+private:
+	Vector2 screenCenter = Vector2(0.5f, 0.5f);
+	Vector2 scoreboardSize = Vector2(0.7f, 0.7f);
+	std::array<ScoreboardBoxes, 27> boxes;
+	std::vector<Player> players;
+	int columns = 3;
+	int rows = 9;
+};

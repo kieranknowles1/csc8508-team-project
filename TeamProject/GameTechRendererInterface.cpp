@@ -42,6 +42,7 @@ namespace NCL::CSC8503 {
         for (auto elem : uiElements) {
             if (elem->IsActive()) {
                 elem->render(frameSprites);
+				elem->render(frameTexts);
             }
         }
 		lights = world->GetLights();
