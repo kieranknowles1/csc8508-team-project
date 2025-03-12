@@ -11,8 +11,13 @@ SamplerState sceneNormalSampler : register(s1);
 Texture2D<float> sceneDepthTex : register(t2);
 SamplerState sceneDepthSampler : register(s2);
 
+struct PS_OUTPUT {
+	float4 diffuse : S_TARGET_OUTPUT0;
+	float4 specular : S_TARGET_OUTPUT1;
+};
+
 [CxxSymbol("Deferred::ps")]
-float4 main(DEFERRED_VS_OUTPUT vertex) : S_TARGET_OUTPUT
+PS_OUTPUT main(DEFERRED_VS_OUTPUT vertex) : S_TARGET_OUTPUT
 {
 	LightState state = objects[vertex.stateId];
 
@@ -31,5 +36,8 @@ float4 main(DEFERRED_VS_OUTPUT vertex) : S_TARGET_OUTPUT
 		Constants.inverseViewProjMatrix
 	);
 
-	return result.diffuse;
+	PS_OUTPUT output;
+	output.diffuse = result.diffuse;
+	output.specular = result.specular;
+	return output;
 }

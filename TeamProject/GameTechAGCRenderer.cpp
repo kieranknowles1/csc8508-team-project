@@ -112,7 +112,8 @@ GameTechAGCRenderer::GameTechAGCRenderer(Window* window) : AGCRenderer(window), 
 
 	sceneBuffer = createBuffer("Scene", FrameBuffer::Slot::Color);
 	sceneNormalBuffer = createBuffer("SceneNormal", FrameBuffer::Slot::Normal);
-	lightBuffer = createBuffer("Lights", FrameBuffer::Slot::Color);
+	lightDiffuse = createBuffer("LightsDiffuse", FrameBuffer::Slot::Color);
+	lightSpecular = createBuffer("LightsSpecular", FrameBuffer::Slot::Specular);
 	screenBuffer = createBuffer("Screen", FrameBuffer::Slot::Color);
 }
 
@@ -370,18 +371,21 @@ void GameTechAGCRenderer::UiPass() {
 void GameTechAGCRenderer::LightPass()
 {
 	// Clear the FBO using a compute shader, waits for it to complete before continuing operations to avoid race conditions
-	auto result = sce::Agc::Toolkit::clearRenderTargetCs(&frameContext->m_dcb, &lightBuffer.target, sce::Agc::Toolkit::RenderTargetClearOp::kAuto);
+	auto result = sce::Agc::Toolkit::clearRenderTargetCs(&frameContext->m_dcb, &lightDiffuse.target, sce::Agc::Toolkit::RenderTargetClearOp::kAuto);
+	result |= sce::Agc::Toolkit::clearRenderTargetCs(&frameContext->m_dcb, &lightSpecular.target, sce::Agc::Toolkit::RenderTargetClearOp::kAuto);
 	frameContext->resetToolkitChangesAndSyncToGl2(result);
 
 	frameContext->setShaders(nullptr, deferredVertexShader->GetAGCPointer(), deferredPixelShader->GetAGCPointer(), sce::Agc::UcPrimitiveType::Type::kTriList);
 	useViewPort(frameContext, ScreenSize);
 
 	sce::Agc::CxRenderTargetMask rtMask;
-	rtMask.init().setMask(0, 0xff);
-	frameContext->m_sb.setState(rtMask).setState(lightBuffer.target);
+	rtMask.init().setMask(0, 0xff).setMask(1, 0xff);
+	frameContext->m_sb.setState(rtMask)
+		.setState(lightDiffuse.target)
+		.setState(lightSpecular.target);
 
 	sce::Agc::CxPrimitiveSetup primSetup;
-	primSetup.init().setCullFace(sce::Agc::CxPrimitiveSetup::CullFace::kNone);
+	primSetup.init().setCullFace(sce::Agc::CxPrimitiveSetup::CullFace::kFront);
 	frameContext->m_sb.setState(primSetup);
 
 	sce::Agc::CxDepthStencilControl depthControl;
@@ -423,6 +427,8 @@ void GameTechAGCRenderer::PostProcessPass()
 	blendControl.init().setBlend(sce::Agc::CxBlendControl::Blend::kDisable);
 	frameContext->m_sb.setState(blendControl);
 
+	frameContext->m_sb.setState(sce::Agc::CxPrimitiveSetup().init().setCullFace(sce::Agc::CxPrimitiveSetup::CullFace::kBack));
+
 	sce::Agc::CxDepthStencilControl depthControl;
 	depthControl.init();
 	depthControl.setDepth(sce::Agc::CxDepthStencilControl::Depth::kDisable);
@@ -433,7 +439,8 @@ void GameTechAGCRenderer::PostProcessPass()
 	frameContext->m_bdr.getStage(sce::Agc::ShaderType::kPs)
 		.setConstantBuffers(0, 1, &currentFrame->constantBuffer)
 		.setSamplers(0, 1, &sceneBuffer.sampler).setTextures(0, 1, sceneBuffer.texture->GetAGCPointer())
-		.setSamplers(1, 1, &lightBuffer.sampler).setTextures(1, 1, lightBuffer.texture->GetAGCPointer());
+		.setSamplers(1, 1, &lightDiffuse.sampler).setTextures(1, 1, lightDiffuse.texture->GetAGCPointer())
+		.setSamplers(2, 1, &lightSpecular.sampler).setTextures(2, 1, lightSpecular.texture->GetAGCPointer());
 
 	unitQuad->BindVertexBuffers(frameContext->m_bdr.getStage(sce::Agc::ShaderType::kGs));
 	DrawBoundMesh(*frameContext, *unitQuad);

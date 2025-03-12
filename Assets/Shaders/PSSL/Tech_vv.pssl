@@ -36,8 +36,8 @@ VS_OUTPUT main(uint vertID : S_VERTEX_ID, uint objID : S_SRT_DATA, uint instance
 
 	float3x3 normMat = float3x3(s.normalMatrix);
 
-	Output.normal = mul(normMat, normal);
-	Output.tangent = mul(normMat, tangent).rgb;
+	Output.normal = normalize(mul(normMat, normal));
+	Output.tangent = normalize(mul(normMat, tangent.rgb));
 	Output.binormal = cross(Output.tangent, Output.normal) * tangent.w;
 
 	return Output;

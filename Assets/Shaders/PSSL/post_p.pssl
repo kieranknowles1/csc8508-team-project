@@ -2,12 +2,16 @@
 #include "glinterop.h"
 
 #include "../include/post/vingette.glsl"
+#include "../include/post/deferred.glsl"
 
 Texture2D<float4> texture : register(t0);
 SamplerState sampler : register(s0);
 
 Texture2D<float4> lightDiffuse : register(t1);
-SamplerState lightSampler : register(s1);
+SamplerState lightDifSampler : register(s1);
+
+Texture2D<float4> lightSpec : register(t2);
+SamplerState lightSpecSampler : register(s2);
 
 struct VS_OUTPUT
 {
@@ -20,6 +24,10 @@ float4 main(VS_OUTPUT vertex) : S_TARGET_OUTPUT
 {
     float4 result = texture.Sample(sampler, vertex.uv);
 
+    float4 lightVal = lightDiffuse.Sample(lightDifSampler, vertex.uv);
+    float4 specVal = lightSpec.Sample(lightSpecSampler, vertex.uv);
+    result.rgb = doDeferredLight(result.rgb, lightVal.rgb, specVal.rgb);
+
     if (Constants.vingetteSettings.enabled) {
         result.rgb = applyVingette(
             result.rgb,
@@ -30,9 +38,5 @@ float4 main(VS_OUTPUT vertex) : S_TARGET_OUTPUT
         );
     }
 
-    float4 lightVal = lightDiffuse.Sample(sampler, vertex.uv);
-
-    result.rgb *= lightVal.rgb;
-    result.a = 1.0f;
     return result;
 }

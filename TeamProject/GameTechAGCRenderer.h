@@ -187,6 +187,7 @@ namespace NCL {
 				enum class Slot {
 					Color,
 					Normal,
+					Specular = Normal,
 				};
 
 				sce::Agc::CxRenderTarget target;
@@ -202,7 +203,8 @@ namespace NCL {
 			FrameBuffer sceneBuffer;
 			FrameBuffer sceneNormalBuffer;
 
-			FrameBuffer lightBuffer;
+			FrameBuffer lightDiffuse;
+			FrameBuffer lightSpecular;
 
 			FrameBuffer screenBuffer;
 
