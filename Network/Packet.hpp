@@ -210,7 +210,7 @@ namespace Packet {
          * @return The buffer item in the queue.
          */
         std::shared_ptr<Packet> Pop() {
-            if (IsEmpty()) return std::make_shared<Packet>();
+            if (IsEmpty()) return std::shared_ptr<Packet>(nullptr);
 
             std::lock_guard<std::mutex> bufferLock(m_bufferMut);
             std::lock_guard<std::mutex> totalLock(m_totalMut);

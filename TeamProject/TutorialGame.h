@@ -103,13 +103,12 @@ namespace NCL {
 
             virtual void UpdateGame(float dt);
             void LoadWorldFromFile(int levelNum);
-            void JoinGame(bool host) {};
+            void JoinGame(bool host);
             void ClearWorld();
 
             GameWorld* getWorld() {
                 return world.get();
             }
-
         protected:
             void InitialiseAssets();
 
@@ -136,6 +135,9 @@ namespace NCL {
              * @param address ENetAddress of the servers location.
              */
             void ConnectToServer(ENetAddress& address);
+            void CreateLocal();
+            void InitPacketHandlers();
+            void ExecuteIncomingPackets();
 
 
 
@@ -224,6 +226,7 @@ namespace NCL {
             inline static std::optional<Lobbies::Lobby> lobby = std::optional<Lobbies::Lobby>();
             inline static std::optional<Lobbies::User> user = std::optional<Lobbies::User>();
             inline static int USER_ID = 0;
+
         };
     }
 }

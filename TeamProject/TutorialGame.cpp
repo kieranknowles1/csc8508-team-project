@@ -6,10 +6,14 @@
 #include "AudioEngine.h"
 #include "GameTechRendererInterface.h"
 #include "BulletDebug.h"
+#include "Multiplayer/GamePackets.hpp"
+#include "Multiplayer/GamePacketHandlers.hpp"
 #include <CSC8503CoreClasses/Debug.h>
 #include "Shoot.h"
 
 #include "Window.h"
+
+#include <chrono>
 
 using namespace NCL;
 using namespace CSC8503;
@@ -39,6 +43,7 @@ TutorialGame::TutorialGame(GameTechRendererInterface* renderer, Controller* cont
     InitialiseAssets();
     InitCamera();
     InitWorld();
+    
 }
 
 /*
@@ -57,6 +62,8 @@ TutorialGame::~TutorialGame()	{
     DestroyBullet();
     audioEngine.Shutdown();
 
+    if (server.has_value()) server->Close();
+
     delete playerController;
 }
 
@@ -67,6 +74,10 @@ static bool BulletRaycast(btDynamicsWorld* world, const btVector3& start, const 
 
 void TutorialGame::UpdateGame(float dt) {
     profiler.beginFrame();
+
+    profiler.startSection("Network Updates.");
+    ExecuteIncomingPackets();
+
     profiler.startSection("Physics");
     // Old
     //int substeps = std::floor(dt / PHYSICS_PERIOD);
@@ -111,11 +122,24 @@ void TutorialGame::UpdateGame(float dt) {
     if (showProfiling) {
         profiler.printTimes();
     }
-
     
     //post processing time variable effect:
     pulse += dt;
     renderer->SetVignettePulse(pulse);
+}
+
+
+void TutorialGame::ExecuteIncomingPackets() {
+    bool isPackets = true;
+    while (isPackets && server.has_value()) {
+        std::shared_ptr<Packet::Packet> packet = server->Fetch();
+        if (packet.get() != nullptr) {
+            Packet::PacketRegister::GetHandler(packet->GetType())->Handle(packet);
+        }
+        else {
+            isPackets = false;
+        }
+    }
 }
 
 void TutorialGame::UpdatePlayer(float dt) {
@@ -306,13 +330,15 @@ void TutorialGame::LoadWorldFromFile(int levelNum) {
     RespawnPoint* respawnPoint = Respawn::GetInstance()->GetRespawn(0);
     player = InitPlayer(respawnPoint->position,respawnPoint->orientation);
     player->SetPlayerID(0);
-    playerController = new PlayerController(player, gun, controller, mainCamera, bulletWorld);
+    playerController = new PlayerController(player, gun, controller, mainCamera, bulletWorld,renderer);
 
     for (int i = 1; i < 8; i++) {
         RespawnPoint* newRespawnPoint = Respawn::GetInstance()->GetRespawn(i);
         PlayerObject* newPlayer = InitPlayer(newRespawnPoint->position, newRespawnPoint->orientation);
         newPlayer->SetPlayerID(i);
     }
+
+
 
     Shoot::GetInstance()->Initialise(bulletWorld,resourceManager.get(), world.get(), renderer->GetDecalSystem());
     Shoot::GetInstance()->InitShotMasks(player, gun);
@@ -340,16 +366,8 @@ void TutorialGame::InitWorld() {
         navMesh = new NavMesh(bulletWorld);
         navMesh->LoadFromFile("Assets/Meshes/NavMeshes/initiallevel.navmesh");
     }
+
 }
-
-void TutorialGame::InitNetwork(bool host) {
-}
-
-
-void TutorialGame::ConnectToServer(ENetAddress& address) {
-    // FIXME
-}
-
 
 PlayerObject* TutorialGame::InitPlayer(btVector3 position, btVector3 upDir) {
     PlayerObject* newPlayer = new PlayerObject();
@@ -580,4 +598,57 @@ GameObject* TutorialGame::AddSphereToWorld(const Vector3& position, float radius
     world->AddGameObject(sphere);
 
     return sphere;
+}
+
+
+void TutorialGame::CreateLocal() {
+    lobby.emplace(MAX_PLAYERS);
+}
+
+
+void TutorialGame::InitNetwork(bool host) {
+    ENetAddress address;
+    enet_address_set_host(&address, host ? "0.0.0.0" : "127.0.0.1");
+    address.host = ENET_HOST_ANY;
+    address.port = host ? DEFAULT_PORT : 0;
+
+    server.emplace(&address, MAX_PLAYERS);
+    server.value().Start();
+}
+
+
+void TutorialGame::ConnectToServer(ENetAddress& address) {
+    server->ConnectTo(&address);
+    while (server->GetConnectionCount() < 1) continue;
+}
+
+
+void TutorialGame::InitPacketHandlers() {
+    Packet::RequestUserIDPacketHandler* requestHandler = new Packet::RequestUserIDPacketHandler();
+    Packet::PacketRegister::Register(requestHandler);
+
+    Packet::UserInfoPacketHandler* infoHandler = new Packet::UserInfoPacketHandler();
+    Packet::PacketRegister::Register(infoHandler);
+}
+
+
+void TutorialGame::JoinGame(bool host) {
+    CreateLocal();
+    InitPacketHandlers();
+    InitNetwork(host);
+
+    if (!host) {
+        ENetAddress dest;
+        enet_address_set_host(&dest, "127.0.0.1");
+        dest.port = DEFAULT_PORT;
+
+        ConnectToServer(dest);
+
+        std::shared_ptr<Packet::RequestUserIDPacket> request = std::make_shared<Packet::RequestUserIDPacket>(nullptr);
+        server.value().Broadcast(request);
+    }
+    else {
+        user.emplace(GenerateUserID());
+        lobby->AddUser(user.value());
+    }
 }

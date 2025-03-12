@@ -23,7 +23,7 @@ namespace NCL::CSC8503 {
 	class GameWorld;
 	class RenderObject;
 
-	struct UIElement {
+	struct UiSprite {
 		// TODO: Need a UV field
 		Maths::Vector2 position;
 		Maths::Vector2 size;
@@ -31,6 +31,22 @@ namespace NCL::CSC8503 {
 		std::shared_ptr<Rendering::Texture> texture;
 	};
 
+    class UiElement {
+    public:
+        virtual void render(std::vector<UiSprite>& sprites) = 0;
+        virtual void Animate(float dt) = 0;
+
+        bool IsActive() const {
+            return enabled;
+        }
+
+        void SetActive(bool active) {
+            enabled = active;
+        }
+
+    protected:
+        bool enabled = false;
+    };
 
 	class GameTechRendererInterface
 	{
@@ -42,6 +58,11 @@ namespace NCL::CSC8503 {
 
 		virtual Rendering::Mesh* LoadMesh(const std::string& name) = 0;
 		virtual Rendering::Texture*	LoadTexture(const std::string& name) = 0;
+
+        // Get UI Elements
+        std::vector<UiElement*> GetUiElements() {
+            return uiElements;
+        }
 
 		bool GetHDROn() const {
 			return hdrOn;
@@ -73,22 +94,27 @@ namespace NCL::CSC8503 {
 			vignettePulse = dt;
 		}
 
-		void AddUIElement(const UIElement& element) {
-			uiElements.push_back(element);
+        void AddUiElement(UiElement* elem) {
+            uiElements.push_back(elem);
+        }
+		void SetVignetteIntesnity(float intensityIn) {
+			vignetteIntensity = intensityIn;
 		}
 
-		// TODO: Proper UI class
-		void initUi();
-
 	protected:
-		//adding bools to toggle post processing. Must be accessible from the specific renderer
+		// Post-processing settings
 		bool hdrOn = true;
+
 		bool vignetteOn = false;
 		float vignettePulse = 0;
+		float vignetteIntensity = 0;
+		btVector3 vignetteColour = btVector3(0.05f, 0.0f, 0.0f);
+
 		Window* window;
 		Camera* camera = nullptr;
-		std::vector<UIElement> uiElements;
+		std::vector<UiElement*> uiElements;
 		std::vector<RenderObject*> frameObjects;
+        std::vector<UiSprite> frameSprites;
 		std::vector<PointLight*> lights;
 		DecalSystem decalSystem;
 	};

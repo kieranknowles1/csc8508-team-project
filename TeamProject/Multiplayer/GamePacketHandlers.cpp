@@ -276,6 +276,7 @@ namespace Packet {
 
 #pragma region UserInfoPacketHandler
     void UserInfoPacketHandler::Handle(const std::shared_ptr<Packet> packet) {
+
         const UserInfoPacket* userInfo = std::static_pointer_cast<UserInfoPacket>(packet).get();
         std::optional<Lobby>& lobby = TutorialGame::GetLobby();
         TutorialGame::UpdateUserID(userInfo->GetUser().GetUserID());
@@ -365,7 +366,16 @@ namespace Packet {
         User newUser(newUserID);
         
         std::shared_ptr<UserInfoPacket> infoPacket = std::make_shared<UserInfoPacket>(newUser, LobbyAction::CREATE);
-        TutorialGame::GetServerInstance().value().Send(infoPacket, request->GetPeer());
+        TutorialGame::GetServerInstance()->Send(infoPacket, request->GetPeer());
+
+        // Insert into host lobby. Only server creator (host) receives Request packets.
+        TutorialGame::GetLobby()->AddUser(newUser);
+
+        // Send information about every user in the lobby.
+        for (User user : TutorialGame::GetLobby()->GetConnectedUsers()) {
+            infoPacket = std::make_shared<UserInfoPacket>(user, LobbyAction::JOIN);
+            TutorialGame::GetServerInstance()->Broadcast(infoPacket);
+        }
     }
 
     std::shared_ptr<Packet> RequestUserIDPacketHandler::Translate(const ENetEvent* event) const {
@@ -373,7 +383,7 @@ namespace Packet {
     }
 
     ENetPacket* RequestUserIDPacketHandler::ToENetPacket(const std::shared_ptr<Packet> packet) const {
-        UserInfoPacket userInfo = (*static_cast<UserInfoPacket*>(packet.get()));
+        RequestUserIDPacket request = (*static_cast<RequestUserIDPacket*>(packet.get()));
 
         char* buffer = new char[
             sizeof(Type),
@@ -382,15 +392,15 @@ namespace Packet {
         ];
         size_t offset = 0;
 
-        Type type = userInfo.GetType();
+        Type type = request.GetType();
         memcpy(buffer, &type, sizeof(Type));
         offset = offset + sizeof(Type);
 
-        uint8_t channel = userInfo.GetChannel();
+        uint8_t channel = request.GetChannel();
         memcpy(buffer + offset, &channel, sizeof(uint8_t));
         offset = offset + sizeof(uint8_t);
 
-        uint32_t sequenceNumber = userInfo.GetSequenceNumber();
+        uint32_t sequenceNumber = request.GetSequenceNumber();
         memcpy(buffer + offset, &sequenceNumber, sizeof(uint32_t));
         offset = offset + sizeof(uint32_t);
 
