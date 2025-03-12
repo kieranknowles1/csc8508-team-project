@@ -14,7 +14,8 @@ DEFERRED_VS_OUTPUT main(uint vertId : S_VERTEX_ID, uint instanceId : S_INSTANCE_
     DEFERRED_VS_OUTPUT output;
     LightState state = objects[instanceId];
 
-    float3 worldPos = (Positions[vertId] * state.radius) + state.position;
+    float3 scale = float3(state.radius);
+    float3 worldPos = (Positions[vertId] * scale) + state.position;
 
     output.position = TransformWorldToClip(float4(worldPos, 1.0f));
 

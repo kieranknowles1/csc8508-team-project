@@ -1,18 +1,35 @@
 #include "ShaderConstants.psslh"
 #include "types.h"
 
+#include "../include/frag/pointlight.glsl"
+
 RegularBuffer<LightState> objects : register(t0);
 
-Texture2D<float4> sceneColorTex : register(t1);
-SamplerState sceneColorSampler : register(s1);
+Texture2D<float4> sceneNormalTex : register(t1);
+SamplerState sceneNormalSampler : register(s1);
 
-Texture2D<float4> sceneNormalTex : register(t2);
-SamplerState sceneNormalSampler : register(s2);
+Texture2D<float> sceneDepthTex : register(t2);
+SamplerState sceneDepthSampler : register(s2);
 
 [CxxSymbol("Deferred::ps")]
 float4 main(DEFERRED_VS_OUTPUT vertex) : S_TARGET_OUTPUT
 {
 	LightState state = objects[vertex.stateId];
 
-	return state.color;
+	float2 texCoord = vertex.position.xy / Constants.screenSize;
+	float3 normal = sceneNormalTex.Sample(sceneNormalSampler, texCoord).rgb;
+	float depth = sceneDepthTex.Sample(sceneDepthSampler, texCoord).r;
+	texCoord.y = 1.0f - texCoord.y;
+
+
+	LightOutput result = doPointLight(
+		state,
+		normal,
+		Constants.cameraPos,
+		texCoord,
+		depth,
+		Constants.inverseViewProjMatrix
+	);
+
+	return result.diffuse;
 }

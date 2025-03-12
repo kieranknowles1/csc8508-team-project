@@ -64,6 +64,9 @@ AGCRenderer::AGCRenderer(Window* w) : RendererBase(w){
 	int32_t ret = sceVideoOutRegisterBuffers2(videoHandle, videoOutputSet, 0, outBuffers, SWAPCOUNT, &attribute, SCE_VIDEO_OUT_BUFFER_ATTRIBUTE_CATEGORY_UNCOMPRESSED, nullptr);
 
 	depthTarget = CreateDepthBufferTarget(ScreenSize.x,ScreenSize.y);
+	depthTexture = new AGCTexture(allocator);
+	auto result = sce::Agc::Core::translate(depthTexture->GetAGCPointer(), &depthTarget, sce::Agc::Core::DepthRenderTargetComponent::kDepth);
+	assert(result == SCE_OK);
 
 	defaultSampler.init()
 		.setXyFilterMode(

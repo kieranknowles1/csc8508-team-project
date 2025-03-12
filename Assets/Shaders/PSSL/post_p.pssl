@@ -6,6 +6,9 @@
 Texture2D<float4> texture : register(t0);
 SamplerState sampler : register(s0);
 
+Texture2D<float4> lightDiffuse : register(t1);
+SamplerState lightSampler : register(s1);
+
 struct VS_OUTPUT
 {
     float4 position : S_POSITION;
@@ -27,5 +30,9 @@ float4 main(VS_OUTPUT vertex) : S_TARGET_OUTPUT
         );
     }
 
+    float4 lightVal = lightDiffuse.Sample(sampler, vertex.uv);
+
+    result.rgb *= lightVal.rgb;
+    result.a = 1.0f;
     return result;
 }

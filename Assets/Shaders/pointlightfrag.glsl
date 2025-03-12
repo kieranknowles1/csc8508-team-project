@@ -1,5 +1,6 @@
 #version 400 core
 
+#define mul(a, b) ((a) * (b))
 #include "include/types.h"
 #include "include/frag/pointlight.glsl"
 

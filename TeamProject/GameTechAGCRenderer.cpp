@@ -196,6 +196,7 @@ This method builds a struct that
 */
 void GameTechAGCRenderer::WriteRenderPassConstants() {
 	ShaderConstants frameData;
+	frameData.screenSize = Vector2(ScreenSize.x, ScreenSize.y);
 	frameData.cameraPos = camera->GetPosition();
 
 	frameData.viewMatrix = camera->BuildViewMatrix();
@@ -305,6 +306,14 @@ void GameTechAGCRenderer::MainRenderPass() {
 
 	frameContext->m_sb.setState(depthTarget);
 
+	sce::Agc::CxBlendControl blendControl;
+	blendControl.init()
+		.setBlend(sce::Agc::CxBlendControl::Blend::kEnable)
+		.setColorSourceMultiplier(sce::Agc::CxBlendControl::ColorSourceMultiplier::kSrcAlpha)
+		.setColorDestMultiplier(sce::Agc::CxBlendControl::ColorDestMultiplier::kOneMinusSrcAlpha)
+		.setColorBlendFunc(sce::Agc::CxBlendControl::ColorBlendFunc::kAdd);
+	frameContext->m_sb.setState(blendControl);
+
 	sce::Agc::CxDepthStencilControl depthControl;
 	depthControl.init();
 	depthControl.setDepth(sce::Agc::CxDepthStencilControl::Depth::kEnable);
@@ -381,11 +390,11 @@ void GameTechAGCRenderer::LightPass()
 
 	sce::Agc::CxBlendControl blendControl;
 	blendControl.init()
-		.setBlend(sce::Agc::CxBlendControl::Blend::kDisable)
-		.setAlphaBlendFunc(sce::Agc::CxBlendControl::AlphaBlendFunc::kAdd)
-		.setColorBlendFunc(sce::Agc::CxBlendControl::ColorBlendFunc::kAdd)
+		.setBlend(sce::Agc::CxBlendControl::Blend::kEnable)
 		.setColorSourceMultiplier(sce::Agc::CxBlendControl::ColorSourceMultiplier::kOne)
-		.setColorDestMultiplier(sce::Agc::CxBlendControl::ColorDestMultiplier::kOne);
+		.setColorDestMultiplier(sce::Agc::CxBlendControl::ColorDestMultiplier::kOne)
+		.setColorBlendFunc(sce::Agc::CxBlendControl::ColorBlendFunc::kAdd);
+	frameContext->m_sb.setState(blendControl);
 
 	frameContext->m_bdr.getStage(sce::Agc::ShaderType::kGs)
 		.setConstantBuffers(0, 1, &currentFrame->constantBuffer)
@@ -394,8 +403,8 @@ void GameTechAGCRenderer::LightPass()
 	frameContext->m_bdr.getStage(sce::Agc::ShaderType::kPs)
 		.setConstantBuffers(0, 1, &currentFrame->constantBuffer)
 		.setBuffers(0, 1, &currentFrame->lights.buffer)
-		.setSamplers(1, 1, &sceneBuffer.sampler).setTextures(1, 1, sceneBuffer.texture->GetAGCPointer())
-		.setSamplers(2, 1, &sceneNormalBuffer.sampler).setTextures(2, 1, sceneNormalBuffer.texture->GetAGCPointer());
+		.setSamplers(1, 1, &sceneNormalBuffer.sampler).setTextures(1, 1, sceneNormalBuffer.texture->GetAGCPointer())
+		.setSamplers(2, 1, &depthSampler).setTextures(2, 1, depthTexture->GetAGCPointer());
 
 	sphere->BindVertexBuffers(frameContext->m_bdr.getStage(sce::Agc::ShaderType::kGs));
 	DrawBoundMeshInstanced(*frameContext, *sphere, lights.size());
@@ -410,6 +419,10 @@ void GameTechAGCRenderer::PostProcessPass()
 	frameContext->m_sb.setState(rtMask);
 	frameContext->m_sb.setState(screenBuffer.target);
 
+	sce::Agc::CxBlendControl blendControl;
+	blendControl.init().setBlend(sce::Agc::CxBlendControl::Blend::kDisable);
+	frameContext->m_sb.setState(blendControl);
+
 	sce::Agc::CxDepthStencilControl depthControl;
 	depthControl.init();
 	depthControl.setDepth(sce::Agc::CxDepthStencilControl::Depth::kDisable);
@@ -419,8 +432,8 @@ void GameTechAGCRenderer::PostProcessPass()
 
 	frameContext->m_bdr.getStage(sce::Agc::ShaderType::kPs)
 		.setConstantBuffers(0, 1, &currentFrame->constantBuffer)
-		.setSamplers(0, 1, &sceneBuffer.sampler)
-		.setTextures(0, 1, sceneBuffer.texture->GetAGCPointer());
+		.setSamplers(0, 1, &sceneBuffer.sampler).setTextures(0, 1, sceneBuffer.texture->GetAGCPointer())
+		.setSamplers(1, 1, &lightBuffer.sampler).setTextures(1, 1, lightBuffer.texture->GetAGCPointer());
 
 	unitQuad->BindVertexBuffers(frameContext->m_bdr.getStage(sce::Agc::ShaderType::kGs));
 	DrawBoundMesh(*frameContext, *unitQuad);
@@ -465,8 +478,7 @@ void GameTechAGCRenderer::DisplayRenderPass() {
 	checkError(sce::Agc::Core::translate(&outputTex, &backBuffers[currentSwap].renderTarget, sce::Agc::Core::RenderTargetComponent::kData));
 
 	frameContext->m_bdr.getStage(sce::Agc::ShaderType::kCs)
-		//.setTextures(0, 1, screenBuffer.texture->GetAGCPointer())
-		.setTextures(0, 1, lightBuffer.texture->GetAGCPointer())
+		.setTextures(0, 1, screenBuffer.texture->GetAGCPointer())
 		.setRwTextures(1, 1, &outputTex);
 	uint32_t xDims = (outputTex.getWidth() + 7) / 8;
 	uint32_t yDims = (outputTex.getHeight() + 7) / 8;
@@ -615,6 +627,7 @@ void GameTechAGCRenderer::UpdateObjectList() {
 		state.color = light->colour;
 		state.position = light->worldPosition;
 		state.radius = light->radius;
+		state.intensity = light->intensity;
 		currentFrame->data.WriteData(state);
 	}
 	currentFrame->lights.end(currentFrame);

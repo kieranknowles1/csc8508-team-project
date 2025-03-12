@@ -74,5 +74,7 @@ namespace NCL::PS5 {
 		MemoryAllocator allocator;
 
 		sce::Agc::CxDepthRenderTarget			depthTarget;
+		PS5::AGCTexture* depthTexture;
+		sce::Agc::Core::Sampler depthSampler;
 	};
 }
