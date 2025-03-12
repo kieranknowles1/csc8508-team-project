@@ -67,7 +67,7 @@ void main(void) {
    vec3 normalWorld = calculateNormal(IN.texCoord);
    for (int i = 0; i < 25; i++) {
        vec3 normalWorld2 =calculateNormal(IN.texCoord+offsets[i]); // check surrounding normals
-       if(distance(normalWorld,normalWorld2) > 0.9f){ // normals are substantially different
+       if(distance(normalWorld,normalWorld2) > 0.75f){ // normals are substantially different
            colour = vec4(0,0,0,1);
            break;
         }
