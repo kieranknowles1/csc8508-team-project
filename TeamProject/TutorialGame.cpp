@@ -79,8 +79,8 @@ void TutorialGame::UpdateGame(float dt) {
     if (testTurret) {
         testTurret->Update(dt);
     }
-    if (navMesh && navMeshDebug) {
-        visualiseNavMesh();
+    if (navMeshDebug) {
+        VisualiseNavMesh();
         if (wanderer) {
             wanderer->Update(dt);
         }
@@ -185,8 +185,10 @@ void TutorialGame::ThirdPersonControls() {
     mainCamera->SetPitch(-15.0f);
 }
 
-void TutorialGame::visualiseNavMesh() {
-    navMesh->VisualiseNavMesh();
+void TutorialGame::VisualiseNavMesh() {
+    for (NavMesh* mesh : navMeshes) {
+        mesh->VisualiseNavMesh();
+    }
 
     /*btVector3 startPoint(94, 0.5833334, 26);
     btVector3 endPoint(68, 0.5833334, 34);
@@ -305,13 +307,40 @@ void TutorialGame::LoadWorldFromFile(int levelNum) {
 
 	navMeshDebug = true;
 	if (navMeshDebug) {
-		freeCam = true;
-		navMesh = new NavMesh(bulletWorld);
-		navMesh->LoadFromFile("Assets/Meshes/NavMeshes/bottom.navmesh");
-		AddTurretToWorld();
-		AddWandererToWorld();
+        InitNavMeshes();
 	}
 
+}
+
+void TutorialGame::InitNavMeshes() {
+    freeCam = true;
+
+    bottom = new NavMesh(bulletWorld);
+    bottom->LoadFromFile("Assets/Meshes/NavMeshes/bottom.navmesh");
+    navMeshes.push_back(bottom);
+
+    top = new NavMesh(bulletWorld);
+    top->LoadFromFile("Assets/Meshes/NavMeshes/top.navmesh");
+    navMeshes.push_back(top);
+
+    front = new NavMesh(bulletWorld);
+    front->LoadFromFile("Assets/Meshes/NavMeshes/front.navmesh");
+    navMeshes.push_back(front);
+
+    back = new NavMesh(bulletWorld);
+    back->LoadFromFile("Assets/Meshes/NavMeshes/back.navmesh");
+    navMeshes.push_back(back);
+
+    left = new NavMesh(bulletWorld);
+    left->LoadFromFile("Assets/Meshes/NavMeshes/left.navmesh");
+    navMeshes.push_back(left);
+
+    right = new NavMesh(bulletWorld);
+    right->LoadFromFile("Assets/Meshes/NavMeshes/right.navmesh");
+    navMeshes.push_back(right);
+
+    AddTurretToWorld();
+    AddWandererToWorld();
 }
 
 void TutorialGame::ResetWorld() {
@@ -382,12 +411,12 @@ Turret* TutorialGame::AddTurretToWorld() {
 }
 
 Wanderer* TutorialGame::AddWandererToWorld() {
-    Wanderer* wanderer = new Wanderer(player, navMesh);
+    Wanderer* wanderer = new Wanderer(player, bottom);
 
     float height = 4.0f;
     float radius = 2.0f;
 
-    wanderer->setInitialPosition(navMesh->GetRandomPointInNavMesh());
+    wanderer->setInitialPosition(bottom->GetRandomPointInNavMesh());
     wanderer->setRenderScale(btVector3(radius * 2, height, radius + 2));
 
     btCollisionShape* shape = new btCapsuleShape(radius, height);

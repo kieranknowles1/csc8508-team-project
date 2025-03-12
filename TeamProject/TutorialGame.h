@@ -203,9 +203,16 @@ namespace NCL {
             LevelImporter* levelImporter;
             bool loadFromLevel;
 
-            NavMesh* navMesh;
+            NavMesh* bottom;
+            NavMesh* top;
+            NavMesh* front;
+            NavMesh* back;
+            NavMesh* left;
+            NavMesh* right;
+            std::vector<NavMesh*> navMeshes;
             bool navMeshDebug = false;
-            void visualiseNavMesh();
+            void VisualiseNavMesh();
+            void InitNavMeshes();
 
             Wanderer* wanderer;
             Wanderer* AddWandererToWorld();
