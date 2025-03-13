@@ -92,6 +92,7 @@ namespace Packet {
         else if (channel == static_cast<int>(Channel::UNSEQUENCED)) packetFlags = ENET_PACKET_FLAG_UNSEQUENCED;
 
         ENetPacket* enetPacket = enet_packet_create(buffer, offset, packetFlags);
+        delete[] buffer;
         return enetPacket;
     }
 #pragma endregion DeltaPacketHandler
@@ -186,6 +187,7 @@ namespace Packet {
         else if (channel == static_cast<int>(Channel::UNSEQUENCED)) packetFlags = ENET_PACKET_FLAG_UNSEQUENCED;
 
         ENetPacket* enetPacket = enet_packet_create(buffer, offset, packetFlags);
+        delete[] buffer;
         return enetPacket;
     }
 #pragma endregion PositonPacketHandler
@@ -283,6 +285,7 @@ namespace Packet {
         else if (channel == static_cast<int>(Channel::UNSEQUENCED)) packetFlags = ENET_PACKET_FLAG_UNSEQUENCED;
 
         ENetPacket* enetPacket = enet_packet_create(buffer, offset, packetFlags);
+        delete[] buffer;
         return enetPacket;
     }
 #pragma endregion ObjectChangeGravityPacketHandler
@@ -325,6 +328,7 @@ namespace Packet {
         else if (channel == static_cast<int>(Channel::UNSEQUENCED)) packetFlags = ENET_PACKET_FLAG_UNSEQUENCED;
 
         ENetPacket* enetPacket = enet_packet_create(buffer, offset, packetFlags);
+        delete[] buffer;
         return enetPacket;
     }
 #pragma endregion StartGamePacketHandler
@@ -386,6 +390,7 @@ namespace Packet {
         else if (channel == static_cast<int>(Channel::UNSEQUENCED)) packetFlags = ENET_PACKET_FLAG_UNSEQUENCED;
 
         ENetPacket* enetPacket = enet_packet_create(buffer, offset, packetFlags);
+        delete[] buffer;
         return enetPacket;
     }
 #pragma endregion AssignHostPacketHandler
@@ -472,6 +477,7 @@ namespace Packet {
 
         ENetPacket* enetPacket = enet_packet_create(buffer, offset, packetFlags);
         enetPacket->dataLength = offset;
+        delete[] buffer;
         return enetPacket;
     }
 #pragma endregion UserInfoPacketHandler
@@ -531,6 +537,7 @@ namespace Packet {
         else if (channel == static_cast<int>(Channel::UNSEQUENCED)) packetFlags = ENET_PACKET_FLAG_UNSEQUENCED;
 
         ENetPacket* enetPacket = enet_packet_create(buffer, offset, packetFlags);
+        delete[] buffer;
         return enetPacket;
     }
 #pragma endregion RequestUserIDPacketHandler
