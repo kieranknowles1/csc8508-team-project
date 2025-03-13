@@ -75,7 +75,7 @@ void PlayerController::HandleShooting(float dt) {
     }
     else {
         if (firing) {
-           // renderer->removeLaser(laserID);
+            renderer->removeLaser(laserID);
             firing = false;
         }
     }

@@ -28,7 +28,7 @@ GameTechRenderer::GameTechRenderer(Window* window) : OGLRenderer(window), GameTe
 	decalShader = std::make_unique<OGLShader>("decal.vert", "decal.frag");
 	decalBlendShader = std::make_unique<OGLShader>("texturevert.glsl", "decalBlend.frag");
 	uiShader = std::make_unique<OGLShader>("ui.vert", "ui.frag");
-	laserShader = std::make_unique<OGLShader>("laser.vert", "laser.frag");
+	laserShader = std::make_unique<OGLShader>("laservert.glsl", "laserfrag.glsl");
 
 	glGenTextures(1, &shadowTex);
 	glBindTexture(GL_TEXTURE_2D, shadowTex);
