@@ -697,6 +697,14 @@ void GameTechRenderer::RenderUI() {
 		DrawBoundMesh();
 	}
 
+	for (const auto& uiElement : frameTexts) {
+		Vector2 pos = uiElement.position;
+		std::string text = uiElement.text;
+		Vector4 color = uiElement.color;
+
+		Debug::Print(text, pos, color);
+	}
+
 	glDisable(GL_BLEND);
 	glEnable(GL_DEPTH_TEST);
 }

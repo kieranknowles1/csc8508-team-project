@@ -22,8 +22,11 @@ void PlayerController::Initialise() {
     rb = player->GetPhysicsObject()->GetRigidBody();
     debugDrawer = bulletWorld->getDebugDrawer();
     crosshair = std::make_unique<Crosshair>();
+    scoreboard = std::make_unique<Scoreboard>();
     renderer->AddUiElement(crosshair.get());
+	renderer->AddUiElement(scoreboard.get());
     crosshair->SetActive(true);
+	scoreboard->SetActive(true);
     
 }
 

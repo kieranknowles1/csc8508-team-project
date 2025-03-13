@@ -69,6 +69,7 @@ public:
 	}
 	
 	void SortPlayers();
+	void InitScoreboard();
 	void UpdateScoreboardData();
 
 private:

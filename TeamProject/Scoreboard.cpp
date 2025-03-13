@@ -39,6 +39,10 @@ void Scoreboard::SortPlayers() {
 	}
 }
 
+void Scoreboard::InitScoreboard() {
+
+}
+
 void Scoreboard::UpdateScoreboardData() {
 	SortPlayers();
 	Vector2 boxSize = Vector2(scoreboardSize.x/columns, scoreboardSize.y/9);
@@ -58,10 +62,16 @@ void Scoreboard::UpdateScoreboardData() {
 			Uitexts[i + 1].text = "Score:";
 			Uitexts[i + 2].text = "Color:";
 		}
-		else {
+		else if (i < players.size()){
 			Uitexts[i * columns].text = players[i - 1].name;
 			Uitexts[i * columns + 1].text = std::to_string(players[i - 1].score);
 			Uitexts[i * columns + 2].text = TeamColorToString(players[i - 1].color);
+		}
+		else
+		{
+			Uitexts[i * columns].text = "";
+			Uitexts[i * columns + 1].text = "";
+			Uitexts[i * columns + 2].text = "";
 		}
 	}
 }
