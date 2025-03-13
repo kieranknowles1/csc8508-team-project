@@ -153,7 +153,7 @@ private:
 	btVector3 forwardDirection;
 	float rotateTimer = 0.0f;
 	bool rotationChanging = false;
-	btVector3 gunCameraOffset = btVector3(0.5, -1.1, -0.5);
+	btVector3 gunCameraOffset = btVector3(4.5, -6.8, -3.5);
 	GameObject* gun;
 
 

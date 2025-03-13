@@ -512,7 +512,7 @@ PlayerObject* TutorialGame::AddPlayerCapsuleToWorld(const Vector3& position, flo
     // Initializing the physics object for the capsule
     capsule->GetPhysicsObject()->InitBulletPhysics(bulletWorld, shape, inverseMass);
     //GameObject* newGun = AddCubeToWorld(Vector3(-300, 20, 40), Vector3(0.5, 0.5, 0.3), 0, false);
-    GameObject* newGun = AddGunToWorld(Vector3(-900, 20, 40), Vector3(0.1, 0.1, 0.1), 0, false);
+    GameObject* newGun = AddGunToWorld(Vector3(-900, 20, 40), Vector3(0.6, 0.6, 0.6), 0, false);
     capsule->setGun(newGun);
     world->AddGameObject(capsule);
 

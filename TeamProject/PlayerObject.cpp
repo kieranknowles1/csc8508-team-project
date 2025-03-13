@@ -231,7 +231,7 @@ void PlayerObject::SetGunTransform(float pitch, float yaw, btVector3 camPos) {
     btQuaternion pitchQuat(btVector3(1, 0, 0), pitchRadians);
     btQuaternion cameraRotation = yawQuat * pitchQuat; // Yaw first, then pitch
 
-    float gunYawOffset = Maths::DegreesToRadians(-30.0f); // Rotate gun slightly right
+    float gunYawOffset = Maths::DegreesToRadians(-40.0f); // Rotate gun slightly right
     btQuaternion gunYawQuat(btVector3(0, 1, 0), gunYawOffset); // Yaw correction
 
     btQuaternion gunRotation = cameraRotation * gunYawQuat; // Apply yaw correction
