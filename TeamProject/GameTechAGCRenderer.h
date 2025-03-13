@@ -30,13 +30,17 @@ namespace NCL {
 			public NCL::CSC8503::GameTechRendererInterface
 		{
 		public:
-			GameTechAGCRenderer();
+			GameTechAGCRenderer(Window* window);
 			~GameTechAGCRenderer();
 
 			virtual Mesh*		LoadMesh(const std::string& name)				override;
 			virtual Texture*	LoadTexture(const std::string& name)			override;
 
 		protected:
+			void checkError(SceError err) {
+				assert(err == SCE_OK);
+			}
+
 			void drawFrame(float dt) override {
 				Update(dt);
 				Render();
@@ -58,6 +62,7 @@ namespace NCL {
 			void MainRenderPass();
 
 			void UiPass();
+			void PostProcessPass();
 
 			void DisplayRenderPass();
 
@@ -142,28 +147,37 @@ namespace NCL {
 
 			sce::Agc::Core::Buffer arrayBuffer;
 
-			NCL::PS5::AGCShader* skinningCompute;
+			std::unique_ptr<PS5::AGCShader> skinningCompute;
 
-			NCL::PS5::AGCShader* defaultVertexShader;
-			NCL::PS5::AGCShader* defaultPixelShader;
+			std::unique_ptr<PS5::AGCShader> defaultVertexShader;
+			std::unique_ptr<PS5::AGCShader> defaultPixelShader;
 
 			std::unique_ptr<PS5::AGCShader> uiVertexShader;
 			std::unique_ptr<PS5::AGCShader> uiPixelShader;
 
-			NCL::PS5::AGCShader* shadowVertexShader;
-			NCL::PS5::AGCShader* shadowPixelShader;
+			std::unique_ptr<PS5::AGCShader> shadowVertexShader;
+			std::unique_ptr<PS5::AGCShader> shadowPixelShader;
 
-			NCL::PS5::AGCShader* debugLineVertexShader;
-			NCL::PS5::AGCShader* debugLinePixelShader;
+			std::unique_ptr<PS5::AGCShader> debugLineVertexShader;
+			std::unique_ptr<PS5::AGCShader> debugLinePixelShader;
 
-			NCL::PS5::AGCShader* debugTextVertexShader;
-			NCL::PS5::AGCShader* debugTextPixelShader;
+			std::unique_ptr<PS5::AGCShader> debugTextVertexShader;
+			std::unique_ptr<PS5::AGCShader> debugTextPixelShader;
 
-			NCL::PS5::AGCShader* gammaCompute;
+			std::unique_ptr<PS5::AGCShader> gammaCompute;
+
+			std::unique_ptr<PS5::AGCShader> postVertexShader;
+			std::unique_ptr<PS5::AGCShader> postPixelShader;
 
 			sce::Agc::CxDepthRenderTarget		shadowTarget;
 			NCL::PS5::AGCTexture*				shadowMap; //ptr into bindless array
 			sce::Agc::Core::Sampler				shadowSampler;
+
+			void createBuffer(const std::string& name, sce::Agc::CxRenderTarget* outTarget, PS5::AGCTexture** outTexture, sce::Agc::Core::Sampler* optionalSampler);
+
+			sce::Agc::CxRenderTarget sceneTarget;
+			NCL::PS5::AGCTexture* sceneTexture;
+			sce::Agc::Core::Sampler sceneSampler;
 
 			sce::Agc::CxRenderTarget			screenTarget;
 			NCL::PS5::AGCTexture*				screenTex; //ptr into bindless array

@@ -9,6 +9,13 @@ https://research.ncl.ac.uk/game/
 #pragma once
 
 namespace NCL::Assets {
+#ifndef __PROSPERO__
+	const std::string DEFAULTCONFIG("default-config.jsonc");
+#else
+	const std::string DEFAULTCONFIG("/app0/default-config.jsonc");
+#endif // !__PROSPERO__
+
+
 	const std::string ASSETROOT(ASSETROOTLOCATION);
 	const std::string SHADERDIR(ASSETROOT + "Shaders/");
 	const std::string MESHDIR(ASSETROOT + "Meshes/");

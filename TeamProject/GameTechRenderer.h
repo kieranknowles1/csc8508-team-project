@@ -26,10 +26,10 @@ namespace NCL {
 				Render();
 			}
 
-			GameTechRenderer();
+			GameTechRenderer(Window* window);
 			~GameTechRenderer() override;
 
-			Mesh* LoadMesh(const std::string& name) override;
+			OGLMesh* LoadMesh(const std::string& name) override; /////WAS Mesh* instead of OGLMesh*
 			Texture* LoadTexture(const std::string& name) override;
 
 		protected:
@@ -70,10 +70,9 @@ namespace NCL {
 
 			// Decal stuff
 			std::unique_ptr<OGLShader> decalShader;
+			std::unique_ptr<OGLShader> decalBlendShader;
 			GLuint decalQuadVAO = 0;
 			GLuint decalQuadVBO = 0;
-			GLuint fullscreenQuadVAO = 0;
-			GLuint fullscreenQuadVBO = 0;
 
 			Vector4		lightColour;
 			float		lightRadius;
@@ -96,16 +95,41 @@ namespace NCL {
 			GLuint textTexVBO;
 			size_t textCount = 0;
 
+			//Deferred rendering additions:
+			OGLShader* deferredsceneShader;
+			OGLShader* pointlightShader;
+			OGLShader* combineShader;
+
+			OGLMesh* lightSphere;
+			GLuint bufferFBO;
+
+			// For drawing multiple point lights.
+			GLuint pointLightFBO;		// For drawing point light specular and diffuse to textures.
+			GLuint lightDiffuseTex;		// Used by pointLightFBO for the diffuse texture.
+			GLuint lightSpecularTex;	// Used by pointLightFBO for the specular texture.
+
+
+			void GenerateScreenTexture(GLuint& into, bool depth = false); //added
+			GLuint bufferDepthTex;
+			GLuint bufferColourTex;
+			GLuint bufferNormalTex;
+			void FillBuffers();
+			void DrawPointLights();
+			void CombineBuffers();
+			void DrawScene(); 
+
 			//Post processing additions:
 			GLuint hdrTex;
 			GLuint hdrFBO;
 			GLuint hdrDepthTex;
+			OGLMesh* fullscreenQuad;  
 			OGLShader* hdrShader;
 			GLuint BTex;
 			GLuint BFBO;
 			OGLShader* vignetteShader;
 			GLuint BDepthTex;
 			void RenderPostProcessing();
+			OGLShader* edgedetectShader;
 
 		};
 	}

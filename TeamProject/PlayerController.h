@@ -15,6 +15,10 @@
 #include <btBulletDynamicsCommon.h>
 #include <btBulletCollisionCommon.h>
 #include "DecalSystem.h"
+#include "Shoot.h"
+#include "Paintball.h"
+#include "Crosshair.h"
+#include <memory>
 
 
 namespace NCL {
@@ -22,15 +26,15 @@ namespace NCL {
 
 		class PlayerController {
 		public:
-			PlayerController(PlayerObject* playerIn, GameObject* gunIn, const Controller* c, Camera* cam, btDiscreteDynamicsWorld* bulletWorldIn, GameWorld* worldIn, ResourceManager* resourceManager, DecalSystem& decalSys) {
+			PlayerController(PlayerObject* playerIn, GameObject* gunIn, const Controller* c, Camera* cam, btDiscreteDynamicsWorld* bulletWorldIn, GameTechRendererInterface* rendererIn) {
 				player = playerIn;
 				gun = gunIn;
 				controller = c;
 				camera = cam;
 				bulletWorld = bulletWorldIn;
-				world = worldIn;
-				this->resourceManager = resourceManager;
-				decalSystem = &decalSys;
+				renderer = rendererIn;
+
+
 				Initialise();
 			}
 			~PlayerController() {};
@@ -38,52 +42,26 @@ namespace NCL {
 			void SetThirdPerson(bool thirdPersonIn) {
 				thirdPerson = thirdPersonIn;
 			};
-			void setTargetWorldRotation(btVector3 worldRotationIn) {
-				if (rotationChanging) return;
-				oldWorldRotation = upDirection;
-				targetWorldRotation = worldRotationIn;
-				rotateTimer = 0.0f;
-				rotationChanging = true;
-			}
-
-			btVector3 getUpDirection() {
-				return upDirection;
-			}
-
-			btVector3 getRightDirection() {
-				return rightDirection;
-			}
-
-			btVector3 getForwardDirection() {
-				return forwardDirection;
-			}
 
 			float getYaw() {
 				return yaw;
 			}
-			btQuaternion getCamOffset() {
-				return camRotOffset;
-			}
 
 			void rollRight() {
-				Rotate(true, true);
+				player->Rotate(true, true,yaw);
 			}
 
 			void rollLeft() {
-				Rotate(false, true);
+				player->Rotate(false, true,yaw);
 			}
 
 			void pitchUp() {
-				Rotate(true, false);
+				player->Rotate(true, false,yaw);
 			}
 
 			void pitchDown() {
-				Rotate(false, false);
+				player->Rotate(false, false,yaw);
 			}
-
-			void CalculateDirections(float dt);
-			btVector3 CalculateRightDirection(btVector3 upDir);
-			btVector3 CalculateForwardDirection(btVector3 upDir, btVector3 rightDir);
 
 		private:
 
@@ -91,7 +69,7 @@ namespace NCL {
 			float playerSpeed = 80.0f;
 			float jumpHeight = 300.0f;
 			float gravityScale = 300.0f;
-			float cameraHeight = 3.0f;
+			float cameraHeight = 4.5f;
 
 			float sprintMulti = 2.0f;
 			float strafeMulti = 0.65f;
@@ -100,7 +78,7 @@ namespace NCL {
 
 			float crouchingTime = 0.3f;
 			float crouchMulti = 0.4f;
-			float crouchHeight = 0.0f;
+			float crouchHeight = -1.0f;
 
 			float slidingTime = 0.25f;
 			float slidingAngle = 75.0f;
@@ -109,28 +87,21 @@ namespace NCL {
 
 			//Gun Variables
 			float shotCooldown = 0.075f;
-			float bulletSpeed = 1000.0f;
 			btVector3 gunCameraOffset = btVector3(1.3, -0.7, -1.2);
-			btVector3 bulletCameraOffset = btVector3(1.0, -0.5, -3.0);
-			float decalRadius = 8.0f;
-			float alphaFade = 1.0f;
-			btVector4 decalColor = btVector4(1.0f, 0.0f, 0.0f, 1.0f);
-			std::string decalTexturePath = "paintball_splash_red.png";
 
 			//Rotation Variables
 			float rotateTime = 0.5f;
 
 			//Special Types Variables
-			float bouncePadHeight = 5000.0f;
+			float bouncePadHeight = 7000.0f;
 
-			btQuaternion camRotOffset = btQuaternion::getIdentity();
-			btQuaternion oldcamRotOffset = btQuaternion::getIdentity();
-			btQuaternion targetcamRotOffset = btQuaternion::getIdentity();
-			btVector3 targetWorldRotation = btVector3(0, 1, 0);
-			btVector3 oldWorldRotation = btVector3(0, 1, 0);
+
+			GameTechRendererInterface* renderer;
+			std::unique_ptr<Crosshair> crosshair;
 			btVector3 upDirection;
 			btVector3 rightDirection;
 			btVector3 forwardDirection;
+			btQuaternion camRotOffset;
 			float rotateTimer = 0.0f;
 			bool rotationChanging = false;
 			bool thirdPerson = false;
@@ -144,7 +115,7 @@ namespace NCL {
 			float yaw = 0;
 			bool crouchTransition = false;
 			float currentHeight;
-			float standingHeight = 4.0f;
+			float standingHeight = 6.5f;
 			float crouchingHeight = 2.0f;
 			float currentCrouchingTimer=0;
 			float currentStandingTimer=10.0f;
@@ -160,7 +131,6 @@ namespace NCL {
 			btVector3 btPlayerPos;
 			btTransform transformGun;
 			btVector3 btGunPos;
-			ResourceManager* resourceManager;
 			GameWorld* world;
 			float shotTimer = 0;
 			bool collision = false;
@@ -169,37 +139,34 @@ namespace NCL {
 			btIDebugDraw* debugDrawer;
 			bool onIce = false;
 			btVector3 previousVelocity;
-			std::shared_ptr<NCL::Rendering::Texture> pngTexture = nullptr;
+
+			btVector3 forward;
+			btVector3 up;
+			btVector3 right;
+			btVector3 movement;
+
 
 			Vector2 getDirectionalInput() const;
 			void Initialise();
 			void HandleShooting(float dt);
 			void HandleCrouching(float dt);
 			void HandleSliding(float dt);
-			void HandleTypes();
+			void SpecialTypeCalculations();
 			bool CheckCeling();
 			btVector3 FindFloorNormal();
 			void SetGunTransform();
-			void Shoot();
-			void ShootBullet(btQuaternion bulletRotation, btVector3 hitPoint);
-			void Rotate(bool positive, bool rolling);
-			btVector3 CalculateUpDirection(float dt);
-			btVector3 CalculateForwardFromYaw();
-			btVector3 CalculateRightFromYaw();
+			void FireShot();
+			void GetAllDirections();
+			void HandleYaw();
+			void RotationCalculations();
+			void CameraMovement();
+			void GroundNormalCalculations();
+			void MovementCalculations(float dt);
+			void HandleJumping();
+			void HandleHurtEffects();
 
-			// decal system
-			DecalSystem* decalSystem;
 		};
 	};
 
-	// Paintball class derived from GameObject
-	class Paintball : public GameObject {
-	public:
-		void OnCollisionEnter(const CollisionInfo& collisionInfo) override;
-		void Initialise(GameObject* playerIn) {
-			player = playerIn;
-		}
-	private:
-		GameObject* player;
-	};
+
 }

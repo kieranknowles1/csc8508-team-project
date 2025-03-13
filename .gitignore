@@ -2,6 +2,7 @@ build
 build-ps5
 .vs
 *.bak
+.cache
 *.bak
 *.mshb
 fmod-cmake/fmod/2.02.26/

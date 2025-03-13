@@ -1,0 +1,22 @@
+#include "ShaderConstants.psslh"
+#include "VertexAttributes.psslh"
+
+struct VS_OUTPUT
+{
+    float4 position : S_POSITION;
+    float2 uv : TEXCOORD0;
+};
+
+[CxxSymbol("Post::gs")]
+VS_OUTPUT main(uint vertID : S_VERTEX_ID) : S_INSTANCE_ID {
+    VS_OUTPUT output;
+
+    // Pass position through to the fragment shader
+    output.position = float4(Positions[vertID], 1.0f);
+    // Positions don't seem to be interpolated, so UV is necessary
+    output.uv = TextureCoords[vertID];
+    // WTF: UV Y coordinates are inverted for some reason
+    output.uv.y = 1.0f - output.uv.y;
+
+    return output;
+}

@@ -9,6 +9,7 @@ set(SOURCES
     PlayerController.cpp
     PlayerController.h
     PlayerObject.h
+    PlayerObject.cpp
     Turret.h
     Turret.cpp
 	BWHelperFunctions.h
@@ -44,6 +45,14 @@ set(SOURCES
     Multiplayer/User.hpp
 	Wanderer.h
 	Wanderer.cpp
+    Shoot.cpp
+    Shoot.h
+    Paintball.h
+    Paintball.cpp
+    PointLight.h
+    Crosshair.h
+    Crosshair.cpp
+    Respawn.h
 )
 
 set(ASSET_ROOT "${CMAKE_SOURCE_DIR}/Assets")

@@ -9,7 +9,10 @@ using namespace Win32Code;
 
 #define WINDOWCLASS "WindowClass"
 
+Win32Window* Win32Window::instance = nullptr;
+
 Win32Window::Win32Window(const WindowInitialisation& winInitInfo) {
+	instance = this;
 	forceQuit		= false;
 	init			= false;
 	mouseLeftWindow	= false;
@@ -113,6 +116,7 @@ Win32Window::Win32Window(const WindowInitialisation& winInitInfo) {
 }
 
 Win32Window::~Win32Window(void)	{
+	instance = nullptr;
 	init = false;
 }
 
@@ -183,13 +187,12 @@ void	Win32Window::SetFullScreen(bool fullScreen) {
 	}
 }
 
-void Win32Window::CheckMessages(MSG &msg)	{
-	Win32Window* thisWindow = (Win32Window*)window;
+void Win32Window::CheckMessages(MSG &msg) {
 	switch (msg.message)	{				// Is There A Message Waiting?
 		case (WM_QUIT):
 		case (WM_CLOSE): {					// Have We Received A Quit Message?
-			thisWindow->ShowOSPointer(true);
-			thisWindow->LockMouseToWindow(false);
+			instance->ShowOSPointer(true);
+			instance->LockMouseToWindow(false);
 			forceQuit = true;
 		}break;
 		case (WM_INPUT): {
@@ -202,11 +205,11 @@ void Win32Window::CheckMessages(MSG &msg)	{
 			RAWINPUT* raw = (RAWINPUT*)lpb;
 
 			if (keyboard && raw->header.dwType == RIM_TYPEKEYBOARD && active) {
-				thisWindow->winKeyboard->UpdateRAW(raw);
+				instance->winKeyboard->UpdateRAW(raw);
 			}
 
 			if (mouse && raw->header.dwType == RIM_TYPEMOUSE && active) {
-				thisWindow->winMouse->UpdateRAW(raw);
+				instance->winMouse->UpdateRAW(raw);
 			}
 
 			delete lpb;
@@ -220,36 +223,38 @@ void Win32Window::CheckMessages(MSG &msg)	{
 }
 
 LRESULT CALLBACK Win32Window::WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)	{
-	Win32Window* thisWindow = (Win32Window*)window;
-
 	bool applyResize = false;
 
     switch(message)	 {
         case(WM_DESTROY):	{
-			thisWindow->ShowOSPointer(true);
-			thisWindow->LockMouseToWindow(false);
+			instance->ShowOSPointer(true);
+			instance->LockMouseToWindow(false);
 
 			PostQuitMessage(0);
-			thisWindow->forceQuit = true;
+			instance->forceQuit = true;
 		} break;
 		case (WM_ACTIVATE): {
 			if(LOWORD(wParam) == WA_INACTIVE)	{
-				thisWindow->active = false;
+				instance->active = false;
 				ReleaseCapture();
 				ClipCursor(NULL);
-				if (thisWindow->init && mouse && keyboard) {
-					thisWindow->winMouse->Sleep();
-					thisWindow->winKeyboard->Sleep();
+				if (instance->init && instance->mouse && instance->keyboard) {
+					if (instance->winMouse) {
+						instance->winMouse->Sleep();
+					}
+					if (instance->winKeyboard) {
+						instance->winKeyboard->Sleep();
+					}
 				}
 			}
 			else {
-				thisWindow->active = true;
-				if(thisWindow->init) {
-					thisWindow->winMouse->Wake();
-					thisWindow->winKeyboard->Wake();
+				instance->active = true;
+				if(instance->init) {
+					instance->winMouse->Wake();
+					instance->winKeyboard->Wake();
 
-					if(thisWindow->lockMouse) {
-						thisWindow->LockMouseToWindow(true);
+					if(instance->lockMouse) {
+						instance->LockMouseToWindow(true);
 					}
 				}
 			}
@@ -257,71 +262,70 @@ LRESULT CALLBACK Win32Window::WindowProc(HWND hWnd, UINT message, WPARAM wParam,
 		}break;
 		case (WM_SYSCOMMAND): {
 			if (wParam == SC_RESTORE) {
-				if (thisWindow->minimised) {
-					ShowWindow(thisWindow->windowHandle, SW_RESTORE);
-					if (thisWindow->init) {
-						thisWindow->winMouse->SetAbsolutePositionBounds(thisWindow->size);
-						thisWindow->LockMouseToWindow(thisWindow->lockMouse);
+				if (instance->minimised) {
+					ShowWindow(instance->windowHandle, SW_RESTORE);
+					if (instance->init) {
+						instance->winMouse->SetAbsolutePositionBounds(instance->size);
+						instance->LockMouseToWindow(instance->lockMouse);
 					}
 				}
 			}
 		}break;
 		case (WM_LBUTTONDOWN): {
-			if(thisWindow->init && thisWindow->lockMouse) {
-				thisWindow->LockMouseToWindow(true);
+			if(instance->init && instance->lockMouse) {
+				instance->LockMouseToWindow(true);
 			}
 		}break;
 		case (WM_MOUSEMOVE): {
 			TRACKMOUSEEVENT tme;
 			tme.cbSize = sizeof(TRACKMOUSEEVENT);
 			tme.dwFlags = TME_LEAVE;
-			tme.hwndTrack = thisWindow->windowHandle;
+			tme.hwndTrack = instance->windowHandle;
 			TrackMouseEvent(&tme);
 
-			if (mouse) {
-				Win32Mouse*realMouse = (Win32Mouse*)mouse;
-				realMouse->UpdateWindowPosition(
+			if (instance->winMouse) {
+				instance->winMouse->UpdateWindowPosition(
 					Vector2i(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam))
 				);
 			}
 
-			if(thisWindow->mouseLeftWindow) {
-				thisWindow->mouseLeftWindow = false;
-				if (thisWindow->init) {
-					thisWindow->winMouse->Wake();
-					thisWindow->winKeyboard->Wake();
+			if(instance->mouseLeftWindow) {
+				instance->mouseLeftWindow = false;
+				if (instance->init) {
+					instance->winMouse->Wake();
+					instance->winKeyboard->Wake();
 				}
 			}
 		}break;
 		case(WM_MOUSELEAVE):{
-			thisWindow->mouseLeftWindow = true;
-			if (thisWindow->init) {
-				thisWindow->winMouse->Sleep();
-				thisWindow->winKeyboard->Sleep();
+			instance->mouseLeftWindow = true;
+			if (instance->init) {
+				instance->winMouse->Sleep();
+				instance->winKeyboard->Sleep();
 			}
 		}break;
 		case(WM_SIZE): {
 			float newX = (float)LOWORD(lParam);
 			float newY = (float)HIWORD(lParam);
-			if (newX > 0 && newY > 0 && (newX != thisWindow->size.x || newY != thisWindow->size.y)) {
-				thisWindow->size.x = (float)LOWORD(lParam);
-				thisWindow->size.y = (float)HIWORD(lParam);
+			if (newX > 0 && newY > 0 && (newX != instance->size.x || newY != instance->size.y)) {
+				instance->size.x = (float)LOWORD(lParam);
+				instance->size.y = (float)HIWORD(lParam);
 			}
 			if (wParam == SIZE_MINIMIZED) {
-				thisWindow->minimised = true;
+				instance->minimised = true;
 				//applyResize = true;
 			}
 			if (wParam == SIZE_MAXIMIZED) {
-				thisWindow->minimised = false;
-				thisWindow->maximised = true;
+				instance->minimised = false;
+				instance->maximised = true;
 				applyResize = true;
 			}
-			else if (wParam == SIZE_RESTORED && thisWindow->maximised) {
-				thisWindow->maximised = false;
+			else if (wParam == SIZE_RESTORED && instance->maximised) {
+				instance->maximised = false;
 				applyResize = true;
 			}
-			else if (wParam == SIZE_RESTORED && thisWindow->minimised) {
-				thisWindow->minimised = false;
+			else if (wParam == SIZE_RESTORED && instance->minimised) {
+				instance->minimised = false;
 				applyResize = true;
 			}
 		}break;
@@ -333,13 +337,13 @@ LRESULT CALLBACK Win32Window::WindowProc(HWND hWnd, UINT message, WPARAM wParam,
     }
 
 	if (applyResize) {
-		if (thisWindow->eventHandler) {
-			thisWindow->eventHandler(NCL::WindowEvent::Resize, thisWindow->size.x, thisWindow->size.y);
+		if (instance->eventHandler) {
+			instance->eventHandler(NCL::WindowEvent::Resize, instance->size.x, instance->size.y);
 		}
 
-		if (thisWindow->init) {
-			thisWindow->winMouse->SetAbsolutePositionBounds(thisWindow->size);
-			thisWindow->LockMouseToWindow(thisWindow->lockMouse);
+		if (instance->init) {
+			instance->winMouse->SetAbsolutePositionBounds(instance->size);
+			instance->LockMouseToWindow(instance->lockMouse);
 		}
 	}
 
