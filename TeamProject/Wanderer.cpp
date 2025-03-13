@@ -28,10 +28,10 @@ Wanderer::Wanderer(GameObject* p, NavMesh* mesh, char side) :
 		if (playerDist <= senseDistance) {
 			GetRenderObject()->SetColour(Vector4(1, 0, 0, 1));
 			shootTimer = maxShootTimer / 2;
-			btVector3 pPos = player->GetTransform().getOrigin();
+			/*btVector3 pPos = player->GetTransform().getOrigin();
 			pPos.setY(navMesh->GetYFromPoint(pPos.getX(), pPos.getZ()));
 			curPath = navMesh->FindPath(curPathPoint, pPos);
-			NewPath(curPath);
+			NewPath(curPath);*/
 			updateplayerPathTimer = maxUpdatePlayerPathTimer;
 			return true;
 		}
@@ -41,7 +41,7 @@ Wanderer::Wanderer(GameObject* p, NavMesh* mesh, char side) :
 		}));
 
 	stateMachine->AddTransition(new StateTransition(playerNear, playerFar, [&]()->bool {
-		if (playerDist > senseDistance + 30.0f) {
+		if (playerDist > senseDistance * 2) {
 			GetRenderObject()->SetColour(Vector4(0, 1, 0, 1));
 			curPath = navMesh->FindPath(curPathPoint, navMesh->GetRandomPointInNavMesh());
 			NewPath(curPath);
@@ -140,17 +140,28 @@ void Wanderer::PlayerNear(float dt) {
 		btTransform trans = GetTransform();
 		btVector3 curPos = trans.getOrigin();
 		btVector3 pPos = player->GetTransform().getOrigin();
+
+		btVector3 dir = (pPos - curPos) == 0 ? btVector3(0, 0, 0) : (pPos - curPos).normalized(); // Get the direction towards the player
+
+		btVector3 newPos = curPos + (dir * (speed * dt)); // Move towards player
+
+		trans.setOrigin(newPos);
+		physicsObject->GetRigidBody()->setWorldTransform(trans);
+
+		/*btTransform trans = GetTransform();
+		btVector3 curPos = trans.getOrigin();
+		btVector3 pPos = player->GetTransform().getOrigin();
 		if (curPos.distance(pPos) < 30) return;
 		pPos.setY(navMesh->GetYFromPoint(pPos.getX(), pPos.getZ()));
 		btVector3 dir = (pPos - curPos) == 0 ? btVector3(0, 0, 0) : (pPos - curPos).normalized();
-		btVector3 newPos = curPos + dir * speed;
+		btVector3 newPos = curPos + dir * (speed * dt);
 		newPos.setY(newPos.getY() - GroundAdjust(newPos));
 		newPos = newPos + offset;
 		trans.setOrigin(newPos);
 		btRigidBody* body = physicsObject->GetRigidBody();
 		body->setWorldTransform(trans);
 
-		/*if (updateplayerPathTimer > 0) {
+		if (updateplayerPathTimer > 0) {
 			if (FollowPath(dt)) {
 				btVector3 newPos = yAdjustedPoint + offset;
 				btTransform trans = GetTransform();
