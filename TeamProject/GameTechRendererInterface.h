@@ -126,7 +126,6 @@ namespace NCL::CSC8503 {
 		std::vector<UiText> frameTexts;
 		std::vector<PointLight*> lights;
 		DecalSystem decalSystem;
-		bool showScoreboard = true;
 	};
 }
 
