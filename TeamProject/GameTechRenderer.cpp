@@ -837,7 +837,7 @@ void GameTechRenderer::RenderPostProcessing() { //gonna try putting edge detecti
 		glBindTexture(GL_TEXTURE_2D, BTex); //currently holds the scene, gonna have to change up the vignette part to accomodate this //was bufferColourTex
 		glUniform1i(glGetUniformLocation(edgedetectShader->GetProgramID(), "sceneTex"), 0);
 		glActiveTexture(GL_TEXTURE1);
-		glBindTexture(GL_TEXTURE_2D, bufferDepthTex);
+		glBindTexture(GL_TEXTURE_2D, bufferDepthTex); 
 		glUniform1i(glGetUniformLocation(edgedetectShader->GetProgramID(), "depthTex"), 1);
 		glUniform2f(glGetUniformLocation(edgedetectShader->GetProgramID(), "windowSize"), windowSize.x, windowSize.y); 
 		glUniform1f(glGetUniformLocation(edgedetectShader->GetProgramID(), "nearPlane"), camera->GetNearPlane());
@@ -897,10 +897,10 @@ void GameTechRenderer::GenerateScreenTexture(GLuint& into, bool depth) {
 
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST); 
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 
-	GLuint format = depth ? GL_DEPTH_COMPONENT24 : GL_RGBA16F; //using floating point textures to allow HDR rendering 
+	GLuint format = depth ? GL_DEPTH_COMPONENT32F : GL_RGBA16F; //using floating point textures to allow HDR rendering DEPTH_COMPONENT24
 	GLuint type = depth ? GL_DEPTH_COMPONENT : GL_RGBA; 
 	GLuint datatype = depth ? GL_UNSIGNED_BYTE : GL_FLOAT;  
 
