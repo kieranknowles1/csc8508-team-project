@@ -377,7 +377,7 @@ void GameTechAGCRenderer::UiPass() {
 		.setSamplers(0, 1, &defaultSampler);
 
 	halfUnitQuad->BindVertexBuffers(frameContext->m_bdr.getStage(sce::Agc::ShaderType::kGs));
-	DrawBoundMeshInstanced(*frameContext, *halfUnitQuad, uiElements.size());
+	DrawBoundMeshInstanced(*frameContext, *halfUnitQuad, frameSprites.size());
 }
 
 void GameTechAGCRenderer::PostProcessPass()
@@ -586,7 +586,7 @@ void GameTechAGCRenderer::UpdateObjectList() {
 
 	currentFrame->uiOffset = currentFrame->data.bytesWritten;
 	char* uiDataPos = currentFrame->data.data;
-	for (auto& ui : uiElements) {
+	for (auto& ui : frameSprites) {
 		UiState state;
 		state.colour = ui.color;
 		state.position = ui.position;

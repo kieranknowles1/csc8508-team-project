@@ -281,6 +281,7 @@ void GameTechRenderer::RenderShadowMap() {
 }
 
 void GameTechRenderer::RenderCamera() {
+	glEnable(GL_DEPTH_TEST);
 	Matrix4 viewMatrix = camera->BuildViewMatrix();
 	Matrix4 projMatrix = camera->BuildProjectionMatrix(hostWindow->GetScreenAspect());
 
@@ -837,7 +838,6 @@ void GameTechRenderer::DrawScene() { //the basic rendering for the scene, curren
 	glEnable(GL_CULL_FACE);
 	glClearColor(1, 1, 1, 0); //doesn't seem to change anything regardless of alpha
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	RenderSkybox();
     RenderCamera();
 	// Render Decals to it's own buffer
 	RenderDecals();
