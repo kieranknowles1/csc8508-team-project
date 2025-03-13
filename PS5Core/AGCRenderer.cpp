@@ -30,8 +30,8 @@ AGCRenderer::AGCRenderer(Window* w) : RendererBase(w){
 		RenderTargetTemp& buffer = backBuffers[i];
 
 		buffer.spec.init();
-		buffer.spec.m_width  = SCREENWIDTH;
-		buffer.spec.m_height = SCREENHEIGHT;
+		buffer.spec.m_width  = ScreenSize.x;
+		buffer.spec.m_height = ScreenSize.y;
 
 		buffer.spec.m_format	= { sce::Agc::Core::TypedFormat::k8_8_8_8UNorm, sce::Agc::Core::Swizzle::kRGBA_R4S4 };
 		buffer.spec.m_tileMode	= sce::Agc::CxRenderTarget::TileMode::kRenderTarget;
@@ -63,7 +63,10 @@ AGCRenderer::AGCRenderer(Window* w) : RendererBase(w){
 	sce::Agc::Core::translate(&attribute, &backBuffers[0].spec, sce::Agc::Core::Colorimetry::kSrgb, sce::Agc::Core::Colorimetry::kBt709);
 	int32_t ret = sceVideoOutRegisterBuffers2(videoHandle, videoOutputSet, 0, outBuffers, SWAPCOUNT, &attribute, SCE_VIDEO_OUT_BUFFER_ATTRIBUTE_CATEGORY_UNCOMPRESSED, nullptr);
 
-	depthTarget = CreateDepthBufferTarget(SCREENWIDTH,SCREENHEIGHT);
+	depthTarget = CreateDepthBufferTarget(ScreenSize.x,ScreenSize.y);
+	depthTexture = new AGCTexture(allocator);
+	auto result = sce::Agc::Core::translate(depthTexture->GetAGCPointer(), &depthTarget, sce::Agc::Core::DepthRenderTargetComponent::kDepth);
+	assert(result == SCE_OK);
 
 	defaultSampler.init()
 		.setXyFilterMode(
@@ -199,7 +202,7 @@ void AGCRenderer::BeginFrame() {
 	frameContext->m_dcb.waitUntilSafeForRendering(videoHandle, currentSwap);
 
 	sce::Agc::CxViewport viewPort;
-	sce::Agc::Core::setViewport(&viewPort, SCREENWIDTH, SCREENHEIGHT, 0, 0, -1.0f, 1.0f);
+	sce::Agc::Core::setViewport(&viewPort, ScreenSize.x, ScreenSize.y, 0, 0, -1.0f, 1.0f);
 
 	frameContext->m_sb.reset();
 	frameContext->m_sb.setState(viewPort);
