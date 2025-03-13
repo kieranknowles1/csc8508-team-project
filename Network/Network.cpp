@@ -120,6 +120,7 @@ void Network::Tick(float dt) {
         m_lastTick += NETWORK_RATE;
 
         SendAll();
+        enet_host_flush(m_host);
 
         ENetEvent event;
 
