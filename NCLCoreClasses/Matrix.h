@@ -161,6 +161,44 @@ namespace NCL::Maths {
         }
 
         template <typename T>
+        constexpr MatrixTemplate<T, 3, 3> FromMat4(const MatrixTemplate<T, 4, 4>& mat) {
+            MatrixTemplate<T, 3, 3> out;
+            out.SetColumn(0, mat.GetColumn(0));
+            out.SetColumn(1, mat.GetColumn(1));
+            out.SetColumn(2, mat.GetColumn(2));
+            return out;
+        }
+
+        // Ported from GLM, see credits.txt
+        // Minimal modifications for compatibility
+        template <typename T>
+        constexpr MatrixTemplate<T, 3, 3> InverseTranspose(const MatrixTemplate<T, 3, 3>& mat) {
+            auto& m = mat.array;
+            T Determinant =
+                +m[0][0] * (m[1][1] * m[2][2] - m[1][2] * m[2][1])
+                - m[0][1] * (m[1][0] * m[2][2] - m[1][2] * m[2][0])
+                + m[0][2] * (m[1][0] * m[2][1] - m[1][1] * m[2][0]);
+
+            MatrixTemplate<T, 3, 3> Inverse;
+            Inverse.array[0][0] = +(m[1][1] * m[2][2] - m[2][1] * m[1][2]);
+            Inverse.array[0][1] = -(m[1][0] * m[2][2] - m[2][0] * m[1][2]);
+            Inverse.array[0][2] = +(m[1][0] * m[2][1] - m[2][0] * m[1][1]);
+            Inverse.array[1][0] = -(m[0][1] * m[2][2] - m[2][1] * m[0][2]);
+            Inverse.array[1][1] = +(m[0][0] * m[2][2] - m[2][0] * m[0][2]);
+            Inverse.array[1][2] = -(m[0][0] * m[2][1] - m[2][0] * m[0][1]);
+            Inverse.array[2][0] = +(m[0][1] * m[1][2] - m[1][1] * m[0][2]);
+            Inverse.array[2][1] = -(m[0][0] * m[1][2] - m[1][0] * m[0][2]);
+            Inverse.array[2][2] = +(m[0][0] * m[1][1] - m[1][0] * m[0][1]);
+            for (int i = 0; i < 3; i++) {
+                for (int j = 0; j < 3; j++) {
+                    Inverse.array[i][j] /= Determinant;
+                }
+            }
+
+            return Inverse;
+        }
+
+        template <typename T>
         constexpr MatrixTemplate<T, 3, 3> Inverse(const MatrixTemplate<T, 3, 3>& mat) {
             MatrixTemplate<T, 3, 3> outMat;
             return outMat;

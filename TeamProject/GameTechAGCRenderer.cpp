@@ -570,7 +570,9 @@ void GameTechAGCRenderer::UpdateObjectList() {
 		Matrix4 transMatrix;
 		g->getParent()->GetTransform().getOpenGLMatrix((float*)&transMatrix);
 		state.modelMatrix = transMatrix * Matrix::Scale(g->getParent()->getRenderScale());
-		state.normalMatrix = Matrix::Transpose(Matrix::Inverse(state.modelMatrix));
+		// Matrix without translation components, for normal transforms
+		Matrix3 transMat3 = Matrix::FromMat4(transMatrix);
+		state.normalMatrix = Matrix::InverseTranspose(transMat3);
 
 		state.colour = g->GetColour();
 		state.texRepeats = g->GetTexRepeating();

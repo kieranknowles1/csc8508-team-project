@@ -18,7 +18,7 @@ PS_OUTPUT main(VS_OUTPUT vertex) : S_TARGET_OUTPUT
 
 	float4 texSample = tex.Sample(sampler, vertex.UV) * vertex.Colour;
 	// Convert to (-1..1) range
-	float4 normSample = (normTex.Sample(sampler, vertex.UV) * 2.0f) - 1.0f;
+	float3 normSample = (normTex.Sample(sampler, vertex.UV).rgb * 2.0f) - 1.0f;
 
 	float3x3 tbn = float3x3(normalize(vertex.tangent), normalize(vertex.binormal), normalize(vertex.normal));
 

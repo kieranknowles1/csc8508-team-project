@@ -34,10 +34,10 @@ VS_OUTPUT main(uint vertID : S_VERTEX_ID, uint objID : S_SRT_DATA, uint instance
 	Output.texID	= s.texIndex;
 	Output.normId = s.normalIndex;
 
-	float3x3 normMat = float3x3(s.normalMatrix);
+	float3x3 normMat = s.normalMatrix;
 
-	Output.normal = normalize(mul(normMat, normal));
-	Output.tangent = normalize(mul(normMat, tangent.rgb));
+	Output.normal = normalize(mul(normMat, normalize(normal)));
+	Output.tangent = normalize(mul(normMat, normalize(tangent.xyz)));
 	Output.binormal = cross(Output.tangent, Output.normal) * tangent.w;
 
 	return Output;
