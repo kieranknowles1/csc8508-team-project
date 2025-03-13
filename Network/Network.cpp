@@ -85,13 +85,6 @@ std::shared_ptr<Packet::Packet> Network::Fetch() {
     while (!m_receiveBuffer.IsEmpty()) {
         fetched = m_receiveBuffer.Pop();
         return fetched;
-        //if (fetched->GetSequenceNumber() > m_lastMaxSequence) m_lastMaxSequence = fetched->GetSequenceNumber();
-
-        //if (fetched->GetSequenceNumber() > m_lastMaxSequence) return fetched;
-        //if (fetched->GetChannel() == static_cast<uint8_t>(Channel::RELIABLE)) return fetched;
-        //if (fetched->GetChannel() == static_cast<uint8_t>(Channel::UNSEQUENCED)) return fetched;
-
-        // Drop old packet.
     }
     return fetched; // Return an empty packet.
 }
@@ -121,6 +114,7 @@ void Network::Run() {
 
 void Network::Tick(float dt) {
     m_elapsedTime += dt;
+    std::cout << "DT = " << dt << std::endl;
 
     while (m_elapsedTime - m_lastTick >= NETWORK_RATE) {
         m_lastTick += NETWORK_RATE;
@@ -163,7 +157,7 @@ void Network::SendAll() {
 
         if (m_sendBuffer[i].second == nullptr) {
             enet_host_broadcast(m_host, m_sendBuffer[i].first.get()->GetChannel(), packet);
-            enet_host_flush(m_host);
+            //enet_host_flush(m_host);
         }
         else {
             enet_peer_send(m_sendBuffer[i].second, m_sendBuffer[i].first.get()->GetChannel(), packet);
