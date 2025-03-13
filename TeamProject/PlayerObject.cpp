@@ -225,22 +225,24 @@ btVector3 PlayerObject::CalculateForwardDirection(btVector3 upDir, btVector3 rig
 
 //attaches gun to the camera position/rotation
 void PlayerObject::SetGunTransform(float pitch, float yaw, btVector3 camPos) {
-    //float pitchRadians = Maths::DegreesToRadians(camera->GetPitch());
-    //float yawRadians = Maths::DegreesToRadians(camera->GetYaw());
     float pitchRadians = Maths::DegreesToRadians(pitch);
     float yawRadians = Maths::DegreesToRadians(yaw);
     btQuaternion yawQuat(btVector3(0, 1, 0), yawRadians);
     btQuaternion pitchQuat(btVector3(1, 0, 0), pitchRadians);
-    btQuaternion gunRotation = camRotOffset * yawQuat * pitchQuat; // Yaw first, then pitch
+    btQuaternion cameraRotation = yawQuat * pitchQuat; // Yaw first, then pitch
 
-    btMatrix3x3 rotationMatrixCam(gunRotation);
+    float gunYawOffset = Maths::DegreesToRadians(-30.0f); // Rotate gun slightly right
+    btQuaternion gunYawQuat(btVector3(0, 1, 0), gunYawOffset); // Yaw correction
+
+    btQuaternion gunRotation = cameraRotation * gunYawQuat; // Apply yaw correction
+
+    btMatrix3x3 rotationMatrixCam(cameraRotation);
     btVector3 adjustedOffset = rotationMatrixCam * gunCameraOffset; // Apply rotation to the offset
 
     btTransform transformGun = gun->GetPhysicsObject()->GetRigidBody()->getWorldTransform();
+    transformGun.setIdentity();
     transformGun.setOrigin(camPos + adjustedOffset);
     transformGun.setRotation(gunRotation);
 
     gun->GetPhysicsObject()->GetRigidBody()->setWorldTransform(transformGun);
 }
-
-

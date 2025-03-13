@@ -181,6 +181,7 @@ namespace NCL {
             Controller* controller;
 
             std::shared_ptr<Texture> defaultTexture;
+            std::shared_ptr<Texture> paintballTexture;
 
             //Coursework Additional functionality
             GameObject* lockedObject	= nullptr;
@@ -230,6 +231,8 @@ namespace NCL {
 
             Wanderer* wanderer;
             Wanderer* AddWandererToWorld();
+
+            GameObject* AddGunToWorld(const Vector3& position, Vector3 dimensions, float inverseMass, bool hasCollision);
 
             //post processing time variable effects
             float pulse = 0;
