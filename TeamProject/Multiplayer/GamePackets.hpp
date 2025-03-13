@@ -24,7 +24,8 @@ namespace Packet {
         START_GAME = CUSTOM_TYPE + 4,
         USER_INFO = CUSTOM_TYPE + 5,
         ASSIGN_HOST = CUSTOM_TYPE + 6,
-        REQUEST_USERID = CUSTOM_TYPE + 7
+        REQUEST_USERID = CUSTOM_TYPE + 7,
+        DAMAGE = CUSTOM_TYPE + 8
     };
 
 
@@ -230,6 +231,35 @@ namespace Packet {
 
     private:
         ENetPeer* m_peer;
+    };
+
+
+    /**
+     * @brief Simple packet for sending damage across the network.
+     */
+    class DamagePacket : public Packet {
+    public:
+        /**
+         * @brief Constructor for the DamagePacket.
+         * @param targetID - the id of the target to damage.
+         * @param damage - the amount of damage to deal.
+         * @param dealer - the id of the user who dealt the damage.
+         * @pram kill - whether the shot resulted in a kill on the target.
+         */
+        DamagePacket(int targetID, int damage, int dealer, bool kill = false) :
+            Packet(static_cast<Type>(PacketType::DAMAGE), static_cast<uint8_t>(Channel::RELIABLE), 0),
+            m_targetID(targetID), m_damage(damage), m_dealer(dealer), m_isKill(kill)
+        {}
+
+        inline int GetTargetID() const { return m_targetID; }
+        inline int GetDamage() const { return m_damage; }
+        inline int GetDamageDealer() const { return m_dealer; }
+        inline bool IsKill() const { return m_isKill; }
+    private:
+        int m_targetID;
+        int m_damage;
+        int m_dealer;
+        bool m_isKill;
     };
 }
 
