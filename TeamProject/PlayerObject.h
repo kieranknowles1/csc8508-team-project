@@ -100,11 +100,18 @@ public:
 		return collisionPoint;
 	}
 
-	/**
-	 * @brief Get the state of the player (usually alive or dead).
-	 * @return PlayerState Enum
-	 */
 	inline PlayerState GetState() { return state; }
+	inline void SetState(PlayerState state) { this->state = state; }
+
+	void Damage(int amount) {
+		health -= amount;
+		if (health <= 0) {
+			state = PlayerState::DEAD;
+			health = 0;
+
+			// TODO: Create Change State packet.
+		}
+	}
 	
 	float GetMaxHealth() {
 		return maxHealth;
