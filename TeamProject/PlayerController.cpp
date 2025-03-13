@@ -26,8 +26,7 @@ void PlayerController::Initialise() {
     renderer->AddUiElement(crosshair.get());
 	renderer->AddUiElement(scoreboard.get());
     crosshair->SetActive(true);
-	scoreboard->SetActive(true);
-    
+	//scoreboard->SetActive(true);
 }
 
 btVector3 GetEulerAngles(btQuaternion quat) {

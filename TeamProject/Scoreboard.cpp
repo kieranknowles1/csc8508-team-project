@@ -1,37 +1,46 @@
 #include "Scoreboard.h"
 
 Scoreboard::Scoreboard() {
-    AddPlayer({ "Player1", 0, TeamColor::RED, 0});
-    AddPlayer({ "Player2", 3, TeamColor::BLUE, 1 });
-    AddPlayer({ "Player3", 6, TeamColor::GREEN, 2 });
-    AddPlayer({ "Player4", 4, TeamColor::YELLOW, 3 });
+    //AddPlayer({ "Player1", 0, TeamColor::RED, 0 });
+    //AddPlayer({ "Player2", 3, TeamColor::BLUE, 1 });
+    //AddPlayer({ "Player3", 6, TeamColor::GREEN, 2 });
+    //AddPlayer({ "Player4", 4, TeamColor::YELLOW, 3 });
     InitScoreboard();
 }
 
-void Scoreboard::SortPlayers() {
-    // Sort the vector based on the player's score in descending order
-    std::sort(players.begin(), players.end(), [](const Player& a, const Player& b) {
-        return a.score > b.score;
-        });
-}
-
 void Scoreboard::UpdateScoreboardText() {
-    // Debug print to check player data
     SortPlayers();
-    std::cout << players[0].name << std::endl;
     for (int i = 0; i < players.size(); i++) {
-        std::cout << players[i].name << std::endl;
         Uitexts[i * columns + 3].text = players[i].name;
-        std::cout << players[i].name << std::endl;
         Uitexts[i * columns + 4].text = std::to_string(players[i].score);
         Uitexts[i * columns + 5].text = TeamColorToString(players[i].color);
     }
 }
 
 void Scoreboard::render(std::vector<UiSprite>& sprites) {
-    static const Vector4 scoreboardColor(0.3f, 0.3f, 0.3f, 0.4f);
+    static const Vector4 scoreboardColor(0.4f, 0.4f, 0.4f, 0.4f); // Adjust alpha for translucency
+    static const Vector4 borderColor(0.1f, 0.1f, 0.1f, 1.0f);
+    const float borderThickness = 0.005f;
+
     for (const auto& box : boxes) {
+        // Add the main box
         sprites.push_back({ box.position, box.size, scoreboardColor });
+
+        // Add the borders
+        Vector2 topLeft = box.position - box.size * 0.5f;
+        Vector2 bottomRight = box.position + box.size * 0.5f;
+
+        // Top border
+        sprites.push_back({ Vector2(box.position.x, topLeft.y + borderThickness * 0.5f), Vector2(box.size.x, borderThickness), borderColor });
+
+        // Bottom border
+        sprites.push_back({ Vector2(box.position.x, bottomRight.y - borderThickness * 0.5f), Vector2(box.size.x, borderThickness), borderColor });
+
+        // Left border
+        sprites.push_back({ Vector2(topLeft.x + borderThickness * 0.5f, box.position.y), Vector2(borderThickness, box.size.y), borderColor });
+
+        // Right border
+        sprites.push_back({ Vector2(bottomRight.x - borderThickness * 0.5f, box.position.y), Vector2(borderThickness, box.size.y), borderColor });
     }
 }
 

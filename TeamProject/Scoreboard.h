@@ -82,7 +82,11 @@ public:
 		}
 	}
 	
-	void SortPlayers();
+	void SortPlayers() {
+		std::sort(players.begin(), players.end(), [](const Player& a, const Player& b) {
+			return a.score > b.score;
+			});
+	}
 
 private:
 	Vector2 screenCenter = Vector2(0.5f, 0.5f);
