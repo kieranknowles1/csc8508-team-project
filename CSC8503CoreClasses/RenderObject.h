@@ -2,6 +2,7 @@
 #include "Texture.h"
 #include "Mesh.h"
 #include "Buffer.h"
+#include <MeshMaterial.h>
 
 namespace NCL {
 	using namespace NCL::Rendering;
@@ -14,6 +15,7 @@ namespace NCL {
 		{
 		public:
 			RenderObject(GameObject* parent, std::shared_ptr<Mesh> mesh, std::shared_ptr<Texture> tex, std::shared_ptr<Texture> normal = nullptr);
+            RenderObject(GameObject* parent, std::shared_ptr<Mesh> mesh, std::shared_ptr<MeshMaterial> mat);
 			~RenderObject();
 
 			void SetDefaultTexture(std::shared_ptr<Texture> t) {
@@ -94,6 +96,7 @@ namespace NCL {
 			float texScaleMultiplier = 0.05f; //unless set to something else, all scaled textures will be scaled with this and their renderScale
 			//additional normal map option:
 			std::shared_ptr<Texture> normalMap;
+            std::shared_ptr<Texture> metallicMap;
 		};
 	}
 }

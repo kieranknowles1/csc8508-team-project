@@ -1,7 +1,7 @@
 #include "MeshMaterial.h"
 #include "Assets.h"
 #include <fstream>
-#include "ResourceManager.h"
+#include "../TeamProject/ResourceManager.h"
 
 using namespace NCL;
 using namespace NCL::Rendering;
@@ -9,7 +9,7 @@ using std::ifstream;
 using std::string;
 
 MeshMaterial::MeshMaterial(CSC8503::ResourceManager* resourceManager, const std::string& filename) {
-    ifstream file(Assets::MESHDIR + filename);
+    ifstream file(Assets::MATERIALDIR + filename);
 
 	string dataType;
 	file >> dataType;
