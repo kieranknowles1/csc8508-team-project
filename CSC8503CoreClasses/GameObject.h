@@ -115,6 +115,14 @@ namespace NCL::CSC8503 {
 			return renderScale;
 		}
 
+		void SetOwner(Lobbies::User user) {
+			owner.emplace(user);
+		}
+
+		std::optional<Lobbies::User> GetOwner() {
+			return owner;
+		}
+
 		void setRenderScale(const Vector3& scale) {
 			renderScale = scale;
 		}

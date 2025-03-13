@@ -10,11 +10,17 @@ namespace Packet {
         const DeltaPacket* deltaPacket = std::static_pointer_cast<DeltaPacket>(packet).get();
         GameObject* object = GameObject::GetGameObjectByID(deltaPacket->GetTargetID());
 
+        // Skip updates for objects the user owns.
+        if (object->GetOwner().value() == TutorialGame::GetUser().value()) { return; }
+
         // Check if last update was newer.
         if (deltaPacket->GetSequenceNumber() > object->GetLastPacketSequence(deltaPacket->GetType())) {
             object->GetPhysicsObject()->GetRigidBody()->setLinearVelocity(deltaPacket->GetLinearVelocity());
             object->GetPhysicsObject()->GetRigidBody()->setAngularVelocity(deltaPacket->GetAngularVelocity());
             object->UpdatePacketSequence(deltaPacket->GetType(), deltaPacket->GetSequenceNumber());
+
+            // Passing on packet to other users if user is host.
+            if (TutorialGame::IsHost()) TutorialGame::GetServerInstance()->Broadcast(packet);
         }
         // Dropping old packets.
     }
@@ -97,11 +103,17 @@ namespace Packet {
         GameObject* targetObject = GameObject::GetGameObjectByID(positionPacket->GetTargetID());
         btRigidBody* body = targetObject->GetPhysicsObject()->GetRigidBody();
 
+        // Skip updates for objects the user owns.
+        if (targetObject->GetOwner().value() == TutorialGame::GetUser().value()) { return; }
+
         // Check if last update was newer.
         if (positionPacket->GetSequenceNumber() > targetObject->GetLastPacketSequence(positionPacket->GetType())) {
             body->getWorldTransform().setOrigin(positionPacket->GetPosition());
             body->getWorldTransform().setRotation(positionPacket->GetOrientation());
             targetObject->UpdatePacketSequence(positionPacket->GetType(), positionPacket->GetSequenceNumber());
+
+            // Passing on packet to other users if user is host.
+            if (TutorialGame::IsHost()) TutorialGame::GetServerInstance()->Broadcast(packet);
         }
         // Dropping old packets.
     }
@@ -199,10 +211,16 @@ namespace Packet {
         GameObject* targetObject = GameObject::GetGameObjectByID(gravityPacket->GetTargetID());
         btRigidBody* body = targetObject->GetPhysicsObject()->GetRigidBody();
 
+        // Skip updates for objects the user owns.
+        if (targetObject->GetOwner().value() == TutorialGame::GetUser().value()) { return; }
+
         // Check if last update was newer.
         if (gravityPacket->GetSequenceNumber() > targetObject->GetLastPacketSequence(gravityPacket->GetType())) {
             TutorialGame::getInstance()->player->setUpDirection(gravityPacket->GetUpDirection());
             targetObject->UpdatePacketSequence(gravityPacket->GetType(), gravityPacket->GetSequenceNumber());
+
+            // Passing on packet to other users if user is host.
+            if (TutorialGame::IsHost()) TutorialGame::GetServerInstance()->Broadcast(packet);
         }
     }
 

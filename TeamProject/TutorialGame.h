@@ -115,6 +115,8 @@ namespace NCL {
             void LoadWorldFromFile(int levelNum);
             void JoinGame(bool host);
 
+            inline static bool IsHost() { return host; }
+
             // FIX ME make this protected/private.
             PlayerObject* player;
 
@@ -237,7 +239,7 @@ namespace NCL {
             inline static std::optional<Lobbies::Lobby> lobby = std::optional<Lobbies::Lobby>();
             inline static std::optional<Lobbies::User> user = std::optional<Lobbies::User>();
             inline static int USER_ID = 0;
-            bool host = false;
+            inline static bool host = false;
 
             GameState state = GameState::IDLE;
         };
