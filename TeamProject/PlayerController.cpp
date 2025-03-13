@@ -38,7 +38,7 @@ void PlayerController::UpdateMovement(float dt) {
     transformPlayer = rb->getWorldTransform();
     btPlayerPos = transformPlayer.getOrigin();
     GetAllDirections();
-    HandleShooting(dt);
+
     if (crosshair) {
         crosshair->Animate(dt);
     }
@@ -53,6 +53,7 @@ void PlayerController::UpdateMovement(float dt) {
     }
     if ((isSliding||slideTransition) && !isCrouching) return;
     RotationCalculations();
+ 
     CameraMovement();
     GroundNormalCalculations();
     MovementCalculations(dt);
@@ -62,17 +63,21 @@ void PlayerController::UpdateMovement(float dt) {
     previousVelocity = rb->getLinearVelocity();
     rb->setLinearVelocity(movement);
     rb->activate();
+    HandleShooting(dt);
 }
 
 
 void PlayerController::HandleShooting(float dt) {
-    if (controller->GetDigital(Controller::DigitalControl::Fire) && shotTimer >= shotCooldown) {
+    if (controller->GetDigital(Controller::DigitalControl::Fire)) {
         FireShot();
         crosshair->fire();
-        shotTimer = 0.0f;
+        firing = true;
     }
     else {
-        shotTimer += dt;
+        if (firing) {
+           // renderer->removeLaser(laserID);
+            firing = false;
+        }
     }
 }
 
@@ -88,7 +93,14 @@ void PlayerController::FireShot() {
     btMatrix3x3 rotationMatrix(bulletRotation);
     btVector3 forwardDir = rotationMatrix * btVector3(0, 0, -1);
 
-   Shoot::GetInstance()->ShootBulletPlayer(camera->GetPosition(), forwardDir, bulletRotation);
+   std::optional<ShotInfo> info = Shoot::GetInstance()->ShootBulletPlayer(camera->GetPosition(), forwardDir, bulletRotation);
+   if(!firing){   
+       laserID = renderer->addLaser(camera->GetPosition(), info.value().hitPos);
+   }
+   else {
+       renderer->updateLaser(laserID, camera->GetPosition(), info.value().hitPos);
+   }
+
 }
 
 
@@ -209,6 +221,7 @@ void PlayerController::HandleSliding(float dt) {
         previousVelocity = rb->getLinearVelocity();
         rb->setLinearVelocity(pastMovement);
         rb->activate();
+        HandleShooting(dt);
     }
 }
 

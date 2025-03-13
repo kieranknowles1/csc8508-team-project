@@ -42,7 +42,7 @@ std::optional<ShotInfo> Shoot::ShootBulletPlayer(btVector3 startPos, btVector3 d
         if (rayInfo.value().hitObj->getType() == GameObject::Type::Player) {
             // TODO: Hit response.
         }
-        SpawnBulletMesh(startPos, dir, rotation, &rayInfo.value());
+       // SpawnBulletMesh(startPos, dir, rotation, &rayInfo.value());
         SpawnDecal(&rayInfo.value());
     }
     return rayInfo;
