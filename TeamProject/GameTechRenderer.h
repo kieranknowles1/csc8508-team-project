@@ -135,6 +135,7 @@ namespace NCL {
 			OGLShader* vignetteShader;
 			GLuint BDepthTex;
 			void RenderPostProcessing();
+			OGLShader* edgedetectShader;
 
 		};
 	}

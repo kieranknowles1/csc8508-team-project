@@ -12,6 +12,7 @@
 #include "NavMesh.h"
 #include "Profiler.h"
 #include "Wanderer.h"
+#include "Respawn.h"
 #include "Network/Network.hpp"
 #include "Multiplayer/Lobby.hpp"
 
@@ -102,7 +103,7 @@ namespace NCL {
 
             virtual void UpdateGame(float dt);
             void LoadWorldFromFile(int levelNum);
-            void JoinGame(bool host) {};
+            void JoinGame(bool host);
 
         protected:
             void InitialiseAssets();
@@ -130,6 +131,9 @@ namespace NCL {
              * @param address ENetAddress of the servers location.
              */
             void ConnectToServer(ENetAddress& address);
+            void CreateLocal();
+            void InitPacketHandlers();
+            void ExecuteIncomingPackets();
 
 
 
@@ -183,7 +187,7 @@ namespace NCL {
             void InitBullet(); // Initialises the Bullet physics world
 
             //Player things
-            void InitPlayer();
+            PlayerObject* InitPlayer(btVector3 position, btVector3 upDir);
             PerspectiveCamera* mainCamera;
             PlayerObject* player;
             GameObject* gun;
@@ -226,6 +230,7 @@ namespace NCL {
             inline static std::optional<Lobbies::Lobby> lobby = std::optional<Lobbies::Lobby>();
             inline static std::optional<Lobbies::User> user = std::optional<Lobbies::User>();
             inline static int USER_ID = 0;
+
         };
     }
 }

@@ -220,8 +220,8 @@ void GameTechAGCRenderer::WriteRenderPassConstants() {
 	frameData.shadowID = shadowMap->GetAssetID();
 
 	frameData.vingetteSettings.enabled = vignetteOn;
-	frameData.vingetteSettings.color = Vector3(0, 0, 0);
-	frameData.vingetteSettings.intensity = 2.0f;
+	frameData.vingetteSettings.color = vignetteColour;
+	frameData.vingetteSettings.intensity = vignetteIntensity;
 	frameData.vingetteSettings.pulse = vignettePulse;
 
 	currentFrame->data.WriteData<ShaderConstants>(frameData); //Let's start filling up our frame data!

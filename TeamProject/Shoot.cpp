@@ -1,4 +1,5 @@
 #include "Shoot.h"
+#include "PointLight.h"
 
 using namespace NCL;
 using namespace CSC8503;
@@ -57,7 +58,7 @@ void Shoot::SpawnBulletMesh(btVector3 startPos, btVector3 dir, btQuaternion rota
 
     Paintball* paintball = new Paintball();
     paintball->Initialise(player);
-    Vector3 bulletSize(0.25f, 0.25f, 0.25f);
+    Vector3 bulletSize(0.5f, 0.5f, 0.5f);
     paintball->setInitialPosition(bulletPos);
     paintball->setRenderScale(bulletSize);
     paintball->SetRenderObject(new RenderObject(
@@ -67,17 +68,16 @@ void Shoot::SpawnBulletMesh(btVector3 startPos, btVector3 dir, btQuaternion rota
     ));
     paintball->GetRenderObject()->SetIsFlat(true);
     paintball->SetPhysicsObject(new PhysicsObject(paintball));
-    paintballColor = btVector4(rand() % 2, rand() % 2, rand() % 2, 1);
-	Vector4 paintballColorVec4(paintballColor.getX(), paintballColor.getY(), paintballColor.getZ(), paintballColor.getW());
-    paintball->GetRenderObject()->SetColour(paintballColorVec4);
+    paintballColor = btVector4(rand()%2, rand() % 2 , rand() % 2 ,1);
+    paintball->GetRenderObject()->SetColour(paintballColor);
 
     btCollisionShape* shape = new btSphereShape(1.0f);
     shape->setMargin(0.01f);
     paintball->GetPhysicsObject()->InitBulletPhysics(bulletWorld, shape, 1.0f);
     world->AddGameObject(paintball);
+
     btVector3 playerVelocity = player->GetPhysicsObject()->GetRigidBody()->getLinearVelocity();
     btVector3 bulletVelocity = playerVelocity + (shorDirection * bulletSpeed);
-
     // Apply impulse
     paintball->setIsPaintball(true);
     paintball->GetPhysicsObject()->GetRigidBody()->setGravity(btVector3(0, 0, 0));

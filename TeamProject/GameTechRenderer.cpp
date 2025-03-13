@@ -139,6 +139,7 @@ GameTechRenderer::GameTechRenderer(Window* window) : OGLRenderer(window), GameTe
 	fullscreenQuad->UploadToGPU(); 
 
 	vignetteShader = new OGLShader("texturevert.glsl", "vignettefrag.glsl");
+	edgedetectShader = new OGLShader("texturevert.glsl", "edgedetectfrag.glsl");
 
  	//start setting up framebuffers for post processing:
 	//first generate the textures to store the rendered scene:
@@ -671,7 +672,7 @@ void GameTechRenderer::RenderUI() {
 	int textureLocation = glGetUniformLocation(uiShader->GetProgramID(), "mainTex");
 
 
-	for (const auto& uiElement : uiElements) {
+	for (const auto& uiElement : frameSprites) {
 		Vector2 pos = uiElement.position;
 		Vector2 size = uiElement.size;
 		Vector4 color = uiElement.color;
@@ -824,25 +825,53 @@ void GameTechRenderer::RenderDecals() {
 	glDepthFunc(GL_LEQUAL);
 }
 
-void GameTechRenderer::RenderPostProcessing() {
-	//Vignette post processing:
-	    glBindFramebuffer(GL_FRAMEBUFFER, BFBO); //unbind hdrFBO and set BFBO   
+void GameTechRenderer::RenderPostProcessing() { //gonna try putting edge detection first:
+        //Edge detection:
+	    glBindFramebuffer(GL_FRAMEBUFFER, hdrFBO);//was BFBO
+		glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+		glDisable(GL_CULL_FACE);
+		glDisable(GL_BLEND);
+		glDisable(GL_DEPTH_TEST);
+		UseShader(*edgedetectShader);
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, BTex); //currently holds the scene, gonna have to change up the vignette part to accomodate this //was bufferColourTex
+		glUniform1i(glGetUniformLocation(edgedetectShader->GetProgramID(), "sceneTex"), 0);
+		glActiveTexture(GL_TEXTURE1);
+		glBindTexture(GL_TEXTURE_2D, bufferDepthTex);
+		glUniform1i(glGetUniformLocation(edgedetectShader->GetProgramID(), "depthTex"), 1);
+		glUniform2f(glGetUniformLocation(edgedetectShader->GetProgramID(), "windowSize"), windowSize.x, windowSize.y); 
+		glUniform1f(glGetUniformLocation(edgedetectShader->GetProgramID(), "nearPlane"), camera->GetNearPlane());
+		glUniform1f(glGetUniformLocation(edgedetectShader->GetProgramID(), "farPlane"), camera->GetFarPlane());
+		//using the same proj and view matrices from RenderCamera(): 
+		Matrix4 viewMatrix = camera->BuildViewMatrix();
+		Matrix4 projMatrix = camera->BuildProjectionMatrix(hostWindow->GetScreenAspect());
+		Matrix4 invProj = Matrix::Inverse(projMatrix); 
+		Matrix4 invView = Matrix::Inverse(viewMatrix);
+
+		glUniformMatrix4fv(glGetUniformLocation(edgedetectShader->GetProgramID(), "inverseProjMatrix"), 1, false, (float*)&invProj);
+		glUniformMatrix4fv(glGetUniformLocation(edgedetectShader->GetProgramID(), "inverseViewMatrix"), 1, false, (float*)&invView);
+
+		BindMesh(*fullscreenQuad);
+		DrawBoundMesh();
+	    //Vignette post processing:
+	    glBindFramebuffer(GL_FRAMEBUFFER, BFBO); //unbind hdrFBO and set BFBO    //was BFBO before adding edge detection //was hdrFBO
 	    glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 	    glDisable(GL_CULL_FACE);
 	    glDisable(GL_BLEND);
 	    glDisable(GL_DEPTH_TEST);
 	    UseShader(*vignetteShader);
 	    glUniform1i(glGetUniformLocation(vignetteShader->GetProgramID(), "vignetteOn"), GetVignetteOn());
+		glUniform1f(glGetUniformLocation(vignetteShader->GetProgramID(), "vignetteIntensity"), vignetteIntensity);
 		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, bufferColourTex); //hdrTex currently holds raw scene
+		glBindTexture(GL_TEXTURE_2D, hdrTex); //hdrTex currently holds raw scene  //was bufferColourTex before adding edge detection //was BTex
 		glUniform1i(glGetUniformLocation(vignetteShader->GetProgramID(), "diffuseTex"), 0);
 		glUniform2f(glGetUniformLocation(vignetteShader->GetProgramID(), "windowSize"), windowSize.x, windowSize.y);
-		Vector3 VignetteColour = Vector3(0.0, 0.0, 0.0); //different colours appear more intense at a given intensity (green)
-		float vignetteIntensity = 2.0f; //Recommendation: vary Intensity between 0.8 and 3
-		glUniform3fv(glGetUniformLocation(vignetteShader->GetProgramID(), "effectColour"), 1, (float*)&VignetteColour);
-		glUniform1f(glGetUniformLocation(vignetteShader->GetProgramID(), "intensity"), vignetteIntensity);
+		glUniform3fv(glGetUniformLocation(vignetteShader->GetProgramID(), "effectColour"), 1, (float*)&vignetteColour);
+
 
 		glUniform1f(glGetUniformLocation(vignetteShader->GetProgramID(), "time"), vignettePulse);
+
+
 		BindMesh(*fullscreenQuad); //simply a quad   
 		DrawBoundMesh(); //finished rendering into BTex now, ready to unbind to draw quad straight to screen next:
 		//HDR post processing:
@@ -853,8 +882,8 @@ void GameTechRenderer::RenderPostProcessing() {
 		glDisable(GL_DEPTH_TEST);
 		UseShader(*hdrShader);
 		glUniform1i(glGetUniformLocation(hdrShader->GetProgramID(), "hdrOn"), GetHDROn()); //send bool to shader so it knows whether to output scene with or without post processing
-		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, BTex);//BTex holds vignetted processed scene (whether applied or not). (tonemapping should be done pretty much last)
+		glActiveTexture(GL_TEXTURE0); //was hdrTex
+		glBindTexture(GL_TEXTURE_2D, BTex);//BTex holds vignetted processed scene (whether applied or not). (tonemapping should be done pretty much last) //was BTex before edge detection
 		glUniform1i(glGetUniformLocation(hdrShader->GetProgramID(), "hdrTex"), 0);
 		BindMesh(*fullscreenQuad); //using unitQuad instead of fullscreen quad
 		DrawBoundMesh();
@@ -990,11 +1019,11 @@ void GameTechRenderer::DrawPointLights() {
 	glUniformMatrix4fv(glGetUniformLocation(pointlightShader->GetProgramID(), "viewMatrix"), 1, false, (float*)&viewMatrix);
 	glUniformMatrix4fv(glGetUniformLocation(pointlightShader->GetProgramID(), "projMatrix"), 1, false, (float*)&projMatrix);
 	BindMesh(*lightSphere);
-
 	for (PointLight* light : lights) {
 		glUniform3fv(glGetUniformLocation(pointlightShader->GetProgramID(), "lightPos"), 1, (float*)&light->worldPosition);
 		glUniform4fv(glGetUniformLocation(pointlightShader->GetProgramID(), "lightColour"), 1, (float*)&light->colour);
 		glUniform1f(glGetUniformLocation(pointlightShader->GetProgramID(), "lightRadius"), light->radius);
+		glUniform1f(glGetUniformLocation(pointlightShader->GetProgramID(), "lightIntensity"), light->intensity);
 		DrawBoundMesh();
 	};
 
@@ -1007,7 +1036,7 @@ void GameTechRenderer::DrawPointLights() {
 }
 
 void GameTechRenderer::CombineBuffers() {//basically final post processing output. Don't need to update matrices as fullscreen quad is not transformed at all
-	glBindFramebuffer(GL_FRAMEBUFFER, bufferFBO); //swapped hdrFBO with bufferFBO to allow decals to work
+	glBindFramebuffer(GL_FRAMEBUFFER, BFBO); //swapped hdrFBO with bufferFBO to allow decals to work //was bufferFBO
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT); //without this line, output is just black 
 	UseShader(*combineShader); 
 	glUniform1i(glGetUniformLocation(combineShader->GetProgramID(), "diffuseTex"), 0);
