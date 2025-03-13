@@ -47,7 +47,7 @@ float NavEntity::GroundAdjust(btVector3 pos) {
 	switch (side) {
 	case('b'):
 		upPos = pos + btVector3(0, 10.0f, 0);
-		downPos = pos + btVector3(0, -10000.0f, 0);
+		downPos = pos + btVector3(0, -1000.0f, 0);
 		direction = (downPos - upPos).normalized();
 
 		rayResult = Shoot::GetInstance()->RayClosest(upPos, direction, this);
@@ -58,18 +58,7 @@ float NavEntity::GroundAdjust(btVector3 pos) {
 
 		//return (pos.getY() - rayResult->hitPos.getY());
 		return rayResult->hitPos.getY();
-	case('t'):
-		upPos = pos + btVector3(0, -10.0f, 0);
-		downPos = pos + btVector3(0, 10000.0f, 0);
-		direction = (downPos - upPos).normalized();
-
-		rayResult = Shoot::GetInstance()->RayClosest(upPos, direction, this);
-
-		if (!rayResult.has_value()) {
-			return 0.0f;  // No hit detected
-		}
-
-		//return (pos.getY() - rayResult->hitPos.getY());
-		return rayResult->hitPos.getY();
+	default:
+		return pos.getY();
 	}
 }

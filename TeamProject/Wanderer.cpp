@@ -69,6 +69,13 @@ void Wanderer::InitPosAndOffset() {
 	btCollisionShape* shape = GetPhysicsObject()->GetRigidBody()->getCollisionShape();
 	btCapsuleShape* capsule = static_cast<btCapsuleShape*>(shape);
 	float halfHeight = capsule->getHalfHeight();
+	switch(side) {
+	case('b'):
+		offset = btVector3(0, halfHeight * 2, 0);
+		break;
+	case('t'):
+		offset = btVector3(0, -halfHeight * 2, 0);
+	}
 	offset = btVector3(0, halfHeight * 2, 0);
 	btTransform trans = GetTransform();
 	curPathPoint = trans.getOrigin();
