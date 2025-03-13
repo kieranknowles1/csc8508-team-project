@@ -116,7 +116,7 @@ public:
 	float GetMaxHealth() {
 		return maxHealth;
 	}
-	float health = 100.0f;
+	int health = 100;
 
 	void setGun(GameObject* gunIn) { gun = gunIn; }
 	void SetGunTransform(float pitch, float yaw, btVector3 camPos);

@@ -544,7 +544,16 @@ namespace Packet {
 
 #pragma region DamageHandler
     void DamagePacketHandler::Handle(const std::shared_ptr<Packet> packet) {
+        const DamagePacket* damagePacket = std::static_pointer_cast<DamagePacket>(packet).get();
+        PlayerObject* targetObject = (PlayerObject*) GameObject::GetGameObjectByID(damagePacket->GetTargetID());
 
+        // Dealer handles damage on their side so ignore packet.
+        if (TutorialGame::GetUser()->GetUserID() != damagePacket->GetDamageDealer()) {
+            targetObject->Damage(damagePacket->GetDamage());
+        }
+
+        // Pass the parcel.
+        if (TutorialGame::IsHost()) TutorialGame::GetServerInstance()->Broadcast(packet);
     }
 
     std::shared_ptr<Packet> DamagePacketHandler::Translate(const ENetEvent* event) const {
@@ -557,7 +566,7 @@ namespace Packet {
         GetBaseData(packet, &type, &channel, &sequenceNumber);
 
         int targetID;
-        memcpy(&targetID, packet->data + offset, sizeof(LobbyAction));
+        memcpy(&targetID, packet->data + offset, sizeof(int));
         offset = offset + sizeof(int);
 
         int damage;
@@ -568,11 +577,7 @@ namespace Packet {
         memcpy(&dealer, packet->data + offset, sizeof(int));
         offset = offset + sizeof(int);
 
-        bool isKill;
-        memcpy(&isKill, packet->data + offset, sizeof(bool));
-        offset = offset + sizeof(bool);
-
-        return std::make_shared<DamagePacket>(targetID, damage, dealer, isKill);
+        return std::make_shared<DamagePacket>(targetID, damage, dealer);
     }
 
     ENetPacket* DamagePacketHandler::ToENetPacket(const std::shared_ptr<Packet> packet) const {
@@ -583,7 +588,6 @@ namespace Packet {
             + sizeof(int)
             + sizeof(int)
             + sizeof(int)
-            + sizeof(bool)
         ];
 
         DamagePacket damagePacket = (*static_cast<DamagePacket*>(packet.get()));
@@ -611,10 +615,6 @@ namespace Packet {
 
         int dealer = damagePacket.GetDamageDealer();
         memcpy(buffer + offset, &dealer, sizeof(int));
-        offset = offset + sizeof(int);
-
-        bool isKill = damagePacket.IsKill();
-        memcpy(buffer + offset, &isKill, sizeof(bool));
         offset = offset + sizeof(int);
 
         int packetFlags = 0;

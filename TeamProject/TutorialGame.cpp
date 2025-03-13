@@ -633,6 +633,9 @@ void TutorialGame::InitPacketHandlers() {
 
     Packet::ObjectChangeGravityPacketHandler* objectChangeGravityHandler = new Packet::ObjectChangeGravityPacketHandler();
     Packet::PacketRegister::Register(objectChangeGravityHandler);
+
+    Packet::DamagePacketHandler* damageHandler = new Packet::DamagePacketHandler();
+    Packet::PacketRegister::Register(damageHandler);
 }
 
 
