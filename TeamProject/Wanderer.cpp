@@ -69,15 +69,36 @@ void Wanderer::InitPosAndOffset() {
 	btCollisionShape* shape = GetPhysicsObject()->GetRigidBody()->getCollisionShape();
 	btCapsuleShape* capsule = static_cast<btCapsuleShape*>(shape);
 	float halfHeight = capsule->getHalfHeight();
+	btTransform trans = GetTransform();
+	btQuaternion rotation;
 	switch(side) {
 	case('b'):
 		offset = btVector3(0, halfHeight * 2, 0);
 		break;
 	case('t'):
 		offset = btVector3(0, -halfHeight * 2, 0);
+		break;
+	case('f'):
+		offset = btVector3(0, 0, 0);
+		rotation = btQuaternion(btVector3(1, 0, 0), SIMD_PI / 2);
+		trans.setRotation(rotation);
+		break;
+	case('k'):
+		offset = btVector3(0, halfHeight * 4, 0);
+		rotation = btQuaternion(btVector3(1, 0, 0), -SIMD_PI / 2);
+		trans.setRotation(rotation);
+		break;
+	case('l'):
+		offset = btVector3(halfHeight * 2, 0, 0);
+		rotation = btQuaternion(btVector3(0, 0, 1), -SIMD_PI / 2);
+		trans.setRotation(rotation);
+		break;
+	case('r'):
+		offset = btVector3(-halfHeight * 2, 0, 0);
+		rotation = btQuaternion(btVector3(0, 0, 1), -SIMD_PI / 2);
+		trans.setRotation(rotation);
+		break;
 	}
-	offset = btVector3(0, halfHeight * 2, 0);
-	btTransform trans = GetTransform();
 	curPathPoint = trans.getOrigin();
 	btVector3 newPos = trans.getOrigin() + offset;
 	trans.setOrigin(newPos);

@@ -18,7 +18,7 @@ namespace NCL {
 			btVector3 yAdjustedPoint;
 			float GroundAdjust(btVector3 pos);
 			char side;
-			float speed = 60;
+			float speed = 20;
 		private:
 
 

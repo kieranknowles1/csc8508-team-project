@@ -340,7 +340,7 @@ void TutorialGame::InitNavMeshes() {
     navMeshes.push_back(right);
 
     AddTurretToWorld();
-    AddWandererToWorld(top, 't');
+    AddWandererToWorld(right, 'r');
 }
 
 void TutorialGame::ResetWorld() {
