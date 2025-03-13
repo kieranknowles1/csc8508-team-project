@@ -115,6 +115,9 @@ namespace NCL {
             void LoadWorldFromFile(int levelNum);
             void JoinGame(bool host);
 
+            // FIX ME make this protected/private.
+            PlayerObject* player;
+
         protected:
             void InitialiseAssets();
 
@@ -202,7 +205,6 @@ namespace NCL {
             //Player things
             PlayerObject* InitPlayer(btVector3 position, btVector3 upDir);
             PerspectiveCamera* mainCamera;
-            PlayerObject* player;
             GameObject* gun;
             PlayerController* playerController = nullptr;
             bool freeCam = false;
@@ -235,6 +237,7 @@ namespace NCL {
             inline static std::optional<Lobbies::Lobby> lobby = std::optional<Lobbies::Lobby>();
             inline static std::optional<Lobbies::User> user = std::optional<Lobbies::User>();
             inline static int USER_ID = 0;
+            bool host = false;
 
             GameState state = GameState::IDLE;
         };

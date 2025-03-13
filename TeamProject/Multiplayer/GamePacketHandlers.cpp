@@ -195,15 +195,77 @@ namespace Packet {
 
 #pragma region ObjectChangeGravityPacketHandler
     void ObjectChangeGravityPacketHandler::Handle(const std::shared_ptr<Packet> packet) {
+        const ObjectChangeGravityPacket* gravityPacket = std::static_pointer_cast<ObjectChangeGravityPacket>(packet).get();
+        GameObject* targetObject = GameObject::GetGameObjectByID(gravityPacket->GetTargetID());
+        btRigidBody* body = targetObject->GetPhysicsObject()->GetRigidBody();
 
+        // Check if last update was newer.
+        if (gravityPacket->GetSequenceNumber() > targetObject->GetLastPacketSequence(gravityPacket->GetType())) {
+            TutorialGame::getInstance()->player->setUpDirection(gravityPacket->GetUpDirection());
+            targetObject->UpdatePacketSequence(gravityPacket->GetType(), gravityPacket->GetSequenceNumber());
+        }
     }
 
     std::shared_ptr<Packet> ObjectChangeGravityPacketHandler::Translate(const ENetEvent* event) const {
-        return std::make_shared<Packet>();
+        ENetPacket* packet = event->packet;
+        Type type;
+        uint8_t channel;
+        uint32_t sequenceNumber;
+        
+        int objectID;
+        btVector3 upVector;
+        size_t offset = sizeof(Type) + sizeof(uint8_t) + sizeof(uint32_t);
+
+        GetBaseData(packet, &type, &channel, &sequenceNumber);
+
+        memcpy(&objectID, packet->data + offset, sizeof(int));
+        offset += sizeof(int);
+
+        memcpy(&upVector, packet->data + offset, sizeof(btVector3));
+        offset += sizeof(btVector3);
+
+        return std::make_shared<ObjectChangeGravityPacket>(objectID, upVector, sequenceNumber);
     }
 
     ENetPacket* ObjectChangeGravityPacketHandler::ToENetPacket(const std::shared_ptr<Packet> packet) const {
-        return nullptr;
+        char* buffer = new char[
+            sizeof(Type)
+            + sizeof(uint8_t)
+            + sizeof(uint32_t)
+            + sizeof(int)
+            + sizeof(btVector3)
+            + sizeof(btQuaternion)
+        ];
+
+        ObjectChangeGravityPacket gravityPacket = (*static_cast<ObjectChangeGravityPacket*>(packet.get()));
+        size_t offset = 0;
+
+        Type type = gravityPacket.GetType();
+        memcpy(buffer, &type, sizeof(Type));
+        offset = offset + sizeof(Type);
+
+        uint8_t channel = gravityPacket.GetChannel();
+        memcpy(buffer + offset, &channel, sizeof(uint8_t));
+        offset = offset + sizeof(uint8_t);
+
+        uint32_t sequenceNumber = gravityPacket.GetSequenceNumber();
+        memcpy(buffer + offset, &sequenceNumber, sizeof(uint32_t));
+        offset = offset + sizeof(uint32_t);
+
+        int objectID = gravityPacket.GetTargetID();
+        memcpy(buffer + offset, &objectID, sizeof(int));
+        offset = offset + sizeof(int);
+
+        btVector3 upVector = gravityPacket.GetUpDirection();
+        memcpy(buffer + offset, &upVector, sizeof(btVector3));
+        offset = offset + sizeof(btVector3);
+
+        int packetFlags = 0;
+        if (channel == static_cast<int>(Channel::RELIABLE)) packetFlags = ENET_PACKET_FLAG_RELIABLE;
+        else if (channel == static_cast<int>(Channel::UNSEQUENCED)) packetFlags = ENET_PACKET_FLAG_UNSEQUENCED;
+
+        ENetPacket* enetPacket = enet_packet_create(buffer, offset, packetFlags);
+        return enetPacket;
     }
 #pragma endregion ObjectChangeGravityPacketHandler
 

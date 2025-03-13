@@ -622,8 +622,14 @@ void TutorialGame::InitPacketHandlers() {
     Packet::UserInfoPacketHandler* infoHandler = new Packet::UserInfoPacketHandler();
     Packet::PacketRegister::Register(infoHandler);
 
+    Packet::PositionPacketHandler* positionHandler = new Packet::PositionPacketHandler();
+    Packet::PacketRegister::Register(positionHandler);
+
     Packet::StartGamePacketHandler* startGameHandler = new Packet::StartGamePacketHandler();
     Packet::PacketRegister::Register(startGameHandler);
+
+    Packet::ObjectChangeGravityPacketHandler* objectChangeGravityHandler = new Packet::ObjectChangeGravityPacketHandler();
+    Packet::PacketRegister::Register(objectChangeGravityHandler);
 }
 
 
@@ -654,21 +660,56 @@ void TutorialGame::StartMultiplayerGame() {
     std::shared_ptr<Packet::StartGamePacket> startGame = std::make_shared<Packet::StartGamePacket>();
     server->Broadcast(startGame);
     Start();
+    host = true;
 }
 
 
 void TutorialGame::Start() {
-    if (server.has_value()) instance->state = GameState::ACTIVE;
-
+    instance->state = GameState::ACTIVE;
     instance->LoadWorldFromFile(9);
     
+    // Init user for single players.
     if (!user.has_value()) user.emplace(GenerateUserID());
 
+    // Spawn in player.
     RespawnPoint* respawnPoint = Respawn::GetInstance()->GetRespawn(user->GetUserID() - 1);
     instance->player = instance->InitPlayer(respawnPoint->position,respawnPoint->orientation);
-    instance->player->SetPlayerID(user->GetUserID() - 1);
-
+    instance->player->SetPlayerID(user->GetUserID());
     instance->playerController = new PlayerController(instance->player, instance->gun, instance->controller, instance->mainCamera, instance->bulletWorld,instance->renderer);
+    instance->player->SetWorldID(user->GetUserID());
+
+    btQuaternion emptyRot;
+
+    // Send initial position to everyone if multiplayer.
+    if (server.has_value()) {
+        std::shared_ptr<Packet::PositionPacket> position = std::make_shared<Packet::PositionPacket>(
+            user->GetUserID(),
+            respawnPoint->position,
+            emptyRot,
+            instance->player->GetLastPacketSequence((uint8_t)Packet::PacketType::POSITION) + 1
+        );
+        instance->player->UpdatePacketSequence((uint8_t)Packet::PacketType::POSITION, position->GetSequenceNumber());
+        server->Broadcast(position);
+
+        std::shared_ptr<Packet::ObjectChangeGravityPacket> gravity = std::make_shared<Packet::ObjectChangeGravityPacket>(
+            user->GetUserID(),
+            respawnPoint->orientation,
+            instance->player->GetLastPacketSequence((uint8_t)Packet::PacketType::OBJECT_CHANGE_GRAVITY) + 1
+        );
+        instance->player->UpdatePacketSequence((uint8_t)Packet::PacketType::OBJECT_CHANGE_GRAVITY, gravity->GetSequenceNumber());
+        server->Broadcast(gravity);
+
+        // Spawn in player objects for other players.
+        for (const User& player : lobby->GetConnectedUsers()) {
+            if (player.GetUserID() == user->GetUserID()) continue;
+
+            RespawnPoint* respawnPoint = Respawn::GetInstance()->GetRespawn(player.GetUserID() - 1);
+            PlayerObject* newPlayer = instance->InitPlayer(respawnPoint->position,respawnPoint->orientation);
+            newPlayer->SetPlayerID(player.GetUserID());
+            newPlayer->SetWorldID(player.GetUserID());
+        }
+    }
+
 
     Shoot::GetInstance()->Initialise(instance->bulletWorld,instance->resourceManager.get(), instance->world.get(), instance->renderer->GetDecalSystem());
     Shoot::GetInstance()->InitShotMasks(instance->player, instance->gun);

@@ -22,7 +22,8 @@ namespace NCL::CSC8503 {
 			Slime,
 			Ice,
 			PointLight,
-			RespawnPoint
+			RespawnPoint,
+			Player
 		};
 
 		GameObject(const std::string& name = "");
