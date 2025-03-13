@@ -122,7 +122,7 @@ void Network::Tick(float dt) {
         enet_host_flush(m_host);
         ENetEvent event;
 
-        while (enet_host_service(m_host, &event, 1) > 0) {
+        while (enet_host_service(m_host, &event, 10) > 0) {
             switch (event.type) {
             case ENET_EVENT_TYPE_CONNECT:
                 if (!ConnectPeer()) {

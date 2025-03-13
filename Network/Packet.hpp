@@ -249,6 +249,8 @@ namespace Packet {
             return m_numPackets >= m_size;
         }
 
+        inline int Size() { return m_numPackets; }
+
     private:
         inline std::shared_ptr<Packet>* Begin() { return m_packets.get(); }
         inline std::shared_ptr<Packet>* End() { return m_packets.get() + m_size; }
