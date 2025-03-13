@@ -40,7 +40,7 @@ std::optional<ShotInfo> Shoot::ShootBulletPlayer(btVector3 startPos, btVector3 d
     // Don't have Rust style and_then until C++23 :(
     if (rayInfo.has_value()) {
         if (rayInfo.value().hitObj->getType() == GameObject::Type::Player) {
-            std::cout << "PLAYER HIT\n";
+            // TODO: Hit response.
         }
         SpawnBulletMesh(startPos, dir, rotation, &rayInfo.value());
         SpawnDecal(&rayInfo.value());
