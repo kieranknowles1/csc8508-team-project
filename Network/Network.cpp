@@ -119,6 +119,7 @@ void Network::Tick(float dt) {
         m_lastTick += NETWORK_RATE;
 
         SendAll();
+        enet_host_flush(m_host);
         ENetEvent event;
 
         while (enet_host_service(m_host, &event, 1) > 0) {
@@ -140,7 +141,6 @@ void Network::Tick(float dt) {
             }
             enet_packet_destroy(event.packet);
         }
-        enet_host_flush(m_host);
     }
 }
 
