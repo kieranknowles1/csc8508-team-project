@@ -72,6 +72,10 @@ namespace Lobbies {
             return sizeof(unsigned int) + (m_name.length() + 1);
         }
 
+        bool operator==(const User& other) const {
+            return other.m_userID == m_userID;
+        }
+
     private:
         unsigned int m_userID;
         std::string m_name = "";

@@ -13,8 +13,6 @@
 
 #include "Window.h"
 
-#include <chrono>
-
 using namespace NCL;
 using namespace CSC8503;
 
@@ -121,7 +119,19 @@ void TutorialGame::UpdateGame(float dt) {
     if (showProfiling) {
         profiler.printTimes();
     }
-    
+
+    if (state == GameState::IDLE) {
+        if (user.has_value() && lobby.has_value()) {
+            if (lobby->IsHost(user.value())) {
+                Debug::Print("Start Game <", Vector2(5, 80));
+                if (controller->GetDigital(Controller::DigitalControl::MenuConfirm)) {
+                    StartMultiplayerGame();
+                }
+            }
+            Debug::Print("Connected: " + std::to_string(lobby->GetConnectedUsers().size()), Vector2(70, 80));
+        }
+    }
+
     //post processing time variable effect:
     pulse += dt;
     renderer->SetVignettePulse(pulse);
@@ -386,6 +396,7 @@ void TutorialGame::InitAI() {
 }
 
 void TutorialGame::ResetWorld() {
+    audioEngine.Shutdown();
     DestroyBullet();
     world->ClearAndErase();
     renderer->GetDecalSystem().ClearDecalsFromWorld();
@@ -658,6 +669,18 @@ void TutorialGame::InitPacketHandlers() {
 
     Packet::UserInfoPacketHandler* infoHandler = new Packet::UserInfoPacketHandler();
     Packet::PacketRegister::Register(infoHandler);
+
+    Packet::PositionPacketHandler* positionHandler = new Packet::PositionPacketHandler();
+    Packet::PacketRegister::Register(positionHandler);
+
+    Packet::DeltaPacketHandler* deltaHandler = new Packet::DeltaPacketHandler();
+    Packet::PacketRegister::Register(deltaHandler);
+
+    Packet::StartGamePacketHandler* startGameHandler = new Packet::StartGamePacketHandler();
+    Packet::PacketRegister::Register(startGameHandler);
+
+    Packet::ObjectChangeGravityPacketHandler* objectChangeGravityHandler = new Packet::ObjectChangeGravityPacketHandler();
+    Packet::PacketRegister::Register(objectChangeGravityHandler);
 }
 
 
@@ -679,5 +702,67 @@ void TutorialGame::JoinGame(bool host) {
     else {
         user.emplace(GenerateUserID());
         lobby->AddUser(user.value());
+        lobby->SetHost(user.value());
     }
+}
+
+
+void TutorialGame::StartMultiplayerGame() {
+    std::shared_ptr<Packet::StartGamePacket> startGame = std::make_shared<Packet::StartGamePacket>();
+    server->Broadcast(startGame);
+    Start();
+    host = true;
+}
+
+
+void TutorialGame::Start() {
+    instance->state = GameState::ACTIVE;
+    instance->LoadWorldFromFile(9);
+    
+    // Init user for single players.
+    if (!user.has_value()) user.emplace(GenerateUserID());
+
+    // Spawn in player.
+    RespawnPoint* respawnPoint = Respawn::GetInstance()->GetRespawn(user->GetUserID() - 1);
+    instance->player = instance->InitPlayer(respawnPoint->position,respawnPoint->orientation);
+    instance->player->SetOwner(user->GetUserID());
+    instance->player->SetWorldID(user->GetUserID());
+    instance->player->setType(GameObject::Type::Player);
+    instance->playerController = new PlayerController(instance->player, instance->gun, instance->controller, instance->mainCamera, instance->bulletWorld,instance->renderer);
+
+    btQuaternion emptyRot;
+
+    // Send initial position to everyone if multiplayer.
+    if (server.has_value()) {
+        std::shared_ptr<Packet::PositionPacket> position = std::make_shared<Packet::PositionPacket>(
+            user->GetUserID(),
+            respawnPoint->position,
+            emptyRot,
+            instance->player->GetLastPacketSequence((uint8_t)Packet::PacketType::POSITION) + 1
+        );
+        instance->player->UpdatePacketSequence((uint8_t)Packet::PacketType::POSITION, position->GetSequenceNumber());
+        server->Broadcast(position);
+
+        std::shared_ptr<Packet::ObjectChangeGravityPacket> gravity = std::make_shared<Packet::ObjectChangeGravityPacket>(
+            user->GetUserID(),
+            respawnPoint->orientation,
+            instance->player->GetLastPacketSequence((uint8_t)Packet::PacketType::OBJECT_CHANGE_GRAVITY) + 1
+        );
+        instance->player->UpdatePacketSequence((uint8_t)Packet::PacketType::OBJECT_CHANGE_GRAVITY, gravity->GetSequenceNumber());
+        server->Broadcast(gravity);
+
+        // Spawn in player objects for other players.
+        for (const User& newUser: lobby->GetConnectedUsers()) {
+            if (newUser.GetUserID() == user->GetUserID()) continue;
+
+            RespawnPoint* respawnPoint = Respawn::GetInstance()->GetRespawn(newUser.GetUserID() - 1);
+            PlayerObject* newPlayer = instance->InitPlayer(respawnPoint->position,respawnPoint->orientation);
+            newPlayer->setType(GameObject::Type::Player);
+            newPlayer->SetOwner(newUser.GetUserID());
+            newPlayer->SetWorldID(newUser.GetUserID());
+        }
+    }
+
+    Shoot::GetInstance()->Initialise(instance->bulletWorld,instance->resourceManager.get(), instance->world.get(), instance->renderer->GetDecalSystem());
+    Shoot::GetInstance()->InitShotMasks(instance->player, instance->gun);
 }

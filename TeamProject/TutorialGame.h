@@ -30,6 +30,12 @@ namespace NCL {
             JOIN_GAME
         };
 
+        enum class GameState {
+            IDLE,
+            ACTIVE
+        };
+
+
         class TutorialGame {
         private:
             static TutorialGame* instance;
@@ -46,6 +52,10 @@ namespace NCL {
             ResourceManager* GetResourceManager() {
                 return resourceManager.get();
             }
+
+            static void Start();
+
+
             /**
              * @brief Get the Network Instance of the Server.
              * @return 
@@ -105,6 +115,11 @@ namespace NCL {
             void LoadWorldFromFile(int levelNum);
             void JoinGame(bool host);
 
+            inline static bool IsHost() { return host; }
+
+            // FIX ME make this protected/private.
+            PlayerObject* player;
+
         protected:
             void InitialiseAssets();
 
@@ -131,6 +146,9 @@ namespace NCL {
              * @param address ENetAddress of the servers location.
              */
             void ConnectToServer(ENetAddress& address);
+
+            void StartMultiplayerGame();
+
             void CreateLocal();
             void InitPacketHandlers();
             void ExecuteIncomingPackets();
@@ -189,7 +207,6 @@ namespace NCL {
             //Player things
             PlayerObject* InitPlayer(btVector3 position, btVector3 upDir);
             PerspectiveCamera* mainCamera;
-            PlayerObject* player;
             GameObject* gun;
             PlayerController* playerController = nullptr;
             bool freeCam = false;
@@ -230,7 +247,9 @@ namespace NCL {
             inline static std::optional<Lobbies::Lobby> lobby = std::optional<Lobbies::Lobby>();
             inline static std::optional<Lobbies::User> user = std::optional<Lobbies::User>();
             inline static int USER_ID = 0;
+            inline static bool host = false;
 
+            GameState state = GameState::IDLE;
         };
     }
 }
