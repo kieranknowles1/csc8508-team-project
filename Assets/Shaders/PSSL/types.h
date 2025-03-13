@@ -16,7 +16,7 @@ struct ObjectState {
 		matrix modelMatrix;
 		// transpose(inverse(mat3(modelMatrix)))
 		// HLSL doesn't have an inverse function, so doing this in cpp
-		float3x3 normalMatrix;
+		matrix normalMatrix;
 		float4 colour;
 		int texIndex = NULLTEX;
 		int normalIndex = NULLTEX;

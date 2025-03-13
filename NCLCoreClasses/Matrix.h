@@ -169,6 +169,16 @@ namespace NCL::Maths {
             return out;
         }
 
+        template <typename T>
+        constexpr MatrixTemplate<T, 4, 4> FromMat3(const MatrixTemplate<T, 3, 3>& mat) {
+            MatrixTemplate<T, 4, 4> out;
+            out.SetColumn(0, Vector4(mat.GetColumn(0), 0));
+            out.SetColumn(1, Vector4(mat.GetColumn(1), 0));
+            out.SetColumn(2, Vector4(mat.GetColumn(2), 0));
+            out.SetColumn(3, Vector4(0, 0, 0, 1));
+            return out;
+        }
+
         // Ported from GLM, see credits.txt
         // Minimal modifications for compatibility
         template <typename T>

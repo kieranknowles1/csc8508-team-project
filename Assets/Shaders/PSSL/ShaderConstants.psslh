@@ -5,16 +5,18 @@
 
 #include "interop.h"
 
-// 24 bytes, 1.5 slots
 struct VingetteSettings {
 	float intensity;
 	float3 color;
+
 	float pulse;
 	bool enabled;
+	float2 __pad;
 };
 
 struct ShaderConstants
 {
+	VingetteSettings vingetteSettings;
 	matrix orthoMatrix;
 
 	matrix viewProjMatrix;
@@ -28,7 +30,6 @@ struct ShaderConstants
 	float3 cameraPos;
 	int __pad;
 
-	VingetteSettings vingetteSettings;
 	float2 screenSize;
 };
 

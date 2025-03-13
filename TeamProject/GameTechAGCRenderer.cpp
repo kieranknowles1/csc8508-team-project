@@ -180,10 +180,10 @@ void GameTechAGCRenderer::RenderFrame() {
 	PostProcessPass();
 
 	////Step 8: Draw UI to the post-processed scene
-	//UiPass();
-	//UpdateDebugData();
-	//RenderDebugLines();
-	//RenderDebugText();
+	UiPass();
+	UpdateDebugData();
+	RenderDebugLines();
+	RenderDebugText();
 
 	//Step 9: Draw the main scene render target to the screen with a compute shader
 	DisplayRenderPass(); //Puts our scene on screen, uses a compute
@@ -211,7 +211,7 @@ void GameTechAGCRenderer::WriteRenderPassConstants() {
 
 	frameData.orthoMatrix = Matrix::Orthographic(0.0f, 100.0f, 100.0f, 0.0f, -1.0f, 1.0f);
 
-	frameData.vingetteSettings.enabled = vignetteOn;
+	frameData.vingetteSettings.enabled = GetVignetteOn();
 	frameData.vingetteSettings.color = vignetteColour;
 	frameData.vingetteSettings.intensity = vignetteIntensity;
 	frameData.vingetteSettings.pulse = vignettePulse;
@@ -365,7 +365,7 @@ void GameTechAGCRenderer::UiPass() {
 		.setSamplers(0, 1, &defaultSampler);
 
 	halfUnitQuad->BindVertexBuffers(frameContext->m_bdr.getStage(sce::Agc::ShaderType::kGs));
-	DrawBoundMeshInstanced(*frameContext, *halfUnitQuad, uiElements.size());
+	DrawBoundMeshInstanced(*frameContext, *halfUnitQuad, frameSprites.size());
 }
 
 void GameTechAGCRenderer::LightPass()
@@ -572,7 +572,7 @@ void GameTechAGCRenderer::UpdateObjectList() {
 		state.modelMatrix = transMatrix * Matrix::Scale(g->getParent()->getRenderScale());
 		// Matrix without translation components, for normal transforms
 		Matrix3 transMat3 = Matrix::FromMat4(transMatrix);
-		state.normalMatrix = Matrix::InverseTranspose(transMat3);
+		state.normalMatrix = Matrix::FromMat3(Matrix::InverseTranspose(transMat3));
 
 		state.colour = g->GetColour();
 		state.texRepeats = g->GetTexRepeating();
@@ -620,7 +620,7 @@ void GameTechAGCRenderer::UpdateObjectList() {
 	currentFrame->objects.end(currentFrame);
 
 	currentFrame->ui.begin(currentFrame);
-	for (auto& ui : uiElements) {
+	for (auto& ui : frameSprites) {
 		UiState state;
 		state.colour = ui.color;
 		state.position = ui.position;
