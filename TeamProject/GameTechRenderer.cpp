@@ -91,6 +91,9 @@ GameTechRenderer::GameTechRenderer(Window* window) : OGLRenderer(window), GameTe
 	lightSphere = LoadMesh("Sphere.msh"); //Load mesh takes care of upload to GPU itself
 
 	glGenFramebuffers(1, &bufferFBO);
+	glGenFramebuffers(1, &bufferFBO);
+	glGenFramebuffers(1, &normalsFBO);
+	glGenFramebuffers(1, &normalsFBO);
 	glGenFramebuffers(1, &pointLightFBO);
 
 	GLenum buffers[2] = {
@@ -101,6 +104,8 @@ GameTechRenderer::GameTechRenderer(Window* window) : OGLRenderer(window), GameTe
 	GenerateScreenTexture(bufferDepthTex, true);
 	GenerateScreenTexture(bufferColourTex);
 	GenerateScreenTexture(bufferNormalTex, false); 
+
+	GenerateScreenTexture(normalsTex, false);
 
 	GenerateScreenTexture(lightDiffuseTex);
 	GenerateScreenTexture(lightSpecularTex);
@@ -115,6 +120,13 @@ GameTechRenderer::GameTechRenderer(Window* window) : OGLRenderer(window), GameTe
 	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE || !bufferColourTex || !bufferNormalTex || !bufferDepthTex ) {//check attachment success
 		return;
 	}
+
+	glBindFramebuffer(GL_FRAMEBUFFER, normalsFBO);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, normalsTex, 0); //attach BFBO as the colour attachment
+	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE || !normalsTex) {
+		return;
+	}
+	glDrawBuffers(2, buffers);
 
 	//second pass:
 	glBindFramebuffer(GL_FRAMEBUFFER, pointLightFBO);
@@ -140,6 +152,7 @@ GameTechRenderer::GameTechRenderer(Window* window) : OGLRenderer(window), GameTe
 
 	vignetteShader = new OGLShader("texturevert.glsl", "vignettefrag.glsl");
 	edgedetectShader = new OGLShader("texturevert.glsl", "edgedetectfrag.glsl");
+	normalsShader = new OGLShader("normalVert.glsl", "normalFrag.glsl");
 
  	//start setting up framebuffers for post processing:
 	//first generate the textures to store the rendered scene:
@@ -196,6 +209,8 @@ GameTechRenderer::GameTechRenderer(Window* window) : OGLRenderer(window), GameTe
 		return;
 	}
 
+
+
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
 }
@@ -217,6 +232,8 @@ GameTechRenderer::~GameTechRenderer() {
 	glDeleteTextures(1, &lightSpecularTex);
 	glDeleteTextures(1, &hdrTex);
 	glDeleteFramebuffers(1, &hdrFBO);
+	glDeleteTextures(1, &normalsTex);
+	glDeleteFramebuffers(1, &normalsFBO);
 	glDeleteTextures(1, &BTex);
 	glDeleteFramebuffers(1, &BFBO);
 	delete fullscreenQuad; //only mesh that needs to be deleted as others are std::make_unique<OGLMesh>
@@ -278,7 +295,7 @@ void GameTechRenderer::RenderFrame() {
 	FillBuffers();
 	DrawPointLights();
 	CombineBuffers();
-	RenderPostProcessing(); 
+	RenderPostProcessing();
 	RenderUI();
 
 	glDisable(GL_CULL_FACE); //Todo - text indices are going the wrong way...
@@ -358,7 +375,7 @@ void GameTechRenderer::RenderSkybox() {
 	glEnable(GL_DEPTH_TEST);
 }
 
-void GameTechRenderer::RenderCamera() {
+void GameTechRenderer::RenderCamera(bool normalMap) {
 	Matrix4 viewMatrix = camera->BuildViewMatrix();
 	Matrix4 projMatrix = camera->BuildProjectionMatrix(hostWindow->GetScreenAspect());
 
@@ -412,9 +429,11 @@ void GameTechRenderer::RenderCamera() {
 		}
 
 		//normal map capabilities added:
+	
 		if ((*i).GetNormalMap()) { //changed texture unit to 1 instead of 2 while there are no shadows
 			BindTextureToShader(*(OGLTexture*)(*i).GetNormalMap(), "normalTex", 1); //need a shader that utilises normal maps, has a uniform sampler2D called "normalTex" in texture unit 2
 		}
+		
 
 		//Matrix4 modelMatrix = (*i).GetTransform()->GetMatrix();
 		Matrix4 modelMatrix;
@@ -432,7 +451,12 @@ void GameTechRenderer::RenderCamera() {
 
 		glUniform1i(hasTexLocation, (OGLTexture*)(*i).GetDefaultTexture() ? 1:0);
 		glUniform1i(hasFlatLocation, i->GetIsFlat());
-		glUniform1i(hasNormalLocation, i->GetHasNormal());
+		if (normalMap) {
+			glUniform1i(hasNormalLocation, i->GetHasNormal());
+		}
+		else {
+			glUniform1i(hasNormalLocation, 0);
+		}
 		glUniform1i(texRepeatingLocation, i->GetTexRepeating());
 
 		BindMesh((OGLMesh&)*(*i).GetMesh());
@@ -839,6 +863,11 @@ void GameTechRenderer::RenderPostProcessing() { //gonna try putting edge detecti
 		glActiveTexture(GL_TEXTURE1);
 		glBindTexture(GL_TEXTURE_2D, bufferDepthTex);
 		glUniform1i(glGetUniformLocation(edgedetectShader->GetProgramID(), "depthTex"), 1);
+
+		glUniform1i(glGetUniformLocation(edgedetectShader->GetProgramID(), "normTex"), 2);
+		glActiveTexture(GL_TEXTURE2);
+		glBindTexture(GL_TEXTURE_2D, normalsTex);
+
 		glUniform2f(glGetUniformLocation(edgedetectShader->GetProgramID(), "windowSize"), windowSize.x, windowSize.y); 
 		glUniform1f(glGetUniformLocation(edgedetectShader->GetProgramID(), "nearPlane"), camera->GetNearPlane());
 		glUniform1f(glGetUniformLocation(edgedetectShader->GetProgramID(), "farPlane"), camera->GetFarPlane());
@@ -911,15 +940,27 @@ void GameTechRenderer::GenerateScreenTexture(GLuint& into, bool depth) {
 void GameTechRenderer::DrawScene() { //the basic rendering for the scene, currently not including shadows. 
 	
 	glBindFramebuffer(GL_FRAMEBUFFER, bufferFBO);
-
 	glEnable(GL_CULL_FACE);
 	glClearColor(1, 1, 1, 0); //doesn't seem to change anything regardless of alpha
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	RenderSkybox();
-    RenderCamera();
+    RenderCamera(true);
+
+
+	glBindFramebuffer(GL_FRAMEBUFFER, normalsFBO);
+	glEnable(GL_CULL_FACE);
+	glClearColor(1, 1, 1, 0); //doesn't seem to change anything regardless of alpha
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	RenderSkybox();
+	RenderCamera(false);
+
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
 	// Render Decals to it's own buffer 
 	RenderDecals(); 
-	
+
+
+
 	glBindFramebuffer(GL_FRAMEBUFFER, hdrFBO);
 	// Blend decals onto the scene using a fullscreen quad
 	glEnable(GL_BLEND);
@@ -974,7 +1015,6 @@ void GameTechRenderer::FillBuffers() { //draws unlit scene
     //bind the framebuffer to store unlit scene
 	glBindFramebuffer(GL_FRAMEBUFFER, bufferFBO); //We will draw the whole scene into bufferFBO for now including the skybox 
 	glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT); 
-	 
 	//draw scene:
 	DrawScene(); //perhaps don't need to draw whole scene but just what will be affected by lighting i.e. skybox will not
 

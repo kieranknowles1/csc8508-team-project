@@ -2,6 +2,7 @@
 
 uniform sampler2D sceneTex;
 uniform sampler2D depthTex;
+uniform sampler2D normTex;
 
 uniform vec2 windowSize;
 uniform float nearPlane;
@@ -50,6 +51,13 @@ vec3 calculateNormal(vec2 texCoord){
     return normalWorld;
 }
 
+// Function to convert non-linear depth values to linear depth values
+// https://learnopengl.com/Advanced-OpenGL/Depth-testing
+float LinearizeDepth(float depth) {
+    return (2.0 * nearPlane) / (farPlane + nearPlane - depth * (farPlane - nearPlane));
+}
+
+
 
 
 vec2 offsets[25] = vec2[] (
@@ -64,14 +72,16 @@ vec2 offsets[25] = vec2[] (
 
 void main(void) {
    vec4 colour = texture(sceneTex, IN.texCoord); //initially just render scene as is ////////
-   vec3 normalWorld = calculateNormal(IN.texCoord);
+   vec3 normalWorld = texture(normTex, IN.texCoord).rgb;
+   float depth = LinearizeDepth(texture(depthTex, IN.texCoord).r);
    for (int i = 0; i < 25; i++) {
-       vec3 normalWorld2 =calculateNormal(IN.texCoord+offsets[i]); // check surrounding normals
-       if(distance(normalWorld,normalWorld2) > 0.75f){ // normals are substantially different
+       vec3 normalWorld2 = texture(normTex, IN.texCoord + offsets[i]).rgb; // check surrounding normals
+       float depthTest = LinearizeDepth(texture(depthTex, IN.texCoord+ offsets[i]).r);
+       if(distance(normalWorld,normalWorld2) >= 0.05f || abs(depth-depthTest) >= 0.05f){ // normals are substantially different
            colour = vec4(0,0,0,1);
            break;
         }
     }
-   fragColor = colour;
+   fragColor = texture(normTex, IN.texCoord);
 
  }

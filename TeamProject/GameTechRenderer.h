@@ -40,7 +40,7 @@ namespace NCL {
 			void RenderFrame()	override;
 
 			void RenderShadowMap();
-			void RenderCamera();
+			void RenderCamera(bool normalMap);
 			void RenderSkybox();
 
 			void RenderDecals();
@@ -127,6 +127,8 @@ namespace NCL {
 			//Post processing additions:
 			GLuint hdrTex;
 			GLuint hdrFBO;
+			GLuint normalsTex;
+			GLuint normalsFBO;
 			GLuint hdrDepthTex;
 			OGLMesh* fullscreenQuad;  
 			OGLShader* hdrShader;
@@ -136,7 +138,7 @@ namespace NCL {
 			GLuint BDepthTex;
 			void RenderPostProcessing();
 			OGLShader* edgedetectShader;
-
+			OGLShader* normalsShader;
 		};
 	}
 }
