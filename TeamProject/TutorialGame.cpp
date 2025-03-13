@@ -679,6 +679,7 @@ void TutorialGame::Start() {
     instance->player = instance->InitPlayer(respawnPoint->position,respawnPoint->orientation);
     instance->player->SetOwner(user->GetUserID());
     instance->player->SetWorldID(user->GetUserID());
+    instance->player->setType(GameObject::Type::Player);
     instance->playerController = new PlayerController(instance->player, instance->gun, instance->controller, instance->mainCamera, instance->bulletWorld,instance->renderer);
 
     btQuaternion emptyRot;
@@ -708,6 +709,7 @@ void TutorialGame::Start() {
 
             RespawnPoint* respawnPoint = Respawn::GetInstance()->GetRespawn(newUser.GetUserID() - 1);
             PlayerObject* newPlayer = instance->InitPlayer(respawnPoint->position,respawnPoint->orientation);
+            newPlayer->setType(GameObject::Type::Player);
             newPlayer->SetOwner(newUser.GetUserID());
             newPlayer->SetWorldID(newUser.GetUserID());
         }

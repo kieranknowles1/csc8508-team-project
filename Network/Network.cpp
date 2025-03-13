@@ -114,7 +114,7 @@ void Network::Run() {
 
 void Network::Tick(float dt) {
     m_elapsedTime += dt;
-    std::cout << "DT = " << dt << std::endl;
+   // std::cout << "DT = " << dt << std::endl;
 
     while (m_elapsedTime - m_lastTick >= NETWORK_RATE) {
         m_lastTick += NETWORK_RATE;
