@@ -39,6 +39,7 @@ namespace NCL::CSC8503 {
 		});
 
         frameSprites.clear();
+		frameTexts.clear();
         for (auto elem : uiElements) {
             if (elem->IsActive()) {
                 elem->render(frameSprites);

@@ -703,6 +703,7 @@ void GameTechRenderer::RenderUI() {
 		Vector4 color = uiElement.color;
 
 		Debug::Print(text, pos, color);
+		std::cout << text << std::endl;
 	}
 
 	glDisable(GL_BLEND);

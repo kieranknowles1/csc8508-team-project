@@ -48,7 +48,7 @@ namespace NCL::CSC8503 {
             return enabled;
         }
 
-        virtual void SetActive(bool active) {
+        void SetActive(bool active) {
             enabled = active;
         }
 

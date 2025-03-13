@@ -45,10 +45,6 @@ public:
 		players[playerId].score = score;
 	}
 
-	void SetActive(bool active) override {
-		enabled = active; 
-	}
-
 	std::string TeamColorToString(TeamColor color) {
 		switch (color) {
 		case TeamColor::RED:
