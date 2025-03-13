@@ -31,6 +31,7 @@ public:
 	Scoreboard();
 	void render(std::vector<UiSprite>& sprites) override;
 	void render(std::vector<UiText>& texts) override;
+	void Animate(float dt) override {};
 
 	void AddPlayer(unsigned int playerID, Player playerData) {
 		players.insert(std::pair<unsigned int, Player>(playerID, playerData));

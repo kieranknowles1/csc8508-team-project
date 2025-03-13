@@ -23,10 +23,19 @@ namespace NCL::CSC8503 {
 	class GameWorld;
 	class RenderObject;
 
+	enum class GameState {
+		MAIN_MENU,
+		PLAYING,
+		PAUSED,
+		SCOREBOARD,
+		GAME_OVER
+	};
+
 	struct UiSprite {
 		Maths::Vector2 position;
 		Maths::Vector2 size;
 		Maths::Vector4 color;
+		GameState state = GameState::PLAYING;
 		std::shared_ptr<Rendering::Texture> texture;
 	};
 
@@ -34,6 +43,7 @@ namespace NCL::CSC8503 {
 		Maths::Vector2 position;
 		std::string text;
 		Maths::Vector4 color;
+		GameState state = GameState::PLAYING;
 	};
 
     class UiElement {
@@ -126,6 +136,7 @@ namespace NCL::CSC8503 {
 		std::vector<UiText> frameTexts;
 		std::vector<PointLight*> lights;
 		DecalSystem decalSystem;
+		bool showScoreboard = true;
 	};
 }
 

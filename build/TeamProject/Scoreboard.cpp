@@ -2,13 +2,17 @@
 
 
 Scoreboard::Scoreboard() {
+	AddPlayer(0, { "Player1", 0, TeamColor::RED });
+	AddPlayer(1, { "Player2", 3, TeamColor::BLUE });
+	AddPlayer(2, { "Player3", 6, TeamColor::GREEN });
+	AddPlayer(3, { "Player4", 4, TeamColor::YELLOW });
 	UpdateScoreboardData();
 }
 
 void Scoreboard::render(std::vector<UiSprite>& sprites) {
 	Vector4 scoreboardColor = Vector4(0.1f, 0.1f, 0.1f, 0.6f);
 	for (const auto& box : boxes) {
-		sprites.push_back({ box.position, box.size, scoreboardColor });
+		sprites.push_back({ box.position, box.size, scoreboardColor, GameState::SCOREBOARD });
 	}
 
 }
@@ -16,7 +20,7 @@ void Scoreboard::render(std::vector<UiSprite>& sprites) {
 void Scoreboard::render(std::vector<UiText>& texts) {
 	Vector4 textColor = Vector4(1, 1, 1, 1);
 	for (const auto& text : Uitexts) {
-		texts.push_back({ text.position, text.text, textColor });
+		texts.push_back({ text.position, text.text, textColor, GameState::SCOREBOARD });
 	}
 }
 

@@ -16,6 +16,7 @@ class Crosshair : public UiElement {
 public:
     Crosshair();
     void render(std::vector<UiSprite>& sprites) override;
+    void render(std::vector<UiText>& texts) override {};
     void Animate(float dt);
 
     void fire();

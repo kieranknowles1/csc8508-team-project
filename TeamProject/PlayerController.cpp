@@ -24,6 +24,7 @@ void PlayerController::Initialise() {
     crosshair = std::make_unique<Crosshair>();
     renderer->AddUiElement(crosshair.get());
     crosshair->SetActive(true);
+    
 }
 
 btVector3 GetEulerAngles(btQuaternion quat) {

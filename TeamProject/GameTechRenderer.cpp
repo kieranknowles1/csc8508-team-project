@@ -521,7 +521,7 @@ void GameTechRenderer::NewRenderText() {
 	SetDebugStringBufferSizes(frameVertCount);
 
 	for (const auto& s : strings) {
-		float size = 20.0f;
+		float size = 0.2f;
 		Debug::GetDebugFont()->BuildVerticesForString(s.data, s.position, s.colour, size, debugTextPos, debugTextUVs, debugTextColours);
 	}
 
