@@ -45,7 +45,7 @@ void Scoreboard::render(std::vector<UiSprite>& sprites) {
 }
 
 void Scoreboard::render(std::vector<UiText>& texts) {
-    static const Vector4 textColor(1, 0.4f, 0, 0.6f);
+    static const Vector4 textColor(1, 1, 1, 1);
     for (const auto& text : Uitexts) {
         texts.push_back({ text.position, text.text, textColor });
     }
