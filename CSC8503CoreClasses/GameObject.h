@@ -83,7 +83,6 @@ namespace NCL::CSC8503 {
 		}
 
 		void SetWorldID(int newID) {
-			if (objects.contains(newID)) return;
 			worldID = newID;
 			objects[worldID] = this;
 		}
