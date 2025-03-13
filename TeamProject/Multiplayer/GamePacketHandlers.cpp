@@ -541,4 +541,44 @@ namespace Packet {
         return enetPacket;
     }
 #pragma endregion RequestUserIDPacketHandler
+
+
+#pragma region DamageHandler
+    void DamagePacketHandler::Handle(const std::shared_ptr<Packet> packet) {
+
+    }
+
+    std::shared_ptr<Packet> DamagePacketHandler::Translate(const ENetEvent* event) const {
+        ENetPacket* packet = event->packet;
+        Type type;
+        uint8_t channel;
+        uint32_t sequenceNumber;
+        
+        size_t offset = sizeof(Type) + sizeof(uint8_t) + sizeof(uint32_t);
+        GetBaseData(packet, &type, &channel, &sequenceNumber);
+
+        int targetID;
+        memcpy(&targetID, packet->data + offset, sizeof(LobbyAction));
+        offset = offset + sizeof(int);
+
+        int damage;
+        memcpy(&damage, packet->data + offset, sizeof(int));
+        offset = offset + sizeof(int);
+
+        int dealer;
+        memcpy(&dealer, packet->data + offset, sizeof(int));
+        offset = offset + sizeof(int);
+
+        bool isKill;
+        memcpy(&isKill, packet->data + offset, sizeof(bool));
+        offset = offset + sizeof(bool);
+
+        return std::make_shared<DamagePacket>(targetID, damage, dealer, isKill);
+    }
+
+    ENetPacket* DamagePacketHandler::ToENetPacket(const std::shared_ptr<Packet> packet) const {
+        return nullptr;
+    }
+
+#pragma endregion DamageHandler
 }
