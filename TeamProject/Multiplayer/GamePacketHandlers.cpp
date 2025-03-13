@@ -576,7 +576,54 @@ namespace Packet {
     }
 
     ENetPacket* DamagePacketHandler::ToENetPacket(const std::shared_ptr<Packet> packet) const {
-        return nullptr;
+        char* buffer = new char[
+            sizeof(Type)
+            + sizeof(uint8_t)
+            + sizeof(uint32_t)
+            + sizeof(int)
+            + sizeof(int)
+            + sizeof(int)
+            + sizeof(bool)
+        ];
+
+        DamagePacket damagePacket = (*static_cast<DamagePacket*>(packet.get()));
+        size_t offset = 0;
+
+        Type type = damagePacket.GetType();
+        memcpy(buffer, &type, sizeof(Type));
+        offset = offset + sizeof(Type);
+
+        uint8_t channel = damagePacket.GetChannel();
+        memcpy(buffer + offset, &channel, sizeof(uint8_t));
+        offset = offset + sizeof(uint8_t);
+
+        uint32_t sequenceNumber = damagePacket.GetSequenceNumber();
+        memcpy(buffer + offset, &sequenceNumber, sizeof(uint32_t));
+        offset = offset + sizeof(uint32_t);
+
+        int targetID = damagePacket.GetTargetID();
+        memcpy(buffer + offset, &targetID, sizeof(int));
+        offset = offset + sizeof(int);
+
+        int damage = damagePacket.GetDamage();
+        memcpy(buffer + offset, &damage, sizeof(int));
+        offset = offset + sizeof(int);
+
+        int dealer = damagePacket.GetDamageDealer();
+        memcpy(buffer + offset, &dealer, sizeof(int));
+        offset = offset + sizeof(int);
+
+        bool isKill = damagePacket.IsKill();
+        memcpy(buffer + offset, &isKill, sizeof(bool));
+        offset = offset + sizeof(int);
+
+        int packetFlags = 0;
+        if (channel == static_cast<int>(Channel::RELIABLE)) packetFlags = ENET_PACKET_FLAG_RELIABLE;
+        else if (channel == static_cast<int>(Channel::UNSEQUENCED)) packetFlags = ENET_PACKET_FLAG_UNSEQUENCED;
+
+        ENetPacket* enetPacket = enet_packet_create(buffer, offset, packetFlags);
+        delete[] buffer;
+        return enetPacket;
     }
 
 #pragma endregion DamageHandler
