@@ -140,6 +140,7 @@ void Network::Tick(float dt) {
             }
             enet_packet_destroy(event.packet);
         }
+        enet_host_flush(m_host);
     }
 }
 
@@ -154,7 +155,6 @@ void Network::SendAll() {
 
         if (m_sendBuffer[i].second == nullptr) {
             enet_host_broadcast(m_host, m_sendBuffer[i].first.get()->GetChannel(), packet);
-            enet_host_flush(m_host);
         }
         else {
             enet_peer_send(m_sendBuffer[i].second, m_sendBuffer[i].first.get()->GetChannel(), packet);
