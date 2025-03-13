@@ -59,7 +59,7 @@ namespace Packet {
         /**
          * @brief Get the Angular Velocity of the Delta Packet.
          * 
-         * This is the current angular velocity of thet object on the server.
+         * This is the current angular velocity of the object on the server.
          * 
          * @return btVector3 containing the angular velocity.
          */
@@ -132,6 +132,24 @@ namespace Packet {
         PlayerState m_newState;
     };
 
+
+    /**
+     * @brief A packet that updates an objects upVector to change its gravity.
+     */
+    class ObjectChangeGravityPacket : public Packet {
+    public:
+        ObjectChangeGravityPacket(int objectID, const btVector3& upDirection, uint32_t sequenceNum) :
+            Packet(static_cast<Type>(PacketType::OBJECT_CHANGE_GRAVITY), static_cast<int>(Channel::FREQUENT), sequenceNum),
+            m_objectID(objectID), m_upDirection(upDirection)
+        {}
+
+        int GetTargetID() const { return m_objectID; }
+        btVector3 GetUpDirection() const { return m_upDirection; }
+
+    private:
+        int m_objectID;
+        btVector3 m_upDirection;
+    };
 
     /**
      * @brief A simple packet to be broadcast to all players simultaneously to
