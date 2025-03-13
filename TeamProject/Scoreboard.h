@@ -6,6 +6,7 @@
 #include "GameTechRendererInterface.h"
 #include "Multiplayer/Lobby.hpp"
 
+
 using namespace NCL::Maths;
 
 
@@ -23,6 +24,7 @@ struct Player {
 	std::string name;
 	int score = 0;
 	TeamColor color;
+	unsigned int playerID;
 };
 
 
@@ -31,18 +33,22 @@ public:
 	Scoreboard();
 	
 	void InitScoreboard();
-	void UpdateScoreboardData();
+	void UpdateScoreboardText();
 
 	void render(std::vector<UiSprite>& sprites) override;
 	void render(std::vector<UiText>& texts) override;
 	void Animate(float dt) override {};
 
-	void AddPlayer(unsigned int playerID, Player playerData) {
-		players.insert(std::pair<unsigned int, Player>(playerID, playerData));
+	void AddPlayer(Player playerData) {
+		players.push_back(playerData);
 	}
 
 	void SetScore(unsigned int score, unsigned int playerId) {
-		players[playerId].score = score;
+		for (auto& player : players) {
+			if (player.playerID == playerId) {
+				player.score = score;
+			}
+		}
 	}
 
 	std::string TeamColorToString(TeamColor color) {
@@ -69,7 +75,11 @@ public:
 	}
 
 	void SetColor(unsigned int playerID, TeamColor color) {
-		players[playerID].color = color;
+		for (auto& player : players) {
+			if (player.playerID == playerID) {
+				player.color = color;
+			}
+		}
 	}
 	
 	void SortPlayers();
@@ -79,7 +89,7 @@ private:
 	Vector2 scoreboardSize = Vector2(0.7f, 0.7f);
 	std::array<ScoreboardBoxes, 27> boxes;
 	std::array<ScoreboardText, 27> Uitexts;
-	std::unordered_map<unsigned int, Player> players;
+	std::vector<Player> players;
 	int columns = 3;
 	int rows = 9;
 };
