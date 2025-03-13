@@ -11,6 +11,7 @@ ResourceManager::ResourceManager(GameTechRendererInterface* renderer)
 	: renderer(renderer)
 	, meshes(this)
 	, textures(this)
+    , materials(this)
 {
 	auto pwd = std::filesystem::current_path().string();
 	std::cout << "Using working directory: " << pwd << std::endl;
@@ -29,12 +30,19 @@ void ResourceManager::collectGarbage()
 	timeSinceGc = 0;
 	meshes.collectGarbage();
 	textures.collectGarbage();
+    materials.collectGarbage();
 }
 
 template<>
 std::shared_ptr<Rendering::Mesh> ResourceMap<std::string, Rendering::Mesh>::load(const std::string& key) {
 	auto mesh = owner->getRenderer()->LoadMesh(key);
 	return std::shared_ptr<Rendering::Mesh>(mesh);
+}
+
+template<>
+std::shared_ptr<MeshMaterial> ResourceMap<std::string, MeshMaterial>::load(const std::string& key) {
+    auto material = std::make_shared<MeshMaterial>(owner, key);
+    return material;
 }
 
 template<>

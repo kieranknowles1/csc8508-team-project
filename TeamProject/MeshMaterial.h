@@ -8,18 +8,18 @@ https://research.ncl.ac.uk/game/
 */
 #pragma once
 
-using std::string;
-using std::vector;
-using std::map;
-
 namespace NCL {
+    namespace CSC8503 {
+        class ResourceManager;
+    }
+
 	namespace Rendering {
 		class Texture;
 	}
 	class MeshMaterialEntry {
 		friend class MeshMaterial;
 	public:
-		bool GetEntry(const string& name, const string** output) const {
+		bool GetEntry(const std::string& name, const std::string** output) const {
 			auto i = entries.find(name);
 			if (i == entries.end()) {
 				return false;
@@ -27,25 +27,26 @@ namespace NCL {
 			*output = &i->second.first;
 			return true;
 		}
-		Rendering::Texture* GetEntry(const string& name) const {
+		std::shared_ptr<Rendering::Texture> GetEntry(const std::string& name) const {
 			auto i = entries.find(name);
 			if (i == entries.end()) {
 				return nullptr;
 			}
 			return i->second.second;
 		}
-		void LoadTextures();
+		void LoadTextures(CSC8503::ResourceManager* resourceManager);
 
 	protected:
-		std::map<string, std::pair<string, Rendering::Texture*>> entries;
+		std::map<std::string, std::pair<std::string, std::shared_ptr<Rendering::Texture>>> entries;
 	};
 
 	class MeshMaterial	{
-		MeshMaterial(const std::string& filename);
+    public:
+		MeshMaterial(CSC8503::ResourceManager* resourceManager, const std::string& filename);
 		~MeshMaterial() {}
 		const MeshMaterialEntry* GetMaterialForLayer(int i) const;
 
-		void LoadTextures();
+		void LoadTextures(CSC8503::ResourceManager* resourceManager);
 
 	protected:
 		std::vector<MeshMaterialEntry>	materialLayers;
