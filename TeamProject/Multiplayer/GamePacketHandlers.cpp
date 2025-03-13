@@ -304,22 +304,21 @@ namespace Packet {
         char* buffer = new char[
             sizeof(Type) +
             sizeof(uint8_t) +
-            sizeof(uint32_t) +
-            sizeof(int)
+            sizeof(uint32_t)
         ];
         
-        AssignHostPacket assignHostPacket = (*static_cast<AssignHostPacket*>(packet.get()));
+        StartGamePacket startPacket = (*static_cast<StartGamePacket*>(packet.get()));
         size_t offset = 0;
 
-        Type type = assignHostPacket.GetType();
+        Type type = startPacket.GetType();
         memcpy(buffer, &type, sizeof(Type));
         offset = offset + sizeof(Type);
 
-        uint8_t channel = assignHostPacket.GetChannel();
+        uint8_t channel = startPacket.GetChannel();
         memcpy(buffer + offset, &channel, sizeof(uint8_t));
         offset = offset + sizeof(uint8_t);
 
-        uint32_t sequenceNumber = assignHostPacket.GetSequenceNumber();
+        uint32_t sequenceNumber = startPacket.GetSequenceNumber();
         memcpy(buffer + offset, &sequenceNumber, sizeof(uint32_t));
         offset = offset + sizeof(uint32_t);
 
