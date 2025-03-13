@@ -114,6 +114,7 @@ void LevelImporter::AddObjectToWorld(ObjectData* data) {
     bool hasCollision = (data->colliderScale != btVector3(0,0,0));
     if (hasCollision) {
         compoundShape = new btCompoundShape();
+        compoundShape->setUserIndex((int)PhysicsObject::ShapeType::Compound);
         btCollisionShape* boxShape = new btBoxShape(data->colliderScale * scale* data->scale / 2.0f);
         btTransform colliderOffset;
         colliderOffset.setIdentity();

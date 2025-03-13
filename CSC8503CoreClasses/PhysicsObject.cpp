@@ -17,7 +17,8 @@ PhysicsObject::~PhysicsObject()	{
 	if (rigidBody) {
 		delete rigidBody->getMotionState();
 
-		auto compoundShape = dynamic_cast<btCompoundShape*>(rigidBody->getCollisionShape());
+		auto shape = rigidBody->getCollisionShape();
+		btCompoundShape* compoundShape = (shape && (shape->getUserIndex() == (int)ShapeType::Compound)) ? (btCompoundShape*)shape : nullptr;
 		if (compoundShape) {
 			for (int i = 0; i < compoundShape->getNumChildShapes(); i++) {
 				delete compoundShape->getChildShape(i);
