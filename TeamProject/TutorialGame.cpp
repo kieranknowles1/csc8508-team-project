@@ -495,7 +495,8 @@ PlayerObject* TutorialGame::AddPlayerCapsuleToWorld(const Vector3& position, flo
 
     // Setting the transform properties for the capsule
     capsule->setInitialPosition(position);
-    capsule->setRenderScale(Vector3(radius * 2, height, radius * 2));
+    capsule->setRenderScale(Vector3(1, 1, 1) * 20.0f);
+    //capsule->setRenderScale(Vector3(radius * 2, height, radius * 2));
 
     // TODO: Set the orientation of the capsule
     //capsule->SetOrientation(rotation);
@@ -504,7 +505,7 @@ PlayerObject* TutorialGame::AddPlayerCapsuleToWorld(const Vector3& position, flo
     btCollisionShape* shape = new btCapsuleShape(radius, height);
 
     // Setting the render object for the capsule
-    capsule->SetRenderObject(new RenderObject(capsule, resourceManager->getMeshes().get("Capsule.msh"), defaultTexture));
+    capsule->SetRenderObject(new RenderObject(capsule, resourceManager->getMeshes().get("Male_Guard.msh"), defaultTexture));
     // Setting the physics object for the capsule
     capsule->SetPhysicsObject(new PhysicsObject(capsule));
 
