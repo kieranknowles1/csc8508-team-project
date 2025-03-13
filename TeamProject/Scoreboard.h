@@ -29,16 +29,24 @@ struct Player {
 class Scoreboard : public UiElement{
 public:
 	Scoreboard();
+	
+	void InitScoreboard();
+	void UpdateScoreboardData();
+
 	void render(std::vector<UiSprite>& sprites) override;
 	void render(std::vector<UiText>& texts) override;
 	void Animate(float dt) override {};
 
 	void AddPlayer(unsigned int playerID, Player playerData) {
 		players.insert(std::pair<unsigned int, Player>(playerID, playerData));
-	};
+	}
 
 	void SetScore(unsigned int score, unsigned int playerId) {
 		players[playerId].score = score;
+	}
+
+	void SetActive(bool active) override {
+		enabled = active; 
 	}
 
 	std::string TeamColorToString(TeamColor color) {
@@ -69,8 +77,6 @@ public:
 	}
 	
 	void SortPlayers();
-	void InitScoreboard();
-	void UpdateScoreboardData();
 
 private:
 	Vector2 screenCenter = Vector2(0.5f, 0.5f);

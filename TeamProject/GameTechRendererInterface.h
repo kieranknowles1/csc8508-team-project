@@ -23,19 +23,10 @@ namespace NCL::CSC8503 {
 	class GameWorld;
 	class RenderObject;
 
-	enum class GameState {
-		MAIN_MENU,
-		PLAYING,
-		PAUSED,
-		SCOREBOARD,
-		GAME_OVER
-	};
-
 	struct UiSprite {
 		Maths::Vector2 position;
 		Maths::Vector2 size;
 		Maths::Vector4 color;
-		GameState state = GameState::PLAYING;
 		std::shared_ptr<Rendering::Texture> texture;
 	};
 
@@ -43,7 +34,6 @@ namespace NCL::CSC8503 {
 		Maths::Vector2 position;
 		std::string text;
 		Maths::Vector4 color;
-		GameState state = GameState::PLAYING;
 	};
 
     class UiElement {
@@ -58,7 +48,7 @@ namespace NCL::CSC8503 {
             return enabled;
         }
 
-        void SetActive(bool active) {
+        virtual void SetActive(bool active) {
             enabled = active;
         }
 
