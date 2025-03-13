@@ -33,13 +33,13 @@ void PlayerObject::Update(float dt) {
         UpdatePacketSequence((uint8_t)Packet::PacketType::POSITION, positionPacket->GetSequenceNumber());
         TutorialGame::GetServerInstance()->Broadcast(positionPacket);
 
-        //std::shared_ptr<Packet::ObjectChangeGravityPacket> gravityPacket = std::make_shared<Packet::ObjectChangeGravityPacket>(
-        //    worldID,
-        //    upDirection,
-        //    GetLastPacketSequence((uint8_t)Packet::PacketType::OBJECT_CHANGE_GRAVITY) + 1
-        //);
-        //UpdatePacketSequence((uint8_t)Packet::PacketType::OBJECT_CHANGE_GRAVITY, gravityPacket->GetSequenceNumber());
-        //TutorialGame::GetServerInstance()->Broadcast(gravityPacket);
+        std::shared_ptr<Packet::ObjectChangeGravityPacket> gravityPacket = std::make_shared<Packet::ObjectChangeGravityPacket>(
+            worldID,
+            upDirection,
+            GetLastPacketSequence((uint8_t)Packet::PacketType::OBJECT_CHANGE_GRAVITY) + 1
+        );
+        UpdatePacketSequence((uint8_t)Packet::PacketType::OBJECT_CHANGE_GRAVITY, gravityPacket->GetSequenceNumber());
+        TutorialGame::GetServerInstance()->Broadcast(gravityPacket);
     }
 }
 

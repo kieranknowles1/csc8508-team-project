@@ -185,5 +185,6 @@ namespace NCL::CSC8503 {
 
 		std::optional<Lobbies::User> owner;
 		std::unordered_map<uint8_t, int> lastPacketUpdates; // uint8_t is the same type used in Packet::Type and PacketType
+
 	};
 }
