@@ -37,20 +37,39 @@ bool NavEntity::FollowPath(float dt) {
 	}
 	curPathPoint = newPathPoint;
 	yAdjustedPoint = curPathPoint;
-	yAdjustedPoint.setY(yAdjustedPoint.getY() - YAdjust(yAdjustedPoint));
+	yAdjustedPoint.setY(GroundAdjust(yAdjustedPoint));
 	return true;
 }
 
-float NavEntity::YAdjust(btVector3 pos) {
-	btVector3 upPos = pos + btVector3(0, 5.0f, 0);
-	btVector3 downPos = pos + btVector3(0, -10000.0f, 0);
-	btVector3 direction = (downPos - upPos).normalized();
+float NavEntity::GroundAdjust(btVector3 pos) {
+	btVector3 upPos, downPos, direction;
+	std::optional<ShotInfo> rayResult;
+	switch (side) {
+	case('b'):
+		upPos = pos + btVector3(0, 10.0f, 0);
+		downPos = pos + btVector3(0, -10000.0f, 0);
+		direction = (downPos - upPos).normalized();
 
-	std::optional<ShotInfo> rayResult = Shoot::GetInstance()->RayClosest(upPos, direction, this);
+		rayResult = Shoot::GetInstance()->RayClosest(upPos, direction, this);
 
-	if (!rayResult.has_value()) {
-		return 0.0f;  // No hit detected
+		if (!rayResult.has_value()) {
+			return 0.0f;  // No hit detected
+		}
+
+		//return (pos.getY() - rayResult->hitPos.getY());
+		return rayResult->hitPos.getY();
+	case('t'):
+		upPos = pos + btVector3(0, -10.0f, 0);
+		downPos = pos + btVector3(0, 10000.0f, 0);
+		direction = (downPos - upPos).normalized();
+
+		rayResult = Shoot::GetInstance()->RayClosest(upPos, direction, this);
+
+		if (!rayResult.has_value()) {
+			return 0.0f;  // No hit detected
+		}
+
+		//return (pos.getY() - rayResult->hitPos.getY());
+		return rayResult->hitPos.getY();
 	}
-
-	return (pos.getY() - rayResult->hitPos.getY());
 }

@@ -8,8 +8,9 @@
 using namespace NCL;
 using namespace CSC8503;
 
-Wanderer::Wanderer(GameObject* p, NavMesh* mesh) :
-	player(p), navMesh(mesh), shootTimer(maxShootTimer), updateplayerPathTimer(maxUpdatePlayerPathTimer) {
+Wanderer::Wanderer(GameObject* p, NavMesh* mesh, char side) :
+	player(p), navMesh(mesh), shootTimer(maxShootTimer), updateplayerPathTimer(maxUpdatePlayerPathTimer){
+	this->side = side;
 	stateMachine = new StateMachine();
 
 	State* playerNear = new State([&](float dt)-> void {
@@ -24,6 +25,7 @@ Wanderer::Wanderer(GameObject* p, NavMesh* mesh) :
 	stateMachine->AddState(playerNear);
 
 	stateMachine->AddTransition(new StateTransition(playerFar, playerNear, [&]()->bool {
+		return false;
 		if (playerDist <= senseDistance) {
 			GetRenderObject()->SetColour(Vector4(1, 0, 0, 1));
 			shootTimer = maxShootTimer / 2;
@@ -115,7 +117,7 @@ void Wanderer::PlayerNear(float dt) {
 		pPos.setY(navMesh->GetYFromPoint(pPos.getX(), pPos.getZ()));
 		btVector3 dir = (pPos - curPos) == 0 ? btVector3(0, 0, 0) : (pPos - curPos).normalized();
 		btVector3 newPos = curPos + dir * speed;
-		newPos.setY(newPos.getY() - YAdjust(newPos));
+		newPos.setY(newPos.getY() - GroundAdjust(newPos));
 		newPos = newPos + offset;
 		trans.setOrigin(newPos);
 		btRigidBody* body = physicsObject->GetRigidBody();

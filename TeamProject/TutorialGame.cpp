@@ -340,7 +340,7 @@ void TutorialGame::InitNavMeshes() {
     navMeshes.push_back(right);
 
     AddTurretToWorld();
-    AddWandererToWorld(top);
+    AddWandererToWorld(top, 't');
 }
 
 void TutorialGame::ResetWorld() {
@@ -410,8 +410,8 @@ Turret* TutorialGame::AddTurretToWorld() {
     return turret;
 }
 
-Wanderer* TutorialGame::AddWandererToWorld(NavMesh* navMesh) {
-    Wanderer* wanderer = new Wanderer(player, navMesh);
+Wanderer* TutorialGame::AddWandererToWorld(NavMesh* navMesh, char side) {
+    Wanderer* wanderer = new Wanderer(player, navMesh, side);
 
     float height = 4.0f;
     float radius = 2.0f;

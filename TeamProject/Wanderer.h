@@ -7,7 +7,7 @@ namespace NCL {
 		class StateMachine;
 		class Wanderer : public NavEntity {
 		public:
-			Wanderer(GameObject* p, NavMesh* nav);
+			Wanderer(GameObject* p, NavMesh* nav, char side);
 			~Wanderer();
 
 			void Update(float dt);
