@@ -1,5 +1,5 @@
-#ifndef GL_TYPES_H
-#define GL_TYPES_H
+#ifndef SL_TYPES_H
+#define SL_TYPES_H
 
 struct LightState {
 	float radius;
