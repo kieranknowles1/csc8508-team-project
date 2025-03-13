@@ -139,7 +139,7 @@ namespace Packet {
     class ObjectChangeGravityPacket : public Packet {
     public:
         ObjectChangeGravityPacket(int objectID, const btVector3& upDirection, uint32_t sequenceNum) :
-            Packet(static_cast<Type>(PacketType::OBJECT_CHANGE_GRAVITY), static_cast<int>(Channel::RELIABLE), sequenceNum),
+            Packet(static_cast<Type>(PacketType::OBJECT_CHANGE_GRAVITY), static_cast<int>(Channel::FREQUENT), sequenceNum),
             m_objectID(objectID), m_upDirection(upDirection)
         {}
 

@@ -103,13 +103,14 @@ namespace Packet {
         GameObject* targetObject = GameObject::GetGameObjectByID(positionPacket->GetTargetID());
         btRigidBody* body = targetObject->GetPhysicsObject()->GetRigidBody();
 
+
         // Skip updates for objects the user owns.
-        if (targetObject->GetOwner().value() == TutorialGame::GetUser().value()) { return; }
+        if (targetObject->GetOwner().value() == TutorialGame::GetUser().value()) return; 
 
         // Check if last update was newer.
         if (positionPacket->GetSequenceNumber() > targetObject->GetLastPacketSequence(positionPacket->GetType())) {
-            body->getWorldTransform().setOrigin(positionPacket->GetPosition());
-            body->getWorldTransform().setRotation(positionPacket->GetOrientation());
+            //body->getWorldTransform().setOrigin(positionPacket->GetPosition());
+            //body->getWorldTransform().setRotation(positionPacket->GetOrientation());
             targetObject->UpdatePacketSequence(positionPacket->GetType(), positionPacket->GetSequenceNumber());
 
             // Passing on packet to other users if user is host.
@@ -209,10 +210,9 @@ namespace Packet {
     void ObjectChangeGravityPacketHandler::Handle(const std::shared_ptr<Packet> packet) {
         const ObjectChangeGravityPacket* gravityPacket = std::static_pointer_cast<ObjectChangeGravityPacket>(packet).get();
         GameObject* targetObject = GameObject::GetGameObjectByID(gravityPacket->GetTargetID());
-        btRigidBody* body = targetObject->GetPhysicsObject()->GetRigidBody();
 
         // Skip updates for objects the user owns.
-        if (targetObject->GetOwner().value() == TutorialGame::GetUser().value()) { return; }
+        if (targetObject->GetOwner().value() == TutorialGame::GetUser().value()) return;
 
         // Check if last update was newer.
         if (gravityPacket->GetSequenceNumber() > targetObject->GetLastPacketSequence(gravityPacket->GetType())) {

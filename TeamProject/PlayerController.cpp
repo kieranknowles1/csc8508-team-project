@@ -1,5 +1,6 @@
 #include "PlayerController.h"
 #include "AudioEngine.h"
+#include "TutorialGame.h"
 
 
 using namespace NCL;
@@ -273,6 +274,7 @@ void PlayerController::RotationCalculations() {
     btQuaternion playerYaw = btQuaternion(btVector3(0, 1, 0), Maths::DegreesToRadians(yaw));
     btQuaternion finalRotation = camRotOffset * playerYaw;
     transformPlayer.setRotation(finalRotation);
+
     rb->setWorldTransform(transformPlayer);
     //finds player forward and right vectors
     btMatrix3x3 rotationMatrix(finalRotation);

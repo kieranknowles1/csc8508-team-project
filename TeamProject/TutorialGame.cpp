@@ -625,6 +625,9 @@ void TutorialGame::InitPacketHandlers() {
     Packet::PositionPacketHandler* positionHandler = new Packet::PositionPacketHandler();
     Packet::PacketRegister::Register(positionHandler);
 
+    Packet::DeltaPacketHandler* deltaHandler = new Packet::DeltaPacketHandler();
+    Packet::PacketRegister::Register(deltaHandler);
+
     Packet::StartGamePacketHandler* startGameHandler = new Packet::StartGamePacketHandler();
     Packet::PacketRegister::Register(startGameHandler);
 
@@ -700,16 +703,15 @@ void TutorialGame::Start() {
         server->Broadcast(gravity);
 
         // Spawn in player objects for other players.
-        for (const User& player : lobby->GetConnectedUsers()) {
-            if (player.GetUserID() == user->GetUserID()) continue;
+        for (const User& newUser: lobby->GetConnectedUsers()) {
+            if (newUser.GetUserID() == user->GetUserID()) continue;
 
-            RespawnPoint* respawnPoint = Respawn::GetInstance()->GetRespawn(player.GetUserID() - 1);
+            RespawnPoint* respawnPoint = Respawn::GetInstance()->GetRespawn(newUser.GetUserID() - 1);
             PlayerObject* newPlayer = instance->InitPlayer(respawnPoint->position,respawnPoint->orientation);
-            newPlayer->SetOwner(player.GetUserID());
-            newPlayer->SetWorldID(player.GetUserID());
+            newPlayer->SetOwner(newUser.GetUserID());
+            newPlayer->SetWorldID(newUser.GetUserID());
         }
     }
-
 
     Shoot::GetInstance()->Initialise(instance->bulletWorld,instance->resourceManager.get(), instance->world.get(), instance->renderer->GetDecalSystem());
     Shoot::GetInstance()->InitShotMasks(instance->player, instance->gun);
