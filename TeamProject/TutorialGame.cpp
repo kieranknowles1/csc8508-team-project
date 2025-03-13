@@ -329,11 +329,11 @@ void TutorialGame::LoadWorldFromFile(int levelNum) {
     player->SetPlayerID(0);
     playerController = new PlayerController(player, gun, controller, mainCamera, bulletWorld,renderer);
 
-   /* for (int i = 1; i < 8; i++) {
+    for (int i = 1; i < 8; i++) {
         RespawnPoint* newRespawnPoint = Respawn::GetInstance()->GetRespawn(i);
         PlayerObject* newPlayer = InitPlayer(newRespawnPoint->position, newRespawnPoint->orientation);
         newPlayer->SetPlayerID(i);
-    }*/
+    }
 
 
 
