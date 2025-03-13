@@ -211,10 +211,11 @@ namespace NCL {
             NavMesh* right;
             std::vector<NavMesh*> navMeshes;
             bool navMeshDebug = false;
+            bool enableAI = true;
             void VisualiseNavMesh();
-            void InitNavMeshes();
+            void InitAI();
 
-            Wanderer* wanderer;
+            std::vector<Wanderer*> wanderers;
             Wanderer* AddWandererToWorld(NavMesh* navMesh, char side);
 
             //post processing time variable effects

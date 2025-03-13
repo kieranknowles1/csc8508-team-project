@@ -76,14 +76,12 @@ void TutorialGame::UpdateGame(float dt) {
     int steps = bulletWorld->stepSimulation(maxDt, substeps, PHYSICS_PERIOD);
 
     profiler.startSection("Update World");
-    if (testTurret) {
-        testTurret->Update(dt);
-    }
-    if (navMeshDebug) {
-        VisualiseNavMesh();
-        if (wanderer) {
+
+    if (enableAI) {
+        for (Wanderer* wanderer : wanderers) {
             wanderer->Update(dt);
         }
+        if (navMeshDebug) VisualiseNavMesh();
     }
 
     UpdateKeys();
@@ -305,15 +303,16 @@ void TutorialGame::LoadWorldFromFile(int levelNum) {
     Shoot::GetInstance()->Initialise(bulletWorld,resourceManager.get(), world.get(), renderer->GetDecalSystem());
     Shoot::GetInstance()->InitShotMasks(player, gun);
 
-	navMeshDebug = true;
-	if (navMeshDebug) {
-        InitNavMeshes();
+	navMeshDebug = false;
+    enableAI = true;
+	if (enableAI) {
+        InitAI();
 	}
 
 }
 
-void TutorialGame::InitNavMeshes() {
-    freeCam = true;
+void TutorialGame::InitAI() {
+    if (navMeshDebug) freeCam = true;
 
     bottom = new NavMesh(bulletWorld);
     bottom->LoadFromFile("Assets/Meshes/NavMeshes/bottom.navmesh");
@@ -339,8 +338,14 @@ void TutorialGame::InitNavMeshes() {
     right->LoadFromFile("Assets/Meshes/NavMeshes/right.navmesh");
     navMeshes.push_back(right);
 
-    AddTurretToWorld();
-    AddWandererToWorld(right, 'r');
+    for (int i = 0; i < 5; i++) {
+        AddWandererToWorld(bottom, 'b');
+        AddWandererToWorld(top, 't');
+        AddWandererToWorld(front, 'f');
+        AddWandererToWorld(back, 'k');
+        AddWandererToWorld(left, 'l');
+        AddWandererToWorld(right, 'r');
+    }
 }
 
 void TutorialGame::ResetWorld() {
@@ -433,7 +438,7 @@ Wanderer* TutorialGame::AddWandererToWorld(NavMesh* navMesh, char side) {
 
     world->AddGameObject(wanderer);
 
-    this->wanderer = wanderer;
+    wanderers.push_back(wanderer);
     return wanderer;
 }
 

@@ -25,7 +25,6 @@ Wanderer::Wanderer(GameObject* p, NavMesh* mesh, char side) :
 	stateMachine->AddState(playerNear);
 
 	stateMachine->AddTransition(new StateTransition(playerFar, playerNear, [&]()->bool {
-		return false;
 		if (playerDist <= senseDistance) {
 			GetRenderObject()->SetColour(Vector4(1, 0, 0, 1));
 			shootTimer = maxShootTimer / 2;
@@ -115,8 +114,8 @@ void Wanderer::UpdatePlayerDistance() {
 	btVector3 wl = trans.getOrigin();
 	btVector3 pl = pTrans.getOrigin();
 
-	wl.setY(0);
-	pl.setY(0);
+	//wl.setY(0);
+	//pl.setY(0);
 
 	playerDist = wl.distance(pl);
 }
@@ -180,7 +179,7 @@ void Wanderer::PlayerFar(float dt) {
 		trans.setOrigin(newPos);
 		btRigidBody* body = physicsObject->GetRigidBody();
 		body->setWorldTransform(trans);
-		navMesh->DebugDrawPath(curPath);
+		//navMesh->DebugDrawPath(curPath);
 	}
 	else {
 		curPath = navMesh->FindPath(curPathPoint, navMesh->GetRandomPointInNavMesh());
