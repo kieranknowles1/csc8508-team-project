@@ -215,7 +215,7 @@ namespace NCL {
             void InitNavMeshes();
 
             Wanderer* wanderer;
-            Wanderer* AddWandererToWorld();
+            Wanderer* AddWandererToWorld(NavMesh* navMesh);
 
             //post processing time variable effects
             float pulse = 0;

@@ -20,9 +20,9 @@ bool NavEntity::FollowPath(float dt) {
 	btVector3 dir = nextPoint - curPathPoint;
 	btVector3 toPoint = (dir.length2() == 0) ? btVector3(0, 0, 0) : dir.normalized();
 
-
-	if (speed <= dist) {
-		newPathPoint = curPathPoint + (toPoint * speed);
+	float frameSpeed = speed * dt;
+	if (frameSpeed <= dist) {
+		newPathPoint = curPathPoint + (toPoint * frameSpeed);
 	}
 	else {
 		if ((++nextNode) == path.size()) {
@@ -30,7 +30,7 @@ bool NavEntity::FollowPath(float dt) {
 			nextNode = -1;
 		}
 		else {
-			float remainder = speed - dist;
+			float remainder = frameSpeed - dist;
 			btVector3 remainderDir = ((path[nextNode] - nextPoint).length2() == 0 ? btVector3(0, 0, 0) : ((path[nextNode] - nextPoint).normalize())) * remainder;
 			newPathPoint = nextPoint + remainderDir;
 		}

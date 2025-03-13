@@ -122,7 +122,7 @@ void TutorialGame::UpdatePlayer(float dt) {
     // Press F for freeCam, press G for thirdPerson
     if (freeCam) {
         //freeCam Movement
-        world->GetMainCamera().UpdateCamera(dt, true);
+        world->GetMainCamera().UpdateCamera(dt * 10.0f, true);
     }
     else {
         //player Movement
@@ -340,7 +340,7 @@ void TutorialGame::InitNavMeshes() {
     navMeshes.push_back(right);
 
     AddTurretToWorld();
-    AddWandererToWorld();
+    AddWandererToWorld(top);
 }
 
 void TutorialGame::ResetWorld() {
@@ -410,13 +410,13 @@ Turret* TutorialGame::AddTurretToWorld() {
     return turret;
 }
 
-Wanderer* TutorialGame::AddWandererToWorld() {
-    Wanderer* wanderer = new Wanderer(player, bottom);
+Wanderer* TutorialGame::AddWandererToWorld(NavMesh* navMesh) {
+    Wanderer* wanderer = new Wanderer(player, navMesh);
 
     float height = 4.0f;
     float radius = 2.0f;
 
-    wanderer->setInitialPosition(bottom->GetRandomPointInNavMesh());
+    wanderer->setInitialPosition(navMesh->GetRandomPointInNavMesh());
     wanderer->setRenderScale(btVector3(radius * 2, height, radius + 2));
 
     btCollisionShape* shape = new btCapsuleShape(radius, height);
