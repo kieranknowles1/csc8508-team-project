@@ -34,3 +34,9 @@ https://github.com/nlohmann/json
 
 Linux input & windowing by SDL2, under the zlib license.
 https://github.com/libsdl-org/SDL
+
+================================================================================
+Tooling
+--------------------------------------------------------------------------------
+
+Unity used for level design, (C) Unity Technologies
