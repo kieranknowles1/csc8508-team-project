@@ -9,6 +9,7 @@ out vec4 FragColor;
 uniform sampler2D sceneTexture;   // The main scene texture
 uniform sampler2D decalTexture;   // The decal buffer texture
 
+
 void main() {
     vec4 sceneColor = texture(sceneTexture, IN.texCoord);
     vec4 decalColor = texture(decalTexture, IN.texCoord);

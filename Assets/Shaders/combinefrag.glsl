@@ -1,9 +1,11 @@
 #version 330 core
+
+#include "include/post/deferred.glsl"
+
 uniform sampler2D diffuseTex;
 uniform sampler2D diffuseLight;
 uniform sampler2D specularLight;
-uniform sampler2D diffuseLight2;
-uniform sampler2D specularLight2;
+uniform sampler2D lasers;
 
 in Vertex {
     vec2 texCoord;
@@ -12,14 +14,22 @@ in Vertex {
 out vec4 fragColour;
 
 void main(void) {
-     vec3 diffuse  = texture(diffuseTex, IN.texCoord).xyz;
-     vec3 light    = texture(diffuseLight, IN.texCoord).xyz;
-     vec3 specular = texture(specularLight, IN.texCoord).xyz;
-     //vec3 light    = texture(diffuseLight, IN.texCoord).xyz + texture(diffuseLight2, IN.texCoord).xyz;
-     //vec3 specular = texture(specularLight, IN.texCoord).xyz + texture(specularLight2, IN.texCoord).xyz;
-     fragColour.xyz  = diffuse * 0.05; //ambient
-     fragColour.xyz += diffuse * light; //lambert
-     fragColour.xyz += specular; 
-    // fragColour.rgb = pow(fragColour.rgb, vec3(1.0 / 2.2f)); //gamma correction, maybe should be in another shader. Probably should be done last   
-     fragColour.a    = 1.0;
+    vec3 diffuse  = texture(diffuseTex, IN.texCoord).xyz;
+    vec3 light    = texture(diffuseLight, IN.texCoord).xyz;
+    vec3 specular = texture(specularLight, IN.texCoord).xyz;
+
+    // fragColour.rgb = pow(fragColour.rgb, vec3(1.0 / 2.2f)); //gamma correction, maybe should be in another shader. Probably should be done last
+    vec4 colour = vec4(0,0,0,0);
+    colour.rgb = doDeferredLight(
+       diffuse,
+       light,
+       specular
+    );
+    vec3 laser =  texture(lasers, IN.texCoord).xyz;
+    if(laser.r >= 0.5f){
+    colour.rgb = laser;
+    }
+    colour.a    = 1.0;
+
+    fragColour =colour;
 }

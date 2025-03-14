@@ -38,7 +38,7 @@ void PlayerController::UpdateMovement(float dt) {
     transformPlayer = rb->getWorldTransform();
     btPlayerPos = transformPlayer.getOrigin();
     GetAllDirections();
-    HandleShooting(dt);
+
     if (crosshair) {
         crosshair->Animate(dt);
     }
@@ -53,6 +53,7 @@ void PlayerController::UpdateMovement(float dt) {
     }
     if ((isSliding||slideTransition) && !isCrouching) return;
     RotationCalculations();
+ 
     CameraMovement();
     GroundNormalCalculations();
     MovementCalculations(dt);
@@ -62,23 +63,28 @@ void PlayerController::UpdateMovement(float dt) {
     previousVelocity = rb->getLinearVelocity();
     rb->setLinearVelocity(movement);
     rb->activate();
+    HandleShooting(dt);
 }
 
 
 void PlayerController::HandleShooting(float dt) {
-    if (controller->GetDigital(Controller::DigitalControl::Fire) && shotTimer >= shotCooldown) {
-        FireShot();
+
+    if (controller->GetDigital(Controller::DigitalControl::Fire)) {
+        FireShot(dt);
         crosshair->fire();
-        shotTimer = 0.0f;
+        firing = true;
     }
     else {
-        shotTimer += dt;
+        if (firing) {
+            renderer->removeLaser(laserID);
+            firing = false;
+        }
     }
 }
 
 
 
-void PlayerController::FireShot() {
+void PlayerController::FireShot(float dt) {
     // Convert camera pitch & yaw to radians
     float pitchRadians = Maths::DegreesToRadians(camera->GetPitch());
     float yawRadians = Maths::DegreesToRadians(yaw);
@@ -87,8 +93,16 @@ void PlayerController::FireShot() {
     btQuaternion bulletRotation = camRotOffset * yawQuat * pitchQuat;
     btMatrix3x3 rotationMatrix(bulletRotation);
     btVector3 forwardDir = rotationMatrix * btVector3(0, 0, -1);
+    btVector3 adjustedOffset = rotationMatrix * gunCameraOffset; // Apply rotation to the offset
 
-   Shoot::GetInstance()->ShootBulletPlayer(camera->GetPosition(), forwardDir, bulletRotation);
+   std::optional<ShotInfo> info = Shoot::GetInstance()->ShootBulletPlayer(camera->GetPosition(), forwardDir, bulletRotation,dt);
+   if(!firing){   
+       laserID = renderer->addLaser(camera->GetPosition()+ adjustedOffset, info.value().hitPos);
+   }
+   else {
+       renderer->updateLaser(laserID, camera->GetPosition() + adjustedOffset, info.value().hitPos);
+   }
+
 }
 
 
@@ -209,6 +223,7 @@ void PlayerController::HandleSliding(float dt) {
         previousVelocity = rb->getLinearVelocity();
         rb->setLinearVelocity(pastMovement);
         rb->activate();
+        HandleShooting(dt);
     }
 }
 
@@ -350,6 +365,7 @@ void PlayerController::HandleJumping() {
 };
 
 void PlayerController::HandleHurtEffects() {
+    renderer->SetVignetteOn(true);
     float healthLossPercent = (player->GetMaxHealth() - player->health) / player->GetMaxHealth();
     if (healthLossPercent <= 0.001f) {
         renderer->SetVignetteOn(false);
