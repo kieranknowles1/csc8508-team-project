@@ -16,3 +16,30 @@ enum class TeamColor : uint32_t {
 	YELLOW = 0xFFFF00FF,
 	CYAN = 0x00FFFFFF
 };
+
+constexpr TeamColor colors[8] = {
+	TeamColor::RED,
+	TeamColor::ORANGE,
+	TeamColor::BLUE,
+	TeamColor::GREEN,
+	TeamColor::PURPLE,
+	TeamColor::PINK,
+	TeamColor::YELLOW,
+	TeamColor::CYAN
+};
+
+class Color {
+public:
+	static btVector4 GetPlayerColor(int index) {
+		uint32_t col = (uint32_t)colors[index-1];
+
+		float alpha = float(col & 0xFF) / 255.0;
+		float blue = float((col >> 8) & 0xFF) / 255.0;
+		float green = float((col >> 16) & 0xFF) / 255.0;
+		float red = float((col >> 24) & 0xFF) / 255.0;
+
+		// Create vec4 color
+		return btVector4(red, green, blue, alpha);
+	}
+
+};
