@@ -648,7 +648,7 @@ void TutorialGame::JoinGame(bool host) {
 
     if (!host) {
         ENetAddress dest;
-        enet_address_set_host(&dest, "10.70.33.113");
+        enet_address_set_host(&dest, "127.0.0.1");
         dest.port = DEFAULT_PORT;
 
         ConnectToServer(dest);
