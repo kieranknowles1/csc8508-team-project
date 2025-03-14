@@ -105,7 +105,6 @@ namespace Packet {
 
         // Check if last update was newer.
         if (laserPacket->GetSequenceNumber() > targetObject->GetLastPacketSequence(laserPacket->GetType())) {
-            std::cout << "LAZERS" << std::endl;
             targetObject->updateLaser(laserPacket->GetStartPos(), laserPacket->GetEndPos());
             targetObject->UpdatePacketSequence(laserPacket->GetType(), laserPacket->GetSequenceNumber());
             // Passing on packet to other users if user is host.
