@@ -44,12 +44,12 @@ std::optional<ShotInfo> Shoot::ShootBulletPlayer(btVector3 startPos, btVector3 d
     if (rayInfo.has_value()) {
         if (rayInfo.value().hitObj->getType() == GameObject::Type::Player) {
             PlayerObject* hit = (PlayerObject*) rayInfo.value().hitObj;
-            hit->Damage(20 * dt); // TODO: Don't hard code this.
+            hit->Damage(100.0f * dt); // TODO: Don't hard code this.
 
             if (TutorialGame::GetServerInstance().has_value()) {
                 std::shared_ptr<Packet::DamagePacket> damagePacket = std::make_shared<Packet::DamagePacket>(
                     hit->GetWorldID(),
-                    20, // TODO: Don't hard code this.
+                    100.0f * dt, // TODO: Don't hard code this.
                     TutorialGame::GetUser()->GetUserID()
                 );
                 TutorialGame::GetServerInstance()->Broadcast(damagePacket);
