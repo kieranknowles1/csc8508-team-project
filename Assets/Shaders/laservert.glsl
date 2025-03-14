@@ -44,7 +44,7 @@ void main(void) {
                   + forward * (zMapped * laserLength) 
                   + right * (position.x * thickness * 0.5) 
                   + up * (position.y * thickness * 0.5)    
-                  + vec3( (cosWaveDistortion * 100.0), (sineWaveDistortion * 100.0),0); 
+                  + vec3( (cosWaveDistortion * 35.0), (sineWaveDistortion * 35.0),0); 
 
 
     OUT.waveDist = waveDistortionFactor;
