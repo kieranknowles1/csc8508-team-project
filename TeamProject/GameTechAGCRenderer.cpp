@@ -463,7 +463,7 @@ void GameTechAGCRenderer::UpdateDebugData() {
 	std::vector< NCL::Rendering::SimpleFont::InterleavedTextVertex> verts;
 
 	for (const auto& s : strings) {
-		float size = 20.0f;
+		float size = 20.0f * s.scale;
 		Debug::GetDebugFont()->BuildInterleavedVerticesForString(s.data, s.position, s.colour, size, verts);
 		//can now copy to GPU visible mem
 		size_t count = verts.size() * TEXT_STRIDE;
