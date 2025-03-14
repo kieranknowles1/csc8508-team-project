@@ -27,12 +27,16 @@ namespace Multiplayer {
         /**
          * @brief Listens to the server tick and sends state when server
          * tick calls this function at the start of the tick.
+         * 
+         * MUST BE THREAD SAFE AS IT IS CALLED FROM THE NETWORK THREAD.
          */
         void SendState(bool endOfTick);
 
         /**
          * @brief Listens to the server tick and processes packets when
          * the tick calls this function at the end of the tick.
+         * 
+         * MUST BE THREAD SAFE AS IT IS CALLED FROM THE NETWORK THREAD.
          */
         void ProcessPackets(bool endOfTick);
 
