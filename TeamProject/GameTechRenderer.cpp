@@ -520,7 +520,7 @@ void GameTechRenderer::NewRenderText() {
 		BindTextureToShader(*t, "mainTex", 0);
 	}
 
-	Matrix4 proj = Matrix::Orthographic(0.0f, 100.0f, 100.0f, 0.0f, -1.0f, 1.0f);
+	Matrix4 proj = Matrix::Orthographic(0.0f, 1.0f, 1.0f, 0.0f, -1.0f, 1.0f, true);
 
 	int matSlot = glGetUniformLocation(debugShader->GetProgramID(), "viewProjMatrix");
 	glUniformMatrix4fv(matSlot, 1, false, (float*)proj.array);
@@ -539,7 +539,7 @@ void GameTechRenderer::NewRenderText() {
 	SetDebugStringBufferSizes(frameVertCount);
 
 	for (const auto& s : strings) {
-		float size = 20.0f;
+		float size = 0.2f;
 		Debug::GetDebugFont()->BuildVerticesForString(s.data, s.position, s.colour, size, debugTextPos, debugTextUVs, debugTextColours);
 	}
 
