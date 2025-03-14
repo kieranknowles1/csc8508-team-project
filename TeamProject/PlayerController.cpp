@@ -79,6 +79,16 @@ void PlayerController::HandleShooting(float dt) {
     else {
         if (firing) {
             renderer->updateLaser(laserID,btVector3(0,0,0),btVector3(0,0,0));
+            if (TutorialGame::GetServerInstance().has_value()) {
+                std::shared_ptr<Packet::LaserPacket> laserPacket = std::make_shared<Packet::LaserPacket>(
+                    player->GetWorldID(),
+                    btVector3(0, 0, 0),
+                    btVector3(0, 0, 0),
+                    player->GetLastPacketSequence((uint8_t)Packet::PacketType::LASER) + 1
+                );
+                player->UpdatePacketSequence((uint8_t)Packet::PacketType::LASER, laserPacket->GetSequenceNumber());
+                TutorialGame::GetServerInstance()->Broadcast(laserPacket);
+            }
             firing = false;
         }
     }
