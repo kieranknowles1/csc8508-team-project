@@ -35,11 +35,15 @@ public:
             GameMode mode = static_cast<GameMode>(selection);
 
             if (mode == GameMode::SINGLEPLAYER) {
-                game->LoadWorldFromFile(9);
+                game->Start();
                 gameMode = "Singleplayer";
             }
             else if (mode == GameMode::HOST_GAME) {
-                game->JoinGame(true);
+                game->JoinGame(true); //This is host game
+                gameMode = "Multiplayer";
+            }
+            else {
+                game->JoinGame(false); //This is join game
                 gameMode = "Multiplayer";
             }
             /*else {
