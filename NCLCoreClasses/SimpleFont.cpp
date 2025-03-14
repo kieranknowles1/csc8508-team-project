@@ -49,21 +49,34 @@ SimpleFont::~SimpleFont()	{
 }
 
 int SimpleFont::GetVertexCountForString(const std::string& text) {
-	return 6 * text.size();
+	int count = 0;
+	for (auto ch : text) {
+		if (ch != '\n' && ch != '\r') {
+			count += 6;
+		}
+	}
+	return count;
 }
 
 void SimpleFont::BuildVerticesForString(const std::string& text, const Vector2& startPos, const Vector4& colour, float size, std::vector<Vector3>& positions, std::vector<Vector2>& texCoords, std::vector<Vector4>& colours) {
 	int endChar = startChar + numChars;
 
 	float currentX = 0.0f;
+	float currentY = startPos.y;
 
 	positions.reserve(positions.size() + (text.length() * 6));
 	colours.reserve(colours.size() + (text.length() * 6));
 	texCoords.reserve(texCoords.size() + (text.length() * 6));
 
-	for (size_t i = 0; i < text.length(); ++i) {
-		int charIndex = (int)text[i];
-
+	for (char charIndex : text) {
+		if (charIndex == '\n') {
+			currentX = 0;
+			currentY += 0.25f * size;
+			continue;
+		}
+		if (charIndex == '\r') {
+			continue;
+		}
 		if (charIndex < startChar) {
 			continue;
 		}
@@ -79,7 +92,7 @@ void SimpleFont::BuildVerticesForString(const std::string& text, const Vector2& 
 		float charHeight = (float)(charData.y1 - charData.y0);
 
 		float xStart = ((charData.xOff + currentX) * texWidthRecip) * scale;
-		float yStart = startPos.y;
+		float yStart = currentY;
 		float yHeight = (charHeight * texHeightRecip) * scale;
 		float yOff = ((charHeight + charData.yOff) * texHeightRecip) * scale;
 
@@ -115,14 +128,21 @@ void SimpleFont::BuildInterleavedVerticesForString(const std::string& text, cons
 	int endChar = startChar + numChars;
 
 	float currentX = 0.0f;
+	float currentY = startPos.y;
 
 	vertices.reserve(text.length() * 6);
 
 	InterleavedTextVertex verts[6];
 
-	for (size_t i = 0; i < text.length(); ++i) {
-		int charIndex = (int)text[i];
-
+	for (char charIndex : text) {
+		if (charIndex == '\n') {
+			currentX = 0;
+			currentY += 0.25f * size;
+			continue;
+		}
+		if (charIndex == '\r') {
+			continue;
+		}
 		if (charIndex < startChar) {
 			continue;
 		}
@@ -138,7 +158,7 @@ void SimpleFont::BuildInterleavedVerticesForString(const std::string& text, cons
 		float charHeight = (float)(charData.y1 - charData.y0);
 
 		float xStart = ((charData.xOff + currentX) * texWidthRecip) * scale;
-		float yStart = startPos.y;
+		float yStart = currentY;
 		float yHeight = (charHeight * texHeightRecip) * scale;
 		float yOff = ((charHeight + charData.yOff) * texHeightRecip) * scale;
 
