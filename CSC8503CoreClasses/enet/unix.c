@@ -155,6 +155,18 @@ enet_address_set_host (ENetAddress * address, const char * name)
     if (resultList != NULL)
       freeaddrinfo (resultList);
 #elif defined(__PROSPERO__)
+    int mid = sceNetPoolCreate("resolverpool", 4 * 1024, 0);
+    int rid = sceNetResolverCreate("resolver", mid, 0);
+
+    SceNetInAddr addr;
+    int ret = sceNetResolverStartNtoa(rid, name, &addr, 0, 0, 0);
+    sceNetResolverDestroy(mid);
+    sceNetPoolDestroy(mid);
+    if (ret >= 0) {
+        address->host = addr.s_addr;
+        return 0;
+    }
+
     assert(0 && "enet_address_set_host not implemented for PS5");
 #else
     struct hostent * hostEntry = NULL;
@@ -519,7 +531,13 @@ enet_socket_receive (ENetSocket socket,
     msgHdr.msg_iov = (struct iovec *) buffers;
     msgHdr.msg_iovlen = bufferCount;
 
-    recvLength = recvmsg (socket, & msgHdr, MSG_NOSIGNAL);
+#ifdef __PROSPERO__
+    int flags = MSG_DONTWAIT;
+#else
+    int flags = MSG_NOSIGNAL;
+#endif // __PROSPERO__
+
+    recvLength = recvmsg (socket, & msgHdr, flags);
 
     if (recvLength == -1)
     {

@@ -289,6 +289,7 @@ int main(int argc, char** argv) {
                 std::string currentItem = menuItems[i];
                 if (i == selection) currentItem = "> " + currentItem + " <";
                 Debug::Print(currentItem, Vector2(0.4f, 0.35f + (0.1f * i)));
+
             }
         }
 

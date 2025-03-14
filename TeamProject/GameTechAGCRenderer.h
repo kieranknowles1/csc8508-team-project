@@ -56,7 +56,6 @@ namespace NCL {
 			void RenderDebugLines();
 			void RenderDebugText();
 
-			void SkyboxPass();
 			void MainRenderPass();
 
 			void UiPass();
@@ -156,8 +155,6 @@ namespace NCL {
 
 			sce::Agc::Core::Buffer arrayBuffer;
 
-			PS5::AGCTexture* skyboxTexture;
-
 			std::unique_ptr<PS5::AGCShader> skinningCompute;
 
 			std::unique_ptr<PS5::AGCShader> defaultVertexShader;
@@ -165,9 +162,6 @@ namespace NCL {
 
 			std::unique_ptr<PS5::AGCShader> uiVertexShader;
 			std::unique_ptr<PS5::AGCShader> uiPixelShader;
-
-			std::unique_ptr<PS5::AGCShader> skyboxVertexShader;
-			std::unique_ptr<PS5::AGCShader> skyboxPixelShader;
 
 			std::unique_ptr<PS5::AGCShader> debugLineVertexShader;
 			std::unique_ptr<PS5::AGCShader> debugLinePixelShader;
