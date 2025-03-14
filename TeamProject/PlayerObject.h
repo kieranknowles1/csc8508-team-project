@@ -143,7 +143,7 @@ private:
 	Type collisionType;
 	PlayerState state;
 
-    btQuaternion camRotOffset = btQuaternion(Maths::DegreesToRadians(-40), 0, 0);
+    btQuaternion camRotOffset;
 	btQuaternion oldcamRotOffset = btQuaternion::getIdentity();
 	btQuaternion targetcamRotOffset = btQuaternion::getIdentity();
 	btVector3 targetWorldRotation = btVector3(0, 1, 0);
@@ -153,7 +153,7 @@ private:
 	btVector3 forwardDirection;
 	float rotateTimer = 0.0f;
 	bool rotationChanging = false;
-	btVector3 gunCameraOffset = btVector3(4.5, -6.8, -7.5);
+	btVector3 gunCameraOffset = btVector3(-1.5, 7.8, -7.5);
 	GameObject* gun;
 
 

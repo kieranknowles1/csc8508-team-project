@@ -496,13 +496,23 @@ PlayerObject* TutorialGame::AddPlayerCapsuleToWorld(const Vector3& position, flo
     // Setting the transform properties for the capsule
     capsule->setInitialPosition(position);
     capsule->setRenderScale(Vector3(1, 1, 1) * 20.0f);
-    //capsule->setRenderScale(Vector3(radius * 2, height, radius * 2));
 
     // TODO: Set the orientation of the capsule
     //capsule->SetOrientation(rotation);
 
     // Creating a Bullet collision shape for the capsule
-    btCollisionShape* shape = new btCapsuleShape(radius, height);
+    btCollisionShape* capsuleShape = new btCapsuleShape(radius * 1.5, height * 3.7);
+
+    // Create a compound shape to apply an offset
+    btCompoundShape* compoundShape = new btCompoundShape();
+
+    // Offset to move the capsule down so it covers the full body (assuming model is centered)
+    btTransform capsuleOffset;
+    capsuleOffset.setIdentity();
+    capsuleOffset.setOrigin(btVector3(0, height * 2.6f, 0)); // Moves the capsule up by half its height
+
+    // Add capsule shape to compound shape with offset
+    compoundShape->addChildShape(capsuleOffset, capsuleShape);
 
     // Setting the render object for the capsule
     capsule->SetRenderObject(new RenderObject(capsule, resourceManager->getMeshes().get("Male_Guard.msh"), defaultTexture));
@@ -510,7 +520,7 @@ PlayerObject* TutorialGame::AddPlayerCapsuleToWorld(const Vector3& position, flo
     capsule->SetPhysicsObject(new PhysicsObject(capsule));
 
     // Initializing the physics object for the capsule
-    capsule->GetPhysicsObject()->InitBulletPhysics(bulletWorld, shape, inverseMass);
+    capsule->GetPhysicsObject()->InitBulletPhysics(bulletWorld, compoundShape, inverseMass);
     //GameObject* newGun = AddCubeToWorld(Vector3(-300, 20, 40), Vector3(0.5, 0.5, 0.3), 0, false);
     GameObject* newGun = AddGunToWorld(Vector3(-900, 20, 40), Vector3(1, 1, 1), 0, false);
     capsule->setGun(newGun);

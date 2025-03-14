@@ -305,8 +305,7 @@ void PlayerController::RotationCalculations() {
 void PlayerController::CameraMovement() {
     btTransform transformPlayerMotion;
     player->GetPhysicsObject()->GetMotionState()->getWorldTransform(transformPlayerMotion);
-    btVector3 offsetPlayerCamPos = btVector3(5, 19, -5);
-    btVector3 playerCamPos = transformPlayerMotion.getOrigin() + offsetPlayerCamPos;
+    btVector3 playerCamPos = transformPlayerMotion.getOrigin();
     playerCamPos += upDirection * (isCrouching ? std::lerp(cameraHeight, crouchHeight, btMin(currentCrouchingTimer / crouchingTime, 1.0f)) : std::lerp(crouchHeight, cameraHeight, btMin(currentStandingTimer / crouchingTime, 1.0f)));
     if (!slideTransition && !thirdPerson) {
         camera->SetPosition(playerCamPos);
