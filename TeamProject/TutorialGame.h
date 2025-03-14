@@ -21,6 +21,7 @@
 namespace NCL {
     namespace CSC8503 {
         class BulletDebug;
+        class Config;
 
         const int MAX_PLAYERS = 8;
 
@@ -108,7 +109,7 @@ namespace NCL {
                 earlyGraveyard.push_back(obj);
             }
 
-            TutorialGame(GameTechRendererInterface* renderer, Controller* controller);
+            TutorialGame(GameTechRendererInterface* renderer, Controller* controller, Config& config);
             ~TutorialGame();
 
             virtual void UpdateGame(float dt);
@@ -174,6 +175,8 @@ namespace NCL {
 
             GameTechRendererInterface* renderer;
             std::unique_ptr<GameWorld> world;
+            Config& config;
+
             std::vector<GameObject*> earlyGraveyard; // Added this frame
             std::vector<GameObject*> lateGraveyard; // Added previous frame
             void clearGraveyard();

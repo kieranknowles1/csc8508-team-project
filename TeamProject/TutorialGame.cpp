@@ -12,15 +12,17 @@
 #include "Shoot.h"
 
 #include "Window.h"
+#include "Config.h"
 
 using namespace NCL;
 using namespace CSC8503;
 
 TutorialGame* TutorialGame::instance = nullptr;
 
-TutorialGame::TutorialGame(GameTechRendererInterface* renderer, Controller* controller)
+TutorialGame::TutorialGame(GameTechRendererInterface* renderer, Controller* controller, Config& config)
     : renderer(renderer)
     , controller(controller)
+    , config(config)
 {
     assert(instance == nullptr && "TutorialGame must be unique");
     instance = this;
@@ -648,7 +650,9 @@ void TutorialGame::JoinGame(bool host) {
 
     if (!host) {
         ENetAddress dest;
-        enet_address_set_host(&dest, "10.70.33.113");
+        auto host = config.get<std::string>("defaultHost");
+        std::cout << "Connecting to " << host << std::endl;
+        enet_address_set_host(&dest, host.c_str());
         dest.port = DEFAULT_PORT;
 
         ConnectToServer(dest);
