@@ -611,7 +611,9 @@ void TutorialGame::InitNetwork(bool host) {
 
 void TutorialGame::ConnectToServer(ENetAddress& address) {
     server->ConnectTo(&address);
-    while (server->GetConnectionCount() < 1) continue;
+    while (server->GetConnectionCount() < 1) {
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    }
 }
 
 
