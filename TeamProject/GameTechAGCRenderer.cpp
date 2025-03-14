@@ -209,7 +209,7 @@ void GameTechAGCRenderer::WriteRenderPassConstants() {
 	frameData.inverseViewMatrix = Matrix::Inverse(frameData.viewMatrix);
 	frameData.inverseProjMatrix = Matrix::Inverse(frameData.projMatrix);
 
-	frameData.orthoMatrix = Matrix::Orthographic(0.0f, 100.0f, 100.0f, 0.0f, -1.0f, 1.0f);
+	frameData.orthoMatrix = Matrix::Orthographic(0.0f, 1.0f, 1.0f, 0.0f, -1.0f, 1.0f, true);
 
 	frameData.vingetteSettings.enabled = GetVignetteOn();
 	frameData.vingetteSettings.color = vignetteColour;
@@ -463,7 +463,7 @@ void GameTechAGCRenderer::UpdateDebugData() {
 	std::vector< NCL::Rendering::SimpleFont::InterleavedTextVertex> verts;
 
 	for (const auto& s : strings) {
-		float size = 20.0f;
+		float size = 0.2f;
 		Debug::GetDebugFont()->BuildInterleavedVerticesForString(s.data, s.position, s.colour, size, verts);
 		//can now copy to GPU visible mem
 		size_t count = verts.size() * TEXT_STRIDE;
