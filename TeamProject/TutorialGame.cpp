@@ -350,11 +350,7 @@ void TutorialGame::LoadWorldFromFile(int levelNum) {
     Shoot::GetInstance()->Initialise(bulletWorld,resourceManager.get(), world.get(), renderer->GetDecalSystem());
     Shoot::GetInstance()->InitShotMasks(player, gun);
 
-	navMeshDebug = false;
-    enableAI = true;
-	if (enableAI) {
-        InitAI();
-	}
+
 
 }
 
@@ -729,6 +725,12 @@ void TutorialGame::Start() {
     instance->player->SetWorldID(user->GetUserID());
     instance->player->setType(GameObject::Type::Player);
     instance->playerController = new PlayerController(instance->player, instance->gun, instance->controller, instance->mainCamera, instance->bulletWorld,instance->renderer);
+
+    instance->navMeshDebug = false;
+    instance->enableAI = true;
+    if (instance->enableAI) {
+        instance->InitAI();
+    }
 
     btQuaternion emptyRot;
 
