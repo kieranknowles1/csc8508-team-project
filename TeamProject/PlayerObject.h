@@ -6,6 +6,7 @@
 #include "GameObject.h"
 #include "PhysicsObject.h"
 #include "CollisionInfo.h"
+#include "Respawn.h"
 
 #include <btBulletDynamicsCommon.h>
 #include <btBulletCollisionCommon.h>
@@ -104,11 +105,15 @@ public:
 	inline void SetState(PlayerState state) { this->state = state; }
 
 	void Damage(float amount) {
+		lastHit = elapsedTime;
+
 		health -= amount;
 		if (health <= 0) {
-			state = PlayerState::DEAD;
-			health = 0;
-
+			//state = PlayerState::DEAD;
+			health = 100;
+			RespawnPoint* point = Respawn::GetInstance()->GetRespawn(worldID - 1);
+			GetPhysicsObject()->GetRigidBody()->getWorldTransform().setOrigin(point->position);
+			setUpDirection(point->orientation);
 			// TODO: Create Change State packet.
 		}
 	}
@@ -116,7 +121,8 @@ public:
 	float GetMaxHealth() {
 		return maxHealth;
 	}
-	float health = 100.0;
+
+	float health = 100.0f;
 
 	void setGun(GameObject* gunIn) { gun = gunIn; }
 	void SetGunTransform(float pitch, float yaw, btVector3 camPos);
@@ -156,6 +162,8 @@ private:
 	btVector3 CalculateForwardFromYaw(float yaw);
 	btVector3 CalculateRightFromYaw(float yaw);
 
+	float elapsedTime = 0;
+	float lastHit = 0;
 
 
 };

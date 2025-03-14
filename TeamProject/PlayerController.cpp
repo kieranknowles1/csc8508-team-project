@@ -350,6 +350,7 @@ void PlayerController::HandleJumping() {
 };
 
 void PlayerController::HandleHurtEffects() {
+    renderer->SetVignetteOn(true);
     float healthLossPercent = (player->GetMaxHealth() - player->health) / player->GetMaxHealth();
     if (healthLossPercent <= 0.001f) {
         renderer->SetVignetteOn(false);

@@ -12,9 +12,15 @@ void PlayerObject::Update(float dt) {
     rightDirection = CalculateRightDirection(upDirection);
     forwardDirection = CalculateForwardDirection(upDirection, rightDirection);
     updateGravity(dt);
+    
+    elapsedTime += dt;
 
-    health += 2 * dt;
-    if (health > 100) health = 100.0f;
+    // 2 seconds before healing.
+    if (elapsedTime - lastHit > 2.0f) {
+        health += 50 * dt;
+        if (health > 100) health = 100.0f;
+        std::cout << health << std::endl;
+    }
 
     if (TutorialGame::GetServerInstance().has_value() && (owner == TutorialGame::GetUser())) {
         std::shared_ptr<Packet::DeltaPacket> deltaPacket = std::make_shared<Packet::DeltaPacket>(
