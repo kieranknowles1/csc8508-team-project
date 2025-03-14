@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdint>
+#include<LinearMath/btVector3.h>
 
 /**
  * Different Team Colors to choose from for each player.

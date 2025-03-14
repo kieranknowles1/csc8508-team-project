@@ -6,6 +6,7 @@
 #include "MshLoader.h"
 #include "ResourceManager.h"
 #include "PointLight.h"
+#include "Colors.h"
 
 #include "Debug.h"
 
@@ -744,7 +745,8 @@ void GameTechRenderer::RenderLasers() {
 		glUniform3fv(glGetUniformLocation(laserShader->GetProgramID(), "endPosition"), 1, (float*)&laser->endPos);
 		glUniform1f(glGetUniformLocation(laserShader->GetProgramID(), "thickness"), 5.0f);
 		glUniform1f(glGetUniformLocation(laserShader->GetProgramID(), "time"), vignettePulse);
-		glUniform1ui(glGetUniformLocation(laserShader->GetProgramID(), "inColour"), (uint32_t) TeamColor::RED);
+		btVector4 color = Color::GetPlayerColor(laser->id);
+		glUniform4fv(glGetUniformLocation(laserShader->GetProgramID(), "inColour"), 1, (float*) &color);
 		DrawBoundMesh();
 	}
 

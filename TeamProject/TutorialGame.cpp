@@ -9,6 +9,7 @@
 #include "Multiplayer/GamePackets.hpp"
 #include "Multiplayer/GamePacketHandlers.hpp"
 #include <CSC8503CoreClasses/Debug.h>
+#include "Colors.h"
 #include "Shoot.h"
 
 #include "Window.h"
@@ -686,6 +687,7 @@ void TutorialGame::Start() {
     instance->player = instance->InitPlayer(respawnPoint->position,respawnPoint->orientation);
     instance->player->SetOwner(user->GetUserID());
     instance->player->SetWorldID(user->GetUserID());
+    instance->player->GetRenderObject()->SetColour(Vector4(Color::GetPlayerColor(user->GetUserID())));
     instance->player->setType(GameObject::Type::Player);
     instance->playerController = new PlayerController(instance->player, instance->gun, instance->controller, instance->mainCamera, instance->bulletWorld,instance->renderer);
 
@@ -719,6 +721,7 @@ void TutorialGame::Start() {
             newPlayer->setType(GameObject::Type::Player);
             newPlayer->SetOwner(newUser.GetUserID());
             newPlayer->SetWorldID(newUser.GetUserID());
+            newPlayer->GetRenderObject()->SetColour(Vector4(Color::GetPlayerColor(newUser.GetUserID())));
         }
     }
 
