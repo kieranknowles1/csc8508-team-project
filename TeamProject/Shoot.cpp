@@ -38,13 +38,13 @@ std::optional<ShotInfo> Shoot::RayClosest(btVector3 startPos, btVector3 dir) {
     return std::nullopt;
 }
 
-std::optional<ShotInfo> Shoot::ShootBulletPlayer(btVector3 startPos, btVector3 dir, btQuaternion rotation) {
+std::optional<ShotInfo> Shoot::ShootBulletPlayer(btVector3 startPos, btVector3 dir, btQuaternion rotation, float dt) {
     auto rayInfo = RayClosest(startPos, dir);
     // Don't have Rust style and_then until C++23 :(
     if (rayInfo.has_value()) {
         if (rayInfo.value().hitObj->getType() == GameObject::Type::Player) {
             PlayerObject* hit = (PlayerObject*) rayInfo.value().hitObj;
-            hit->Damage(20); // TODO: Don't hard code this.
+            hit->Damage(20 * dt); // TODO: Don't hard code this.
 
             if (TutorialGame::GetServerInstance().has_value()) {
                 std::shared_ptr<Packet::DamagePacket> damagePacket = std::make_shared<Packet::DamagePacket>(

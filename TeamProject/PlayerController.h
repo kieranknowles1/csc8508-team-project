@@ -155,7 +155,7 @@ namespace NCL {
 			bool CheckCeling();
 			btVector3 FindFloorNormal();
 			void SetGunTransform();
-			void FireShot();
+			void FireShot(float dt);
 			void GetAllDirections();
 			void HandleYaw();
 			void RotationCalculations();

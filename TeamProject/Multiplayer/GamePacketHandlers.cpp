@@ -569,9 +569,9 @@ namespace Packet {
         memcpy(&targetID, packet->data + offset, sizeof(int));
         offset = offset + sizeof(int);
 
-        int damage;
-        memcpy(&damage, packet->data + offset, sizeof(int));
-        offset = offset + sizeof(int);
+        float damage;
+        memcpy(&damage, packet->data + offset, sizeof(float));
+        offset = offset + sizeof(float);
 
         int dealer;
         memcpy(&dealer, packet->data + offset, sizeof(int));
@@ -609,9 +609,9 @@ namespace Packet {
         memcpy(buffer + offset, &targetID, sizeof(int));
         offset = offset + sizeof(int);
 
-        int damage = damagePacket.GetDamage();
-        memcpy(buffer + offset, &damage, sizeof(int));
-        offset = offset + sizeof(int);
+        float damage = damagePacket.GetDamage();
+        memcpy(buffer + offset, &damage, sizeof(float));
+        offset = offset + sizeof(float);
 
         int dealer = damagePacket.GetDamageDealer();
         memcpy(buffer + offset, &dealer, sizeof(int));

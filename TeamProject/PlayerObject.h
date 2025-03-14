@@ -103,7 +103,7 @@ public:
 	inline PlayerState GetState() { return state; }
 	inline void SetState(PlayerState state) { this->state = state; }
 
-	void Damage(int amount) {
+	void Damage(float amount) {
 		health -= amount;
 		if (health <= 0) {
 			state = PlayerState::DEAD;
@@ -116,7 +116,7 @@ public:
 	float GetMaxHealth() {
 		return maxHealth;
 	}
-	int health = 100;
+	float health = 100.0;
 
 	void setGun(GameObject* gunIn) { gun = gunIn; }
 	void SetGunTransform(float pitch, float yaw, btVector3 camPos);

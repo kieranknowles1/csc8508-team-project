@@ -13,6 +13,9 @@ void PlayerObject::Update(float dt) {
     forwardDirection = CalculateForwardDirection(upDirection, rightDirection);
     updateGravity(dt);
 
+    health += 2 * dt;
+    if (health > 100) health = 100.0f;
+
     if (TutorialGame::GetServerInstance().has_value() && (owner == TutorialGame::GetUser())) {
         std::shared_ptr<Packet::DeltaPacket> deltaPacket = std::make_shared<Packet::DeltaPacket>(
             worldID,

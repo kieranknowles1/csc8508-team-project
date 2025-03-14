@@ -93,14 +93,12 @@ namespace Packet {
 
         /**
          * @brief Get the new position of the game object from the packet.
-         * 
          * @return btVector3 containing the new position data.
          */
         inline btVector3 GetPosition() const { return m_position; }
 
         /**
          * @brief Get the new orientation of the game object from the packet.
-         * 
          * @return btQaternion containing the new orientation data. 
          */
         inline btQuaternion GetOrientation() const { return m_orientation; }
@@ -245,18 +243,18 @@ namespace Packet {
          * @param damage - the amount of damage to deal.
          * @param dealer - the id of the user who dealt the damage.
          */
-        DamagePacket(int targetID, int damage, int dealer) :
+        DamagePacket(int targetID, float damage, int dealer) :
             Packet(static_cast<Type>(PacketType::DAMAGE), static_cast<uint8_t>(Channel::RELIABLE), 0),
             m_targetID(targetID), m_damage(damage), m_dealer(dealer)
         {}
 
         inline int GetTargetID() const { return m_targetID; }
-        inline int GetDamage() const { return m_damage; }
+        inline float GetDamage() const { return m_damage; }
         inline int GetDamageDealer() const { return m_dealer; }
 
     private:
         int m_targetID;
-        int m_damage;
+        float m_damage;
         int m_dealer;
     };
 }

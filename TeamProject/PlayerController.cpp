@@ -67,7 +67,7 @@ void PlayerController::UpdateMovement(float dt) {
 
 void PlayerController::HandleShooting(float dt) {
     if (controller->GetDigital(Controller::DigitalControl::Fire) && shotTimer >= shotCooldown) {
-        FireShot();
+        FireShot(dt);
         crosshair->fire();
         shotTimer = 0.0f;
     }
@@ -78,7 +78,7 @@ void PlayerController::HandleShooting(float dt) {
 
 
 
-void PlayerController::FireShot() {
+void PlayerController::FireShot(float dt) {
     // Convert camera pitch & yaw to radians
     float pitchRadians = Maths::DegreesToRadians(camera->GetPitch());
     float yawRadians = Maths::DegreesToRadians(yaw);
@@ -88,7 +88,7 @@ void PlayerController::FireShot() {
     btMatrix3x3 rotationMatrix(bulletRotation);
     btVector3 forwardDir = rotationMatrix * btVector3(0, 0, -1);
 
-   Shoot::GetInstance()->ShootBulletPlayer(camera->GetPosition(), forwardDir, bulletRotation);
+   Shoot::GetInstance()->ShootBulletPlayer(camera->GetPosition(), forwardDir, bulletRotation, dt);
 }
 
 
