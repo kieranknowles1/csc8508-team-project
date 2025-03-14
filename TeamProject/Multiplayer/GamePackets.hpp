@@ -25,7 +25,8 @@ namespace Packet {
         USER_INFO = CUSTOM_TYPE + 5,
         ASSIGN_HOST = CUSTOM_TYPE + 6,
         REQUEST_USERID = CUSTOM_TYPE + 7,
-        DAMAGE = CUSTOM_TYPE + 8
+        DAMAGE = CUSTOM_TYPE + 8,
+        LASER = CUSTOM_TYPE + 9
     };
 
 
@@ -70,6 +71,43 @@ namespace Packet {
         const int m_objectID;
         const btVector3 m_linearVelocity;
         const btVector3 m_angularVelocity;
+    };
+
+    class LaserPacket : public Packet {
+    public:
+        LaserPacket(int objectID, const btVector3& startPos, const btVector3& endPos, int sequenceNum) :
+            Packet(static_cast<Type>(PacketType::LASER), static_cast<int>(Channel::FREQUENT), sequenceNum),
+            m_objectID(objectID), m_startPos(startPos), m_endPos(endPos)
+        {}
+
+        /**
+         * @brief Get the ID of the object this delta packet should be applied to.
+         * @return int representing the GameObject's worldID.
+         */
+        inline int GetTargetID() const { return m_objectID; }
+
+        /**
+         * @brief Get the Linear Velocity of the Delta Packet.
+         *
+         * This is the current linear velocity of the object on the server.
+         *
+         * @return btVector3 containing the linear velocity.
+         */
+        inline btVector3 GetStartPos() const { return m_startPos; }
+
+        /**
+         * @brief Get the Angular Velocity of the Delta Packet.
+         *
+         * This is the current angular velocity of the object on the server.
+         *
+         * @return btVector3 containing the angular velocity.
+         */
+        inline btVector3 GetEndPos() const { return m_endPos; }
+
+    private:
+        const int m_objectID;
+        const btVector3 m_startPos;
+        const btVector3 m_endPos;
     };
 
 

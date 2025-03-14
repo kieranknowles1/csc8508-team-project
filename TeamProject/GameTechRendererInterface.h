@@ -109,18 +109,9 @@ namespace NCL::CSC8503 {
 			vignetteIntensity = intensityIn;
 		}
 
-
-		void addLaser(btVector3 startPos, btVector3 endPos, int laserId) {
-			lasers.push_back(new Laser(startPos, endPos, laserId));
-		}
-
-		void removeLaser(int laserId) {
-			for (auto it = lasers.begin(); it != lasers.end(); ++it) {
-				if ((*it)->id == laserId) {
-					delete* it;
-					lasers.erase(it);
-					return;  
-				}
+		void initLasers() {
+			for (int i = 0; i < 8; i++) {
+				lasers.push_back(new Laser(btVector3(0,0,0), btVector3(0, 0, 0), i));
 			}
 		}
 

@@ -739,11 +739,12 @@ void GameTechRenderer::RenderLasers() {
 
 	BindMesh(*lightSphere);
 	for (Laser* laser : lasers) {
+		if (laser->startPos == btVector3(0, 0, 0) && laser->endPos == btVector3(0, 0, 0)) continue;
 		glUniform3fv(glGetUniformLocation(laserShader->GetProgramID(), "startPosition"), 1, (float*)&laser->startPos);
 		glUniform3fv(glGetUniformLocation(laserShader->GetProgramID(), "endPosition"), 1, (float*)&laser->endPos);
 		glUniform1f(glGetUniformLocation(laserShader->GetProgramID(), "thickness"), 5.0f);
 		glUniform1f(glGetUniformLocation(laserShader->GetProgramID(), "time"), vignettePulse);
-		glUniform1ui(glGetUniformLocation(laserShader->GetProgramID(), "inColour"), (uint32_t) TeamColor::ORANGE);
+		glUniform1ui(glGetUniformLocation(laserShader->GetProgramID(), "inColour"), (uint32_t) TeamColor::RED);
 		DrawBoundMesh();
 	}
 

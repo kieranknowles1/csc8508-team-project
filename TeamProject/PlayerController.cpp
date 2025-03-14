@@ -1,6 +1,7 @@
 #include "PlayerController.h"
 #include "AudioEngine.h"
 #include "TutorialGame.h"
+#include "Multiplayer/GamePackets.hpp"
 
 
 using namespace NCL;
@@ -77,7 +78,7 @@ void PlayerController::HandleShooting(float dt) {
     }
     else {
         if (firing) {
-            renderer->removeLaser(laserID);
+            renderer->updateLaser(laserID,btVector3(0,0,0),btVector3(0,0,0));
             firing = false;
         }
     }
@@ -97,12 +98,19 @@ void PlayerController::FireShot(float dt) {
     btVector3 adjustedOffset = rotationMatrix * gunCameraOffset; // Apply rotation to the offset
 
    std::optional<ShotInfo> info = Shoot::GetInstance()->ShootBulletPlayer(camera->GetPosition(), forwardDir, bulletRotation,dt);
-   if(!firing){   
-       renderer->addLaser(camera->GetPosition()+ adjustedOffset, info.value().hitPos,laserID);
-   }
-   else {
-       renderer->updateLaser(laserID, camera->GetPosition() + adjustedOffset, info.value().hitPos);
-   }
+    renderer->updateLaser(laserID, camera->GetPosition() + adjustedOffset, info.value().hitPos);
+
+    if (TutorialGame::GetServerInstance().has_value()) {
+        std::shared_ptr<Packet::LaserPacket> laserPacket = std::make_shared<Packet::LaserPacket>(
+            player->GetWorldID(),
+            camera->GetPosition() + adjustedOffset,
+            info.value().hitPos,
+            player->GetLastPacketSequence((uint8_t)Packet::PacketType::LASER) + 1
+        );
+        player->UpdatePacketSequence((uint8_t)Packet::PacketType::LASER, laserPacket->GetSequenceNumber());
+        TutorialGame::GetServerInstance()->Broadcast(laserPacket);
+    }
+   
 
 }
 
