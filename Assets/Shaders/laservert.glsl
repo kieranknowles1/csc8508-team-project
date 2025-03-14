@@ -28,18 +28,24 @@ void main(void) {
     float laserLength = length(endPosition - startPosition);
 
     float zMapped = (position.z + 1.0) * 0.5;
-
     float midPointDist = abs(zMapped - 0.5);
 
     float waveDistortionFactor = smoothstep(0.5, 0.25, midPointDist);
 
-    float sineWaveDistortion = sin(time * 3.0 + zMapped * 10.0) * 0.1 * thickness * waveDistortionFactor;
+    float sineWaveDistortion = sin(time * 3.0 + zMapped * 10.0*(laserLength *0.001f)) * 0.1 * thickness * waveDistortionFactor;
+
+    float cosWaveDistortion = cos(time * 3.0 + zMapped * 10.0*(laserLength *0.001f)) * 0.1 * thickness * waveDistortionFactor;
+
+    sineWaveDistortion *= (laserLength *0.0005f);
+    
+    cosWaveDistortion *= (laserLength *0.0005f);
 
     vec3 worldPos = startPosition 
                   + forward * (zMapped * laserLength) 
                   + right * (position.x * thickness * 0.5) 
                   + up * (position.y * thickness * 0.5)    
-                  + vec3(0.0, sineWaveDistortion * 20.0, 0.0); 
+                  + vec3( (cosWaveDistortion * 100.0), (sineWaveDistortion * 100.0),0); 
+
 
     OUT.waveDist = waveDistortionFactor;
     OUT.TexCoord = texCoord;

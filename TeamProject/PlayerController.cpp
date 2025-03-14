@@ -92,13 +92,14 @@ void PlayerController::FireShot() {
     btQuaternion bulletRotation = camRotOffset * yawQuat * pitchQuat;
     btMatrix3x3 rotationMatrix(bulletRotation);
     btVector3 forwardDir = rotationMatrix * btVector3(0, 0, -1);
+    btVector3 adjustedOffset = rotationMatrix * gunCameraOffset; // Apply rotation to the offset
 
    std::optional<ShotInfo> info = Shoot::GetInstance()->ShootBulletPlayer(camera->GetPosition(), forwardDir, bulletRotation);
    if(!firing){   
-       laserID = renderer->addLaser(camera->GetPosition(), info.value().hitPos);
+       laserID = renderer->addLaser(camera->GetPosition()+ adjustedOffset, info.value().hitPos);
    }
    else {
-       renderer->updateLaser(laserID, camera->GetPosition(), info.value().hitPos);
+       renderer->updateLaser(laserID, camera->GetPosition() + adjustedOffset, info.value().hitPos);
    }
 
 }
