@@ -62,7 +62,19 @@ std::optional<ShotInfo> Shoot::ShootBulletPlayer(btVector3 startPos, btVector3 d
         SpawnDecal(&rayInfo.value());
     }
     return rayInfo;
+}
 
+std::optional<ShotInfo> Shoot::ShootBulletAI(btVector3 startPos, btVector3 dir, btQuaternion rotation,float dt) {
+    auto rayInfo = RayClosest(startPos, dir);
+    // Don't have Rust style and_then until C++23 :(
+    if (rayInfo.has_value()) {
+        if (rayInfo.value().hitObj->getType() == GameObject::Type::Player) {
+            PlayerObject* hit = (PlayerObject*)rayInfo.value().hitObj;
+            hit->Damage(100.0f * dt); // TODO: Don't hard code this.
+        }
+        SpawnDecal(&rayInfo.value());
+    }
+    return rayInfo;
 }
 
 void Shoot::SpawnBulletMesh(btVector3 startPos, btVector3 dir, btQuaternion rotation, ShotInfo* rayInfo) {

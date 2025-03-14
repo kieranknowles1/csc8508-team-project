@@ -49,6 +49,7 @@ namespace NCL {
 
 			std::optional<ShotInfo> RayClosest(btVector3 startPos, btVector3 dir, GameObject * ignore = nullptr);
 			std::optional<ShotInfo> ShootBulletPlayer(btVector3 startPos, btVector3 dir,btQuaternion rotation, float dt);
+			std::optional<ShotInfo> ShootBulletAI(btVector3 startPos, btVector3 dir, btQuaternion rotation,float dt);
 
 
 		private:
