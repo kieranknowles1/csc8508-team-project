@@ -8,55 +8,55 @@
 #include <iostream>
 #include <GameScreen.h>
 
-using namespace NCL;
-using namespace NCL::CSC8503;
+namespace NCL::CSC8503 {
 
 class MainMenuScreen : public PushdownState {
-    int selection = 0;
+    size_t selection = 0;
     bool inMenu;
     TutorialGame* game;
     Controller* controller;
-    std::string gameMode;
 
 public:
     MainMenuScreen(Controller* controller, TutorialGame* game) : controller(controller), game(game), selection(0), inMenu(true) {}
 
     PushdownResult OnUpdate(float dt, PushdownState** newState) override {
 
-        const std::string menuItems[3] = { "Singleplayer", "Host Game", "Join Game" };
+        const std::array<std::string, 5> menuItems = { "Singleplayer", "Host Game", "Join Game", "Credits", "Quit"};
 
         if (controller->GetDigital(Controller::DigitalControl::MenuDown)) {
-            selection = std::min(2, selection + 1);
+            selection = std::min(menuItems.size() - 1, selection + 1);
         }
         if (controller->GetDigital(Controller::DigitalControl::MenuUp)) {
-            selection = std::max(0, selection - 1);
+            selection = std::max(size_t(0), selection - 1);
         }
         if (controller->GetDigital(Controller::DigitalControl::MenuConfirm)) {
             GameMode mode = static_cast<GameMode>(selection);
 
-            if (mode == GameMode::SINGLEPLAYER) {
+            switch (mode)
+            {
+            case GameMode::SINGLEPLAYER:
                 game->Start();
-                gameMode = "Singleplayer";
-            }
-            else if (mode == GameMode::HOST_GAME) {
+                break;
+            case GameMode::HOST_GAME:
                 game->JoinGame(true); //This is host game
-                gameMode = "Multiplayer";
-            }
-            else {
+                break;
+            case GameMode::JOIN_GAME:
                 game->JoinGame(false); //This is join game
-                gameMode = "Multiplayer";
+                break;
+            case GameMode::CREDITS:
+                break;
+            case GameMode::QUIT:
+                return PushdownResult::Pop;
+            default: assert(false);
             }
-            /*else {
-                game->JoinGame(mode == GameMode::HOST_GAME);
-                gameMode = "Multiplayer";
-            }*/
-            *newState = new GameScreen(controller, game, gameMode);
+
+            *newState = new GameScreen(controller, game);
             inMenu = false;
             return PushdownResult::Push;
         }
 
         //Render menu
-        for (int i = 0; i < 3; i++) {
+        for (int i = 0; i < menuItems.size(); i++) {
             std::string currentItem = menuItems[i];
             if (i == selection) currentItem += " <";
             Debug::Print(currentItem, Vector2(1, 50 + (10 * i))); //Replace with AddUIElement
@@ -70,3 +70,5 @@ public:
 
     }
 };
+
+}

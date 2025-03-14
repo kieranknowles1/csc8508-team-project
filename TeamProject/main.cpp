@@ -119,7 +119,8 @@ int main(int argc, char** argv) {
     // Clear delta time to exclude start up time
     window->GetTimer().GetTimeDeltaSeconds();
 
-    while (window->UpdateWindow() && !window->GetKeyboard()->KeyPressed(KeyCodes::ESCAPE)) {
+    bool quit = false;
+    while (window->UpdateWindow() && !window->GetKeyboard()->KeyPressed(KeyCodes::ESCAPE) && !quit) {
         float dt = window->GetTimer().GetTimeDeltaSeconds();
         controller->Update(dt);
         window->SetTitle("Gametech frame time:" + std::to_string(1000.0f * dt));
@@ -127,7 +128,7 @@ int main(int argc, char** argv) {
         //game->UpdateGame(dt);
 
 
-        machine.Update(dt);
+        quit |= !machine.Update(dt);
         renderer->collectFrameObjects(game->getWorld());
         renderer->drawFrame(dt);
         Debug::UpdateRenderables(dt);
