@@ -46,6 +46,7 @@ namespace NCL {
 			void RenderDecals();
 			void RenderQuad();
 			void RenderUI();
+			void RenderLasers();
 
 			void LoadSkybox();
 
@@ -114,6 +115,10 @@ namespace NCL {
 			GLuint lightDiffuseTex;		// Used by pointLightFBO for the diffuse texture.
 			GLuint lightSpecularTex;	// Used by pointLightFBO for the specular texture.
 
+			//lasers
+			std::unique_ptr<OGLShader> laserShader;
+			GLuint laserFBO;
+			GLuint laserTex;
 
 			void GenerateScreenTexture(GLuint& into, bool depth = false); //added
 			GLuint bufferDepthTex;

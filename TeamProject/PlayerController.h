@@ -139,6 +139,8 @@ namespace NCL {
 			btIDebugDraw* debugDrawer;
 			bool onIce = false;
 			btVector3 previousVelocity;
+			bool firing;
+			int laserID;
 
 			btVector3 forward;
 			btVector3 up;

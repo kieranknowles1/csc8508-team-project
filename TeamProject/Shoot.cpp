@@ -55,7 +55,7 @@ std::optional<ShotInfo> Shoot::ShootBulletPlayer(btVector3 startPos, btVector3 d
                 TutorialGame::GetServerInstance()->Broadcast(damagePacket);
             }
         }
-        SpawnBulletMesh(startPos, dir, rotation, &rayInfo.value());
+       // SpawnBulletMesh(startPos, dir, rotation, &rayInfo.value());
         SpawnDecal(&rayInfo.value());
     }
     return rayInfo;
