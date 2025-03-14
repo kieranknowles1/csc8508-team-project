@@ -1,60 +1,36 @@
-1. Paintball Gun: "Atom Ray Gun Waterpistol" (https://skfb.ly/oorJF) by akselmot is licensed under Creative Commons Attribution (http://creativecommons.org/licenses/by/4.0/).
+TODO: Credit ourselves, add in what each of us did
 
-2. Evil Genius Assets used with permission.
-
-Some matrix maths ported from OpenGL Mathematics (GLM)
-
-================================================================================
-OpenGL Mathematics (GLM)
---------------------------------------------------------------------------------
-GLM is licensed under The Happy Bunny License or MIT License
+- Kieran Knowles
+  PS5 support, Linux support, and engine development.
 
 ================================================================================
-The Happy Bunny License (Modified MIT License)
---------------------------------------------------------------------------------
-Copyright (c) 2005 - G-Truc Creation
+Assets
+-------------------------------------------------------------------------------
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
+Paintball Gun: "Atom Ray Gun Waterpistol" (https://skfb.ly/oorJF) by akselmot
+is licensed under Creative Commons Attribution
+(http://creativecommons.org/licenses/by/4.0/).
 
-The above copyright notice and this permission notice shall be included in
-all copies or substantial portions of the Software.
+Evil Genius Assets used with permission from Rebellion.
 
-Restrictions:
- By making use of the Software for military purposes, you choose to make a
- Bunny unhappy.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-THE SOFTWARE.
+Textures by TextureCan, under Creative Commons CC0
+https://www.texturecan.com/
 
 ================================================================================
-The MIT License
+Libraries
 --------------------------------------------------------------------------------
-Copyright (c) 2005 - G-Truc Creation
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
+Made using FMOD Studio by Firelight Technologies Pty Ltd.
 
-The above copyright notice and this permission notice shall be included in
-all copies or substantial portions of the Software.
+Physics by Bullet Physics under the zlib license.
+https://github.com/bulletphysics/bullet3
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-THE SOFTWARE.
+Some matrix maths ported from OpenGL Mathematics (GLM) under the Happy Bunny
+(modified MIT license).
+https://github.com/g-truc/glm
+
+JSON loading by Nlohmann JSON under the MIT license.
+https://github.com/nlohmann/json
+
+Linux input & windowing by SDL2, under the zlib license.
+https://github.com/libsdl-org/SDL
