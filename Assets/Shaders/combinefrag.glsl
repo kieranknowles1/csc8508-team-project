@@ -25,9 +25,9 @@ void main(void) {
        light,
        specular
     );
-    vec3 laser =  texture(lasers, IN.texCoord).xyz;
-    if(laser.r >= 0.5f){
-    colour.rgb = laser;
+    vec4 laser =  texture(lasers, IN.texCoord);
+    if(laser.a >= 0.1f){
+    colour = laser;
     }
     colour.a    = 1.0;
 

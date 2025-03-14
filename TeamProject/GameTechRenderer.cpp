@@ -10,6 +10,7 @@
 #include "Debug.h"
 
 #include <NCLCoreClasses/stb/stb_image.h>
+#include <Colors.h>
 
 using namespace NCL;
 using namespace Rendering;
@@ -292,9 +293,9 @@ void GameTechRenderer::RenderFrame() {
 	//RenderShadowMap();
 	FillBuffers();
 	DrawPointLights();
-	CombineBuffers();
-	RenderPostProcessing(); 
 	RenderLasers();
+	CombineBuffers();
+	RenderPostProcessing();
 	RenderUI();
 
 
@@ -721,7 +722,9 @@ void GameTechRenderer::RenderUI() {
 
 void GameTechRenderer::RenderLasers() {
 	glBindFramebuffer(GL_FRAMEBUFFER, laserFBO);
+	glClearColor(0, 0, 0, 0);
 	glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
+	
 	glEnable(GL_BLEND);
 
 	UseShader(*laserShader);
@@ -735,14 +738,12 @@ void GameTechRenderer::RenderLasers() {
 	glUniformMatrix4fv(glGetUniformLocation(laserShader->GetProgramID(), "projMatrix"), 1, false, (float*)&projMatrix);
 
 	BindMesh(*lightSphere);
-	int count = 0;
 	for (Laser* laser : lasers) {
-		std::cout << "LASER: " << count << std::endl;
-		count++;
 		glUniform3fv(glGetUniformLocation(laserShader->GetProgramID(), "startPosition"), 1, (float*)&laser->startPos);
 		glUniform3fv(glGetUniformLocation(laserShader->GetProgramID(), "endPosition"), 1, (float*)&laser->endPos);
 		glUniform1f(glGetUniformLocation(laserShader->GetProgramID(), "thickness"), 5.0f);
 		glUniform1f(glGetUniformLocation(laserShader->GetProgramID(), "time"), vignettePulse);
+		glUniform1ui(glGetUniformLocation(laserShader->GetProgramID(), "inColour"), (uint32_t) TeamColor::ORANGE);
 		DrawBoundMesh();
 	}
 

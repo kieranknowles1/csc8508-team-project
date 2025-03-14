@@ -25,6 +25,7 @@ void PlayerController::Initialise() {
     crosshair = std::make_unique<Crosshair>();
     renderer->AddUiElement(crosshair.get());
     crosshair->SetActive(true);
+    laserID = player->GetWorldID();
 }
 
 btVector3 GetEulerAngles(btQuaternion quat) {
@@ -97,7 +98,7 @@ void PlayerController::FireShot(float dt) {
 
    std::optional<ShotInfo> info = Shoot::GetInstance()->ShootBulletPlayer(camera->GetPosition(), forwardDir, bulletRotation,dt);
    if(!firing){   
-       laserID = renderer->addLaser(camera->GetPosition()+ adjustedOffset, info.value().hitPos);
+       renderer->addLaser(camera->GetPosition()+ adjustedOffset, info.value().hitPos,laserID);
    }
    else {
        renderer->updateLaser(laserID, camera->GetPosition() + adjustedOffset, info.value().hitPos);

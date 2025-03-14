@@ -110,10 +110,8 @@ namespace NCL::CSC8503 {
 		}
 
 
-		int addLaser(btVector3 startPos, btVector3 endPos) {
-			int laserId = lasers.size();
+		void addLaser(btVector3 startPos, btVector3 endPos, int laserId) {
 			lasers.push_back(new Laser(startPos, endPos, laserId));
-			return laserId;
 		}
 
 		void removeLaser(int laserId) {
