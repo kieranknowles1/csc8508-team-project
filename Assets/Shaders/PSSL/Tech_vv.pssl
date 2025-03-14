@@ -1,22 +1,12 @@
 #include "ShaderConstants.psslh"
 #include "VertexAttributes.psslh"
 #include "Skinning.psslh"
-#include "TechObject.psslh"
+#include "types.h"
 #include "Bindless.psslh"
 #include "Vertex.psslh"
 
 #include "glinterop.h"
 #include "../include/vert/texscale.glsl"
-
-struct VS_OUTPUT
-{
-	float4 Position		: S_POSITION;
-	float2 UV			: TEXCOORD0;
-	float4 Colour		: TEXCOORD1;
-	int	texID			: TEXCOORD2;
-
-	float4 ShadowClip	: TEXCOORD2;
-};
 
 [CxxSymbol("TestShader::gs")]
 VS_OUTPUT main(uint vertID : S_VERTEX_ID, uint objID : S_SRT_DATA, uint instanceID : S_INSTANCE_ID)
@@ -41,9 +31,14 @@ VS_OUTPUT main(uint vertID : S_VERTEX_ID, uint objID : S_SRT_DATA, uint instance
 
 	Output.Position = TransformWorldToClip(position);
 	Output.Colour	= s.colour;
-	Output.texID	= s.index[0];
+	Output.texID	= s.texIndex;
+	Output.normId = s.normalIndex;
 
-	Output.ShadowClip = mul(Constants.shadowMatrix, position);
+	float3x3 normMat = float3x3(s.normalMatrix);
+
+	Output.normal = normalize(mul(normMat, normalize(normal)));
+	Output.tangent = normalize(mul(normMat, normalize(tangent.xyz)));
+	Output.binormal = cross(Output.tangent, Output.normal) * tangent.w;
 
 	return Output;
 }

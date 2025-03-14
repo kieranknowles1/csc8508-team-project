@@ -123,12 +123,12 @@ void TutorialGame::UpdateGame(float dt) {
     if (state == GameState::IDLE) {
         if (user.has_value() && lobby.has_value()) {
             if (lobby->IsHost(user.value())) {
-                Debug::Print("Start Game <", Vector2(5, 80));
+                Debug::Print("> Start Game <", Vector2(0.4f, 0.5f));
                 if (controller->GetDigital(Controller::DigitalControl::MenuConfirm)) {
                     StartMultiplayerGame();
                 }
             }
-            Debug::Print("Connected: " + std::to_string(lobby->GetConnectedUsers().size()), Vector2(70, 80));
+            Debug::Print("Connected: " + std::to_string(lobby->GetConnectedUsers().size()) + "/8", Vector2(0.6f, 0.9f));
         }
     }
 
@@ -407,7 +407,7 @@ void TutorialGame::InitWorld() {
 
 PlayerObject* TutorialGame::InitPlayer(btVector3 position, btVector3 upDir) {
     PlayerObject* newPlayer = new PlayerObject();
-    newPlayer = AddPlayerCapsuleToWorld(position, 7.0f, 3.5f, 10.0f);
+    newPlayer = AddPlayerCapsuleToWorld(position, 20.0f, 8.5f, 10.0f);
     // Keep us from clipping when falling too fast
     newPlayer->GetPhysicsObject()->GetRigidBody()->setCcdMotionThreshold(1.0f);
     newPlayer->GetPhysicsObject()->GetRigidBody()->setCcdSweptSphereRadius(0.4f);
@@ -655,7 +655,9 @@ void TutorialGame::InitNetwork(bool host) {
 
 void TutorialGame::ConnectToServer(ENetAddress& address) {
     server->ConnectTo(&address);
-    while (server->GetConnectionCount() < 1) continue;
+    while (server->GetConnectionCount() < 1) {
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    }
 }
 
 
@@ -677,6 +679,9 @@ void TutorialGame::InitPacketHandlers() {
 
     Packet::ObjectChangeGravityPacketHandler* objectChangeGravityHandler = new Packet::ObjectChangeGravityPacketHandler();
     Packet::PacketRegister::Register(objectChangeGravityHandler);
+
+    Packet::DamagePacketHandler* damageHandler = new Packet::DamagePacketHandler();
+    Packet::PacketRegister::Register(damageHandler);
 }
 
 
@@ -687,7 +692,7 @@ void TutorialGame::JoinGame(bool host) {
 
     if (!host) {
         ENetAddress dest;
-        enet_address_set_host(&dest, "127.0.0.1");
+        enet_address_set_host(&dest, "10.70.33.113");
         dest.port = DEFAULT_PORT;
 
         ConnectToServer(dest);

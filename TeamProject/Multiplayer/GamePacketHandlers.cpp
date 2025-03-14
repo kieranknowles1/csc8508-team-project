@@ -92,6 +92,7 @@ namespace Packet {
         else if (channel == static_cast<int>(Channel::UNSEQUENCED)) packetFlags = ENET_PACKET_FLAG_UNSEQUENCED;
 
         ENetPacket* enetPacket = enet_packet_create(buffer, offset, packetFlags);
+        delete[] buffer;
         return enetPacket;
     }
 #pragma endregion DeltaPacketHandler
@@ -186,6 +187,7 @@ namespace Packet {
         else if (channel == static_cast<int>(Channel::UNSEQUENCED)) packetFlags = ENET_PACKET_FLAG_UNSEQUENCED;
 
         ENetPacket* enetPacket = enet_packet_create(buffer, offset, packetFlags);
+        delete[] buffer;
         return enetPacket;
     }
 #pragma endregion PositonPacketHandler
@@ -283,6 +285,7 @@ namespace Packet {
         else if (channel == static_cast<int>(Channel::UNSEQUENCED)) packetFlags = ENET_PACKET_FLAG_UNSEQUENCED;
 
         ENetPacket* enetPacket = enet_packet_create(buffer, offset, packetFlags);
+        delete[] buffer;
         return enetPacket;
     }
 #pragma endregion ObjectChangeGravityPacketHandler
@@ -301,22 +304,21 @@ namespace Packet {
         char* buffer = new char[
             sizeof(Type) +
             sizeof(uint8_t) +
-            sizeof(uint32_t) +
-            sizeof(int)
+            sizeof(uint32_t)
         ];
         
-        AssignHostPacket assignHostPacket = (*static_cast<AssignHostPacket*>(packet.get()));
+        StartGamePacket startPacket = (*static_cast<StartGamePacket*>(packet.get()));
         size_t offset = 0;
 
-        Type type = assignHostPacket.GetType();
+        Type type = startPacket.GetType();
         memcpy(buffer, &type, sizeof(Type));
         offset = offset + sizeof(Type);
 
-        uint8_t channel = assignHostPacket.GetChannel();
+        uint8_t channel = startPacket.GetChannel();
         memcpy(buffer + offset, &channel, sizeof(uint8_t));
         offset = offset + sizeof(uint8_t);
 
-        uint32_t sequenceNumber = assignHostPacket.GetSequenceNumber();
+        uint32_t sequenceNumber = startPacket.GetSequenceNumber();
         memcpy(buffer + offset, &sequenceNumber, sizeof(uint32_t));
         offset = offset + sizeof(uint32_t);
 
@@ -325,6 +327,7 @@ namespace Packet {
         else if (channel == static_cast<int>(Channel::UNSEQUENCED)) packetFlags = ENET_PACKET_FLAG_UNSEQUENCED;
 
         ENetPacket* enetPacket = enet_packet_create(buffer, offset, packetFlags);
+        delete[] buffer;
         return enetPacket;
     }
 #pragma endregion StartGamePacketHandler
@@ -386,6 +389,7 @@ namespace Packet {
         else if (channel == static_cast<int>(Channel::UNSEQUENCED)) packetFlags = ENET_PACKET_FLAG_UNSEQUENCED;
 
         ENetPacket* enetPacket = enet_packet_create(buffer, offset, packetFlags);
+        delete[] buffer;
         return enetPacket;
     }
 #pragma endregion AssignHostPacketHandler
@@ -472,6 +476,7 @@ namespace Packet {
 
         ENetPacket* enetPacket = enet_packet_create(buffer, offset, packetFlags);
         enetPacket->dataLength = offset;
+        delete[] buffer;
         return enetPacket;
     }
 #pragma endregion UserInfoPacketHandler
@@ -531,7 +536,95 @@ namespace Packet {
         else if (channel == static_cast<int>(Channel::UNSEQUENCED)) packetFlags = ENET_PACKET_FLAG_UNSEQUENCED;
 
         ENetPacket* enetPacket = enet_packet_create(buffer, offset, packetFlags);
+        delete[] buffer;
         return enetPacket;
     }
 #pragma endregion RequestUserIDPacketHandler
+
+
+#pragma region DamageHandler
+    void DamagePacketHandler::Handle(const std::shared_ptr<Packet> packet) {
+        const DamagePacket* damagePacket = std::static_pointer_cast<DamagePacket>(packet).get();
+        PlayerObject* targetObject = (PlayerObject*) GameObject::GetGameObjectByID(damagePacket->GetTargetID());
+
+        // Dealer handles damage on their side so ignore packet.
+        if (TutorialGame::GetUser()->GetUserID() != damagePacket->GetDamageDealer()) {
+            targetObject->Damage(damagePacket->GetDamage());
+        }
+
+        // Pass the parcel.
+        if (TutorialGame::IsHost()) TutorialGame::GetServerInstance()->Broadcast(packet);
+    }
+
+    std::shared_ptr<Packet> DamagePacketHandler::Translate(const ENetEvent* event) const {
+        ENetPacket* packet = event->packet;
+        Type type;
+        uint8_t channel;
+        uint32_t sequenceNumber;
+        
+        size_t offset = sizeof(Type) + sizeof(uint8_t) + sizeof(uint32_t);
+        GetBaseData(packet, &type, &channel, &sequenceNumber);
+
+        int targetID;
+        memcpy(&targetID, packet->data + offset, sizeof(int));
+        offset = offset + sizeof(int);
+
+        float damage;
+        memcpy(&damage, packet->data + offset, sizeof(float));
+        offset = offset + sizeof(float);
+
+        int dealer;
+        memcpy(&dealer, packet->data + offset, sizeof(int));
+        offset = offset + sizeof(int);
+
+        return std::make_shared<DamagePacket>(targetID, damage, dealer);
+    }
+
+    ENetPacket* DamagePacketHandler::ToENetPacket(const std::shared_ptr<Packet> packet) const {
+        char* buffer = new char[
+            sizeof(Type)
+            + sizeof(uint8_t)
+            + sizeof(uint32_t)
+            + sizeof(int)
+            + sizeof(int)
+            + sizeof(int)
+        ];
+
+        DamagePacket damagePacket = (*static_cast<DamagePacket*>(packet.get()));
+        size_t offset = 0;
+
+        Type type = damagePacket.GetType();
+        memcpy(buffer, &type, sizeof(Type));
+        offset = offset + sizeof(Type);
+
+        uint8_t channel = damagePacket.GetChannel();
+        memcpy(buffer + offset, &channel, sizeof(uint8_t));
+        offset = offset + sizeof(uint8_t);
+
+        uint32_t sequenceNumber = damagePacket.GetSequenceNumber();
+        memcpy(buffer + offset, &sequenceNumber, sizeof(uint32_t));
+        offset = offset + sizeof(uint32_t);
+
+        int targetID = damagePacket.GetTargetID();
+        memcpy(buffer + offset, &targetID, sizeof(int));
+        offset = offset + sizeof(int);
+
+        float damage = damagePacket.GetDamage();
+        memcpy(buffer + offset, &damage, sizeof(float));
+        offset = offset + sizeof(float);
+
+        int dealer = damagePacket.GetDamageDealer();
+        memcpy(buffer + offset, &dealer, sizeof(int));
+        offset = offset + sizeof(int);
+
+        int packetFlags = 0;
+        if (channel == static_cast<int>(Channel::RELIABLE)) packetFlags = ENET_PACKET_FLAG_RELIABLE;
+        else if (channel == static_cast<int>(Channel::UNSEQUENCED)) packetFlags = ENET_PACKET_FLAG_UNSEQUENCED;
+
+        ENetPacket* enetPacket = enet_packet_create(buffer, offset, packetFlags);
+        delete[] buffer;
+        return enetPacket;
+    }
+
+#pragma endregion DamageHandler
 }

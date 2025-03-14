@@ -115,32 +115,34 @@ void Network::Run() {
 void Network::Tick(float dt) {
     m_elapsedTime += dt;
 
-    while (m_elapsedTime - m_lastTick >= NETWORK_RATE) {
-        m_lastTick += NETWORK_RATE;
+    while (m_elapsedTime - m_lastTick >= NETWORK_RATE && m_state == NetworkState::ON) {
 
         SendAll();
         enet_host_flush(m_host);
-        ENetEvent event;
 
-        while (enet_host_service(m_host, &event, 10) > 0) {
-            switch (event.type) {
-            case ENET_EVENT_TYPE_CONNECT:
-                if (!ConnectPeer()) {
-                    enet_peer_disconnect(event.peer, 0);
-                }
-                else if (m_connectCallback != nullptr) {
-                    m_connectCallback(event.peer);
-                }
-                break;
-            case ENET_EVENT_TYPE_DISCONNECT:
-                DisconnectPeer();
-                break;
-            case ENET_EVENT_TYPE_RECEIVE:
-                HandleIncomingPacket(&event);
-                break;
+        // Fast Forward, skipping updates.
+        do m_lastTick += NETWORK_RATE; while (m_lastTick < m_elapsedTime);
+    }
+    ENetEvent event;
+
+    while (enet_host_service(m_host, &event, 10) > 0) {
+        switch (event.type) {
+        case ENET_EVENT_TYPE_CONNECT:
+            if (!ConnectPeer()) {
+                enet_peer_disconnect(event.peer, 0);
             }
-            enet_packet_destroy(event.packet);
+            else if (m_connectCallback != nullptr) {
+                m_connectCallback(event.peer);
+            }
+            break;
+        case ENET_EVENT_TYPE_DISCONNECT:
+            DisconnectPeer();
+            break;
+        case ENET_EVENT_TYPE_RECEIVE:
+            HandleIncomingPacket(&event);
+            break;
         }
+        enet_packet_destroy(event.packet);
     }
 }
 

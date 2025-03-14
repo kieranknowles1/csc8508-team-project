@@ -1,8 +1,0 @@
-#define NULLTEX -1
-
-struct UiState {
-    float4 colour;
-    float2 position;
-    float2 size;
-    int texture;
-};

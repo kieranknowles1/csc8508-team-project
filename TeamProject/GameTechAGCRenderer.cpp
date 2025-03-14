@@ -15,7 +15,6 @@ using namespace Rendering;
 using namespace CSC8503;
 using namespace PS5;
 
-const int SHADOW_SIZE		= 8192;
 const int FRAMES_IN_FLIGHT	= 2;
 
 const int BINDLESS_TEX_COUNT		= 128;
@@ -24,42 +23,48 @@ const int BINDLESS_BUFFER_COUNT		= 128;
 const size_t LINE_STRIDE = sizeof(Vector4) + sizeof(Vector4);
 const size_t TEXT_STRIDE = sizeof(Vector2) + sizeof(Vector2) + sizeof(Vector4);
 
-void NCL::CSC8503::GameTechAGCRenderer::createBuffer(const std::string& name, sce::Agc::CxRenderTarget* outTarget, PS5::AGCTexture** outTexture, sce::Agc::Core::Sampler* optionalSampler)
+GameTechAGCRenderer::FrameBuffer GameTechAGCRenderer::createBuffer(const std::string& name, FrameBuffer::Slot slot)
 {
-	*outTarget = CreateColourBufferTarget(window->GetScreenSize().x, window->GetScreenSize().y, true);
-	*outTexture = CreateFrameBufferTextureSlot(name);
+	FrameBuffer buf;
+	buf.target = CreateColourBufferTarget(window->GetScreenSize().x, window->GetScreenSize().y, true);
+	buf.target.setSlot((int)slot);
+	buf.texture = CreateFrameBufferTextureSlot(name);
 
-	auto error = sce::Agc::Core::translate((*outTexture)->GetAGCPointer(), outTarget, sce::Agc::Core::RenderTargetComponent::kData);
-	checkError(error);
+	checkError(sce::Agc::Core::translate(buf.texture->GetAGCPointer(), &buf.target, sce::Agc::Core::RenderTargetComponent::kData));
 
-	if (optionalSampler) {
-		optionalSampler->init().setXyFilterMode(
-			sce::Agc::Core::Sampler::FilterMode::kPoint,
-			sce::Agc::Core::Sampler::FilterMode::kPoint
-		)
-			.setMipFilterMode(sce::Agc::Core::Sampler::MipFilterMode::kPoint);
-	}
+	buf.sampler.init().setXyFilterMode(
+		sce::Agc::Core::Sampler::FilterMode::kPoint,
+		sce::Agc::Core::Sampler::FilterMode::kPoint
+	).setMipFilterMode(sce::Agc::Core::Sampler::MipFilterMode::kPoint);
+
+	return buf;
+}
+
+void GameTechAGCRenderer::useViewPort(sce::Agc::Core::BasicContext* context, Vector2i size) const
+{
+	sce::Agc::CxViewport viewPort;
+	sce::Agc::Core::setViewport(&viewPort, size.x, size.y, 0, 0, -1.0f, 1.0f);
+	context->m_sb.setState(viewPort);
 }
 
 GameTechAGCRenderer::GameTechAGCRenderer(Window* window) : AGCRenderer(window), GameTechRendererInterface(window) {
-	SceError error = SCE_OK;
 	bindlessTextures = (sce::Agc::Core::Texture*)allocator.Allocate(BINDLESS_TEX_COUNT * sizeof(sce::Agc::Core::Texture), sce::Agc::Alignment::kBuffer);
 	sce::Agc::Core::BufferSpec texSpec;
 	texSpec.initAsRegularBuffer(bindlessTextures, sizeof(sce::Agc::Core::Texture), BINDLESS_TEX_COUNT);
-	error = sce::Agc::Core::initialize(&textureBuffer, &texSpec);
+	checkError(sce::Agc::Core::initialize(&textureBuffer, &texSpec));
 
 	bindlessBuffers = (sce::Agc::Core::Buffer*)allocator.Allocate(BINDLESS_BUFFER_COUNT * sizeof(sce::Agc::Core::Buffer), sce::Agc::Alignment::kBuffer);
 	sce::Agc::Core::BufferSpec buffSpec;
 	buffSpec.initAsRegularBuffer(bindlessBuffers, sizeof(sce::Agc::Core::Buffer), BINDLESS_BUFFER_COUNT);
-	error = sce::Agc::Core::initialize(&arrayBuffer, &buffSpec);
+	checkError(sce::Agc::Core::initialize(&arrayBuffer, &buffSpec));
 	bufferCount = 1; //We skip over index 0, makes some selection logic easier later
-
-	skyboxTexture = (AGCTexture*)LoadTexture("Skybox.dds");
 
 	unitQuad = Mesh::Quad<AGCMesh>(1.0f);
 	unitQuad->UploadToGPU(this);
 	halfUnitQuad = Mesh::Quad<AGCMesh>(0.5f);
 	halfUnitQuad->UploadToGPU(this);
+
+	sphere = (AGCMesh*)LoadMesh("Sphere.msh");
 
 	skinningCompute = std::make_unique<AGCShader>("Skinning_c.ags", allocator);
 	gammaCompute	= std::make_unique<AGCShader>("Gamma_c.ags", allocator);
@@ -70,17 +75,14 @@ GameTechAGCRenderer::GameTechAGCRenderer(Window* window) : AGCRenderer(window), 
 	uiVertexShader = std::make_unique<AGCShader>("UI_vv.ags", allocator);
 	uiPixelShader = std::make_unique<AGCShader>("UI_p.ags", allocator);
 
-	shadowVertexShader	= std::make_unique<AGCShader>("Shadow_vv.ags", allocator);
-	shadowPixelShader	= std::make_unique<AGCShader>("Shadow_p.ags", allocator);
-
-	skyboxVertexShader	= std::make_unique<AGCShader>("Skybox_vv.ags", allocator);
-	skyboxPixelShader	= std::make_unique<AGCShader>("Skybox_p.ags" , allocator);
-
 	debugLineVertexShader	= std::make_unique<AGCShader>("DebugLine_vv.ags", allocator);
 	debugLinePixelShader	= std::make_unique<AGCShader>("DebugLine_p.ags" , allocator);
 
 	debugTextVertexShader	= std::make_unique<AGCShader>("DebugText_vv.ags", allocator);
 	debugTextPixelShader	= std::make_unique<AGCShader>("DebugText_p.ags" , allocator);
+
+	deferredVertexShader = std::make_unique<AGCShader>("deferred_vv.ags", allocator);
+	deferredPixelShader = std::make_unique<AGCShader>("deferred_p.ags", allocator);
 
 	postVertexShader = std::make_unique<AGCShader>("post_vv.ags", allocator);
 	postPixelShader = std::make_unique<AGCShader>("post_p.ags", allocator);
@@ -95,7 +97,7 @@ GameTechAGCRenderer::GameTechAGCRenderer(Window* window) : AGCRenderer(window), 
 			sce::Agc::Core::BufferSpec bufSpec;
 			bufSpec.initAsConstantBuffer(allFrames[i].data.dataStart, sizeof(ShaderConstants));
 
-			SceError error = sce::Agc::Core::initialize(&allFrames[i].constantBuffer, &bufSpec);
+			checkError(sce::Agc::Core::initialize(&allFrames[i].constantBuffer, &bufSpec));
 		}
 	}
 	currentFrameIndex = 0;
@@ -103,22 +105,15 @@ GameTechAGCRenderer::GameTechAGCRenderer(Window* window) : AGCRenderer(window), 
 
 	Debug::CreateDebugFont("PressStart2P.fnt", *LoadTexture("PressStart2P.png"));
 
-	shadowTarget	= CreateDepthBufferTarget(SHADOW_SIZE, SHADOW_SIZE);
-	shadowMap		= CreateFrameBufferTextureSlot("Shadowmap");
-
-	createBuffer("Scene", &sceneTarget, &sceneTexture, &sceneSampler);
-	createBuffer("Screen", &screenTarget, &screenTex, nullptr);
-
-	shadowSampler.init()
-		.setXyFilterMode(
-			sce::Agc::Core::Sampler::FilterMode::kPoint,	//magnification
-			sce::Agc::Core::Sampler::FilterMode::kPoint		//minificaction
-		)
-		.setMipFilterMode(sce::Agc::Core::Sampler::MipFilterMode::kPoint);
+	sceneBuffer = createBuffer("Scene", FrameBuffer::Slot::Color);
+	sceneNormalBuffer = createBuffer("SceneNormal", FrameBuffer::Slot::Normal);
+	lightDiffuse = createBuffer("LightsDiffuse", FrameBuffer::Slot::Color);
+	lightSpecular = createBuffer("LightsSpecular", FrameBuffer::Slot::Specular);
+	screenBuffer = createBuffer("Screen", FrameBuffer::Slot::Color);
 }
 
 GameTechAGCRenderer::~GameTechAGCRenderer()	{
-
+	delete sphere;
 }
 
 Mesh* GameTechAGCRenderer::LoadMesh(const std::string& name) {
@@ -130,28 +125,28 @@ Mesh* GameTechAGCRenderer::LoadMesh(const std::string& name) {
 
 NCL::PS5::AGCTexture* GameTechAGCRenderer::CreateFrameBufferTextureSlot(const std::string& name) {
 	uint32_t index = textureMap.size();
-	AGCTexture* t = new AGCTexture(allocator);
-
-	textureMap.insert({ name, t });
+	auto t = std::make_unique<AGCTexture>(allocator);
 	t->SetAssetID(index);
 	bindlessTextures[t->GetAssetID()] = *t->GetAGCPointer();
 
-	return t;
+	auto ptr = t.get();
+	textureMap.insert({ name, std::move(t) });
+	return ptr;
 }
 
 Texture* GameTechAGCRenderer::LoadTexture(const std::string& name) {
 	auto found = textureMap.find(name);
 	if (found != textureMap.end()) {
-		return (Texture*)found->second;
+		return (Texture*)found->second.get();
 	}
-	AGCTexture* t = new AGCTexture(name, allocator);
-
+	auto t = std::make_unique<AGCTexture>(name, allocator);
 	t->SetAssetID(textureMap.size());
-	textureMap.insert({name, t});
-
 	bindlessTextures[t->GetAssetID()] = *t->GetAGCPointer();
 
-	return (Texture*)t;
+	auto ptr = t.get();
+	textureMap.insert({name, std::move(t)});
+
+	return ptr;
 }
 
 void GameTechAGCRenderer::RenderFrame() {
@@ -160,10 +155,7 @@ void GameTechAGCRenderer::RenderFrame() {
 	currentFrame->data.Reset();
 
 	currentFrame->globalDataOffset	= 0;
-	currentFrame->objectStateOffset = sizeof(ShaderConstants);
-	currentFrame->debugLinesOffset = 0;
 	currentFrame->debugTextOffset	= 0;
-	currentFrame->uiOffset = 0;
 	currentFrame->textVertCount		= 0;
 	currentFrame->lineVertCount		= 0;
 
@@ -172,16 +164,14 @@ void GameTechAGCRenderer::RenderFrame() {
 	//Step 2: Walk the object list and build up the object set and required buffer memory
 	UpdateObjectList();
 	//Step 4: Go through the geometry and darw it to a shadow map
-	ShadowmapPass();
-	//Step 5: Draw a skybox to our main scene render target
-	SkyboxPass();
 	//Step 6: Draw the scene to our main scene render target
 	MainRenderPass();
 
 	// Step 7: Apply post processing to the scene buffer
+	LightPass();
 	PostProcessPass();
 
-	//Step 8: Draw UI to the post-processed scene
+	////Step 8: Draw UI to the post-processed scene
 	UiPass();
 	UpdateDebugData();
 	RenderDebugLines();
@@ -199,9 +189,7 @@ This method builds a struct that
 */
 void GameTechAGCRenderer::WriteRenderPassConstants() {
 	ShaderConstants frameData;
-	frameData.lightColour = Vector4(0.8f, 0.8f, 0.5f, 1.0f);
-	frameData.lightRadius = 1000.0f;
-	frameData.lightPosition = Vector3(-100.0f, 60.0f, -100.0f);
+	frameData.screenSize = Vector2(ScreenSize.x, ScreenSize.y);
 	frameData.cameraPos = camera->GetPosition();
 
 	frameData.viewMatrix = camera->BuildViewMatrix();
@@ -213,13 +201,9 @@ void GameTechAGCRenderer::WriteRenderPassConstants() {
 	frameData.inverseViewMatrix = Matrix::Inverse(frameData.viewMatrix);
 	frameData.inverseProjMatrix = Matrix::Inverse(frameData.projMatrix);
 
-	frameData.orthoMatrix = Matrix::Orthographic(0.0f, 100.0f, 100.0f, 0.0f, -1.0f, 1.0f);
-	frameData.shadowMatrix = Matrix::Perspective(50.0f, 500.0f, 1.0f, 45.0f) *
-		Matrix::View(frameData.lightPosition, Vector3(0, 0, 0), Vector3(0, 1, 0));
+	frameData.orthoMatrix = Matrix::Orthographic(0.0f, 1.0f, 1.0f, 0.0f, -1.0f, 1.0f, true);
 
-	frameData.shadowID = shadowMap->GetAssetID();
-
-	frameData.vingetteSettings.enabled = vignetteOn;
+	frameData.vingetteSettings.enabled = GetVignetteOn();
 	frameData.vingetteSettings.color = vignetteColour;
 	frameData.vingetteSettings.intensity = vignetteIntensity;
 	frameData.vingetteSettings.pulse = vignettePulse;
@@ -227,7 +211,6 @@ void GameTechAGCRenderer::WriteRenderPassConstants() {
 	currentFrame->data.WriteData<ShaderConstants>(frameData); //Let's start filling up our frame data!
 
 	currentFrame->data.AlignData(128);
-	currentFrame->objectStateOffset = currentFrame->data.bytesWritten;
 }
 
 void GameTechAGCRenderer::DrawObjects() {
@@ -274,93 +257,27 @@ void GameTechAGCRenderer::DrawObjects() {
 	}
 }
 
-void GameTechAGCRenderer::SkyboxPass() {
-	frameContext->setShaders(nullptr, skyboxVertexShader->GetAGCPointer(), skyboxPixelShader->GetAGCPointer(), sce::Agc::UcPrimitiveType::Type::kTriList);
-
-	sce::Agc::CxViewport viewPort;
-	sce::Agc::Core::setViewport(&viewPort, SCREENWIDTH, SCREENHEIGHT, 0, 0, -1.0f, 1.0f);
-	frameContext->m_sb.setState(viewPort);
-
-	sce::Agc::CxRenderTargetMask rtMask = sce::Agc::CxRenderTargetMask().init().setMask(0, 0xFF);
-	frameContext->m_sb.setState(rtMask);
-	frameContext->m_sb.setState(sceneTarget);
-
-	frameContext->m_sb.setState(depthTarget);
-
-	sce::Agc::CxDepthStencilControl depthControl;
-	depthControl.init();
-	depthControl.setDepth(sce::Agc::CxDepthStencilControl::Depth::kDisable);
-	depthControl.setDepthFunction(sce::Agc::CxDepthStencilControl::DepthFunction::kAlways);
-	depthControl.setDepthWrite(sce::Agc::CxDepthStencilControl::DepthWrite::kDisable);
-	frameContext->m_sb.setState(depthControl);
-
-	frameContext->m_bdr.getStage(sce::Agc::ShaderType::kGs)
-		.setConstantBuffers(0, 1, &currentFrame->constantBuffer);
-
-	frameContext->m_bdr.getStage(sce::Agc::ShaderType::kPs)
-		.setSamplers(0, 1, &defaultSampler)
-		.setTextures(1, 1, skyboxTexture->GetAGCPointer());
-
-	unitQuad->BindVertexBuffers(frameContext->m_bdr.getStage(sce::Agc::ShaderType::kGs));
-	DrawBoundMesh(*frameContext, *unitQuad);
-}
-
-void GameTechAGCRenderer::ShadowmapPass() {
-	sce::Agc::Toolkit::Result tk1 = sce::Agc::Toolkit::clearDepthRenderTargetCs(&frameContext->m_dcb, &shadowTarget);
-	sce::Agc::Toolkit::Result wat = frameContext->resetToolkitChangesAndSyncToGl2(tk1);
-
-	frameContext->setShaders(nullptr, shadowVertexShader->GetAGCPointer(), shadowPixelShader->GetAGCPointer(), sce::Agc::UcPrimitiveType::Type::kTriList);
-
-	sce::Agc::CxViewport viewPort;
-	sce::Agc::Core::setViewport(&viewPort, SHADOW_SIZE, SHADOW_SIZE, 0, 0, -1.0f, 1.0f);
-	frameContext->m_sb.setState(viewPort);
-
-	sce::Agc::CxRenderTargetMask rtMask = sce::Agc::CxRenderTargetMask().init().setMask(0, 0x0);
-	frameContext->m_sb.setState(rtMask);
-	frameContext->m_sb.setState(shadowTarget);
-
-	sce::Agc::CxDepthStencilControl depthControl;
-	depthControl
-		.init()
-		.setDepth(sce::Agc::CxDepthStencilControl::Depth::kEnable)
-		.setDepthFunction(sce::Agc::CxDepthStencilControl::DepthFunction::kLessEqual)
-		.setDepthWrite(sce::Agc::CxDepthStencilControl::DepthWrite::kEnable);
-
-	frameContext->m_sb.setState(depthControl);
-
-	frameContext->m_bdr.getStage(sce::Agc::ShaderType::kGs)
-		.setConstantBuffers(0, 1, &currentFrame->constantBuffer)
-		.setBuffers(0, 1, &currentFrame->objectBuffer)
-		.setBuffers(1, 1, &arrayBuffer);
-
-	frameContext->m_bdr.getStage(sce::Agc::ShaderType::kPs)
-		.setSamplers(0, 1, &defaultSampler)
-		.setBuffers(1, 1, &textureBuffer);
-
-	DrawObjects();
-
-	sce::Agc::Core::gpuSyncEvent(&frameContext->m_dcb, sce::Agc::Core::SyncWaitMode::kDrainGraphics, sce::Agc::Core::SyncCacheOp::kFlushCompressedDepthBufferForTexture);
-
-	const bool htileTC = (shadowTarget.getTextureCompatiblePlaneCompression() == sce::Agc::CxDepthRenderTarget::TextureCompatiblePlaneCompression::kEnable);
-	const sce::Agc::Core::MaintainCompression maintainCompression = htileTC ? sce::Agc::Core::MaintainCompression::kEnable : sce::Agc::Core::MaintainCompression::kDisable;
-
-	sce::Agc::Core::translate(&bindlessTextures[shadowMap->GetAssetID()], &shadowTarget, sce::Agc::Core::DepthRenderTargetComponent::kDepth, maintainCompression);
-}
-
 void GameTechAGCRenderer::MainRenderPass() {
 	frameContext->setShaders(nullptr, defaultVertexShader->GetAGCPointer(), defaultPixelShader->GetAGCPointer(), sce::Agc::UcPrimitiveType::Type::kTriList);
 
-	sce::Agc::CxViewport viewPort;
-	sce::Agc::Core::setViewport(&viewPort, SCREENWIDTH, SCREENHEIGHT, 0, 0, -1.0f, 1.0f);
-	frameContext->m_sb.setState(viewPort);
+	useViewPort(frameContext, ScreenSize);
 	frameContext->m_sb.setState(backBuffers[currentSwap].targetMask);
 	frameContext->m_sb.setState(backBuffers[currentSwap].renderTarget);
 
-	sce::Agc::CxRenderTargetMask rtMask = sce::Agc::CxRenderTargetMask().init().setMask(0, 0xFF);
+	sce::Agc::CxRenderTargetMask rtMask = sce::Agc::CxRenderTargetMask().init().setMask(0, 0xFF).setMask(1, 0xff);
 	frameContext->m_sb.setState(rtMask);
-	frameContext->m_sb.setState(sceneTarget);
+	frameContext->m_sb.setState(sceneBuffer.target);
+	frameContext->m_sb.setState(sceneNormalBuffer.target);
 
 	frameContext->m_sb.setState(depthTarget);
+
+	sce::Agc::CxBlendControl blendControl;
+	blendControl.init()
+		.setBlend(sce::Agc::CxBlendControl::Blend::kEnable)
+		.setColorSourceMultiplier(sce::Agc::CxBlendControl::ColorSourceMultiplier::kSrcAlpha)
+		.setColorDestMultiplier(sce::Agc::CxBlendControl::ColorDestMultiplier::kOneMinusSrcAlpha)
+		.setColorBlendFunc(sce::Agc::CxBlendControl::ColorBlendFunc::kAdd);
+	frameContext->m_sb.setState(blendControl);
 
 	sce::Agc::CxDepthStencilControl depthControl;
 	depthControl.init();
@@ -377,29 +294,26 @@ void GameTechAGCRenderer::MainRenderPass() {
 
 	frameContext->m_bdr.getStage(sce::Agc::ShaderType::kGs)
 		.setConstantBuffers(0, 1, &currentFrame->constantBuffer)
-		.setBuffers(0, 1, &currentFrame->objectBuffer)
+		.setBuffers(0, 1, &currentFrame->objects.buffer)
 		.setBuffers(1, 1, &arrayBuffer);
 
 	frameContext->m_bdr.getStage(sce::Agc::ShaderType::kPs)
 		.setConstantBuffers(0, 1, &currentFrame->constantBuffer)
 		.setBuffers(0, 1, &textureBuffer)
-		.setSamplers(0, 1, &defaultSampler)
-		.setSamplers(1, 1, &shadowSampler);
+		.setSamplers(0, 1, &defaultSampler);
 	DrawObjects();
 }
 
 void GameTechAGCRenderer::UiPass() {
 	frameContext->setShaders(nullptr, uiVertexShader->GetAGCPointer(), uiPixelShader->GetAGCPointer(), sce::Agc::UcPrimitiveType::Type::kTriList);
 
-	sce::Agc::CxViewport viewPort;
-	sce::Agc::Core::setViewport(&viewPort, SCREENWIDTH, SCREENHEIGHT, 0, 0, -1.0f, 1.0f);
-	frameContext->m_sb.setState(viewPort);
+	useViewPort(frameContext, ScreenSize);
 	frameContext->m_sb.setState(backBuffers[currentSwap].targetMask);
 	frameContext->m_sb.setState(backBuffers[currentSwap].renderTarget);
 
 	sce::Agc::CxRenderTargetMask rtMask = sce::Agc::CxRenderTargetMask().init().setMask(0, 0xFF);
 	frameContext->m_sb.setState(rtMask);
-	frameContext->m_sb.setState(screenTarget);
+	frameContext->m_sb.setState(screenBuffer.target);
 
 	frameContext->m_sb.setState(depthTarget);
 
@@ -409,25 +323,75 @@ void GameTechAGCRenderer::UiPass() {
 	frameContext->m_sb.setState(depthControl);
 
 	frameContext->m_bdr.getStage(sce::Agc::ShaderType::kGs)
-		.setBuffers(0, 1, &currentFrame->uiBuffer);
+		.setBuffers(0, 1, &currentFrame->ui.buffer);
 	frameContext->m_bdr.getStage(sce::Agc::ShaderType::kPs)
 		.setBuffers(0, 1, &textureBuffer)
 		.setSamplers(0, 1, &defaultSampler);
 
 	halfUnitQuad->BindVertexBuffers(frameContext->m_bdr.getStage(sce::Agc::ShaderType::kGs));
-	DrawBoundMeshInstanced(*frameContext, *halfUnitQuad, uiElements.size());
+	DrawBoundMeshInstanced(*frameContext, *halfUnitQuad, frameSprites.size());
+}
+
+void GameTechAGCRenderer::LightPass()
+{
+	// Clear the FBO using a compute shader, waits for it to complete before continuing operations to avoid race conditions
+	auto result = sce::Agc::Toolkit::clearRenderTargetCs(&frameContext->m_dcb, &lightDiffuse.target, sce::Agc::Toolkit::RenderTargetClearOp::kAuto);
+	result |= sce::Agc::Toolkit::clearRenderTargetCs(&frameContext->m_dcb, &lightSpecular.target, sce::Agc::Toolkit::RenderTargetClearOp::kAuto);
+	frameContext->resetToolkitChangesAndSyncToGl2(result);
+
+	frameContext->setShaders(nullptr, deferredVertexShader->GetAGCPointer(), deferredPixelShader->GetAGCPointer(), sce::Agc::UcPrimitiveType::Type::kTriList);
+	useViewPort(frameContext, ScreenSize);
+
+	sce::Agc::CxRenderTargetMask rtMask;
+	rtMask.init().setMask(0, 0xff).setMask(1, 0xff);
+	frameContext->m_sb.setState(rtMask)
+		.setState(lightDiffuse.target)
+		.setState(lightSpecular.target);
+
+	sce::Agc::CxPrimitiveSetup primSetup;
+	primSetup.init().setCullFace(sce::Agc::CxPrimitiveSetup::CullFace::kFront);
+	frameContext->m_sb.setState(primSetup);
+
+	sce::Agc::CxDepthStencilControl depthControl;
+	depthControl.init().setDepth(sce::Agc::CxDepthStencilControl::Depth::kDisable).setDepthFunction(sce::Agc::CxDepthStencilControl::DepthFunction::kAlways);
+	frameContext->m_sb.setState(depthControl);
+
+	sce::Agc::CxBlendControl blendControl;
+	blendControl.init()
+		.setBlend(sce::Agc::CxBlendControl::Blend::kEnable)
+		.setColorSourceMultiplier(sce::Agc::CxBlendControl::ColorSourceMultiplier::kOne)
+		.setColorDestMultiplier(sce::Agc::CxBlendControl::ColorDestMultiplier::kOne)
+		.setColorBlendFunc(sce::Agc::CxBlendControl::ColorBlendFunc::kAdd);
+	frameContext->m_sb.setState(blendControl);
+
+	frameContext->m_bdr.getStage(sce::Agc::ShaderType::kGs)
+		.setConstantBuffers(0, 1, &currentFrame->constantBuffer)
+		.setBuffers(0, 1, &currentFrame->lights.buffer);
+
+	frameContext->m_bdr.getStage(sce::Agc::ShaderType::kPs)
+		.setConstantBuffers(0, 1, &currentFrame->constantBuffer)
+		.setBuffers(0, 1, &currentFrame->lights.buffer)
+		.setSamplers(1, 1, &sceneNormalBuffer.sampler).setTextures(1, 1, sceneNormalBuffer.texture->GetAGCPointer())
+		.setSamplers(2, 1, &depthSampler).setTextures(2, 1, depthTexture->GetAGCPointer());
+
+	sphere->BindVertexBuffers(frameContext->m_bdr.getStage(sce::Agc::ShaderType::kGs));
+	DrawBoundMeshInstanced(*frameContext, *sphere, lights.size());
 }
 
 void GameTechAGCRenderer::PostProcessPass()
 {
 	frameContext->setShaders(nullptr, postVertexShader->GetAGCPointer(), postPixelShader->GetAGCPointer(), sce::Agc::UcPrimitiveType::Type::kTriList);
-	sce::Agc::CxViewport viewPort;
-	sce::Agc::Core::setViewport(&viewPort, SCREENWIDTH, SCREENHEIGHT, 0, 0, -1.0f, 1.0f);
-	frameContext->m_sb.setState(viewPort);
+	useViewPort(frameContext, ScreenSize);
 
 	sce::Agc::CxRenderTargetMask rtMask = sce::Agc::CxRenderTargetMask().init().setMask(0, 0xFF);
 	frameContext->m_sb.setState(rtMask);
-	frameContext->m_sb.setState(screenTarget);
+	frameContext->m_sb.setState(screenBuffer.target);
+
+	sce::Agc::CxBlendControl blendControl;
+	blendControl.init().setBlend(sce::Agc::CxBlendControl::Blend::kDisable);
+	frameContext->m_sb.setState(blendControl);
+
+	frameContext->m_sb.setState(sce::Agc::CxPrimitiveSetup().init().setCullFace(sce::Agc::CxPrimitiveSetup::CullFace::kBack));
 
 	sce::Agc::CxDepthStencilControl depthControl;
 	depthControl.init();
@@ -438,8 +402,9 @@ void GameTechAGCRenderer::PostProcessPass()
 
 	frameContext->m_bdr.getStage(sce::Agc::ShaderType::kPs)
 		.setConstantBuffers(0, 1, &currentFrame->constantBuffer)
-		.setSamplers(0, 1, &sceneSampler)
-		.setTextures(0, 1, sceneTexture->GetAGCPointer());
+		.setSamplers(0, 1, &sceneBuffer.sampler).setTextures(0, 1, sceneBuffer.texture->GetAGCPointer())
+		.setSamplers(1, 1, &lightDiffuse.sampler).setTextures(1, 1, lightDiffuse.texture->GetAGCPointer())
+		.setSamplers(2, 1, &lightSpecular.sampler).setTextures(2, 1, lightSpecular.texture->GetAGCPointer());
 
 	unitQuad->BindVertexBuffers(frameContext->m_bdr.getStage(sce::Agc::ShaderType::kGs));
 	DrawBoundMesh(*frameContext, *unitQuad);
@@ -456,15 +421,13 @@ void GameTechAGCRenderer::UpdateDebugData() {
 	}
 	currentFrame->lineVertCount = (int)lines.size() * 2;
 
-	currentFrame->debugLinesOffset = currentFrame->data.bytesWritten;
-
 	currentFrame->data.WriteData((void*)lines.data(), (size_t)currentFrame->lineVertCount * LINE_STRIDE);
 
 	currentFrame->debugTextOffset = currentFrame->data.bytesWritten;
 	std::vector< NCL::Rendering::SimpleFont::InterleavedTextVertex> verts;
 
 	for (const auto& s : strings) {
-		float size = 20.0f;
+		float size = 0.2f;
 		Debug::GetDebugFont()->BuildInterleavedVerticesForString(s.data, s.position, s.colour, size, verts);
 		//can now copy to GPU visible mem
 		size_t count = verts.size() * TEXT_STRIDE;
@@ -483,13 +446,10 @@ void GameTechAGCRenderer::DisplayRenderPass() {
 	sce::Agc::DispatchModifier modifier = gammaCompute->GetAGCPointer()->m_specials->m_dispatchModifier;
 
 	sce::Agc::Core::Texture outputTex; //Alias for our framebuffer tex;
-	SceError error = sce::Agc::Core::translate(&outputTex, &backBuffers[currentSwap].renderTarget, sce::Agc::Core::RenderTargetComponent::kData);
-	if (error != SCE_OK) {
-		std::cerr << "Error displaying render pass" << std::endl;
-	}
+	checkError(sce::Agc::Core::translate(&outputTex, &backBuffers[currentSwap].renderTarget, sce::Agc::Core::RenderTargetComponent::kData));
 
 	frameContext->m_bdr.getStage(sce::Agc::ShaderType::kCs)
-		.setTextures(0, 1, screenTex->GetAGCPointer())
+		.setTextures(0, 1, screenBuffer.texture->GetAGCPointer())
 		.setRwTextures(1, 1, &outputTex);
 	uint32_t xDims = (outputTex.getWidth() + 7) / 8;
 	uint32_t yDims = (outputTex.getHeight() + 7) / 8;
@@ -513,7 +473,7 @@ void GameTechAGCRenderer::RenderDebugLines() {
 
 	sce::Agc::Core::BufferSpec bufSpec;
 	bufSpec.initAsRegularBuffer(dataPos, LINE_STRIDE, dataCount);
-	SceError error = sce::Agc::Core::initialize(&currentFrame->debugLineBuffer, &bufSpec);
+	checkError(sce::Agc::Core::initialize(&currentFrame->debugLineBuffer, &bufSpec));
 
 	frameContext->m_bdr.getStage(sce::Agc::ShaderType::kGs)
 		.setConstantBuffers(0, 1, &currentFrame->constantBuffer)
@@ -552,7 +512,7 @@ void GameTechAGCRenderer::RenderDebugText() {
 
 	sce::Agc::Core::BufferSpec bufSpec;
 	bufSpec.initAsRegularBuffer(dataPos, TEXT_STRIDE, dataCount);
-	SceError error = sce::Agc::Core::initialize(&currentFrame->debugTextBuffer, &bufSpec);
+	checkError(sce::Agc::Core::initialize(&currentFrame->debugTextBuffer, &bufSpec));
 
 	frameContext->m_bdr.getStage(sce::Agc::ShaderType::kGs)
 		.setConstantBuffers(0, 1, &currentFrame->constantBuffer)
@@ -568,23 +528,26 @@ void GameTechAGCRenderer::RenderDebugText() {
 }
 
 void GameTechAGCRenderer::UpdateObjectList() {
-	char* dataPos = currentFrame->data.data;
+	currentFrame->objects.begin(currentFrame);
 	for (auto g : frameObjects) {
 		ObjectState state;
 		Matrix4 transMatrix;
 		g->getParent()->GetTransform().getOpenGLMatrix((float*)&transMatrix);
 		state.modelMatrix = transMatrix * Matrix::Scale(g->getParent()->getRenderScale());
+		// Matrix without translation components, for normal transforms
+		Matrix3 transMat3 = Matrix::FromMat4(state.modelMatrix);
+		state.normalMatrix = Matrix::FromMat3(Matrix::InverseTranspose(transMat3));
 
 		state.colour = g->GetColour();
 		state.texRepeats = g->GetTexRepeating();
 		state.texScale = g->getParent()->getRenderScale() * g->GetTexScaleMultiplier();
-		state.index[0] = 0; //Default Texture
-		state.index[1] = 0; //Skinning buffer
+		state.skinningIndex = NULLTEX;
 
 		Texture* t = g->GetDefaultTexture();
-		if (t) {
-			state.index[0] = t->GetAssetID();
-		}
+		state.texIndex = t ? t->GetAssetID() : NULLTEX;
+
+		Texture* normal = g->GetNormalMap();
+		state.normalIndex = normal ? normal->GetAssetID() : NULLTEX;
 
 		AGCMesh* m = (AGCMesh*)g->GetMesh();
 		if (m && m->GetJointCount() > 0) {//It's a skeleton mesh, need to update transformed vertices buffer
@@ -603,7 +566,7 @@ void GameTechAGCRenderer::UpdateObjectList() {
 				bufSpec.initAsRegularBuffer(vertexData, vertexSize, vertexCount);
 
 				sce::Agc::Core::Buffer vBuffer;
-				SceError error = sce::Agc::Core::initialize(&vBuffer, &bufSpec);
+				checkError(sce::Agc::Core::initialize(&vBuffer, &bufSpec));
 
 				uint32_t bufferID = bufferCount++;
 				b = new AGCBuffer(vBuffer, vertexData);
@@ -612,19 +575,16 @@ void GameTechAGCRenderer::UpdateObjectList() {
 
 				bindlessBuffers[bufferID] = vBuffer;
 			}
-			state.index[1] = b->GetAssetID();
+			state.skinningIndex = b->GetAssetID();
 
 			frameJobs.push_back({ g, b->GetAssetID() });
 		}
 		currentFrame->data.WriteData<ObjectState>(state);
 	}
-	sce::Agc::Core::BufferSpec bufSpec;
-	bufSpec.initAsRegularBuffer(dataPos, sizeof(ObjectState), frameObjects.size());
-	sce::Agc::Core::initialize(&currentFrame->objectBuffer, &bufSpec);
+	currentFrame->objects.end(currentFrame);
 
-	currentFrame->uiOffset = currentFrame->data.bytesWritten;
-	char* uiDataPos = currentFrame->data.data;
-	for (auto& ui : uiElements) {
+	currentFrame->ui.begin(currentFrame);
+	for (auto& ui : frameSprites) {
 		UiState state;
 		state.colour = ui.color;
 		state.position = ui.position;
@@ -632,8 +592,32 @@ void GameTechAGCRenderer::UpdateObjectList() {
 		state.texture = ui.texture != nullptr ? ui.texture->GetAssetID() : NULLTEX;
 		currentFrame->data.WriteData(state);
 	}
+	currentFrame->ui.end(currentFrame);
 
-	sce::Agc::Core::BufferSpec uiBufSpec;
-	uiBufSpec.initAsRegularBuffer(uiDataPos, sizeof(UiState), uiElements.size());
-	sce::Agc::Core::initialize(&currentFrame->uiBuffer, &uiBufSpec);
+	currentFrame->lights.begin(currentFrame);
+	for (auto& light : lights) {
+		LightState state;
+		state.color = light->colour;
+		state.position = light->worldPosition;
+		state.radius = light->radius;
+		state.intensity = light->intensity;
+		currentFrame->data.WriteData(state);
+	}
+	currentFrame->lights.end(currentFrame);
+}
+
+template<typename T>
+inline void GameTechAGCRenderer::FrameData::UniformArray<T>::begin(FrameData* frame)
+{
+	start = frame->data.data;
+}
+
+template<typename T>
+inline void GameTechAGCRenderer::FrameData::UniformArray<T>::end(FrameData* frame)
+{
+	sce::Agc::Core::BufferSpec spec;
+	auto bytesWritten = frame->data.data - start;
+	auto elemsWritten = bytesWritten / sizeof(T);
+	spec.initAsRegularBuffer(start, sizeof(T), elemsWritten);
+	sce::Agc::Core::initialize(&buffer, &spec);
 }

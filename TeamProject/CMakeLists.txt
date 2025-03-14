@@ -4,6 +4,8 @@ set(SOURCES
     BulletDebug.h
     GameTechRendererInterface.cpp
     GameTechRendererInterface.h
+    Scoreboard.cpp
+    Scoreboard.h
     TutorialGame.cpp
     TutorialGame.h
     PlayerController.cpp
@@ -93,6 +95,9 @@ else()
     list(APPEND SOURCES
         GameTechAGCRenderer.h
         GameTechAGCRenderer.cpp
+
+        ${CMAKE_SOURCE_DIR}/Assets/Shaders/PSSL/types.h
+        ${CMAKE_SOURCE_DIR}/Assets/Shaders/PSSL/ShaderConstants.psslh
     )
 endif()
 
