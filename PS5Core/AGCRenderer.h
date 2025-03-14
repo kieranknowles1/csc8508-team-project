@@ -16,8 +16,7 @@ License: MIT (see LICENSE file at the top of the source tree)
 
 static const uint32_t SWAPCOUNT = 2;
 
-static const uint32_t SCREENWIDTH = 1920;
-static const uint32_t SCREENHEIGHT = 1080;
+static const NCL::Vector2i ScreenSize(1920, 1080);
 
 struct PS5Shader {
 	uint8_t* allocation = nullptr;
@@ -75,5 +74,7 @@ namespace NCL::PS5 {
 		MemoryAllocator allocator;
 
 		sce::Agc::CxDepthRenderTarget			depthTarget;
+		PS5::AGCTexture* depthTexture;
+		sce::Agc::Core::Sampler depthSampler;
 	};
 }

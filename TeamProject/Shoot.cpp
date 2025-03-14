@@ -1,5 +1,8 @@
 #include "Shoot.h"
 #include "PointLight.h"
+#include "PlayerObject.h"
+#include "TutorialGame.h"
+#include "Multiplayer/GamePackets.hpp"
 
 using namespace NCL;
 using namespace CSC8503;
@@ -35,11 +38,24 @@ std::optional<ShotInfo> Shoot::RayClosest(btVector3 startPos, btVector3 dir) {
     return std::nullopt;
 }
 
-std::optional<ShotInfo> Shoot::ShootBulletPlayer(btVector3 startPos, btVector3 dir, btQuaternion rotation) {
+std::optional<ShotInfo> Shoot::ShootBulletPlayer(btVector3 startPos, btVector3 dir, btQuaternion rotation, float dt) {
     auto rayInfo = RayClosest(startPos, dir);
     // Don't have Rust style and_then until C++23 :(
     if (rayInfo.has_value()) {
-        SpawnBulletMesh(startPos, dir, rotation, &rayInfo.value());
+        if (rayInfo.value().hitObj->getType() == GameObject::Type::Player) {
+            PlayerObject* hit = (PlayerObject*) rayInfo.value().hitObj;
+            hit->Damage(100.0f * dt); // TODO: Don't hard code this.
+
+            if (TutorialGame::GetServerInstance().has_value()) {
+                std::shared_ptr<Packet::DamagePacket> damagePacket = std::make_shared<Packet::DamagePacket>(
+                    hit->GetWorldID(),
+                    100.0f * dt, // TODO: Don't hard code this.
+                    TutorialGame::GetUser()->GetUserID()
+                );
+                TutorialGame::GetServerInstance()->Broadcast(damagePacket);
+            }
+        }
+       // SpawnBulletMesh(startPos, dir, rotation, &rayInfo.value());
         SpawnDecal(&rayInfo.value());
     }
     return rayInfo;

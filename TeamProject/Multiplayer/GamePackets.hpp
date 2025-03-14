@@ -24,7 +24,8 @@ namespace Packet {
         START_GAME = CUSTOM_TYPE + 4,
         USER_INFO = CUSTOM_TYPE + 5,
         ASSIGN_HOST = CUSTOM_TYPE + 6,
-        REQUEST_USERID = CUSTOM_TYPE + 7
+        REQUEST_USERID = CUSTOM_TYPE + 7,
+        DAMAGE = CUSTOM_TYPE + 8
     };
 
 
@@ -59,7 +60,7 @@ namespace Packet {
         /**
          * @brief Get the Angular Velocity of the Delta Packet.
          * 
-         * This is the current angular velocity of thet object on the server.
+         * This is the current angular velocity of the object on the server.
          * 
          * @return btVector3 containing the angular velocity.
          */
@@ -92,14 +93,12 @@ namespace Packet {
 
         /**
          * @brief Get the new position of the game object from the packet.
-         * 
          * @return btVector3 containing the new position data.
          */
         inline btVector3 GetPosition() const { return m_position; }
 
         /**
          * @brief Get the new orientation of the game object from the packet.
-         * 
          * @return btQaternion containing the new orientation data. 
          */
         inline btQuaternion GetOrientation() const { return m_orientation; }
@@ -132,6 +131,24 @@ namespace Packet {
         PlayerState m_newState;
     };
 
+
+    /**
+     * @brief A packet that updates an objects upVector to change its gravity.
+     */
+    class ObjectChangeGravityPacket : public Packet {
+    public:
+        ObjectChangeGravityPacket(int objectID, const btVector3& upDirection, uint32_t sequenceNum) :
+            Packet(static_cast<Type>(PacketType::OBJECT_CHANGE_GRAVITY), static_cast<int>(Channel::FREQUENT), sequenceNum),
+            m_objectID(objectID), m_upDirection(upDirection)
+        {}
+
+        int GetTargetID() const { return m_objectID; }
+        btVector3 GetUpDirection() const { return m_upDirection; }
+
+    private:
+        int m_objectID;
+        btVector3 m_upDirection;
+    };
 
     /**
      * @brief A simple packet to be broadcast to all players simultaneously to
@@ -212,6 +229,33 @@ namespace Packet {
 
     private:
         ENetPeer* m_peer;
+    };
+
+
+    /**
+     * @brief Simple packet for sending damage across the network.
+     */
+    class DamagePacket : public Packet {
+    public:
+        /**
+         * @brief Constructor for the DamagePacket.
+         * @param targetID - the id of the target to damage.
+         * @param damage - the amount of damage to deal.
+         * @param dealer - the id of the user who dealt the damage.
+         */
+        DamagePacket(int targetID, float damage, int dealer) :
+            Packet(static_cast<Type>(PacketType::DAMAGE), static_cast<uint8_t>(Channel::RELIABLE), 0),
+            m_targetID(targetID), m_damage(damage), m_dealer(dealer)
+        {}
+
+        inline int GetTargetID() const { return m_targetID; }
+        inline float GetDamage() const { return m_damage; }
+        inline int GetDamageDealer() const { return m_dealer; }
+
+    private:
+        int m_targetID;
+        float m_damage;
+        int m_dealer;
     };
 }
 

@@ -122,6 +122,10 @@ int main(int argc, char** argv) {
     while (window->UpdateWindow() && !window->GetKeyboard()->KeyPressed(KeyCodes::ESCAPE)) {
         float dt = window->GetTimer().GetTimeDeltaSeconds();
         controller->Update(dt);
+        window->SetTitle("Gametech frame time:" + std::to_string(1000.0f * dt));
+
+        //game->UpdateGame(dt);
+
 
         machine.Update(dt);
         renderer->collectFrameObjects(game->getWorld());

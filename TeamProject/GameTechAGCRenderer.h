@@ -6,10 +6,8 @@
 
 #include "../PS5Core/AGCBuffer.h"
 
-#include "./Shaders/PSSL/Interop.h"				//Always include this before any PSSL headers
 #include "./Shaders/PSSL/ShaderConstants.psslh"
-#include "./Shaders/PSSL/TechObject.psslh"
-#include "./Shaders/PSSL/UIObject.psslh"
+#include "Shaders/PSSL/types.h"
 
 namespace NCL {
 	namespace Rendering {
@@ -58,11 +56,11 @@ namespace NCL {
 			void RenderDebugLines();
 			void RenderDebugText();
 
-			void ShadowmapPass();
 			void SkyboxPass();
 			void MainRenderPass();
 
 			void UiPass();
+			void LightPass();
 			void PostProcessPass();
 
 			void DisplayRenderPass();
@@ -108,9 +106,20 @@ namespace NCL {
 			};
 
 			struct FrameData {
+				template <typename T>
+				struct UniformArray {
+					sce::Agc::Core::Buffer buffer;
+					char* start;
+
+					void begin(FrameData* frame);
+					void end(FrameData* frame);
+				};
+
+				UniformArray<ObjectState> objects;
+				UniformArray<UiState> ui;
+				UniformArray<LightState> lights;
+
 				sce::Agc::Core::Buffer constantBuffer;
-				sce::Agc::Core::Buffer objectBuffer;
-				sce::Agc::Core::Buffer uiBuffer;
 
 				sce::Agc::Core::Buffer debugLineBuffer;
 				sce::Agc::Core::Buffer debugTextBuffer;
@@ -118,8 +127,6 @@ namespace NCL {
 				BumpAllocator data;
 
 				int globalDataOffset	= 0;	//Where does the global data start in the buffer?
-				int objectStateOffset	= 0;	//Where does the object states start?
-				int uiOffset = 0;
 				int debugLinesOffset	= 0;	//Where do the debug lines start?
 				int debugTextOffset		= 0;	//Where do the debug text verts start?
 
@@ -138,13 +145,14 @@ namespace NCL {
 
 			std::unique_ptr<PS5::AGCMesh> unitQuad;
 			std::unique_ptr<PS5::AGCMesh> halfUnitQuad;
+			PS5::AGCMesh* sphere;
 
 			sce::Agc::Core::Texture*	bindlessTextures;
 			sce::Agc::Core::Buffer*		bindlessBuffers;
 			uint32_t bufferCount;
 
 			sce::Agc::Core::Buffer textureBuffer;
-			std::map<std::string, NCL::PS5::AGCTexture*> textureMap;
+			std::map<std::string, std::unique_ptr<PS5::AGCTexture>> textureMap;
 
 			sce::Agc::Core::Buffer arrayBuffer;
 
@@ -158,9 +166,6 @@ namespace NCL {
 			std::unique_ptr<PS5::AGCShader> uiVertexShader;
 			std::unique_ptr<PS5::AGCShader> uiPixelShader;
 
-			std::unique_ptr<PS5::AGCShader> shadowVertexShader;
-			std::unique_ptr<PS5::AGCShader> shadowPixelShader;
-
 			std::unique_ptr<PS5::AGCShader> skyboxVertexShader;
 			std::unique_ptr<PS5::AGCShader> skyboxPixelShader;
 
@@ -172,23 +177,38 @@ namespace NCL {
 
 			std::unique_ptr<PS5::AGCShader> gammaCompute;
 
+			std::unique_ptr<PS5::AGCShader> deferredVertexShader;
+			std::unique_ptr<PS5::AGCShader> deferredPixelShader;
+
 			std::unique_ptr<PS5::AGCShader> postVertexShader;
 			std::unique_ptr<PS5::AGCShader> postPixelShader;
 
-			sce::Agc::CxDepthRenderTarget		shadowTarget;
-			NCL::PS5::AGCTexture*				shadowMap; //ptr into bindless array
-			sce::Agc::Core::Sampler				shadowSampler;
+			struct FrameBuffer {
+				enum class Slot {
+					Color,
+					Normal,
+					Specular = Normal,
+				};
 
-			void createBuffer(const std::string& name, sce::Agc::CxRenderTarget* outTarget, PS5::AGCTexture** outTexture, sce::Agc::Core::Sampler* optionalSampler);
+				sce::Agc::CxRenderTarget target;
+				PS5::AGCTexture* texture;
+				sce::Agc::Core::Sampler sampler;
+			};
 
-			sce::Agc::CxRenderTarget sceneTarget;
-			NCL::PS5::AGCTexture* sceneTexture;
-			sce::Agc::Core::Sampler sceneSampler;
+			FrameBuffer createBuffer(const std::string& name, FrameBuffer::Slot slot);
 
-			sce::Agc::CxRenderTarget			screenTarget;
-			NCL::PS5::AGCTexture*				screenTex; //ptr into bindless array
+			// Configure a viewport that takes up the requested size
+			void useViewPort(sce::Agc::Core::BasicContext* context, Vector2i size) const;
+
+			FrameBuffer sceneBuffer;
+			FrameBuffer sceneNormalBuffer;
+
+			FrameBuffer lightDiffuse;
+			FrameBuffer lightSpecular;
+
+			FrameBuffer screenBuffer;
 
 			std::vector<SkinningJob> frameJobs;
 		};
-	}
+}
 }

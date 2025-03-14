@@ -20,7 +20,7 @@ struct RespawnPoint {
 class Respawn {
 public:
 	Respawn() { instance = this; }
-	~Respawn();
+	~Respawn() {};
 	static Respawn* GetInstance() { return instance; }
 
 	void InsertRespawn(RespawnPoint* respawnPoint) {

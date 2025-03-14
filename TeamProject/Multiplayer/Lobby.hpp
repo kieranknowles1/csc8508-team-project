@@ -11,7 +11,8 @@ namespace Lobbies {
     enum class LobbyAction : uint8_t {
         JOIN,
         CREATE,
-        LEAVE
+        LEAVE,
+        SET_HOST
     };
 
 
@@ -142,6 +143,11 @@ namespace Lobbies {
             }
             return users;
         }
+
+        /** 
+         * @brief Determine if the given user is the host user.
+         */
+        inline bool IsHost(User user) { return m_hostUser.has_value() && (user.GetUserID() == m_hostUser->GetUserID()); }
 
     private:
         std::optional<User> m_hostUser;

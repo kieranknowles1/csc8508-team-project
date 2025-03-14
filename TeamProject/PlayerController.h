@@ -66,15 +66,15 @@ namespace NCL {
 		private:
 
 			//Player Movement Variables
-			float playerSpeed = 80.0f;
+			float playerSpeed = 130.0f;
 			float jumpHeight = 300.0f;
 			float gravityScale = 300.0f;
-			float cameraHeight = 4.5f;
+			float cameraHeight = 14.0f;
 
 			float sprintMulti = 2.0f;
 			float strafeMulti = 0.65f;
 			float backwardsMulti = 0.55f;
-			float airMulti = 1.0f;
+			float airMulti = 0.75f;
 
 			float crouchingTime = 0.3f;
 			float crouchMulti = 0.4f;
@@ -93,7 +93,7 @@ namespace NCL {
 			float rotateTime = 0.5f;
 
 			//Special Types Variables
-			float bouncePadHeight = 5000.0f;
+			float bouncePadHeight = 7000.0f;
 
 
 			GameTechRendererInterface* renderer;
@@ -115,8 +115,8 @@ namespace NCL {
 			float yaw = 0;
 			bool crouchTransition = false;
 			float currentHeight;
-			float standingHeight = 6.5f;
-			float crouchingHeight = 2.0f;
+			float standingHeight = 20.0f;
+			float crouchingHeight = 6.0f;
 			float currentCrouchingTimer=0;
 			float currentStandingTimer=10.0f;
 			bool isCrouching;
@@ -139,6 +139,8 @@ namespace NCL {
 			btIDebugDraw* debugDrawer;
 			bool onIce = false;
 			btVector3 previousVelocity;
+			bool firing;
+			int laserID;
 
 			btVector3 forward;
 			btVector3 up;
@@ -155,7 +157,7 @@ namespace NCL {
 			bool CheckCeling();
 			btVector3 FindFloorNormal();
 			void SetGunTransform();
-			void FireShot();
+			void FireShot(float dt);
 			void GetAllDirections();
 			void HandleYaw();
 			void RotationCalculations();
