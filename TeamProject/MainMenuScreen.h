@@ -6,7 +6,8 @@
 //#include "Window.h"
 #include <CSC8503CoreClasses/Debug.h>
 #include <iostream>
-#include <GameScreen.h>
+#include "GameScreen.h"
+#include "CreditsScreen.h"
 
 namespace NCL::CSC8503 {
 
@@ -44,6 +45,8 @@ public:
                 game->JoinGame(false); //This is join game
                 break;
             case GameMode::CREDITS:
+                *newState = new CreditsScreen(controller, Assets::CREDITS);
+                return PushdownResult::Push;
                 break;
             case GameMode::QUIT:
                 return PushdownResult::Pop;
