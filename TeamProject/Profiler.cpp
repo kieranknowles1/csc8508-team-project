@@ -18,12 +18,12 @@ namespace NCL::CSC8503 {
 
 	void Profiler::printTimes()
 	{
-		Vector2 position(0, 10);
+		Vector2 position(0, 0.1);
 		for (auto& section : times) {
 			std::stringstream str;
 			str << section.first << ": " << std::chrono::duration_cast<std::chrono::microseconds>(section.second).count() / 1000.0f << "ms";
 			Debug::Print(str.str(), position);
-			position.y += 5;
+			position.y += 0.05;
 		}
 	}
 
