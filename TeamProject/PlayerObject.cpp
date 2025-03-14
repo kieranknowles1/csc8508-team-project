@@ -16,10 +16,9 @@ void PlayerObject::Update(float dt) {
     elapsedTime += dt;
 
     // 2 seconds before healing.
-    if (elapsedTime - lastHit > 2.0f) {
-        health += 50 * dt;
+    if (elapsedTime - lastHit > 4.0f) {
+        health += 25 * dt;
         if (health > 100) health = 100.0f;
-        std::cout << health << std::endl;
     }
 
     if (TutorialGame::GetServerInstance().has_value() && (owner == TutorialGame::GetUser())) {

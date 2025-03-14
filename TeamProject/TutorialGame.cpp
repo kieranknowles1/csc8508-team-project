@@ -363,7 +363,7 @@ void TutorialGame::InitWorld() {
 
 PlayerObject* TutorialGame::InitPlayer(btVector3 position, btVector3 upDir) {
     PlayerObject* newPlayer = new PlayerObject();
-    newPlayer = AddPlayerCapsuleToWorld(position, 7.0f, 3.5f, 10.0f);
+    newPlayer = AddPlayerCapsuleToWorld(position, 20.0f, 8.5f, 10.0f);
     // Keep us from clipping when falling too fast
     newPlayer->GetPhysicsObject()->GetRigidBody()->setCcdMotionThreshold(1.0f);
     newPlayer->GetPhysicsObject()->GetRigidBody()->setCcdSweptSphereRadius(0.4f);
@@ -646,7 +646,7 @@ void TutorialGame::JoinGame(bool host) {
 
     if (!host) {
         ENetAddress dest;
-        enet_address_set_host(&dest, "127.0.0.1");
+        enet_address_set_host(&dest, "10.70.33.113");
         dest.port = DEFAULT_PORT;
 
         ConnectToServer(dest);

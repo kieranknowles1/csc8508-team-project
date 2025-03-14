@@ -69,7 +69,7 @@ namespace NCL {
 			float playerSpeed = 80.0f;
 			float jumpHeight = 300.0f;
 			float gravityScale = 300.0f;
-			float cameraHeight = 4.5f;
+			float cameraHeight = 14.0f;
 
 			float sprintMulti = 2.0f;
 			float strafeMulti = 0.65f;
@@ -115,8 +115,8 @@ namespace NCL {
 			float yaw = 0;
 			bool crouchTransition = false;
 			float currentHeight;
-			float standingHeight = 6.5f;
-			float crouchingHeight = 2.0f;
+			float standingHeight = 20.0f;
+			float crouchingHeight = 6.0f;
 			float currentCrouchingTimer=0;
 			float currentStandingTimer=10.0f;
 			bool isCrouching;

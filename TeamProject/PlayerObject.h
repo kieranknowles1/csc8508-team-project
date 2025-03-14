@@ -114,6 +114,7 @@ public:
 			RespawnPoint* point = Respawn::GetInstance()->GetRespawn(worldID - 1);
 			GetPhysicsObject()->GetRigidBody()->getWorldTransform().setOrigin(point->position);
 			setUpDirection(point->orientation);
+			setCollided(0);
 			// TODO: Create Change State packet.
 		}
 	}
