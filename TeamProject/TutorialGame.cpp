@@ -448,7 +448,7 @@ GameObject* TutorialGame::AddGunToWorld(const Vector3& position, Vector3 dimensi
     gun->GetPhysicsObject()->InitBulletPhysics(bulletWorld, shape, inverseMass, hasCollision);
 
     // Setting render object
-    gun->SetRenderObject(new RenderObject(gun, resourceManager->getMeshes().get("PaintballGun.msh"), paintballTexture));
+    gun->SetRenderObject(new RenderObject(gun, resourceManager->getMeshes().get("VD_Raygun_Cartoony_Rigged1.msh"), resourceManager->getMaterials().get("VD_Raygun_Cartoony_Rigged1.mat")));
     gun->GetRenderObject()->SetTexRepeating(true); //scale texture (no stretching)
 
     world->AddGameObject(gun);
@@ -522,7 +522,7 @@ PlayerObject* TutorialGame::AddPlayerCapsuleToWorld(const Vector3& position, flo
     // Initializing the physics object for the capsule
     capsule->GetPhysicsObject()->InitBulletPhysics(bulletWorld, compoundShape, inverseMass);
     //GameObject* newGun = AddCubeToWorld(Vector3(-300, 20, 40), Vector3(0.5, 0.5, 0.3), 0, false);
-    GameObject* newGun = AddGunToWorld(Vector3(-900, 20, 40), Vector3(0.5, 0.5, 0.5), 0, false);
+    GameObject* newGun = AddGunToWorld(Vector3(-900, 20, 40), Vector3(2, 2, 2), 0, false);
     capsule->setGun(newGun);
     world->AddGameObject(capsule);
 
