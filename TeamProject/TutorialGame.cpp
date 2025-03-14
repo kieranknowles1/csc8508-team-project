@@ -727,7 +727,7 @@ void TutorialGame::Start() {
     instance->playerController = new PlayerController(instance->player, instance->gun, instance->controller, instance->mainCamera, instance->bulletWorld,instance->renderer);
 
     instance->navMeshDebug = false;
-    instance->enableAI = true;
+    instance->enableAI = false;
     if (instance->enableAI) {
         instance->InitAI();
     }
