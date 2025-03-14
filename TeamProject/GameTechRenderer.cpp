@@ -209,6 +209,11 @@ GameTechRenderer::GameTechRenderer(Window* window) : OGLRenderer(window), GameTe
 
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
+	//Mesh Animation addditions:
+	MaleGuard = LoadMesh("/MaleGuard/Male_Guard.msh");
+	test = new MeshAnimation("/MaleGuard/Flinches.anm");
+	//material = new MeshMaterial("/MaleGuard/Male_Guard");// not sure if this is the right one   
+
 }
 
 GameTechRenderer::~GameTechRenderer() {
@@ -236,6 +241,8 @@ GameTechRenderer::~GameTechRenderer() {
 	delete fullscreenQuad; //only mesh that needs to be deleted as others are std::make_unique<OGLMesh>
 	delete hdrShader;
 	delete vignetteShader;
+
+	delete MaleGuard;
 
 }
 

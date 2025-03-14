@@ -137,6 +137,13 @@ void TutorialGame::UpdateGame(float dt) {
     //post processing time variable effect:
     pulse += dt;
     renderer->SetVignettePulse(pulse);
+
+    //Mesh Animation additions:
+    aniFrameTime = renderer->GetFrameTime();
+    aniFrameTime -= dt;
+    renderer->SetFrameTime(aniFrameTime);
+
+
 }
 
 

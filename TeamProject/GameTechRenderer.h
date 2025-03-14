@@ -12,6 +12,8 @@
 #include "OGLMesh.h"
 
 #include "GameTechRendererInterface.h"
+#include "MeshAnimation.h"
+#include "MeshMaterial.h"
 
 namespace NCL {
 	namespace CSC8503 {
@@ -141,6 +143,13 @@ namespace NCL {
 			GLuint BDepthTex;
 			void RenderPostProcessing();
 			OGLShader* edgedetectShader;
+
+			//Mesh Animation Additions:
+			OGLMesh* MaleGuard; //trying out unique pointers for now
+			MeshAnimation* test;
+			MeshMaterial* material;
+			vector<GLuint> matTextures;
+
 
 		};
 	}

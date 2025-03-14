@@ -137,6 +137,21 @@ namespace NCL::CSC8503 {
 			}
 		}
 
+		int GetCurrentFrame() const {
+			return currentFrame;
+		}
+
+		void SetCurrentFrame(int value) {
+			currentFrame = value;
+		}
+
+		float GetFrameTime() const {
+			return frameTime;
+		}
+
+		void SetFrameTime(float value) {
+			frameTime = value;
+		}
 	
 
 	protected:
@@ -156,6 +171,10 @@ namespace NCL::CSC8503 {
 		std::vector<PointLight*> lights;
 		std::vector<Laser*> lasers;
 		DecalSystem decalSystem;
+
+		//Mesh Animation additions:
+		int currentFrame = 0;
+		float frameTime = 0.0f;
 	};
 }
 

@@ -234,6 +234,10 @@ namespace NCL {
             //post processing time variable effects
             float pulse = 0;
 
+            //to allow mesh animation to access time:
+            int aniCurrentFrame;
+            float aniFrameTime;
+
         private:
             inline static std::optional<Network> server = std::optional<Network>();
             inline static std::optional<Lobbies::Lobby> lobby = std::optional<Lobbies::Lobby>();
