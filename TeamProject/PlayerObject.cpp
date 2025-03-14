@@ -18,7 +18,7 @@ void PlayerObject::Update(float dt) {
     // 2 seconds before healing.
     if (elapsedTime - lastHit > 4.0f) {
         health += 25 * dt;
-        if (health > 100) health = 100.0f;
+        if (health > maxHealth) health = maxHealth;
     }
 
     if (TutorialGame::GetServerInstance().has_value() && (owner == TutorialGame::GetUser())) {
