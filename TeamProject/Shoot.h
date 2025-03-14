@@ -47,7 +47,7 @@ namespace NCL {
 				player = playerIn; gun = gunIn;
 			};
 			std::optional<ShotInfo> RayClosest(btVector3 startPos, btVector3 dir);
-			std::optional<ShotInfo> ShootBulletPlayer(btVector3 startPos, btVector3 dir,btQuaternion rotation);
+			std::optional<ShotInfo> ShootBulletPlayer(btVector3 startPos, btVector3 dir,btQuaternion rotation, float dt);
 
 		private:
 			//Shot Variables

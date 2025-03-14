@@ -68,8 +68,9 @@ void PlayerController::UpdateMovement(float dt) {
 
 
 void PlayerController::HandleShooting(float dt) {
+
     if (controller->GetDigital(Controller::DigitalControl::Fire)) {
-        FireShot();
+        FireShot(dt);
         crosshair->fire();
         firing = true;
     }
@@ -83,7 +84,7 @@ void PlayerController::HandleShooting(float dt) {
 
 
 
-void PlayerController::FireShot() {
+void PlayerController::FireShot(float dt) {
     // Convert camera pitch & yaw to radians
     float pitchRadians = Maths::DegreesToRadians(camera->GetPitch());
     float yawRadians = Maths::DegreesToRadians(yaw);
@@ -101,6 +102,9 @@ void PlayerController::FireShot() {
    else {
        renderer->updateLaser(laserID, camera->GetPosition() + adjustedOffset, info.value().hitPos);
    }
+
+
+   Shoot::GetInstance()->ShootBulletPlayer(camera->GetPosition(), forwardDir, bulletRotation, dt);
 
 }
 
@@ -364,6 +368,7 @@ void PlayerController::HandleJumping() {
 };
 
 void PlayerController::HandleHurtEffects() {
+    renderer->SetVignetteOn(true);
     float healthLossPercent = (player->GetMaxHealth() - player->health) / player->GetMaxHealth();
     if (healthLossPercent <= 0.001f) {
         renderer->SetVignetteOn(false);
