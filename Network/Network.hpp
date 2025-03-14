@@ -140,6 +140,21 @@ public:
      */
     int GetConnectionCount() const { return m_connections - 1; }
 
+    /**
+     * @brief Add a function to be called when the server Ticks.
+     * The function is called before SendAll() is called.
+     * 
+     * PLEASE ENSURE THE FUNCTION CALL IS THREADSAFE. IT IS CALLED FROM WITHIN
+     * THE NETWORK THREAD.
+     * 
+     * If the value passed to the function is true, it is the end of the tick.
+     * 
+     * @param func - the function to call.
+     */
+    inline void AddTickListener(std::function<void(bool)> func) {
+        m_tickListeners.push_back(func);
+    }
+
 
 protected:
     /**
@@ -189,4 +204,5 @@ private:
 
     ENetHost* m_host = nullptr;
     std::function<void(ENetPeer*)> m_connectCallback;
+    std::vector<std::function<void(bool)>> m_tickListeners;
 };
