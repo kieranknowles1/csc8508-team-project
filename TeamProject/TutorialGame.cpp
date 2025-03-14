@@ -501,7 +501,7 @@ PlayerObject* TutorialGame::AddPlayerCapsuleToWorld(const Vector3& position, flo
     //capsule->SetOrientation(rotation);
 
     // Creating a Bullet collision shape for the capsule
-    btCollisionShape* capsuleShape = new btCapsuleShape(radius * 1.5, height * 3.7);
+    btCollisionShape* capsuleShape = new btCapsuleShape(radius * 1.6, height * 3.7);
 
     // Create a compound shape to apply an offset
     btCompoundShape* compoundShape = new btCompoundShape();
