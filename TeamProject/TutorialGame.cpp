@@ -9,6 +9,7 @@
 #include "Multiplayer/GamePackets.hpp"
 #include "Multiplayer/GamePacketHandlers.hpp"
 #include <CSC8503CoreClasses/Debug.h>
+#include "Colors.h"
 #include "Shoot.h"
 
 #include "Window.h"
@@ -124,12 +125,12 @@ void TutorialGame::UpdateGame(float dt) {
     if (state == GameState::IDLE) {
         if (user.has_value() && lobby.has_value()) {
             if (lobby->IsHost(user.value())) {
-                Debug::Print("Start Game <", Vector2(5, 80));
+                Debug::Print("> Start Game <", Vector2(0.4f, 0.5f));
                 if (controller->GetDigital(Controller::DigitalControl::MenuConfirm)) {
                     StartMultiplayerGame();
                 }
             }
-            Debug::Print("Connected: " + std::to_string(lobby->GetConnectedUsers().size()), Vector2(70, 80));
+            Debug::Print("Connected: " + std::to_string(lobby->GetConnectedUsers().size()) + "/8", Vector2(0.6f, 0.9f));
         }
     }
 
@@ -376,6 +377,7 @@ PlayerObject* TutorialGame::InitPlayer(btVector3 position, btVector3 upDir) {
   
     newPlayer->GetRenderObject()->SetColour(Vector4(playerColour));
     newPlayer->setUpDirection(upDir);
+    newPlayer->setRenderer(renderer);
     return newPlayer;
 }
 
@@ -614,7 +616,9 @@ void TutorialGame::InitNetwork(bool host) {
 
 void TutorialGame::ConnectToServer(ENetAddress& address) {
     server->ConnectTo(&address);
-    while (server->GetConnectionCount() < 1) continue;
+    while (server->GetConnectionCount() < 1) {
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    }
 }
 
 
@@ -639,6 +643,9 @@ void TutorialGame::InitPacketHandlers() {
 
     Packet::DamagePacketHandler* damageHandler = new Packet::DamagePacketHandler();
     Packet::PacketRegister::Register(damageHandler);
+
+    Packet::LaserPacketHandler* laserHandler = new Packet::LaserPacketHandler();
+    Packet::PacketRegister::Register(laserHandler);
 }
 
 
@@ -649,7 +656,7 @@ void TutorialGame::JoinGame(bool host) {
 
     if (!host) {
         ENetAddress dest;
-        enet_address_set_host(&dest, "10.70.33.113");
+        enet_address_set_host(&dest, "127.0.0.1");
         dest.port = DEFAULT_PORT;
 
         ConnectToServer(dest);
@@ -685,6 +692,7 @@ void TutorialGame::Start() {
     instance->player = instance->InitPlayer(respawnPoint->position,respawnPoint->orientation);
     instance->player->SetOwner(user->GetUserID());
     instance->player->SetWorldID(user->GetUserID());
+    instance->player->GetRenderObject()->SetColour(Vector4(Color::GetPlayerColor(user->GetUserID())));
     instance->player->setType(GameObject::Type::Player);
     instance->playerController = new PlayerController(instance->player, instance->gun, instance->controller, instance->mainCamera, instance->bulletWorld,instance->renderer);
 
@@ -718,6 +726,7 @@ void TutorialGame::Start() {
             newPlayer->setType(GameObject::Type::Player);
             newPlayer->SetOwner(newUser.GetUserID());
             newPlayer->SetWorldID(newUser.GetUserID());
+            newPlayer->GetRenderObject()->SetColour(Vector4(Color::GetPlayerColor(newUser.GetUserID())));
         }
     }
 

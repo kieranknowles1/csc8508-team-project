@@ -12,15 +12,9 @@ public:
     TutorialGame* game;
 
     PushdownResult OnUpdate(float dt, PushdownState** newState) override {
-        pauseReminder -= dt;
-
         game->UpdateGame(dt);
 
-        if (pauseReminder < 0) {
-            Debug::Print("Press P to pause the game!", Vector2(20, 20), Vector4(0, 0, 0, 1));
-        }
         if (controller->GetDigital(Controller::DigitalControl::Pause)) {
-            pauseReminder = 0;
             *newState = new PauseScreen(controller, game);
             std::cout << "Game entered pause state \n";
             return PushdownResult::Push;
@@ -34,6 +28,4 @@ public:
     void OnAwake() override {
         std::cout << "Game state active\n";
     }
-protected:
-    float pauseReminder = 1;
 };

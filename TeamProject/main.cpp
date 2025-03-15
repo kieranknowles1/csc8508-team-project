@@ -125,9 +125,6 @@ int main(int argc, char** argv) {
         controller->Update(dt);
         window->SetTitle("Gametech frame time:" + std::to_string(1000.0f * dt));
 
-        //game->UpdateGame(dt);
-
-
         quit |= !machine.Update(dt);
         renderer->collectFrameObjects(game->getWorld());
         renderer->drawFrame(dt);

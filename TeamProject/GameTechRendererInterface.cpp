@@ -12,6 +12,7 @@ namespace NCL::CSC8503 {
 		: window(window)
         , decalSystem(window->GetScreenSize().x, window->GetScreenSize().y)
 	{
+		initLasers();
 	}
 
 	void GameTechRendererInterface::collectFrameObjects(GameWorld* world)
@@ -39,9 +40,11 @@ namespace NCL::CSC8503 {
 		});
 
         frameSprites.clear();
+		frameTexts.clear();
         for (auto elem : uiElements) {
             if (elem->IsActive()) {
                 elem->render(frameSprites);
+				elem->render(frameTexts);
             }
         }
 		lights = world->GetLights();
