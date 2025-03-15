@@ -10,6 +10,7 @@
 
 #include <btBulletDynamicsCommon.h>
 #include <btBulletCollisionCommon.h>
+#include <mutex>
 
 using namespace NCL::CSC8503;
 
@@ -35,10 +36,10 @@ public:
 
 	void updateGravity(float dt);
 
-	btVector3 getUpDirection() {
+    btVector3 getUpDirection() {
+        std::lock_guard<std::mutex> lock(m_stateLock);
 		return upDirection;
-
-	}
+    }
 
 	void setUpDirection(btVector3 target) {
 		upDirection = target;
@@ -107,6 +108,7 @@ public:
 	void Damage(float amount) {
 		lastHit = elapsedTime;
 
+		std::lock_guard<std::mutex> lock(m_stateLock);
 		health -= amount;
 		if (health <= 0) {
 			//state = PlayerState::DEAD;

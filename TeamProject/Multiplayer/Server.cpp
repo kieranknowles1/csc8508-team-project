@@ -1,5 +1,10 @@
+#include <memory>
+
 #include "Server.hpp"
 #include "TutorialGame.h"
+
+#include "Multiplayer/GamePackets.hpp"
+#include "Multiplayer/GamePacketHandlers.hpp"
 #include "Multiplayer/Lobby.hpp"
 #include "Multiplayer/User.hpp"
 
@@ -35,6 +40,44 @@ namespace Multiplayer {
 
     void Server::SendState(bool endOfTick) {
         if (endOfTick) return;
+
+        m_game->GetWorld()->OperateOnContents([&](GameObject* object) {
+            if (object->isStatic()) return;
+
+            btVector3 objLinearVelocity = object->getLinearVelocity();
+            btVector3 objAngularVelocity = object->getAngularVelocity();
+            btVector3 objPosition = object->getPosition();
+            btQuaternion objOrientation = object->getRotation();
+
+            // Create packets.
+            std::shared_ptr<Packet::DeltaPacket> delta = std::make_shared<Packet::DeltaPacket>(
+                object->GetWorldID(),
+                objLinearVelocity,
+                objAngularVelocity,
+                m_tickCount
+            );
+            m_network->Broadcast(delta);
+
+            std::shared_ptr<Packet::PositionPacket> position = std::make_shared<Packet::PositionPacket>(
+                object->GetWorldID(),
+                objPosition,
+                objOrientation,
+                m_tickCount
+            );
+            m_network->Broadcast(position);
+
+            // Create change gravity packet for players.
+            if (object->getType() == GameObject::Type::Player) {
+                PlayerObject* playerObj = static_cast<PlayerObject*>(object);
+
+                std::shared_ptr<Packet::ObjectChangeGravityPacket> gravity = std::make_shared<Packet::ObjectChangeGravityPacket>(
+                    playerObj->GetWorldID(),
+                    playerObj->getUpDirection(),
+                    m_tickCount
+                );
+                m_network->Broadcast(gravity);
+            }
+        });
     }
 
     void Server::ProcessPackets(bool endOfTick) {

@@ -113,7 +113,10 @@ public:
      * 
      * @param callback The function to call.
      */
-    inline void SetConnectCallback(std::function<void(ENetPeer*)> callback) { m_connectCallback = callback; }
+    inline void SetConnectCallback(std::function<void(ENetPeer*)> callback) { 
+        std::lock_guard<std::mutex> lock(m_connectCallbackMut);
+        m_connectCallback = callback;
+    }
 
     /**
      * @brief Fetch a packet from the buffer.
@@ -189,6 +192,7 @@ private:
     std::thread m_networkThread;
     std::mutex m_stateMut;
     std::mutex m_sendMut;
+    std::mutex m_connectCallbackMut;
     std::mutex m_listenerMut;
 
     NetworkState m_state = NetworkState::CLOSED;

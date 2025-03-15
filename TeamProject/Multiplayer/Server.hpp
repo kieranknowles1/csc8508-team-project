@@ -1,11 +1,13 @@
 #pragma once
 
+#include "TutorialGame.h"
 #include <Network/Network.hpp>
 
 namespace Lobbies {
     class User;
     class Lobby;
 }
+
 
 namespace Multiplayer {
 

@@ -116,6 +116,7 @@ namespace NCL {
             void JoinGame(bool host);
 
             inline static bool IsHost() { return host; }
+            GameWorld* GetWorld() const { return world.get(); }
 
             // FIX ME make this protected/private.
             PlayerObject* player;
@@ -153,10 +154,7 @@ namespace NCL {
             void InitPacketHandlers();
             void ExecuteIncomingPackets();
 
-
-
             void UpdatePlayer(float dt);
-
 
             Turret* AddTurretToWorld();
 

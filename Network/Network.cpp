@@ -135,6 +135,7 @@ void Network::Tick(float dt) {
                 enet_peer_disconnect(event.peer, 0);
             }
             else if (m_connectCallback != nullptr) {
+                std::lock_guard<std::mutex> lock(m_connectCallbackMut);
                 m_connectCallback(event.peer);
             }
             break;

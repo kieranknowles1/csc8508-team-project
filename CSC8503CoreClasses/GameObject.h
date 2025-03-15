@@ -1,5 +1,6 @@
 #pragma once
 
+#include <mutex>
 #include <unordered_map>
 #include <nlohmann/json.hpp>
 
@@ -83,11 +84,13 @@ namespace NCL::CSC8503 {
 		}
 
 		void SetWorldID(int newID) {
+			std::lock_guard<std::mutex> lock(m_stateLock);
 			worldID = newID;
 			objects[worldID] = this;
 		}
 
-		int		GetWorldID() const {
+		int		GetWorldID() {
+			std::lock_guard<std::mutex> lock(m_stateLock);
 			return worldID;
 		}
 
@@ -96,18 +99,46 @@ namespace NCL::CSC8503 {
 		}
 
 		void setInitialPosition(const Vector3& position) {
+			std::lock_guard<std::mutex> lock(m_stateLock);
 			initialPosition = position;
 		}
 
 		void setInitialRotation(const btQuaternion& rotation) {
+			std::lock_guard<std::mutex> lock(m_stateLock);
 			initialRotation = rotation;
 		}
 
-		btVector3 getInitialPosition() const {
+		btVector3 getInitialPosition() {
+			std::lock_guard<std::mutex> lock(m_stateLock);
 			return initialPosition;
 		}
-		btQuaternion getInitialRotation() const {
+		btQuaternion getInitialRotation() {
+			std::lock_guard<std::mutex> lock(m_stateLock);
 			return initialRotation;
+		}
+
+		btVector3 getLinearVelocity() {
+			btRigidBody* rigidBody = GetPhysicsObject()->GetRigidBody();
+			std::lock_guard<std::mutex> lock(m_stateLock);
+			return rigidBody->getLinearVelocity();
+		}
+
+		btVector3 getAngularVelocity() {
+			btRigidBody* rigidBody = GetPhysicsObject()->GetRigidBody();
+			std::lock_guard<std::mutex> lock(m_stateLock);
+			return rigidBody->getAngularVelocity();
+		}
+
+		btVector3 getPosition() {
+			btTransform& transform = GetPhysicsObject()->GetRigidBody()->getWorldTransform();
+			std::lock_guard<std::mutex> lock(m_stateLock);
+			return transform.getOrigin();
+		}
+
+		btQuaternion getRotation() {
+			btTransform& transform = GetPhysicsObject()->GetRigidBody()->getWorldTransform();
+			std::lock_guard<std::mutex> lock(m_stateLock);
+			return transform.getRotation();
 		}
 
 		Vector3 getRenderScale() const {
@@ -136,6 +167,10 @@ namespace NCL::CSC8503 {
 		}
 		Type getType() {
 			return type;
+		}
+
+		bool isStatic() const {
+			return GetPhysicsObject()->GetRigidBody()->getInvMass() == 0.0f;
 		}
 
 		static GameObject* GetGameObjectByID(int id) {
@@ -186,5 +221,6 @@ namespace NCL::CSC8503 {
 		std::optional<Lobbies::User> owner;
 		std::unordered_map<uint8_t, int> lastPacketUpdates; // uint8_t is the same type used in Packet::Type and PacketType
 
+		std::mutex m_stateLock;
 	};
 }
