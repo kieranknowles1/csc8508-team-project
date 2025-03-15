@@ -195,6 +195,9 @@ void LevelImporter::HandleTypes(GameObject* obj) {
         Respawn::GetInstance()->InsertRespawn(respawnPoint);
         break;
     }
+    case GameObject::Type::Centre:
+        obj->GetRenderObject()->SetTexScaleMultiplier(0.005f);
+        break;
 
     default:
         break;

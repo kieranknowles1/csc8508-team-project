@@ -24,7 +24,8 @@ namespace NCL::CSC8503 {
 			Ice,
 			PointLight,
 			RespawnPoint,
-			Player
+			Player,
+			Centre
 		};
 
 		GameObject(const std::string& name = "");
