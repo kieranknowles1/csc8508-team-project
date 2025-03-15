@@ -59,7 +59,7 @@ public:
         for (int i = 0; i < 3; i++) {
             std::string currentItem = menuItems[i];
             if (i == selection) currentItem += " <";
-            Debug::Print(currentItem, Vector2(1, 50 + (10 * i))); //Replace with AddUIElement
+            Debug::Print(currentItem, Vector2(0, 0.50 + (0.10 * i))); //Replace with AddUIElement
         }
         return PushdownResult::NoChange;
 

@@ -15,9 +15,6 @@ public:
         if (controller->GetDigital(Controller::DigitalControl::Unpause)) {
             return PushdownResult::Pop;
         }
-        Debug::Print("Press P to unpause the game!", Vector2(20, 20), Vector4(0, 0, 0, 1));
-        //return PushdownResult::NoChange;
-        //Debug::Print("Press U to unpause the game!", Vector2(10, 10), Vector4(0, 0, 0, 1));
 
         const std::string resumeGame = "Resume";
         const std::string exitGame = "Exit";
@@ -49,7 +46,7 @@ public:
             for (int i = 0; i < 2; i++) {
                 std::string currentItem = menuItems[i];
                 if (i == selection) currentItem = currentItem + " <";
-                Debug::Print(currentItem, Vector2(1, 50 + (10 * i)));
+                Debug::Print(currentItem, Vector2(0, 0.50 + (0.10 * i)));
             }
         }
 
