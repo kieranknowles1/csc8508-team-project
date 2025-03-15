@@ -61,8 +61,6 @@ namespace Multiplayer {
         Packet::PacketRegister::Register(m_handlers.back().get());
     }
 
-
-
     void Server::SendState(bool endOfTick) {
         if (endOfTick) return;
 
@@ -107,6 +105,14 @@ namespace Multiplayer {
 
     void Server::ProcessPackets(bool endOfTick) {
         if (!endOfTick) return;
+
+        // TODO: place packets into a buffer to add a little delay before processing so that
+        // enough time has passed for all the packets to arrive.
+        std::shared_ptr<Packet::Packet> currentPacket = m_network->Fetch();
+        while (currentPacket.get() != nullptr) {
+            Packet::PacketRegister::GetHandler(currentPacket->GetType())->Handle(currentPacket);
+            currentPacket = m_network->Fetch();
+        }
     }
 
 
