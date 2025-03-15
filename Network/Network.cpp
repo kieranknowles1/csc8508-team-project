@@ -116,6 +116,7 @@ void Network::Tick(float dt) {
     m_elapsedTime += dt;
 
     while (m_elapsedTime - m_lastTick >= NETWORK_RATE && m_state == NetworkState::ON) {
+        std::lock_guard<std::mutex> lock(m_listenerMut);
         for (auto func : m_tickListeners) func(false);
 
         SendAll();

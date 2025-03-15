@@ -152,6 +152,7 @@ public:
      * @param func - the function to call.
      */
     inline void AddTickListener(std::function<void(bool)> func) {
+        std::lock_guard<std::mutex> lock(m_listenerMut);
         m_tickListeners.push_back(func);
     }
 
@@ -188,6 +189,7 @@ private:
     std::thread m_networkThread;
     std::mutex m_stateMut;
     std::mutex m_sendMut;
+    std::mutex m_listenerMut;
 
     NetworkState m_state = NetworkState::CLOSED;
 
