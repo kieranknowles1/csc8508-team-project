@@ -18,12 +18,16 @@ namespace NCL::CSC8503 {
 	public:
 		enum class Type {
 			Default,
+			Floor,
 			JumpPad,
 			Slime,
 			Ice,
 			PointLight,
 			RespawnPoint,
-			Player
+			Player,
+			Centre,
+			SlimeCastle,
+			Courtyard
 		};
 
 		GameObject(const std::string& name = "");

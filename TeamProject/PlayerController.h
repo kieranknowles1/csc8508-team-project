@@ -88,7 +88,7 @@ namespace NCL {
 
 			//Gun Variables
 			float shotCooldown = 0.075f;
-			btVector3 gunCameraOffset = btVector3(1.3, -0.7, -1.2);
+			btVector3 gunCameraOffset = btVector3(1.3, -0.7, -2.5f);
 
 			//Rotation Variables
 			float rotateTime = 0.5f;
