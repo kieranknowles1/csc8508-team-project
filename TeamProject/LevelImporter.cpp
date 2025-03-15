@@ -160,12 +160,6 @@ void LevelImporter::HandleTypes(GameObject* obj) {
     btVector4 colourLight = LightColour();
     switch (obj->getType())
     {
-    case GameObject::Type::Default:
-        obj->GetRenderObject()->SetTexScaleMultiplier(0.005f);
-        break;
-    case GameObject::Type::Floor:
-        obj->GetRenderObject()->SetTexScaleMultiplier(0.005f);
-        break;
     case GameObject::Type::JumpPad:
         obj->GetRenderObject()->SetColour(Vector4(0.3f, 0.3f, 0.3f, 1));
         obj->GetRenderObject()->SetTexScaleMultiplier(0.0025f);
@@ -195,9 +189,6 @@ void LevelImporter::HandleTypes(GameObject* obj) {
         Respawn::GetInstance()->InsertRespawn(respawnPoint);
         break;
     }
-    case GameObject::Type::Centre:
-        obj->GetRenderObject()->SetTexScaleMultiplier(0.005f);
-        break;
 
     default:
         break;

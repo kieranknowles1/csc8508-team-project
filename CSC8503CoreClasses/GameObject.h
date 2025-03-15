@@ -25,7 +25,9 @@ namespace NCL::CSC8503 {
 			PointLight,
 			RespawnPoint,
 			Player,
-			Centre
+			Centre,
+			SlimeCaste,
+			Courtyard
 		};
 
 		GameObject(const std::string& name = "");
