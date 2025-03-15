@@ -31,6 +31,9 @@ GameTechRenderer::GameTechRenderer(Window* window) : OGLRenderer(window), GameTe
 	decalBlendShader = std::make_unique<OGLShader>("texturevert.glsl", "decalBlend.frag");
 	uiShader = std::make_unique<OGLShader>("ui.vert", "ui.frag");
 	laserShader = std::make_unique<OGLShader>("laser.vert", "laser.frag");
+	laserPostProcess = std::make_unique<OGLShader>("texturevert.glsl", "laserPost.frag");
+	laserPostProcess2 = std::make_unique<OGLShader>("texturevert.glsl", "laserPost2.frag");
+	addLaserShader = std::make_unique<OGLShader>("texturevert.glsl", "laserCombine.frag");
 
 	glGenTextures(1, &shadowTex);
 	glBindTexture(GL_TEXTURE_2D, shadowTex);
@@ -88,6 +91,9 @@ GameTechRenderer::GameTechRenderer(Window* window) : OGLRenderer(window), GameTe
 	glGenFramebuffers(1, &bufferFBO);
 	glGenFramebuffers(1, &pointLightFBO);
 	glGenFramebuffers(1, &laserFBO);
+	glGenFramebuffers(1, &laserPostFBO);
+	glGenFramebuffers(1, &laserPostFBO2);
+	glGenFramebuffers(1, &laserAddFBO);
 
 	GLenum buffers[2] = {
 	GL_COLOR_ATTACHMENT0,
@@ -102,6 +108,9 @@ GameTechRenderer::GameTechRenderer(Window* window) : OGLRenderer(window), GameTe
 	GenerateScreenTexture(lightSpecularTex);
 
 	GenerateScreenTexture(laserTex);
+	GenerateScreenTexture(laserPostTex);
+	GenerateScreenTexture(laserPostTex2);
+	GenerateScreenTexture(laserAddedTex);
 	//attach textures to FBOS:
 	//first pass:
 	glBindFramebuffer(GL_FRAMEBUFFER, bufferFBO);
@@ -130,6 +139,28 @@ GameTechRenderer::GameTechRenderer(Window* window) : OGLRenderer(window), GameTe
 	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE || !laserTex) {
 		return;
 	}
+
+	glBindFramebuffer(GL_FRAMEBUFFER, laserPostFBO);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, laserPostTex, 0);
+	glDrawBuffers(1, buffers);
+	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE || !laserPostTex) {
+		return;
+	}
+
+	glBindFramebuffer(GL_FRAMEBUFFER, laserPostFBO2);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, laserPostTex2, 0);
+	glDrawBuffers(1, buffers);
+	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE || !laserPostTex2) {
+		return;
+	}
+
+	glBindFramebuffer(GL_FRAMEBUFFER, laserAddFBO);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, laserAddedTex, 0);
+	glDrawBuffers(1, buffers);
+	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE || !laserAddedTex) {
+		return;
+	}
+
 
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	//not enabling depth test etc here as this is done in the rendering functions
@@ -226,6 +257,8 @@ GameTechRenderer::~GameTechRenderer() {
 	glDeleteFramebuffers(1, &BFBO);
 	glDeleteFramebuffers(1, &laserFBO);
 	glDeleteTextures(1, &laserTex);
+	glDeleteFramebuffers(1, &laserPostFBO);
+	glDeleteTextures(1, &laserPostTex);
 
 	delete fullscreenQuad; //only mesh that needs to be deleted as others are std::make_unique<OGLMesh>
 	delete hdrShader;
@@ -681,6 +714,39 @@ void GameTechRenderer::RenderLasers() {
 		DrawBoundMesh();
 	}
 
+	int texWidth, texHeight;
+	glBindTexture(GL_TEXTURE_2D, laserTex);
+	glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_WIDTH, &texWidth);
+	glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_HEIGHT, &texHeight);
+	Vector2 texelSize = Vector2(1.0f / texWidth, 1.0f / texHeight);
+
+
+	glBindFramebuffer(GL_FRAMEBUFFER, laserPostFBO);
+	glClearColor(0, 0, 0, 0);
+	glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
+	glEnable(GL_BLEND);
+	UseShader(*laserPostProcess);
+	BindMesh(*fullscreenQuad);
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, laserTex);
+	glUniform1i(glGetUniformLocation(laserPostProcess->GetProgramID(), "laserTex"), 0);
+	glUniform1f(glGetUniformLocation(laserPostProcess->GetProgramID(), "blurScale"),1.25f);
+	glUniform2fv(glGetUniformLocation(laserPostProcess->GetProgramID(), "texelSize"), 1, (float*)&texelSize);
+	DrawBoundMesh();
+
+	glBindFramebuffer(GL_FRAMEBUFFER, laserPostFBO2);
+	glClearColor(0, 0, 0, 0);
+	glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
+	glEnable(GL_BLEND);
+	UseShader(*laserPostProcess2);
+	BindMesh(*fullscreenQuad);
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, laserPostTex);
+	glUniform1i(glGetUniformLocation(laserPostProcess->GetProgramID(), "laserTex"), 0);
+	glUniform1f(glGetUniformLocation(laserPostProcess->GetProgramID(), "blurScale"), 1.25f);
+	glUniform2fv(glGetUniformLocation(laserPostProcess->GetProgramID(), "texelSize"), 1, (float*)&texelSize);
+	DrawBoundMesh();
+
 }
 
 /*
@@ -831,9 +897,25 @@ void GameTechRenderer::RenderPostProcessing() { //gonna try putting edge detecti
 
 		glUniformMatrix4fv(glGetUniformLocation(edgedetectShader->GetProgramID(), "inverseProjMatrix"), 1, false, (float*)&invProj);
 		glUniformMatrix4fv(glGetUniformLocation(edgedetectShader->GetProgramID(), "inverseViewMatrix"), 1, false, (float*)&invView);
-
 		BindMesh(*fullscreenQuad);
 		DrawBoundMesh();
+
+		//Add Laser 
+		glBindFramebuffer(GL_FRAMEBUFFER, laserAddFBO);//was BFBO
+		glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+		glDisable(GL_CULL_FACE);
+		glDisable(GL_BLEND);
+		glDisable(GL_DEPTH_TEST);
+		UseShader(*addLaserShader);
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, hdrTex); //currently holds the scene, gonna have to change up the vignette part to accomodate this //was bufferColourTex
+		glUniform1i(glGetUniformLocation(addLaserShader->GetProgramID(), "sceneTex"), 0);
+		glActiveTexture(GL_TEXTURE1);
+		glBindTexture(GL_TEXTURE_2D, laserPostTex2);
+		glUniform1i(glGetUniformLocation(addLaserShader->GetProgramID(), "laserTex"), 1);
+		BindMesh(*fullscreenQuad);
+		DrawBoundMesh();
+
 	    //Vignette post processing:
 	    glBindFramebuffer(GL_FRAMEBUFFER, BFBO); //unbind hdrFBO and set BFBO    //was BFBO before adding edge detection //was hdrFBO
 	    glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
@@ -844,7 +926,7 @@ void GameTechRenderer::RenderPostProcessing() { //gonna try putting edge detecti
 	    glUniform1i(glGetUniformLocation(vignetteShader->GetProgramID(), "vignetteOn"), GetVignetteOn());
 		glUniform1f(glGetUniformLocation(vignetteShader->GetProgramID(), "vignetteIntensity"), vignetteIntensity);
 		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, hdrTex); //hdrTex currently holds raw scene  //was bufferColourTex before adding edge detection //was BTex
+		glBindTexture(GL_TEXTURE_2D, laserAddedTex); //hdrTex currently holds raw scene  //was bufferColourTex before adding edge detection //was BTex
 		glUniform1i(glGetUniformLocation(vignetteShader->GetProgramID(), "diffuseTex"), 0);
 		glUniform2f(glGetUniformLocation(vignetteShader->GetProgramID(), "windowSize"), windowSize.x, windowSize.y);
 		glUniform3fv(glGetUniformLocation(vignetteShader->GetProgramID(), "effectColour"), 1, (float*)&vignetteColour);
@@ -1038,10 +1120,6 @@ void GameTechRenderer::CombineBuffers() {//basically final post processing outpu
 	glUniform1i(glGetUniformLocation(combineShader->GetProgramID(), "specularLight"), 2);
 	glActiveTexture(GL_TEXTURE2);
 	glBindTexture(GL_TEXTURE_2D, lightSpecularTex);
-
-	glUniform1i(glGetUniformLocation(combineShader->GetProgramID(), "lasers"), 3);
-	glActiveTexture(GL_TEXTURE3);
-	glBindTexture(GL_TEXTURE_2D, laserTex);
 
 	BindMesh(*fullscreenQuad);
 	DrawBoundMesh();

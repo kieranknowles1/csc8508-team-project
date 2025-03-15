@@ -5,7 +5,6 @@
 uniform sampler2D diffuseTex;
 uniform sampler2D diffuseLight;
 uniform sampler2D specularLight;
-uniform sampler2D lasers;
 
 in Vertex {
     vec2 texCoord;
@@ -25,10 +24,6 @@ void main(void) {
        light,
        specular
     );
-    vec4 laser =  texture(lasers, IN.texCoord);
-    if(laser.a >= 0.1f){
-    colour = laser;
-    }
     colour.a    = 1.0;
 
     fragColour =colour;

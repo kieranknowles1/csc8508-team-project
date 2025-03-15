@@ -113,6 +113,15 @@ namespace NCL {
 			std::unique_ptr<OGLShader> laserShader;
 			GLuint laserFBO;
 			GLuint laserTex;
+			std::unique_ptr<OGLShader> laserPostProcess;
+			GLuint laserPostFBO;
+			GLuint laserPostTex;
+			std::unique_ptr<OGLShader> laserPostProcess2;
+			GLuint laserPostFBO2;
+			GLuint laserPostTex2;
+			std::unique_ptr<OGLShader> addLaserShader;
+			GLuint laserAddFBO;
+			GLuint laserAddedTex;
 
 			void GenerateScreenTexture(GLuint& into, bool depth = false); //added
 			GLuint bufferDepthTex;
