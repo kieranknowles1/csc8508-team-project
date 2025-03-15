@@ -4,6 +4,8 @@ set(SOURCES
     BulletDebug.h
     GameTechRendererInterface.cpp
     GameTechRendererInterface.h
+    Scoreboard.cpp
+    Scoreboard.h
     TutorialGame.cpp
     TutorialGame.h
     PlayerController.cpp

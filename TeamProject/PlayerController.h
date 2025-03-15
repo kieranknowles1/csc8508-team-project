@@ -18,6 +18,7 @@
 #include "Shoot.h"
 #include "Paintball.h"
 #include "Crosshair.h"
+#include "Scoreboard.h"
 #include <memory>
 
 
@@ -87,7 +88,7 @@ namespace NCL {
 
 			//Gun Variables
 			float shotCooldown = 0.075f;
-			btVector3 gunCameraOffset = btVector3(1.3, -0.7, -1.2);
+			btVector3 gunCameraOffset = btVector3(1.3, -0.7, -2.5f);
 
 			//Rotation Variables
 			float rotateTime = 0.5f;
@@ -98,6 +99,7 @@ namespace NCL {
 
 			GameTechRendererInterface* renderer;
 			std::unique_ptr<Crosshair> crosshair;
+			std::unique_ptr<Scoreboard> scoreboard;
 			btVector3 upDirection;
 			btVector3 rightDirection;
 			btVector3 forwardDirection;

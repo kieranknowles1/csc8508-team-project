@@ -49,7 +49,7 @@ std::optional<ShotInfo> Shoot::ShootBulletPlayer(btVector3 startPos, btVector3 d
             if (TutorialGame::GetServerInstance().has_value()) {
                 std::shared_ptr<Packet::DamagePacket> damagePacket = std::make_shared<Packet::DamagePacket>(
                     hit->GetWorldID(),
-                    100.0f * dt, // TODO: Don't hard code this.
+                    200.0f * dt, // TODO: Don't hard code this.
                     TutorialGame::GetUser()->GetUserID()
                 );
                 TutorialGame::GetServerInstance()->Broadcast(damagePacket);

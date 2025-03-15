@@ -59,8 +59,6 @@ GameTechAGCRenderer::GameTechAGCRenderer(Window* window) : AGCRenderer(window), 
 	checkError(sce::Agc::Core::initialize(&arrayBuffer, &buffSpec));
 	bufferCount = 1; //We skip over index 0, makes some selection logic easier later
 
-	skyboxTexture = (AGCTexture*)LoadTexture("Skybox.dds");
-
 	unitQuad = Mesh::Quad<AGCMesh>(1.0f);
 	unitQuad->UploadToGPU(this);
 	halfUnitQuad = Mesh::Quad<AGCMesh>(0.5f);
@@ -76,9 +74,6 @@ GameTechAGCRenderer::GameTechAGCRenderer(Window* window) : AGCRenderer(window), 
 
 	uiVertexShader = std::make_unique<AGCShader>("UI_vv.ags", allocator);
 	uiPixelShader = std::make_unique<AGCShader>("UI_p.ags", allocator);
-
-	skyboxVertexShader	= std::make_unique<AGCShader>("Skybox_vv.ags", allocator);
-	skyboxPixelShader	= std::make_unique<AGCShader>("Skybox_p.ags" , allocator);
 
 	debugLineVertexShader	= std::make_unique<AGCShader>("DebugLine_vv.ags", allocator);
 	debugLinePixelShader	= std::make_unique<AGCShader>("DebugLine_p.ags" , allocator);
@@ -169,9 +164,6 @@ void GameTechAGCRenderer::RenderFrame() {
 	//Step 2: Walk the object list and build up the object set and required buffer memory
 	UpdateObjectList();
 	//Step 4: Go through the geometry and darw it to a shadow map
-	//ShadowmapPass();
-	//Step 5: Draw a skybox to our main scene render target
-	SkyboxPass();
 	//Step 6: Draw the scene to our main scene render target
 	MainRenderPass();
 
@@ -209,7 +201,7 @@ void GameTechAGCRenderer::WriteRenderPassConstants() {
 	frameData.inverseViewMatrix = Matrix::Inverse(frameData.viewMatrix);
 	frameData.inverseProjMatrix = Matrix::Inverse(frameData.projMatrix);
 
-	frameData.orthoMatrix = Matrix::Orthographic(0.0f, 100.0f, 100.0f, 0.0f, -1.0f, 1.0f);
+	frameData.orthoMatrix = Matrix::Orthographic(0.0f, 1.0f, 1.0f, 0.0f, -1.0f, 1.0f, true);
 
 	frameData.vingetteSettings.enabled = GetVignetteOn();
 	frameData.vingetteSettings.color = vignetteColour;
@@ -263,34 +255,6 @@ void GameTechAGCRenderer::DrawObjects() {
 			instanceCount++;
 		}
 	}
-}
-
-void GameTechAGCRenderer::SkyboxPass() {
-	frameContext->setShaders(nullptr, skyboxVertexShader->GetAGCPointer(), skyboxPixelShader->GetAGCPointer(), sce::Agc::UcPrimitiveType::Type::kTriList);
-	useViewPort(frameContext, ScreenSize);
-
-	sce::Agc::CxRenderTargetMask rtMask = sce::Agc::CxRenderTargetMask().init().setMask(0, 0xFF);
-	frameContext->m_sb.setState(rtMask);
-	frameContext->m_sb.setState(sceneBuffer.target);
-
-	frameContext->m_sb.setState(depthTarget);
-
-	sce::Agc::CxDepthStencilControl depthControl;
-	depthControl.init();
-	depthControl.setDepth(sce::Agc::CxDepthStencilControl::Depth::kDisable);
-	depthControl.setDepthFunction(sce::Agc::CxDepthStencilControl::DepthFunction::kAlways);
-	depthControl.setDepthWrite(sce::Agc::CxDepthStencilControl::DepthWrite::kDisable);
-	frameContext->m_sb.setState(depthControl);
-
-	frameContext->m_bdr.getStage(sce::Agc::ShaderType::kGs)
-		.setConstantBuffers(0, 1, &currentFrame->constantBuffer);
-
-	frameContext->m_bdr.getStage(sce::Agc::ShaderType::kPs)
-		.setSamplers(0, 1, &defaultSampler)
-		.setTextures(1, 1, skyboxTexture->GetAGCPointer());
-
-	unitQuad->BindVertexBuffers(frameContext->m_bdr.getStage(sce::Agc::ShaderType::kGs));
-	DrawBoundMesh(*frameContext, *unitQuad);
 }
 
 void GameTechAGCRenderer::MainRenderPass() {
@@ -463,7 +427,7 @@ void GameTechAGCRenderer::UpdateDebugData() {
 	std::vector< NCL::Rendering::SimpleFont::InterleavedTextVertex> verts;
 
 	for (const auto& s : strings) {
-		float size = 20.0f;
+		float size = 0.2f;
 		Debug::GetDebugFont()->BuildInterleavedVerticesForString(s.data, s.position, s.colour, size, verts);
 		//can now copy to GPU visible mem
 		size_t count = verts.size() * TEXT_STRIDE;
