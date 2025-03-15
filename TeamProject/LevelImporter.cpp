@@ -139,13 +139,13 @@ void LevelImporter::AddObjectToWorld(ObjectData* data) {
     cube->GetRenderObject()->SetTexRepeating(true);//sets texture to repeat and scale
     if (data->meshName == "Quad") {
         cube->GetRenderObject()->SetTexScaleMultiplier(0.005f);
-        cube->GetRenderObject()->SetDefaultTexture(resourceManager->getTextures().get("tiles_0099_color_1k.jpg"));
-        cube->GetRenderObject()->SetNormal(resourceManager->getTextures().get("tiles_0099_normal_opengl_1k.png"));
+        cube->GetRenderObject()->SetDefaultTexture(resourceManager->getTextures().get("plastic_0001_color_1k.jpg"));
+        cube->GetRenderObject()->SetNormal(resourceManager->getTextures().get("plastic_0001_normal_opengl_1k.png"));
     }
     else {
-        cube->GetRenderObject()->SetTexScaleMultiplier(0.01f);
-        cube->GetRenderObject()->SetDefaultTexture(resourceManager->getTextures().get("marble_0013_color_1k.jpg"));
-        cube->GetRenderObject()->SetNormal(resourceManager->getTextures().get("marble_0013_normal_opengl_1k.png"));
+        cube->GetRenderObject()->SetTexScaleMultiplier(0.005f);
+        cube->GetRenderObject()->SetDefaultTexture(resourceManager->getTextures().get("plastic_0004_color_1k.jpg"));
+        cube->GetRenderObject()->SetNormal(resourceManager->getTextures().get("plastic_0004_normal_opengl_1k.png"));
     }
     cube->setType(data->type);
     HandleTypes(cube);
