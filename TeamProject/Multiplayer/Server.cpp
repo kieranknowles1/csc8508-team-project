@@ -32,11 +32,36 @@ namespace Multiplayer {
 
     Server::~Server() {
         m_network->Close();
-        
+
         delete m_network;
         delete m_lobby;
         delete m_user;
     }
+
+    void Server::InitPacketHandlers() {
+        m_handlers.push_back(std::make_unique<Packet::RequestUserIDPacketHandler>());
+        Packet::PacketRegister::Register(m_handlers.back().get());
+
+        m_handlers.push_back(std::make_unique<Packet::UserInfoPacketHandler>());
+        Packet::PacketRegister::Register(m_handlers.back().get());
+
+        m_handlers.push_back(std::make_unique<Packet::PositionPacketHandler>());
+        Packet::PacketRegister::Register(m_handlers.back().get());
+
+        m_handlers.push_back(std::make_unique<Packet::DeltaPacketHandler>());
+        Packet::PacketRegister::Register(m_handlers.back().get());
+
+        m_handlers.push_back(std::make_unique<Packet::StartGamePacketHandler>());
+        Packet::PacketRegister::Register(m_handlers.back().get());
+
+        m_handlers.push_back(std::make_unique<Packet::ObjectChangeGravityPacketHandler>());
+        Packet::PacketRegister::Register(m_handlers.back().get());
+
+        m_handlers.push_back(std::make_unique<Packet::DamagePacketHandler>());
+        Packet::PacketRegister::Register(m_handlers.back().get());
+    }
+
+
 
     void Server::SendState(bool endOfTick) {
         if (endOfTick) return;

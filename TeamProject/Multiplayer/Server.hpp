@@ -27,6 +27,11 @@ namespace Multiplayer {
         Server(TutorialGame* game, bool isHost = false);
         ~Server();
 
+        /**
+         * @brief Register all necessary packet handlers.
+         */
+        void InitPacketHandlers();
+
     private:
         /**
          * @brief Listens to the server tick and sends state when server
@@ -47,6 +52,7 @@ namespace Multiplayer {
         TutorialGame* m_game = nullptr;
         Lobbies::User* m_user = nullptr;
         Lobbies::Lobby* m_lobby = nullptr;
+        std::vector<std::unique_ptr<Packet::PacketHandler>> m_handlers;
         Network* m_network = nullptr;
         uint32_t m_tickCount = 0;
         bool m_isHost = false;
