@@ -7,6 +7,7 @@
 #include "PhysicsObject.h"
 #include "CollisionInfo.h"
 #include "Respawn.h"
+#include "MeshAnimation.h"
 
 #include <btBulletDynamicsCommon.h>
 #include <btBulletCollisionCommon.h>
@@ -165,6 +166,9 @@ private:
 
 	float elapsedTime = 0;
 	float lastHit = 0;
+
+	//Skeletal Animation stuff:
+	//MeshAnimation* test;
 
 
 };

@@ -146,9 +146,11 @@ namespace NCL {
 
 			//Mesh Animation Additions:
 			OGLMesh* MaleGuard; //trying out unique pointers for now
-			MeshAnimation* test;
+			//MeshAnimation* test;
 			MeshMaterial* material;
 			vector<GLuint> matTextures;
+			void RenderAnimations();
+			OGLShader* animationShader;
 
 
 		};

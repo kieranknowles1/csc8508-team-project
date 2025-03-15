@@ -12,6 +12,12 @@ void PlayerObject::Update(float dt) {
     rightDirection = CalculateRightDirection(upDirection);
     forwardDirection = CalculateForwardDirection(upDirection, rightDirection);
     updateGravity(dt);
+
+    //Animation:
+    //progress to next frame:
+    //frametime -= dt
+    //renderObject->GetAnimation()->
+   // renderObject->GetAnimation()->SetCurrentFrame((renderObject->GetAnimation()->GetCurrentFrame() + 1) % (renderObject->GetAnimation()->GetFrameCount()));
     
     elapsedTime += dt;
 

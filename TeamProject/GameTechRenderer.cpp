@@ -211,8 +211,9 @@ GameTechRenderer::GameTechRenderer(Window* window) : OGLRenderer(window), GameTe
 
 	//Mesh Animation addditions:
 	MaleGuard = LoadMesh("/MaleGuard/Male_Guard.msh");
-	test = new MeshAnimation("/MaleGuard/Flinches.anm");
+	//test = new MeshAnimation("/MaleGuard/Flinches.anm");
 	//material = new MeshMaterial("/MaleGuard/Male_Guard");// not sure if this is the right one   
+	animationShader = new OGLShader("skinningvert.glsl", "deferredscenefrag.glsl"); //not yet sure if this fragment shader can work here
 
 }
 
@@ -426,6 +427,9 @@ void GameTechRenderer::RenderCamera() {
 	//glBindTexture(GL_TEXTURE_2D, shadowTex);
 
 	for (const auto&i : frameObjects) {
+		if ((*i).getParent()->GetIsAnimated() == true) {//if object is a player, don't want it to be drawn here
+			continue; //go to next renderObject in loop
+		}
 
 		if ((*i).GetDefaultTexture()) { 
 			BindTextureToShader(*(OGLTexture*)(*i).GetDefaultTexture(), "diffuseTex", 0); //was maintTex for scenefrag. Using diffuseTex for deferredscenefrag
@@ -1121,4 +1125,39 @@ void GameTechRenderer::CombineBuffers() {//basically final post processing outpu
 	DrawBoundMesh();
 	glBindFramebuffer(GL_FRAMEBUFFER, 0); //hdrTex should now hold full deferred lighting rendered scene 
 
+}
+
+void GameTechRenderer::RenderAnimations() {
+	// if gameobject (i.e. renderObject's parent) animation == true then it can be rendered here. Calculate the necessary matrices by accessing the renderObject's animation
+	//and send the necessary info to shader. This should render players anyway even if animations not currently playing
+	std::vector<RenderObject*> animatedObjects;
+	for (const auto& i : frameObjects) { //iterate over all render objects
+		if (i->getParent()->GetIsAnimated() == true) {
+			animatedObjects.emplace_back(); //should add all animated objects to animatedObjects
+		}
+	}
+	//From here pretty much like Render Camera but for animated meshes using the animation Shader instead
+
+	Matrix4 viewMatrix = camera->BuildViewMatrix();
+	Matrix4 projMatrix = camera->BuildProjectionMatrix(hostWindow->GetScreenAspect());
+
+	UseShader(*animationShader);
+
+	int projLocation = glGetUniformLocation(animationShader->GetProgramID(), "projMatrix");
+	int viewLocation = glGetUniformLocation(animationShader->GetProgramID(), "viewMatrix");
+	int modelLocation = glGetUniformLocation(animationShader->GetProgramID(), "modelMatrix");
+
+	int cameraLocation = glGetUniformLocation(animationShader->GetProgramID(), "cameraPos");
+	Vector3 camPos = camera->GetPosition();
+	glUniform3fv(cameraLocation, 1, &camPos.x);
+
+	glUniformMatrix4fv(projLocation, 1, false, (float*)&projMatrix);
+	glUniformMatrix4fv(viewLocation, 1, false, (float*)&viewMatrix);
+
+	glUniformMatrix4fv(projLocation, 1, false, (float*)&projMatrix); 
+	glUniformMatrix4fv(viewLocation, 1, false, (float*)&viewMatrix); 
+
+	for (const auto& i : animatedObjects) {
+	
+	}
 }

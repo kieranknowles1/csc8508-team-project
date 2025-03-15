@@ -162,6 +162,10 @@ namespace NCL::CSC8503 {
 
 		void setDeleted() { deleted = true; }
 		bool isDeleted() { return deleted; }
+
+		bool GetIsAnimated() { return animated; }
+		void SetIsAnimated(bool a) { animated = a; }
+
 	protected:
 		PhysicsObject*		physicsObject;
 		RenderObject*		renderObject;
@@ -171,6 +175,7 @@ namespace NCL::CSC8503 {
 
 		bool		isActive;
 		bool paintball = false;
+		bool animated = false;
 		int			worldID;
 		std::string	name;
 		Type type;

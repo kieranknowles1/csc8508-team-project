@@ -44,10 +44,19 @@ namespace NCL::Rendering {
 
 		const Maths::Matrix4* GetJointData(size_t frame) const;
 
+		size_t GetCurrentFrame() const {
+			return currentFrame;
+		}
+
+		void SetCurrentFrame(size_t frame) {
+			currentFrame = frame;
+		}
+
 	protected:
 		size_t		jointCount;
 		size_t		frameCount;
 		float		frameRate;
+		size_t      currentFrame; //added. Could potentially just put this in whatever file I am updating the frame in
 
 		std::vector<Maths::Matrix4>		allJoints;
 	};

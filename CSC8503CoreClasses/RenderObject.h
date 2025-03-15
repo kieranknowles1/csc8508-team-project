@@ -2,6 +2,7 @@
 #include "Texture.h"
 #include "Mesh.h"
 #include "Buffer.h"
+#include "MeshAnimation.h"
 
 namespace NCL {
 	using namespace NCL::Rendering;
@@ -83,6 +84,10 @@ namespace NCL {
 				return buffer;
 			}
 
+			MeshAnimation* GetAnimation() const {
+				return test;
+			}
+
 		protected:
 			GameObject* parent;
 			Buffer* buffer;
@@ -94,6 +99,9 @@ namespace NCL {
 			float texScaleMultiplier = 0.05f; //unless set to something else, all scaled textures will be scaled with this and their renderScale
 			//additional normal map option:
 			std::shared_ptr<Texture> normalMap;
+
+			//Animation stuff:
+			MeshAnimation* test;
 		};
 	}
 }
