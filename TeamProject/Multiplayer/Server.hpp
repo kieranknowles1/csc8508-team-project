@@ -2,10 +2,12 @@
 
 #include <Network/Network.hpp>
 
-#include "Multiplayer/Lobby.hpp"
+namespace Lobbies {
+    class User;
+    class Lobby;
+}
 
 namespace Multiplayer {
-    using namespace Lobbies;
 
     constexpr ENetAddress hostAddress = { ENET_HOST_ANY, DEFAULT_PORT };
     const int TICK_BUFFER_SIZE = 5;
@@ -17,10 +19,10 @@ namespace Multiplayer {
     class Server {
     public:
         /**
-         * @brief If is the host, creates a server, otherwise, joins one.
+         * @brief Starts the network and creates a lobby and a unique user.
          * @param isHost - Whether the server is the host or not.
          */
-        Server(bool isHost = false);
+        Server(TutorialGame* game, bool isHost = false);
         ~Server();
 
     private:
@@ -40,8 +42,9 @@ namespace Multiplayer {
          */
         void ProcessPackets(bool endOfTick);
 
-
-        Lobby* m_lobby = nullptr;
+        TutorialGame* m_game = nullptr;
+        Lobbies::User* m_user = nullptr;
+        Lobbies::Lobby* m_lobby = nullptr;
         Network* m_network = nullptr;
         uint32_t m_tickCount = 0;
         bool m_isHost = false;
