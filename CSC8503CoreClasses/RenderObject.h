@@ -88,7 +88,7 @@ namespace NCL {
 			Buffer* buffer;
 			std::shared_ptr<Mesh> mesh;
 			std::shared_ptr<Texture> texture;
-			Vector4		colour = Vector4(1, 1, 0, 0.99);
+			Vector4 colour = Vector4(1, 1, 1, 1);
 			bool isFlat = false;
 			bool texRepeating = false; // added to allow repeating textures per object
 			float texScaleMultiplier = 0.05f; //unless set to something else, all scaled textures will be scaled with this and their renderScale

@@ -18,6 +18,7 @@ namespace NCL::CSC8503 {
 	public:
 		enum class Type {
 			Default,
+			Floor,
 			JumpPad,
 			Slime,
 			Ice,

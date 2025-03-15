@@ -28,6 +28,10 @@ public:
 	}
 
 	RespawnPoint* GetRespawn(unsigned int ID) {
+		if (respawnPoints.size() < ID) {
+			std::cerr << "RESPAWN POINT NOT FOUND" << std::endl;
+			return nullptr;
+		}
 		return respawnPoints.at(ID);
 	}
 
