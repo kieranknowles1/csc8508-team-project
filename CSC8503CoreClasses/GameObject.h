@@ -26,7 +26,7 @@ namespace NCL::CSC8503 {
 			RespawnPoint,
 			Player,
 			Centre,
-			SlimeCaste,
+			SlimeCastle,
 			Courtyard
 		};
 

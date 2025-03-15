@@ -172,7 +172,7 @@ void LevelImporter::HandleTypes(GameObject* obj) {
     case GameObject::Type::Ice:
         obj->GetRenderObject()->SetColour(Vector4(1, 2.0f, 2.0f, 1));
         break;
-    case GameObject::Type::SlimeCaste:
+    case GameObject::Type::SlimeCastle:
         obj->GetRenderObject()->SetColour(Vector4(0.8f, 0.8f, 0.8f, 1));
         obj->GetRenderObject()->SetTexScaleMultiplier(0.0035f);
         break;
