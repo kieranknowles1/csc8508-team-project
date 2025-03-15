@@ -86,7 +86,10 @@ GameTechRenderer::GameTechRenderer(Window* window) : OGLRenderer(window), GameTe
 	combineShader = new OGLShader("texturevert.glsl", "combinefrag.glsl");
 
 	lightSphere = new OGLMesh();
-	lightSphere = LoadMesh("Sphere.msh"); //Load mesh takes care of upload to GPU itself
+	lightSphere = LoadMesh("Sphere.msh");
+
+	highResSphere = new OGLMesh();
+	highResSphere = LoadMesh("Sphere_HighRes.msh");
 
 	glGenFramebuffers(1, &bufferFBO);
 	glGenFramebuffers(1, &pointLightFBO);
@@ -244,6 +247,7 @@ GameTechRenderer::~GameTechRenderer() {
 	delete pointlightShader;
 	delete combineShader;
 	delete lightSphere;
+	delete highResSphere;
 	glDeleteFramebuffers(1, &bufferFBO);
 	glDeleteFramebuffers(1, &pointLightFBO);
 	glDeleteTextures(1, &bufferColourTex);
@@ -702,12 +706,12 @@ void GameTechRenderer::RenderLasers() {
 	glUniformMatrix4fv(glGetUniformLocation(laserShader->GetProgramID(), "viewMatrix"), 1, false, (float*)&viewMatrix);
 	glUniformMatrix4fv(glGetUniformLocation(laserShader->GetProgramID(), "projMatrix"), 1, false, (float*)&projMatrix);
 
-	BindMesh(*lightSphere);
+	BindMesh(*highResSphere);
 	for (Laser* laser : lasers) {
 		if (laser->startPos == btVector3(0, 0, 0) && laser->endPos == btVector3(0, 0, 0)) continue;
 		glUniform3fv(glGetUniformLocation(laserShader->GetProgramID(), "startPosition"), 1, (float*)&laser->startPos);
 		glUniform3fv(glGetUniformLocation(laserShader->GetProgramID(), "endPosition"), 1, (float*)&laser->endPos);
-		glUniform1f(glGetUniformLocation(laserShader->GetProgramID(), "thickness"), 5.0f);
+		glUniform1f(glGetUniformLocation(laserShader->GetProgramID(), "thickness"), 0.5f);
 		glUniform1f(glGetUniformLocation(laserShader->GetProgramID(), "time"), vignettePulse);
 		btVector4 color = Color::GetPlayerColor(laser->id);
 		glUniform4fv(glGetUniformLocation(laserShader->GetProgramID(), "inColour"), 1, (float*) &color);

@@ -119,7 +119,7 @@ namespace NCL::CSC8503 {
 
 		void initLasers() {
 			for (int i = 0; i < 8; i++) {
-				lasers.push_back(new Laser(btVector3(0,0,0), btVector3(0, 0, 0), i));
+				lasers.push_back(new Laser(btVector3(0,0,0), btVector3(0, 0, 0), i+1));
 			}
 		}
 

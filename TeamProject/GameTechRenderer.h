@@ -102,6 +102,7 @@ namespace NCL {
 			OGLShader* combineShader;
 
 			OGLMesh* lightSphere;
+			OGLMesh* highResSphere;
 			GLuint bufferFBO;
 
 			// For drawing multiple point lights.
