@@ -18,6 +18,7 @@
 #include "Shoot.h"
 #include "Paintball.h"
 #include "Crosshair.h"
+#include "Scoreboard.h"
 #include <memory>
 
 
@@ -98,6 +99,7 @@ namespace NCL {
 
 			GameTechRendererInterface* renderer;
 			std::unique_ptr<Crosshair> crosshair;
+			std::unique_ptr<Scoreboard> scoreboard;
 			btVector3 upDirection;
 			btVector3 rightDirection;
 			btVector3 forwardDirection;

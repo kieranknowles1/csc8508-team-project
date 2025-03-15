@@ -126,12 +126,12 @@ void TutorialGame::UpdateGame(float dt) {
     if (state == GameState::IDLE) {
         if (user.has_value() && lobby.has_value()) {
             if (lobby->IsHost(user.value())) {
-                Debug::Print("Start Game <", Vector2(5, 80));
+                Debug::Print("> Start Game <", Vector2(0.4f, 0.5f));
                 if (controller->GetDigital(Controller::DigitalControl::MenuConfirm)) {
                     StartMultiplayerGame();
                 }
             }
-            Debug::Print("Connected: " + std::to_string(lobby->GetConnectedUsers().size()), Vector2(70, 80));
+            Debug::Print("Connected: " + std::to_string(lobby->GetConnectedUsers().size()) + "/8", Vector2(0.6f, 0.9f));
         }
     }
 
@@ -613,7 +613,9 @@ void TutorialGame::InitNetwork(bool host) {
 
 void TutorialGame::ConnectToServer(ENetAddress& address) {
     server->ConnectTo(&address);
-    while (server->GetConnectionCount() < 1) continue;
+    while (server->GetConnectionCount() < 1) {
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    }
 }
 
 
