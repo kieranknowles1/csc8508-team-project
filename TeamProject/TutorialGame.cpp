@@ -9,6 +9,7 @@
 #include "Multiplayer/GamePackets.hpp"
 #include "Multiplayer/GamePacketHandlers.hpp"
 #include <CSC8503CoreClasses/Debug.h>
+#include "Colors.h"
 #include "Shoot.h"
 
 #include "Window.h"
@@ -373,6 +374,7 @@ PlayerObject* TutorialGame::InitPlayer(btVector3 position, btVector3 upDir) {
   
     newPlayer->GetRenderObject()->SetColour(Vector4(playerColour));
     newPlayer->setUpDirection(upDir);
+    newPlayer->setRenderer(renderer);
     return newPlayer;
 }
 
@@ -638,6 +640,9 @@ void TutorialGame::InitPacketHandlers() {
 
     Packet::DamagePacketHandler* damageHandler = new Packet::DamagePacketHandler();
     Packet::PacketRegister::Register(damageHandler);
+
+    Packet::LaserPacketHandler* laserHandler = new Packet::LaserPacketHandler();
+    Packet::PacketRegister::Register(laserHandler);
 }
 
 
@@ -648,7 +653,7 @@ void TutorialGame::JoinGame(bool host) {
 
     if (!host) {
         ENetAddress dest;
-        enet_address_set_host(&dest, "10.70.33.113");
+        enet_address_set_host(&dest, "127.0.0.1");
         dest.port = DEFAULT_PORT;
 
         ConnectToServer(dest);
@@ -684,6 +689,7 @@ void TutorialGame::Start() {
     instance->player = instance->InitPlayer(respawnPoint->position,respawnPoint->orientation);
     instance->player->SetOwner(user->GetUserID());
     instance->player->SetWorldID(user->GetUserID());
+    instance->player->GetRenderObject()->SetColour(Vector4(Color::GetPlayerColor(user->GetUserID())));
     instance->player->setType(GameObject::Type::Player);
     instance->playerController = new PlayerController(instance->player, instance->gun, instance->controller, instance->mainCamera, instance->bulletWorld,instance->renderer);
 
@@ -717,6 +723,7 @@ void TutorialGame::Start() {
             newPlayer->setType(GameObject::Type::Player);
             newPlayer->SetOwner(newUser.GetUserID());
             newPlayer->SetWorldID(newUser.GetUserID());
+            newPlayer->GetRenderObject()->SetColour(Vector4(Color::GetPlayerColor(newUser.GetUserID())));
         }
     }
 

@@ -25,7 +25,8 @@ namespace Packet {
         USER_INFO = CUSTOM_TYPE + 5,
         ASSIGN_HOST = CUSTOM_TYPE + 6,
         REQUEST_USERID = CUSTOM_TYPE + 7,
-        DAMAGE = CUSTOM_TYPE + 8
+        DAMAGE = CUSTOM_TYPE + 8,
+        LASER = CUSTOM_TYPE + 9
     };
 
 
@@ -70,6 +71,29 @@ namespace Packet {
         const int m_objectID;
         const btVector3 m_linearVelocity;
         const btVector3 m_angularVelocity;
+    };
+
+    /**
+    * @brief Laser Packet class.
+    *
+    * Stores the start and end positions of a laser.
+    * Used by clients for displaying other players lasers.
+    */
+    class LaserPacket : public Packet {
+    public:
+        LaserPacket(int objectID, const btVector3& startPos, const btVector3& endPos, int sequenceNum) :
+            Packet(static_cast<Type>(PacketType::LASER), static_cast<int>(Channel::FREQUENT), sequenceNum),
+            m_objectID(objectID), m_startPos(startPos), m_endPos(endPos)
+        {}
+
+        inline int GetTargetID() const { return m_objectID; }
+        inline btVector3 GetStartPos() const { return m_startPos; }
+        inline btVector3 GetEndPos() const { return m_endPos; }
+
+    private:
+        const int m_objectID;
+        const btVector3 m_startPos;
+        const btVector3 m_endPos;
     };
 
 
