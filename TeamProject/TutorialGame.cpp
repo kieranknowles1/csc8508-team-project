@@ -656,8 +656,10 @@ void TutorialGame::JoinGame(bool host) {
     if (!host) {
         ENetAddress dest;
 
-        auto host = config.get<std::string>("defaultHost");
+        std::string host = config.get<std::string>("defaultHost");
         std::cout << "Connecting to " << host << std::endl;
+
+        //enet_address_set_host(&dest, "127.0.0.1");
         enet_address_set_host(&dest, host.c_str());
 
         dest.port = DEFAULT_PORT;
