@@ -8,7 +8,11 @@ using namespace NCL;
 using namespace CSC8503;
 
 void PlayerObject::Update(float dt) {
+    m_stateLock.lock();
     upDirection = CalculateUpDirection(dt);
+    m_stateLock.unlock();
+
+
     rightDirection = CalculateRightDirection(upDirection);
     forwardDirection = CalculateForwardDirection(upDirection, rightDirection);
     updateGravity(dt);
@@ -17,37 +21,9 @@ void PlayerObject::Update(float dt) {
 
     // 2 seconds before healing.
     if (elapsedTime - lastHit > 4.0f) {
+        std::lock_guard<std::mutex> lock(m_stateLock);
         health += 25 * dt;
         if (health > maxHealth) health = maxHealth;
-    }
-
-    if (TutorialGame::GetServerInstance().has_value() && (owner == TutorialGame::GetUser())) {
-        std::shared_ptr<Packet::DeltaPacket> deltaPacket = std::make_shared<Packet::DeltaPacket>(
-            worldID,
-            GetPhysicsObject()->GetRigidBody()->getLinearVelocity(),
-            GetPhysicsObject()->GetRigidBody()->getAngularVelocity(),
-            GetLastPacketSequence((uint8_t)Packet::PacketType::DELTA) + 1
-        );
-        UpdatePacketSequence((uint8_t)Packet::PacketType::DELTA, deltaPacket->GetSequenceNumber());
-        TutorialGame::GetServerInstance()->Broadcast(deltaPacket);
-
-        btTransform transform = GetPhysicsObject()->GetRigidBody()->getWorldTransform();
-        std::shared_ptr<Packet::PositionPacket> positionPacket = std::make_shared<Packet::PositionPacket>(
-            worldID,
-            transform.getOrigin(),
-            transform.getRotation(),
-            GetLastPacketSequence((uint8_t)Packet::PacketType::POSITION) + 1
-        );
-        UpdatePacketSequence((uint8_t)Packet::PacketType::POSITION, positionPacket->GetSequenceNumber());
-        TutorialGame::GetServerInstance()->Broadcast(positionPacket);
-
-        std::shared_ptr<Packet::ObjectChangeGravityPacket> gravityPacket = std::make_shared<Packet::ObjectChangeGravityPacket>(
-            worldID,
-            upDirection,
-            GetLastPacketSequence((uint8_t)Packet::PacketType::OBJECT_CHANGE_GRAVITY) + 1
-        );
-        UpdatePacketSequence((uint8_t)Packet::PacketType::OBJECT_CHANGE_GRAVITY, gravityPacket->GetSequenceNumber());
-        TutorialGame::GetServerInstance()->Broadcast(gravityPacket);
     }
 }
 
@@ -114,6 +90,7 @@ void PlayerObject::OnCollisionStay(const CollisionInfo& collision){
 
 
 void PlayerObject::updateGravity(float dt) {
+    std::lock_guard<std::mutex> lock(m_stateLock);
 	btVector3 movement = this->GetPhysicsObject()->GetRigidBody()->getLinearVelocity();
 	movement += upDirection * -(gravityScale * dt);
 	this->GetPhysicsObject()->GetRigidBody()->setLinearVelocity(movement);
