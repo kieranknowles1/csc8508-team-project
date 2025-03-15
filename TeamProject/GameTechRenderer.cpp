@@ -11,7 +11,6 @@
 #include "Debug.h"
 
 #include <NCLCoreClasses/stb/stb_image.h>
-#include <Colors.h>
 
 using namespace NCL;
 using namespace Rendering;
@@ -707,7 +706,7 @@ void GameTechRenderer::RenderLasers() {
 	glUniformMatrix4fv(glGetUniformLocation(laserShader->GetProgramID(), "projMatrix"), 1, false, (float*)&projMatrix);
 
 	BindMesh(*highResSphere);
-	for (Laser* laser : lasers) {
+	for (std::shared_ptr<Laser> laser : lasers) {
 		if (laser->startPos == btVector3(0, 0, 0) && laser->endPos == btVector3(0, 0, 0)) continue;
 		glUniform3fv(glGetUniformLocation(laserShader->GetProgramID(), "startPosition"), 1, (float*)&laser->startPos);
 		glUniform3fv(glGetUniformLocation(laserShader->GetProgramID(), "endPosition"), 1, (float*)&laser->endPos);

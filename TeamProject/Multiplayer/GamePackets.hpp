@@ -73,6 +73,12 @@ namespace Packet {
         const btVector3 m_angularVelocity;
     };
 
+    /**
+    * @brief Laser Packet class.
+    *
+    * Stores the start and end positions of a laser.
+    * Used by clients for displaying other players lasers.
+    */
     class LaserPacket : public Packet {
     public:
         LaserPacket(int objectID, const btVector3& startPos, const btVector3& endPos, int sequenceNum) :
@@ -80,28 +86,8 @@ namespace Packet {
             m_objectID(objectID), m_startPos(startPos), m_endPos(endPos)
         {}
 
-        /**
-         * @brief Get the ID of the object this delta packet should be applied to.
-         * @return int representing the GameObject's worldID.
-         */
         inline int GetTargetID() const { return m_objectID; }
-
-        /**
-         * @brief Get the Linear Velocity of the Delta Packet.
-         *
-         * This is the current linear velocity of the object on the server.
-         *
-         * @return btVector3 containing the linear velocity.
-         */
         inline btVector3 GetStartPos() const { return m_startPos; }
-
-        /**
-         * @brief Get the Angular Velocity of the Delta Packet.
-         *
-         * This is the current angular velocity of the object on the server.
-         *
-         * @return btVector3 containing the angular velocity.
-         */
         inline btVector3 GetEndPos() const { return m_endPos; }
 
     private:

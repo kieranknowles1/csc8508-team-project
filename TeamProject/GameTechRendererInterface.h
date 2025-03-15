@@ -119,13 +119,14 @@ namespace NCL::CSC8503 {
 
 		void initLasers() {
 			for (int i = 0; i < 8; i++) {
-				lasers.push_back(new Laser(btVector3(0,0,0), btVector3(0, 0, 0), i+1));
+				std::shared_ptr<Laser> newLaser = std::make_shared<Laser>(btVector3(0, 0, 0), btVector3(0, 0, 0), i + 1);
+				lasers.push_back(newLaser);
 			}
 		}
 
 		void updateLaser(int laserId, btVector3 startPos, btVector3 endPos) {
 			// Find the laser with the given ID and update its positions
-			for (Laser* laser : lasers) {
+			for (std::shared_ptr<Laser> laser : lasers) {
 				if (laser->id == laserId) {
 					laser->startPos = startPos;  
 					laser->endPos = endPos;   
@@ -152,7 +153,7 @@ namespace NCL::CSC8503 {
         std::vector<UiSprite> frameSprites;
 		std::vector<UiText> frameTexts;
 		std::vector<PointLight*> lights;
-		std::vector<Laser*> lasers;
+		std::vector<std::shared_ptr<Laser>> lasers;
 		DecalSystem decalSystem;
 	};
 }
