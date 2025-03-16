@@ -8,14 +8,14 @@
 namespace NCL::CSC8503 {
 
 class CreditsScreen : public PushdownState {
-	// Screen % per second
-	const static constexpr float Speed = 10.0f;
+	// Screens per second
+	const static constexpr float Speed = 0.10f;
 	// ~80 chars
 	const static constexpr float TextScale = 0.65f;
 
 	float speedup = 0.0f;
 
-	float yPos = 30.0f;
+	float yPos = 0.30f;
 	float totalHeight;
 	Controller* controller;
 	std::string text;
@@ -28,7 +28,7 @@ public:
 		}
 
 		int lineCount = std::count(text.begin(), text.end(), '\n');
-		totalHeight = (lineCount * 5.0f * TextScale);
+		totalHeight = (lineCount * 0.05f * TextScale);
 	}
 
 	PushdownResult OnUpdate(float dt, PushdownState** newState) override {
@@ -42,14 +42,14 @@ public:
 
 		float down = controller->GetAnalogue(Controller::AnalogueControl::MoveForward);
 		if (down != 0) {
-			speedup -= down * 15.0f * dt;
+			speedup -= down * 0.15f * dt;
 		}
 		else {
 			speedup = 0;
 		}
 
 		// ~80 chars at 720p
-		Debug::Print("Oh hi there. I see you found a feature (TM)", Vector2(0, yPos - 50.0f));
+		Debug::Print("Oh hi there. I see you found a feature (TM)", Vector2(0, yPos - 0.50f));
 		Debug::Print(text, Vector2(0, yPos), Vector4(1, 1, 1, 1), TextScale);
 		yPos -= (Speed + speedup) * dt;
 
