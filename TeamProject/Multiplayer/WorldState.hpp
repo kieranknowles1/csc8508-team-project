@@ -35,16 +35,6 @@ namespace WorldState {
         }
 
         /**
-         * @brief Lock this object for writing if you want to write to multiple
-         * states at once. This will block reading until the lock is
-         * destructed.
-         * @return A unique lock that will exist till destructed.
-         */
-        std::unique_lock<std::shared_mutex> GetWriteLock() {
-            return std::unique_lock(m_stateLock);
-        }
-
-        /**
          * @brief Update a state.
          * This function blocks all reading until it has finished.
          */
