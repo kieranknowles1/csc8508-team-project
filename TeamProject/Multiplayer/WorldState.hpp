@@ -1,13 +1,14 @@
 #pragma once
 
 #include <LinearMath/btVector3.h>
+#include <LinearMath/btQuaternion.h>
 #include <shared_mutex>
 #include <unordered_map>
 #include <variant>
 #include <vector>
 
 namespace WorldState {
-    using StateValue = std::variant<btVector3>;
+    using StateValue = std::variant<btVector3, btQuaternion>;
 
     enum class StateType {
         LinearVelocity,

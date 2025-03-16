@@ -677,7 +677,6 @@ void TutorialGame::Start() {
     instance->LoadWorldFromFile(9);
     
     // Init user for single players.
-    if (!user.has_value()) user.emplace(GenerateUserID());
 
     // Spawn in player.
     RespawnPoint* respawnPoint = Respawn::GetInstance()->GetRespawn(user->GetUserID() - 1);

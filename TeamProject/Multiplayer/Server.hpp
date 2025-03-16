@@ -29,8 +29,18 @@ namespace Multiplayer {
 
         /**
          * @brief Register all necessary packet handlers.
+         * Packet register is static so this only needs to be called once.
          */
         void InitPacketHandlers();
+
+        /**
+         * @brief Connect and busy-wait for the server to respond.
+         * @param ip - String representation of the ip (XX.XX.XX.XX).
+         * @param waitSeconds - How many seconds to wait before giving up.
+         */
+        void JoinGame(const std::string& ip, float waitSeconds);
+
+        bool IsConnected() const { return m_connected; }
 
     private:
         /**
@@ -49,12 +59,24 @@ namespace Multiplayer {
          */
         void ProcessPackets(bool endOfTick);
 
+        /**
+         * @brief Listens for connections to the server and sends relevant
+         * information to the connecting user. This is only used by the host.
+         */
+        void OnClientJoin(ENetPeer* peer);
+
+
         TutorialGame* m_game = nullptr;
+        Network* m_network = nullptr;
+
         Lobbies::User* m_user = nullptr;
         Lobbies::Lobby* m_lobby = nullptr;
+
         std::vector<std::unique_ptr<Packet::PacketHandler>> m_handlers;
-        Network* m_network = nullptr;
+
         uint32_t m_tickCount = 0;
         bool m_isHost = false;
+        bool m_connected = false;
+        unsigned int m_uniqueUserID = 0;
     };
 }
