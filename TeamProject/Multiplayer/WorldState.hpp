@@ -13,6 +13,7 @@ namespace WorldState {
         LinearVelocity,
         AngularVelocity,
         Position,
+        Rotation,
         UpVector
     };
 
@@ -52,8 +53,7 @@ namespace WorldState {
             }
         }
 
-        template <typename T>
-        T ReadState(StateType type) {
+        StateValue ReadState(StateType type) {
             std::shared_lock lock(m_stateLock);
             return m_states[type];
         }
