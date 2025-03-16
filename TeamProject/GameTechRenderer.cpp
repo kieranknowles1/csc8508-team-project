@@ -33,6 +33,7 @@ GameTechRenderer::GameTechRenderer(Window* window) : OGLRenderer(window), GameTe
 	laserPostProcess = std::make_unique<OGLShader>("texturevert.glsl", "laserPost.frag");
 	laserPostProcess2 = std::make_unique<OGLShader>("texturevert.glsl", "laserPost2.frag");
 	addLaserShader = std::make_unique<OGLShader>("texturevert.glsl", "laserCombine.frag");
+	laserPreProcess = std::make_unique<OGLShader>("laserPre.vert", "laserPre.frag");
 
 	glGenTextures(1, &shadowTex);
 	glBindTexture(GL_TEXTURE_2D, shadowTex);
@@ -90,6 +91,7 @@ GameTechRenderer::GameTechRenderer(Window* window) : OGLRenderer(window), GameTe
 	glGenFramebuffers(1, &bufferFBO);
 	glGenFramebuffers(1, &pointLightFBO);
 	glGenFramebuffers(1, &laserFBO);
+	glGenFramebuffers(1, &laserPreFBO);
 	glGenFramebuffers(1, &laserPostFBO);
 	glGenFramebuffers(1, &laserPostFBO2);
 	glGenFramebuffers(1, &laserAddFBO);
@@ -107,6 +109,8 @@ GameTechRenderer::GameTechRenderer(Window* window) : OGLRenderer(window), GameTe
 	GenerateScreenTexture(lightSpecularTex);
 
 	GenerateScreenTexture(laserTex);
+	GenerateScreenTexture(laserPreTex);
+	GenerateScreenTexture(laserTexOld);
 	GenerateScreenTexture(laserPostTex);
 	GenerateScreenTexture(laserPostTex2);
 	GenerateScreenTexture(laserAddedTex);
@@ -136,6 +140,13 @@ GameTechRenderer::GameTechRenderer(Window* window) : OGLRenderer(window), GameTe
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, laserTex, 0);
 	glDrawBuffers(1, buffers);
 	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE || !laserTex) {
+		return;
+	}
+
+	glBindFramebuffer(GL_FRAMEBUFFER, laserPreFBO);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, laserPreTex, 0);
+	glDrawBuffers(1, buffers);
+	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE || !laserPreTex) {
 		return;
 	}
 
@@ -254,6 +265,13 @@ GameTechRenderer::~GameTechRenderer() {
 	glDeleteTextures(1, &laserTex);
 	glDeleteFramebuffers(1, &laserPostFBO);
 	glDeleteTextures(1, &laserPostTex);
+
+	glDeleteFramebuffers(1, &laserPostFBO2);
+	glDeleteTextures(1, &laserPostTex2);
+	glDeleteFramebuffers(1, &laserPreFBO);
+	glDeleteTextures(1, &laserPreTex);
+	glDeleteTextures(1, &laserTexOld);
+
 }
 
 void GameTechRenderer::RenderFrame() {
@@ -676,19 +694,17 @@ void GameTechRenderer::RenderUI() {
 }
 
 void GameTechRenderer::RenderLasers() {
+
+
+	//draw lasers
 	glBindFramebuffer(GL_FRAMEBUFFER, laserFBO);
 	glClearColor(0, 0, 0, 0);
 	glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
-
 	glEnable(GL_BLEND);
-
 	UseShader(*laserShader);
-
-	//using the same proj and view matrices from RenderCamera():
 	Matrix4 viewMatrix = camera->BuildViewMatrix();
 	Matrix4 projMatrix = camera->BuildProjectionMatrix(hostWindow->GetScreenAspect());
-
-	//update shader matrices here (don't need to set model matrices though as this will be taken care of in vertex shader):
+	Matrix4 viewProjMatrix = (viewMatrix * projMatrix);
 	glUniformMatrix4fv(glGetUniformLocation(laserShader->GetProgramID(), "viewMatrix"), 1, false, (float*)&viewMatrix);
 	glUniformMatrix4fv(glGetUniformLocation(laserShader->GetProgramID(), "projMatrix"), 1, false, (float*)&projMatrix);
 
@@ -700,17 +716,34 @@ void GameTechRenderer::RenderLasers() {
 		glUniform1f(glGetUniformLocation(laserShader->GetProgramID(), "thickness"), 0.5f);
 		glUniform1f(glGetUniformLocation(laserShader->GetProgramID(), "time"), vignettePulse);
 		btVector4 color = Color::GetPlayerColor(laser->id);
-		glUniform4fv(glGetUniformLocation(laserShader->GetProgramID(), "inColour"), 1, (float*) &color);
+		glUniform4fv(glGetUniformLocation(laserShader->GetProgramID(), "inColour"), 1, (float*)&color);
 		DrawBoundMesh();
 	}
 
-	int texWidth, texHeight;
+	// motion blur
+	glBindFramebuffer(GL_FRAMEBUFFER, laserPreFBO);
+	glEnable(GL_BLEND);
+	UseShader(*laserPreProcess);
+	BindMesh(*fullscreenQuad);
+	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, laserTex);
+	glUniform1i(glGetUniformLocation(laserPreProcess->GetProgramID(), "laserTex"), 0);
+	glActiveTexture(GL_TEXTURE1);
+	glBindTexture(GL_TEXTURE_2D, laserTexOld);
+	glUniform1i(glGetUniformLocation(laserPreProcess->GetProgramID(), "oldLaserTex"), 1);
+	glUniform1f(glGetUniformLocation(laserPreProcess->GetProgramID(), "dt"), vignettePulse);
+	glUniformMatrix4fv(glGetUniformLocation(laserPreProcess->GetProgramID(), "currViewProjMatrix"), 1, false, (float*)&viewProjMatrix);
+	glUniformMatrix4fv(glGetUniformLocation(laserPreProcess->GetProgramID(), "prevViewProjMatrix"), 1, false, (float*)&laserPreviousViewProjMatrix);
+	DrawBoundMesh();
+
+	// calculate texelSize needed for blur
+	int texWidth, texHeight;
+	glBindTexture(GL_TEXTURE_2D, laserPreTex);
 	glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_WIDTH, &texWidth);
 	glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_HEIGHT, &texHeight);
 	Vector2 texelSize = Vector2(1.0f / texWidth, 1.0f / texHeight);
 
-
+	// vertical blur
 	glBindFramebuffer(GL_FRAMEBUFFER, laserPostFBO);
 	glClearColor(0, 0, 0, 0);
 	glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
@@ -718,12 +751,13 @@ void GameTechRenderer::RenderLasers() {
 	UseShader(*laserPostProcess);
 	BindMesh(*fullscreenQuad);
 	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, laserTex);
+	glBindTexture(GL_TEXTURE_2D, laserPreTex);
 	glUniform1i(glGetUniformLocation(laserPostProcess->GetProgramID(), "laserTex"), 0);
 	glUniform1f(glGetUniformLocation(laserPostProcess->GetProgramID(), "blurScale"),1.25f);
 	glUniform2fv(glGetUniformLocation(laserPostProcess->GetProgramID(), "texelSize"), 1, (float*)&texelSize);
 	DrawBoundMesh();
 
+	// horizontal blur
 	glBindFramebuffer(GL_FRAMEBUFFER, laserPostFBO2);
 	glClearColor(0, 0, 0, 0);
 	glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
@@ -736,7 +770,8 @@ void GameTechRenderer::RenderLasers() {
 	glUniform1f(glGetUniformLocation(laserPostProcess->GetProgramID(), "blurScale"), 1.25f);
 	glUniform2fv(glGetUniformLocation(laserPostProcess->GetProgramID(), "texelSize"), 1, (float*)&texelSize);
 	DrawBoundMesh();
-
+	laserPreviousViewProjMatrix = viewProjMatrix;
+	laserTexOld = laserPreTex;
 }
 
 /*
