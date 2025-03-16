@@ -16,7 +16,7 @@ TODO: Credit ourselves, add in what each of us did
   ...
 
 - Kieran Knowles
-  Head of PS5 Support, Linux Support, and Engine Development.
+  Head of PS5 Support and Linux Support. Assisted in Engine Development.
 
 - Max Davidson
   ...
