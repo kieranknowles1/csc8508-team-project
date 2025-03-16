@@ -23,7 +23,6 @@ public:
     PushdownResult OnUpdate(float dt, PushdownState** newState) override {
         const std::array<std::string, 5> menuItems = { "Singleplayer", "Host Game", "Join Game", "Credits", "Quit"};
         
-        std::cout << selection << std::endl;
         if (controller->GetDigital(Controller::DigitalControl::MenuDown)) {
             selection = (size_t)std::min((int)menuItems.size() - 1, (int)selection + 1);
         }
