@@ -75,24 +75,8 @@ static bool BulletRaycast(btDynamicsWorld* world, const btVector3& start, const 
 }
 
 void TutorialGame::UpdateGame(float dt) {
-    if (server != nullptr) {
-        Debug::Print("Lobby: ", Vector2(0.4f, 0.1f));
-        if (server->IsHost()) {
-            Debug::Print("> Start Game <", Vector2(0.4f, 0.5f));
-            if (controller->GetDigital(Controller::DigitalControl::MenuConfirm)) {
-                SetState(GameState::STARTING);
-                Start();
-            }
-        }
-        Debug::Print(
-            "Connected: "
-            + std::to_string(server->ClientCount())
-            + "/"
-            + std::to_string(server->GetMaxClients()),
-            Vector2(0.6f, 0.9f)
-        );
-    }
-    if (GetState() == GameState::IDLE) return;
+    std::cout << "Updating.\n";
+    //if (GetState() == GameState::IDLE) return;
 
     profiler.beginFrame();
 
@@ -637,6 +621,7 @@ void TutorialGame::Start() {
     instance->player = instance->InitPlayer(respawnPoint->position,respawnPoint->orientation);
     User user(0);
     instance->player->SetOwner(0);
+    instance->player->SetPlayerID(0);
     instance->player->SetWorldID(user.GetUserID());
     //instance->player->GetRenderObject()->SetColour(Vector4(Color::GetPlayerColor(user->GetUserID())));
     instance->player->setType(GameObject::Type::Player);

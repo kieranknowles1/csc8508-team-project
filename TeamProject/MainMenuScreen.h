@@ -7,22 +7,20 @@
 #include <CSC8503CoreClasses/Debug.h>
 #include <iostream>
 #include "GameScreen.h"
+#include "LobbyScreen.h"
 #include "CreditsScreen.h"
 
 namespace NCL::CSC8503 {
 
 class MainMenuScreen : public PushdownState {
     size_t selection = 0;
-    bool inMenu;
     TutorialGame* game;
     Controller* controller;
 
 public:
-    MainMenuScreen(Controller* controller, TutorialGame* game) : controller(controller), game(game), selection(0), inMenu(true) {}
+    MainMenuScreen(Controller* controller, TutorialGame* game) : controller(controller), game(game), selection(0) {}
 
     PushdownResult OnUpdate(float dt, PushdownState** newState) override {
-
-
         const std::array<std::string, 5> menuItems = { "Singleplayer", "Host Game", "Join Game", "Credits", "Quit"};
 
         if (controller->GetDigital(Controller::DigitalControl::MenuDown)) {
@@ -38,13 +36,15 @@ public:
             {
             case GameMode::SINGLEPLAYER:
                 game->Start();
-                break;
+                *newState = new GameScreen(controller, game);
+                return PushdownResult::Push;
+
             case GameMode::HOST_GAME:
-                game->StartMultiplayerGame(true); //This is host game
-                break;
             case GameMode::JOIN_GAME:
-                game->StartMultiplayerGame(false); //This is join game
-                break;
+                game->StartMultiplayerGame(mode == GameMode::HOST_GAME); 
+                *newState = new LobbyScreen(controller, game);
+                return PushdownResult::Push;
+
             case GameMode::CREDITS:
                 *newState = new CreditsScreen(controller, Assets::CREDITS);
                 return PushdownResult::Push;
@@ -53,10 +53,6 @@ public:
                 return PushdownResult::Pop;
             default: assert(false);
             }
-
-            *newState = new GameScreen(controller, game);
-            inMenu = false;
-            return PushdownResult::Push;
         }
 
         //Render menu
