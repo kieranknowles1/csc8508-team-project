@@ -22,7 +22,8 @@ public:
 
     PushdownResult OnUpdate(float dt, PushdownState** newState) override {
 
-        const std::array<std::string, 5> menuItems = { "Singleplayer", "Host Game", "Join Game", "Credits", "Quit"};
+
+        const std::array<std::string, 5> menuItems = { " Singleplayer", " Host Game", " Join Game", " Credits", " Quit"};
 
         if (controller->GetDigital(Controller::DigitalControl::MenuDown)) {
             selection = std::min(menuItems.size() - 1, selection + 1);
@@ -61,8 +62,8 @@ public:
         //Render menu
         for (int i = 0; i < menuItems.size(); i++) {
             std::string currentItem = menuItems[i];
-            if (i == selection) currentItem += " <";
-            Debug::Print(currentItem, Vector2(0, 0.50 + (0.10 * i))); //Replace with AddUIElement
+            if (i == selection) currentItem = ">" + currentItem + " <";
+            Debug::Print(currentItem, Vector2(0.35f, 0.35f + (0.1f * i)));
         }
         return PushdownResult::NoChange;
 
