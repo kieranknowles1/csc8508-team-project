@@ -49,13 +49,12 @@ void PlayerController::UpdateMovement(float dt) {
     HandleYaw();
     SpecialTypeCalculations();
     HandleSliding(dt);
-    HandleCrouching(dt);
 
     if (inAirTime > 0) {
         player->setCollided(0);
         inAirTime -= dt;
     }
-    if ((isSliding||slideTransition) && !isCrouching) return;
+    if (isSliding||slideTransition) return;
     RotationCalculations();
  
     CameraMovement();
@@ -127,58 +126,6 @@ void PlayerController::FireShot(float dt) {
 }
 
 
-//transitions states between standing and crouching
-void PlayerController::HandleCrouching(float dt) {
-    if (isSliding) {
-        return;
-    }
-    if ((crouching && !controller->GetDigital(Controller::DigitalControl::Crouch)) || slideTransition) {
-        crouching = CheckCeling();
-    }
-    else {
-        crouching = controller->GetDigital(Controller::DigitalControl::Crouch);
-    }
-
-    crouchTransition = crouching ? (currentCrouchingTimer < crouchingTime) : (currentStandingTimer < crouchingTime);
-
-    if (crouching) {
-        isCrouching = true;
-        currentStandingTimer = 0;
-        currentCrouchingTimer = btMin(currentCrouchingTimer + dt, crouchingTime);
-        currentHeight = std::lerp(standingHeight, crouchingHeight, currentCrouchingTimer / crouchingTime);
-    }
-    else {
-        isCrouching = false;
-        currentCrouchingTimer = 0;
-        currentStandingTimer = btMin(currentStandingTimer + dt, crouchingTime);
-        currentHeight = std::lerp(crouchingHeight, standingHeight, currentStandingTimer / crouchingTime);
-    }
-
-    if (crouchTransition) {
-        Vector3 currentScale = player->getRenderScale();
-        currentScale.y = (currentHeight+2)*0.7;
-        player->setRenderScale(currentScale);
-
-        btCollisionShape* shape = player->GetPhysicsObject()->GetRigidBody()->getCollisionShape();
-        shape->setLocalScaling(btVector3(1, currentHeight/standingHeight, 1));
-    }
-}
-
-
-//uses ray to detect if the player is blocked from standing
-bool PlayerController::CheckCeling() {
-    btVector3 btBelowPlayerPos = btPlayerPos;
-    btBelowPlayerPos += (upDirection * 4.1f);
-    btCollisionWorld::ClosestRayResultCallback callback(btPlayerPos, btBelowPlayerPos);
-    bulletWorld->rayTest(btPlayerPos, btBelowPlayerPos, callback);
-    if (callback.hasHit()) {
-        return true;
-    }
-    else {
-        return false;
-    }
-}
-
 // finds surface normal of floor below
 btVector3 PlayerController::FindFloorNormal() {
     btVector3 btBelowPlayerPos = btPlayerPos;
@@ -197,7 +144,7 @@ btVector3 PlayerController::FindFloorNormal() {
 void PlayerController::HandleSliding(float dt) {
     bool crouching = controller->GetDigital(Controller::DigitalControl::Crouch);
     bool sprinting = controller->GetDigital(Controller::DigitalControl::Sprint);
-    bool slidingCondition = crouching && sprinting && !isCrouching;
+    bool slidingCondition = crouching && sprinting;
 
     slideTransition = slidingCondition
         ? (currentSlidingTimer < slidingTime)
@@ -214,7 +161,7 @@ void PlayerController::HandleSliding(float dt) {
         currentStandingSlideTimer = btMin(currentStandingSlideTimer + dt, slidingTime);
     }
 
-    if ((slideTransition || isSliding) && !isCrouching) {
+    if (slideTransition || isSliding) {
         float slideFactor = isSliding ? btMin(currentSlidingTimer / slidingTime, 1.0f) : btMin(currentStandingSlideTimer / slidingTime, 1.0f);
 
         btQuaternion playerRotation1(btVector3(0, 1, 0), Maths::DegreesToRadians(yaw));
@@ -325,7 +272,7 @@ void PlayerController::CameraMovement() {
     btTransform transformPlayerMotion;
     player->GetPhysicsObject()->GetMotionState()->getWorldTransform(transformPlayerMotion);
     btVector3 playerCamPos = transformPlayerMotion.getOrigin();
-    playerCamPos += upDirection * (isCrouching ? std::lerp(cameraHeight, crouchHeight, btMin(currentCrouchingTimer / crouchingTime, 1.0f)) : std::lerp(crouchHeight, cameraHeight, btMin(currentStandingTimer / crouchingTime, 1.0f)));
+    playerCamPos += upDirection * cameraHeight;
     if (!slideTransition && !thirdPerson) {
         camera->SetPosition(playerCamPos);
         player->SetGunTransform(camera->GetPitch(), camera->GetYaw(), playerCamPos);
@@ -358,10 +305,9 @@ void PlayerController::MovementCalculations(float dt) {
     Vector2 directionalInput = getDirectionalInput();
     bool sprinting = controller->GetDigital(Controller::DigitalControl::Sprint);
     float forwardMovement = directionalInput.y;
-    float moveMulti = playerSpeed * (sprinting ? sprintMulti : 1) * (isCrouching ? crouchMulti : 1) * (player->getCollided() <= 0 ? airMulti : 1);
+    float moveMulti = playerSpeed * (sprinting ? sprintMulti : 1) * (player->getCollided() <= 0 ? airMulti : 1);
     forwardMovement *= (forwardMovement <= 0) ? backwardsMulti : 1;
     movement = (right * directionalInput.x * strafeMulti * moveMulti) + (forward * forwardMovement * moveMulti);
-
     if (player->getCollided() <= 0 || onIce) {
         movement *= (airMulti * dt);
         movement += rb->getLinearVelocity();
