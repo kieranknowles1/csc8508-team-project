@@ -33,7 +33,6 @@ namespace Multiplayer {
             m_network->SetConnectCallback([&](ENetPeer* client) { OnClientJoin(client); });
         }
 
-        m_network->Start();
     }
 
     Server::~Server() {
@@ -105,22 +104,22 @@ namespace Multiplayer {
             if (!object->GetWorldState().HasState()) return;
 
             WorldState::ObjectState& worldState = object->GetWorldState();
-            std::shared_lock readLock = worldState.GetReadLock();
+            worldState.AcquireReadLock(); // ACQUIRE LOCK.
 
             // TODO: Move packet creation to virtual function inside GameObject.
             // Create packets.
             std::shared_ptr<Packet::DeltaPacket> delta = std::make_shared<Packet::DeltaPacket>(
                 object->GetWorldID(),
-                std::get<btVector3>(worldState.ReadState(WorldState::StateType::LinearVelocity)),
-                std::get<btVector3>(worldState.ReadState(WorldState::StateType::AngularVelocity)),
+                std::get<btVector3>(worldState.UnsafeReadState(WorldState::StateType::LinearVelocity)),
+                std::get<btVector3>(worldState.UnsafeReadState(WorldState::StateType::AngularVelocity)),
                 m_tickCount
             );
             m_network->Broadcast(delta);
 
             std::shared_ptr<Packet::PositionPacket> position = std::make_shared<Packet::PositionPacket>(
                 object->GetWorldID(),
-                std::get<btVector3>(worldState.ReadState(WorldState::StateType::Position)),
-                std::get<btQuaternion>(worldState.ReadState(WorldState::StateType::Rotation)),
+                std::get<btVector3>(worldState.UnsafeReadState(WorldState::StateType::Position)),
+                std::get<btQuaternion>(worldState.UnsafeReadState(WorldState::StateType::Rotation)),
                 m_tickCount
             );
             m_network->Broadcast(position);
@@ -131,12 +130,12 @@ namespace Multiplayer {
 
                 std::shared_ptr<Packet::ObjectChangeGravityPacket> gravity = std::make_shared<Packet::ObjectChangeGravityPacket>(
                     playerObj->GetWorldID(),
-                    std::get<btVector3>(worldState.ReadState(WorldState::StateType::UpVector)),
+                    std::get<btVector3>(worldState.UnsafeReadState(WorldState::StateType::UpVector)),
                     m_tickCount
                 );
                 m_network->Broadcast(gravity);
             }
-            readLock.release(); // Just in case.
+            worldState.ReleaseReadLock(); // RELEASE LOCK.
         });
     }
 

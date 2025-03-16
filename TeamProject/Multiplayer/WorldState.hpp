@@ -29,11 +29,15 @@ namespace WorldState {
         /**
          * @brief Lock this object for reading if you want to read multiple
          * states at once without allowing writes.
-         * @return A shared lock that will exist till destructed.
+         * @see ReleaseReadLock();
          */
-        std::shared_lock<std::shared_mutex> GetReadLock() {
-            return std::shared_lock(m_stateLock);
-        }
+        inline void AcquireReadLock() { m_stateLock.lock_shared(); }
+
+        /**
+         * @brief Release previous acquired read lock.
+         * @see AcquireReadLock
+         */
+        inline void ReleaseReadLock() { m_stateLock.unlock_shared(); }
 
         /**
          * @brief Update a state.
@@ -56,6 +60,10 @@ namespace WorldState {
 
         StateValue ReadState(StateType type) {
             std::shared_lock lock(m_stateLock);
+            return m_states[type];
+        }
+
+        StateValue UnsafeReadState(StateType type) {
             return m_states[type];
         }
 

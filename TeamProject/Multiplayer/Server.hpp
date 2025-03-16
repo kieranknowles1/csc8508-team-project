@@ -41,6 +41,8 @@ namespace Multiplayer {
          */
         void SetUser(const Lobbies::User& user);
 
+        void Start() { m_network->Start(); }
+
         inline void AddUserToLobby(const Lobbies::User& user) { m_lobby->AddUser(user); }
         inline void RemoveUserFromLobby(const Lobbies::User& user) { m_lobby->RemoveUser(user); }
         inline void AssignLobbyHost(const Lobbies::User& user) { m_lobby->SetHost(user); }
