@@ -186,6 +186,8 @@ namespace NCL::CSC8503 {
             return light;
         }
 
+        WorldState::ObjectState& GetWorldState() { return objectWorldState; }
+
         void setDeleted() { deleted = true; }
         bool isDeleted() { return deleted; }
     protected:
