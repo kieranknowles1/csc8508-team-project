@@ -1,7 +1,7 @@
 void TransformVertexToWorld(ObjectState s, uint vertID, out float4 position, out float3 normal, out float4 tangent, out float3 bitangent) {
 	float3 vPos;
-	if(s.index[1] > 0) {
-		RegularBuffer<SkinnedVertex> skinBuffer = bindlessBuffers[s.index[1]];
+	if(s.skinningIndex > 0) {
+		RegularBuffer<SkinnedVertex> skinBuffer = bindlessBuffers[s.skinningIndex];
 		SkinnedVertex v = skinBuffer[vertID];
 
 		vPos		= v.position;

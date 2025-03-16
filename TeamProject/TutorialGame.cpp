@@ -9,20 +9,21 @@
 #include "Multiplayer/GamePackets.hpp"
 #include "Multiplayer/GamePacketHandlers.hpp"
 #include <CSC8503CoreClasses/Debug.h>
+#include "Colors.h"
 #include "Shoot.h"
 
 #include "Window.h"
-
-#include <chrono>
+#include "Config.h"
 
 using namespace NCL;
 using namespace CSC8503;
 
 TutorialGame* TutorialGame::instance = nullptr;
 
-TutorialGame::TutorialGame(GameTechRendererInterface* renderer, Controller* controller)
+TutorialGame::TutorialGame(GameTechRendererInterface* renderer, Controller* controller, Config& config)
     : renderer(renderer)
     , controller(controller)
+    , config(config)
 {
     assert(instance == nullptr && "TutorialGame must be unique");
     instance = this;
@@ -36,7 +37,7 @@ TutorialGame::TutorialGame(GameTechRendererInterface* renderer, Controller* cont
     mainCamera = &world->GetMainCamera();
 
     resourceManager = std::make_unique<ResourceManager>(renderer);
-    new Shoot();
+    new Shoot(); //Shoot and Respawn have new before them but are not being deleted to my knowledge
     new Respawn();
 
     InitialiseAssets();
@@ -86,14 +87,12 @@ void TutorialGame::UpdateGame(float dt) {
     int steps = bulletWorld->stepSimulation(maxDt, substeps, PHYSICS_PERIOD);
 
     profiler.startSection("Update World");
-    if (testTurret) {
-        testTurret->Update(dt);
-    }
-    if (navMesh && navMeshDebug) {
-        visualiseNavMesh();
-        if (wanderer) {
+
+    if (enableAI) {
+        for (Wanderer* wanderer : wanderers) {
             wanderer->Update(dt);
         }
+        if (navMeshDebug) VisualiseNavMesh();
     }
 
     UpdateKeys();
@@ -110,7 +109,6 @@ void TutorialGame::UpdateGame(float dt) {
     clearGraveyard();
     profiler.startSection("Prepare Render");
     bulletWorld->debugDrawWorld();
-    renderer->collectFrameObjects(world.get());
 
     profiler.startSection("Render Decals");
     // Fade decal after sometime - @Kieran: Didn't forget to call the Update function this time :)
@@ -119,6 +117,18 @@ void TutorialGame::UpdateGame(float dt) {
     profiler.endFrame();
     if (showProfiling) {
         profiler.printTimes();
+    }
+
+    if (state == GameState::IDLE) {
+        if (user.has_value() && lobby.has_value()) {
+            if (lobby->IsHost(user.value())) {
+                Debug::Print("> Start Game <", Vector2(0.4f, 0.5f));
+                if (controller->GetDigital(Controller::DigitalControl::MenuConfirm)) {
+                    StartMultiplayerGame();
+                }
+            }
+            Debug::Print("Connected: " + std::to_string(lobby->GetConnectedUsers().size()) + "/8", Vector2(0.6f, 0.9f));
+        }
     }
 
     //post processing time variable effect:
@@ -145,7 +155,7 @@ void TutorialGame::UpdatePlayer(float dt) {
     // Press F for freeCam, press G for thirdPerson
     if (freeCam) {
         //freeCam Movement
-        world->GetMainCamera().UpdateCamera(dt, true);
+        world->GetMainCamera().UpdateCamera(dt * 10.0f, true);
     }
     else {
         //player Movement
@@ -207,8 +217,10 @@ void TutorialGame::ThirdPersonControls() {
     mainCamera->SetPitch(-15.0f);
 }
 
-void TutorialGame::visualiseNavMesh() {
-    navMesh->VisualiseNavMesh();
+void TutorialGame::VisualiseNavMesh() {
+    for (NavMesh* mesh : navMeshes) {
+        mesh->VisualiseNavMesh();
+    }
 
     /*btVector3 startPoint(94, 0.5833334, 26);
     btVector3 endPoint(68, 0.5833334, 34);
@@ -293,12 +305,16 @@ void TutorialGame::InitCamera() {
 }
 
 void TutorialGame::DestroyBullet() {
+    // TODO: These could all be unique_ptr
     delete bulletWorld;
     delete bulletDebug;
     delete solver;
     delete dispatcher;
     delete collisionConfig;
     delete broadphase;
+
+    bulletWorld = nullptr; bulletDebug = nullptr; solver = nullptr;
+    dispatcher = nullptr; collisionConfig = nullptr; broadphase = nullptr;
 }
 
 /* Bullet Physics world has been initialized here */
@@ -315,56 +331,67 @@ void TutorialGame::InitBullet() {
 }
 
 void TutorialGame::LoadWorldFromFile(int levelNum) {
-    ResetWorld();
+    ClearWorld();
     InitWorld();
 
     LevelImporter levelImporter(resourceManager.get(), world.get(), bulletWorld);
     levelImporter.LoadLevel(levelNum);
 
-    RespawnPoint* respawnPoint = Respawn::GetInstance()->GetRespawn(0);
-    player = InitPlayer(respawnPoint->position,respawnPoint->orientation);
-    player->SetPlayerID(0);
-    playerController = std::make_unique<PlayerController>(player, gun, controller, mainCamera, bulletWorld,renderer);
-
-    for (int i = 1; i < 8; i++) {
-        RespawnPoint* newRespawnPoint = Respawn::GetInstance()->GetRespawn(i);
-        PlayerObject* newPlayer = InitPlayer(newRespawnPoint->position, newRespawnPoint->orientation);
-        newPlayer->SetPlayerID(i);
-    }
-
-
-
-    Shoot::GetInstance()->Initialise(bulletWorld,resourceManager.get(), world.get(), renderer->GetDecalSystem());
-    Shoot::GetInstance()->InitShotMasks(player, gun);
-
-    if (navMeshDebug) {
-        AddTurretToWorld();
-        AddWandererToWorld();
-    }
-
 }
 
-void TutorialGame::ResetWorld() {
+void TutorialGame::InitAI() {
+    if (navMeshDebug) freeCam = true;
+
+    bottom = new NavMesh(bulletWorld);
+    bottom->LoadFromFile("Assets/Meshes/NavMeshes/bottom.navmesh");
+    navMeshes.push_back(bottom);
+
+    top = new NavMesh(bulletWorld);
+    top->LoadFromFile("Assets/Meshes/NavMeshes/top.navmesh");
+    navMeshes.push_back(top);
+
+    front = new NavMesh(bulletWorld);
+    front->LoadFromFile("Assets/Meshes/NavMeshes/front.navmesh");
+    navMeshes.push_back(front);
+
+    back = new NavMesh(bulletWorld);
+    back->LoadFromFile("Assets/Meshes/NavMeshes/back.navmesh");
+    navMeshes.push_back(back);
+
+    left = new NavMesh(bulletWorld);
+    left->LoadFromFile("Assets/Meshes/NavMeshes/left.navmesh");
+    navMeshes.push_back(left);
+
+    right = new NavMesh(bulletWorld);
+    right->LoadFromFile("Assets/Meshes/NavMeshes/right.navmesh");
+    navMeshes.push_back(right);
+
+    for (int i = 0; i < 5; i++) {
+        AddWandererToWorld(bottom, 'b');
+        AddWandererToWorld(top, 't');
+        AddWandererToWorld(front, 'f');
+        AddWandererToWorld(back, 'k');
+        AddWandererToWorld(left, 'l');
+        AddWandererToWorld(right, 'r');
+    }
+}
+
+
+void TutorialGame::ClearWorld() {
     DestroyBullet();
     world->ClearAndErase();
     renderer->GetDecalSystem().ClearDecalsFromWorld();
 }
 
 void TutorialGame::InitWorld() {
-    InitBullet();
-    audioEngine.Init();
 
-    navMeshDebug = false;
-    if (navMeshDebug) {
-        freeCam = true;
-        navMesh = new NavMesh(bulletWorld);
-        navMesh->LoadFromFile("Assets/Meshes/NavMeshes/initiallevel.navmesh");
-    }
+	InitBullet();
+	audioEngine.Init();
 
 }
 
 PlayerObject* TutorialGame::InitPlayer(btVector3 position, btVector3 upDir) {
-    PlayerObject* newPlayer = AddPlayerCapsuleToWorld(position, 7.0f, 3.5f, 10.0f);
+    newPlayer = AddPlayerCapsuleToWorld(position, 20.0f, 8.5f, 10.0f);
     // Keep us from clipping when falling too fast
     newPlayer->GetPhysicsObject()->GetRigidBody()->setCcdMotionThreshold(1.0f);
     newPlayer->GetPhysicsObject()->GetRigidBody()->setCcdSweptSphereRadius(0.4f);
@@ -374,6 +401,7 @@ PlayerObject* TutorialGame::InitPlayer(btVector3 position, btVector3 upDir) {
 
     newPlayer->GetRenderObject()->SetColour(Vector4(playerColour));
     newPlayer->setUpDirection(upDir);
+    newPlayer->setRenderer(renderer);
     return newPlayer;
 }
 
@@ -404,8 +432,8 @@ Turret* TutorialGame::AddTurretToWorld() {
     return turret;
 }
 
-Wanderer* TutorialGame::AddWandererToWorld() {
-    Wanderer* wanderer = new Wanderer(player, navMesh);
+Wanderer* TutorialGame::AddWandererToWorld(NavMesh* navMesh, char side) {
+    Wanderer* wanderer = new Wanderer(player, navMesh, side);
 
     float height = 4.0f;
     float radius = 2.0f;
@@ -421,13 +449,13 @@ Wanderer* TutorialGame::AddWandererToWorld() {
     physicsObject->InitBulletPhysics(bulletWorld, shape, 0);
     wanderer->SetPhysicsObject(physicsObject);
 
-    wanderer->GetRenderObject()->SetColour(Vector4(1, 0, 0, 1));
+	wanderer->GetRenderObject()->SetColour(Vector4(0, 1, 0, 1));
 
     wanderer->InitPosAndOffset();
 
     world->AddGameObject(wanderer);
 
-    this->wanderer = wanderer;
+    wanderers.push_back(wanderer);
     return wanderer;
 }
 
@@ -612,7 +640,9 @@ void TutorialGame::InitNetwork(bool host) {
 
 void TutorialGame::ConnectToServer(ENetAddress& address) {
     server->ConnectTo(&address);
-    while (server->GetConnectionCount() < 1) continue;
+    while (server->GetConnectionCount() < 1) {
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    }
 }
 
 
@@ -622,6 +652,24 @@ void TutorialGame::InitPacketHandlers() {
 
     Packet::UserInfoPacketHandler* infoHandler = new Packet::UserInfoPacketHandler();
     Packet::PacketRegister::Register(infoHandler);
+
+    Packet::PositionPacketHandler* positionHandler = new Packet::PositionPacketHandler();
+    Packet::PacketRegister::Register(positionHandler);
+
+    Packet::DeltaPacketHandler* deltaHandler = new Packet::DeltaPacketHandler();
+    Packet::PacketRegister::Register(deltaHandler);
+
+    Packet::StartGamePacketHandler* startGameHandler = new Packet::StartGamePacketHandler();
+    Packet::PacketRegister::Register(startGameHandler);
+
+    Packet::ObjectChangeGravityPacketHandler* objectChangeGravityHandler = new Packet::ObjectChangeGravityPacketHandler();
+    Packet::PacketRegister::Register(objectChangeGravityHandler);
+
+    Packet::DamagePacketHandler* damageHandler = new Packet::DamagePacketHandler();
+    Packet::PacketRegister::Register(damageHandler);
+
+    Packet::LaserPacketHandler* laserHandler = new Packet::LaserPacketHandler();
+    Packet::PacketRegister::Register(laserHandler);
 }
 
 
@@ -632,7 +680,13 @@ void TutorialGame::JoinGame(bool host) {
 
     if (!host) {
         ENetAddress dest;
-        enet_address_set_host(&dest, "127.0.0.1");
+
+        std::string host = config.get<std::string>("defaultHost");
+        std::cout << "Connecting to " << host << std::endl;
+
+        //enet_address_set_host(&dest, "127.0.0.1");
+        enet_address_set_host(&dest, host.c_str());
+
         dest.port = DEFAULT_PORT;
 
         ConnectToServer(dest);
@@ -643,5 +697,75 @@ void TutorialGame::JoinGame(bool host) {
     else {
         user.emplace(GenerateUserID());
         lobby->AddUser(user.value());
+        lobby->SetHost(user.value());
     }
+}
+
+
+void TutorialGame::StartMultiplayerGame() {
+    std::shared_ptr<Packet::StartGamePacket> startGame = std::make_shared<Packet::StartGamePacket>();
+    server->Broadcast(startGame);
+    Start();
+    host = true;
+}
+
+
+void TutorialGame::Start() {
+    instance->state = GameState::ACTIVE;
+    instance->LoadWorldFromFile(9);
+    
+    // Init user for single players.
+    if (!user.has_value()) user.emplace(GenerateUserID());
+
+    // Spawn in player.
+    RespawnPoint* respawnPoint = Respawn::GetInstance()->GetRespawn(user->GetUserID() - 1);
+    instance->player = instance->InitPlayer(respawnPoint->position,respawnPoint->orientation);
+    instance->player->SetOwner(user->GetUserID());
+    instance->player->SetWorldID(user->GetUserID());
+    instance->player->GetRenderObject()->SetColour(Vector4(Color::GetPlayerColor(user->GetUserID())));
+    instance->player->setType(GameObject::Type::Player);
+    instance->playerController = new PlayerController(instance->player, instance->gun, instance->controller, instance->mainCamera, instance->bulletWorld,instance->renderer);
+
+    instance->navMeshDebug = false;
+    instance->enableAI = false;
+    if (instance->enableAI) {
+        instance->InitAI();
+    }
+
+    btQuaternion emptyRot;
+
+    // Send initial position to everyone if multiplayer.
+    if (server.has_value()) {
+        std::shared_ptr<Packet::PositionPacket> position = std::make_shared<Packet::PositionPacket>(
+            user->GetUserID(),
+            respawnPoint->position,
+            emptyRot,
+            instance->player->GetLastPacketSequence((uint8_t)Packet::PacketType::POSITION) + 1
+        );
+        instance->player->UpdatePacketSequence((uint8_t)Packet::PacketType::POSITION, position->GetSequenceNumber());
+        server->Broadcast(position);
+
+        std::shared_ptr<Packet::ObjectChangeGravityPacket> gravity = std::make_shared<Packet::ObjectChangeGravityPacket>(
+            user->GetUserID(),
+            respawnPoint->orientation,
+            instance->player->GetLastPacketSequence((uint8_t)Packet::PacketType::OBJECT_CHANGE_GRAVITY) + 1
+        );
+        instance->player->UpdatePacketSequence((uint8_t)Packet::PacketType::OBJECT_CHANGE_GRAVITY, gravity->GetSequenceNumber());
+        server->Broadcast(gravity);
+
+        // Spawn in player objects for other players.
+        for (const User& newUser: lobby->GetConnectedUsers()) {
+            if (newUser.GetUserID() == user->GetUserID()) continue;
+
+            RespawnPoint* respawnPoint = Respawn::GetInstance()->GetRespawn(newUser.GetUserID() - 1);
+            PlayerObject* newPlayer = instance->InitPlayer(respawnPoint->position,respawnPoint->orientation);
+            newPlayer->setType(GameObject::Type::Player);
+            newPlayer->SetOwner(newUser.GetUserID());
+            newPlayer->SetWorldID(newUser.GetUserID());
+            newPlayer->GetRenderObject()->SetColour(Vector4(Color::GetPlayerColor(newUser.GetUserID())));
+        }
+    }
+
+    Shoot::GetInstance()->Initialise(instance->bulletWorld,instance->resourceManager.get(), instance->world.get(), instance->renderer->GetDecalSystem());
+    Shoot::GetInstance()->InitShotMasks(instance->player, instance->gun);
 }

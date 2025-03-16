@@ -11,6 +11,7 @@ namespace NCL {
 			std::string	data;
 			Vector2 position;
 			Vector4 colour;
+			float scale;
 		};
 
 		struct DebugTexEntry {
@@ -31,7 +32,7 @@ namespace NCL {
 
 		static void DrawTex(const Texture& t, const Vector2& pos, const Vector2& scale, const Vector4& colour = Vector4(1, 1, 1, 1));
 
-		static void Print(const std::string& text, const Vector2& pos, const Vector4& colour = Vector4(1, 1, 1, 1));
+		static void Print(const std::string& text, const Vector2& pos, const Vector4& colour = Vector4(1, 1, 1, 1), float scale = 1.0f);
 		static void DrawLine(const Vector3& startpoint, const Vector3& endpoint, const Vector4& colour = Vector4(1, 1, 1, 1), float time = 0.0f);
 
 		static void DrawAxisLines(const Matrix4& modelMatrix, float scaleBoost = 1.0f, float time = 0.0f);

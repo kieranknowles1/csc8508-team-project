@@ -20,7 +20,7 @@ struct RespawnPoint {
 class Respawn {
 public:
 	Respawn() { instance = this; }
-	~Respawn();
+	~Respawn() {};
 	static Respawn* GetInstance() { return instance; }
 
 	void InsertRespawn(RespawnPoint* respawnPoint) {
@@ -28,6 +28,10 @@ public:
 	}
 
 	RespawnPoint* GetRespawn(unsigned int ID) {
+		if (respawnPoints.size() < ID) {
+			std::cerr << "RESPAWN POINT NOT FOUND" << std::endl;
+			return nullptr;
+		}
 		return respawnPoints.at(ID);
 	}
 

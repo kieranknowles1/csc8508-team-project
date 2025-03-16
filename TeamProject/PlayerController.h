@@ -18,6 +18,7 @@
 #include "Shoot.h"
 #include "Paintball.h"
 #include "Crosshair.h"
+#include "Scoreboard.h"
 #include <memory>
 
 
@@ -66,19 +67,15 @@ namespace NCL {
 		private:
 
 			//Player Movement Variables
-			float playerSpeed = 80.0f;
+			float playerSpeed = 130.0f;
 			float jumpHeight = 300.0f;
 			float gravityScale = 300.0f;
-			float cameraHeight = 4.5f;
+			float cameraHeight = 14.0f;
 
 			float sprintMulti = 2.0f;
 			float strafeMulti = 0.65f;
 			float backwardsMulti = 0.55f;
-			float airMulti = 1.0f;
-
-			float crouchingTime = 0.3f;
-			float crouchMulti = 0.4f;
-			float crouchHeight = -1.0f;
+			float airMulti = 0.75f;
 
 			float slidingTime = 0.25f;
 			float slidingAngle = 75.0f;
@@ -87,17 +84,18 @@ namespace NCL {
 
 			//Gun Variables
 			float shotCooldown = 0.075f;
-			btVector3 gunCameraOffset = btVector3(1.3, -0.7, -1.2);
+			btVector3 gunCameraOffset = btVector3(1.3, -0.7, -2.5f);
 
 			//Rotation Variables
 			float rotateTime = 0.5f;
 
 			//Special Types Variables
-			float bouncePadHeight = 5000.0f;
+			float bouncePadHeight = 7000.0f;
 
 
 			GameTechRendererInterface* renderer;
 			std::unique_ptr<Crosshair> crosshair;
+			std::unique_ptr<Scoreboard> scoreboard;
 			btVector3 upDirection;
 			btVector3 rightDirection;
 			btVector3 forwardDirection;
@@ -113,13 +111,6 @@ namespace NCL {
 			const Controller* controller = nullptr;
 			Camera* camera = nullptr;
 			float yaw = 0;
-			bool crouchTransition = false;
-			float currentHeight;
-			float standingHeight = 6.5f;
-			float crouchingHeight = 2.0f;
-			float currentCrouchingTimer=0;
-			float currentStandingTimer=10.0f;
-			bool isCrouching;
 			bool isSliding = false;
 			bool slideTransition = false;
 			float currentAngle;
@@ -139,6 +130,8 @@ namespace NCL {
 			btIDebugDraw* debugDrawer;
 			bool onIce = false;
 			btVector3 previousVelocity;
+			bool firing;
+			int laserID;
 
 			btVector3 forward;
 			btVector3 up;
@@ -149,13 +142,10 @@ namespace NCL {
 			Vector2 getDirectionalInput() const;
 			void Initialise();
 			void HandleShooting(float dt);
-			void HandleCrouching(float dt);
 			void HandleSliding(float dt);
 			void SpecialTypeCalculations();
-			bool CheckCeling();
 			btVector3 FindFloorNormal();
-			void SetGunTransform();
-			void FireShot();
+			void FireShot(float dt);
 			void GetAllDirections();
 			void HandleYaw();
 			void RotationCalculations();

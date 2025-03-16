@@ -4,6 +4,8 @@ set(SOURCES
     BulletDebug.h
     GameTechRendererInterface.cpp
     GameTechRendererInterface.h
+    Scoreboard.cpp
+    Scoreboard.h
     TutorialGame.cpp
     TutorialGame.h
     PlayerController.cpp
@@ -30,12 +32,11 @@ set(SOURCES
     Config.cpp
     DecalSystem.h
     DecalSystem.cpp
-    PushdownState.h
-    PushdownMachine.cpp
-    PushdownMachine.h
-    MainMenuState.h
-    PlayingState.h
-    PausedState.h
+    MainMenuScreen.h
+    CreditsScreen.h
+    GameScreen.h
+    PauseScreen.h
+    LobbyScreen.h
     Colors.h
     Multiplayer/GamePackets.hpp
     Multiplayer/GamePacketHandlers.hpp
@@ -93,6 +94,9 @@ else()
     list(APPEND SOURCES
         GameTechAGCRenderer.h
         GameTechAGCRenderer.cpp
+
+        ${CMAKE_SOURCE_DIR}/Assets/Shaders/PSSL/types.h
+        ${CMAKE_SOURCE_DIR}/Assets/Shaders/PSSL/ShaderConstants.psslh
     )
 endif()
 

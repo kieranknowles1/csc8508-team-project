@@ -23,18 +23,34 @@ namespace NCL::CSC8503 {
 	class GameWorld;
 	class RenderObject;
 
+
+	struct Laser {
+		btVector3 startPos;
+		btVector3 endPos;
+		int id;
+	};
+
+
 	struct UiSprite {
-		// TODO: Need a UV field
 		Maths::Vector2 position;
 		Maths::Vector2 size;
 		Maths::Vector4 color;
 		std::shared_ptr<Rendering::Texture> texture;
 	};
 
+	struct UiText {
+		Maths::Vector2 position;
+		std::string text;
+		Maths::Vector4 color;
+	};
+
     class UiElement {
     public:
         virtual void render(std::vector<UiSprite>& sprites) = 0;
-        virtual void Animate(float dt) = 0;
+		
+		virtual void render(std::vector<UiText>& Uitexts) = 0;
+        
+		virtual void Animate(float dt) = 0;
 
         bool IsActive() const {
             return enabled;
@@ -101,6 +117,26 @@ namespace NCL::CSC8503 {
 			vignetteIntensity = intensityIn;
 		}
 
+		void initLasers() {
+			for (int i = 0; i < 8; i++) {
+				std::shared_ptr<Laser> newLaser = std::make_shared<Laser>(btVector3(0, 0, 0), btVector3(0, 0, 0), i + 1);
+				lasers.push_back(newLaser);
+			}
+		}
+
+		void updateLaser(int laserId, btVector3 startPos, btVector3 endPos) {
+			// Find the laser with the given ID and update its positions
+			for (std::shared_ptr<Laser> laser : lasers) {
+				if (laser->id == laserId) {
+					laser->startPos = startPos;  
+					laser->endPos = endPos;   
+					return; 
+				}
+			}
+		}
+
+	
+
 	protected:
 		// Post-processing settings
 		bool hdrOn = true;
@@ -115,7 +151,9 @@ namespace NCL::CSC8503 {
 		std::vector<UiElement*> uiElements;
 		std::vector<RenderObject*> frameObjects;
         std::vector<UiSprite> frameSprites;
+		std::vector<UiText> frameTexts;
 		std::vector<PointLight*> lights;
+		std::vector<std::shared_ptr<Laser>> lasers;
 		DecalSystem decalSystem;
 	};
 }

@@ -41,13 +41,11 @@ namespace NCL {
 
 			void RenderShadowMap();
 			void RenderCamera();
-			void RenderSkybox();
 
 			void RenderDecals();
 			void RenderQuad();
 			void RenderUI();
-
-			void LoadSkybox();
+			void RenderLasers();
 
 			void SetDebugStringBufferSizes(size_t newVertCount);
 			void SetDebugLineBufferSizes(size_t newVertCount);
@@ -55,14 +53,11 @@ namespace NCL {
 			std::unique_ptr<OGLShader> uiShader;
 			std::unique_ptr<OGLShader> sceneShader;
 			std::unique_ptr<OGLShader> debugShader;
-			std::unique_ptr<OGLShader> skyboxShader;
-			std::unique_ptr<OGLMesh> skyboxMesh;
 
 			// 1.0f size quad, for HDR
 			std::unique_ptr<OGLMesh> unitQuad;
 			// 0.5f size quad, for sprites
 			std::unique_ptr<OGLMesh> halfUnitQuad;
-			GLuint		skyboxTex;
 
 			GLuint crosshairVAO;
 			GLuint crosshairVBO;
@@ -107,6 +102,7 @@ namespace NCL {
 			std::unique_ptr<OGLShader> combineShader;
 
 			std::unique_ptr<OGLMesh> lightSphere;
+			OGLMesh* highResSphere;
 			GLuint bufferFBO;
 
 			// For drawing multiple point lights.
@@ -114,6 +110,19 @@ namespace NCL {
 			GLuint lightDiffuseTex;		// Used by pointLightFBO for the diffuse texture.
 			GLuint lightSpecularTex;	// Used by pointLightFBO for the specular texture.
 
+			//lasers
+			std::unique_ptr<OGLShader> laserShader;
+			GLuint laserFBO;
+			GLuint laserTex;
+			std::unique_ptr<OGLShader> laserPostProcess;
+			GLuint laserPostFBO;
+			GLuint laserPostTex;
+			std::unique_ptr<OGLShader> laserPostProcess2;
+			GLuint laserPostFBO2;
+			GLuint laserPostTex2;
+			std::unique_ptr<OGLShader> addLaserShader;
+			GLuint laserAddFBO;
+			GLuint laserAddedTex;
 
 			void GenerateScreenTexture(GLuint& into, bool depth = false); //added
 			GLuint bufferDepthTex;
@@ -135,6 +144,7 @@ namespace NCL {
 			std::unique_ptr<OGLShader> vignetteShader;
 			GLuint BDepthTex;
 			void RenderPostProcessing();
+			OGLShader* edgedetectShader;
 
 		};
 	}

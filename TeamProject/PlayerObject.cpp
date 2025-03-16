@@ -1,4 +1,8 @@
 #include "PlayerObject.h"
+#include "TutorialGame.h"
+#include "Multiplayer/GamePackets.hpp"
+
+#include <memory>
 
 using namespace NCL;
 using namespace CSC8503;
@@ -8,6 +12,43 @@ void PlayerObject::Update(float dt) {
     rightDirection = CalculateRightDirection(upDirection);
     forwardDirection = CalculateForwardDirection(upDirection, rightDirection);
     updateGravity(dt);
+    
+    elapsedTime += dt;
+
+    // 2 seconds before healing.
+    if (elapsedTime - lastHit > 4.0f) {
+        health += 25 * dt;
+        if (health > maxHealth) health = maxHealth;
+    }
+
+    if (TutorialGame::GetServerInstance().has_value() && (owner == TutorialGame::GetUser())) {
+        std::shared_ptr<Packet::DeltaPacket> deltaPacket = std::make_shared<Packet::DeltaPacket>(
+            worldID,
+            GetPhysicsObject()->GetRigidBody()->getLinearVelocity(),
+            GetPhysicsObject()->GetRigidBody()->getAngularVelocity(),
+            GetLastPacketSequence((uint8_t)Packet::PacketType::DELTA) + 1
+        );
+        UpdatePacketSequence((uint8_t)Packet::PacketType::DELTA, deltaPacket->GetSequenceNumber());
+        TutorialGame::GetServerInstance()->Broadcast(deltaPacket);
+
+        btTransform transform = GetPhysicsObject()->GetRigidBody()->getWorldTransform();
+        std::shared_ptr<Packet::PositionPacket> positionPacket = std::make_shared<Packet::PositionPacket>(
+            worldID,
+            transform.getOrigin(),
+            transform.getRotation(),
+            GetLastPacketSequence((uint8_t)Packet::PacketType::POSITION) + 1
+        );
+        UpdatePacketSequence((uint8_t)Packet::PacketType::POSITION, positionPacket->GetSequenceNumber());
+        TutorialGame::GetServerInstance()->Broadcast(positionPacket);
+
+        std::shared_ptr<Packet::ObjectChangeGravityPacket> gravityPacket = std::make_shared<Packet::ObjectChangeGravityPacket>(
+            worldID,
+            upDirection,
+            GetLastPacketSequence((uint8_t)Packet::PacketType::OBJECT_CHANGE_GRAVITY) + 1
+        );
+        UpdatePacketSequence((uint8_t)Packet::PacketType::OBJECT_CHANGE_GRAVITY, gravityPacket->GetSequenceNumber());
+        TutorialGame::GetServerInstance()->Broadcast(gravityPacket);
+    }
 }
 
 void PlayerObject::OnCollisionEnter(const CollisionInfo& collisionInfo){

@@ -64,12 +64,6 @@ void Network::Close() {
 
 void Network::ConnectTo(const ENetAddress* destination) {
     ENetPeer* peer = enet_host_connect(m_host, destination, static_cast<int>(Channel::CHANNEL_COUNT), 0);
-
-    //while (peer->state != ENET_PEER_STATE_CONNECTED) {
-    //    enet_host_service(m_host, nullptr, 0);
-    //    std::cout << "Connecting...\n";
-    //}
-    //std::cout << "Connection Successful.\n";
 }
 
 
@@ -90,14 +84,7 @@ std::shared_ptr<Packet::Packet> Network::Fetch() {
 
     while (!m_receiveBuffer.IsEmpty()) {
         fetched = m_receiveBuffer.Pop();
-
-        if (fetched->GetSequenceNumber() > m_lastMaxSequence) m_lastMaxSequence = fetched->GetSequenceNumber();
-
-        if (fetched->GetSequenceNumber() > m_lastMaxSequence) return fetched;
-        if (fetched->GetChannel() == static_cast<uint8_t>(Channel::RELIABLE)) return fetched;
-        if (fetched->GetChannel() == static_cast<uint8_t>(Channel::UNSEQUENCED)) return fetched;
-
-        // Drop old packet.
+        return fetched;
     }
     return fetched; // Return an empty packet.
 }
@@ -128,32 +115,34 @@ void Network::Run() {
 void Network::Tick(float dt) {
     m_elapsedTime += dt;
 
-    while (m_elapsedTime - m_lastTick >= NETWORK_RATE) {
-        m_lastTick += NETWORK_RATE;
+    while (m_elapsedTime - m_lastTick >= NETWORK_RATE && m_state == NetworkState::ON) {
 
         SendAll();
+        enet_host_flush(m_host);
 
-        ENetEvent event;
+        // Fast Forward, skipping updates.
+        do m_lastTick += NETWORK_RATE; while (m_lastTick < m_elapsedTime);
+    }
+    ENetEvent event;
 
-        while (enet_host_service(m_host, &event, 1) > 0) {
-            switch (event.type) {
-            case ENET_EVENT_TYPE_CONNECT:
-                if (!ConnectPeer()) {
-                    enet_peer_disconnect(event.peer, 0);
-                }
-                else if (m_connectCallback != nullptr) {
-                    m_connectCallback(event.peer);
-                }
-                break;
-            case ENET_EVENT_TYPE_DISCONNECT:
-                DisconnectPeer();
-                break;
-            case ENET_EVENT_TYPE_RECEIVE:
-                HandleIncomingPacket(&event);
-                break;
+    while (enet_host_service(m_host, &event, 10) > 0) {
+        switch (event.type) {
+        case ENET_EVENT_TYPE_CONNECT:
+            if (!ConnectPeer()) {
+                enet_peer_disconnect(event.peer, 0);
             }
-            enet_packet_destroy(event.packet);
+            else if (m_connectCallback != nullptr) {
+                m_connectCallback(event.peer);
+            }
+            break;
+        case ENET_EVENT_TYPE_DISCONNECT:
+            DisconnectPeer();
+            break;
+        case ENET_EVENT_TYPE_RECEIVE:
+            HandleIncomingPacket(&event);
+            break;
         }
+        enet_packet_destroy(event.packet);
     }
 }
 
@@ -166,10 +155,8 @@ void Network::SendAll() {
         
         ENetPacket* packet = handler->ToENetPacket(m_sendBuffer[i].first);
 
-
         if (m_sendBuffer[i].second == nullptr) {
             enet_host_broadcast(m_host, m_sendBuffer[i].first.get()->GetChannel(), packet);
-            enet_host_flush(m_host);
         }
         else {
             enet_peer_send(m_sendBuffer[i].second, m_sendBuffer[i].first.get()->GetChannel(), packet);

@@ -12,7 +12,7 @@
 
 
 // The rate at which packets will be sent and received.
-const float NETWORK_RATE = 1 / 60.0f; // Seconds
+const float NETWORK_RATE = 1 / 120.0f; // Seconds
 
 // How many packets to store before denying packets.
 const int BUFFER_SIZE = 1024;

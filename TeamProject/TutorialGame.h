@@ -21,14 +21,23 @@
 namespace NCL {
     namespace CSC8503 {
         class BulletDebug;
+        class Config;
 
         const int MAX_PLAYERS = 8;
 
         enum class GameMode {
             SINGLEPLAYER,
             HOST_GAME,
-            JOIN_GAME
+            JOIN_GAME,
+            CREDITS,
+            QUIT,
         };
+
+        enum class GameState {
+            IDLE,
+            ACTIVE
+        };
+
 
         class TutorialGame {
         private:
@@ -46,6 +55,10 @@ namespace NCL {
             ResourceManager* GetResourceManager() {
                 return resourceManager.get();
             }
+
+            static void Start();
+
+
             /**
              * @brief Get the Network Instance of the Server.
              * @return
@@ -98,12 +111,22 @@ namespace NCL {
                 earlyGraveyard.push_back(obj);
             }
 
-            TutorialGame(GameTechRendererInterface* renderer, Controller* controller);
+            TutorialGame(GameTechRendererInterface* renderer, Controller* controller, Config& config);
             ~TutorialGame();
 
             virtual void UpdateGame(float dt);
             void LoadWorldFromFile(int levelNum);
             void JoinGame(bool host);
+            void ClearWorld();
+
+            GameWorld* getWorld() {
+                return world.get();
+            }
+
+            inline static bool IsHost() { return host; }
+
+            // FIX ME make this protected/private.
+            PlayerObject* player;
 
         protected:
             void InitialiseAssets();
@@ -113,7 +136,7 @@ namespace NCL {
             void ThirdPersonControls();
 
             void InitWorld();
-            void ResetWorld();
+            //void ResetWorld();
 
             void SetupHost() {};
 
@@ -131,6 +154,9 @@ namespace NCL {
              * @param address ENetAddress of the servers location.
              */
             void ConnectToServer(ENetAddress& address);
+
+            void StartMultiplayerGame();
+
             void CreateLocal();
             void InitPacketHandlers();
             void ExecuteIncomingPackets();
@@ -156,6 +182,8 @@ namespace NCL {
 
             GameTechRendererInterface* renderer;
             std::unique_ptr<GameWorld> world;
+            Config& config;
+
             std::vector<GameObject*> earlyGraveyard; // Added this frame
             std::vector<GameObject*> lateGraveyard; // Added previous frame
             void clearGraveyard();
@@ -189,7 +217,6 @@ namespace NCL {
             //Player things
             PlayerObject* InitPlayer(btVector3 position, btVector3 upDir);
             PerspectiveCamera* mainCamera;
-            PlayerObject* player;
             GameObject* gun;
             std::unique_ptr<PlayerController> playerController;
             bool freeCam = false;
@@ -203,12 +230,24 @@ namespace NCL {
             //AI
             Turret* testTurret = nullptr;
 
-            NavMesh* navMesh;
-            bool navMeshDebug = false;
-            void visualiseNavMesh();
+            //Level import
+            LevelImporter* levelImporter;
+            bool loadFromLevel;
 
-            Wanderer* wanderer;
-            Wanderer* AddWandererToWorld();
+            NavMesh* bottom;
+            NavMesh* top;
+            NavMesh* front;
+            NavMesh* back;
+            NavMesh* left;
+            NavMesh* right;
+            std::vector<NavMesh*> navMeshes;
+            bool navMeshDebug = false;
+            bool enableAI = true;
+            void VisualiseNavMesh();
+            void InitAI();
+
+            std::vector<Wanderer*> wanderers;
+            Wanderer* AddWandererToWorld(NavMesh* navMesh, char side);
 
             //post processing time variable effects
             float pulse = 0;
@@ -218,7 +257,9 @@ namespace NCL {
             inline static std::optional<Lobbies::Lobby> lobby = std::optional<Lobbies::Lobby>();
             inline static std::optional<Lobbies::User> user = std::optional<Lobbies::User>();
             inline static int USER_ID = 0;
+            inline static bool host = false;
 
+            GameState state = GameState::IDLE;
         };
     }
 }

@@ -17,7 +17,6 @@ void Crosshair::render(std::vector<UiSprite>& sprites) {
     sprites.push_back({ screenCenter, dotSize, crosshairColor });
 }
 
-
 void Crosshair::fire() { fired = false; }
 void Crosshair::Animate(float dt)
 {

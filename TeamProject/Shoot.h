@@ -46,8 +46,11 @@ namespace NCL {
 			void InitShotMasks(GameObject* playerIn, GameObject* gunIn) {
 				player = playerIn; gun = gunIn;
 			};
-			std::optional<ShotInfo> RayClosest(btVector3 startPos, btVector3 dir);
-			std::optional<ShotInfo> ShootBulletPlayer(btVector3 startPos, btVector3 dir,btQuaternion rotation);
+
+			std::optional<ShotInfo> RayClosest(btVector3 startPos, btVector3 dir, GameObject * ignore = nullptr);
+			std::optional<ShotInfo> ShootBulletPlayer(btVector3 startPos, btVector3 dir,btQuaternion rotation, float dt);
+			std::optional<ShotInfo> ShootBulletAI(btVector3 startPos, btVector3 dir, btQuaternion rotation,float dt);
+
 
 		private:
 			//Shot Variables
