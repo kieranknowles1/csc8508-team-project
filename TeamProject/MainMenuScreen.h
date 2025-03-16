@@ -62,8 +62,14 @@ public:
         //Render menu
         for (int i = 0; i < menuItems.size(); i++) {
             std::string currentItem = menuItems[i];
-            if (i == selection) currentItem = ">" + currentItem + " <";
-            Debug::Print(currentItem, Vector2(0.35f, 0.35f + (0.1f * i)));
+            if (i == selection) {
+                currentItem = "> " + currentItem + " <";
+            }
+            else {
+                currentItem = "  " + currentItem;
+            }
+
+            Debug::Print(currentItem, Vector2(0.35f, 0.32f + (0.1f * i)));
         }
         return PushdownResult::NoChange;
 
