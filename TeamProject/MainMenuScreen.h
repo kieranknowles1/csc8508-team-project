@@ -22,12 +22,13 @@ public:
 
     PushdownResult OnUpdate(float dt, PushdownState** newState) override {
         const std::array<std::string, 5> menuItems = { "Singleplayer", "Host Game", "Join Game", "Credits", "Quit"};
-
+        
+        std::cout << selection << std::endl;
         if (controller->GetDigital(Controller::DigitalControl::MenuDown)) {
-            selection = std::min(menuItems.size() - 1, selection + 1);
+            selection = (size_t)std::min((int)menuItems.size() - 1, (int)selection + 1);
         }
         if (controller->GetDigital(Controller::DigitalControl::MenuUp)) {
-            selection = std::max(size_t(0), selection - 1);
+            selection = (size_t)std::max(0, (int)selection - 1);
         }
         if (controller->GetDigital(Controller::DigitalControl::MenuConfirm)) {
             GameMode mode = static_cast<GameMode>(selection);
@@ -62,7 +63,7 @@ public:
         //Render menu
         for (int i = 0; i < menuItems.size(); i++) {
             std::string currentItem = menuItems[i];
-            if (i == selection) {
+            if (i == (int) selection) {
                 currentItem = "> " + currentItem + " <";
             }
             else {
