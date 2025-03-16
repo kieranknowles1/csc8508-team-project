@@ -1,9 +1,10 @@
 #pragma once
 
 #include <LinearMath/btVector3.h>
+#include <shared_mutex>
 #include <unordered_map>
 #include <variant>
-#include <shared_mutex>
+#include <vector>
 
 namespace WorldState {
     using StateValue = std::variant<btVector3>;
@@ -36,19 +37,19 @@ namespace WorldState {
          * @brief Update a state.
          * This function blocks all reading until it has finished.
          */
-        void UpdateState(StateType type, StateValue value) {
+        void UpdateState(const std::pair<StateType, StateValue>& stateUpdate) {
             std::unique_lock lock(m_stateLock);
-            m_states[type] = value;
+            m_states[stateUpdate.first] = stateUpdate.second;
         }
 
         /**
          * @brief Write multiple states updates at once.
          * Assumes state and value parameters have the same number of items.
          */
-        void UpdateStates(std::vector<StateType>& states, std::vector<StateValue>& values) {
+        void UpdateStates(std::vector<std::pair<StateType, StateValue>>& stateUpdates) {
             std::unique_lock lock(m_stateLock);
-            for (int i = 0; i < states.size(); i++) {
-                m_states[states[i]] = values[i];
+            for (const std::pair<StateType, StateValue>& stateUpdate:stateUpdates) {
+                m_states[stateUpdate.first] = stateUpdate.second;
             }
         }
 
