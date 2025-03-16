@@ -1,6 +1,5 @@
 #include "TutorialGame.h"
 #include "GameObject.h"
-
 #include "Multiplayer/GamePacketHandlers.hpp"
 
 namespace Packet {
@@ -92,6 +91,96 @@ namespace Packet {
         return enetPacket;
     }
 #pragma endregion DeltaPacketHandler
+
+#pragma region LaserPacketHandler
+    void LaserPacketHandler::Handle(const std::shared_ptr<Packet> packet) {
+        const LaserPacket* laserPacket = std::static_pointer_cast<LaserPacket>(packet).get();
+        PlayerObject* targetObject = (PlayerObject*)GameObject::GetGameObjectByID(laserPacket->GetTargetID());
+        // Skip updates for objects the user owns.
+        if (targetObject->GetOwner().value() == TutorialGame::GetUser().value()) { return; }
+
+        // Check if last update was newer.
+        if (laserPacket->GetSequenceNumber() > targetObject->GetLastPacketSequence(laserPacket->GetType())) {
+            targetObject->updateLaser(laserPacket->GetStartPos(), laserPacket->GetEndPos());
+            targetObject->UpdatePacketSequence(laserPacket->GetType(), laserPacket->GetSequenceNumber());
+            // Passing on packet to other users if user is host.
+            if (TutorialGame::IsHost()) TutorialGame::GetServerInstance()->Broadcast(packet);
+        }
+        // Dropping old packets.
+    }
+
+    std::shared_ptr<Packet> LaserPacketHandler::Translate(const ENetEvent* event) const {
+        ENetPacket* packet = event->packet;
+        Type type;
+        uint8_t channel;
+        uint32_t sequenceNumber;
+
+        int objectID;
+        btVector3 startPos;
+        btVector3 endPos;
+        size_t offset = sizeof(Type) + sizeof(uint8_t) + sizeof(uint32_t);
+
+        GetBaseData(packet, &type, &channel, &sequenceNumber);
+
+        memcpy(&objectID, packet->data + offset, sizeof(int));
+        offset += sizeof(int);
+
+        memcpy(&startPos, packet->data + offset, sizeof(btVector3));
+        offset += sizeof(btVector3);
+
+        memcpy(&endPos, packet->data + offset, sizeof(btVector3));
+        offset += sizeof(btVector3);
+
+        return std::make_shared<LaserPacket>(objectID, startPos, endPos, sequenceNumber);
+    }
+
+    ENetPacket* LaserPacketHandler::ToENetPacket(const std::shared_ptr<Packet> packet) const {
+        char* buffer = new char[
+            sizeof(Type)
+                + sizeof(uint8_t)
+                + sizeof(uint32_t)
+                + sizeof(int)
+                + sizeof(btVector3)
+                + sizeof(btVector3)
+        ];
+
+        LaserPacket laserPacket = (*static_cast<LaserPacket*>(packet.get()));
+        size_t offset = 0;
+
+        Type type = laserPacket.GetType();
+        memcpy(buffer, &type, sizeof(Type));
+        offset = offset + sizeof(Type);
+
+        uint8_t channel = laserPacket.GetChannel();
+        memcpy(buffer + offset, &channel, sizeof(uint8_t));
+        offset = offset + sizeof(uint8_t);
+
+        uint32_t sequenceNumber = laserPacket.GetSequenceNumber();
+        memcpy(buffer + offset, &sequenceNumber, sizeof(uint32_t));
+        offset = offset + sizeof(uint32_t);
+
+        int objectID = laserPacket.GetTargetID();
+        memcpy(buffer + offset, &objectID, sizeof(int));
+        offset = offset + sizeof(int);
+
+        btVector3 startPos = laserPacket.GetStartPos();
+        memcpy(buffer + offset, &startPos, sizeof(btVector3));
+        offset = offset + sizeof(btVector3);
+
+        btVector3 endPos = laserPacket.GetEndPos();
+        memcpy(buffer + offset, &endPos, sizeof(btVector3));
+        offset = offset + sizeof(btVector3);
+
+        int packetFlags = 0;
+        if (channel == static_cast<int>(Channel::RELIABLE)) packetFlags = ENET_PACKET_FLAG_RELIABLE;
+        else if (channel == static_cast<int>(Channel::UNSEQUENCED)) packetFlags = ENET_PACKET_FLAG_UNSEQUENCED;
+
+        ENetPacket* enetPacket = enet_packet_create(buffer, offset, packetFlags);
+        delete[] buffer;
+        return enetPacket;
+    }
+#pragma endregion LaserPacketHandler
+
 
 
 #pragma region PositonPacketHandler

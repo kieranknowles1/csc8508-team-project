@@ -9,18 +9,21 @@
 #include "Multiplayer/GamePackets.hpp"
 #include "Multiplayer/GamePacketHandlers.hpp"
 #include <CSC8503CoreClasses/Debug.h>
+#include "Colors.h"
 #include "Shoot.h"
 
 #include "Window.h"
+#include "Config.h"
 
 using namespace NCL;
 using namespace CSC8503;
 
 TutorialGame* TutorialGame::instance = nullptr;
 
-TutorialGame::TutorialGame(GameTechRendererInterface* renderer, Controller* controller)
+TutorialGame::TutorialGame(GameTechRendererInterface* renderer, Controller* controller, Config& config)
     : renderer(renderer)
     , controller(controller)
+    , config(config)
 {
     assert(instance == nullptr && "TutorialGame must be unique");
     instance = this;
@@ -373,6 +376,7 @@ PlayerObject* TutorialGame::InitPlayer(btVector3 position, btVector3 upDir) {
   
     newPlayer->GetRenderObject()->SetColour(Vector4(playerColour));
     newPlayer->setUpDirection(upDir);
+    newPlayer->setRenderer(renderer);
     return newPlayer;
 }
 
@@ -638,6 +642,9 @@ void TutorialGame::InitPacketHandlers() {
 
     Packet::DamagePacketHandler* damageHandler = new Packet::DamagePacketHandler();
     Packet::PacketRegister::Register(damageHandler);
+
+    Packet::LaserPacketHandler* laserHandler = new Packet::LaserPacketHandler();
+    Packet::PacketRegister::Register(laserHandler);
 }
 
 
@@ -648,7 +655,12 @@ void TutorialGame::JoinGame(bool host) {
 
     if (!host) {
         ENetAddress dest;
-        enet_address_set_host(&dest, "127.0.0.1");
+
+        std::string host = config.get<std::string>("defaultHost");
+        std::cout << "Connecting to " << host << std::endl;
+
+        //enet_address_set_host(&dest, "127.0.0.1");
+        enet_address_set_host(&dest, host.c_str());
         dest.port = DEFAULT_PORT;
 
         ConnectToServer(dest);
@@ -683,6 +695,7 @@ void TutorialGame::Start() {
     instance->player = instance->InitPlayer(respawnPoint->position,respawnPoint->orientation);
     instance->player->SetOwner(user->GetUserID());
     instance->player->SetWorldID(user->GetUserID());
+    instance->player->GetRenderObject()->SetColour(Vector4(Color::GetPlayerColor(user->GetUserID())));
     instance->player->setType(GameObject::Type::Player);
     instance->playerController = new PlayerController(instance->player, instance->gun, instance->controller, instance->mainCamera, instance->bulletWorld,instance->renderer);
 
@@ -699,6 +712,7 @@ void TutorialGame::Start() {
             newPlayer->setType(GameObject::Type::Player);
             newPlayer->SetOwner(newUser.GetUserID());
             newPlayer->SetWorldID(newUser.GetUserID());
+            newPlayer->GetRenderObject()->SetColour(Vector4(Color::GetPlayerColor(newUser.GetUserID())));
         }
     }
 

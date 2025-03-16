@@ -16,17 +16,21 @@ namespace NCL::CSC8503 {
     class RenderObject;
     class PhysicsObject;
 
-    class GameObject	{
-    public:
-        enum class Type {
-            Default,
-            JumpPad,
-            Slime,
-            Ice,
-            PointLight,
-            RespawnPoint,
-            Player
-        };
+	class GameObject	{
+	public:
+		enum class Type {
+			Default,
+			Floor,
+			JumpPad,
+			Slime,
+			Ice,
+			PointLight,
+			RespawnPoint,
+			Player,
+			Centre,
+			SlimeCastle,
+			Courtyard
+		};
 
         GameObject(const std::string& name = "");
         virtual ~GameObject();

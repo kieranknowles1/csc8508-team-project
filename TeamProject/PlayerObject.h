@@ -7,6 +7,7 @@
 #include "PhysicsObject.h"
 #include "CollisionInfo.h"
 #include "Respawn.h"
+#include "GameTechRendererInterface.h"
 
 #include <btBulletDynamicsCommon.h>
 #include <btBulletCollisionCommon.h>
@@ -39,6 +40,15 @@ public:
     btVector3 getUpDirection() {
 		return upDirection;
     }
+
+	void setRenderer(GameTechRendererInterface* rendIn) {
+		renderer = rendIn;
+	}
+
+	void updateLaser(btVector3 startPos, btVector3 endPos) {
+		renderer->updateLaser(GetWorldID(), startPos, endPos);
+	}
+
 
 	void setUpDirection(btVector3 target) {
 		upDirection = target;
@@ -165,6 +175,9 @@ private:
 
 	float elapsedTime = 0;
 	float lastHit = 0;
+
+
+	GameTechRendererInterface* renderer;
 
 
 };

@@ -242,7 +242,7 @@ int main(int argc, char** argv) {
     PushdownMachine machine(new GameScreen(controller));
 
 
-    auto game = std::make_unique<TutorialGame>(renderer.get(), controller);
+    auto game = std::make_unique<TutorialGame>(renderer.get(), controller, config);
 
 
     // Clear delta time to exclude start up time
