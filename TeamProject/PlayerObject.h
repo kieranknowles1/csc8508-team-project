@@ -37,7 +37,6 @@ public:
 	void updateGravity(float dt);
 
     btVector3 getUpDirection() {
-        std::lock_guard<std::mutex> lock(m_stateLock);
 		return upDirection;
     }
 
@@ -108,7 +107,6 @@ public:
 	void Damage(float amount) {
 		lastHit = elapsedTime;
 
-		std::lock_guard<std::mutex> lock(m_stateLock);
 		health -= amount;
 		if (health <= 0) {
 			//state = PlayerState::DEAD;

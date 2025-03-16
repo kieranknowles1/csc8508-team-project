@@ -8,10 +8,7 @@ using namespace NCL;
 using namespace CSC8503;
 
 void PlayerObject::Update(float dt) {
-    m_stateLock.lock();
     upDirection = CalculateUpDirection(dt);
-    m_stateLock.unlock();
-
 
     rightDirection = CalculateRightDirection(upDirection);
     forwardDirection = CalculateForwardDirection(upDirection, rightDirection);
@@ -21,7 +18,6 @@ void PlayerObject::Update(float dt) {
 
     // 2 seconds before healing.
     if (elapsedTime - lastHit > 4.0f) {
-        std::lock_guard<std::mutex> lock(m_stateLock);
         health += 25 * dt;
         if (health > maxHealth) health = maxHealth;
     }
@@ -90,7 +86,6 @@ void PlayerObject::OnCollisionStay(const CollisionInfo& collision){
 
 
 void PlayerObject::updateGravity(float dt) {
-    std::lock_guard<std::mutex> lock(m_stateLock);
 	btVector3 movement = this->GetPhysicsObject()->GetRigidBody()->getLinearVelocity();
 	movement += upDirection * -(gravityScale * dt);
 	this->GetPhysicsObject()->GetRigidBody()->setLinearVelocity(movement);

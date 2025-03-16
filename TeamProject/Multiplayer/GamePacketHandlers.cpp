@@ -14,15 +14,11 @@ namespace Packet {
         if (object->GetOwner().value() == TutorialGame::GetUser().value()) { return; }
 
         // Check if last update was newer.
-        if (deltaPacket->GetSequenceNumber() > object->GetLastPacketSequence(deltaPacket->GetType())) {
-            object->GetPhysicsObject()->GetRigidBody()->setLinearVelocity(deltaPacket->GetLinearVelocity());
-            object->GetPhysicsObject()->GetRigidBody()->setAngularVelocity(deltaPacket->GetAngularVelocity());
-            object->UpdatePacketSequence(deltaPacket->GetType(), deltaPacket->GetSequenceNumber());
+        object->GetPhysicsObject()->GetRigidBody()->setLinearVelocity(deltaPacket->GetLinearVelocity());
+        object->GetPhysicsObject()->GetRigidBody()->setAngularVelocity(deltaPacket->GetAngularVelocity());
 
-            // Passing on packet to other users if user is host.
-            if (TutorialGame::IsHost()) TutorialGame::GetServerInstance()->Broadcast(packet);
-        }
-        // Dropping old packets.
+        // Passing on packet to other users if user is host.
+        if (TutorialGame::IsHost()) TutorialGame::GetServerInstance()->Broadcast(packet);
     }
     
     std::shared_ptr<Packet> DeltaPacketHandler::Translate(const ENetEvent* event) const {
@@ -109,15 +105,11 @@ namespace Packet {
         if (targetObject->GetOwner().value() == TutorialGame::GetUser().value()) return; 
 
         // Check if last update was newer.
-        if (positionPacket->GetSequenceNumber() > targetObject->GetLastPacketSequence(positionPacket->GetType())) {
-            body->getWorldTransform().setOrigin(positionPacket->GetPosition());
-            body->getWorldTransform().setRotation(positionPacket->GetOrientation());
-            targetObject->UpdatePacketSequence(positionPacket->GetType(), positionPacket->GetSequenceNumber());
+        body->getWorldTransform().setOrigin(positionPacket->GetPosition());
+        body->getWorldTransform().setRotation(positionPacket->GetOrientation());
 
-            // Passing on packet to other users if user is host.
-            if (TutorialGame::IsHost()) TutorialGame::GetServerInstance()->Broadcast(packet);
-        }
-        // Dropping old packets.
+        // Passing on packet to other users if user is host.
+        if (TutorialGame::IsHost()) TutorialGame::GetServerInstance()->Broadcast(packet);
     }
 
     std::shared_ptr<Packet> PositionPacketHandler::Translate(const ENetEvent* event) const {
@@ -217,13 +209,10 @@ namespace Packet {
         if (targetObject->GetOwner().value() == TutorialGame::GetUser().value()) return;
 
         // Check if last update was newer.
-        if (gravityPacket->GetSequenceNumber() > targetObject->GetLastPacketSequence(gravityPacket->GetType())) {
-            targetObject->setUpDirection(gravityPacket->GetUpDirection());
-            targetObject->UpdatePacketSequence(gravityPacket->GetType(), gravityPacket->GetSequenceNumber());
+        targetObject->setUpDirection(gravityPacket->GetUpDirection());
 
-            // Passing on packet to other users if user is host.
-            if (TutorialGame::IsHost()) TutorialGame::GetServerInstance()->Broadcast(packet);
-        }
+        // Passing on packet to other users if user is host.
+        if (TutorialGame::IsHost()) TutorialGame::GetServerInstance()->Broadcast(packet);
     }
 
     std::shared_ptr<Packet> ObjectChangeGravityPacketHandler::Translate(const ENetEvent* event) const {

@@ -84,13 +84,11 @@ namespace NCL::CSC8503 {
 		}
 
 		void SetWorldID(int newID) {
-			std::lock_guard<std::mutex> lock(m_stateLock);
 			worldID = newID;
 			objects[worldID] = this;
 		}
 
 		int		GetWorldID() {
-			std::lock_guard<std::mutex> lock(m_stateLock);
 			return worldID;
 		}
 
@@ -99,45 +97,37 @@ namespace NCL::CSC8503 {
 		}
 
 		void setInitialPosition(const Vector3& position) {
-			std::lock_guard<std::mutex> lock(m_stateLock);
 			initialPosition = position;
 		}
 
 		void setInitialRotation(const btQuaternion& rotation) {
-			std::lock_guard<std::mutex> lock(m_stateLock);
 			initialRotation = rotation;
 		}
 
 		btVector3 getInitialPosition() {
-			std::lock_guard<std::mutex> lock(m_stateLock);
 			return initialPosition;
 		}
 		btQuaternion getInitialRotation() {
-			std::lock_guard<std::mutex> lock(m_stateLock);
 			return initialRotation;
 		}
 
 		btVector3 getLinearVelocity() {
 			btRigidBody* rigidBody = GetPhysicsObject()->GetRigidBody();
-			std::lock_guard<std::mutex> lock(m_stateLock);
 			return rigidBody->getLinearVelocity();
 		}
 
 		btVector3 getAngularVelocity() {
 			btRigidBody* rigidBody = GetPhysicsObject()->GetRigidBody();
-			std::lock_guard<std::mutex> lock(m_stateLock);
 			return rigidBody->getAngularVelocity();
 		}
 
 		btVector3 getPosition() {
 			btTransform& transform = GetPhysicsObject()->GetRigidBody()->getWorldTransform();
-			std::lock_guard<std::mutex> lock(m_stateLock);
 			return transform.getOrigin();
 		}
 
 		btQuaternion getRotation() {
 			btTransform& transform = GetPhysicsObject()->GetRigidBody()->getWorldTransform();
-			std::lock_guard<std::mutex> lock(m_stateLock);
 			return transform.getRotation();
 		}
 
@@ -185,16 +175,6 @@ namespace NCL::CSC8503 {
 			return light;
 		}
 
-		int GetLastPacketSequence(uint8_t type) {
-			if (lastPacketUpdates.contains(type)) return lastPacketUpdates[type];
-			else return 0;
-		}
-
-		void UpdatePacketSequence(uint8_t type, int value) {
-			lastPacketUpdates[type] = value;
-		}
-
-
 		void setDeleted() { deleted = true; }
 		bool isDeleted() { return deleted; }
 	protected:
@@ -219,8 +199,5 @@ namespace NCL::CSC8503 {
 		PointLight* light = nullptr;
 
 		std::optional<Lobbies::User> owner;
-		std::unordered_map<uint8_t, int> lastPacketUpdates; // uint8_t is the same type used in Packet::Type and PacketType
-
-		std::mutex m_stateLock;
 	};
 }

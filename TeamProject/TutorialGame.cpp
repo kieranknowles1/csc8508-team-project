@@ -691,23 +691,6 @@ void TutorialGame::Start() {
 
     // Send initial position to everyone if multiplayer.
     if (server.has_value()) {
-        std::shared_ptr<Packet::PositionPacket> position = std::make_shared<Packet::PositionPacket>(
-            user->GetUserID(),
-            respawnPoint->position,
-            emptyRot,
-            instance->player->GetLastPacketSequence((uint8_t)Packet::PacketType::POSITION) + 1
-        );
-        instance->player->UpdatePacketSequence((uint8_t)Packet::PacketType::POSITION, position->GetSequenceNumber());
-        server->Broadcast(position);
-
-        std::shared_ptr<Packet::ObjectChangeGravityPacket> gravity = std::make_shared<Packet::ObjectChangeGravityPacket>(
-            user->GetUserID(),
-            respawnPoint->orientation,
-            instance->player->GetLastPacketSequence((uint8_t)Packet::PacketType::OBJECT_CHANGE_GRAVITY) + 1
-        );
-        instance->player->UpdatePacketSequence((uint8_t)Packet::PacketType::OBJECT_CHANGE_GRAVITY, gravity->GetSequenceNumber());
-        server->Broadcast(gravity);
-
         // Spawn in player objects for other players.
         for (const User& newUser: lobby->GetConnectedUsers()) {
             if (newUser.GetUserID() == user->GetUserID()) continue;
