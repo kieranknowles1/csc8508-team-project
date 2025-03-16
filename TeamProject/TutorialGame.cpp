@@ -334,24 +334,6 @@ void TutorialGame::LoadWorldFromFile(int levelNum) {
     levelImporter = new LevelImporter(resourceManager.get(), world.get(), bulletWorld);
     levelImporter->LoadLevel(levelNum);
 
-    RespawnPoint* respawnPoint = Respawn::GetInstance()->GetRespawn(0);
-    player = InitPlayer(respawnPoint->position,respawnPoint->orientation);
-    player->SetPlayerID(0);
-    playerController = new PlayerController(player, gun, controller, mainCamera, bulletWorld,renderer);
-
-    for (int i = 1; i < 8; i++) {
-        RespawnPoint* newRespawnPoint = Respawn::GetInstance()->GetRespawn(i);
-        PlayerObject* newPlayer = InitPlayer(newRespawnPoint->position, newRespawnPoint->orientation);
-        newPlayer->SetPlayerID(i);
-    }
-
-
-
-    Shoot::GetInstance()->Initialise(bulletWorld,resourceManager.get(), world.get(), renderer->GetDecalSystem());
-    Shoot::GetInstance()->InitShotMasks(player, gun);
-
-
-
 }
 
 void TutorialGame::InitAI() {
