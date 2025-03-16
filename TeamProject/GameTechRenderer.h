@@ -144,7 +144,7 @@ namespace NCL {
 			std::unique_ptr<OGLShader> vignetteShader;
 			GLuint BDepthTex;
 			void RenderPostProcessing();
-			OGLShader* edgedetectShader;
+			std::unique_ptr<OGLShader> edgedetectShader;
 
 		};
 	}

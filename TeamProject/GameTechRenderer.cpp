@@ -174,7 +174,7 @@ GameTechRenderer::GameTechRenderer(Window* window) : OGLRenderer(window), GameTe
 	fullscreenQuad->UploadToGPU();
 
 	vignetteShader = std::make_unique<OGLShader>("texturevert.glsl", "vignettefrag.glsl");
-	edgedetectShader = new OGLShader("texturevert.glsl", "edgedetectfrag.glsl");
+	edgedetectShader = std::make_unique<OGLShader>("texturevert.glsl", "edgedetectfrag.glsl");
 
  	//start setting up framebuffers for post processing:
 	//first generate the textures to store the rendered scene:
@@ -679,7 +679,7 @@ void GameTechRenderer::RenderLasers() {
 	glBindFramebuffer(GL_FRAMEBUFFER, laserFBO);
 	glClearColor(0, 0, 0, 0);
 	glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
-	
+
 	glEnable(GL_BLEND);
 
 	UseShader(*laserShader);
@@ -890,7 +890,7 @@ void GameTechRenderer::RenderPostProcessing() { //gonna try putting edge detecti
 		BindMesh(*fullscreenQuad);
 		DrawBoundMesh();
 
-		//Add Laser 
+		//Add Laser
 		glBindFramebuffer(GL_FRAMEBUFFER, laserAddFBO);//was BFBO
 		glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 		glDisable(GL_CULL_FACE);

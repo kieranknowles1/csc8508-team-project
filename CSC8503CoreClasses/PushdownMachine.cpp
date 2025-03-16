@@ -10,6 +10,13 @@ PushdownMachine::PushdownMachine(PushdownState* initialState)
 
 PushdownMachine::~PushdownMachine()
 {
+	while (!stateStack.empty()) {
+		delete stateStack.top();
+		stateStack.pop();
+	}
+
+	// This will be part of the stack
+	// delete initialState;
 }
 
 bool PushdownMachine::Update(float dt) {
@@ -28,10 +35,10 @@ bool PushdownMachine::Update(float dt) {
 				else {
 					activeState = stateStack.top();
 					activeState->OnAwake();
-				}					
+				}
 			}break;
 			case PushdownState::Push: {
-				activeState->OnSleep();		
+				activeState->OnSleep();
 
 				stateStack.push(newState);
 				activeState = newState;
