@@ -491,42 +491,28 @@ GameObject* TutorialGame::AddCubeToWorld(const Vector3& position, Vector3 dimens
 }
 
 PlayerObject* TutorialGame::AddPlayerCapsuleToWorld(const Vector3& position, float height, float radius, float inverseMass) {
-    PlayerObject* capsule = new PlayerObject();
+    PlayerObject* player = new PlayerObject();
 
     // Setting the transform properties for the capsule
-    capsule->setInitialPosition(position);
-    capsule->setRenderScale(Vector3(1, 1, 1) * 20.0f);
-
-    // TODO: Set the orientation of the capsule
-    //capsule->SetOrientation(rotation);
+    player->setInitialPosition(position);
+    player->setRenderScale(Vector3(radius * 2, height, radius * 2));
 
     // Creating a Bullet collision shape for the capsule
-    btCollisionShape* capsuleShape = new btCapsuleShape(radius * 1.6, height * 1.0);
-
-    // Create a compound shape to apply an offset
-    btCompoundShape* compoundShape = new btCompoundShape();
-
-    // Offset to move the capsule down so it covers the full body (assuming model is centered)
-    btTransform capsuleOffset;
-    capsuleOffset.setIdentity();
-    capsuleOffset.setOrigin(btVector3(0, height * 1.0f, 0)); // Moves the capsule up by half its height
-
-    // Add capsule shape to compound shape with offset
-    compoundShape->addChildShape(capsuleOffset, capsuleShape);
+    btCollisionShape* playerShape = new btCapsuleShape(radius, height);
 
     // Setting the render object for the capsule
-    capsule->SetRenderObject(new RenderObject(capsule, resourceManager->getMeshes().get(""), defaultTexture));
+    player->SetRenderObject(new RenderObject(player, resourceManager->getMeshes().get(""), defaultTexture));
     // Setting the physics object for the capsule
-    capsule->SetPhysicsObject(new PhysicsObject(capsule));
+    player->SetPhysicsObject(new PhysicsObject(player));
 
     // Initializing the physics object for the capsule
-    capsule->GetPhysicsObject()->InitBulletPhysics(bulletWorld, compoundShape, inverseMass);
+    player->GetPhysicsObject()->InitBulletPhysics(bulletWorld, playerShape, inverseMass);
     //GameObject* newGun = AddCubeToWorld(Vector3(-300, 20, 40), Vector3(0.5, 0.5, 0.3), 0, false);
     GameObject* newGun = AddGunToWorld(Vector3(-900, 20, 40), Vector3(2, 2, 2), 0, false);
-    capsule->setGun(newGun);
-    world->AddGameObject(capsule);
+    player->setGun(newGun);
+    world->AddGameObject(player);
 
-    return capsule;
+    return player;
 }
 
 GameObject* TutorialGame::AddCapsuleToWorld(const Vector3& position, float height, float radius, float inverseMass) {
