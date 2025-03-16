@@ -75,12 +75,9 @@ static bool BulletRaycast(btDynamicsWorld* world, const btVector3& start, const 
 }
 
 void TutorialGame::UpdateGame(float dt) {
-    std::cout << "Updating.\n";
-    //if (GetState() == GameState::IDLE) return;
-
     profiler.beginFrame();
-
     profiler.startSection("Physics");
+
     // Old
     //int substeps = std::floor(dt / PHYSICS_PERIOD);
     //int steps = bulletWorld->stepSimulation(dt , substeps, PHYSICS_PERIOD);
@@ -627,11 +624,11 @@ void TutorialGame::Start() {
     instance->player->setType(GameObject::Type::Player);
     instance->playerController = std::make_unique<PlayerController>(instance->player, instance->gun, instance->controller, instance->mainCamera, instance->bulletWorld,instance->renderer);
 
-    //instance->navMeshDebug = false;
-    //instance->enableAI = false;
-    //if (instance->enableAI) {
-    //    instance->InitAI();
-    //}
+    instance->navMeshDebug = false;
+    instance->enableAI = false;
+    if (instance->enableAI) {
+        instance->InitAI();
+    }
 
     //btQuaternion emptyRot;
 

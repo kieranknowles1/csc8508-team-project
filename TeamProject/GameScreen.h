@@ -2,9 +2,6 @@
 
 #include <PauseScreen.h>
 
-using namespace NCL;
-using namespace NCL::CSC8503;
-
 namespace NCL {
     namespace CSC8503 {
         class GameScreen : public PushdownState {

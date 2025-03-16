@@ -40,9 +40,13 @@ public:
                 return PushdownResult::Push;
 
             case GameMode::HOST_GAME:
+                game->StartMultiplayerGame(true); 
+                *newState = new HostLobbyScreen(controller, game);
+                return PushdownResult::Push;
+
             case GameMode::JOIN_GAME:
-                game->StartMultiplayerGame(mode == GameMode::HOST_GAME); 
-                *newState = new LobbyScreen(controller, game);
+                game->StartMultiplayerGame(true); 
+                *newState = new ClientLobbyScreen(controller, game);
                 return PushdownResult::Push;
 
             case GameMode::CREDITS:
