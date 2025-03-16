@@ -21,6 +21,7 @@
 namespace NCL {
     namespace CSC8503 {
         class BulletDebug;
+        class Config;
 
         const int MAX_PLAYERS = 8;
 
@@ -110,7 +111,7 @@ namespace NCL {
                 earlyGraveyard.push_back(obj);
             }
 
-            TutorialGame(GameTechRendererInterface* renderer, Controller* controller);
+            TutorialGame(GameTechRendererInterface* renderer, Controller* controller, Config& config);
             ~TutorialGame();
 
             virtual void UpdateGame(float dt);
@@ -181,6 +182,8 @@ namespace NCL {
 
             GameTechRendererInterface* renderer;
             std::unique_ptr<GameWorld> world;
+            Config& config;
+
             std::vector<GameObject*> earlyGraveyard; // Added this frame
             std::vector<GameObject*> lateGraveyard; // Added previous frame
             void clearGraveyard();
@@ -231,12 +234,20 @@ namespace NCL {
             LevelImporter* levelImporter;
             bool loadFromLevel;
 
-            NavMesh* navMesh;
+            NavMesh* bottom;
+            NavMesh* top;
+            NavMesh* front;
+            NavMesh* back;
+            NavMesh* left;
+            NavMesh* right;
+            std::vector<NavMesh*> navMeshes;
             bool navMeshDebug = false;
-            void visualiseNavMesh();
+            bool enableAI = true;
+            void VisualiseNavMesh();
+            void InitAI();
 
-            Wanderer* wanderer;
-            Wanderer* AddWandererToWorld();
+            std::vector<Wanderer*> wanderers;
+            Wanderer* AddWandererToWorld(NavMesh* navMesh, char side);
 
             //post processing time variable effects
             float pulse = 0;

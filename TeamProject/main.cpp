@@ -111,7 +111,7 @@ int main(int argc, char** argv) {
     auto renderer = createRenderer(window.get());
     auto controller = createController(window.get());
 
-    auto game = std::make_unique<TutorialGame>(renderer.get(), controller);
+    auto game = std::make_unique<TutorialGame>(renderer.get(), controller, config);
 
     //PushdownMachine machine(new GameScreen(controller, game.get(), "Singleplayer"));
     PushdownMachine machine(new MainMenuScreen(controller, game.get()));
