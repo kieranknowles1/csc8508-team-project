@@ -48,6 +48,10 @@ Implementation* sgpImplementation = nullptr;
 
 //Initializing a global FMod implementation instance
 void CAudioEngine::Init() {
+    if (sgpImplementation != nullptr) {
+        std::cerr << "Duplicate CAudioEngine::Init, ignoring" << std::endl;
+        return;
+    }
 #if __PROSPERO__
     auto libFmod = sceKernelLoadStartModule("/app0/libfmod.prx", 0, nullptr, 0, nullptr, nullptr);
     auto libFmodStudio = sceKernelLoadStartModule("/app0/libfmodstudio.prx", 0, nullptr, 0, nullptr, nullptr);
@@ -285,4 +289,5 @@ int CAudioEngine::ErrorCheck(FMOD_RESULT result) {
 //Shuts down the audio engine and releases resources.
 void CAudioEngine::Shutdown() {
     delete sgpImplementation;
+    sgpImplementation = nullptr;
 }

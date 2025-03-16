@@ -97,12 +97,12 @@ namespace NCL {
 			size_t textCount = 0;
 
 			//Deferred rendering additions:
-			OGLShader* deferredsceneShader;
-			OGLShader* pointlightShader;
-			OGLShader* combineShader;
+			std::unique_ptr<OGLShader> deferredsceneShader;
+			std::unique_ptr<OGLShader> pointlightShader;
+			std::unique_ptr<OGLShader> combineShader;
 
-			OGLMesh* lightSphere;
-			OGLMesh* highResSphere;
+			std::unique_ptr<OGLMesh> lightSphere;
+			std::unique_ptr<OGLMesh> highResSphere;
 			GLuint bufferFBO;
 
 			// For drawing multiple point lights.
@@ -135,21 +135,23 @@ namespace NCL {
 			void FillBuffers();
 			void DrawPointLights();
 			void CombineBuffers();
-			void DrawScene(); 
+			void DrawScene();
 
 			//Post processing additions:
 			GLuint hdrTex;
 			GLuint hdrFBO;
 			GLuint hdrDepthTex;
-			OGLMesh* fullscreenQuad;  
-			OGLShader* hdrShader;
+			std::unique_ptr<OGLMesh> fullscreenQuad;
+			std::unique_ptr<OGLShader> hdrShader;
 			GLuint BTex;
 			GLuint BFBO;
-			OGLShader* vignetteShader;
+			std::unique_ptr<OGLShader> vignetteShader;
 			GLuint BDepthTex;
 			void RenderPostProcessing();
-			OGLShader* edgedetectShader;
+
 			Matrix4 laserPreviousViewProjMatrix;
+
+			std::unique_ptr<OGLShader> edgedetectShader;
 
 		};
 	}

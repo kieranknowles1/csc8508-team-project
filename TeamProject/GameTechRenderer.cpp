@@ -81,15 +81,12 @@ GameTechRenderer::GameTechRenderer(Window* window) : OGLRenderer(window), GameTe
 	/////////InitCrosshair(); //This line Ameya added for crosshair THINK THIS CAN BE REMOVED, NOT SURE YET IF INITUI REPLACES IT ANYWHERE
 
 	//Deferred rendering additions:
-	deferredsceneShader = new OGLShader("scene.vert", "deferredscenefrag.glsl");
-	pointlightShader = new OGLShader("pointlightvertex.glsl", "pointlightfrag.glsl");
-	combineShader = new OGLShader("texturevert.glsl", "combinefrag.glsl");
+	deferredsceneShader = std::make_unique<OGLShader>("scene.vert", "deferredscenefrag.glsl");
+	pointlightShader = std::make_unique<OGLShader>("pointlightvertex.glsl", "pointlightfrag.glsl");
+	combineShader = std::make_unique<OGLShader>("texturevert.glsl", "combinefrag.glsl");
 
-	lightSphere = new OGLMesh();
-	lightSphere = LoadMesh("Sphere.msh");
-
-	highResSphere = new OGLMesh();
-	highResSphere = LoadMesh("Sphere_HighRes.msh");
+	lightSphere = std::unique_ptr<OGLMesh>(LoadMesh("Sphere.msh")); //Load mesh takes care of upload to GPU itself
+	highResSphere = std::unique_ptr<OGLMesh>(LoadMesh("Sphere_HighRes.msh"));
 
 	glGenFramebuffers(1, &bufferFBO);
 	glGenFramebuffers(1, &pointLightFBO);
@@ -179,16 +176,16 @@ GameTechRenderer::GameTechRenderer(Window* window) : OGLRenderer(window), GameTe
 	//not enabling depth test etc here as this is done in the rendering functions
 
 	//Post processing additions:
-	hdrShader = new OGLShader("texturevert.glsl", "hdrfrag.glsl");
+	hdrShader = std::make_unique<OGLShader>("texturevert.glsl", "hdrfrag.glsl");
 
-	fullscreenQuad = new OGLMesh();
+	fullscreenQuad = std::make_unique<OGLMesh>();
 	fullscreenQuad->SetVertexPositions({ Vector3(-1, 1,0), Vector3(-1,-1,0) , Vector3(1,-1,0) , Vector3(1,1,0) });
 	fullscreenQuad->SetVertexTextureCoords({ Vector2(0, 1), Vector2(0,0) , Vector2(1,0) , Vector2(1,1) });
 	fullscreenQuad->SetVertexIndices({ 0,1,2,2,3,0 });
 	fullscreenQuad->UploadToGPU();
 
-	vignetteShader = new OGLShader("texturevert.glsl", "vignettefrag.glsl");
-	edgedetectShader = new OGLShader("texturevert.glsl", "edgedetectfrag.glsl");
+	vignetteShader = std::make_unique<OGLShader>("texturevert.glsl", "vignettefrag.glsl");
+	edgedetectShader = std::make_unique<OGLShader>("texturevert.glsl", "edgedetectfrag.glsl");
 
  	//start setting up framebuffers for post processing:
 	//first generate the textures to store the rendered scene:
@@ -253,11 +250,6 @@ GameTechRenderer::~GameTechRenderer() {
 	glDeleteTextures(1, &shadowTex);
 	glDeleteFramebuffers(1, &shadowFBO);
 
-	delete deferredsceneShader;
-	delete pointlightShader;
-	delete combineShader;
-	delete lightSphere;
-	delete highResSphere;
 	glDeleteFramebuffers(1, &bufferFBO);
 	glDeleteFramebuffers(1, &pointLightFBO);
 	glDeleteTextures(1, &bufferColourTex);
@@ -273,15 +265,12 @@ GameTechRenderer::~GameTechRenderer() {
 	glDeleteTextures(1, &laserTex);
 	glDeleteFramebuffers(1, &laserPostFBO);
 	glDeleteTextures(1, &laserPostTex);
+
 	glDeleteFramebuffers(1, &laserPostFBO2);
 	glDeleteTextures(1, &laserPostTex2);
 	glDeleteFramebuffers(1, &laserPreFBO);
 	glDeleteTextures(1, &laserPreTex);
 	glDeleteTextures(1, &laserTexOld);
-
-	delete fullscreenQuad; //only mesh that needs to be deleted as others are std::make_unique<OGLMesh>
-	delete hdrShader;
-	delete vignetteShader;
 
 }
 
@@ -936,7 +925,7 @@ void GameTechRenderer::RenderPostProcessing() { //gonna try putting edge detecti
 		BindMesh(*fullscreenQuad);
 		DrawBoundMesh();
 
-		//Add Laser 
+		//Add Laser
 		glBindFramebuffer(GL_FRAMEBUFFER, laserAddFBO);//was BFBO
 		glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 		glDisable(GL_CULL_FACE);

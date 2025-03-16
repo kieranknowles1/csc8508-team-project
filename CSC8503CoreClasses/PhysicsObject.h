@@ -15,6 +15,13 @@ namespace NCL {
 		// using GetRigidBody()->activate()
 		class PhysicsObject	{
 		public:
+			// https://stackoverflow.com/questions/14243854/c-dynamic-cast-causes-a-segfault-even-when-the-object-that-is-casted-is-not-n
+			// Bullet is built without RTTI on MSVC, so holding type in a user index
+			// Index defaults to -1 (all 1s), using a flag would need it to be set everywhere
+			enum class ShapeType {
+				Compound = 1
+			};
+
 			PhysicsObject(GameObject* parent);
 			~PhysicsObject();
 

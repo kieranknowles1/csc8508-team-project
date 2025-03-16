@@ -13,7 +13,7 @@ public:
 	PointLight(btVector3 worldPositionIn, float radiusIn,float intensityIn, btVector4 colourIn) {
 		worldPosition = worldPositionIn; radius = radiusIn; intensity = intensityIn; colour = colourIn;
 	};
-	~PointLight();
+	~PointLight() {};
 
 	btVector3 worldPosition;
 	float radius;
