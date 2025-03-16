@@ -25,9 +25,12 @@ void PlayerController::Initialise() {
     debugDrawer = bulletWorld->getDebugDrawer();
     crosshair = std::make_unique<Crosshair>();
     scoreboard = std::make_unique<Scoreboard>();
+    overheat = std::make_unique<Overheat>();
     renderer->AddUiElement(crosshair.get());
 	renderer->AddUiElement(scoreboard.get());
+    renderer->AddUiElement(overheat.get());
     crosshair->SetActive(true);
+    overheat->SetActive(true);
     laserID = player->GetWorldID();
 }
 
@@ -43,8 +46,9 @@ void PlayerController::UpdateMovement(float dt) {
     btPlayerPos = transformPlayer.getOrigin();
     GetAllDirections();
 
-    if (crosshair) {
+    if (crosshair && overheat) {
         crosshair->Animate(dt);
+        overheat->Animate(dt);
     }
     HandleYaw();
     SpecialTypeCalculations();
@@ -72,14 +76,19 @@ void PlayerController::UpdateMovement(float dt) {
 
 void PlayerController::HandleShooting(float dt) {
 
-    if (controller->GetDigital(Controller::DigitalControl::Fire)) {
+    if (controller->GetDigital(Controller::DigitalControl::Fire) && overheat->CanFire()) {
         FireShot(dt);
-        crosshair->fire();
-        firing = true;
+        if (!firing) {
+            crosshair->fire();
+            overheat->fire();
+            firing = true;
+        }
     }
     else {
         if (firing) {
             renderer->updateLaser(laserID,btVector3(0,0,0),btVector3(0,0,0));
+            crosshair->stopFiring();
+            overheat->stopFiring();
             if (TutorialGame::GetServerInstance().has_value()) {
                 std::shared_ptr<Packet::LaserPacket> laserPacket = std::make_shared<Packet::LaserPacket>(
                     player->GetWorldID(),

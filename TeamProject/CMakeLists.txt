@@ -54,6 +54,8 @@ set(SOURCES
     Crosshair.h
     Crosshair.cpp
     Respawn.h
+    Overheat.h
+    Overheat.cpp
 )
 
 set(ASSET_ROOT "${CMAKE_SOURCE_DIR}/Assets")
