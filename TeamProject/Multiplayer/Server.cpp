@@ -67,24 +67,22 @@ namespace Multiplayer {
         m_game->GetWorld()->OperateOnContents([&](GameObject* object) {
             if (object->isStatic()) return;
 
-            btVector3 objLinearVelocity = object->getLinearVelocity();
-            btVector3 objAngularVelocity = object->getAngularVelocity();
-            btVector3 objPosition = object->getPosition();
-            btQuaternion objOrientation = object->getRotation();
+            WorldState::ObjectState& worldState = object->GetWorldState();
+            std::shared_lock readLock = worldState.GetReadLock();
 
             // Create packets.
             std::shared_ptr<Packet::DeltaPacket> delta = std::make_shared<Packet::DeltaPacket>(
                 object->GetWorldID(),
-                objLinearVelocity,
-                objAngularVelocity,
+                worldState.ReadState(WorldState::StateType::LinearVelocity),
+                worldState.ReadState(WorldState::StateType::AngularVelocity),
                 m_tickCount
             );
             m_network->Broadcast(delta);
 
             std::shared_ptr<Packet::PositionPacket> position = std::make_shared<Packet::PositionPacket>(
                 object->GetWorldID(),
-                objPosition,
-                objOrientation,
+                worldState.ReadState(WorldState::StateType::Position),
+                worldState.ReadState(WorldState::StateType::Rotation),
                 m_tickCount
             );
             m_network->Broadcast(position);
@@ -95,7 +93,7 @@ namespace Multiplayer {
 
                 std::shared_ptr<Packet::ObjectChangeGravityPacket> gravity = std::make_shared<Packet::ObjectChangeGravityPacket>(
                     playerObj->GetWorldID(),
-                    playerObj->getUpDirection(),
+                    worldState.ReadState(WorldState::StateType::UpVector),
                     m_tickCount
                 );
                 m_network->Broadcast(gravity);
