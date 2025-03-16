@@ -81,5 +81,23 @@ namespace Packet {
         void Handle(const std::shared_ptr<Packet> packet) override;
         std::shared_ptr<Packet> Translate(const ENetEvent* event) const override;
         ENetPacket* ToENetPacket(const std::shared_ptr<Packet> packet) const override;
+    }; 
+
+    class PingPacketHandler : public PacketHandler {
+    public:
+        PingPacketHandler() : PacketHandler(static_cast<Type>(PacketType::PING)) {}
+
+        void Handle(const std::shared_ptr<Packet> packet) override;
+        std::shared_ptr<Packet> Translate(const ENetEvent* event) const override;
+        ENetPacket* ToENetPacket(const std::shared_ptr<Packet> packet) const override;
+    }; 
+
+    class PongPacketHandler : public PacketHandler {
+    public:
+        PongPacketHandler() : PacketHandler(static_cast<Type>(PacketType::PONG)) {}
+
+        void Handle(const std::shared_ptr<Packet> packet) override;
+        std::shared_ptr<Packet> Translate(const ENetEvent* event) const override;
+        ENetPacket* ToENetPacket(const std::shared_ptr<Packet> packet) const override;
     };
 }
