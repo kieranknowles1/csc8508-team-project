@@ -122,26 +122,6 @@ namespace NCL::CSC8503 {
             return initialRotation;
         }
 
-        btVector3 getLinearVelocity() {
-            btRigidBody* rigidBody = GetPhysicsObject()->GetRigidBody();
-            return rigidBody->getLinearVelocity();
-        }
-
-        btVector3 getAngularVelocity() {
-            btRigidBody* rigidBody = GetPhysicsObject()->GetRigidBody();
-            return rigidBody->getAngularVelocity();
-        }
-
-        btVector3 getPosition() {
-            btTransform& transform = GetPhysicsObject()->GetRigidBody()->getWorldTransform();
-            return transform.getOrigin();
-        }
-
-        btQuaternion getRotation() {
-            btTransform& transform = GetPhysicsObject()->GetRigidBody()->getWorldTransform();
-            return transform.getRotation();
-        }
-
         Vector3 getRenderScale() const {
             return renderScale;
         }
