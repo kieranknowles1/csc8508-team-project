@@ -381,6 +381,7 @@ void TutorialGame::ClearWorld() {
     DestroyBullet();
     world->ClearAndErase();
     renderer->GetDecalSystem().ClearDecalsFromWorld();
+    renderer->ClearUIElemets();
 }
 
 void TutorialGame::InitWorld() {
