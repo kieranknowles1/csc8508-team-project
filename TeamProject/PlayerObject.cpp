@@ -21,6 +21,21 @@ void PlayerObject::Update(float dt) {
         health += 25 * dt;
         if (health > maxHealth) health = maxHealth;
     }
+
+    std::vector<std::pair<WorldState::StateType, WorldState::StateValue>> stateUpdates;
+    stateUpdates.push_back(
+        { WorldState::StateType::LinearVelocity, GetPhysicsObject()->GetRigidBody()->getLinearVelocity() }
+    );
+    stateUpdates.push_back(
+        { WorldState::StateType::AngularVelocity, GetPhysicsObject()->GetRigidBody()->getAngularVelocity() }
+    );
+    stateUpdates.push_back(
+        { WorldState::StateType::Position, GetPhysicsObject()->GetRigidBody()->getWorldTransform().getOrigin() }
+    );
+    stateUpdates.push_back(
+        { WorldState::StateType::UpVector, upDirection }
+    );
+    objectWorldState.UpdateStates(stateUpdates);
 }
 
 void PlayerObject::OnCollisionEnter(const CollisionInfo& collisionInfo){

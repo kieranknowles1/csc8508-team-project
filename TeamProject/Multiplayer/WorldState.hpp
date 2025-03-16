@@ -44,7 +44,6 @@ namespace WorldState {
 
         /**
          * @brief Write multiple states updates at once.
-         * Assumes state and value parameters have the same number of items.
          */
         void UpdateStates(std::vector<std::pair<StateType, StateValue>>& stateUpdates) {
             std::unique_lock lock(m_stateLock);
