@@ -95,12 +95,14 @@ namespace Multiplayer {
         if (m_game->GetState() == GameState::STARTING) {
             std::shared_ptr<Packet::StartGamePacket> startGame = std::make_shared<Packet::StartGamePacket>();
             m_network->Broadcast(startGame);
-
             m_game->SetState(GameState::ACTIVE);
         }
 
+        if (m_game->GetState() != GameState::ACTIVE) return;
+
         m_game->GetWorld()->OperateOnContents([&](GameObject* object) {
             if (object->isStatic()) return;
+            if (!object->GetWorldState().HasState()) return;
 
             WorldState::ObjectState& worldState = object->GetWorldState();
             std::shared_lock readLock = worldState.GetReadLock();
@@ -134,6 +136,7 @@ namespace Multiplayer {
                 );
                 m_network->Broadcast(gravity);
             }
+            readLock.release(); // Just in case.
         });
     }
 

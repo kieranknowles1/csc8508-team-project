@@ -10,14 +10,10 @@ namespace Packet {
         const DeltaPacket* deltaPacket = std::static_pointer_cast<DeltaPacket>(packet).get();
         GameObject* object = GameObject::GetGameObjectByID(deltaPacket->GetTargetID());
 
-        // Skip updates for objects the user owns.
-        //if (object->GetOwner().value() == TutorialGame::GetUser().value()) { return; }
+        if (object == nullptr) return;
 
         object->GetPhysicsObject()->GetRigidBody()->setLinearVelocity(deltaPacket->GetLinearVelocity());
         object->GetPhysicsObject()->GetRigidBody()->setAngularVelocity(deltaPacket->GetAngularVelocity());
-
-        // Passing on packet to other users if user is host.
-        //if (TutorialGame::IsHost()) TutorialGame::GetServerInstance()->Broadcast(packet);
     }
     
     std::shared_ptr<Packet> DeltaPacketHandler::Translate(const ENetEvent* event) const {
@@ -91,6 +87,7 @@ namespace Packet {
         return enetPacket;
     }
 #pragma endregion DeltaPacketHandler
+
 
 #pragma region LaserPacketHandler
     void LaserPacketHandler::Handle(const std::shared_ptr<Packet> packet) {
@@ -177,21 +174,16 @@ namespace Packet {
 #pragma endregion LaserPacketHandler
 
 
-
 #pragma region PositonPacketHandler
     void PositionPacketHandler::Handle(const std::shared_ptr<Packet> packet) {
         const PositionPacket* positionPacket = std::static_pointer_cast<PositionPacket>(packet).get();
         GameObject* targetObject = GameObject::GetGameObjectByID(positionPacket->GetTargetID());
+
+        if (targetObject == nullptr) return;
+
         btRigidBody* body = targetObject->GetPhysicsObject()->GetRigidBody();
-
-
-        // Skip updates for objects the user owns.
-
-        // Check if last update was newer.
         body->getWorldTransform().setOrigin(positionPacket->GetPosition());
         body->getWorldTransform().setRotation(positionPacket->GetOrientation());
-
-        // Passing on packet to other users if user is host.
     }
 
     std::shared_ptr<Packet> PositionPacketHandler::Translate(const ENetEvent* event) const {
@@ -287,12 +279,9 @@ namespace Packet {
         const ObjectChangeGravityPacket* gravityPacket = std::static_pointer_cast<ObjectChangeGravityPacket>(packet).get();
         PlayerObject* targetObject = (PlayerObject*) GameObject::GetGameObjectByID(gravityPacket->GetTargetID());
 
-        // Skip updates for objects the user owns.
+        if (targetObject == nullptr) return;
 
-        // Check if last update was newer.
         targetObject->setUpDirection(gravityPacket->GetUpDirection());
-
-        // Passing on packet to other users if user is host.
     }
 
     std::shared_ptr<Packet> ObjectChangeGravityPacketHandler::Translate(const ENetEvent* event) const {
@@ -363,6 +352,7 @@ namespace Packet {
 #pragma region StartGamePacketHandler
     void StartGamePacketHandler::Handle(const std::shared_ptr<Packet> packet) {
         TutorialGame* game = TutorialGame::getInstance();
+        std::cout << "Starting.\n";
         game->SetState(GameState::ACTIVE);
         game->Start();
     }
@@ -406,7 +396,6 @@ namespace Packet {
 
 #pragma region UserInfoPacketHandler
     void UserInfoPacketHandler::Handle(const std::shared_ptr<Packet> packet) {
-
         const UserInfoPacket* userInfo = std::static_pointer_cast<UserInfoPacket>(packet).get();
         Multiplayer::Server* server = TutorialGame::getInstance()->GetServerInstance();
 
@@ -493,6 +482,7 @@ namespace Packet {
         const DamagePacket* damagePacket = std::static_pointer_cast<DamagePacket>(packet).get();
         PlayerObject* targetObject = (PlayerObject*) GameObject::GetGameObjectByID(damagePacket->GetTargetID());
 
+        if (targetObject == nullptr) return;
         // Dealer handles damage on their side so ignore packet.
         //if (TutorialGame::GetUser()->GetUserID() != damagePacket->GetDamageDealer()) {
         //    targetObject->Damage(damagePacket->GetDamage());

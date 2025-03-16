@@ -59,6 +59,8 @@ namespace WorldState {
             return m_states[type];
         }
 
+        inline bool HasState() const { return m_states.size() > 0; }
+
     private:
         std::shared_mutex m_stateLock;
         std::unordered_map<StateType, StateValue> m_states;

@@ -33,6 +33,9 @@ void PlayerObject::Update(float dt) {
         { WorldState::StateType::Position, GetPhysicsObject()->GetRigidBody()->getWorldTransform().getOrigin() }
     );
     stateUpdates.push_back(
+        { WorldState::StateType::Rotation, GetPhysicsObject()->GetRigidBody()->getWorldTransform().getRotation() }
+    );
+    stateUpdates.push_back(
         { WorldState::StateType::UpVector, upDirection }
     );
     objectWorldState.UpdateStates(stateUpdates);

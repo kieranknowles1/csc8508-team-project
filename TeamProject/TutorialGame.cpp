@@ -368,7 +368,7 @@ PlayerObject* TutorialGame::InitPlayer(btVector3 position, btVector3 upDir) {
     newPlayer->GetPhysicsObject()->GetRigidBody()->setAngularFactor(0);
     newPlayer->GetPhysicsObject()->GetRigidBody()->setFriction(0.0f);
     newPlayer->GetPhysicsObject()->GetRigidBody()->setDamping(0.0, 0);
-  
+
     newPlayer->GetRenderObject()->SetColour(Vector4(playerColour));
     newPlayer->setUpDirection(upDir);
     newPlayer->setRenderer(renderer);
@@ -430,7 +430,7 @@ Wanderer* TutorialGame::AddWandererToWorld() {
 }
 
 /* Adding an object to test the bullet physics */
-GameObject* TutorialGame::AddCubeToWorld(const Vector3& position, Vector3 dimensions, float inverseMass,bool hasCollision) {
+GameObject* TutorialGame::AddCubeToWorld(const Vector3& position, Vector3 dimensions, float inverseMass, bool hasCollision) {
     GameObject* cube = new GameObject();
 
     // Setting the transform properties for the cube
@@ -595,7 +595,7 @@ GameObject* TutorialGame::AddSphereToWorld(const Vector3& position, float radius
 void TutorialGame::StartMultiplayerGame(bool isHost) {
     server = new Multiplayer::Server(this, isHost);
     server->InitPacketHandlers();
-    
+
     if (!isHost) {
         server->JoinGame("127.0.0.1", 30.0f);
         //server->JoinGame(config.get<std::string>("defaultHost"), 30.0f);
@@ -604,7 +604,6 @@ void TutorialGame::StartMultiplayerGame(bool isHost) {
 
 
 void TutorialGame::Start() {
-    instance->state = GameState::ACTIVE;
     instance->LoadWorldFromFile(9);
     
     // Init user for single players.

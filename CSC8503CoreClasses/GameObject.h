@@ -95,6 +95,9 @@ namespace NCL::CSC8503 {
             stateUpdates.push_back(
                 { WorldState::StateType::Position, GetPhysicsObject()->GetRigidBody()->getWorldTransform().getOrigin() }
             );
+            stateUpdates.push_back(
+                { WorldState::StateType::Rotation, GetPhysicsObject()->GetRigidBody()->getWorldTransform().getRotation() }
+            );
             objectWorldState.UpdateStates(stateUpdates);
         }
 
