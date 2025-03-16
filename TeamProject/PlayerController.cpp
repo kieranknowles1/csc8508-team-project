@@ -86,9 +86,8 @@ void PlayerController::HandleShooting(float dt) {
                     player->GetWorldID(),
                     btVector3(0, 0, 0),
                     btVector3(0, 0, 0),
-                    player->GetLastPacketSequence((uint8_t)Packet::PacketType::LASER) + 1
+                    0
                 );
-                player->UpdatePacketSequence((uint8_t)Packet::PacketType::LASER, laserPacket->GetSequenceNumber());
                 TutorialGame::GetServerInstance()->Broadcast(laserPacket);
             }
             firing = false;
@@ -117,9 +116,8 @@ void PlayerController::FireShot(float dt) {
             player->GetWorldID(),
             camera->GetPosition() + adjustedOffset,
             info.value().hitPos,
-            player->GetLastPacketSequence((uint8_t)Packet::PacketType::LASER) + 1
+            0
         );
-        player->UpdatePacketSequence((uint8_t)Packet::PacketType::LASER, laserPacket->GetSequenceNumber());
         TutorialGame::GetServerInstance()->Broadcast(laserPacket);
     }
    

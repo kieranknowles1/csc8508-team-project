@@ -100,13 +100,10 @@ namespace Packet {
         if (targetObject->GetOwner().value() == TutorialGame::GetUser().value()) { return; }
 
         // Check if last update was newer.
-        if (laserPacket->GetSequenceNumber() > targetObject->GetLastPacketSequence(laserPacket->GetType())) {
-            targetObject->updateLaser(laserPacket->GetStartPos(), laserPacket->GetEndPos());
-            targetObject->UpdatePacketSequence(laserPacket->GetType(), laserPacket->GetSequenceNumber());
-            // Passing on packet to other users if user is host.
-            if (TutorialGame::IsHost()) TutorialGame::GetServerInstance()->Broadcast(packet);
-        }
-        // Dropping old packets.
+        targetObject->updateLaser(laserPacket->GetStartPos(), laserPacket->GetEndPos());
+
+        // Passing on packet to other users if user is host.
+        if (TutorialGame::IsHost()) TutorialGame::GetServerInstance()->Broadcast(packet);
     }
 
     std::shared_ptr<Packet> LaserPacketHandler::Translate(const ENetEvent* event) const {
