@@ -33,6 +33,7 @@ set(SOURCES
     DecalSystem.h
     DecalSystem.cpp
     MainMenuScreen.h
+    CreditsScreen.h
     GameScreen.h
     PauseScreen.h
     LobbyScreen.h

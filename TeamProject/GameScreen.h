@@ -7,10 +7,9 @@ using namespace NCL::CSC8503;
 
 class GameScreen : public PushdownState {
 public:
-    GameScreen(Controller* controller, TutorialGame* game, std::string mode) : controller(controller), game(game), mode(mode) {}
+    GameScreen(Controller* controller, TutorialGame* game) : controller(controller), game(game) {}
     Controller* controller;
     TutorialGame* game;
-    std::string mode;
 
     PushdownResult OnUpdate(float dt, PushdownState** newState) override {
         game->UpdateGame(dt);

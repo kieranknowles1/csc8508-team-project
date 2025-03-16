@@ -28,7 +28,9 @@ namespace NCL {
         enum class GameMode {
             SINGLEPLAYER,
             HOST_GAME,
-            JOIN_GAME
+            JOIN_GAME,
+            CREDITS,
+            QUIT,
         };
 
         enum class GameState {
