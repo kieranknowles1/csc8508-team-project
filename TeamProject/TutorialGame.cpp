@@ -36,7 +36,6 @@ TutorialGame::TutorialGame(GameTechRendererInterface* renderer, Controller* cont
     world->GetMainCamera().SetController(controller);
     mainCamera = &world->GetMainCamera();
 
-    loadFromLevel = true;
     resourceManager = std::make_unique<ResourceManager>(renderer);
     new Shoot(); //Shoot and Respawn have new before them but are not being deleted to my knowledge
     new Respawn();
@@ -44,7 +43,7 @@ TutorialGame::TutorialGame(GameTechRendererInterface* renderer, Controller* cont
     InitialiseAssets();
     InitCamera();
     InitWorld();
-    
+
 }
 
 /*
@@ -64,8 +63,6 @@ TutorialGame::~TutorialGame()	{
     audioEngine.Shutdown();
 
     if (server.has_value()) server->Close();
-
-    delete playerController;
 }
 
 static bool BulletRaycast(btDynamicsWorld* world, const btVector3& start, const btVector3& end, btCollisionWorld::ClosestRayResultCallback& resultCallback) {
@@ -337,8 +334,8 @@ void TutorialGame::LoadWorldFromFile(int levelNum) {
     ClearWorld();
     InitWorld();
 
-    levelImporter = new LevelImporter(resourceManager.get(), world.get(), bulletWorld);
-    levelImporter->LoadLevel(levelNum);
+    LevelImporter levelImporter(resourceManager.get(), world.get(), bulletWorld);
+    levelImporter.LoadLevel(levelNum);
 
 }
 
@@ -394,15 +391,14 @@ void TutorialGame::InitWorld() {
 }
 
 PlayerObject* TutorialGame::InitPlayer(btVector3 position, btVector3 upDir) {
-    PlayerObject* newPlayer = new PlayerObject();
-    newPlayer = AddPlayerCapsuleToWorld(position, 20.0f, 8.5f, 10.0f);
+    PlayerObject* newPlayer = AddPlayerCapsuleToWorld(position, 20.0f, 8.5f, 10.0f);
     // Keep us from clipping when falling too fast
     newPlayer->GetPhysicsObject()->GetRigidBody()->setCcdMotionThreshold(1.0f);
     newPlayer->GetPhysicsObject()->GetRigidBody()->setCcdSweptSphereRadius(0.4f);
     newPlayer->GetPhysicsObject()->GetRigidBody()->setAngularFactor(0);
     newPlayer->GetPhysicsObject()->GetRigidBody()->setFriction(0.0f);
     newPlayer->GetPhysicsObject()->GetRigidBody()->setDamping(0.0, 0);
-  
+
     newPlayer->GetRenderObject()->SetColour(Vector4(playerColour));
     newPlayer->setUpDirection(upDir);
     newPlayer->setRenderer(renderer);
@@ -728,7 +724,7 @@ void TutorialGame::Start() {
     instance->player->SetWorldID(user->GetUserID());
     instance->player->GetRenderObject()->SetColour(Vector4(Color::GetPlayerColor(user->GetUserID())));
     instance->player->setType(GameObject::Type::Player);
-    instance->playerController = new PlayerController(instance->player, instance->gun, instance->controller, instance->mainCamera, instance->bulletWorld,instance->renderer);
+    instance->playerController = std::make_unique<PlayerController>(instance->player, instance->gun, instance->controller, instance->mainCamera, instance->bulletWorld,instance->renderer);
 
     instance->navMeshDebug = false;
     instance->enableAI = false;
