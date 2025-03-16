@@ -352,7 +352,6 @@ namespace Packet {
 #pragma region StartGamePacketHandler
     void StartGamePacketHandler::Handle(const std::shared_ptr<Packet> packet) {
         TutorialGame* game = TutorialGame::getInstance();
-        std::cout << "Starting.\n";
         game->SetState(GameState::ACTIVE);
         game->Start();
     }

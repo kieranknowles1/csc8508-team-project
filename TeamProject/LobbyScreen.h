@@ -79,6 +79,11 @@ namespace NCL {
             PushdownResult OnUpdate(float dt, PushdownState** newState) override {
                 UpdateSelection();
 
+                if (game->GetState() == GameState::ACTIVE) {
+                    *newState = new GameScreen(controller, game);
+                    return PushdownResult::Push;
+                }
+
                 if (controller->GetDigital(Controller::DigitalControl::MenuConfirm)) {
                     switch (selection) {
                     case (uint8_t) ClientLobbyItems::LeaveLobby:

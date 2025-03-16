@@ -45,7 +45,7 @@ public:
                 return PushdownResult::Push;
 
             case GameMode::JOIN_GAME:
-                game->StartMultiplayerGame(true); 
+                game->StartMultiplayerGame(false); 
                 *newState = new ClientLobbyScreen(controller, game);
                 return PushdownResult::Push;
 

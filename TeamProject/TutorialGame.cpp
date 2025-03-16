@@ -605,12 +605,12 @@ void TutorialGame::StartMultiplayerGame(bool isHost) {
 
     if (!isHost) {
         server->JoinGame("127.0.0.1", 30.0f);
-        //server->JoinGame(config.get<std::string>("defaultHost"), 30.0f);
     }
 }
 
 
 void TutorialGame::Start() {
+    instance->SetState(GameState::STARTING);
     instance->LoadWorldFromFile(9);
     
     // Spawn in player.

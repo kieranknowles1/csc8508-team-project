@@ -91,7 +91,7 @@ namespace Multiplayer {
         if (endOfTick) return;
         if (!m_isHost) return;
         
-        if (m_game->GetState() == GameState::STARTING) {
+        if (m_isHost && m_game->GetState() == GameState::STARTING) {
             std::shared_ptr<Packet::StartGamePacket> startGame = std::make_shared<Packet::StartGamePacket>();
             m_network->Broadcast(startGame);
             m_game->SetState(GameState::ACTIVE);
