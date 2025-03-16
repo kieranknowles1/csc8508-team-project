@@ -227,12 +227,20 @@ namespace NCL {
             LevelImporter* levelImporter;
             bool loadFromLevel;
 
-            NavMesh* navMesh;
+            NavMesh* bottom;
+            NavMesh* top;
+            NavMesh* front;
+            NavMesh* back;
+            NavMesh* left;
+            NavMesh* right;
+            std::vector<NavMesh*> navMeshes;
             bool navMeshDebug = false;
-            void visualiseNavMesh();
+            bool enableAI = true;
+            void VisualiseNavMesh();
+            void InitAI();
 
-            Wanderer* wanderer;
-            Wanderer* AddWandererToWorld();
+            std::vector<Wanderer*> wanderers;
+            Wanderer* AddWandererToWorld(NavMesh* navMesh, char side);
 
             //post processing time variable effects
             float pulse = 0;

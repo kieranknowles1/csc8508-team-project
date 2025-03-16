@@ -7,15 +7,15 @@ namespace NCL {
 		class StateMachine;
 		class Wanderer : public NavEntity {
 		public:
-			Wanderer(GameObject* p, NavMesh* nav);
+			Wanderer(GameObject* p, NavMesh* nav, char side);
 			~Wanderer();
 
 			void Update(float dt);
 			void InitPosAndOffset();
 
 		private:
-			void PlayerNear();
-			void PlayerFar();
+			void PlayerNear(float dt);
+			void PlayerFar(float dt);
 
 			NavMesh* navMesh;
 			std::vector<btVector3> curPath = {};
@@ -27,6 +27,12 @@ namespace NCL {
 			btVector3 offset;
 
 			GameObject* player;
+
+			float maxShootTimer = 5.0f;
+			float shootTimer;
+
+			float maxUpdatePlayerPathTimer = 2.0f;
+			float updateplayerPathTimer;
 		};
 	}
 }
