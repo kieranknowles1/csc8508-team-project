@@ -32,12 +32,10 @@ set(SOURCES
     Config.cpp
     DecalSystem.h
     DecalSystem.cpp
-    PushdownState.h
-    PushdownMachine.cpp
-    PushdownMachine.h
-    MainMenuState.h
-    PlayingState.h
-    PausedState.h
+    MainMenuScreen.h
+    GameScreen.h
+    PauseScreen.h
+    LobbyScreen.h
     Colors.h
     Multiplayer/GamePackets.hpp
     Multiplayer/GamePacketHandlers.hpp

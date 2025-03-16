@@ -38,7 +38,7 @@ TutorialGame::TutorialGame(GameTechRendererInterface* renderer, Controller* cont
 
     loadFromLevel = true;
     resourceManager = std::make_unique<ResourceManager>(renderer);
-    new Shoot();
+    new Shoot(); //Shoot and Respawn have new before them but are not being deleted to my knowledge
     new Respawn();
 
     InitialiseAssets();
@@ -112,7 +112,6 @@ void TutorialGame::UpdateGame(float dt) {
     clearGraveyard();
     profiler.startSection("Prepare Render");
     bulletWorld->debugDrawWorld();
-    renderer->collectFrameObjects(world.get());
 
     profiler.startSection("Render Decals");
     // Fade decal after sometime - @Kieran: Didn't forget to call the Update function this time :)
@@ -309,12 +308,16 @@ void TutorialGame::InitCamera() {
 }
 
 void TutorialGame::DestroyBullet() {
+    // TODO: These could all be unique_ptr
     delete bulletWorld;
     delete bulletDebug;
     delete solver;
     delete dispatcher;
     delete collisionConfig;
     delete broadphase;
+
+    bulletWorld = nullptr; bulletDebug = nullptr; solver = nullptr;
+    dispatcher = nullptr; collisionConfig = nullptr; broadphase = nullptr;
 }
 
 /* Bullet Physics world has been initialized here */
@@ -331,7 +334,7 @@ void TutorialGame::InitBullet() {
 }
 
 void TutorialGame::LoadWorldFromFile(int levelNum) {
-    ResetWorld();
+    ClearWorld();
     InitWorld();
 
     levelImporter = new LevelImporter(resourceManager.get(), world.get(), bulletWorld);
@@ -376,8 +379,8 @@ void TutorialGame::InitAI() {
     }
 }
 
-void TutorialGame::ResetWorld() {
-    audioEngine.Shutdown();
+
+void TutorialGame::ClearWorld() {
     DestroyBullet();
     world->ClearAndErase();
     renderer->GetDecalSystem().ClearDecalsFromWorld();
