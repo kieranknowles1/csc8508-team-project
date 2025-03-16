@@ -135,12 +135,15 @@ namespace NCL::CSC8503 {
 			}
 		}
 
-	
+		void ClearUIElemets() {
+			uiElements.clear();
+		}
+
 
 	protected:
 		// Post-processing settings
 		bool hdrOn = true;
-
+		std::vector<UiElement*> uiElements;
 		bool vignetteOn = false;
 		float vignettePulse = 0;
 		float vignetteIntensity = 0;
@@ -148,7 +151,7 @@ namespace NCL::CSC8503 {
 
 		Window* window;
 		Camera* camera = nullptr;
-		std::vector<UiElement*> uiElements;
+
 		std::vector<RenderObject*> frameObjects;
         std::vector<UiSprite> frameSprites;
 		std::vector<UiText> frameTexts;
