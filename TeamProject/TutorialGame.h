@@ -231,7 +231,6 @@ namespace NCL {
             Turret* testTurret = nullptr;
 
             //Level import
-            LevelImporter* levelImporter;
             bool loadFromLevel;
 
             NavMesh* bottom;

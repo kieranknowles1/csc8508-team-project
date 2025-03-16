@@ -102,7 +102,7 @@ namespace NCL {
 			std::unique_ptr<OGLShader> combineShader;
 
 			std::unique_ptr<OGLMesh> lightSphere;
-			OGLMesh* highResSphere;
+			std::unique_ptr<OGLMesh> highResSphere;
 			GLuint bufferFBO;
 
 			// For drawing multiple point lights.

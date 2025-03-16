@@ -85,9 +85,7 @@ GameTechRenderer::GameTechRenderer(Window* window) : OGLRenderer(window), GameTe
 	combineShader = std::make_unique<OGLShader>("texturevert.glsl", "combinefrag.glsl");
 
 	lightSphere = std::unique_ptr<OGLMesh>(LoadMesh("Sphere.msh")); //Load mesh takes care of upload to GPU itself
-
-	highResSphere = new OGLMesh();
-	highResSphere = LoadMesh("Sphere_HighRes.msh");
+	highResSphere = std::unique_ptr<OGLMesh>(LoadMesh("Sphere_HighRes.msh"));
 
 	glGenFramebuffers(1, &bufferFBO);
 	glGenFramebuffers(1, &pointLightFBO);
@@ -241,11 +239,6 @@ GameTechRenderer::~GameTechRenderer() {
 	glDeleteTextures(1, &shadowTex);
 	glDeleteFramebuffers(1, &shadowFBO);
 
-	delete deferredsceneShader;
-	delete pointlightShader;
-	delete combineShader;
-	delete lightSphere;
-	delete highResSphere;
 	glDeleteFramebuffers(1, &bufferFBO);
 	glDeleteFramebuffers(1, &pointLightFBO);
 	glDeleteTextures(1, &bufferColourTex);
@@ -261,11 +254,6 @@ GameTechRenderer::~GameTechRenderer() {
 	glDeleteTextures(1, &laserTex);
 	glDeleteFramebuffers(1, &laserPostFBO);
 	glDeleteTextures(1, &laserPostTex);
-	delete fullscreenQuad; //only mesh that needs to be deleted as others are std::make_unique<OGLMesh>
-	delete hdrShader;
-	delete vignetteShader;
-}
-
 }
 
 void GameTechRenderer::RenderFrame() {

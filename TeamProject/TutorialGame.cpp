@@ -391,7 +391,7 @@ void TutorialGame::InitWorld() {
 }
 
 PlayerObject* TutorialGame::InitPlayer(btVector3 position, btVector3 upDir) {
-    newPlayer = AddPlayerCapsuleToWorld(position, 20.0f, 8.5f, 10.0f);
+    PlayerObject* newPlayer = AddPlayerCapsuleToWorld(position, 20.0f, 8.5f, 10.0f);
     // Keep us from clipping when falling too fast
     newPlayer->GetPhysicsObject()->GetRigidBody()->setCcdMotionThreshold(1.0f);
     newPlayer->GetPhysicsObject()->GetRigidBody()->setCcdSweptSphereRadius(0.4f);
@@ -724,7 +724,7 @@ void TutorialGame::Start() {
     instance->player->SetWorldID(user->GetUserID());
     instance->player->GetRenderObject()->SetColour(Vector4(Color::GetPlayerColor(user->GetUserID())));
     instance->player->setType(GameObject::Type::Player);
-    instance->playerController = new PlayerController(instance->player, instance->gun, instance->controller, instance->mainCamera, instance->bulletWorld,instance->renderer);
+    instance->playerController = std::make_unique<PlayerController>(instance->player, instance->gun, instance->controller, instance->mainCamera, instance->bulletWorld,instance->renderer);
 
     instance->navMeshDebug = false;
     instance->enableAI = false;
