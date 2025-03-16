@@ -33,7 +33,9 @@ namespace NCL {
         enum class GameMode {
             SINGLEPLAYER,
             HOST_GAME,
-            JOIN_GAME
+            JOIN_GAME,
+            CREDITS,
+            QUIT,
         };
 
         enum class GameState {
@@ -65,7 +67,7 @@ namespace NCL {
 
             /**
              * @brief Get the Network Instance of the Server.
-             * @return 
+             * @return
              */
             Multiplayer::Server* GetServerInstance() { return server; }
 
@@ -100,7 +102,13 @@ namespace NCL {
 
             virtual void UpdateGame(float dt);
             void LoadWorldFromFile(int levelNum);
+
             void StartMultiplayerGame(bool isHost);
+            void ClearWorld();
+
+            GameWorld* getWorld() {
+                return world.get();
+            }
 
             GameWorld* GetWorld() const { return world.get(); }
 
@@ -115,7 +123,7 @@ namespace NCL {
             void ThirdPersonControls();
 
             void InitWorld();
-            void ResetWorld();
+            //void ResetWorld();
 
             void SetupHost() {};
 
@@ -173,7 +181,7 @@ namespace NCL {
             PlayerObject* InitPlayer(btVector3 position, btVector3 upDir);
             PerspectiveCamera* mainCamera;
             GameObject* gun;
-            PlayerController* playerController = nullptr;
+            std::unique_ptr<PlayerController> playerController;
             bool freeCam = false;
             bool thirdPerson = false;
             Vector4 playerColour = Vector4(1, 0.8, 1, 1);
@@ -186,15 +194,22 @@ namespace NCL {
             Turret* testTurret = nullptr;
 
             //Level import
-            LevelImporter* levelImporter;
             bool loadFromLevel;
 
-            NavMesh* navMesh;
+            NavMesh* bottom;
+            NavMesh* top;
+            NavMesh* front;
+            NavMesh* back;
+            NavMesh* left;
+            NavMesh* right;
+            std::vector<NavMesh*> navMeshes;
             bool navMeshDebug = false;
-            void visualiseNavMesh();
+            bool enableAI = true;
+            void VisualiseNavMesh();
+            void InitAI();
 
-            Wanderer* wanderer;
-            Wanderer* AddWandererToWorld();
+            std::vector<Wanderer*> wanderers;
+            Wanderer* AddWandererToWorld(NavMesh* navMesh, char side);
 
             //post processing time variable effects
             float pulse = 0;

@@ -10,19 +10,22 @@ set(SOURCES
     Colors.h
     Config.cpp
     Config.h
+    CreditsScreen.h
     Crosshair.cpp
     Crosshair.h
-
 
     DecalSystem.cpp
     DecalSystem.h
 
+    GameScreen.h
     GameTechRendererInterface.cpp
     GameTechRendererInterface.h
 
     LevelImporter.cpp
     LevelImporter.h
+    LobbyScreen.h
 
+    MainMenuScreen.h
     MainMenuState.h
     Multiplayer/GamePacketHandlers.cpp
     Multiplayer/GamePacketHandlers.hpp
@@ -45,6 +48,7 @@ set(SOURCES
 
     Paintball.cpp
     Paintball.h
+    PauseScreen.h
     PausedState.h
     PlayerController.cpp
     PlayerController.h

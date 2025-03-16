@@ -8,7 +8,7 @@ using namespace NCL;
 using namespace CSC8503;
 
 
-std::optional<ShotInfo> Shoot::RayClosest(btVector3 startPos, btVector3 dir) {
+std::optional<ShotInfo> Shoot::RayClosest(btVector3 startPos, btVector3 dir, GameObject * ignore) {
 	dir.normalize();
     btVector3 shotPos = (startPos + (dir * 10000));
     btCollisionWorld::AllHitsRayResultCallback callback(startPos, shotPos);
@@ -23,6 +23,9 @@ std::optional<ShotInfo> Shoot::RayClosest(btVector3 startPos, btVector3 dir) {
         for (int i = 0; i < callback.m_collisionObjects.size(); i++) { // loop all hits
             GameObject* hit = static_cast<GameObject*>(callback.m_collisionObjects[i]->getUserPointer());
             if (!hit->getIsPaintball() && hit != player && hit != gun) { // ignore paintballs
+                if (ignore) {
+                    if (hit == ignore) continue;
+                }
                 btVector3 posHit = callback.m_hitPointWorld[i];
                 float distance = startPos.distance(posHit);
                 if (distance < smallestDist) { // find closest valid hit
@@ -60,7 +63,19 @@ std::optional<ShotInfo> Shoot::ShootBulletPlayer(btVector3 startPos, btVector3 d
         SpawnDecal(&rayInfo.value());
     }
     return rayInfo;
+}
 
+std::optional<ShotInfo> Shoot::ShootBulletAI(btVector3 startPos, btVector3 dir, btQuaternion rotation,float dt) {
+    auto rayInfo = RayClosest(startPos, dir);
+    // Don't have Rust style and_then until C++23 :(
+    if (rayInfo.has_value()) {
+        if (rayInfo.value().hitObj->getType() == GameObject::Type::Player) {
+            PlayerObject* hit = (PlayerObject*)rayInfo.value().hitObj;
+            hit->Damage(100.0f * dt); // TODO: Don't hard code this.
+        }
+        SpawnDecal(&rayInfo.value());
+    }
+    return rayInfo;
 }
 
 void Shoot::SpawnBulletMesh(btVector3 startPos, btVector3 dir, btQuaternion rotation, ShotInfo* rayInfo) {
