@@ -19,6 +19,7 @@
 #include "Paintball.h"
 #include "Crosshair.h"
 #include "Scoreboard.h"
+#include "Overheat.h"
 #include <memory>
 
 
@@ -83,7 +84,6 @@ namespace NCL {
 			float slidingCameraBackwards = 2.5f;
 
 			//Gun Variables
-			float shotCooldown = 0.075f;
 			btVector3 gunCameraOffset = btVector3(1.3, -0.7, -2.5f);
 
 			//Rotation Variables
@@ -96,6 +96,7 @@ namespace NCL {
 			GameTechRendererInterface* renderer;
 			std::unique_ptr<Crosshair> crosshair;
 			std::unique_ptr<Scoreboard> scoreboard;
+			std::unique_ptr<Overheat> overheat;
 			btVector3 upDirection;
 			btVector3 rightDirection;
 			btVector3 forwardDirection;
@@ -130,8 +131,11 @@ namespace NCL {
 			btIDebugDraw* debugDrawer;
 			bool onIce = false;
 			btVector3 previousVelocity;
-			bool firing;
+			bool firing = false;
 			int laserID;
+			float firingTimer = 0.0f;
+			float overheatTimer = 0.0f;
+			float cooldownTimer = 0.0f;
 
 			btVector3 forward;
 			btVector3 up;
