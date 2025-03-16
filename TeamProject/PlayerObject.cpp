@@ -225,8 +225,6 @@ btVector3 PlayerObject::CalculateForwardDirection(btVector3 upDir, btVector3 rig
 
 //attaches gun to the camera position/rotation
 void PlayerObject::SetGunTransform(float pitch, float yaw, btVector3 camPos) {
-    //float pitchRadians = Maths::DegreesToRadians(camera->GetPitch());
-    //float yawRadians = Maths::DegreesToRadians(camera->GetYaw());
     float pitchRadians = Maths::DegreesToRadians(pitch);
     float yawRadians = Maths::DegreesToRadians(yaw);
     btQuaternion yawQuat(btVector3(0, 1, 0), yawRadians);

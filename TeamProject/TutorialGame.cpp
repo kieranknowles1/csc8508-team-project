@@ -501,7 +501,7 @@ PlayerObject* TutorialGame::AddPlayerCapsuleToWorld(const Vector3& position, flo
     //capsule->SetOrientation(rotation);
 
     // Creating a Bullet collision shape for the capsule
-    btCollisionShape* capsuleShape = new btCapsuleShape(radius * 1.6, height * 3.7);
+    btCollisionShape* capsuleShape = new btCapsuleShape(radius * 1.6, height * 1.0);
 
     // Create a compound shape to apply an offset
     btCompoundShape* compoundShape = new btCompoundShape();
@@ -509,13 +509,13 @@ PlayerObject* TutorialGame::AddPlayerCapsuleToWorld(const Vector3& position, flo
     // Offset to move the capsule down so it covers the full body (assuming model is centered)
     btTransform capsuleOffset;
     capsuleOffset.setIdentity();
-    capsuleOffset.setOrigin(btVector3(0, height * 2.6f, 0)); // Moves the capsule up by half its height
+    capsuleOffset.setOrigin(btVector3(0, height * 1.0f, 0)); // Moves the capsule up by half its height
 
     // Add capsule shape to compound shape with offset
     compoundShape->addChildShape(capsuleOffset, capsuleShape);
 
     // Setting the render object for the capsule
-    capsule->SetRenderObject(new RenderObject(capsule, resourceManager->getMeshes().get("Male_Guard.msh"), defaultTexture));
+    capsule->SetRenderObject(new RenderObject(capsule, resourceManager->getMeshes().get(""), defaultTexture));
     // Setting the physics object for the capsule
     capsule->SetPhysicsObject(new PhysicsObject(capsule));
 
