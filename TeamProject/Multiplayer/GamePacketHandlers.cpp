@@ -1,6 +1,7 @@
 #include "TutorialGame.h"
 #include "GameObject.h"
 #include "Multiplayer/GamePacketHandlers.hpp"
+#include "Multiplayer/Server.hpp"
 
 namespace Packet {
 
@@ -406,25 +407,22 @@ namespace Packet {
 #pragma region UserInfoPacketHandler
     void UserInfoPacketHandler::Handle(const std::shared_ptr<Packet> packet) {
 
-        //const UserInfoPacket* userInfo = std::static_pointer_cast<UserInfoPacket>(packet).get();
-        //std::optional<Lobby>& lobby = TutorialGame::GetLobby();
-        //TutorialGame::UpdateUserID(userInfo->GetUser().GetUserID());
+        const UserInfoPacket* userInfo = std::static_pointer_cast<UserInfoPacket>(packet).get();
+        Multiplayer::Server* server = TutorialGame::getInstance()->GetServerInstance();
 
-        //if (!lobby.has_value()) return;
-
-        //switch (userInfo->GetAction()) {
-        //case LobbyAction::CREATE:
-        //    TutorialGame::SetUser(userInfo->GetUser());
-        //    break;
-        //case LobbyAction::JOIN:
-        //    lobby->AddUser(userInfo->GetUser());
-        //    break;
-        //case LobbyAction::LEAVE:
-        //    lobby->RemoveUser(userInfo->GetUser());
-        //    break;
-        //case LobbyAction::SET_HOST:
-        //    lobby->SetHost(userInfo->GetUser());
-        //}
+        switch (userInfo->GetAction()) {
+        case LobbyAction::CREATE:
+            server->SetUser(userInfo->GetUser());
+            break;
+        case LobbyAction::JOIN:
+            server->AddUserToLobby(userInfo->GetUser());
+            break;
+        case LobbyAction::LEAVE:
+            server->RemoveUserFromLobby(userInfo->GetUser());
+            break;
+        case LobbyAction::SET_HOST:
+            server->AssignLobbyHost(userInfo->GetUser());
+        }
     }
 
     std::shared_ptr<Packet> UserInfoPacketHandler::Translate(const ENetEvent* event) const {

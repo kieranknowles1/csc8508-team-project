@@ -135,7 +135,13 @@ void TutorialGame::UpdateGame(float dt) {
                     Start();
                 }
             }
-            //Debug::Print("Connected: " + std::to_string(lobby->GetConnectedUsers().size()) + "/8", Vector2(0.6f, 0.9f));
+            Debug::Print(
+                "Connected: "
+                + std::to_string(server->ClientCount())
+                + "/"
+                + std::to_string(server->GetMaxClients()),
+                Vector2(0.6f, 0.9f)
+            );
         }
     }
 

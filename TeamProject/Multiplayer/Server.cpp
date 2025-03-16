@@ -14,16 +14,18 @@ namespace Multiplayer {
     Server::Server(TutorialGame* game, bool isHost) : m_game(game), m_isHost(isHost) {
         m_lobby = new Lobbies::Lobby(MAX_PLAYERS);
 
-        m_user = new Lobbies::User(m_uniqueUserID++);
-        m_lobby->AddUser(*m_user);
-
-        if (isHost) m_lobby->SetHost(*m_user);
+        if (isHost) {
+            m_user = new Lobbies::User(m_uniqueUserID++);
+            m_lobby->AddUser(*m_user);
+            m_lobby->SetHost(*m_user);
+        }
 
         ENetAddress networkAddr;
         networkAddr.host = ENET_HOST_ANY;
         networkAddr.port = isHost ? DEFAULT_PORT : 0;
 
-        m_network = new Network(&networkAddr, isHost ? MAX_PLAYERS : 1);
+        // Max number of incoming connections is 1 less (because of host).
+        m_network = new Network(&networkAddr, isHost ? MAX_PLAYERS - 1 : 1);
         m_network->AddTickListener([&](bool endOfTick) { SendState(endOfTick); });
         m_network->AddTickListener([&](bool endOfTick) { ProcessPackets(endOfTick); });
 
@@ -77,6 +79,13 @@ namespace Multiplayer {
         } while (m_network->GetConnectionCount() < 1 && elapsed.count() < waitSeconds);
 
         m_connected = m_network->GetConnectionCount() > 0;
+    }
+
+    void Server::SetUser(const Lobbies::User& user) {
+        if (m_user != nullptr) {
+            delete m_user;
+        }
+        m_user = new Lobbies::User(user);
     }
 
     void Server::SendState(bool endOfTick) {

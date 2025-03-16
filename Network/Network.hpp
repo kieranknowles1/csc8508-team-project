@@ -141,7 +141,7 @@ public:
      * @brief Get the number of external connections.
      * @return int representing the number of external connections.
      */
-    int GetConnectionCount() const { return m_connections - 1; }
+    int GetConnectionCount() const { return m_connections; }
 
     /**
      * @brief Add a function to be called when the server Ticks.

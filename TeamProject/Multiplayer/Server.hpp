@@ -2,13 +2,7 @@
 
 #include "TutorialGame.h"
 #include <Network/Network.hpp>
-
-namespace Lobbies {
-    class User;
-    class Lobby;
-}
-
-
+#include "Multiplayer/Lobby.hpp"
 
 namespace Multiplayer {
 
@@ -41,8 +35,20 @@ namespace Multiplayer {
          */
         void JoinGame(const std::string& ip, float waitSeconds);
 
-        bool IsConnected() const { return m_connected; }
-        bool IsHost() const { return m_isHost; }
+        /**
+         * @brief Used to create a user object for this network.
+         * Frees the previous user if there was one.
+         */
+        void SetUser(const Lobbies::User& user);
+
+        inline void AddUserToLobby(const Lobbies::User& user) { m_lobby->AddUser(user); }
+        inline void RemoveUserFromLobby(const Lobbies::User& user) { m_lobby->RemoveUser(user); }
+        inline void AssignLobbyHost(const Lobbies::User& user) { m_lobby->SetHost(user); }
+
+        inline bool IsConnected() const { return m_connected; }
+        inline bool IsHost() const { return m_isHost; }
+        inline unsigned int ClientCount() const { return m_lobby->GetConnectedUsers().size(); }
+        inline unsigned int GetMaxClients() const { return MAX_PLAYERS; }
 
     private:
         /**
