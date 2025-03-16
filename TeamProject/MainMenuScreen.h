@@ -40,10 +40,10 @@ public:
                 game->Start();
                 break;
             case GameMode::HOST_GAME:
-                game->JoinGame(true); //This is host game
+                game->StartMultiplayerGame(true); //This is host game
                 break;
             case GameMode::JOIN_GAME:
-                game->JoinGame(false); //This is join game
+                game->StartMultiplayerGame(false); //This is join game
                 break;
             case GameMode::CREDITS:
                 *newState = new CreditsScreen(controller, Assets::CREDITS);

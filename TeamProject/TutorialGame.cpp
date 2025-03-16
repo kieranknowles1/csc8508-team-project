@@ -632,8 +632,6 @@ void TutorialGame::StartMultiplayerGame(bool isHost) {
 void TutorialGame::Start() {
     instance->LoadWorldFromFile(9);
     
-    // Init user for single players.
-
     // Spawn in player.
     RespawnPoint* respawnPoint = Respawn::GetInstance()->GetRespawn(0);
     instance->player = instance->InitPlayer(respawnPoint->position,respawnPoint->orientation);
@@ -644,11 +642,11 @@ void TutorialGame::Start() {
     instance->player->setType(GameObject::Type::Player);
     instance->playerController = std::make_unique<PlayerController>(instance->player, instance->gun, instance->controller, instance->mainCamera, instance->bulletWorld,instance->renderer);
 
-    instance->navMeshDebug = false;
-    instance->enableAI = false;
-    if (instance->enableAI) {
-        instance->InitAI();
-    }
+    //instance->navMeshDebug = false;
+    //instance->enableAI = false;
+    //if (instance->enableAI) {
+    //    instance->InitAI();
+    //}
 
     //btQuaternion emptyRot;
 
