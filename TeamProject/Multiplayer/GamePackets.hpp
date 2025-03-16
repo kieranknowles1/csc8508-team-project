@@ -25,7 +25,9 @@ namespace Packet {
         USER_INFO = CUSTOM_TYPE + 5,
         REQUEST_USERID = CUSTOM_TYPE + 6,
         DAMAGE = CUSTOM_TYPE + 7,
-        LASER = CUSTOM_TYPE + 8
+        LASER = CUSTOM_TYPE + 8,
+        PING = CUSTOM_TYPE + 9,
+        PONG = CUSTOM_TYPE + 10
     };
 
 
@@ -234,5 +236,28 @@ namespace Packet {
         float m_damage;
         int m_dealer;
     };
+
+
+    /**
+     * @brief Ping the server or client.
+     */
+    class Ping : public Packet {
+    public:
+        Ping() :
+            Packet(static_cast<Type>(PacketType::PING), static_cast<uint8_t>(Channel::RELIABLE), 0)
+        {}
+    };
+
+
+    /**
+     * @brief Pong a ping.
+     */
+    class Pong : public Packet {
+    public:
+        Pong() :
+            Packet(static_cast<Type>(PacketType::PONG), static_cast<uint8_t>(Channel::RELIABLE), 0)
+        {}
+    };
+
 }
 
