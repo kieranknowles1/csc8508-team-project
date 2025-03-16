@@ -236,6 +236,22 @@ void PlayerObject::SetGunTransform(float pitch, float yaw, btVector3 camPos) {
     btMatrix3x3 rotationMatrixCam(gunRotation);
     btVector3 adjustedOffset = rotationMatrixCam * gunCameraOffset; // Apply rotation to the offset
 
+    // Gun Animation starts here
+    float speed = GetPhysicsObject()->GetRigidBody()->getLinearVelocity().length();
+
+    if (speed > 0.1f) {
+        float frequency = 1.0f; // Adjust for faster/slower blobbing
+        float amplitude = 0.01f; // Adjust for bigger/smaller blobbing
+        float time = Maths::DegreesToRadians(elapsedTime * 360.0f); // Convert to radians
+
+        // Apply bobbing effect
+        float bobbingOffsetY = sin(time * frequency) * (amplitude * 0.2) * (speed / 5.0f);
+        float bobbingOffsetX = cos(time * frequency * 0.5f) * (amplitude * 0.1f) * (speed / 5.0f);
+
+        adjustedOffset += btVector3(bobbingOffsetX, bobbingOffsetY, 0);
+    }
+
+
     btTransform transformGun = gun->GetPhysicsObject()->GetRigidBody()->getWorldTransform();
     transformGun.setOrigin(camPos + adjustedOffset);
     transformGun.setRotation(gunRotation);
