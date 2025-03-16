@@ -64,29 +64,9 @@ namespace Packet {
     };
 
 
-    class AssignHostPacketHandler : public PacketHandler {
-    public:
-        AssignHostPacketHandler() : PacketHandler(static_cast<Type>(PacketType::ASSIGN_HOST)) {}
-
-        void Handle(const std::shared_ptr<Packet> packet) override;
-        std::shared_ptr<Packet> Translate(const ENetEvent* event) const override;
-        ENetPacket* ToENetPacket(const std::shared_ptr<Packet> packet) const override;
-    };
-
-
     class UserInfoPacketHandler : public PacketHandler {
     public:
         UserInfoPacketHandler() : PacketHandler(static_cast<Type>(PacketType::USER_INFO)) {}
-
-        void Handle(const std::shared_ptr<Packet> packet) override;
-        std::shared_ptr<Packet> Translate(const ENetEvent* event) const override;
-        ENetPacket* ToENetPacket(const std::shared_ptr<Packet> packet) const override;
-    };
-
-
-    class RequestUserIDPacketHandler : public PacketHandler {
-    public:
-        RequestUserIDPacketHandler() : PacketHandler(static_cast<Type>(PacketType::REQUEST_USERID)) {}
 
         void Handle(const std::shared_ptr<Packet> packet) override;
         std::shared_ptr<Packet> Translate(const ENetEvent* event) const override;

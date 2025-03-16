@@ -81,14 +81,14 @@ void PlayerController::HandleShooting(float dt) {
     else {
         if (firing) {
             renderer->updateLaser(laserID,btVector3(0,0,0),btVector3(0,0,0));
-            if (TutorialGame::GetServerInstance().has_value()) {
+            if (TutorialGame::getInstance()->GetServerInstance() != nullptr) {
                 std::shared_ptr<Packet::LaserPacket> laserPacket = std::make_shared<Packet::LaserPacket>(
                     player->GetWorldID(),
                     btVector3(0, 0, 0),
                     btVector3(0, 0, 0),
                     0
                 );
-                TutorialGame::GetServerInstance()->Broadcast(laserPacket);
+                //TutorialGame::GetServerInstance()->Broadcast(laserPacket);
             }
             firing = false;
         }
@@ -111,14 +111,14 @@ void PlayerController::FireShot(float dt) {
    std::optional<ShotInfo> info = Shoot::GetInstance()->ShootBulletPlayer(camera->GetPosition(), forwardDir, bulletRotation,dt);
     renderer->updateLaser(laserID, camera->GetPosition() + adjustedOffset, info.value().hitPos);
 
-    if (TutorialGame::GetServerInstance().has_value()) {
+    if (TutorialGame::getInstance()->GetServerInstance() != nullptr) {
         std::shared_ptr<Packet::LaserPacket> laserPacket = std::make_shared<Packet::LaserPacket>(
             player->GetWorldID(),
             camera->GetPosition() + adjustedOffset,
             info.value().hitPos,
             0
         );
-        TutorialGame::GetServerInstance()->Broadcast(laserPacket);
+        //TutorialGame::GetServerInstance()->Broadcast(laserPacket);
     }
    
 

@@ -9,6 +9,7 @@ namespace Lobbies {
 }
 
 
+
 namespace Multiplayer {
 
     constexpr ENetAddress hostAddress = { ENET_HOST_ANY, DEFAULT_PORT };
@@ -41,6 +42,7 @@ namespace Multiplayer {
         void JoinGame(const std::string& ip, float waitSeconds);
 
         bool IsConnected() const { return m_connected; }
+        bool IsHost() const { return m_isHost; }
 
     private:
         /**

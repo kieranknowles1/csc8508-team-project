@@ -46,13 +46,14 @@ std::optional<ShotInfo> Shoot::ShootBulletPlayer(btVector3 startPos, btVector3 d
             PlayerObject* hit = (PlayerObject*) rayInfo.value().hitObj;
             hit->Damage(100.0f * dt); // TODO: Don't hard code this.
 
-            if (TutorialGame::GetServerInstance().has_value()) {
+            if (TutorialGame::getInstance()->GetServerInstance() != nullptr) {
                 std::shared_ptr<Packet::DamagePacket> damagePacket = std::make_shared<Packet::DamagePacket>(
                     hit->GetWorldID(),
                     200.0f * dt, // TODO: Don't hard code this.
-                    TutorialGame::GetUser()->GetUserID()
+                    0
+                    //TutorialGame::GetUser()->GetUserID()
                 );
-                TutorialGame::GetServerInstance()->Broadcast(damagePacket);
+                //TutorialGame::GetServerInstance()->Broadcast(damagePacket);
             }
         }
        // SpawnBulletMesh(startPos, dir, rotation, &rayInfo.value());

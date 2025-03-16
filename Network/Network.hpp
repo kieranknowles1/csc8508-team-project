@@ -205,7 +205,7 @@ private:
     float m_lastTick = 0;
     int m_lastMaxSequence = 0; // Each tick will drop optional packets that didn't make the first tick.
 
-    int m_connections = 1;
+    int m_connections = 0;
     int m_maxConnections;
 
     ENetHost* m_host = nullptr;

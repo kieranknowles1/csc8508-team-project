@@ -14,8 +14,7 @@ namespace Multiplayer {
     Server::Server(TutorialGame* game, bool isHost) : m_game(game), m_isHost(isHost) {
         m_lobby = new Lobbies::Lobby(MAX_PLAYERS);
 
-        int id = TutorialGame::GenerateUserID();
-        m_user = new Lobbies::User(id);
+        m_user = new Lobbies::User(m_uniqueUserID++);
         m_lobby->AddUser(*m_user);
 
         if (isHost) m_lobby->SetHost(*m_user);
@@ -44,9 +43,6 @@ namespace Multiplayer {
     }
 
     void Server::InitPacketHandlers() {
-        m_handlers.push_back(std::make_unique<Packet::RequestUserIDPacketHandler>());
-        Packet::PacketRegister::Register(m_handlers.back().get());
-
         m_handlers.push_back(std::make_unique<Packet::UserInfoPacketHandler>());
         Packet::PacketRegister::Register(m_handlers.back().get());
 
@@ -78,13 +74,21 @@ namespace Multiplayer {
         do {
             end = std::chrono::high_resolution_clock::now();
             elapsed = end - start;
-        } while (m_network->GetConnectionCount() < 2 && elapsed.count() < waitSeconds);
+        } while (m_network->GetConnectionCount() < 1 && elapsed.count() < waitSeconds);
 
-        m_connected = m_network->GetConnectionCount() > 1;
+        m_connected = m_network->GetConnectionCount() > 0;
     }
 
     void Server::SendState(bool endOfTick) {
         if (endOfTick) return;
+        if (!m_isHost) return;
+        
+        if (m_game->GetState() == GameState::STARTING) {
+            std::shared_ptr<Packet::StartGamePacket> startGame = std::make_shared<Packet::StartGamePacket>();
+            m_network->Broadcast(startGame);
+
+            m_game->SetState(GameState::ACTIVE);
+        }
 
         m_game->GetWorld()->OperateOnContents([&](GameObject* object) {
             if (object->isStatic()) return;
@@ -157,11 +161,6 @@ namespace Multiplayer {
         // NOTE: There is no need to send world info here because currently the
         // Lobby is just a menu screen.
     }
-
-
-
-
-
 }
 
 

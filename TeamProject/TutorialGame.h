@@ -14,9 +14,14 @@
 #include "Wanderer.h"
 #include "Respawn.h"
 #include "Network/Network.hpp"
-#include "Multiplayer/Lobby.hpp"
+//#include "Multiplayer/Server.hpp"
 
+#include <shared_mutex>
 #include <btBulletDynamicsCommon.h>
+
+namespace Multiplayer {
+    class Server;
+}
 
 namespace NCL {
     namespace CSC8503 {
@@ -33,6 +38,7 @@ namespace NCL {
 
         enum class GameState {
             IDLE,
+            STARTING,
             ACTIVE
         };
 
@@ -61,37 +67,17 @@ namespace NCL {
              * @brief Get the Network Instance of the Server.
              * @return 
              */
-            inline static std::optional<Network>& GetServerInstance() { return server; }
+            Multiplayer::Server* GetServerInstance() { return server; }
 
-            /**
-             * @brief Get the lobby instance.
-             */
-            inline static std::optional<Lobbies::Lobby>& GetLobby() { return lobby; }
+            GameState GetState() const { 
+                std::shared_lock lock(*stateMutex);
+                return state;
+            }
 
-            /**
-             * @brief Get the user object for this player.
-             */
-            inline static std::optional<Lobbies::User>& GetUser() { return user; }
-
-            /**
-             * @brief Set the user object for this player.
-             */
-            inline static void SetUser(Lobbies::User newUser) { user.emplace(newUser); }
-
-            /**
-             * @brief Increment user id by 1, generating a new unique ID.
-             */
-            inline static int GenerateUserID() { USER_ID++; return USER_ID; }
-
-            /**
-             * @brief Used to automatically increment the userID from received
-             * UserInfoPackets.
-             * 
-             * Helps guarantee unique user ID's if in future we allow users to
-             * take control of the server.
-             */
-            inline static void UpdateUserID(int id) { if (id > USER_ID) USER_ID = id; }
-
+            void SetState(GameState newState) {
+                std::unique_lock lock(*stateMutex);
+                state = newState;
+            }
 
             // Remove an object at the end of this frame. Use during update to avoid removing
             // from containers while iterating
@@ -114,9 +100,8 @@ namespace NCL {
 
             virtual void UpdateGame(float dt);
             void LoadWorldFromFile(int levelNum);
-            void JoinGame(bool host);
+            void StartMultiplayerGame(bool isHost);
 
-            inline static bool IsHost() { return host; }
             GameWorld* GetWorld() const { return world.get(); }
 
             // FIX ME make this protected/private.
@@ -133,27 +118,6 @@ namespace NCL {
             void ResetWorld();
 
             void SetupHost() {};
-
-            /**
-             * @brief Initialise the network object and run it.
-             * @param host Whether the network should be the host server.
-             */
-            void InitNetwork(bool host = false);
-
-            /**
-             * @brief Connect to a host game at the given address.
-             *
-             * Connection resolution is handled by packet response.
-             *
-             * @param address ENetAddress of the servers location.
-             */
-            void ConnectToServer(ENetAddress& address);
-
-            void StartMultiplayerGame();
-
-            void CreateLocal();
-            void InitPacketHandlers();
-            void ExecuteIncomingPackets();
 
             void UpdatePlayer(float dt);
 
@@ -236,12 +200,8 @@ namespace NCL {
             float pulse = 0;
 
         private:
-            inline static std::optional<Network> server = std::optional<Network>();
-            inline static std::optional<Lobbies::Lobby> lobby = std::optional<Lobbies::Lobby>();
-            inline static std::optional<Lobbies::User> user = std::optional<Lobbies::User>();
-            inline static int USER_ID = 0;
-            inline static bool host = false;
-
+            Multiplayer::Server* server = nullptr;
+            std::shared_mutex* stateMutex = nullptr;
             GameState state = GameState::IDLE;
         };
     }

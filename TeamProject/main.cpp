@@ -33,22 +33,6 @@ size_t sceLibcHeapSize = 256 * 1024 * 1024;
 using namespace NCL;
 using namespace NCL::CSC8503;
 
-
-void TestPacketHandlers() {
-
-    Packet::RequestUserIDPacketHandler infoHandler;
-    Packet::PacketRegister::Register(&infoHandler);
-
-    std::shared_ptr<Packet::RequestUserIDPacket> testInfoPacket = std::make_shared<Packet::RequestUserIDPacket>(nullptr);
-
-    ENetPacket* userInfoENetPacket = infoHandler.ToENetPacket(testInfoPacket);
-    ENetEvent event;
-    event.packet = userInfoENetPacket;
-
-    std::shared_ptr<Packet::Packet> infoPacketReturned = infoHandler.Translate(&event);
-    std::shared_ptr<Packet::RequestUserIDPacket> infoPacketConverted = std::static_pointer_cast<Packet::RequestUserIDPacket>(infoPacketReturned);
-}
-
 class MainMenuScreen : public PushdownState {
     int selection = 0;
 
@@ -280,7 +264,7 @@ int main(int argc, char** argv) {
                     game->Start();
                 }
                 else {
-                    game->JoinGame(mode == GameMode::HOST_GAME);
+                    game->StartMultiplayerGame(mode == GameMode::HOST_GAME);
                 }
                 inMenu = false;
             }
