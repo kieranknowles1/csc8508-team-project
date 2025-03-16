@@ -26,7 +26,6 @@ set(SOURCES
     LobbyScreen.h
 
     MainMenuScreen.h
-    MainMenuState.h
     Multiplayer/GamePacketHandlers.cpp
     Multiplayer/GamePacketHandlers.hpp
     Multiplayer/GamePackets.hpp
@@ -49,7 +48,6 @@ set(SOURCES
     Paintball.cpp
     Paintball.h
     PauseScreen.h
-    PausedState.h
     PlayerController.cpp
     PlayerController.h
     PlayerObject.cpp
@@ -58,9 +56,6 @@ set(SOURCES
     PointLight.h
     Profiler.cpp
     Profiler.h
-    PushdownMachine.cpp
-    PushdownMachine.h
-    PushdownState.h
 
     Scoreboard.cpp
     Scoreboard.h
