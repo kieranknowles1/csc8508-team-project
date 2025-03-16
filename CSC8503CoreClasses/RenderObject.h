@@ -88,6 +88,10 @@ namespace NCL {
 				return test;
 			}
 
+			void SetAnimation(MeshAnimation* name) {
+				test = name; //idk if this is how it should be handled. Might also be an issue if changing where the pointer is pointing
+			}
+
 		protected:
 			GameObject* parent;
 			Buffer* buffer;
@@ -101,7 +105,9 @@ namespace NCL {
 			std::shared_ptr<Texture> normalMap;
 
 			//Animation stuff:
-			MeshAnimation* test;
+			MeshAnimation* test; //InitPlayer will set animated from gameObject to true
+			//also might be good to have something like if animated, use material and mattextures and set all the textures for each submesh
+			//doesn't neccessarily matter if a mesh has a texture if its never send to shader. Can just access matTextures instead
 		};
 	}
 }

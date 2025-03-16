@@ -34,9 +34,9 @@ namespace NCL::Rendering {
 			return frameRate;
 		}
 
-		float GetFrameTime() const {
+		/*float GetFrameTime() const { //removing this for now
 			return 1.0f / frameRate;
-		}
+		}*/
 
 		float GetAnimationTime() const {
 			return frameCount / (float)frameRate;
@@ -52,11 +52,14 @@ namespace NCL::Rendering {
 			currentFrame = frame;
 		}
 
+		void UpdateAnimation(float dt); //not sure if this is the best place to put this
+
 	protected:
 		size_t		jointCount;
 		size_t		frameCount;
 		float		frameRate;
-		size_t      currentFrame; //added. Could potentially just put this in whatever file I am updating the frame in
+		size_t      currentFrame = 0; //added. Could potentially just put this in whatever file I am updating the frame in
+		float       frameTime = 0.0f; //added
 
 		std::vector<Maths::Matrix4>		allJoints;
 	};

@@ -78,7 +78,7 @@ namespace NCL::CSC8503 {
 			//std::cout << "OnCollisionStay: " << this->GetWorldID() << " is still colliding with " << otherObject->GetWorldID() << std::endl;
 		}
 
-		virtual void Update(float dt) {
+		virtual void Update(float dt) {//could do the updating for animations in here maybe
 
 		}
 

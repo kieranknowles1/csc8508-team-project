@@ -1151,13 +1151,34 @@ void GameTechRenderer::RenderAnimations() {
 	Vector3 camPos = camera->GetPosition();
 	glUniform3fv(cameraLocation, 1, &camPos.x);
 
-	glUniformMatrix4fv(projLocation, 1, false, (float*)&projMatrix);
+	glUniformMatrix4fv(projLocation, 1, false, (float*)&projMatrix); //projection and view matrix don't vary between meshes so can send uniforms here
 	glUniformMatrix4fv(viewLocation, 1, false, (float*)&viewMatrix);
 
-	glUniformMatrix4fv(projLocation, 1, false, (float*)&projMatrix); 
-	glUniformMatrix4fv(viewLocation, 1, false, (float*)&viewMatrix); 
-
 	for (const auto& i : animatedObjects) {
-	
+		glUniform1i(glGetUniformLocation(animationShader->GetProgramID(), "diffuseTex"), 0); //not binding texture here?
+
+		//std::vector<std::vector<Matrix4>> frameMatrices; //storing a vector of Matrix4 vectors
+		std::vector<Matrix4> frameMatrices;
+
+		//These two changed to fit the datatypes as defined in this codebase:
+		//const std::vector<Matrix4> invBindPose = (*i).GetMesh()->GetInverseBindPose(); //InverseBindPose in mesh.h is a vector of matrix4 not a Matrix4*
+		const Matrix4 invBindPose = (*i).GetMesh()->GetInverseBindPose()[0]; //need to figure out the correct element to access. Why is InverseBindPose a vector?
+		const Matrix4* frameData = (*i).GetAnimation()->GetJointData((*i).GetAnimation()->GetCurrentFrame());//joint data is a Matrix4*
+
+		//in mesh.h InverseBindPose is a vector of matrix4 instead of just a Matrix4. This may be to allow each submesh to have its own bindpose. It may not be needed though so
+		//may be able to assume the bindpose will be the first element? Perhaps the possibility of any number of bindposes should be accounted for?
+
+		for (unsigned int q = 0; q < (*i).GetMesh()->GetJointCount(); ++q) {
+			frameMatrices.emplace_back(frameData[q] * invBindPose); 
+		}
+
+		int j = glGetUniformLocation(animationShader->GetProgramID(), "joints");
+		glUniformMatrix4fv(j, frameMatrices.size(), false, (float*)frameMatrices.data());
+
+		for (int k = 0; k < (*i).GetMesh()->GetSubMeshCount(); ++k) {
+			glActiveTexture(GL_TEXTURE0);
+			glBindTexture(GL_TEXTURE_2D, matTextures[k]); //still need to properly set up where to put matTextures
+
+		}
 	}
 }
