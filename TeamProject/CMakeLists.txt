@@ -41,6 +41,9 @@ set(SOURCES
     NavMesh.cpp
     NavMesh.h
 
+    Overheat.h
+    Overheat.cpp
+
     ResourceManager.cpp
     ResourceManager.h
     Respawn.h

@@ -114,6 +114,10 @@ namespace NCL {
 			std::unique_ptr<OGLShader> laserShader;
 			GLuint laserFBO;
 			GLuint laserTex;
+			std::unique_ptr<OGLShader> laserPreProcess;
+			GLuint laserPreFBO;
+			GLuint laserPreTex;
+			GLuint laserTexOld;
 			std::unique_ptr<OGLShader> laserPostProcess;
 			GLuint laserPostFBO;
 			GLuint laserPostTex;
@@ -144,6 +148,9 @@ namespace NCL {
 			std::unique_ptr<OGLShader> vignetteShader;
 			GLuint BDepthTex;
 			void RenderPostProcessing();
+
+			Matrix4 laserPreviousViewProjMatrix;
+
 			std::unique_ptr<OGLShader> edgedetectShader;
 
 		};
