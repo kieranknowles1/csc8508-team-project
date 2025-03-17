@@ -13,6 +13,16 @@ namespace Packet {
         ENetPacket* ToENetPacket(const std::shared_ptr<Packet> packet) const override;
     };
 
+    class LaserPacketHandler : public PacketHandler {
+    public:
+        LaserPacketHandler() : PacketHandler(static_cast<Type>(PacketType::LASER)) {}
+
+        void Handle(const std::shared_ptr<Packet> packet) override;
+        std::shared_ptr<Packet> Translate(const ENetEvent* event) const override;
+        ENetPacket* ToENetPacket(const std::shared_ptr<Packet> packet) const override;
+    };
+
+
 
     class PositionPacketHandler : public PacketHandler {
     public:

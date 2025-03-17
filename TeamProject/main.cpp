@@ -9,7 +9,9 @@
 #include "Config.h"
 #include "PushdownState.h"
 #include "PushdownMachine.h"
-//#include "MainMenuState.h"
+#include "MainMenuScreen.h"
+#include "GameScreen.h"
+#include "PauseScreen.h"
 
 #include "Multiplayer/GamePacketHandlers.hpp"
 
@@ -48,97 +50,6 @@ void TestPacketHandlers() {
     std::shared_ptr<Packet::Packet> infoPacketReturned = infoHandler.Translate(&event);
     std::shared_ptr<Packet::RequestUserIDPacket> infoPacketConverted = std::static_pointer_cast<Packet::RequestUserIDPacket>(infoPacketReturned);
 }
-
-class MainMenuScreen : public PushdownState {
-    int selection = 0;
-
-    PushdownResult OnUpdate(float dt, PushdownState** newState) override {
-
-    }
-};
-
-class PauseScreen : public PushdownState {
-    int selection = 0;
-
-public:
-    PauseScreen(Controller* controller) : controller(controller) {}
-    Controller* controller;
-
-    PushdownResult OnUpdate(float dt, PushdownState** newState) override {
-        if (controller->GetDigital(Controller::DigitalControl::Unpause)) {
-            return PushdownResult::Pop;
-        }
-        Debug::Print("Press U to unpause the game!", Vector2(20, 20), Vector4(0, 0, 0, 1));
-        //return PushdownResult::NoChange;
-        //Debug::Print("Press U to unpause the game!", Vector2(10, 10), Vector4(0, 0, 0, 1));
-
-        const std::string resumeGame = "Resume";
-        const std::string exitGame = "Exit";
-
-        bool inMenu = true;
-
-        std::string menuItems[2] = { resumeGame, exitGame };
-
-        if (inMenu) {
-            if (controller->GetDigital(Controller::DigitalControl::MenuDown)) {
-                selection = std::min(1, selection + 1);
-            }
-            if (controller->GetDigital(Controller::DigitalControl::MenuUp)) {
-                selection = std::max(0, selection - 1);
-            }
-            if (controller->GetDigital(Controller::DigitalControl::MenuConfirm)) {
-                const std::string pauseSelection = menuItems[selection];
-
-                if (pauseSelection == "Resume") {
-                    return PushdownResult::Pop;
-                } //Add an else function here to return to main menu
-                inMenu = false;
-            }
-
-            for (int i = 0; i < 2; i++) {
-                std::string currentItem = menuItems[i];
-                if (i == selection) currentItem = currentItem + " <";
-                Debug::Print(currentItem, Vector2(1, 50 + (10 * i)));
-            }
-        }
-
-        return PushdownResult::NoChange;
-    }
-    void OnAwake() override {
-    }
-};
-
-class GameScreen : public PushdownState {
-public:
-    GameScreen(Controller* controller) : controller(controller) {}
-    Controller* controller;
-
-    PushdownResult OnUpdate(float dt, PushdownState** newState) override {
-        pauseReminder -= dt;
-
-        if (pauseReminder < 0) {
-            Debug::Print("Press P to pause the game!", Vector2(20, 20), Vector4(0, 0, 0, 1));
-        }
-        if (controller->GetDigital(Controller::DigitalControl::Pause)) {
-            pauseReminder = 0;
-            *newState = new PauseScreen(controller);
-            std::cout << "Game entered pause state \n";
-            return PushdownResult::Push;
-        }
-        if (controller->GetDigital(Controller::DigitalControl::PauseQuit)) {
-            Debug::Print("Going back to main menu", Vector2(0.1f, 0.3f), Vector4(0, 0, 0, 1));
-            return PushdownResult::Pop;
-        }
-        return PushdownResult::NoChange;
-    };
-    void OnAwake() override {
-        std::cout << "Game state active\n";
-    }
-protected:
-    float pauseReminder = 1;
-};
-
-
 
 std::unique_ptr<Window> createWindow(const Config& config) {
 #ifndef __PROSPERO__
@@ -187,123 +98,42 @@ Controller* createController(Window* window) {
 #endif // !__PROSPERO__
 
 }
-
-/*int main(int argc, char** argv) {
-    auto config = Config("user-config.jsonc", "default-config.jsonc");
-
-
-    auto window = createWindow(config);
-    bool paused = false;
-
-    window->ShowOSPointer(false);
-    window->LockMouseToWindow(true);
-
-    auto renderer = std::make_unique<GameTechRenderer>();
-    auto controller = std::make_unique<KeyboardMouseController>(*window->GetKeyboard(), *window->GetMouse());
-
-    auto game = std::make_unique<TutorialGame>(renderer.get(), controller.get());
-    // Clear delta time to exclude start up time
-    window->GetTimer().GetTimeDeltaSeconds();
-
-    while (window->UpdateWindow() && !Window::GetKeyboard()->KeyDown(KeyCodes::ESCAPE)) {
-
-        if (NCL::Window::GetKeyboard()->KeyPressed(NCL::KeyCodes::P)) {
-            paused = !paused;
-        }
-
-        float dt = window->GetTimer().GetTimeDeltaSeconds();
-
-        window->SetTitle("Gametech frame time:" + std::to_string(1000.0f * dt));
-        if (!paused) {
-            game->UpdateGame(dt);
-        }
-
-        renderer->Update(dt);
-        renderer->Render();
-
-
-        Debug::UpdateRenderables(dt);
-    }
-}*/
-
+bool locked = true;
 
 int main(int argc, char** argv) {
     auto config = Config("user-config.jsonc", Assets::DEFAULTCONFIG);
     bool quickStart = config.get<bool>("quickStart");
 
     auto window = createWindow(config);
-    //bool paused = false;
 
     window->ShowOSPointer(false);
     window->LockMouseToWindow(true);
 
     auto renderer = createRenderer(window.get());
     auto controller = createController(window.get());
-    PushdownMachine machine(new GameScreen(controller));
 
+    auto game = std::make_unique<TutorialGame>(renderer.get(), controller, config);
 
-    auto game = std::make_unique<TutorialGame>(renderer.get(), controller);
-
+    //PushdownMachine machine(new GameScreen(controller, game.get(), "Singleplayer"));
+    PushdownMachine machine(new MainMenuScreen(controller, game.get()));
 
     // Clear delta time to exclude start up time
     window->GetTimer().GetTimeDeltaSeconds();
 
-    const std::string singleplayer = "Singleplayer";
-    const std::string hostGame = "Host Game";
-    const std::string joinGame = "Join Game";
-    int selection = 0;
-    bool inMenu = true;
-
-    std::string menuItems[3] = { singleplayer, hostGame, joinGame };
-
-    while (window->UpdateWindow() && !window->GetKeyboard()->KeyPressed(KeyCodes::ESCAPE)) {
+    bool quit = false;
+    while (window->UpdateWindow() && !window->GetKeyboard()->KeyPressed(KeyCodes::ESCAPE) && !quit) {
+        if (window->GetKeyboard()->KeyPressed(KeyCodes::NUM1)) {
+            locked = !locked;
+            window->ShowOSPointer(!locked);
+            window->LockMouseToWindow(locked);
+        }
         float dt = window->GetTimer().GetTimeDeltaSeconds();
         controller->Update(dt);
         window->SetTitle("Gametech frame time:" + std::to_string(1000.0f * dt));
 
-        game->UpdateGame(dt);
-
-        if (inMenu) {
-
-            //Try showing the FMod logo here
-
-            if (controller->GetDigital(Controller::DigitalControl::MenuDown)) {
-                selection = std::min(2, selection + 1);
-            }
-            if (controller->GetDigital(Controller::DigitalControl::MenuUp)) {
-                selection = std::max(0, selection - 1);
-            }
-            if (controller->GetDigital(Controller::DigitalControl::MenuConfirm) || quickStart) {
-                GameMode mode = static_cast<GameMode>(selection);
-
-                if (mode == GameMode::SINGLEPLAYER) {
-                    game->Start();
-                }
-                else {
-                    game->JoinGame(mode == GameMode::HOST_GAME);
-                }
-                inMenu = false;
-            }
-
-            for (int i = 0; i < 3; i++) {
-                std::string currentItem = menuItems[i];
-                if (i == selection) currentItem = currentItem + " <";
-                Debug::Print(currentItem, Vector2(1, 50 + (10 * i)));
-            }
-        }
-
-        else {
-            if (!machine.Update(dt)) {
-                inMenu = true;
-            }
-            //Add a GetState function to PushdownMachine/PushdownState to return the screen it's on, and if it's on PauseScreen
-            //Pause the game->UpdateGame
-        }
-
-
+        quit |= !machine.Update(dt);
+        renderer->collectFrameObjects(game->getWorld());
         renderer->drawFrame(dt);
-
-
         Debug::UpdateRenderables(dt);
     }
 }

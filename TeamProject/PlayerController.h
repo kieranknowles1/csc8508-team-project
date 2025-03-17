@@ -18,6 +18,8 @@
 #include "Shoot.h"
 #include "Paintball.h"
 #include "Crosshair.h"
+#include "Scoreboard.h"
+#include "Overheat.h"
 #include <memory>
 
 
@@ -76,18 +78,13 @@ namespace NCL {
 			float backwardsMulti = 0.55f;
 			float airMulti = 0.75f;
 
-			float crouchingTime = 0.3f;
-			float crouchMulti = 0.4f;
-			float crouchHeight = -1.0f;
-
 			float slidingTime = 0.25f;
 			float slidingAngle = 75.0f;
 			float slidingCameraHeight = 0.0f;
 			float slidingCameraBackwards = 2.5f;
 
 			//Gun Variables
-			float shotCooldown = 0.075f;
-			btVector3 gunCameraOffset = btVector3(1.3, -0.7, -1.2);
+			btVector3 gunCameraOffset = btVector3(1.3, -0.7, -2.5f);
 
 			//Rotation Variables
 			float rotateTime = 0.5f;
@@ -98,6 +95,8 @@ namespace NCL {
 
 			GameTechRendererInterface* renderer;
 			std::unique_ptr<Crosshair> crosshair;
+			std::unique_ptr<Scoreboard> scoreboard;
+			std::unique_ptr<Overheat> overheat;
 			btVector3 upDirection;
 			btVector3 rightDirection;
 			btVector3 forwardDirection;
@@ -113,13 +112,6 @@ namespace NCL {
 			const Controller* controller = nullptr;
 			Camera* camera = nullptr;
 			float yaw = 0;
-			bool crouchTransition = false;
-			float currentHeight;
-			float standingHeight = 20.0f;
-			float crouchingHeight = 6.0f;
-			float currentCrouchingTimer=0;
-			float currentStandingTimer=10.0f;
-			bool isCrouching;
 			bool isSliding = false;
 			bool slideTransition = false;
 			float currentAngle;
@@ -139,8 +131,11 @@ namespace NCL {
 			btIDebugDraw* debugDrawer;
 			bool onIce = false;
 			btVector3 previousVelocity;
-			bool firing;
+			bool firing = false;
 			int laserID;
+			float firingTimer = 0.0f;
+			float overheatTimer = 0.0f;
+			float cooldownTimer = 0.0f;
 
 			btVector3 forward;
 			btVector3 up;
@@ -151,12 +146,9 @@ namespace NCL {
 			Vector2 getDirectionalInput() const;
 			void Initialise();
 			void HandleShooting(float dt);
-			void HandleCrouching(float dt);
 			void HandleSliding(float dt);
 			void SpecialTypeCalculations();
-			bool CheckCeling();
 			btVector3 FindFloorNormal();
-			void SetGunTransform();
 			void FireShot(float dt);
 			void GetAllDirections();
 			void HandleYaw();

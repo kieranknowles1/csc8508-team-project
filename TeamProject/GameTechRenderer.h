@@ -43,14 +43,11 @@ namespace NCL {
 
 			void RenderShadowMap();
 			void RenderCamera();
-			void RenderSkybox();
 
 			void RenderDecals();
 			void RenderQuad();
 			void RenderUI();
 			void RenderLasers();
-
-			void LoadSkybox();
 
 			void SetDebugStringBufferSizes(size_t newVertCount);
 			void SetDebugLineBufferSizes(size_t newVertCount);
@@ -58,14 +55,11 @@ namespace NCL {
 			std::unique_ptr<OGLShader> uiShader;
 			std::unique_ptr<OGLShader> sceneShader;
 			std::unique_ptr<OGLShader> debugShader;
-			std::unique_ptr<OGLShader> skyboxShader;
-			std::unique_ptr<OGLMesh> skyboxMesh;
 
 			// 1.0f size quad, for HDR
 			std::unique_ptr<OGLMesh> unitQuad;
 			// 0.5f size quad, for sprites
 			std::unique_ptr<OGLMesh> halfUnitQuad;
-			GLuint		skyboxTex;
 
 			GLuint crosshairVAO;
 			GLuint crosshairVBO;
@@ -105,11 +99,12 @@ namespace NCL {
 			size_t textCount = 0;
 
 			//Deferred rendering additions:
-			OGLShader* deferredsceneShader;
-			OGLShader* pointlightShader;
-			OGLShader* combineShader;
+			std::unique_ptr<OGLShader> deferredsceneShader;
+			std::unique_ptr<OGLShader> pointlightShader;
+			std::unique_ptr<OGLShader> combineShader;
 
-			OGLMesh* lightSphere;
+			std::unique_ptr<OGLMesh> lightSphere;
+			std::unique_ptr<OGLMesh> highResSphere;
 			GLuint bufferFBO;
 
 			// For drawing multiple point lights.
@@ -121,6 +116,19 @@ namespace NCL {
 			std::unique_ptr<OGLShader> laserShader;
 			GLuint laserFBO;
 			GLuint laserTex;
+			std::unique_ptr<OGLShader> laserPreProcess;
+			GLuint laserPreFBO;
+			GLuint laserPreTex;
+			GLuint laserTexOld;
+			std::unique_ptr<OGLShader> laserPostProcess;
+			GLuint laserPostFBO;
+			GLuint laserPostTex;
+			std::unique_ptr<OGLShader> laserPostProcess2;
+			GLuint laserPostFBO2;
+			GLuint laserPostTex2;
+			std::unique_ptr<OGLShader> addLaserShader;
+			GLuint laserAddFBO;
+			GLuint laserAddedTex;
 
 			void GenerateScreenTexture(GLuint& into, bool depth = false); //added
 			GLuint bufferDepthTex;
@@ -129,20 +137,23 @@ namespace NCL {
 			void FillBuffers();
 			void DrawPointLights();
 			void CombineBuffers();
-			void DrawScene(); 
+			void DrawScene();
 
 			//Post processing additions:
 			GLuint hdrTex;
 			GLuint hdrFBO;
 			GLuint hdrDepthTex;
-			OGLMesh* fullscreenQuad;  
-			OGLShader* hdrShader;
+			std::unique_ptr<OGLMesh> fullscreenQuad;
+			std::unique_ptr<OGLShader> hdrShader;
 			GLuint BTex;
 			GLuint BFBO;
-			OGLShader* vignetteShader;
+			std::unique_ptr<OGLShader> vignetteShader;
 			GLuint BDepthTex;
 			void RenderPostProcessing();
-			OGLShader* edgedetectShader;
+
+			Matrix4 laserPreviousViewProjMatrix;
+
+			std::unique_ptr<OGLShader> edgedetectShader;
 
 			//Mesh Animation Additions:
 			OGLMesh* MaleGuard; //trying out unique pointers for now

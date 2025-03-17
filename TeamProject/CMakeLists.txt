@@ -4,6 +4,8 @@ set(SOURCES
     BulletDebug.h
     GameTechRendererInterface.cpp
     GameTechRendererInterface.h
+    Scoreboard.cpp
+    Scoreboard.h
     TutorialGame.cpp
     TutorialGame.h
     PlayerController.cpp
@@ -30,12 +32,11 @@ set(SOURCES
     Config.cpp
     DecalSystem.h
     DecalSystem.cpp
-    PushdownState.h
-    PushdownMachine.cpp
-    PushdownMachine.h
-    MainMenuState.h
-    PlayingState.h
-    PausedState.h
+    MainMenuScreen.h
+    CreditsScreen.h
+    GameScreen.h
+    PauseScreen.h
+    LobbyScreen.h
     Colors.h
     Multiplayer/GamePackets.hpp
     Multiplayer/GamePacketHandlers.hpp
@@ -55,6 +56,8 @@ set(SOURCES
     Respawn.h
     AnimatedRenderObject.h
     AnimatedRenderObject.cpp
+    Overheat.h
+    Overheat.cpp
 )
 
 set(ASSET_ROOT "${CMAKE_SOURCE_DIR}/Assets")

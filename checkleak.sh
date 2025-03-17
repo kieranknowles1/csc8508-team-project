@@ -1,10 +1,12 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-cmake -DCMAKE_BUILD_TYPE=Debug build
-make --directory build -j12
+TARGET=CSC8508-1
 
-valgrind --leak-check=full ./build/TeamProject/CSC8508
+cmake -DCMAKE_BUILD_TYPE=Debug build
+make --directory build -j12 $TARGET
+
+valgrind --suppressions=valgrind-ignore.supp --leak-check=full ./build/TeamProject/$TARGET
 
 # Extra aggressive options
-# valgrind --leak-check=full --show-leak-kinds=all ./build/TeamProject/CSC8508
+# valgrind --leak-check=full --show-leak-kinds=all ./build/TeamProject/$TARGET

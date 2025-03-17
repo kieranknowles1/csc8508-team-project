@@ -50,10 +50,10 @@ LevelImporter::~LevelImporter() {
 }
 
 void LevelImporter::ClearObjects() {
-    //for (auto obj : objects) {
-    //    delete obj;
-    //}
-    //objects.clear();
+    for (auto obj : objects) {
+       delete obj;
+    }
+    objects.clear();
 }
 
 void LevelImporter::LoadLevel(int level) {
@@ -110,9 +110,11 @@ void LevelImporter::AddObjectToWorld(ObjectData* data) {
 
 
     // Divide by 2 for half-size
-    btCompoundShape* compoundShape = new btCompoundShape();
+    btCompoundShape* compoundShape = nullptr;
     bool hasCollision = (data->colliderScale != btVector3(0,0,0));
     if (hasCollision) {
+        compoundShape = new btCompoundShape();
+        compoundShape->setUserIndex((int)PhysicsObject::ShapeType::Compound);
         btCollisionShape* boxShape = new btBoxShape(data->colliderScale * scale* data->scale / 2.0f);
         btTransform colliderOffset;
         colliderOffset.setIdentity();
@@ -125,28 +127,20 @@ void LevelImporter::AddObjectToWorld(ObjectData* data) {
 
     // Setting render object
     // TODO: Include file extensions
-    auto optionalTexture = [&](const std::string& tex) {
-        return tex.empty() ? resourceManager->getTextures().get("checkerboard.png") : resourceManager->getTextures().get(tex + ".tga");
+    auto mainTexture = [&](const std::string& tex) {
+        return tex.empty() ? resourceManager->getTextures().get("checkerboard.png") : resourceManager->getTextures().get(tex + ".jpg");
     };
+    auto normalTexture = [&](const std::string& tex) {
+        return tex.empty() ? nullptr : resourceManager->getTextures().get(tex + ".png");
+        };
     cube->SetRenderObject(new RenderObject(
         cube,
         resourceManager->getMeshes().get(data->meshName + ".msh"),
-        optionalTexture(data->mainTextureName),
-        optionalTexture(data->normalTextureName)
+        mainTexture(data->mainTextureName),
+        normalTexture(data->normalTextureName)
     ));
     world->AddGameObject(cube);
-    cube->GetRenderObject()->SetColour(Vector4(1.0f, 1.0f, 1.0f, 1.0f));
     cube->GetRenderObject()->SetTexRepeating(true);//sets texture to repeat and scale
-    if (data->meshName == "Quad") {
-        cube->GetRenderObject()->SetTexScaleMultiplier(0.005f);
-        cube->GetRenderObject()->SetDefaultTexture(resourceManager->getTextures().get("tiles_0099_color_1k.jpg"));
-        cube->GetRenderObject()->SetNormal(resourceManager->getTextures().get("tiles_0099_normal_opengl_1k.png"));
-    }
-    else {
-        cube->GetRenderObject()->SetTexScaleMultiplier(0.01f);
-        cube->GetRenderObject()->SetDefaultTexture(resourceManager->getTextures().get("marble_0013_color_1k.jpg"));
-        cube->GetRenderObject()->SetNormal(resourceManager->getTextures().get("marble_0013_normal_opengl_1k.png"));
-    }
     cube->setType(data->type);
     HandleTypes(cube);
 }
@@ -168,30 +162,31 @@ void LevelImporter::HandleTypes(GameObject* obj) {
     btVector4 colourLight = LightColour();
     switch (obj->getType())
     {
-    case GameObject::Type::Default:
-        break;
+
     case GameObject::Type::JumpPad:
         obj->GetRenderObject()->SetColour(Vector4(0.3f, 0.3f, 0.3f, 1));
         obj->GetRenderObject()->SetTexScaleMultiplier(0.0025f);
-        obj->GetRenderObject()->SetDefaultTexture(resourceManager->getTextures().get("metal_0082_ao_1k.jpg"));
-        obj->GetRenderObject()->SetNormal(resourceManager->getTextures().get("metal_0082_normal_opengl_1k.png"));
         break;
     case GameObject::Type::Slime:
         obj->GetRenderObject()->SetColour(Vector4(0, 1, 0, 1));
         obj->GetRenderObject()->SetTexScaleMultiplier(0.0025f);
-        obj->GetRenderObject()->SetDefaultTexture(resourceManager->getTextures().get("others_0001_color_1k.jpg"));
-        obj->GetRenderObject()->SetNormal(resourceManager->getTextures().get("others_0001_normal_opengl_1k.png"));
         break;
     case GameObject::Type::Ice:
         obj->GetRenderObject()->SetColour(Vector4(1, 2.0f, 2.0f, 1));
-        obj->GetRenderObject()->SetTexScaleMultiplier(0.005f);
-        obj->GetRenderObject()->SetDefaultTexture(resourceManager->getTextures().get("ground_0031_color_1k.jpg"));
-        obj->GetRenderObject()->SetNormal(resourceManager->getTextures().get("ground_0031_normal_opengl_1k.png"));
         break;
+    case GameObject::Type::SlimeCastle:
+        obj->GetRenderObject()->SetColour(Vector4(0.8f, 0.8f, 0.8f, 1));
+        obj->GetRenderObject()->SetTexScaleMultiplier(0.0035f);
+        break;
+    case GameObject::Type::Centre:
+        obj->GetRenderObject()->SetTexScaleMultiplier(0.0025f);
+        break;
+
+
     case GameObject::Type::PointLight:
         obj->GetRenderObject()->SetDefaultTexture(nullptr);
         obj->GetRenderObject()->SetNormal(nullptr);
-        world->AddPointLight(new PointLight(obj->GetPhysicsObject()->GetRigidBody()->getWorldTransform().getOrigin(), 850,1, colourLight));
+        world->AddPointLight(new PointLight(obj->GetPhysicsObject()->GetRigidBody()->getWorldTransform().getOrigin(), 950,1, colourLight));
         colourLight *= 10;
         colourLight.setW(1.0f);
         obj->GetRenderObject()->SetColour(colourLight);
@@ -205,7 +200,6 @@ void LevelImporter::HandleTypes(GameObject* obj) {
         Respawn::GetInstance()->InsertRespawn(respawnPoint);
         break;
     }
-
     default:
         break;
     }

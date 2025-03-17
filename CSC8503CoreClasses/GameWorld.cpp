@@ -25,6 +25,10 @@ void GameWorld::ClearAndErase() {
 	for (auto& i : gameObjects) {
 		delete i;
 	}
+	for (auto& i : lights) {
+		delete i;
+	}
+	lights.clear();
 	Clear();
 }
 

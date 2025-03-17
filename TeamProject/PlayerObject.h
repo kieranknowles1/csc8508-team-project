@@ -8,6 +8,7 @@
 #include "CollisionInfo.h"
 #include "Respawn.h"
 #include "MeshAnimation.h"
+#include "GameTechRendererInterface.h"
 
 #include <btBulletDynamicsCommon.h>
 #include <btBulletCollisionCommon.h>
@@ -40,6 +41,15 @@ public:
 		return upDirection;
 
 	}
+
+	void setRenderer(GameTechRendererInterface* rendIn) {
+		renderer = rendIn;
+	}
+
+	void updateLaser(btVector3 startPos, btVector3 endPos) {
+		renderer->updateLaser(GetWorldID(), startPos, endPos);
+	}
+
 
 	void setUpDirection(btVector3 target) {
 		upDirection = target;
@@ -169,6 +179,9 @@ private:
 
 	//Skeletal Animation stuff:
 	//MeshAnimation* test;
+
+
+	GameTechRendererInterface* renderer;
 
 
 };

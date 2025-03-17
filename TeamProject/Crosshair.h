@@ -12,13 +12,23 @@ struct CrosshairLine {
     Vector2 size;
 };
 
+enum CrosshairState {
+    Idle,
+    Expanding,
+    Firing,
+    Retracting
+};
+
+
 class Crosshair : public UiElement {
 public:
     Crosshair();
     void render(std::vector<UiSprite>& sprites) override;
+    void render(std::vector<UiText>& texts) override {};
     void Animate(float dt);
 
     void fire();
+    void stopFiring();
 
 private:
     void UpdateCrosshairData();
@@ -28,10 +38,16 @@ private:
     float lineThickness = 0.0025f;
     float horizontalLineThickness = 0.0035f;
     float horizontalLineLength = 0.015f;
-    float gapSize = 0.0005f;
+    float gapSize = 0.018f;
 
-    // Pulse animation
-    float pulse = 0.0f;
     std::array<CrosshairLine, 4> lines;
-    bool fired = false;
+    float startTime = 1.0f;
+    float endTime = 1.0f;
+    float timeElapsed = 0.0f;
+    float maxExpansion = 4.0f;
+    CrosshairState currentState = Idle;
+    float currentTimer = 0.0f;
+    bool reversing = false;
+    float wobbleAmount = 0.0f;
+    float expansionFactor = 1.0f;
 };
