@@ -40,7 +40,10 @@ public:
             selection = std::min(menuItems.size() - 1, selection + 1);
         }
         if (controller->GetDigital(Controller::DigitalControl::MenuUp)) {
-            selection = std::max(size_t(0), selection - 1);
+            if (selection > 0) {
+                selection--;
+            }
+            //selection = std::max(size_t(0), selection - 1);
         }
         if (controller->GetDigital(Controller::DigitalControl::MenuConfirm)) {
             GameMode mode = static_cast<GameMode>(selection);
