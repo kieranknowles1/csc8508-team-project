@@ -241,9 +241,9 @@ namespace Packet {
     /**
      * @brief Ping the server or client.
      */
-    class Ping : public Packet {
+    class PingPacket : public Packet {
     public:
-        Ping() :
+        PingPacket() :
             Packet(static_cast<Type>(PacketType::PING), static_cast<uint8_t>(Channel::RELIABLE), 0)
         {}
     };
@@ -252,9 +252,9 @@ namespace Packet {
     /**
      * @brief Pong a ping.
      */
-    class Pong : public Packet {
+    class PongPacket : public Packet {
     public:
-        Pong() :
+        PongPacket() :
             Packet(static_cast<Type>(PacketType::PONG), static_cast<uint8_t>(Channel::RELIABLE), 0)
         {}
     };

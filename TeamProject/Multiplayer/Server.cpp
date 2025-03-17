@@ -87,6 +87,7 @@ namespace Multiplayer {
         m_user = new Lobbies::User(user);
     }
 
+
     void Server::SendState(bool endOfTick) {
         if (endOfTick) return;
         if (!m_isHost) return;

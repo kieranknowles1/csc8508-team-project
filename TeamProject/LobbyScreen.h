@@ -79,7 +79,8 @@ namespace NCL {
             PushdownResult OnUpdate(float dt, PushdownState** newState) override {
                 UpdateSelection();
 
-                if (game->GetState() == GameState::ACTIVE) {
+                if (game->GetState() == GameState::STARTING) {
+                    game->Start();
                     *newState = new GameScreen(controller, game);
                     return PushdownResult::Push;
                 }
