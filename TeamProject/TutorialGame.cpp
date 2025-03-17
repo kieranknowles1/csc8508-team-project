@@ -55,7 +55,6 @@ for this module, even in the coursework, but you can add it if you like!
 */
 void TutorialGame::InitialiseAssets() {
     defaultTexture = resourceManager->getTextures().get("checkerboard.png");
-    paintballTexture = resourceManager->getTextures().get("paintball_basecolor.png");
 }
 
 TutorialGame::~TutorialGame()	{
@@ -157,7 +156,7 @@ void TutorialGame::UpdatePlayer(float dt) {
     // Press F for freeCam, press G for thirdPerson
     if (freeCam) {
         //freeCam Movement
-        world->GetMainCamera().UpdateCamera(dt, true);
+        world->GetMainCamera().UpdateCamera(dt * 10.0f, true);
     }
     else {
         //player Movement
@@ -462,30 +461,6 @@ Wanderer* TutorialGame::AddWandererToWorld(NavMesh* navMesh, char side) {
     return wanderer;
 }
 
-GameObject* TutorialGame::AddGunToWorld(const Vector3& position, Vector3 dimensions, float inverseMass, bool hasCollision)
-{
-    GameObject* gun = new GameObject();
-
-    // Setting the transform properties for the gun
-    gun->setInitialPosition(position);
-    gun->setRenderScale(dimensions);
-
-    btCollisionShape* shape = new btBoxShape(btVector3(dimensions.x / 2.0f, dimensions.y / 2.0f, dimensions.z / 2.0f));
-
-    // Setting the physics object for the gun
-    gun->SetPhysicsObject(new PhysicsObject(gun));
-
-    // Initialize Bullet physics for the gun
-    gun->GetPhysicsObject()->InitBulletPhysics(bulletWorld, shape, inverseMass, hasCollision);
-
-    // Setting render object
-    gun->SetRenderObject(new RenderObject(gun, resourceManager->getMeshes().get("VD_Raygun_Cartoony_Rigged1.msh"), resourceManager->getMaterials().get("VD_Raygun_Cartoony_Rigged1.mat")));
-
-    world->AddGameObject(gun);
-
-    return gun;
-}
-
 /* Adding an object to test the bullet physics */
 GameObject* TutorialGame::AddCubeToWorld(const Vector3& position, Vector3 dimensions, float inverseMass,bool hasCollision) {
     GameObject* cube = new GameObject();
@@ -521,28 +496,30 @@ GameObject* TutorialGame::AddCubeToWorld(const Vector3& position, Vector3 dimens
 }
 
 PlayerObject* TutorialGame::AddPlayerCapsuleToWorld(const Vector3& position, float height, float radius, float inverseMass) {
-    PlayerObject* player = new PlayerObject();
+    PlayerObject* capsule = new PlayerObject();
 
     // Setting the transform properties for the capsule
-    player->setInitialPosition(position);
-    player->setRenderScale(Vector3(radius * 2, height, radius * 2));
+    capsule->setInitialPosition(position);
+    capsule->setRenderScale(Vector3(radius * 2, height, radius * 2));
+
+    // TODO: Set the orientation of the capsule
+    //capsule->SetOrientation(rotation);
 
     // Creating a Bullet collision shape for the capsule
-    btCollisionShape* playerShape = new btCapsuleShape(radius, height);
+    btCollisionShape* shape = new btCapsuleShape(radius, height);
 
     // Setting the render object for the capsule
-    player->SetRenderObject(new RenderObject(player, resourceManager->getMeshes().get("Capsule.msh"), defaultTexture));
+    capsule->SetRenderObject(new RenderObject(capsule, resourceManager->getMeshes().get("Capsule.msh"), defaultTexture));
     // Setting the physics object for the capsule
-    player->SetPhysicsObject(new PhysicsObject(player));
+    capsule->SetPhysicsObject(new PhysicsObject(capsule));
 
     // Initializing the physics object for the capsule
-    player->GetPhysicsObject()->InitBulletPhysics(bulletWorld, playerShape, inverseMass);
-    //GameObject* newGun = AddCubeToWorld(Vector3(-300, 20, 40), Vector3(0.5, 0.5, 0.3), 0, false);
-    GameObject* newGun = AddGunToWorld(Vector3(-900, 20, 40), Vector3(2, 2, 2), 0, false);
-    player->setGun(newGun);
-    world->AddGameObject(player);
+    capsule->GetPhysicsObject()->InitBulletPhysics(bulletWorld, shape, inverseMass);
+    GameObject* newGun = AddCubeToWorld(Vector3(10, 2, 20), Vector3(0.6, 0.6, 1.6), 0, false);
+    capsule->setGun(newGun);
+    world->AddGameObject(capsule);
 
-    return player;
+    return capsule;
 }
 
 GameObject* TutorialGame::AddCapsuleToWorld(const Vector3& position, float height, float radius, float inverseMass) {

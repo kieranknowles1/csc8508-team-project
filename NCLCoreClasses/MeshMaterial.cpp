@@ -1,15 +1,13 @@
 #include "MeshMaterial.h"
 #include "Assets.h"
-#include <fstream>
-#include "../TeamProject/ResourceManager.h"
+#include "TextureLoader.h"
 
 using namespace NCL;
 using namespace NCL::Rendering;
 using std::ifstream;
-using std::string;
 
-MeshMaterial::MeshMaterial(CSC8503::ResourceManager* resourceManager, const std::string& filename) {
-    ifstream file(Assets::MATERIALDIR + filename);
+MeshMaterial::MeshMaterial(const std::string& filename) {
+	ifstream file(Assets::MESHDIR + filename);
 
 	string dataType;
 	file >> dataType;
@@ -66,16 +64,15 @@ const MeshMaterialEntry* MeshMaterial::GetMaterialForLayer(int i) const {
 	return meshLayers[i];
 }
 
-void MeshMaterial::LoadTextures(CSC8503::ResourceManager* resourceManager) {
+void MeshMaterial::LoadTextures() {
 	for(auto& i : meshLayers) {
-		i->LoadTextures(resourceManager);
+		i->LoadTextures();
 	}
 }
 
-void MeshMaterialEntry::LoadTextures(CSC8503::ResourceManager* resourceManager) {
+void MeshMaterialEntry::LoadTextures() {
 	for (auto& i : entries) {
 		string filename = Assets::TEXTUREDIR + i.second.first;
-        i.second.second = resourceManager->getTextures().get(filename);
 
 		//Texture* t = TextureLoader::LoadAPITexture(filename);
 

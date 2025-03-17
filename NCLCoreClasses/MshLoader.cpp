@@ -14,8 +14,7 @@ using namespace Maths;
 
 bool MshLoader::LoadMesh(const std::string& filename, Mesh& destinationMesh) {
 	auto binFile(Assets::MESHDIR + filename + "b");
-	//if (std::filesystem::exists(binFile)) {
-    if (false) {
+	if (std::filesystem::exists(binFile)) {
 		return LoadBinaryMesh(binFile, destinationMesh);
 	}
 	else {

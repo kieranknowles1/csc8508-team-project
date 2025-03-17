@@ -6,7 +6,7 @@
 #include <memory>
 #include "PointLight.h"
 
-#include "Vector.h"
+#include <NCLCoreClasses/Vector.h>
 
 namespace NCL::Rendering {
 	class Mesh;
