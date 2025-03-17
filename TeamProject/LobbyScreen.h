@@ -29,11 +29,27 @@ namespace NCL::CSC8503 {
 			//const std::array<std::string, 10> menuItems = { "Red", "Orange", "Green", "Purple", "Yellow", "Blue", "Pink", "Cyan", "Leave", "Start" };
 
 			if (controller->GetDigital(Controller::DigitalControl::MenuDown)) {
+				size_t startSelection = selection;
+				do {
+					selection = std::min(menuItems.size() - 1, selection + 1);
+				} while (selection < 8 && colourTaken[selection] && selection != startSelection); // Skip taken colours
+			}
+
+			if (controller->GetDigital(Controller::DigitalControl::MenuUp)) {
+				size_t startSelection = selection;
+				do {
+					selection = selection > 0 ? selection - 1 : selection;
+				} while (selection < 8 && colourTaken[selection] && selection != startSelection); // Skip taken colours
+			}
+
+			//Old colour menu scrolling
+			/*if (controller->GetDigital(Controller::DigitalControl::MenuDown)) {
 				selection = std::min(menuItems.size() - 1, selection + 1);
 			}
 			if (controller->GetDigital(Controller::DigitalControl::MenuUp)) {
 				selection = std::max(size_t(0), selection - 1);
-			}
+			}*/
+
 			if (controller->GetDigital(Controller::DigitalControl::MenuConfirm)) {
 				if (selection < 8) {  // If a colour is selected
 					if (!colourTaken[selection]) {
@@ -69,7 +85,7 @@ namespace NCL::CSC8503 {
 			// Render Colour Options
 			for (size_t i = 0; i < 10; i++) {
 				std::string currentItem = (i == selection) ? "> " + std::to_string(i + 1) + ". " + (i < 8 && colourTaken[i] ? "Taken" : menuItems[i]) + " <"
-					: "  " + std::to_string(i + 1) + ". " + (i < 8 && colourTaken[i] ? "Taken" : menuItems[i]);
+					: "  " + std::to_string(i + 1) + ". " + (i < 8 && colourTaken[i] ? "" : menuItems[i]);
 
 				//Leave button
 				if (i == 8) {
