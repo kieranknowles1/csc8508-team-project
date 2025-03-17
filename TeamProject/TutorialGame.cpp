@@ -9,18 +9,21 @@
 #include "Multiplayer/GamePackets.hpp"
 #include "Multiplayer/GamePacketHandlers.hpp"
 #include <CSC8503CoreClasses/Debug.h>
+#include "Colors.h"
 #include "Shoot.h"
 
 #include "Window.h"
+#include "Config.h"
 
 using namespace NCL;
 using namespace CSC8503;
 
 TutorialGame* TutorialGame::instance = nullptr;
 
-TutorialGame::TutorialGame(GameTechRendererInterface* renderer, Controller* controller)
+TutorialGame::TutorialGame(GameTechRendererInterface* renderer, Controller* controller, Config& config)
     : renderer(renderer)
     , controller(controller)
+    , config(config)
 {
     assert(instance == nullptr && "TutorialGame must be unique");
     instance = this;
@@ -33,15 +36,14 @@ TutorialGame::TutorialGame(GameTechRendererInterface* renderer, Controller* cont
     world->GetMainCamera().SetController(controller);
     mainCamera = &world->GetMainCamera();
 
-    loadFromLevel = true;
     resourceManager = std::make_unique<ResourceManager>(renderer);
-    new Shoot();
+    new Shoot(); //Shoot and Respawn have new before them but are not being deleted to my knowledge
     new Respawn();
 
     InitialiseAssets();
     InitCamera();
     InitWorld();
-    
+
 }
 
 /*
@@ -62,8 +64,6 @@ TutorialGame::~TutorialGame()	{
     audioEngine.Shutdown();
 
     if (server.has_value()) server->Close();
-
-    delete playerController;
 }
 
 static bool BulletRaycast(btDynamicsWorld* world, const btVector3& start, const btVector3& end, btCollisionWorld::ClosestRayResultCallback& resultCallback) {
@@ -88,14 +88,12 @@ void TutorialGame::UpdateGame(float dt) {
     int steps = bulletWorld->stepSimulation(maxDt, substeps, PHYSICS_PERIOD);
 
     profiler.startSection("Update World");
-    if (testTurret) {
-        testTurret->Update(dt);
-    }
-    if (navMesh && navMeshDebug) {
-        visualiseNavMesh();
-        if (wanderer) {
+
+    if (enableAI) {
+        for (Wanderer* wanderer : wanderers) {
             wanderer->Update(dt);
         }
+        if (navMeshDebug) VisualiseNavMesh();
     }
 
     UpdateKeys();
@@ -112,7 +110,6 @@ void TutorialGame::UpdateGame(float dt) {
     clearGraveyard();
     profiler.startSection("Prepare Render");
     bulletWorld->debugDrawWorld();
-    renderer->collectFrameObjects(world.get());
 
     profiler.startSection("Render Decals");
     // Fade decal after sometime - @Kieran: Didn't forget to call the Update function this time :)
@@ -138,6 +135,7 @@ void TutorialGame::UpdateGame(float dt) {
     //post processing time variable effect:
     pulse += dt;
     renderer->SetVignettePulse(pulse);
+    renderer->SetDelta(dt);
 }
 
 
@@ -159,7 +157,7 @@ void TutorialGame::UpdatePlayer(float dt) {
     // Press F for freeCam, press G for thirdPerson
     if (freeCam) {
         //freeCam Movement
-        world->GetMainCamera().UpdateCamera(dt, true);
+        world->GetMainCamera().UpdateCamera(dt * 10.0f, true);
     }
     else {
         //player Movement
@@ -221,8 +219,10 @@ void TutorialGame::ThirdPersonControls() {
     mainCamera->SetPitch(-15.0f);
 }
 
-void TutorialGame::visualiseNavMesh() {
-    navMesh->VisualiseNavMesh();
+void TutorialGame::VisualiseNavMesh() {
+    for (NavMesh* mesh : navMeshes) {
+        mesh->VisualiseNavMesh();
+    }
 
     /*btVector3 startPoint(94, 0.5833334, 26);
     btVector3 endPoint(68, 0.5833334, 34);
@@ -307,12 +307,16 @@ void TutorialGame::InitCamera() {
 }
 
 void TutorialGame::DestroyBullet() {
+    // TODO: These could all be unique_ptr
     delete bulletWorld;
     delete bulletDebug;
     delete solver;
     delete dispatcher;
     delete collisionConfig;
     delete broadphase;
+
+    bulletWorld = nullptr; bulletDebug = nullptr; solver = nullptr;
+    dispatcher = nullptr; collisionConfig = nullptr; broadphase = nullptr;
 }
 
 /* Bullet Physics world has been initialized here */
@@ -329,51 +333,78 @@ void TutorialGame::InitBullet() {
 }
 
 void TutorialGame::LoadWorldFromFile(int levelNum) {
-    ResetWorld();
+    ClearWorld();
     InitWorld();
 
-    levelImporter = new LevelImporter(resourceManager.get(), world.get(), bulletWorld);
-    levelImporter->LoadLevel(levelNum);
-
-    if (navMeshDebug) {
-        AddTurretToWorld();
-        AddWandererToWorld();
-    }
+    LevelImporter levelImporter(resourceManager.get(), world.get(), bulletWorld);
+    levelImporter.LoadLevel(levelNum);
 
 }
 
-void TutorialGame::ResetWorld() {
-    audioEngine.Shutdown();
+void TutorialGame::InitAI() {
+    if (navMeshDebug) freeCam = true;
+
+    bottom = new NavMesh(bulletWorld);
+    bottom->LoadFromFile("Assets/Meshes/NavMeshes/bottom.navmesh");
+    navMeshes.push_back(bottom);
+
+    top = new NavMesh(bulletWorld);
+    top->LoadFromFile("Assets/Meshes/NavMeshes/top.navmesh");
+    navMeshes.push_back(top);
+
+    front = new NavMesh(bulletWorld);
+    front->LoadFromFile("Assets/Meshes/NavMeshes/front.navmesh");
+    navMeshes.push_back(front);
+
+    back = new NavMesh(bulletWorld);
+    back->LoadFromFile("Assets/Meshes/NavMeshes/back.navmesh");
+    navMeshes.push_back(back);
+
+    left = new NavMesh(bulletWorld);
+    left->LoadFromFile("Assets/Meshes/NavMeshes/left.navmesh");
+    navMeshes.push_back(left);
+
+    right = new NavMesh(bulletWorld);
+    right->LoadFromFile("Assets/Meshes/NavMeshes/right.navmesh");
+    navMeshes.push_back(right);
+
+    for (int i = 0; i < 5; i++) {
+        AddWandererToWorld(bottom, 'b');
+        AddWandererToWorld(top, 't');
+        AddWandererToWorld(front, 'f');
+        AddWandererToWorld(back, 'k');
+        AddWandererToWorld(left, 'l');
+        AddWandererToWorld(right, 'r');
+    }
+}
+
+
+void TutorialGame::ClearWorld() {
     DestroyBullet();
     world->ClearAndErase();
     renderer->GetDecalSystem().ClearDecalsFromWorld();
+    renderer->ClearUIElemets();
 }
 
 void TutorialGame::InitWorld() {
-    InitBullet();
-    audioEngine.Init();
 
-    navMeshDebug = false;
-    if (navMeshDebug) {
-        freeCam = true;
-        navMesh = new NavMesh(bulletWorld);
-        navMesh->LoadFromFile("Assets/Meshes/NavMeshes/initiallevel.navmesh");
-    }
+	InitBullet();
+	audioEngine.Init();
 
 }
 
 PlayerObject* TutorialGame::InitPlayer(btVector3 position, btVector3 upDir) {
-    PlayerObject* newPlayer = new PlayerObject();
-    newPlayer = AddPlayerCapsuleToWorld(position, 20.0f, 8.5f, 10.0f);
+    PlayerObject* newPlayer = AddPlayerCapsuleToWorld(position, 20.0f, 8.5f, 10.0f);
     // Keep us from clipping when falling too fast
     newPlayer->GetPhysicsObject()->GetRigidBody()->setCcdMotionThreshold(1.0f);
     newPlayer->GetPhysicsObject()->GetRigidBody()->setCcdSweptSphereRadius(0.4f);
     newPlayer->GetPhysicsObject()->GetRigidBody()->setAngularFactor(0);
     newPlayer->GetPhysicsObject()->GetRigidBody()->setFriction(0.0f);
     newPlayer->GetPhysicsObject()->GetRigidBody()->setDamping(0.0, 0);
-  
+
     newPlayer->GetRenderObject()->SetColour(Vector4(playerColour));
     newPlayer->setUpDirection(upDir);
+    newPlayer->setRenderer(renderer);
     return newPlayer;
 }
 
@@ -404,8 +435,8 @@ Turret* TutorialGame::AddTurretToWorld() {
     return turret;
 }
 
-Wanderer* TutorialGame::AddWandererToWorld() {
-    Wanderer* wanderer = new Wanderer(player, navMesh);
+Wanderer* TutorialGame::AddWandererToWorld(NavMesh* navMesh, char side) {
+    Wanderer* wanderer = new Wanderer(player, navMesh, side);
 
     float height = 4.0f;
     float radius = 2.0f;
@@ -421,13 +452,13 @@ Wanderer* TutorialGame::AddWandererToWorld() {
     physicsObject->InitBulletPhysics(bulletWorld, shape, 0);
     wanderer->SetPhysicsObject(physicsObject);
 
-    wanderer->GetRenderObject()->SetColour(Vector4(1, 0, 0, 1));
+	wanderer->GetRenderObject()->SetColour(Vector4(0, 1, 0, 1));
 
     wanderer->InitPosAndOffset();
 
     world->AddGameObject(wanderer);
 
-    this->wanderer = wanderer;
+    wanderers.push_back(wanderer);
     return wanderer;
 }
 
@@ -661,6 +692,9 @@ void TutorialGame::InitPacketHandlers() {
 
     Packet::DamagePacketHandler* damageHandler = new Packet::DamagePacketHandler();
     Packet::PacketRegister::Register(damageHandler);
+
+    Packet::LaserPacketHandler* laserHandler = new Packet::LaserPacketHandler();
+    Packet::PacketRegister::Register(laserHandler);
 }
 
 
@@ -671,7 +705,13 @@ void TutorialGame::JoinGame(bool host) {
 
     if (!host) {
         ENetAddress dest;
-        enet_address_set_host(&dest, "10.70.33.113");
+
+        std::string host = config.get<std::string>("defaultHost");
+        std::cout << "Connecting to " << host << std::endl;
+
+        //enet_address_set_host(&dest, "127.0.0.1");
+        enet_address_set_host(&dest, host.c_str());
+
         dest.port = DEFAULT_PORT;
 
         ConnectToServer(dest);
@@ -707,8 +747,15 @@ void TutorialGame::Start() {
     instance->player = instance->InitPlayer(respawnPoint->position,respawnPoint->orientation);
     instance->player->SetOwner(user->GetUserID());
     instance->player->SetWorldID(user->GetUserID());
+    instance->player->GetRenderObject()->SetColour(Vector4(Color::GetPlayerColor(user->GetUserID())));
     instance->player->setType(GameObject::Type::Player);
-    instance->playerController = new PlayerController(instance->player, instance->gun, instance->controller, instance->mainCamera, instance->bulletWorld,instance->renderer);
+    instance->playerController = std::make_unique<PlayerController>(instance->player, instance->gun, instance->controller, instance->mainCamera, instance->bulletWorld,instance->renderer);
+
+    instance->navMeshDebug = false;
+    instance->enableAI = false;
+    if (instance->enableAI) {
+        instance->InitAI();
+    }
 
     btQuaternion emptyRot;
 
@@ -740,6 +787,7 @@ void TutorialGame::Start() {
             newPlayer->setType(GameObject::Type::Player);
             newPlayer->SetOwner(newUser.GetUserID());
             newPlayer->SetWorldID(newUser.GetUserID());
+            newPlayer->GetRenderObject()->SetColour(Vector4(Color::GetPlayerColor(newUser.GetUserID())));
         }
     }
 

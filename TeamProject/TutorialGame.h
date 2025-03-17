@@ -21,13 +21,16 @@
 namespace NCL {
     namespace CSC8503 {
         class BulletDebug;
+        class Config;
 
         const int MAX_PLAYERS = 8;
 
         enum class GameMode {
             SINGLEPLAYER,
             HOST_GAME,
-            JOIN_GAME
+            JOIN_GAME,
+            CREDITS,
+            QUIT,
         };
 
         enum class GameState {
@@ -58,7 +61,7 @@ namespace NCL {
 
             /**
              * @brief Get the Network Instance of the Server.
-             * @return 
+             * @return
              */
             inline static std::optional<Network>& GetServerInstance() { return server; }
 
@@ -85,7 +88,7 @@ namespace NCL {
             /**
              * @brief Used to automatically increment the userID from received
              * UserInfoPackets.
-             * 
+             *
              * Helps guarantee unique user ID's if in future we allow users to
              * take control of the server.
              */
@@ -108,12 +111,17 @@ namespace NCL {
                 earlyGraveyard.push_back(obj);
             }
 
-            TutorialGame(GameTechRendererInterface* renderer, Controller* controller);
+            TutorialGame(GameTechRendererInterface* renderer, Controller* controller, Config& config);
             ~TutorialGame();
 
             virtual void UpdateGame(float dt);
             void LoadWorldFromFile(int levelNum);
             void JoinGame(bool host);
+            void ClearWorld();
+
+            GameWorld* getWorld() {
+                return world.get();
+            }
 
             inline static bool IsHost() { return host; }
 
@@ -128,7 +136,7 @@ namespace NCL {
             void ThirdPersonControls();
 
             void InitWorld();
-            void ResetWorld();
+            //void ResetWorld();
 
             void SetupHost() {};
 
@@ -174,6 +182,8 @@ namespace NCL {
 
             GameTechRendererInterface* renderer;
             std::unique_ptr<GameWorld> world;
+            Config& config;
+
             std::vector<GameObject*> earlyGraveyard; // Added this frame
             std::vector<GameObject*> lateGraveyard; // Added previous frame
             void clearGraveyard();
@@ -209,7 +219,7 @@ namespace NCL {
             PlayerObject* InitPlayer(btVector3 position, btVector3 upDir);
             PerspectiveCamera* mainCamera;
             GameObject* gun;
-            PlayerController* playerController = nullptr;
+            std::unique_ptr<PlayerController> playerController;
             bool freeCam = false;
             bool thirdPerson = false;
             Vector4 playerColour = Vector4(1, 0.8, 1, 1);
@@ -222,15 +232,22 @@ namespace NCL {
             Turret* testTurret = nullptr;
 
             //Level import
-            LevelImporter* levelImporter;
             bool loadFromLevel;
 
-            NavMesh* navMesh;
+            NavMesh* bottom;
+            NavMesh* top;
+            NavMesh* front;
+            NavMesh* back;
+            NavMesh* left;
+            NavMesh* right;
+            std::vector<NavMesh*> navMeshes;
             bool navMeshDebug = false;
-            void visualiseNavMesh();
+            bool enableAI = true;
+            void VisualiseNavMesh();
+            void InitAI();
 
-            Wanderer* wanderer;
-            Wanderer* AddWandererToWorld();
+            std::vector<Wanderer*> wanderers;
+            Wanderer* AddWandererToWorld(NavMesh* navMesh, char side);
 
             GameObject* AddGunToWorld(const Vector3& position, Vector3 dimensions, float inverseMass, bool hasCollision);
 

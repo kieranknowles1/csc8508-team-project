@@ -16,6 +16,15 @@ PhysicsObject::~PhysicsObject()	{
 	// Clean up Bullet physics components
 	if (rigidBody) {
 		delete rigidBody->getMotionState();
+
+		auto shape = rigidBody->getCollisionShape();
+		btCompoundShape* compoundShape = (shape && (shape->getUserIndex() == (int)ShapeType::Compound)) ? (btCompoundShape*)shape : nullptr;
+		if (compoundShape) {
+			for (int i = 0; i < compoundShape->getNumChildShapes(); i++) {
+				delete compoundShape->getChildShape(i);
+			}
+		}
+
 		delete rigidBody->getCollisionShape();
 		delete rigidBody;
 	}

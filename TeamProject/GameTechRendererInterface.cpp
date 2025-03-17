@@ -12,6 +12,7 @@ namespace NCL::CSC8503 {
 		: window(window)
         , decalSystem(window->GetScreenSize().x, window->GetScreenSize().y)
 	{
+		initLasers();
 	}
 
 	void GameTechRendererInterface::collectFrameObjects(GameWorld* world)

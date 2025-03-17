@@ -1,0 +1,45 @@
+# Nvidia drivers raise quite a few errors out of our control
+{
+   nvidia_realloc_zero
+   Memcheck:ReallocZero
+   ...
+   obj:*/libnvidia-glcore.so.*
+}
+{
+   nvidia_badsize
+   Memcheck:BadSize
+   ...
+   obj:*/libnvidia-glcore.so.*
+}
+{
+   nvidia_cond
+   Memcheck:Cond
+   ...
+   obj:*/libnvidia-glcore.so.*
+}
+{
+   nvidia_noninit
+   Memcheck:Value8
+   ...
+   obj:*/libnvidia-glcore.so.*
+}
+
+# dbus_shutdown is only intended for debugging, and is not normally
+# used
+{
+   dbus_shutdown
+   Memcheck:Leak
+   match-leak-kinds: definite
+   fun:calloc
+   fun:dbus_message_new_empty_header
+   fun:_dbus_message_loader_queue_messages
+   fun:_dbus_transport_get_dispatch_status
+   fun:_dbus_transport_queue_messages
+   fun:do_reading
+   fun:socket_do_iteration
+   fun:_dbus_transport_do_iteration
+   fun:_dbus_connection_do_iteration_unlocked
+   fun:_dbus_connection_block_pending_call
+   fun:dbus_connection_send_with_reply_and_block
+   fun:dbus_bus_register
+}

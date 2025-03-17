@@ -9,6 +9,9 @@
     // resolution
     "fullscreen": "None",
 
+    // The default host to use when joining a game
+    "defaultHost": "10.70.33.113",
+
     // Immediately start the game, without showing the main menu
     "quickStart": false
 }

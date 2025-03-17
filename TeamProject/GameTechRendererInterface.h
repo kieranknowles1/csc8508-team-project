@@ -117,26 +117,21 @@ namespace NCL::CSC8503 {
 			vignetteIntensity = intensityIn;
 		}
 
-
-		int addLaser(btVector3 startPos, btVector3 endPos) {
-			int laserId = lasers.size();
-			lasers.push_back(new Laser(startPos, endPos, laserId));
-			return laserId;
+		void SetDelta(float dt) {
+			delta = dt;
 		}
 
-		void removeLaser(int laserId) {
-			for (auto it = lasers.begin(); it != lasers.end(); ++it) {
-				if ((*it)->id == laserId) {
-					delete* it;
-					lasers.erase(it);
-					return;  
-				}
+
+		void initLasers() {
+			for (int i = 0; i < 8; i++) {
+				std::shared_ptr<Laser> newLaser = std::make_shared<Laser>(btVector3(0, 0, 0), btVector3(0, 0, 0), i + 1);
+				lasers.push_back(newLaser);
 			}
 		}
 
 		void updateLaser(int laserId, btVector3 startPos, btVector3 endPos) {
 			// Find the laser with the given ID and update its positions
-			for (Laser* laser : lasers) {
+			for (std::shared_ptr<Laser> laser : lasers) {
 				if (laser->id == laserId) {
 					laser->startPos = startPos;  
 					laser->endPos = endPos;   
@@ -145,25 +140,28 @@ namespace NCL::CSC8503 {
 			}
 		}
 
-	
+		void ClearUIElemets() {
+			uiElements.clear();
+		}
+
 
 	protected:
 		// Post-processing settings
 		bool hdrOn = true;
-
+		std::vector<UiElement*> uiElements;
 		bool vignetteOn = false;
 		float vignettePulse = 0;
 		float vignetteIntensity = 0;
 		btVector3 vignetteColour = btVector3(0.05f, 0.0f, 0.0f);
-
+		float delta = 0;
 		Window* window;
 		Camera* camera = nullptr;
-		std::vector<UiElement*> uiElements;
+
 		std::vector<RenderObject*> frameObjects;
         std::vector<UiSprite> frameSprites;
 		std::vector<UiText> frameTexts;
 		std::vector<PointLight*> lights;
-		std::vector<Laser*> lasers;
+		std::vector<std::shared_ptr<Laser>> lasers;
 		DecalSystem decalSystem;
 	};
 }

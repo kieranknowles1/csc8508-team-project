@@ -11,8 +11,10 @@ https://research.ncl.ac.uk/game/
 namespace NCL::Assets {
 #ifndef __PROSPERO__
 	const std::string DEFAULTCONFIG("default-config.jsonc");
+	const std::string CREDITS("Credits.txt");
 #else
 	const std::string DEFAULTCONFIG("/app0/default-config.jsonc");
+	const std::string CREDITS("/app0/Credits.txt");
 #endif // !__PROSPERO__
 
 

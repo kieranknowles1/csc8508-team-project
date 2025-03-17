@@ -32,12 +32,11 @@ set(SOURCES
     Config.cpp
     DecalSystem.h
     DecalSystem.cpp
-    PushdownState.h
-    PushdownMachine.cpp
-    PushdownMachine.h
-    MainMenuState.h
-    PlayingState.h
-    PausedState.h
+    MainMenuScreen.h
+    CreditsScreen.h
+    GameScreen.h
+    PauseScreen.h
+    LobbyScreen.h
     Colors.h
     Multiplayer/GamePackets.hpp
     Multiplayer/GamePacketHandlers.hpp
@@ -55,6 +54,8 @@ set(SOURCES
     Crosshair.h
     Crosshair.cpp
     Respawn.h
+    Overheat.h
+    Overheat.cpp
 )
 
 set(ASSET_ROOT "${CMAKE_SOURCE_DIR}/Assets")
