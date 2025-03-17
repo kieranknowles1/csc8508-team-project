@@ -34,14 +34,14 @@ namespace WorldState {
         inline void AcquireReadLock() { m_stateLock.lock_shared(); }
 
         /**
-         * @brief Release previous acquired read lock.
+         * @brief Release previously acquired read lock.
          * @see AcquireReadLock
          */
         inline void ReleaseReadLock() { m_stateLock.unlock_shared(); }
 
         /**
          * @brief Update a state.
-         * This function blocks all reading until it has finished.
+         * This function blocks reading until it has finished.
          */
         void UpdateState(const std::pair<StateType, StateValue>& stateUpdate) {
             std::unique_lock lock(m_stateLock);
@@ -49,7 +49,8 @@ namespace WorldState {
         }
 
         /**
-         * @brief Write multiple states updates at once.
+         * @brief Write multiple state updates at once.
+         * This function blocks reading until it has finished.
          */
         void UpdateStates(std::vector<std::pair<StateType, StateValue>>& stateUpdates) {
             std::unique_lock lock(m_stateLock);
@@ -68,6 +69,11 @@ namespace WorldState {
         }
 
         inline bool HasState() const { return m_states.size() > 0; }
+
+        void Clear() {
+            std::unique_lock(m_stateLock);
+            m_states.clear();
+        }
 
     private:
         std::shared_mutex m_stateLock;
