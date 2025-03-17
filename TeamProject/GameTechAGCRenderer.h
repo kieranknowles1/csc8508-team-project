@@ -109,6 +109,7 @@ namespace NCL {
 				struct UniformArray {
 					sce::Agc::Core::Buffer buffer;
 					char* start;
+					size_t count;
 
 					void begin(FrameData* frame);
 					void end(FrameData* frame);
@@ -117,20 +118,12 @@ namespace NCL {
 				UniformArray<ObjectState> objects;
 				UniformArray<UiState> ui;
 				UniformArray<LightState> lights;
+				UniformArray<LineState> debugLines;
+				UniformArray<TextState> debugText;
 
 				sce::Agc::Core::Buffer constantBuffer;
 
-				sce::Agc::Core::Buffer debugLineBuffer;
-				sce::Agc::Core::Buffer debugTextBuffer;
-
 				BumpAllocator data;
-
-				int globalDataOffset	= 0;	//Where does the global data start in the buffer?
-				int debugLinesOffset	= 0;	//Where do the debug lines start?
-				int debugTextOffset		= 0;	//Where do the debug text verts start?
-
-				size_t lineVertCount = 0;
-				size_t textVertCount = 0;
 			};
 
 			struct SkinningJob {

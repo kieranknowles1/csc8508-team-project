@@ -20,9 +20,6 @@ const int FRAMES_IN_FLIGHT	= 2;
 const int BINDLESS_TEX_COUNT		= 128;
 const int BINDLESS_BUFFER_COUNT		= 128;
 
-const size_t LINE_STRIDE = sizeof(Vector4) + sizeof(Vector4);
-const size_t TEXT_STRIDE = sizeof(Vector2) + sizeof(Vector2) + sizeof(Vector4);
-
 GameTechAGCRenderer::FrameBuffer GameTechAGCRenderer::createBuffer(const std::string& name, FrameBuffer::Slot slot)
 {
 	FrameBuffer buf;
@@ -153,11 +150,6 @@ void GameTechAGCRenderer::RenderFrame() {
 	currentFrame = &allFrames[currentFrameIndex];
 
 	currentFrame->data.Reset();
-
-	currentFrame->globalDataOffset	= 0;
-	currentFrame->debugTextOffset	= 0;
-	currentFrame->textVertCount		= 0;
-	currentFrame->lineVertCount		= 0;
 
 	//Step 1: Write the frame's constant data to the buffer
 	WriteRenderPassConstants();
@@ -414,28 +406,27 @@ void GameTechAGCRenderer::UpdateDebugData() {
 	const std::vector<NCL::Debug::DebugStringEntry>& strings = NCL::Debug::GetDebugStrings();
 	const std::vector<Debug::DebugLineEntry>& lines = Debug::GetDebugLines();
 
-
-
-	for (const auto& s : strings) {
-		currentFrame->textVertCount += Debug::GetDebugFont()->GetVertexCountForString(s.data);
+	currentFrame->debugLines.begin(currentFrame);
+	for (const auto& line : lines) {
+		LineState begin; LineState end;
+		begin.pos = Vector4(line.start, 0); begin.colour = line.colourA;
+		end.pos = Vector4(line.end, 0); end.colour = line.colourB;
+		currentFrame->data.WriteData(&begin, sizeof(begin));
+		currentFrame->data.WriteData(&end, sizeof(end));
 	}
-	currentFrame->lineVertCount = (int)lines.size() * 2;
+	currentFrame->debugLines.end(currentFrame);
 
-	currentFrame->data.WriteData((void*)lines.data(), (size_t)currentFrame->lineVertCount * LINE_STRIDE);
 
-	currentFrame->debugTextOffset = currentFrame->data.bytesWritten;
-	std::vector< NCL::Rendering::SimpleFont::InterleavedTextVertex> verts;
-
+	currentFrame->debugText.begin(currentFrame);
+	std::vector<SimpleFont::InterleavedTextVertex> verts;
+	static_assert(sizeof(SimpleFont::InterleavedTextVertex) == sizeof(TextState));
 	for (const auto& s : strings) {
 		float size = 0.2f * s.scale;
 		Debug::GetDebugFont()->BuildInterleavedVerticesForString(s.data, s.position, s.colour, size, verts);
-		//can now copy to GPU visible mem
-		size_t count = verts.size() * TEXT_STRIDE;
-		memcpy(currentFrame->data.data, verts.data(), count);
-		currentFrame->data.data += count;
-		currentFrame->data.bytesWritten += count;
+		currentFrame->data.WriteData(verts.data(), verts.size() * sizeof(TextState));
 		verts.clear();
 	}
+	currentFrame->debugText.end(currentFrame);
 }
 
 void GameTechAGCRenderer::DisplayRenderPass() {
@@ -458,7 +449,7 @@ void GameTechAGCRenderer::DisplayRenderPass() {
 }
 
 void GameTechAGCRenderer::RenderDebugLines() {
-	if (currentFrame->lineVertCount == 0) {
+	if (currentFrame->debugLines.count == 0) {
 		return;
 	}
 	frameContext->setShaders(nullptr, debugLineVertexShader->GetAGCPointer(), debugLinePixelShader->GetAGCPointer(), sce::Agc::UcPrimitiveType::Type::kLineList);
@@ -468,22 +459,15 @@ void GameTechAGCRenderer::RenderDebugLines() {
 		.setDepthWrite(sce::Agc::CxDepthStencilControl::DepthWrite::kDisable);
 	frameContext->m_sb.setState(depthControl);
 
-	char* dataPos		= currentFrame->data.dataStart + currentFrame->debugLinesOffset;
-	size_t dataCount	= currentFrame->lineVertCount;
-
-	sce::Agc::Core::BufferSpec bufSpec;
-	bufSpec.initAsRegularBuffer(dataPos, LINE_STRIDE, dataCount);
-	checkError(sce::Agc::Core::initialize(&currentFrame->debugLineBuffer, &bufSpec));
-
 	frameContext->m_bdr.getStage(sce::Agc::ShaderType::kGs)
 		.setConstantBuffers(0, 1, &currentFrame->constantBuffer)
-		.setBuffers(0, 1, &currentFrame->debugLineBuffer);
+		.setBuffers(0, 1, &currentFrame->debugLines.buffer);
 
-	frameContext->drawIndexAuto(currentFrame->lineVertCount);
+	frameContext->drawIndexAuto(currentFrame->debugLines.count);
 }
 
 void GameTechAGCRenderer::RenderDebugText() {
-	if (currentFrame->textVertCount == 0) {
+	if (currentFrame->debugText.count == 0) {
 		return;
 	}
 	frameContext->setShaders(nullptr, debugTextVertexShader->GetAGCPointer(), debugTextPixelShader->GetAGCPointer(), sce::Agc::UcPrimitiveType::Type::kTriList);
@@ -507,16 +491,9 @@ void GameTechAGCRenderer::RenderDebugText() {
 
 	frameContext->m_sb.setState(blendControl);
 
-	char* dataPos = currentFrame->data.dataStart + currentFrame->debugTextOffset;
-	size_t dataCount = currentFrame->textVertCount;
-
-	sce::Agc::Core::BufferSpec bufSpec;
-	bufSpec.initAsRegularBuffer(dataPos, TEXT_STRIDE, dataCount);
-	checkError(sce::Agc::Core::initialize(&currentFrame->debugTextBuffer, &bufSpec));
-
 	frameContext->m_bdr.getStage(sce::Agc::ShaderType::kGs)
 		.setConstantBuffers(0, 1, &currentFrame->constantBuffer)
-		.setBuffers(0, 1, &currentFrame->debugTextBuffer);
+		.setBuffers(0, 1, &currentFrame->debugText.buffer);
 
 	AGCTexture* debugTex = (AGCTexture*)Debug::GetDebugFont()->GetTexture();
 
@@ -524,7 +501,7 @@ void GameTechAGCRenderer::RenderDebugText() {
 		.setSamplers(0, 1, &pixelSampler)
 		.setTextures(1, 1, debugTex->GetAGCPointer());
 
-	frameContext->drawIndexAuto(currentFrame->textVertCount);
+	frameContext->drawIndexAuto(currentFrame->debugText.count);
 }
 
 void GameTechAGCRenderer::UpdateObjectList() {
@@ -619,7 +596,7 @@ inline void GameTechAGCRenderer::FrameData::UniformArray<T>::end(FrameData* fram
 {
 	sce::Agc::Core::BufferSpec spec;
 	auto bytesWritten = frame->data.data - start;
-	auto elemsWritten = bytesWritten / sizeof(T);
-	spec.initAsRegularBuffer(start, sizeof(T), elemsWritten);
+	count = bytesWritten / sizeof(T);
+	spec.initAsRegularBuffer(start, sizeof(T), count);
 	sce::Agc::Core::initialize(&buffer, &spec);
 }
