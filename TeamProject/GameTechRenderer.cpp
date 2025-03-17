@@ -988,9 +988,9 @@ void GameTechRenderer::GenerateScreenTexture(GLuint& into, bool depth) {
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 
-	GLuint format = depth ? GL_DEPTH_COMPONENT24 : GL_RGBA16F; //using floating point textures to allow HDR rendering
+	GLuint format = depth ? GL_DEPTH_COMPONENT32F : GL_RGBA16F; //using floating point textures to allow HDR rendering
 	GLuint type = depth ? GL_DEPTH_COMPONENT : GL_RGBA;
-	GLuint datatype = depth ? GL_UNSIGNED_BYTE : GL_FLOAT;
+	GLuint datatype = depth ? GL_FLOAT : GL_FLOAT;
 
 	glTexImage2D(GL_TEXTURE_2D, 0, format, windowSize.x, windowSize.y, 0, type, datatype, NULL);
 	glBindTexture(GL_TEXTURE_2D, 0);
