@@ -44,7 +44,7 @@ static void writeStrings(std::ofstream& fs, const std::vector<std::string>& data
 static int writeOptionalJointNames(int& chunksWritten, std::ofstream& fs, const std::vector<std::string>& data) {
 	if (data.empty()) return 0;
 	chunksWritten++;
-	
+
 	write(fs, MshLoader::GeometryChunkTypes::JointNames);
 	write(fs, data.size());
 
@@ -109,6 +109,7 @@ static void convert(const Mesh& mesh, std::string_view target) {
 	writeOptionalChunk(chunksWritten, fs, MshLoader::GeometryChunkTypes::VTangents, mesh.GetTangentData(), mesh.GetVertexCount());
 	writeOptionalChunk(chunksWritten, fs, MshLoader::GeometryChunkTypes::VTex0, mesh.GetTextureCoordData(), mesh.GetVertexCount());
 	writeOptionalChunk(chunksWritten, fs, MshLoader::GeometryChunkTypes::Indices, mesh.GetIndexData(), mesh.GetIndexCount());
+	writeOptionalChunk(chunksWritten, fs, MshLoader::GeometryChunkTypes::VWeightIndices, mesh.GetSkinIndexData(), mesh.GetVertexCount());
 	writeOptionalChunk(chunksWritten, fs, MshLoader::GeometryChunkTypes::VWeightValues, mesh.GetSkinWeightData(), mesh.GetVertexCount());
 	int jointNameCount = writeOptionalJointNames(chunksWritten, fs, mesh.GetJointNames());
 	writeOptionalJointParents(chunksWritten, fs, mesh.GetJointParents(), jointNameCount);
@@ -129,11 +130,11 @@ int main(int argc, char** argv) {
 		return 1;
 	}
 
-	std::string_view source(argv[1]);
-	std::string_view target(argv[2]);
+	std::string source(argv[1]);
+	std::string target(argv[2]);
 
 	Mesh mesh;
-	bool ok = MshLoader::LoadTextMesh(std::string(source), mesh);
+	bool ok = MshLoader::LoadTextMesh(source, mesh);
 	if (!ok) {
 		throw std::runtime_error("Failed to load mesh");
 	}
