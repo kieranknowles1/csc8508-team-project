@@ -134,6 +134,7 @@ void TutorialGame::UpdateGame(float dt) {
     //post processing time variable effect:
     pulse += dt;
     renderer->SetVignettePulse(pulse);
+    renderer->SetDelta(dt);
 }
 
 
@@ -685,8 +686,8 @@ void TutorialGame::JoinGame(bool host) {
         std::string host = config.get<std::string>("defaultHost");
         std::cout << "Connecting to " << host << std::endl;
 
-        //enet_address_set_host(&dest, "127.0.0.1");
-        enet_address_set_host(&dest, host.c_str());
+        enet_address_set_host(&dest, "127.0.0.1");
+        //enet_address_set_host(&dest, host.c_str());
 
         dest.port = DEFAULT_PORT;
 

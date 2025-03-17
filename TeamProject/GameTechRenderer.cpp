@@ -731,7 +731,7 @@ void GameTechRenderer::RenderLasers() {
 	glActiveTexture(GL_TEXTURE1);
 	glBindTexture(GL_TEXTURE_2D, laserTexOld);
 	glUniform1i(glGetUniformLocation(laserPreProcess->GetProgramID(), "oldLaserTex"), 1);
-	glUniform1f(glGetUniformLocation(laserPreProcess->GetProgramID(), "dt"), vignettePulse);
+	glUniform1f(glGetUniformLocation(laserPreProcess->GetProgramID(), "dt"), delta);
 	glUniformMatrix4fv(glGetUniformLocation(laserPreProcess->GetProgramID(), "currViewProjMatrix"), 1, false, (float*)&viewProjMatrix);
 	glUniformMatrix4fv(glGetUniformLocation(laserPreProcess->GetProgramID(), "prevViewProjMatrix"), 1, false, (float*)&laserPreviousViewProjMatrix);
 	DrawBoundMesh();
