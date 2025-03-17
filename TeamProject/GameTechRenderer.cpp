@@ -385,44 +385,56 @@ void GameTechRenderer::RenderCamera() {
 	//glBindTexture(GL_TEXTURE_2D, shadowTex);
 
 	for (const auto&i : frameObjects) {
+        size_t subMeshCount = i->GetMesh()->GetSubMeshCount();
 
-		if ((*i).GetDefaultTexture()) {
-			BindTextureToShader(*(OGLTexture*)(*i).GetDefaultTexture(), "diffuseTex", 0); //was maintTex for scenefrag. Using diffuseTex for deferredscenefrag
-			//figure out scale of object:
-			Vector3 scale = i->getParent()->getRenderScale() * i->GetTexScaleMultiplier();
-			glUniform3fv(texScaleLocation, 1, scale.array);
+        for (size_t subMeshIndex = 0; subMeshIndex < subMeshCount; ++subMeshIndex) {
+            bool hasTex = (subMeshIndex < i->GetTextures().size()) && i->GetTextures()[subMeshIndex];
+            bool hasNormal = (subMeshIndex < i->GetNormalMaps().size()) && i->GetNormalMaps()[subMeshIndex];
+            //Bind textures per submesh
+            if (hasTex) {
+                BindTextureToShader(*(i->GetTextures()[subMeshIndex]), "diffuseTex", 0);
+            }
 
-		}
+            if (hasNormal) {
+                BindTextureToShader(*(i->GetNormalMaps()[subMeshIndex]), "normalTex", 1);
+            }
+            Vector3 texScale;
+            // TODO: Proper flag to control this, named something like scaleTextureWithSize (but shorter)
+            if (i->GetTexRepeating()) {
+                texScale = i->getParent()->getRenderScale() * i->GetTexScaleMultiplier();
+            }
+            else {
+                texScale = Vector3(1, 1, 1);
+            }
+            glUniform3fv(texScaleLocation, 1, texScale.array);
+            // TODO: Add metallic maps
+            /*if (subMeshIndex < i->GetMetallicMaps().size() && i->GetMetallicMaps()[subMeshIndex]) {
+                BindTextureToShader(*(i->GetMetallicMaps()[subMeshIndex]), "metallicTex", 2);
+            }*/
 
-		//normal map capabilities added:
-		if ((*i).GetNormalMap()) { //changed texture unit to 1 instead of 2 while there are no shadows
-			BindTextureToShader(*(OGLTexture*)(*i).GetNormalMap(), "normalTex", 1); //need a shader that utilises normal maps, has a uniform sampler2D called "normalTex" in texture unit 2
-		}
+            Matrix4 modelMatrix;
+            i->getParent()->GetTransform().getOpenGLMatrix((btScalar*)&modelMatrix);
+            modelMatrix = modelMatrix * Matrix::Scale(i->getParent()->getRenderScale());
+            glUniformMatrix4fv(modelLocation, 1, false, (float*)&modelMatrix);
 
-		//Matrix4 modelMatrix = (*i).GetTransform()->GetMatrix();
-		Matrix4 modelMatrix;
-		i->getParent()->GetTransform().getOpenGLMatrix((btScalar*)&modelMatrix);
-		modelMatrix = modelMatrix * Matrix::Scale(i->getParent()->getRenderScale());
-		glUniformMatrix4fv(modelLocation, 1, false, (float*)&modelMatrix);
+            //Matrix4 fullShadowMat = shadowMatrix * modelMatrix; //TEMPORARILY REMOVING SHADOWS
+            //glUniformMatrix4fv(shadowLocation, 1, false, (float*)&fullShadowMat);
 
-		//Matrix4 fullShadowMat = shadowMatrix * modelMatrix; //TEMPORARILY REMOVING SHADOWS
-		//glUniformMatrix4fv(shadowLocation, 1, false, (float*)&fullShadowMat);
+            Vector4 colour = i->GetColour();
+            glUniform4fv(colourLocation, 1, &colour.x);
 
-		Vector4 colour = i->GetColour();
-		glUniform4fv(colourLocation, 1, &colour.x);
+            glUniform1i(hasVColLocation, !(*i).GetMesh()->GetColourData().empty());
 
-		glUniform1i(hasVColLocation, !(*i).GetMesh()->GetColourData().empty());
+            glUniform1i(hasTexLocation, hasTex);
+            // TODO: Add metallic maps
+            //glUniform1i(hasMetallicLocation, i->GetMetallicMaps().size() > subMeshIndex && i->GetMetallicMaps()[subMeshIndex] != nullptr);
+            glUniform1i(hasFlatLocation, i->GetIsFlat());
+            glUniform1i(hasNormalLocation, hasNormal);
+            glUniform1i(texRepeatingLocation, i->GetTexRepeating());
 
-		glUniform1i(hasTexLocation, (OGLTexture*)(*i).GetDefaultTexture() ? 1:0);
-		glUniform1i(hasFlatLocation, i->GetIsFlat());
-		glUniform1i(hasNormalLocation, i->GetHasNormal());
-		glUniform1i(texRepeatingLocation, i->GetTexRepeating());
-
-		BindMesh((OGLMesh&)*(*i).GetMesh());
-		size_t layerCount = (*i).GetMesh()->GetSubMeshCount();
-		for (size_t i = 0; i < layerCount; ++i) {
-			DrawBoundMesh((uint32_t)i);
-		}
+            BindMesh((OGLMesh&)*(*i).GetMesh());
+            DrawBoundMesh((uint32_t)subMeshIndex);
+        }
 	}
 }
 
