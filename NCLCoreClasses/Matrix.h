@@ -60,18 +60,6 @@ namespace NCL::Maths {
         }
     };
 
-    template <typename T, uint32_t rows, uint32_t cols>
-    bool operator==(const MatrixTemplate<T, rows, cols>& lhs, const MatrixTemplate<T, rows, cols>& rhs) {
-        for (int i = 0; i < rows; i++) {
-            for (int j = 0; j < cols; j++) {
-                if (lhs.array[i][j] != rhs.array[i][j]) {
-                    return false;
-                }
-            }
-        }
-        return true;
-    }
-
     using Matrix2 = MatrixTemplate<float, 2, 2>;
     using Matrix3 = MatrixTemplate<float, 3, 3>;
     using Matrix4 = MatrixTemplate<float, 4, 4>;

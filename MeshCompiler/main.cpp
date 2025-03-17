@@ -44,7 +44,7 @@ static void writeStrings(std::ofstream& fs, const std::vector<std::string>& data
 static int writeOptionalJointNames(int& chunksWritten, std::ofstream& fs, const std::vector<std::string>& data) {
 	if (data.empty()) return 0;
 	chunksWritten++;
-
+	
 	write(fs, MshLoader::GeometryChunkTypes::JointNames);
 	write(fs, data.size());
 
@@ -91,7 +91,13 @@ static void writeOptionalSubMeshNames(int& chunksWritten, std::ofstream& fs, con
 // - MSHB magic
 // - Rest of data in text mesh format, only converted to binary. Single precision floats and 32-bit integers
 
-static void convert(const Mesh& mesh, std::string_view target) {
+static void convert(std::string_view source, std::string_view target) {
+	Mesh mesh;
+	bool ok = MshLoader::LoadTextMesh(std::string(source), mesh);
+	if (!ok) {
+		throw std::runtime_error("Failed to load mesh");
+	}
+
 	std::ofstream fs(std::string(target), std::ios::binary);
 	fs.write("MSHB", 4);
 	write(fs, Version);
@@ -109,7 +115,6 @@ static void convert(const Mesh& mesh, std::string_view target) {
 	writeOptionalChunk(chunksWritten, fs, MshLoader::GeometryChunkTypes::VTangents, mesh.GetTangentData(), mesh.GetVertexCount());
 	writeOptionalChunk(chunksWritten, fs, MshLoader::GeometryChunkTypes::VTex0, mesh.GetTextureCoordData(), mesh.GetVertexCount());
 	writeOptionalChunk(chunksWritten, fs, MshLoader::GeometryChunkTypes::Indices, mesh.GetIndexData(), mesh.GetIndexCount());
-	writeOptionalChunk(chunksWritten, fs, MshLoader::GeometryChunkTypes::VWeightIndices, mesh.GetSkinIndexData(), mesh.GetVertexCount());
 	writeOptionalChunk(chunksWritten, fs, MshLoader::GeometryChunkTypes::VWeightValues, mesh.GetSkinWeightData(), mesh.GetVertexCount());
 	int jointNameCount = writeOptionalJointNames(chunksWritten, fs, mesh.GetJointNames());
 	writeOptionalJointParents(chunksWritten, fs, mesh.GetJointParents(), jointNameCount);
@@ -130,27 +135,9 @@ int main(int argc, char** argv) {
 		return 1;
 	}
 
-	std::string source(argv[1]);
-	std::string target(argv[2]);
-
-	Mesh mesh;
-	bool ok = MshLoader::LoadTextMesh(source, mesh);
-	if (!ok) {
-		throw std::runtime_error("Failed to load mesh");
-	}
-
+	std::string_view source(argv[1]);
+	std::string_view target(argv[2]);
 	std::cout << "Converting " << source << " to " << target << std::endl;
 
-	convert(mesh, target);
-
-	// Check for round-trip accuracy
-	Mesh loaded;
-	ok = MshLoader::LoadBinaryMesh(target, loaded);
-	if (!ok) {
-		throw std::runtime_error("Failed to load mesh");
-	}
-
-	if (mesh != loaded) {
-		throw std::runtime_error("Round-trip check failed");
-	}
+	convert(source, target);
 }

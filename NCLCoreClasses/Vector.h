@@ -29,16 +29,6 @@ namespace NCL::Maths {
         }
     };
 
-    template <typename T, uint32_t n>
-    bool operator==(const VectorTemplate<T, n>& lhs, const VectorTemplate<T, n>& rhs) {
-        for (int i = 0; i < n; i++) {
-            if (lhs.array[i] != rhs.array[i]) {
-                return false;
-            }
-        }
-        return true;
-    }
-
     using Vector2 = VectorTemplate<float, 2>;
     // DEPRECATED: Prefer btVector3
     using Vector3 = VectorTemplate<float, 3>;

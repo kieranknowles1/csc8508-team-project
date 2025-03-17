@@ -1,12 +1,6 @@
 set(TEXTURE_EXTENSIONS ".jpg" ".png" ".dds")
 set(MIP_LEVELS 8)
 
-# Extra files that need to be copied, but do not live in assets
-set(EXTRA_FILES
-    Credits.txt
-    default-config.jsonc
-)
-
 macro(process_file)
     set(outvar ${ARGV0})
     set(file ${ARGV1})
@@ -63,16 +57,6 @@ macro(copy_assets)
             COMMAND ${CMAKE_COMMAND} -E copy
             ${processed}
             ${destination}/${relative}
-        )
-    endforeach()
-
-    cmake_path(GET destination PARENT_PATH assetParentDir)
-    foreach(file ${EXTRA_FILES})
-        add_custom_command(
-            TARGET ${afterTarget} POST_BUILD
-            COMMAND ${CMAKE_COMMAND} -E copy
-            ${CMAKE_SOURCE_DIR}/${file}
-            ${assetParentDir}/${file}
         )
     endforeach()
 
