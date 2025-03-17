@@ -381,7 +381,7 @@ PlayerObject* TutorialGame::InitPlayer(btVector3 position, btVector3 upDir) {
     newPlayer->GetRenderObject()->SetColour(Vector4(playerColour));
     newPlayer->setUpDirection(upDir);
     //newPlayer->SetIsAnimated(true); //maybe better to manage this wherever animations are being applied rather than here but for testing this is probably fine
-    newPlayer->GetRenderObject()->SetMesh(resourceManager->getMeshes().get("Male_Guard.msh"));
+    newPlayer->GetRenderObject()->SetMesh(resourceManager->getMeshes().get("/MaleGuard/Male_Guard.msh")); //Think this is now correct, console not angry at me
     return newPlayer;
 }
 
