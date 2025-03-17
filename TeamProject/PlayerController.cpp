@@ -75,6 +75,7 @@ void PlayerController::UpdateMovement(float dt) {
 
 
 void PlayerController::HandleShooting(float dt) {
+    static int beamSoundChannel = -1;
 
     if (controller->GetDigital(Controller::DigitalControl::Fire) && overheat->CanFire()) {
         FireShot(dt);
@@ -82,6 +83,12 @@ void PlayerController::HandleShooting(float dt) {
             crosshair->fire();
             overheat->fire();
             firing = true;
+            beamSoundChannel = audioEngine.PlaySounds("Beam.mp3", camera->GetPosition(), 0.0f);
+        }
+        else {
+            if (beamSoundChannel != -1) {
+                audioEngine.SetChannel3dPosition(beamSoundChannel, camera->GetPosition());
+            }
         }
     }
     else {
@@ -99,6 +106,12 @@ void PlayerController::HandleShooting(float dt) {
                 player->UpdatePacketSequence((uint8_t)Packet::PacketType::LASER, laserPacket->GetSequenceNumber());
                 TutorialGame::GetServerInstance()->Broadcast(laserPacket);
             }
+
+            if (beamSoundChannel != -1) {
+                audioEngine.SetChannelVolume(beamSoundChannel, -100.0f);
+                beamSoundChannel = -1;
+            }
+
             firing = false;
         }
     }
