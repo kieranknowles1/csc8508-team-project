@@ -48,8 +48,8 @@ namespace NCL {
 
 		void LoadTextures(CSC8503::ResourceManager* resourceManager);
 
-        int GetMaterialCount() const {
-            return materialLayers.size();
+        int GetLayerCount() const {
+            return meshLayers.size();
         }
 
 	protected:

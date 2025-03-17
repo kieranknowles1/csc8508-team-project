@@ -20,7 +20,7 @@ NCL::CSC8503::RenderObject::RenderObject(GameObject* parent, std::shared_ptr<Mes
 
     // Check if the number of submeshes matches the material layers
     int subMeshCount = mesh->GetSubMeshCount();
-    int materialCount = mat->GetMaterialCount();
+    int materialCount = mat->GetLayerCount();
 
     // Assign materials per submesh
     for (int i = 0; i < subMeshCount; i++) {
