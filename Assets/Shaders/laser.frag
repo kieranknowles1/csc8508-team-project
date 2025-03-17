@@ -1,9 +1,18 @@
 #version 400 core
 
 uniform vec4 inColour;
+uniform sampler2D depthTex;
+uniform vec2 windowSize;
 
-out vec4 FragColor;
+in float depth;
+
+out vec4 fragColor;
 
 void main() {
-    FragColor = inColour; 
+    vec2 screenUV = gl_FragCoord.xy / windowSize;
+    float texDepth = texture(depthTex, screenUV).r; 
+    if (depth > texDepth) {
+        discard;
+    }
+    fragColor = inColour;
 }
