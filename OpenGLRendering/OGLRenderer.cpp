@@ -172,8 +172,8 @@ void OGLRenderer::DrawBoundMesh(int subLayer, int numInstances) {
 	}
 }
 
-void OGLRenderer::BindTextureToShader(const Texture& t, const std::string& uniform, int texUnit) const{
-    GLint texID = static_cast<const OGLTexture&>(t).GetObjectID();
+void OGLRenderer::BindTextureToShader(const OGLTexture& t, const std::string& uniform, int texUnit) const{
+	GLint texID = t.GetObjectID();
 
 	if (!activeShader) {
 		std::cout << __FUNCTION__ << " has been called without a bound shader!\n";

@@ -45,6 +45,8 @@ set(Rendering
 	"MshLoader.cpp"
     "MshLoader.h"
 
+    "MeshMaterial.cpp"
+    "MeshMaterial.h"
     "RendererBase.cpp"
     "RendererBase.h"
     "Shader.cpp"

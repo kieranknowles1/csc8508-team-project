@@ -35,10 +35,7 @@ out Vertex
 
 void main(void)
 {
-	// FIXME: Use a texture matrix, not this hack
-	// OUT.texCoord = scaleUv(texCoord, texScale, normal, texRepeating);1
-	OUT.texCoord = texCoord;
-	OUT.texCoord.y = 1.0 - OUT.texCoord.y; //flip y axis
+	OUT.texCoord = scaleUv(texCoord, texScale, normal, texRepeating);
 
 	mat4 mvp 		  = (projMatrix * viewMatrix * modelMatrix);
 	mat3 normalMatrix = transpose ( inverse ( mat3 ( modelMatrix )));

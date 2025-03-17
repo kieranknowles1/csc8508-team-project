@@ -64,7 +64,6 @@ file(GLOB_RECURSE DATA "${ASSET_ROOT}/Data/*")
 file(GLOB_RECURSE FONTS "${ASSET_ROOT}/Fonts/*.fnt")
 file(GLOB_RECURSE LEVELS "${ASSET_ROOT}/Levels/*.json")
 file(GLOB_RECURSE MESHES "${ASSET_ROOT}/Meshes/*.msh")
-file(GLOB_RECURSE MATERIALS "${ASSET_ROOT}/Materials/*.mat")
 if (PS5_BUILD)
     file(GLOB_RECURSE SHADERS "${ASSET_ROOT}/Shaders/PSSL/*.pssl")
 else()
@@ -84,7 +83,6 @@ set(ASSETS
     ${FONTS}
     ${LEVELS}
     ${MESHES}
-    ${MATERIALS}
     ${SHADERS}
     ${TEXTURES}
 )
