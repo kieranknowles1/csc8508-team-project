@@ -4,7 +4,7 @@
 
 Overheat::Overheat() {
     overheatBar = { Vector2(0.5,0.2),Vector2(0.0,0.06),startColour };
-    backgroundBar = { Vector2(0.5,0.2),Vector2(0.5,0.075),Vector4(0.2,0.2,0.2,1.0f) };
+    backgroundBar = { Vector2(0.5,0.2),Vector2(0.5,0.075),Vector4(0.2,0.2,0.2,0.4f) };
 }
 
 
@@ -51,7 +51,7 @@ void Overheat::Animate(float dt) {
             currentState = Overheating;
         }
         barSize = expansionAtStopped;
-        barColour = Vector4(0.7f, 0.1f, 0.1f, 1.0f);
+        barColour = Vector4(0.7f, 0.1f, 0.1f, 0.4f);
         break;
     case Holding:
         currentTimer -= dt;
@@ -60,7 +60,7 @@ void Overheat::Animate(float dt) {
             currentTimer = cooldownTimeCurrent;
             currentState = Cooling;
         }
-        barColour = Vector4(0.9f, 0.3f, 0.3f, 1.0f);
+        barColour = Vector4(0.9f, 0.3f, 0.3f, 0.4f);
         break;
     case Overheating:
         currentTimer -= dt;
@@ -70,7 +70,7 @@ void Overheat::Animate(float dt) {
             currentState = Cooling;
             coolingFromOverheat = true;
         }
-        barColour = Vector4(0.2f, 0.0f, 0.0f, 1.0f);
+        barColour = Vector4(0.2f, 0.0f, 0.0f, 0.4f);
         break;
     case Cooling:
         currentTimer -= dt;
@@ -80,7 +80,7 @@ void Overheat::Animate(float dt) {
             coolingFromOverheat = false;
         }
         barSize = (currentTimer / cooldownTimeCurrent) * (expansionAtStopped);
-        barColour = Vector4(0.4f, 0.7f, 1.0f, 1.0f);
+        barColour = Vector4(0.4f, 0.7f, 1.0f, 0.4f);
         break;
     case Stopped:
         break;
