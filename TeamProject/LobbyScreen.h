@@ -70,7 +70,24 @@ namespace NCL::CSC8503 {
 			for (size_t i = 0; i < 10; i++) {
 				std::string currentItem = (i == selection) ? "> " + std::to_string(i + 1) + ". " + (i < 8 && colourTaken[i] ? "Taken" : menuItems[i]) + " <"
 					: "  " + std::to_string(i + 1) + ". " + (i < 8 && colourTaken[i] ? "Taken" : menuItems[i]);
-				Debug::Print(currentItem, basePos + Vector2(0, 0.06f * i));
+
+				//Leave button
+				if (i == 8) {
+					currentItem = (i == selection) ? "> LEAVE <" : "  LEAVE";
+					Debug::Print(currentItem, basePos + Vector2(0, 0.07f * i));
+					continue;
+				}
+
+				//Start button
+				if (i == 9) {
+					currentItem = (i == selection) ? "> START GAME <" : "  START GAME";
+					Debug::Print(currentItem, basePos + Vector2(0.35f, 0.08f * i));
+					continue;
+				}
+
+				btVector4 btColour = Color::GetPlayerColor(i + 1);
+				Vector4 textColour(btColour.x(), btColour.y(), btColour.z(), btColour.w());
+				Debug::Print(currentItem, basePos + Vector2(0, 0.06f * i), textColour);
 			}
 
 			// Render Player List
@@ -86,7 +103,7 @@ namespace NCL::CSC8503 {
 		bool isHost;
 		size_t selection;
 		GameTechRendererInterface* renderer;
-		const std::array<std::string, 10> menuItems = { "Red", "Orange", "Green", "Purple", "Yellow", "Blue", "Pink", "Cyan", "Leave", "Start" };
+		const std::array<std::string, 10> menuItems = { "Red", "Orange", "Blue", "Green", "Purple", "Pink", "Yellow", "Cyan", "Leave", "Start" };
 
 		std::unordered_map<int, bool> assignedColors;
 		std::vector<std::string> playerList;
