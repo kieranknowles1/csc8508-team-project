@@ -91,13 +91,7 @@ static void writeOptionalSubMeshNames(int& chunksWritten, std::ofstream& fs, con
 // - MSHB magic
 // - Rest of data in text mesh format, only converted to binary. Single precision floats and 32-bit integers
 
-static void convert(std::string_view source, std::string_view target) {
-	Mesh mesh;
-	bool ok = MshLoader::LoadTextMesh(std::string(source), mesh);
-	if (!ok) {
-		throw std::runtime_error("Failed to load mesh");
-	}
-
+static void convert(const Mesh& mesh, std::string_view target) {
 	std::ofstream fs(std::string(target), std::ios::binary);
 	fs.write("MSHB", 4);
 	write(fs, Version);
@@ -137,7 +131,25 @@ int main(int argc, char** argv) {
 
 	std::string_view source(argv[1]);
 	std::string_view target(argv[2]);
+
+	Mesh mesh;
+	bool ok = MshLoader::LoadTextMesh(std::string(source), mesh);
+	if (!ok) {
+		throw std::runtime_error("Failed to load mesh");
+	}
+
 	std::cout << "Converting " << source << " to " << target << std::endl;
 
-	convert(source, target);
+	convert(mesh, target);
+
+	// Check for round-trip accuracy
+	Mesh loaded;
+	ok = MshLoader::LoadBinaryMesh(target, loaded);
+	if (!ok) {
+		throw std::runtime_error("Failed to load mesh");
+	}
+
+	if (mesh != loaded) {
+		throw std::runtime_error("Round-trip check failed");
+	}
 }
