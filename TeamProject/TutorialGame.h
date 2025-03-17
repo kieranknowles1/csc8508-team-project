@@ -128,6 +128,8 @@ namespace NCL {
             // FIX ME make this protected/private.
             PlayerObject* player;
 
+            void SetGameMode(GameMode gm) { gameMode = gm; }
+
         protected:
             void InitialiseAssets();
 
@@ -260,7 +262,7 @@ namespace NCL {
 
             GameState state = GameState::IDLE;
 
-            bool isSinglePlayer = false;
+            GameMode gameMode;
         };
     }
 }
