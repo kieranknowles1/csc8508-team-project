@@ -482,7 +482,7 @@ GameObject* TutorialGame::AddCubeToWorld(const Vector3& position, Vector3 dimens
     cube->GetPhysicsObject()->InitBulletPhysics(bulletWorld, shape, inverseMass, hasCollision);
 
     // Setting render object
-    cube->SetRenderObject(new RenderObject(cube, resourceManager->getMeshes().get("Cube.msh"), resourceManager->getMaterials().get("PaintballGun.mat")));
+    cube->SetRenderObject(new RenderObject(cube, resourceManager->getMeshes().get("Cube.msh"), defaultTexture));
     cube->GetRenderObject()->SetTexRepeating(true); //scale texture (no stretching)
 
     world->AddGameObject(cube);

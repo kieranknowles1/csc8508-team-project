@@ -42,6 +42,7 @@ std::shared_ptr<Rendering::Mesh> ResourceMap<std::string, Rendering::Mesh>::load
 template<>
 std::shared_ptr<MeshMaterial> ResourceMap<std::string, MeshMaterial>::load(const std::string& key) {
     auto material = std::make_shared<MeshMaterial>(owner, key);
+    material->LoadTextures(owner);
     return material;
 }
 

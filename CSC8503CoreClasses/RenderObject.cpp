@@ -17,9 +17,27 @@ NCL::CSC8503::RenderObject::RenderObject(GameObject* parent, std::shared_ptr<Mes
     this->parent = parent;
     this->mesh = mesh;
     this->colour = Vector4(1.0f, 0.0f, 0.0f, 1.0f);
-    this->texture = mat->GetMaterialForLayer(0)->GetEntry("Diffuse");
-    this->normalMap = mat->GetMaterialForLayer(0)->GetEntry("Bump");
-    this->metallicMap = mat->GetMaterialForLayer(0)->GetEntry("Metallic");
+
+    // Check if the number of submeshes matches the material layers
+    int subMeshCount = mesh->GetSubMeshCount();
+    int materialCount = mat->GetMaterialCount();
+
+    // Assign materials per submesh
+    for (int i = 0; i < subMeshCount; i++) {
+        if (i < materialCount) { // Ensure we don't go out of bounds
+            auto materialLayer = mat->GetMaterialForLayer(i);
+            if (materialLayer) {
+                textures.push_back(materialLayer->GetEntry("Diffuse"));
+                normalMaps.push_back(materialLayer->GetEntry("Bump"));
+                metallicMaps.push_back(materialLayer->GetEntry("Metallic"));
+            }
+            else {
+                textures.push_back(nullptr);
+                normalMaps.push_back(nullptr);
+                metallicMaps.push_back(nullptr);
+            }
+        }
+    }
 }
 
 RenderObject::~RenderObject() {
