@@ -1215,6 +1215,8 @@ void GameTechRenderer::RenderAnimations() {
 		int j = glGetUniformLocation(animationShader->GetProgramID(), "joints");
 		glUniformMatrix4fv(j, frameMatrices.size(), false, (float*)frameMatrices.data());
 
+		//all the vertex data is already sent to shader when the mesh is loaded in
+
 		/*for (int k = 0; k < (*i).GetMesh()->GetSubMeshCount(); ++k) {
 			glActiveTexture(GL_TEXTURE0);
 			glBindTexture(GL_TEXTURE_2D, matTextures[k]); //still need to properly set up where to put matTextures

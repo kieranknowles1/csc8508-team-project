@@ -3,6 +3,7 @@
 #include "Mesh.h"
 #include "Buffer.h"
 #include "MeshAnimation.h"
+#include "MeshMaterial.h"
 
 namespace NCL {
 	using namespace NCL::Rendering;
@@ -112,6 +113,8 @@ namespace NCL {
 			MeshAnimation* test; //InitPlayer will set animated from gameObject to true
 			//also might be good to have something like if animated, use material and mattextures and set all the textures for each submesh
 			//doesn't neccessarily matter if a mesh has a texture if its never send to shader. Can just access matTextures instead
+			MeshMaterial* material;  
+			//std::shared_ptr<MeshMaterial> material; 
 		};
 	}
 }

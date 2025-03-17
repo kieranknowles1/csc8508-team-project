@@ -10,8 +10,13 @@ RenderObject::RenderObject(GameObject* parent, std::shared_ptr<Mesh> mesh, std::
 	this->texture	= tex;
 	this->colour	= Vector4(1.0f, 1.0f, 1.0f, 1.0f);
 	this->normalMap = normal;
+
+	//set materials instead of textures:
+	/*for (int i = 0; i < this->mesh->GetSubMeshCount(); ++i) {
+		const MeshMaterialEntry* matEntry = this->material->GetMaterialForLayer(i);   
+	}*/
 }
 
-RenderObject::~RenderObject() {
+RenderObject::~RenderObject() { 
 
 }
