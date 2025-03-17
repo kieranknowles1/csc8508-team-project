@@ -157,7 +157,7 @@ void TutorialGame::UpdatePlayer(float dt) {
     // Press F for freeCam, press G for thirdPerson
     if (freeCam) {
         //freeCam Movement
-        world->GetMainCamera().UpdateCamera(dt * 10.0f, true);
+        world->GetMainCamera().UpdateCamera(dt, true);
     }
     else {
         //player Movement
