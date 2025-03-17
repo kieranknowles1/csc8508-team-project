@@ -14,7 +14,7 @@ void PlayerObject::Update(float dt) {
     updateGravity(dt);
 
     //Animation: Not checking for if animated == true since all players should be animated
-    renderObject->GetAnimation()->UpdateAnimation(dt);
+    //renderObject->GetAnimation()->UpdateAnimation(dt);
     
     elapsedTime += dt;
 

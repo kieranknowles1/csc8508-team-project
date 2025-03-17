@@ -92,6 +92,10 @@ namespace NCL {
 				test = name; //idk if this is how it should be handled. Might also be an issue if changing where the pointer is pointing
 			}
 
+			void SetMesh(std::shared_ptr<Mesh> M) { //Temporarily added
+				mesh = M;
+			}
+
 		protected:
 			GameObject* parent;
 			Buffer* buffer;

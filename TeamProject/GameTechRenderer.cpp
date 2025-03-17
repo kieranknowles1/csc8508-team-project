@@ -1163,7 +1163,7 @@ void GameTechRenderer::RenderAnimations() {
 		//These two changed to fit the datatypes as defined in this codebase:
 		//const std::vector<Matrix4> invBindPose = (*i).GetMesh()->GetInverseBindPose(); //InverseBindPose in mesh.h is a vector of matrix4 not a Matrix4*
 		const Matrix4 invBindPose = (*i).GetMesh()->GetInverseBindPose()[0]; //need to figure out the correct element to access. Why is InverseBindPose a vector?
-		const Matrix4* frameData = (*i).GetAnimation()->GetJointData((*i).GetAnimation()->GetCurrentFrame());//joint data is a Matrix4*
+		const Matrix4* frameData = (*i).GetAnimation()->GetJointData((*i).GetAnimation()->GetCurrentFrame());//joint data is a Matrix4* SHOULD THESE BE CALCULATED PER JOINT?
 
 		//in mesh.h InverseBindPose is a vector of matrix4 instead of just a Matrix4. This may be to allow each submesh to have its own bindpose. It may not be needed though so
 		//may be able to assume the bindpose will be the first element? Perhaps the possibility of any number of bindposes should be accounted for?
@@ -1175,10 +1175,23 @@ void GameTechRenderer::RenderAnimations() {
 		int j = glGetUniformLocation(animationShader->GetProgramID(), "joints");
 		glUniformMatrix4fv(j, frameMatrices.size(), false, (float*)frameMatrices.data());
 
-		for (int k = 0; k < (*i).GetMesh()->GetSubMeshCount(); ++k) {
+		/*for (int k = 0; k < (*i).GetMesh()->GetSubMeshCount(); ++k) {
 			glActiveTexture(GL_TEXTURE0);
 			glBindTexture(GL_TEXTURE_2D, matTextures[k]); //still need to properly set up where to put matTextures
+			BindMesh((OGLMesh&)*(*i).GetMesh());
+			size_t layerCount = (*i).GetMesh()->GetSubMeshCount();
+			for (size_t p = 0; p < layerCount; ++p) {
+				DrawBoundMesh((uint32_t)i);
+			}
+		}*/
 
+		for (int k = 0; k < (*i).GetMesh()->GetSubMeshCount(); ++k) { //should the int be size_t instead?
+			glActiveTexture(GL_TEXTURE0);
+			glBindTexture(GL_TEXTURE_2D, matTextures[k]); //need to properly set up matTextures probably as a member of renderObject
+			BindMesh((OGLMesh&)*(*i).GetMesh());
+			DrawBoundMesh((uint32_t)i);
 		}
 	}
 }
+
+
