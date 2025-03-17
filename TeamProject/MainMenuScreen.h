@@ -8,14 +8,25 @@
 #include <iostream>
 #include "GameScreen.h"
 #include "CreditsScreen.h"
+#include "GameTechRendererInterface.h"
+#include "LobbyScreen.h"
 
 namespace NCL::CSC8503 {
+
+    enum class GameMode {
+        SINGLEPLAYER,
+        HOST_GAME,
+        JOIN_GAME,
+        CREDITS,
+        QUIT,
+    };
 
 class MainMenuScreen : public PushdownState {
     size_t selection = 0;
     bool inMenu;
     TutorialGame* game;
     Controller* controller;
+    //GameTechRendererInterface* renderer; //Including this now so I can use AddUIElement to replace Debug::Print later
 
 public:
     MainMenuScreen(Controller* controller, TutorialGame* game) : controller(controller), game(game), selection(0), inMenu(true) {}
@@ -37,7 +48,10 @@ public:
             switch (mode)
             {
             case GameMode::SINGLEPLAYER:
-                game->Start();
+                *newState = new LobbyScreen(controller, game, true);
+                inMenu = false;
+                return PushdownResult::Push;
+                //game->Start();
                 break;
             case GameMode::HOST_GAME:
                 game->JoinGame(true); //This is host game

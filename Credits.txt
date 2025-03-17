@@ -5,8 +5,8 @@ TODO: Credit ourselves, add in what each of us did
   Assisted in Graphics Engineering
 
 - Ameya Ghuman
-  ...
-  ...
+  Head of Audio Programming
+  Co-Lead of UI Programming
 
 - Billy Connors
   ...
@@ -49,7 +49,7 @@ https://www.texturecan.com/
 Libraries
 --------------------------------------------------------------------------------
 
-Made using FMOD Studio by Firelight Technologies Pty Ltd.
+Audio Engine: FMOD Studio by Firelight Technologies Pty Ltd.
 
 Physics by Bullet Physics under the zlib license.
 https://github.com/bulletphysics/bullet3

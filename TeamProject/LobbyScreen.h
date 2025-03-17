@@ -1,4 +1,98 @@
 #pragma once
 
-#include "TeamProject/Multiplayer/Lobby.hpp"
-#include "TeamProject/Multiplayer/User.hpp"
+//#include "TeamProject/Multiplayer/Lobby.hpp"
+//#include "TeamProject/Multiplayer/User.hpp"
+
+#include "PushdownState.h"
+#include "TutorialGame.h"
+#include <CSC8503CoreClasses/Debug.h>
+#include <NCLCoreClasses/Window.h>
+#include "Colors.h"
+#include <vector>
+#include <unordered_map>
+
+namespace NCL::CSC8503 {
+
+	class LobbyScreen : public PushdownState {
+	public:
+		LobbyScreen(Controller* controller, TutorialGame* game, bool isHost) : controller(controller), game(game), isHost(isHost), selection(0), playerList(8, "Empty") {
+
+			//Initialize colour slots as available
+			//for (int i = 0; i < 8; i++) {
+			//	assignedColors[i] = false;
+			//}
+			colourTaken.fill(false);
+
+		}
+
+		PushdownResult OnUpdate(float dt, PushdownState** newState) override{
+			const std::array<std::string, 10> menuItems = { "Red", "Orange", "Green", "Purple", "Yellow", "Blue", "Pink", "Cyan", "Leave", "Start" };
+
+			if (controller->GetDigital(Controller::DigitalControl::MenuDown)) {
+				selection = std::min(menuItems.size() - 1, selection + 1);
+			}
+			if (controller->GetDigital(Controller::DigitalControl::MenuUp)) {
+				selection = std::max(size_t(0), selection - 1);
+			}
+			if (controller->GetDigital(Controller::DigitalControl::MenuConfirm)) {
+				if (selection < 8) {  // If a colour is selected
+					if (!colourTaken[selection]) {
+						colourTaken[selection] = true;
+						for (auto& player : playerList) {
+							if (player == "Empty") {
+								player = menuItems[selection]; // Assign colour to first empty slot
+								break;
+							}
+						}
+					}
+				}
+				else if (selection == 8) {  // Leave Button
+					return PushdownResult::Pop;
+				}
+				else if (selection == 9 && isHost) {  // Start Button (only host can press)
+					game->Start();
+					*newState = new GameScreen(controller, game);
+					return PushdownResult::Push;
+				}
+			}
+
+			RenderUI();
+			return PushdownResult::NoChange;
+		}
+
+		void RenderUI() {
+			Vector2 basePos = Vector2(0.1f, 0.8f);
+			Vector2 listPos = Vector2(0.8f, 0.8f);
+
+			//Debug::Print("LOBBY - Select Your Color", Vector2(0.4f, 0.95f));
+
+			// Render Colour Options
+			for (size_t i = 0; i < 10; i++) {
+				std::string currentItem = (i == selection) ? "> " + std::to_string(i + 1) + ". " + (i < 8 && colourTaken[i] ? "Taken" : "") + " <"
+					: "  " + std::to_string(i + 1) + ". " + (i < 8 && colourTaken[i] ? "Taken" : "");
+				Debug::Print(currentItem, basePos - Vector2(0, 0.05f * i));
+			}
+
+			// Render Player List
+			Debug::Print("PLAYERS", listPos);
+			for (size_t i = 0; i < playerList.size(); i++) {
+				Debug::Print(std::to_string(i + 1) + ". " + playerList[i], listPos - Vector2(0, 0.05f * (i + 1)));
+			}
+		}
+
+	protected:
+		TutorialGame* game;
+		Controller* controller;
+		bool isHost;
+		size_t selection;
+		GameTechRendererInterface* renderer;
+
+		std::unordered_map<int, bool> assignedColors;
+		std::vector<std::string> playerList;
+		std::array<bool, 8> colourTaken;
+
+		void AssignColour(int colourIndex);
+		void StartGame(PushdownState** newState);
+		//void RenderUI();
+	};
+}
