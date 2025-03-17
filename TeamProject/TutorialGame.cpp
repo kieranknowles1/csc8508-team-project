@@ -728,7 +728,7 @@ void TutorialGame::Start() {
     instance->playerController = std::make_unique<PlayerController>(instance->player, instance->gun, instance->controller, instance->mainCamera, instance->bulletWorld,instance->renderer);
 
     instance->navMeshDebug = false;
-    instance->enableAI = false;
+    instance->enableAI = true;
     if (instance->enableAI) {
         instance->InitAI();
     }
@@ -765,6 +765,9 @@ void TutorialGame::Start() {
             newPlayer->SetWorldID(newUser.GetUserID());
             newPlayer->GetRenderObject()->SetColour(Vector4(Color::GetPlayerColor(newUser.GetUserID())));
         }
+    }
+    else {
+        instance->isSinglePlayer = true;
     }
 
     Shoot::GetInstance()->Initialise(instance->bulletWorld,instance->resourceManager.get(), instance->world.get(), instance->renderer->GetDecalSystem());

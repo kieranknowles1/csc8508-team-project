@@ -259,6 +259,8 @@ namespace NCL {
             inline static bool host = false;
 
             GameState state = GameState::IDLE;
+
+            bool isSinglePlayer = false;
         };
     }
 }
