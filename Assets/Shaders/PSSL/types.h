@@ -32,6 +32,17 @@ struct UiState {
     int texture = NULLTEX;
 };
 
+struct TextState {
+	float2 pos;
+	float2 uv;
+	float4 colour;
+};
+
+struct LineState {
+	float4 pos;
+	float4 colour;
+};
+
 struct VS_OUTPUT
 {
 	float4 Position SLOT(S_POSITION);
@@ -56,6 +67,19 @@ struct DEFERRED_VS_OUTPUT
 {
 	float4 position SLOT(S_POSITION);
 	int stateId SLOT(TEXCOORD0);
+};
+
+struct TEXT_VS_OUTPUT
+{
+	float4 Position SLOT(S_POSITION);
+	float2 UV SLOT(TEXCOORD0);
+	float4 Colour SLOT(TEXCOORD1);
+};
+
+struct LINE_VS_OUTPUT
+{
+	float4 Position SLOT(S_POSITION);
+	float4 Colour SLOT(TEXCOORD1);
 };
 
 #undef SLOT
