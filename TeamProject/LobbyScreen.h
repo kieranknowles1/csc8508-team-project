@@ -26,7 +26,7 @@ namespace NCL::CSC8503 {
 		}
 
 		PushdownResult OnUpdate(float dt, PushdownState** newState) override{
-			const std::array<std::string, 10> menuItems = { "Red", "Orange", "Green", "Purple", "Yellow", "Blue", "Pink", "Cyan", "Leave", "Start" };
+			//const std::array<std::string, 10> menuItems = { "Red", "Orange", "Green", "Purple", "Yellow", "Blue", "Pink", "Cyan", "Leave", "Start" };
 
 			if (controller->GetDigital(Controller::DigitalControl::MenuDown)) {
 				selection = std::min(menuItems.size() - 1, selection + 1);
@@ -61,22 +61,22 @@ namespace NCL::CSC8503 {
 		}
 
 		void RenderUI() {
-			Vector2 basePos = Vector2(0.1f, 0.8f);
-			Vector2 listPos = Vector2(0.8f, 0.8f);
+			Vector2 basePos = Vector2(0.01f, 0.2f);
+			Vector2 listPos = Vector2(0.8f, 0.2f);
 
-			//Debug::Print("LOBBY - Select Your Color", Vector2(0.4f, 0.95f));
+			Debug::Print("Select your colour!", Vector2(0.3f, 0.1f));
 
 			// Render Colour Options
 			for (size_t i = 0; i < 10; i++) {
-				std::string currentItem = (i == selection) ? "> " + std::to_string(i + 1) + ". " + (i < 8 && colourTaken[i] ? "Taken" : "") + " <"
-					: "  " + std::to_string(i + 1) + ". " + (i < 8 && colourTaken[i] ? "Taken" : "");
-				Debug::Print(currentItem, basePos - Vector2(0, 0.05f * i));
+				std::string currentItem = (i == selection) ? "> " + std::to_string(i + 1) + ". " + (i < 8 && colourTaken[i] ? "Taken" : menuItems[i]) + " <"
+					: "  " + std::to_string(i + 1) + ". " + (i < 8 && colourTaken[i] ? "Taken" : menuItems[i]);
+				Debug::Print(currentItem, basePos + Vector2(0, 0.06f * i));
 			}
 
 			// Render Player List
 			Debug::Print("PLAYERS", listPos);
 			for (size_t i = 0; i < playerList.size(); i++) {
-				Debug::Print(std::to_string(i + 1) + ". " + playerList[i], listPos - Vector2(0, 0.05f * (i + 1)));
+				Debug::Print(std::to_string(i + 1) + ". " + playerList[i], listPos + Vector2(0, 0.05f * (i + 1)));
 			}
 		}
 
@@ -86,6 +86,7 @@ namespace NCL::CSC8503 {
 		bool isHost;
 		size_t selection;
 		GameTechRendererInterface* renderer;
+		const std::array<std::string, 10> menuItems = { "Red", "Orange", "Green", "Purple", "Yellow", "Blue", "Pink", "Cyan", "Leave", "Start" };
 
 		std::unordered_map<int, bool> assignedColors;
 		std::vector<std::string> playerList;
