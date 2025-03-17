@@ -28,6 +28,8 @@ namespace NCL {
 			public NCL::CSC8503::GameTechRendererInterface
 		{
 		public:
+			const static constexpr size_t UboSize = 1024 * 1024 * 64;
+
 			GameTechAGCRenderer(Window* window);
 			~GameTechAGCRenderer();
 
@@ -82,11 +84,11 @@ namespace NCL {
 
 				template<typename T>
 				void WriteData(T value) {
-					memcpy(data, &value, sizeof(T));
-					data += sizeof(T);
-					bytesWritten += sizeof(T);
+					WriteData(&value, sizeof(T));
 				}
 				void WriteData(void* inData, size_t byteCount) {
+					assert(bytesWritten + byteCount < UboSize && "UBO overflow");
+
 					memcpy(data, inData, byteCount);
 					data += byteCount;
 					bytesWritten += byteCount;

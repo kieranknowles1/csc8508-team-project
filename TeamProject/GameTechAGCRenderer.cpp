@@ -88,7 +88,7 @@ GameTechAGCRenderer::GameTechAGCRenderer(Window* window) : AGCRenderer(window), 
 	for (int i = 0; i < FRAMES_IN_FLIGHT; ++i) {
 
 		{//We store scene object matrices etc in a big UBO
-			allFrames[i].data.dataStart = (char*)allocator.Allocate(1024 * 1024 * 64, sce::Agc::Alignment::kBuffer);
+			allFrames[i].data.dataStart = (char*)allocator.Allocate(UboSize, sce::Agc::Alignment::kBuffer);
 			allFrames[i].data.data = allFrames[i].data.dataStart;
 
 			sce::Agc::Core::BufferSpec bufSpec;
