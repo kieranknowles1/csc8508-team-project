@@ -88,7 +88,7 @@ void TutorialGame::UpdateGame(float dt) {
 
     profiler.startSection("Update World");
 
-    spGameController->Update(dt);
+    if(spGameController) spGameController->Update(dt);
 
     UpdateKeys();
     world->UpdateWorld(dt);
