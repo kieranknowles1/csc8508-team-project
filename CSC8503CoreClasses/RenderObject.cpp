@@ -16,7 +16,7 @@ NCL::CSC8503::RenderObject::RenderObject(GameObject* parent, std::shared_ptr<Mes
 {
     this->parent = parent;
     this->mesh = mesh;
-    this->colour = Vector4(1.0f, 0.0f, 0.0f, 1.0f);
+    this->colour = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
 
     // Check if the number of submeshes matches the material layers
     int subMeshCount = mesh->GetSubMeshCount();

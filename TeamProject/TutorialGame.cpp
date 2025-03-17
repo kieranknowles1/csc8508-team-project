@@ -449,7 +449,6 @@ GameObject* TutorialGame::AddGunToWorld(const Vector3& position, Vector3 dimensi
 
     // Setting render object
     gun->SetRenderObject(new RenderObject(gun, resourceManager->getMeshes().get("VD_Raygun_Cartoony_Rigged1.msh"), resourceManager->getMaterials().get("VD_Raygun_Cartoony_Rigged1.mat")));
-    gun->GetRenderObject()->SetTexRepeating(true); //scale texture (no stretching)
 
     world->AddGameObject(gun);
 

@@ -355,7 +355,14 @@ void GameTechRenderer::RenderCamera() {
             if (hasNormal) {
                 BindTextureToShader(*(i->GetNormalMaps()[subMeshIndex]), "normalTex", 1);
             }
-            Vector3 texScale = i->getParent()->getRenderScale() * i->GetTexScaleMultiplier();
+            Vector3 texScale;
+            // TODO: Proper flag to control this, named something like scaleTextureWithSize (but shorter)
+            if (i->GetTexRepeating()) {
+                texScale = i->getParent()->getRenderScale() * i->GetTexScaleMultiplier();
+            }
+            else {
+                texScale = Vector3(1, 1, 1);
+            }
             glUniform3fv(texScaleLocation, 1, texScale.array);
             // TODO: Add metallic maps
             /*if (subMeshIndex < i->GetMetallicMaps().size() && i->GetMetallicMaps()[subMeshIndex]) {

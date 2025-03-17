@@ -66,6 +66,7 @@ UniqueOGLTexture OGLTexture::TextureFromFile(const std::string&name) {
     }
 
 	UniqueOGLTexture glTex = TextureFromData(texData, width, height, channels);
+    glTex->fileName = name;
 
 	free(texData);
 
