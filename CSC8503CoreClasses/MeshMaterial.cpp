@@ -74,8 +74,7 @@ void MeshMaterial::LoadTextures(CSC8503::ResourceManager* resourceManager) {
 
 void MeshMaterialEntry::LoadTextures(CSC8503::ResourceManager* resourceManager) {
 	for (auto& i : entries) {
-		string filename = Assets::TEXTUREDIR + i.second.first;
-        i.second.second = resourceManager->getTextures().get(filename);
+        i.second.second = resourceManager->getTextures().get(i.second.first);
 
 		//Texture* t = TextureLoader::LoadAPITexture(filename);
 

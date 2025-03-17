@@ -23,10 +23,10 @@ AGCTexture::AGCTexture(const std::string& filename, const MemoryAllocator& a) {
 
 	if (!fp) {
 		std::cout << __FUNCTION__ << "Can't load file " << filename << "\n";
-		return;
+		// We have no way to handle a failed load, and would segfault later
+		assert(fp && "Could not open file");
 	}
 
-	//SCE_AGC_ASSERT_MSG_RETURN(fp, SCE_AGC_ERROR_FAILURE, "Could not open file %s", filename);
 	fseek(fp, 0, SEEK_END);
 	long sz = ftell(fp);
 	if (sz <= 0)

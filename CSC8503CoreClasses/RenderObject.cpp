@@ -8,8 +8,12 @@ RenderObject::RenderObject(GameObject* parent, std::shared_ptr<Mesh> mesh, std::
 	this->parent	= parent;
 	this->mesh		= mesh;
 	this->colour	= Vector4(1.0f, 1.0f, 1.0f, 1.0f);
-    this->textures.push_back(tex);
-    this->normalMaps.push_back(normal);
+    if (tex) {
+        this->textures.push_back(tex);
+    }
+    if (normal) {
+        this->normalMaps.push_back(normal);
+    }
 }
 
 NCL::CSC8503::RenderObject::RenderObject(GameObject* parent, std::shared_ptr<Mesh> mesh, std::shared_ptr<MeshMaterial> mat)

@@ -543,11 +543,13 @@ void GameTechAGCRenderer::UpdateObjectList() {
 		state.texScale = g->getParent()->getRenderScale() * g->GetTexScaleMultiplier();
 		state.skinningIndex = NULLTEX;
 
-		Texture* t = g->GetDefaultTexture();
-		state.texIndex = t ? t->GetAssetID() : NULLTEX;
-
-		Texture* normal = g->GetNormalMap();
-		state.normalIndex = normal ? normal->GetAssetID() : NULLTEX;
+		// TODO: Handle multiple layers
+		state.texIndex = g->GetTextures().empty()
+			? NULLTEX
+			: g->GetTextures()[0]->GetAssetID();
+		state.normalIndex = g->GetNormalMaps().empty()
+			? NULLTEX
+			: g->GetNormalMaps()[0]->GetAssetID();
 
 		AGCMesh* m = (AGCMesh*)g->GetMesh();
 		if (m && m->GetJointCount() > 0) {//It's a skeleton mesh, need to update transformed vertices buffer
