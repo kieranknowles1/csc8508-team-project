@@ -106,7 +106,7 @@ int main(int argc, char** argv) {
     auto window = createWindow(config);
 
     window->ShowOSPointer(false);
-    window->LockMouseToWindow(false);
+    window->LockMouseToWindow(true);
 
     auto renderer = createRenderer(window.get());
     auto controller = createController(window.get());
