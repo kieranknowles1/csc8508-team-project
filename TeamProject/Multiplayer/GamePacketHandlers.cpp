@@ -12,8 +12,8 @@ namespace Packet {
 
         if (object == nullptr) return;
 
-        object->GetPhysicsObject()->GetRigidBody()->setLinearVelocity(deltaPacket->GetLinearVelocity());
-        object->GetPhysicsObject()->GetRigidBody()->setAngularVelocity(deltaPacket->GetAngularVelocity());
+        object->GetWorldState().UpdateState({ WorldState::StateType::LinearVelocity, deltaPacket->GetLinearVelocity() });
+        object->GetWorldState().UpdateState({ WorldState::StateType::AngularVelocity, deltaPacket->GetAngularVelocity() });
     }
     
     std::shared_ptr<Packet> DeltaPacketHandler::Translate(const ENetEvent* event) const {

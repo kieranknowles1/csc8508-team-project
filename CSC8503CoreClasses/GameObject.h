@@ -85,6 +85,11 @@ namespace NCL::CSC8503 {
         }
 
         virtual void Update(float dt) {
+            GetPhysicsObject()->GetRigidBody()->setLinearVelocity(std::get<btVector3>(objectWorldState.ReadState(WorldState::StateType::LinearVelocity)));
+            GetPhysicsObject()->GetRigidBody()->setAngularVelocity(std::get<btVector3>(objectWorldState.ReadState(WorldState::StateType::AngularVelocity)));
+            GetPhysicsObject()->GetRigidBody()->getWorldTransform().setOrigin(std::get<btVector3>(objectWorldState.ReadState(WorldState::StateType::Position)));
+            GetPhysicsObject()->GetRigidBody()->getWorldTransform().setRotation(std::get<btQuaternion>(objectWorldState.ReadState(WorldState::StateType::Rotation)));
+
             std::vector<std::pair<WorldState::StateType, WorldState::StateValue>> stateUpdates;
             stateUpdates.push_back(
                 { WorldState::StateType::LinearVelocity, GetPhysicsObject()->GetRigidBody()->getLinearVelocity() }
