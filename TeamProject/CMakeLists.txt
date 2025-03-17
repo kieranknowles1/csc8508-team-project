@@ -53,6 +53,8 @@ set(SOURCES
     Crosshair.h
     Crosshair.cpp
     Respawn.h
+    AnimatedRenderObject.h
+    AnimatedRenderObject.cpp
 )
 
 set(ASSET_ROOT "${CMAKE_SOURCE_DIR}/Assets")

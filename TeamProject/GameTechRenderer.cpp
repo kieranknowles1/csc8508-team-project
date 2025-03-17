@@ -212,7 +212,7 @@ GameTechRenderer::GameTechRenderer(Window* window) : OGLRenderer(window), GameTe
 	//Mesh Animation addditions:
 	MaleGuard = LoadMesh("/MaleGuard/Male_Guard.msh");
 	//test = new MeshAnimation("/MaleGuard/Flinches.anm");
-	//material = new MeshMaterial("/MaleGuard/Male_Guard");// not sure if this is the right one   
+	//material = new MeshMaterial("/MaleGuard/Male_Guard");// not sure if this is the right one. Currently, resourceManager doesn't support submeshes => no materials
 	animationShader = new OGLShader("skinningvert.glsl", "deferredscenefrag.glsl"); //not yet sure if this fragment shader can work here
 
 }
@@ -244,6 +244,8 @@ GameTechRenderer::~GameTechRenderer() {
 	delete vignetteShader;
 
 	delete MaleGuard;
+	delete animationShader;
+	
 
 }
 
@@ -430,6 +432,8 @@ void GameTechRenderer::RenderCamera() {
 		if ((*i).getParent()->GetIsAnimated() == true) {//if object is a player, don't want it to be drawn here
 			continue; //go to next renderObject in loop
 		}
+
+		//if ((*i).getParent()->getType() == Player); //could instead check based on type
 
 		if ((*i).GetDefaultTexture()) { 
 			BindTextureToShader(*(OGLTexture*)(*i).GetDefaultTexture(), "diffuseTex", 0); //was maintTex for scenefrag. Using diffuseTex for deferredscenefrag
