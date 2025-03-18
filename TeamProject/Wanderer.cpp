@@ -128,6 +128,28 @@ void Wanderer::PlayerNear(float dt) {
 
 	if (shootTimer <= 0) {
 
+		/*NEW SHOOTING
+		* Handle lasers for adding AI in GameTechRenderer
+		* Handle color in GameTechRenderer RenderLasers()
+		void PlayerController::HandleShooting(float dt) {
+
+    if (controller->GetDigital(Controller::DigitalControl::Fire) && overheat->CanFire()) {
+           std::optional<ShotInfo> info = Shoot::GetInstance()->ShootBulletPlayer(camera->GetPosition(), forwardDir, bulletRotation,dt);
+    renderer->updateLaser(laserID, camera->GetPosition() + adjustedOffset, info.value().hitPos);
+        if (!firing) {
+            firing = true;
+        }
+    }
+    else {
+        if (firing) {
+            renderer->updateLaser(laserID,btVector3(0,0,0),btVector3(0,0,0));
+            }
+            firing = false;
+        }
+    }
+}
+		*/
+
 		btVector3 curPos = GetTransform().getOrigin();
 		btVector3 pPos = player->GetTransform().getOrigin();
 		btVector3 dir = (pPos - curPos) == 0 ? btVector3(0, 0, 0) : (pPos - curPos).normalized();
