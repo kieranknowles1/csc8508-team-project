@@ -94,6 +94,7 @@ void PlayerController::HandleShooting(float dt) {
                     player->GetWorldID(),
                     btVector3(0, 0, 0),
                     btVector3(0, 0, 0),
+                    btVector3(0, 0, 0),
                     player->GetLastPacketSequence((uint8_t)Packet::PacketType::LASER) + 1
                 );
                 player->UpdatePacketSequence((uint8_t)Packet::PacketType::LASER, laserPacket->GetSequenceNumber());
@@ -117,7 +118,7 @@ void PlayerController::FireShot(float dt) {
     btVector3 forwardDir = rotationMatrix * btVector3(0, 0, -1);
     btVector3 adjustedOffset = rotationMatrix * gunCameraOffset; // Apply rotation to the offset
 
-   std::optional<ShotInfo> info = Shoot::GetInstance()->ShootBulletPlayer(camera->GetPosition(), forwardDir, bulletRotation,dt);
+   std::optional<ShotInfo> info = Shoot::GetInstance()->ShootBulletPlayer(camera->GetPosition(), forwardDir, bulletRotation,dt, laserID);
     renderer->updateLaser(laserID, camera->GetPosition() + adjustedOffset, info.value().hitPos);
 
     if (TutorialGame::GetServerInstance().has_value()) {
@@ -125,6 +126,7 @@ void PlayerController::FireShot(float dt) {
             player->GetWorldID(),
             camera->GetPosition() + adjustedOffset,
             info.value().hitPos,
+            info.value().hitNormal,
             player->GetLastPacketSequence((uint8_t)Packet::PacketType::LASER) + 1
         );
         player->UpdatePacketSequence((uint8_t)Packet::PacketType::LASER, laserPacket->GetSequenceNumber());

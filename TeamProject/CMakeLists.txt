@@ -48,8 +48,6 @@ set(SOURCES
 	Wanderer.cpp
     Shoot.cpp
     Shoot.h
-    Paintball.h
-    Paintball.cpp
     PointLight.h
     Crosshair.h
     Crosshair.cpp
