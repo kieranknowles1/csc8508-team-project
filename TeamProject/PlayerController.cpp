@@ -94,6 +94,7 @@ void PlayerController::HandleShooting(float dt) {
                     player->GetWorldID(),
                     btVector3(0, 0, 0),
                     btVector3(0, 0, 0),
+                    btVector3(0, 0, 0),
                     player->GetLastPacketSequence((uint8_t)Packet::PacketType::LASER) + 1
                 );
                 player->UpdatePacketSequence((uint8_t)Packet::PacketType::LASER, laserPacket->GetSequenceNumber());
@@ -125,6 +126,7 @@ void PlayerController::FireShot(float dt) {
             player->GetWorldID(),
             camera->GetPosition() + adjustedOffset,
             info.value().hitPos,
+            info.value().hitNormal,
             player->GetLastPacketSequence((uint8_t)Packet::PacketType::LASER) + 1
         );
         player->UpdatePacketSequence((uint8_t)Packet::PacketType::LASER, laserPacket->GetSequenceNumber());
