@@ -31,6 +31,9 @@ public:
     void fire();
     void stopFiring();
     bool CanFire() { return (currentState != Overheating && !coolingFromOverheat); }
+    float GetOverheatPercentage() const {
+        return barSize / maxSize; //Normalize to 0.0 - 1.0
+    }
 
 private:
 

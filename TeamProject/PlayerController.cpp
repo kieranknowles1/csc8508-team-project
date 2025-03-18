@@ -83,7 +83,17 @@ void PlayerController::HandleShooting(float dt) {
             crosshair->fire();
             overheat->fire();
             firing = true;
+
+            //Get the playback position of the sound to be played
+            float overheatPercentage = overheat->GetOverheatPercentage();
+            float beamSoundLength = 7.1f; //7 seconds
+            unsigned int startTimeMs = static_cast<unsigned int>(overheatPercentage * beamSoundLength * 1000); //Convert to milliseconds
             beamSoundChannel = audioEngine.PlaySounds("Beam.mp3", camera->GetPosition(), 0.0f);
+
+            if (beamSoundChannel != -1) {
+                audioEngine.SetChannel3dPosition(beamSoundChannel, camera->GetPosition());
+                audioEngine.SetChannelPlaybackPosition(beamSoundChannel, startTimeMs);
+            }
         }
         else {
             if (beamSoundChannel != -1) {

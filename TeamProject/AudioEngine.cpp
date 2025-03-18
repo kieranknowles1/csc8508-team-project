@@ -140,6 +140,16 @@ void CAudioEngine::SetChannel3dPosition(int nChannelId, const NCL::Maths::Vector
     CAudioEngine::ErrorCheck(tFoundIt->second->set3DAttributes(&position, NULL));
 }
 
+void CAudioEngine::SetChannelPlaybackPosition(int channelId, unsigned int positionMs) {
+    auto tFoundIt = sgpImplementation->mChannels.find(channelId);
+    if (tFoundIt == sgpImplementation->mChannels.end()) {
+        return;
+    }
+
+    FMOD_RESULT result = tFoundIt->second->setPosition(positionMs, FMOD_TIMEUNIT_MS);
+    ErrorCheck(result);
+}
+
 void CAudioEngine::Set3dListenerAndOrientation(const NCL::Maths::Vector3& vPosition, const NCL::Maths::Vector3& vLook, const NCL::Maths::Vector3& vUp) {
     FMOD_VECTOR fmodPosition = VectorToFmod(vPosition);
     FMOD_VECTOR fmodLook = VectorToFmod(vLook);

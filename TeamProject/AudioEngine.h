@@ -85,6 +85,7 @@ public:
 	void SetEventParameter(const std::string& strEventName, const std::string& strParameterName, float fValue);
 	void StopAllChannels();
 	void SetChannel3dPosition(int nChannelId, const NCL::Maths::Vector3& vPosition);
+	void SetChannelPlaybackPosition(int channelId, unsigned int positionMs);
 	void SetChannelVolume(int nChannelId, float fVolumedB);
 	bool IsPlaying(int nChannelId) const;
 	bool IsEventPlaying(const std::string& strEventName) const;
