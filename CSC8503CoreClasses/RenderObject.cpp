@@ -1,6 +1,8 @@
 #include "RenderObject.h"
 #include "Mesh.h"
 
+#include "../TeamProject/Material.h"
+
 using namespace NCL::CSC8503;
 using namespace NCL;
 
@@ -12,7 +14,7 @@ RenderObject::RenderObject(GameObject* parent, std::shared_ptr<Mesh> mesh, std::
     this->normalMaps.push_back(normal);
 }
 
-NCL::CSC8503::RenderObject::RenderObject(GameObject* parent, std::shared_ptr<Mesh> mesh, std::shared_ptr<MeshMaterial> mat)
+NCL::CSC8503::RenderObject::RenderObject(GameObject* parent, std::shared_ptr<Mesh> mesh, std::shared_ptr<Material> mat)
 {
     this->parent = parent;
     this->mesh = mesh;
@@ -25,16 +27,14 @@ NCL::CSC8503::RenderObject::RenderObject(GameObject* parent, std::shared_ptr<Mes
     // Assign materials per submesh
     for (int i = 0; i < subMeshCount; i++) {
         if (i < materialCount) { // Ensure we don't go out of bounds
-            auto materialLayer = mat->GetMaterialForLayer(i);
+            auto materialLayer = mat->GetLayer(i);
             if (materialLayer) {
-                textures.push_back(materialLayer->GetEntry("Diffuse"));
-                normalMaps.push_back(materialLayer->GetEntry("Bump"));
-                metallicMaps.push_back(materialLayer->GetEntry("Metallic"));
+                textures.push_back(materialLayer->diffuse);
+                normalMaps.push_back(materialLayer->normal);
             }
             else {
                 textures.push_back(nullptr);
                 normalMaps.push_back(nullptr);
-                metallicMaps.push_back(nullptr);
             }
         }
     }

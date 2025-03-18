@@ -2,10 +2,11 @@
 #include "Texture.h"
 #include "Mesh.h"
 #include "Buffer.h"
-#include <MeshMaterial.h>
 
 namespace NCL {
 	using namespace NCL::Rendering;
+
+	class Material;
 
 	namespace CSC8503 {
 		class GameObject;
@@ -15,7 +16,7 @@ namespace NCL {
 		{
 		public:
 			RenderObject(GameObject* parent, std::shared_ptr<Mesh> mesh, std::shared_ptr<Texture> tex, std::shared_ptr<Texture> normal = nullptr);
-            RenderObject(GameObject* parent, std::shared_ptr<Mesh> mesh, std::shared_ptr<MeshMaterial> mat);
+            RenderObject(GameObject* parent, std::shared_ptr<Mesh> mesh, std::shared_ptr<Material> mat);
 			~RenderObject();
 
 			Mesh* GetMesh() const {
@@ -67,11 +68,9 @@ namespace NCL {
 
             const std::vector<std::shared_ptr<Texture>>& GetTextures() const { return textures; }
             const std::vector<std::shared_ptr<Texture>>& GetNormalMaps() const { return normalMaps; }
-            const std::vector<std::shared_ptr<Texture>>& GetMetallicMaps() const { return metallicMaps; }
 
             void SetTextures(const std::initializer_list<std::shared_ptr<Texture>>& texs) { textures = texs; }
             void SetNormalMaps(const std::initializer_list<std::shared_ptr<Texture>> norms) { normalMaps = norms; }
-            void SetMetallicMaps(const std::initializer_list<std::shared_ptr<Texture>>& metal) { metallicMaps = metal; }
 
 		protected:
 			GameObject* parent;
@@ -84,7 +83,6 @@ namespace NCL {
 
             std::vector<std::shared_ptr<Texture>> textures;
             std::vector<std::shared_ptr<Texture>> normalMaps;
-            std::vector<std::shared_ptr<Texture>> metallicMaps;
 		};
 	}
 }

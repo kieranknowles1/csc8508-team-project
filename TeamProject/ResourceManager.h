@@ -11,7 +11,7 @@
 #include "Mesh.h"
 #include "Texture.h"
 #include "Shader.h"
-#include "MeshMaterial.h"
+#include "Material.h"
 
 namespace NCL::CSC8503 {
     class GameTechRenderer;
@@ -87,7 +87,7 @@ namespace NCL::CSC8503 {
         //ResourceMap<std::string, Rendering::Texture>& getCubeMaps() { return cubeMaps; }
         ResourceMap<std::string, Rendering::Mesh>& getMeshes() { return meshes; }
         ResourceMap<std::string, Rendering::Texture>& getTextures() { return textures; }
-        ResourceMap<std::string, MeshMaterial>& getMaterials() { return materials; }
+        ResourceMap<std::string, Material>& getMaterials() { return materials; }
     protected:
         // Needed to upload platform-specific data to GPU
         GameTechRendererInterface* renderer;
@@ -95,7 +95,7 @@ namespace NCL::CSC8503 {
         //ResourceMap<std::string, Rendering::Texture> cubeMaps;
         ResourceMap<std::string, Rendering::Mesh> meshes;
         ResourceMap<std::string, Rendering::Texture> textures;
-        ResourceMap<std::string, MeshMaterial> materials;
+        ResourceMap<std::string, Material> materials;
 
         float gcFrequency = 30.0f;
         float timeSinceGc;

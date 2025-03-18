@@ -56,6 +56,8 @@ set(SOURCES
     Respawn.h
     Overheat.h
     Overheat.cpp
+    Material.h
+    Material.cpp
 )
 
 set(ASSET_ROOT "${CMAKE_SOURCE_DIR}/Assets")
