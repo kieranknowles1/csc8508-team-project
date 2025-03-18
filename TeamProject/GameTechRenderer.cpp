@@ -406,6 +406,7 @@ void GameTechRenderer::RenderCamera() {
             else {
                 texScale = Vector3(1, 1, 1);
             }
+			glUniform1i(texRepeatingLocation, i->GetTexRepeating());
             glUniform3fv(texScaleLocation, 1, texScale.array);
             // TODO: Add metallic maps
             /*if (subMeshIndex < i->GetMetallicMaps().size() && i->GetMetallicMaps()[subMeshIndex]) {
@@ -430,7 +431,6 @@ void GameTechRenderer::RenderCamera() {
             //glUniform1i(hasMetallicLocation, i->GetMetallicMaps().size() > subMeshIndex && i->GetMetallicMaps()[subMeshIndex] != nullptr);
             glUniform1i(hasFlatLocation, i->GetIsFlat());
             glUniform1i(hasNormalLocation, hasNormal);
-            glUniform1i(texRepeatingLocation, i->GetTexRepeating());
 
             BindMesh((OGLMesh&)*(*i).GetMesh());
             DrawBoundMesh((uint32_t)subMeshIndex);

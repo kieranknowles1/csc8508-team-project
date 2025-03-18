@@ -80,7 +80,7 @@ namespace NCL {
 			Vector4		colour = Vector4(1, 1, 0, 0.99);
 			bool isFlat = false;
 			bool texRepeating = false; // added to allow repeating textures per object
-			float texScaleMultiplier = 0.05f; //unless set to something else, all scaled textures will be scaled with this and their renderScale
+			float texScaleMultiplier = 0.005f; //unless set to something else, all scaled textures will be scaled with this and their renderScale
 
             std::vector<std::shared_ptr<Texture>> textures;
             std::vector<std::shared_ptr<Texture>> normalMaps;
