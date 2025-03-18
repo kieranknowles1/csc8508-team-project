@@ -394,17 +394,15 @@ void GameTechAGCRenderer::PostProcessPass()
 	frameContext->m_sb.setState(sce::Agc::CxPrimitiveSetup().init().setCullFace(sce::Agc::CxPrimitiveSetup::CullFace::kBack));
 
 	sce::Agc::CxDepthStencilControl depthControl;
-	depthControl.init();
-	depthControl.setDepth(sce::Agc::CxDepthStencilControl::Depth::kDisable);
-	depthControl.setDepthFunction(sce::Agc::CxDepthStencilControl::DepthFunction::kAlways);
-	depthControl.setDepthWrite(sce::Agc::CxDepthStencilControl::DepthWrite::kDisable);
+	depthControl.init().setDepth(sce::Agc::CxDepthStencilControl::Depth::kDisable).setDepthFunction(sce::Agc::CxDepthStencilControl::DepthFunction::kAlways);
 	frameContext->m_sb.setState(depthControl);
 
 	frameContext->m_bdr.getStage(sce::Agc::ShaderType::kPs)
 		.setConstantBuffers(0, 1, &currentFrame->constantBuffer)
 		.setSamplers(0, 1, &sceneBuffer.sampler).setTextures(0, 1, sceneBuffer.texture->GetAGCPointer())
 		.setSamplers(1, 1, &lightDiffuse.sampler).setTextures(1, 1, lightDiffuse.texture->GetAGCPointer())
-		.setSamplers(2, 1, &lightSpecular.sampler).setTextures(2, 1, lightSpecular.texture->GetAGCPointer());
+		.setSamplers(2, 1, &lightSpecular.sampler).setTextures(2, 1, lightSpecular.texture->GetAGCPointer())
+		.setSamplers(3, 1, &depthSampler).setTextures(3, 1, depthTexture->GetAGCPointer());
 
 	unitQuad->BindVertexBuffers(frameContext->m_bdr.getStage(sce::Agc::ShaderType::kGs));
 	DrawBoundMesh(*frameContext, *unitQuad);

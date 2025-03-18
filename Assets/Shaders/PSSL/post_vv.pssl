@@ -1,4 +1,3 @@
-#include "ShaderConstants.psslh"
 #include "VertexAttributes.psslh"
 
 struct VS_OUTPUT
