@@ -694,8 +694,6 @@ void GameTechRenderer::RenderUI() {
 }
 
 void GameTechRenderer::RenderLasers() {
-
-
 	//draw lasers
 	glBindFramebuffer(GL_FRAMEBUFFER, laserFBO);
 	glClearColor(0, 0, 0, 0);
@@ -708,12 +706,17 @@ void GameTechRenderer::RenderLasers() {
 	glUniformMatrix4fv(glGetUniformLocation(laserShader->GetProgramID(), "viewMatrix"), 1, false, (float*)&viewMatrix);
 	glUniformMatrix4fv(glGetUniformLocation(laserShader->GetProgramID(), "projMatrix"), 1, false, (float*)&projMatrix);
 
+	glActiveTexture(GL_TEXTURE1);
+	glBindTexture(GL_TEXTURE_2D, bufferDepthTex);
+	glUniform1i(glGetUniformLocation(laserShader->GetProgramID(), "depthTex"), 1);
+	glUniform2f(glGetUniformLocation(laserShader->GetProgramID(), "windowSize"), windowSize.x, windowSize.y);
+
 	BindMesh(*highResSphere);
 	for (std::shared_ptr<Laser> laser : lasers) {
 		if (laser->startPos == btVector3(0, 0, 0) && laser->endPos == btVector3(0, 0, 0)) continue;
 		glUniform3fv(glGetUniformLocation(laserShader->GetProgramID(), "startPosition"), 1, (float*)&laser->startPos);
 		glUniform3fv(glGetUniformLocation(laserShader->GetProgramID(), "endPosition"), 1, (float*)&laser->endPos);
-		glUniform1f(glGetUniformLocation(laserShader->GetProgramID(), "thickness"), 0.5f);
+		glUniform1f(glGetUniformLocation(laserShader->GetProgramID(), "thickness"), 0.25f);
 		glUniform1f(glGetUniformLocation(laserShader->GetProgramID(), "time"), vignettePulse);
 		btVector4 color = Color::GetPlayerColor(laser->id);
 		glUniform4fv(glGetUniformLocation(laserShader->GetProgramID(), "inColour"), 1, (float*)&color);

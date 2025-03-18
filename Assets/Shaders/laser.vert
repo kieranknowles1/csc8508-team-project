@@ -8,6 +8,8 @@ uniform vec3 endPosition;
 uniform float thickness;
 uniform float time;
 
+out float depth;
+
 layout(location = 0) in vec3 position;
 layout(location = 2) in vec2 texCoord;
 
@@ -54,5 +56,9 @@ void main(void) {
                   + baseWaveOffset
                   + rippleOffset;
 
-    gl_Position = projMatrix * viewMatrix * vec4(worldPos, 1.0);
+
+    vec4 clipSpacePos = projMatrix * viewMatrix * vec4(worldPos, 1.0);
+    gl_Position = clipSpacePos;
+    depth = (clipSpacePos.z / clipSpacePos.w) * 0.5 + 0.5; //world space position
+
 }
