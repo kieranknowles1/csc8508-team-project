@@ -43,6 +43,12 @@ namespace Multiplayer {
 
         void Start() { m_network->Start(); }
 
+        /**
+         * @brief Determine if the owner of the server is also the owner of the
+         * game object.
+         */
+        bool IsOwnerOf(GameObject* object);
+
         inline void AddUserToLobby(const Lobbies::User& user) { m_lobby->AddUser(user); }
         inline void RemoveUserFromLobby(const Lobbies::User& user) { m_lobby->RemoveUser(user); }
         inline void AssignLobbyHost(const Lobbies::User& user) { m_lobby->SetHost(user); }

@@ -86,6 +86,9 @@ namespace Multiplayer {
         m_user = new Lobbies::User(user);
     }
 
+    bool Server::IsOwnerOf(GameObject* obj) {
+        return obj->GetOwner() == *m_user;
+    }
 
     void Server::SendState(bool endOfTick) {
         if (endOfTick) return;
