@@ -32,7 +32,6 @@ namespace Multiplayer {
         if (isHost) {
             m_network->SetConnectCallback([&](ENetPeer* client) { OnClientJoin(client); });
         }
-
     }
 
     Server::~Server() {
@@ -94,6 +93,7 @@ namespace Multiplayer {
         
         if (m_isHost && m_game->GetState() == GameState::STARTING) {
             std::shared_ptr<Packet::StartGamePacket> startGame = std::make_shared<Packet::StartGamePacket>();
+            SyncTickCount(0);
             m_network->Broadcast(startGame);
             m_game->SetState(GameState::ACTIVE);
         }
@@ -147,7 +147,18 @@ namespace Multiplayer {
         // enough time has passed for all the packets to arrive.
         std::shared_ptr<Packet::Packet> currentPacket = m_network->Fetch();
         while (currentPacket.get() != nullptr) {
-            Packet::PacketRegister::GetHandler(currentPacket->GetType())->Handle(currentPacket);
+
+            // Process packets that have a sequence of zero (usually high priority).
+            if (currentPacket->GetSequenceNumber() == 0 ) {
+                Packet::PacketRegister::GetHandler(currentPacket->GetType())->Handle(currentPacket);
+            }
+
+            // Add packet to the buffer.
+            else {
+            }
+
+
+
             currentPacket = m_network->Fetch();
         }
     }

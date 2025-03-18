@@ -52,6 +52,12 @@ namespace Multiplayer {
         inline unsigned int ClientCount() const { return m_lobby->GetConnectedUsers().size(); }
         inline unsigned int GetMaxClients() const { return MAX_PLAYERS; }
 
+        /**
+         * @brief Set a value the server should start ticking from.
+         * Used to synchronise the start of the game.
+         */
+        void SyncTickCount(int count) { m_tickCount; }
+
     private:
         /**
          * @brief Listens to the server tick and sends state when server
@@ -88,5 +94,7 @@ namespace Multiplayer {
         bool m_isHost = false;
         bool m_connected = false;
         unsigned int m_uniqueUserID = 0;
+
+        std::array<std::vector<std::shared_ptr<Packet::Packet>>, TICK_BUFFER_SIZE> m_buffer;
     };
 }
