@@ -2,6 +2,7 @@
 #include "PointLight.h"
 #include "PlayerObject.h"
 #include "TutorialGame.h"
+#include "Colors.h"
 #include "Multiplayer/GamePackets.hpp"
 
 using namespace NCL;
@@ -41,7 +42,7 @@ std::optional<ShotInfo> Shoot::RayClosest(btVector3 startPos, btVector3 dir, Gam
     return std::nullopt;
 }
 
-std::optional<ShotInfo> Shoot::ShootBulletPlayer(btVector3 startPos, btVector3 dir, btQuaternion rotation, float dt) {
+std::optional<ShotInfo> Shoot::ShootBulletPlayer(btVector3 startPos, btVector3 dir, btQuaternion rotation, float dt, int shotID) {
     auto rayInfo = RayClosest(startPos, dir);
     // Don't have Rust style and_then until C++23 :(
     if (rayInfo.has_value()) {
@@ -59,7 +60,7 @@ std::optional<ShotInfo> Shoot::ShootBulletPlayer(btVector3 startPos, btVector3 d
             }
         }
        // SpawnBulletMesh(startPos, dir, rotation, &rayInfo.value());
-        SpawnDecal(&rayInfo.value());
+        SpawnDecal(&rayInfo.value(), shotID);
     }
     return rayInfo;
 }
@@ -72,19 +73,19 @@ std::optional<ShotInfo> Shoot::ShootBulletAI(btVector3 startPos, btVector3 dir, 
             PlayerObject* hit = (PlayerObject*)rayInfo.value().hitObj;
             hit->Damage(100.0f * dt); // TODO: Don't hard code this.
         }
-        SpawnDecal(&rayInfo.value());
+        SpawnDecal(&rayInfo.value(),1);
     }
     return rayInfo;
 }
 
 
-void Shoot::SpawnDecal(ShotInfo* shotinfo) {
+void Shoot::SpawnDecal(ShotInfo* shotinfo, int shotID) {
     if (shotinfo->hitObj != nullptr) {
 		// Choose a random decal texture
         std::shared_ptr<NCL::Rendering::Texture> pngTexture = decalSystem->PickRandomDecal(decalTextures);
 
 		// Use the same color for the decal as the paintball
-        btVector4 decalColor = paintballColor;
+        btVector4 decalColor = Color::GetPlayerColor(shotID);
 
 		// Generate a random rotation angle for the decal
         float decalRotation = decalSystem->GetRandomRotation();
