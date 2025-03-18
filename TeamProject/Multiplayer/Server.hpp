@@ -41,6 +41,8 @@ namespace Multiplayer {
          */
         void SetUser(const Lobbies::User& user);
 
+        Lobbies::User* GetUser() const { return m_user; }
+
         void Start() { m_network->Start(); }
 
         /**
@@ -59,10 +61,13 @@ namespace Multiplayer {
         inline unsigned int GetMaxClients() const { return MAX_PLAYERS; }
 
         /**
-         * @brief Set a value the server should start ticking from.
+         * @brief Reset the tick to zero.
          * Used to synchronise the start of the game.
          */
-        void SyncTickCount(int count) { m_tickCount; }
+        void ResetTick() {
+            m_tickCount = 0;
+            m_processTick = -TICK_BUFFER_SIZE + 1;
+        }
 
     private:
         /**
@@ -97,6 +102,7 @@ namespace Multiplayer {
         std::vector<std::unique_ptr<Packet::PacketHandler>> m_handlers;
 
         uint32_t m_tickCount = 0;
+        int m_processTick = -TICK_BUFFER_SIZE + 1;
         bool m_isHost = false;
         bool m_connected = false;
         unsigned int m_uniqueUserID = 0;

@@ -2,6 +2,7 @@
 
 #include "GameScreen.h"
 #include "PushdownState.h"
+#include "Multiplayer/Server.hpp"
 
 namespace NCL {
     namespace CSC8503 {
@@ -35,6 +36,7 @@ namespace NCL {
                     switch (selection) {
                     case (uint8_t) HostLobbyItems::StartGame:
                         game->Start();
+                        game->GetServerInstance()->ResetTick();
                         *newState = new GameScreen(controller, game);
                         return PushdownResult::Push;
                     case (uint8_t) HostLobbyItems::CloseLobby:
@@ -81,6 +83,7 @@ namespace NCL {
 
                 if (game->GetState() == GameState::STARTING) {
                     game->Start();
+                    game->GetServerInstance()->ResetTick();
                     *newState = new GameScreen(controller, game);
                     return PushdownResult::Push;
                 }

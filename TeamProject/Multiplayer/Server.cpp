@@ -96,7 +96,6 @@ namespace Multiplayer {
         
         if (m_isHost && m_game->GetState() == GameState::STARTING) {
             std::shared_ptr<Packet::StartGamePacket> startGame = std::make_shared<Packet::StartGamePacket>();
-            SyncTickCount(0);
             m_network->Broadcast(startGame);
             m_game->SetState(GameState::ACTIVE);
         }
@@ -158,13 +157,24 @@ namespace Multiplayer {
 
             // Add packet to the buffer.
             else {
-
+                // Drop old packets.
+                if (currentPacket->GetSequenceNumber() >= m_processTick) {
+                    m_buffer[m_tickCount % TICK_BUFFER_SIZE].push_back(currentPacket);
+                }
             }
-
-
-
             currentPacket = m_network->Fetch();
         }
+
+        // Reading.
+        if (m_processTick >= 0) {
+            for (std::shared_ptr<Packet::Packet> packet : m_buffer[m_processTick % TICK_BUFFER_SIZE]) {
+                Packet::PacketRegister::GetHandler(currentPacket->GetType())->Handle(packet);
+            }
+            m_buffer[m_processTick % TICK_BUFFER_SIZE].clear();
+        }
+
+        m_tickCount++;
+        m_processTick++;
     }
 
     void Server::OnClientJoin(ENetPeer* client) {
