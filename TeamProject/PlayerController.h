@@ -83,7 +83,7 @@ namespace NCL {
 			float slidingCameraBackwards = 2.5f;
 
 			//Gun Variables
-			btVector3 gunCameraOffset = btVector3(1.3, -0.7, -2.5f);
+			btVector3 gunCameraOffset = btVector3(0, 0.22f, -1.5f);
 
 			//Rotation Variables
 			float rotateTime = 0.5f;
