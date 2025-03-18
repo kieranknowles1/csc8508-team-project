@@ -5,6 +5,16 @@ SamplerState sampler			: register(s0);
 
 RegularBuffer<sce::Agc::Core::Texture> textures : register(t0);
 
+float4 sampleTexture(int id, float2 uv, float4 def) {
+    if (id == NULLTEX) {
+        return def;
+    } else {
+        // Tell the compiler that different threads may need different textures
+        Texture2D<float4> tex = Texture2D<float4>(textures[NonUniformResourceIndex(id)]);
+        return tex.Sample(sampler, uv);
+    }
+}
+
 struct PS_OUTPUT {
 	float4 color : S_TARGET_OUTPUT0;
 	float4 normal : S_TARGET_OUTPUT1;
@@ -13,12 +23,11 @@ struct PS_OUTPUT {
 [CxxSymbol("TestShader::ps")]
 PS_OUTPUT main(VS_OUTPUT vertex) : S_TARGET_OUTPUT
 {
-	Texture2D<float4> tex = Texture2D<float4>(textures[NonUniformResourceIndex(vertex.texID)]);
-	Texture2D<float4> normTex = Texture2D<float4>(textures[NonUniformResourceIndex(vertex.normId)]);
+	if (vertex.Colour.a <= 0.0f) discard;
 
-	float4 texSample = tex.Sample(sampler, vertex.UV) * vertex.Colour;
+	float4 texSample = sampleTexture(vertex.texID, vertex.UV, float4(1, 1, 1, 1)) * vertex.Colour;
 	// Convert to (-1..1) range
-	float3 normSample = (normTex.Sample(sampler, vertex.UV).rgb * 2.0f) - 1.0f;
+	float3 normSample = (sampleTexture(vertex.normId, vertex.UV, float4(0, 0, 0, 1)).rgb * 2.0f) - 1.0f;
 
 	float3x3 tbn = float3x3(normalize(vertex.tangent), normalize(vertex.binormal), normalize(vertex.normal));
 

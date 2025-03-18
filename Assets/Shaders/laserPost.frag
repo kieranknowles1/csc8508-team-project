@@ -19,6 +19,6 @@ void main() {
         sum += texture(laserTex, IN.texCoord + offset) * weights[abs(i)];
     }
 
-    if (sum.a < 0.1) discard;
+    if (sum.a < 0.01) discard;
     fragColor = sum;
 }
