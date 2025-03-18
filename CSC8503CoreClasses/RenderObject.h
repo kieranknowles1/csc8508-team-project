@@ -71,7 +71,7 @@ namespace NCL {
 				return buffer;
 			}
 
-		/*	MeshAnimation* GetAnimation() const {
+			MeshAnimation* GetAnimation() const {
 				return test;
 			}
 
@@ -81,7 +81,7 @@ namespace NCL {
 
 			void SetMesh(std::shared_ptr<Mesh> M) { //Temporarily added
 				mesh = M;
-			}*/
+			}
 
 		protected:
 			GameObject* parent;

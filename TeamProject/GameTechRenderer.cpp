@@ -245,7 +245,7 @@ GameTechRenderer::GameTechRenderer(Window* window) : OGLRenderer(window), GameTe
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
 	//Mesh Animation addditions:
-	MaleGuard = LoadMesh("/MaleGuard/Male_Guard.msh");
+	//MaleGuard = LoadMesh("/MaleGuard/Male_Guard.msh");
 	//test = new MeshAnimation("/MaleGuard/Flinches.anm");
 	//material = new MeshMaterial("/MaleGuard/Male_Guard");// not sure if this is the right one. Currently, resourceManager doesn't support submeshes => no materials
 	animationShader = new OGLShader("skinningvert.glsl", "deferredscenefrag.glsl"); //not yet sure if this fragment shader can work here
@@ -278,8 +278,8 @@ GameTechRenderer::~GameTechRenderer() {
 	glDeleteTextures(1, &laserPreTex);
 	glDeleteTextures(1, &laserTexOld);
 
-	delete MaleGuard;
-	delete animationShader;
+	//delete MaleGuard;
+	//delete animationShader;
 	
 
 }
@@ -1186,7 +1186,7 @@ void GameTechRenderer::CombineBuffers() {//basically final post processing outpu
 	glBindFramebuffer(GL_FRAMEBUFFER, 0); //hdrTex should now hold full deferred lighting rendered scene
 
 }
-/*
+
 void GameTechRenderer::RenderAnimations() {
 	// if gameobject (i.e. renderObject's parent) animation == true then it can be rendered here. Calculate the necessary matrices by accessing the renderObject's animation
 	//and send the necessary info to shader. This should render players anyway even if animations not currently playing
@@ -1197,11 +1197,16 @@ void GameTechRenderer::RenderAnimations() {
 		}
 	}
 	//From here pretty much like Render Camera but for animated meshes using the animation Shader instead
+	//this should render only animated objects i.e. players which should all have submeshes and materials
 
 	Matrix4 viewMatrix = camera->BuildViewMatrix();
 	Matrix4 projMatrix = camera->BuildProjectionMatrix(hostWindow->GetScreenAspect());
 
 	UseShader(*animationShader);
+
+	//define the locations here since they don't change per mesh:
+	int colourLocation = glGetUniformLocation(animationShader->GetProgramID(), "objectColour");
+	int hasVColLocation = glGetUniformLocation(animationShader->GetProgramID(), "hasVertexColours"); 
 
 	int projLocation = glGetUniformLocation(animationShader->GetProgramID(), "projMatrix");
 	int viewLocation = glGetUniformLocation(animationShader->GetProgramID(), "viewMatrix");
@@ -1244,15 +1249,81 @@ void GameTechRenderer::RenderAnimations() {
 			size_t layerCount = (*i).GetMesh()->GetSubMeshCount();
 			for (size_t p = 0; p < layerCount; ++p) {
 				DrawBoundMesh((uint32_t)i);
-			}
+			} THIS BLOCK WILL PROBABLY BE REMOVED
 		}*/
 
-	/*	for (int k = 0; k < (*i).GetMesh()->GetSubMeshCount(); ++k) { //should the int be size_t instead?
-			glActiveTexture(GL_TEXTURE0);
-			glBindTexture(GL_TEXTURE_2D, matTextures[k]); //need to properly set up matTextures probably as a member of renderObject
+
+		//for consistency with renderCamera:
+		size_t subMeshCount = i->GetMesh()->GetSubMeshCount();
+
+		for (size_t subMeshIndex = 0; subMeshIndex < subMeshCount; ++subMeshIndex) { //should the int be size_t instead?     
+			const Material::Layer* layer = i->getMaterial() ? i->getMaterial()->GetLayer(subMeshIndex) : nullptr; //shouldn't return nullptr since all animated objects have materials
+		    //Bind textures per submesh:
+			BindTextureToShader(*layer->diffuse, "diffuseTex", 0); //should all have a diffuse texture
+
+			Matrix4 modelMatrix;
+			i->getParent()->GetTransform().getOpenGLMatrix((btScalar*)&modelMatrix);
+			modelMatrix = modelMatrix * Matrix::Scale(i->getParent()->getRenderScale());
+			glUniformMatrix4fv(modelLocation, 1, false, (float*)&modelMatrix);
+
+			Vector4 Colour = i->GetColour();
+			glUniform4fv(colourLocation, 1, &Colour.x);
+
+			glUniform1i(hasVColLocation, !(*i).GetMesh()->GetColourData().empty());
+
+
+
 			BindMesh((OGLMesh&)*(*i).GetMesh());
-			DrawBoundMesh((uint32_t)i);
+			DrawBoundMesh((uint32_t)subMeshIndex);
 		}
 	}
-}*/
+}
 
+//for reference: 
+/*
+if ((*i).getParent()->GetIsAnimated() == true) {//if object is a player, don't want it to be drawn here
+	continue; //go to next renderObject in loop
+}
+
+//if ((*i).getParent()->getType() == Player); //could instead check based on type
+size_t subMeshCount = i->GetMesh()->GetSubMeshCount();
+
+for (size_t subMeshIndex = 0; subMeshIndex < subMeshCount; ++subMeshIndex) {
+	const Material::Layer* layer = i->getMaterial() ? i->getMaterial()->GetLayer(subMeshIndex) : nullptr;
+
+	bool hasTex = layer && layer->diffuse;
+	bool hasNormal = layer && layer->normal;
+	//Bind textures per submesh
+	if (hasTex) {
+		BindTextureToShader(*layer->diffuse, "diffuseTex", 0);
+	}
+
+	if (hasNormal) {
+		BindTextureToShader(*layer->normal, "normalTex", 1);
+	}*/
+
+//FURTHER REFERENCE:
+
+/*
+		 Matrix4 modelMatrix;
+			i->getParent()->GetTransform().getOpenGLMatrix((btScalar*)&modelMatrix);
+			modelMatrix = modelMatrix * Matrix::Scale(i->getParent()->getRenderScale());
+			glUniformMatrix4fv(modelLocation, 1, false, (float*)&modelMatrix);
+
+			//Matrix4 fullShadowMat = shadowMatrix * modelMatrix; //TEMPORARILY REMOVING SHADOWS
+			//glUniformMatrix4fv(shadowLocation, 1, false, (float*)&fullShadowMat);
+
+			Vector4 colour = i->GetColour();
+			glUniform4fv(colourLocation, 1, &colour.x);
+
+			glUniform1i(hasVColLocation, !(*i).GetMesh()->GetColourData().empty());
+
+			glUniform1i(hasTexLocation, hasTex);//////////////////////////////////////////////////////
+			// TODO: Add metallic maps
+			//glUniform1i(hasMetallicLocation, i->GetMetallicMaps().size() > subMeshIndex && i->GetMetallicMaps()[subMeshIndex] != nullptr);
+			glUniform1i(hasFlatLocation, i->GetIsFlat()); ////////////////////////////////////////////////////////////
+			glUniform1i(hasNormalLocation, hasNormal); //////////////////////////////////////////
+
+			BindMesh((OGLMesh&)*(*i).GetMesh());
+			DrawBoundMesh((uint32_t)subMeshIndex);
+*/
