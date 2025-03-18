@@ -25,11 +25,11 @@ SimpleFont::SimpleFont(const std::string&filename) {
 
 
 SimpleFont::~SimpleFont()	{
-
+    FT_Done_FreeType(ft);
 }
 
 int SimpleFont::InitializeFreeType(const std::string& filename) {
-    FT_Library ft;
+    
     if (FT_Init_FreeType(&ft)) {
         std::cout << "ERROR::FREETYPE: Could not init FreeType Library" << std::endl;
         return -1;
@@ -38,6 +38,7 @@ int SimpleFont::InitializeFreeType(const std::string& filename) {
     FT_Face face;
     if (FT_New_Face(ft, (Assets::FONTSSDIR + filename).c_str(), 0, &face)) {
         std::cout << "ERROR::FREETYPE: Failed to load font" << std::endl;
+        FT_Done_FreeType(ft); // Free library before returning (not needed but good practice for resource management)
         return -1;
     }
 
@@ -89,7 +90,7 @@ int SimpleFont::InitializeFreeType(const std::string& filename) {
             texture,
             Vector2(face->glyph->bitmap.width, face->glyph->bitmap.rows),
             Vector2(face->glyph->bitmap_left, face->glyph->bitmap_top),
-            face->glyph->advance.x
+            face->glyph->advance.x >> 6 // bitshift by 6 to get value in pixels (2^6 = 64)
         };
 
         characters.insert(std::pair<char, Character>(c, character));

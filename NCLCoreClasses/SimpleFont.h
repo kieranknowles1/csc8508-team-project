@@ -28,8 +28,11 @@ namespace NCL {
                 Vector2   bearing;   // Offset from baseline to left/top of glyph
                 unsigned int advance;   // Offset to advance to next glyph
 			};
+            
+            struct FT_LibraryRec_; // Forward declaration of FreeType library
+            FT_Library ft;
 
-            std::map<char, Character> characters;
+            std::map<unsigned char, Character> characters;
 		};
 	}
 }
