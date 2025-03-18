@@ -23,8 +23,6 @@ enum class PlayerState {
 class PlayerObject : public GameObject {
 public:
 
-	inline unsigned int GetPlayerID() const { return playerID; }
-	void SetPlayerID(unsigned intplayerIDIn) {playerID = intplayerIDIn; }
 
 	void Update(float dt) override;
 
@@ -124,6 +122,7 @@ public:
 			RespawnPoint* point = Respawn::GetInstance()->GetRespawn(worldID - 1);
 			GetPhysicsObject()->GetRigidBody()->getWorldTransform().setOrigin(point->position);
 			setUpDirection(point->orientation);
+			resetCollisionType();
 			setCollided(0);
 			// TODO: Create Change State packet.
 		}
@@ -146,7 +145,6 @@ private:
 	float rotateTime = 0.5f;
 	float maxHealth = 100.0f;
 
-	unsigned int playerID;
 	int collided = 0;
 	btVector3 collisionNormal = btVector3(0, 1, 0);
 	btVector3 collisionPoint = btVector3(0, 0, 0);

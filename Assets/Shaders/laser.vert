@@ -43,7 +43,7 @@ void main(void) {
     float rippleSpeed = time * -50.0;
     float rippleAngle1 = zMapped * rippleFreq * 6.283185 + rippleSpeed;
     float rippleAngle2 = zMapped * rippleFreq * 8.283185 + rippleSpeed * 0.5;
-    float rippleStrength = 0.03 * waveDistortionFactor * sqrt(laserLength);  // Small contribution
+    float rippleStrength = 0.04 * waveDistortionFactor * sqrt(laserLength);  // Small contribution
     vec3 rippleOffset = (
         (perp1 * sin(rippleAngle1)) + (perp2 * cos(rippleAngle2))
     ) * rippleStrength;

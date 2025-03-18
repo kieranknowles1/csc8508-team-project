@@ -16,7 +16,6 @@
 #include <btBulletCollisionCommon.h>
 #include "DecalSystem.h"
 #include "Shoot.h"
-#include "Paintball.h"
 #include "Crosshair.h"
 #include "Scoreboard.h"
 #include "Overheat.h"
