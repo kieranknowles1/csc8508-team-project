@@ -72,6 +72,7 @@ void PlayerObject::OnCollisionEnter(const CollisionInfo& collisionInfo){
         collisionNormal = collisionInfo.contactNormal;
         collisionPoint = collisionInfo.contactPointA;
         collisionType = collisionInfo.otherObject->getType();
+        jumpPadHeight = collisionInfo.otherObject->getJumpPadStrength();
     }
 }
 
@@ -111,7 +112,7 @@ void PlayerObject::OnCollisionStay(const CollisionInfo& collision){
 
 	// set special type collision
     if (angle <= 25.0f) {
-        if (collision.otherObject->getType() == Type::Ice) {
+        if (collision.otherObject->getType() == Type::Ice && collisionType!= Type::JumpPad) {
             collisionType = Type::Ice;
         }
     }
@@ -119,6 +120,7 @@ void PlayerObject::OnCollisionStay(const CollisionInfo& collision){
 		collisionNormal = collision.contactNormal;
 		collisionPoint = collision.contactPointA;
         collisionType = collision.otherObject->getType();
+        jumpPadHeight = collision.otherObject->getJumpPadStrength();
 	}
 }
 

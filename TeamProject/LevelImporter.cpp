@@ -37,6 +37,7 @@ void from_json(const json& j, ObjectData& obj) {
     j.at("mainTextureName").get_to(obj.mainTextureName);
     j.at("normalTextureName").get_to(obj.normalTextureName);
     j.at("type").get_to(obj.type);
+    j.at("jumpPadStrength").get_to(obj.jumpPadStrength);
 }
 
 LevelImporter::LevelImporter(ResourceManager* resourceManager, GameWorld* worldIn, btDiscreteDynamicsWorld* bulletWorldIn) {
@@ -142,6 +143,7 @@ void LevelImporter::AddObjectToWorld(ObjectData* data) {
     world->AddGameObject(cube);
     cube->GetRenderObject()->SetTexRepeating(true);//sets texture to repeat and scale
     cube->setType(data->type);
+    cube->setJumpPadStrength(data->jumpPadStrength);
     HandleTypes(cube);
 }
 

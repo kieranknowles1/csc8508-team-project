@@ -136,6 +136,14 @@ namespace NCL::CSC8503 {
 			return type;
 		}
 
+		float getJumpPadStrength() {
+			return jumpPadStrength;
+		}
+		void setJumpPadStrength(float jumpIn) {
+			jumpPadStrength = jumpIn;
+		}
+		
+
 		static GameObject* GetGameObjectByID(int id) {
 			if (objects.contains(id)) return objects[id];
 			return nullptr;
@@ -182,6 +190,6 @@ namespace NCL::CSC8503 {
 
 		std::optional<Lobbies::User> owner;
 		std::unordered_map<uint8_t, int> lastPacketUpdates; // uint8_t is the same type used in Packet::Type and PacketType
-
+		float jumpPadStrength = 0.0f;
 	};
 }

@@ -88,9 +88,6 @@ namespace NCL {
 			//Rotation Variables
 			float rotateTime = 0.5f;
 
-			//Special Types Variables
-			float bouncePadHeight = 7000.0f;
-
 
 			GameTechRendererInterface* renderer;
 			std::unique_ptr<Crosshair> crosshair;

@@ -218,7 +218,7 @@ void PlayerController::SpecialTypeCalculations() {
         btVector3 normal = player->getCollisionNormal();
         float dotProduct = normal.dot(upDirection.absolute());
         btVector3 movement = btVector3(0, 0, 0);
-        movement += (bouncePadHeight * -player->getCollisionNormal());
+        movement += (player->getCollisionJumpPadStrength() * -player->getCollisionNormal());
         rb->setLinearVelocity(btVector3(0, 0, 0));
         player->setCollided(0);
         inAirTime = 0.2f;
