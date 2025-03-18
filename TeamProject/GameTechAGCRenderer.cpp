@@ -10,6 +10,8 @@
 
 #include "../CSC8503CoreClasses/Debug.h"
 
+#include "Material.h"
+
 using namespace NCL;
 using namespace Rendering;
 using namespace CSC8503;
@@ -543,10 +545,13 @@ void GameTechAGCRenderer::UpdateObjectList() {
 		state.texScale = g->getParent()->getRenderScale() * g->GetTexScaleMultiplier();
 		state.skinningIndex = NULLTEX;
 
-		Texture* t = g->GetDefaultTexture();
+		// TODO: Support multiple layers
+		const Material::Layer* layer = g->getMaterial() ? g->getMaterial()->GetLayer(0) : nullptr;
+
+		auto t = layer ? layer->diffuse : nullptr;
 		state.texIndex = t ? t->GetAssetID() : NULLTEX;
 
-		Texture* normal = g->GetNormalMap();
+		auto  normal = layer ? layer->normal : nullptr;
 		state.normalIndex = normal ? normal->GetAssetID() : NULLTEX;
 
 		AGCMesh* m = (AGCMesh*)g->GetMesh();
