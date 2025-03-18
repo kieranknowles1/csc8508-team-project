@@ -12,7 +12,8 @@ RenderObject::RenderObject(GameObject* parent, std::shared_ptr<Mesh> mesh, std::
 	this->normalMap = normal;
 
 	//set materials instead of textures:
-	/*for (int i = 0; i < this->mesh->GetSubMeshCount(); ++i) {
+	/*this->material = new MeshMaterial("/MaleGuard/Male_Guard.mat"); //should the .mat extension be included?
+	for (int i = 0; i < this->mesh->GetSubMeshCount(); ++i) {
 		const MeshMaterialEntry* matEntry = this->material->GetMaterialForLayer(i);   
 	}*/
 }

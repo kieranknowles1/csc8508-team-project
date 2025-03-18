@@ -40,7 +40,7 @@ namespace NCL {
 		std::map<string, std::pair<string, Rendering::Texture*>> entries;
 	};
 
-	class MeshMaterial	{
+	class MeshMaterial	{ 
 		MeshMaterial(const std::string& filename);
 		~MeshMaterial() {}
 		const MeshMaterialEntry* GetMaterialForLayer(int i) const;
