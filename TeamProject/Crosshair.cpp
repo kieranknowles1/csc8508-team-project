@@ -97,9 +97,16 @@ void Crosshair::Animate(float dt) {
 
 void Crosshair::UpdateCrosshairData()
 {
-    lines[0] = { { screenCenter.x - gapSize - lineLength, screenCenter.y },
+    screenCenter = Vector2(0.5f, 0.5f);
+    lineLength = 0.01f;
+    lineThickness = 0.0025f;
+    horizontalLineThickness = 0.0035f;
+    horizontalLineLength = 0.006f;
+    gapSize = 0.013f;
+
+    lines[0] = { { screenCenter.x - gapSize - horizontalLineLength* 0.5f, screenCenter.y },
                  { horizontalLineLength, horizontalLineThickness } };
-    lines[1] = { { screenCenter.x + gapSize + lineLength, screenCenter.y },
+    lines[1] = { { screenCenter.x + gapSize + horizontalLineLength * 0.5f, screenCenter.y },
                  { horizontalLineLength, horizontalLineThickness } };
     lines[2] = { { screenCenter.x, screenCenter.y + gapSize + lineLength },
                  { lineThickness, lineLength } };

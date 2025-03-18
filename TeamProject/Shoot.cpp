@@ -92,7 +92,7 @@ void Shoot::SpawnBulletMesh(btVector3 startPos, btVector3 dir, btQuaternion rota
     paintball->SetRenderObject(new RenderObject(
         paintball,
         resourceManager->getMeshes().get("Sphere.msh"),
-        nullptr
+        std::shared_ptr<Rendering::Texture>()
     ));
     paintball->GetRenderObject()->SetIsFlat(true);
     paintball->SetPhysicsObject(new PhysicsObject(paintball));
