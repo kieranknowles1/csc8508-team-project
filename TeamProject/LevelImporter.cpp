@@ -51,7 +51,7 @@ LevelImporter::~LevelImporter() {
 
 void LevelImporter::ClearObjects() {
     for (auto obj : objects) {
-       delete obj;
+        delete obj;
     }
     objects.clear();
 }
@@ -88,7 +88,7 @@ void LevelImporter::LoadLevel(int level) {
             << " Scale: (" << obj->scale.x() << ", " << obj->scale.y() << ", " << obj->scale.z() << ")\n"
             << "Collider Position: (" << obj->colliderPosition.x() << ", " << obj->colliderPosition.y() << ", " << obj->colliderPosition.z() << ")"
             << " Collider Scale: (" << obj->colliderScale.x() << ", " << obj->colliderScale.y() << ", " << obj->colliderScale.z() << ")\n\n";*/
-            AddObjectToWorld(obj);
+        AddObjectToWorld(obj);
     }
 
     // Immediately free anything not needed by the new scene that was loaded for the old one
@@ -103,19 +103,19 @@ void LevelImporter::AddObjectToWorld(ObjectData* data) {
     Mesh* selectedMesh = nullptr;
     // TODO: Don't hard code this
     bool isFloor = data->meshName == "corridor_walls_and_floor/Corridor_Floor_Basic";
-	cube->setInitialPosition(data->position * scale);
+    cube->setInitialPosition(data->position * scale);
 
     cube->setInitialRotation(data->rotation);
-    cube->setRenderScale(data->scale* scale);
+    cube->setRenderScale(data->scale * scale);
 
 
     // Divide by 2 for half-size
     btCompoundShape* compoundShape = nullptr;
-    bool hasCollision = (data->colliderScale != btVector3(0,0,0));
+    bool hasCollision = (data->colliderScale != btVector3(0, 0, 0));
     if (hasCollision) {
         compoundShape = new btCompoundShape();
         compoundShape->setUserIndex((int)PhysicsObject::ShapeType::Compound);
-        btCollisionShape* boxShape = new btBoxShape(data->colliderScale * scale* data->scale / 2.0f);
+        btCollisionShape* boxShape = new btBoxShape(data->colliderScale * scale * data->scale / 2.0f);
         btTransform colliderOffset;
         colliderOffset.setIdentity();
         colliderOffset.setOrigin(data->colliderPosition * scale);
@@ -129,7 +129,7 @@ void LevelImporter::AddObjectToWorld(ObjectData* data) {
     // TODO: Include file extensions
     auto mainTexture = [&](const std::string& tex) {
         return tex.empty() ? resourceManager->getTextures().get("checkerboard.png") : resourceManager->getTextures().get(tex + ".jpg");
-    };
+        };
     auto normalTexture = [&](const std::string& tex) {
         return tex.empty() ? nullptr : resourceManager->getTextures().get(tex + ".png");
         };
@@ -148,11 +148,11 @@ void LevelImporter::AddObjectToWorld(ObjectData* data) {
 btVector4 LevelImporter::LightColour() {
     switch (lightCount) {
     case 0: return btVector4(1.0f, 0.0f, 0.0f, 1.0f); // Red
-    case 1: return btVector4(0.0f, 1.0f, 0.0f, 1.0f); // Green
-    case 2: return btVector4(0.0f, 0.0f, 1.0f, 1.0f); // Blue
+    case 1: return btVector4(1.0f, 1.0f, 0.0f, 1.0f); // Yellow
+    case 2: return btVector4(0.0f, 1.0f, 0.0f, 1.0f); // Green
     case 3: return btVector4(0.0f, 1.0f, 1.0f, 1.0f); // Cyan
     case 4: return btVector4(1.0f, 0.0f, 1.0f, 1.0f); // Magenta
-    case 5: return btVector4(1.0f, 1.0f, 0.0f, 1.0f); // Yellow
+    case 5: return btVector4(0.0f, 0.0f, 1.0f, 1.0f); // Blue
     default: return btVector4(1.0f, 1.0f, 1.0f, 1.0f); // White (fallback, shouldn't be hit)
     }
 }
@@ -186,7 +186,7 @@ void LevelImporter::HandleTypes(GameObject* obj) {
     case GameObject::Type::PointLight:
         obj->GetRenderObject()->SetDefaultTexture(nullptr);
         obj->GetRenderObject()->SetNormal(nullptr);
-        world->AddPointLight(new PointLight(obj->GetPhysicsObject()->GetRigidBody()->getWorldTransform().getOrigin(), 950,1, colourLight));
+        world->AddPointLight(new PointLight(obj->GetPhysicsObject()->GetRigidBody()->getWorldTransform().getOrigin(), 950, 1, colourLight));
         colourLight *= 10;
         colourLight.setW(1.0f);
         obj->GetRenderObject()->SetColour(colourLight);
@@ -196,7 +196,7 @@ void LevelImporter::HandleTypes(GameObject* obj) {
     {
         btMatrix3x3 rotationMatrixCam(obj->GetTransform().getRotation());
         btVector3 upwards = rotationMatrixCam * btVector3(0, 1, 0); // Apply rotation to the offset
-        RespawnPoint* respawnPoint = new RespawnPoint(obj->GetTransform().getOrigin(),upwards);
+        RespawnPoint* respawnPoint = new RespawnPoint(obj->GetTransform().getOrigin(), upwards);
         Respawn::GetInstance()->InsertRespawn(respawnPoint);
         break;
     }

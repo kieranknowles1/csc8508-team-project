@@ -151,6 +151,9 @@ namespace NCL {
 
 			Matrix4 laserPreviousViewProjMatrix;
 
+			GLuint edgeNormalsFBO;
+			std::unique_ptr<OGLShader> edgeNormals;
+			GLuint edgeNormalsTex;
 			std::unique_ptr<OGLShader> edgedetectShader;
 
 		};
