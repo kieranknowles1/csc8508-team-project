@@ -31,7 +31,15 @@ namespace NCL::Rendering {
 			assetID = newID;
 		}
 
+		virtual void load(const std::string& name) = 0;
+		virtual void upload() = 0;
 	protected:
+		char* texData		= nullptr;
+		uint32_t width		= 0;
+		uint32_t height		= 0;
+		uint32_t channels	= 0;
+		uint32_t flags		= 0;
+
 		Texture();
 
 		Vector2ui		dimensions;

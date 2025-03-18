@@ -23,50 +23,23 @@ OGLTexture::OGLTexture(GLuint texToOwn) {
 
 OGLTexture::~OGLTexture()	{
 	glDeleteTextures(1, &texID);
+	free(texData);
 }
 
 UniqueOGLTexture OGLTexture::TextureFromData(char* data, uint32_t width, uint32_t height, uint32_t channels) {
 	UniqueOGLTexture tex = std::make_unique<OGLTexture>();
-	tex->dimensions = { width, height };
-
-	int dataSize = width * height * channels; //This always assumes data is 1 byte per channel
-
-	int sourceType = GL_RGB;
-
-	switch (channels) {
-		case 1: sourceType = GL_RED	; break;
-		case 2: sourceType = GL_RG	; break;
-		case 3: sourceType = GL_RGB	; break;
-		case 4: sourceType = GL_RGBA; break;
-	}
-
-	glBindTexture(GL_TEXTURE_2D, tex->texID);
-
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, sourceType, GL_UNSIGNED_BYTE, data);
-
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-	glGenerateMipmap(GL_TEXTURE_2D);
-
-	glBindTexture(GL_TEXTURE_2D, 0);
-
-	return tex;
+	tex->texData = data;
+	tex->width = width;
+	tex->height = height;
+	tex->channels = channels;
+	tex->upload();
 }
 
 UniqueOGLTexture OGLTexture::TextureFromFile(const std::string&name) {
-	char* texData		= nullptr;
-	uint32_t width		= 0;
-	uint32_t height		= 0;
-	uint32_t channels	= 0;
-	uint32_t flags		= 0;
-	TextureLoader::LoadTexture(name, texData, width, height, channels, flags);
-
-	UniqueOGLTexture glTex = TextureFromData(texData, width, height, channels);
-
-	free(texData);
-
-	return glTex;
+	UniqueOGLTexture tex = std::make_unique<OGLTexture>();
+	tex->load(name);
+	tex->upload();
+	return tex;
 }
 
 UniqueOGLTexture OGLTexture::LoadCubemap(
@@ -112,4 +85,36 @@ UniqueOGLTexture OGLTexture::LoadCubemap(
 	glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
 
 	return tex;
+}
+
+void OGLTexture::load(const std::string& name)
+{
+	TextureLoader::LoadTexture(name, texData, width, height, channels, flags);
+}
+
+void OGLTexture::upload()
+{
+	int dataSize = width * height * channels; //This always assumes data is 1 byte per channel
+
+	int sourceType = GL_RGB;
+
+	switch (channels) {
+		case 1: sourceType = GL_RED	; break;
+		case 2: sourceType = GL_RG	; break;
+		case 3: sourceType = GL_RGB	; break;
+		case 4: sourceType = GL_RGBA; break;
+	}
+
+	glBindTexture(GL_TEXTURE_2D, texID);
+
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, sourceType, GL_UNSIGNED_BYTE, texData);
+
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+	glGenerateMipmap(GL_TEXTURE_2D);
+
+	glBindTexture(GL_TEXTURE_2D, 0);
+	free(texData);
+	texData = nullptr;
 }

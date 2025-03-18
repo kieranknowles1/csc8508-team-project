@@ -3,16 +3,17 @@
 Tests performed with the following:
 
 - Clang++ 19.1.7
-- Linux
+- Linux 
 - Debug build
 - Ryzen 7 5800X CPU
 
-Before threading:
+Methodology: Basic time measurement was added, and each test was repeated 3
+times. Nowhere near scientific.
 
-| Before Threading |
-| ---------------- |
-| 418ms            |
-| 424ms            |
-| 424ms            |
-| Average          |
-| 422ms            |
+| Before Threading | 12 Threads |
+| ---------------- | ---------- |
+| 418ms            | 52ms       |
+| 424ms            | 52ms       |
+| 424ms            | 52ms       |
+| Average          |            |
+| 422ms            | 52ms       |
