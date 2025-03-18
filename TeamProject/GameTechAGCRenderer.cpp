@@ -261,6 +261,10 @@ void GameTechAGCRenderer::MainRenderPass() {
 	frameContext->m_sb.setState(sceneBuffer.target);
 	frameContext->m_sb.setState(sceneNormalBuffer.target);
 
+	auto result = sce::Agc::Toolkit::clearRenderTargetCs(&frameContext->m_dcb, &sceneBuffer.target);
+	result |= sce::Agc::Toolkit::clearRenderTargetCs(&frameContext->m_dcb, &sceneNormalBuffer.target);
+	frameContext->resetToolkitChangesAndSyncToGl2(result);
+
 	frameContext->m_sb.setState(depthTarget);
 
 	sce::Agc::CxBlendControl blendControl;
