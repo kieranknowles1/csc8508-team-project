@@ -152,12 +152,13 @@ namespace Multiplayer {
         while (currentPacket.get() != nullptr) {
 
             // Process packets that have a sequence of zero (usually high priority).
-            if (currentPacket->GetSequenceNumber() == 0 ) {
+            if (currentPacket->GetChannel() == (uint8_t) Channel::RELIABLE ) {
                 Packet::PacketRegister::GetHandler(currentPacket->GetType())->Handle(currentPacket);
             }
 
             // Add packet to the buffer.
             else {
+
             }
 
 
