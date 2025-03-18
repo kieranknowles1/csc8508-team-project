@@ -11,6 +11,9 @@ https://research.ncl.ac.uk/game/
 #include "TextureLoader.h"
 #include "Assets.h"
 
+#include <ft2build.h>
+#include FT_FREETYPE_H
+
 using namespace NCL;
 using namespace Rendering;
 using namespace Maths;
@@ -41,11 +44,27 @@ SimpleFont::SimpleFont(const std::string&filename, Texture& tex) : texture(tex)	
 	}
 	texWidthRecip	= 1.0f / texWidth;
 	texHeightRecip	= 1.0f / texHeight;
+    
+    InitializeFreeType(filename);
 }
 
 
 SimpleFont::~SimpleFont()	{
 	delete[]	allCharData;
+}
+
+int SimpleFont::InitializeFreeType(const std::string& filename) {
+    FT_Library ft;
+    if (FT_Init_FreeType(&ft)) {
+        std::cout << "ERROR::FREETYPE: Could not init FreeType Library" << std::endl;
+        return -1;
+    }
+
+    FT_Face face;
+    if (FT_New_Face(ft, (Assets::FONTSSDIR + filename).c_str(), 0, &face)) {
+        std::cout << "ERROR::FREETYPE: Failed to load font" << std::endl;
+        return -1;
+    }
 }
 
 int SimpleFont::GetVertexCountForString(const std::string& text) {

@@ -13,10 +13,12 @@ namespace NCL {
 	namespace Rendering {
 		class Texture;
 
-		class SimpleFont	{
+		class SimpleFont {
 		public:
 			SimpleFont(const std::string&fontName, Texture& tex);
 			~SimpleFont();
+
+            int InitializeFreeType();
 
 			struct InterleavedTextVertex {
 				NCL::Maths::Vector2 pos;
