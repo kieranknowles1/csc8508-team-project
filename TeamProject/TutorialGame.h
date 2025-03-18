@@ -218,7 +218,6 @@ namespace NCL {
             //Player things
             PlayerObject* InitPlayer(btVector3 position, btVector3 upDir);
             PerspectiveCamera* mainCamera;
-            GameObject* gun;
             std::unique_ptr<PlayerController> playerController;
             bool freeCam = false;
             bool thirdPerson = false;

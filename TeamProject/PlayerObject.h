@@ -136,6 +136,7 @@ public:
 	float health = 100.0f;
 
 	void setGun(GameObject* gunIn) { gun = gunIn; }
+	GameObject* getGun() {return gun;}
 	void SetGunTransform(float pitch, float yaw, btVector3 camPos);
 
 private:
