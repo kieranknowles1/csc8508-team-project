@@ -12,45 +12,20 @@ https://research.ncl.ac.uk/game/
 #include "Assets.h"
 
 #include <ft2build.h>
+#include "../OpenGLRendering/glad/gl.h"
 #include FT_FREETYPE_H
 
 using namespace NCL;
 using namespace Rendering;
 using namespace Maths;
 
-SimpleFont::SimpleFont(const std::string&filename, Texture& tex) : texture(tex)	{
-	startChar	= 0;
-	numChars	= 0;
-	allCharData	= nullptr;
-
-	std::ifstream fontFile(Assets::FONTSSDIR + filename);
-
-	fontFile >> texWidth;
-	fontFile >> texHeight;
-	fontFile >> startChar;
-	fontFile >> numChars;
-
-	allCharData = new FontChar[numChars];
-
-	for (int i = 0; i < numChars; ++i) {
-		fontFile >> allCharData[i].x0;
-		fontFile >> allCharData[i].y0;
-		fontFile >> allCharData[i].x1;
-		fontFile >> allCharData[i].y1;
-
-		fontFile >> allCharData[i].xOff;
-		fontFile >> allCharData[i].yOff;
-		fontFile >> allCharData[i].xAdvance;
-	}
-	texWidthRecip	= 1.0f / texWidth;
-	texHeightRecip	= 1.0f / texHeight;
-    
+SimpleFont::SimpleFont(const std::string&filename) {
     InitializeFreeType(filename);
 }
 
 
 SimpleFont::~SimpleFont()	{
-	delete[]	allCharData;
+
 }
 
 int SimpleFont::InitializeFreeType(const std::string& filename) {
@@ -67,154 +42,60 @@ int SimpleFont::InitializeFreeType(const std::string& filename) {
     }
 
     FT_Set_Pixel_Sizes(face, 0, 48); // 0 width lets FreeType calculate the width based on the height
-}
 
-int SimpleFont::GetVertexCountForString(const std::string& text) {
-	int count = 0;
-	for (auto ch : text) {
-		if (ch != '\n' && ch != '\r') {
-			count += 6;
-		}
-	}
-	return count;
-}
+    // Setting FT_LOAD_RENDER flag to render the character as an 8-bit grayscale bitmap
+    // This is required to extract the glyph's bitmap data and can be accessed through face->glyph->bitmap
+    if (FT_Load_Char(face, 'X', FT_LOAD_RENDER)) { // Load character X
+        std::cout << "ERROR::FREETYPE: Failed to load Glyph" << std::endl;
+        return -1;
+    }
 
-void SimpleFont::BuildVerticesForString(const std::string& text, const Vector2& startPos, const Vector4& colour, float size, std::vector<Vector3>& positions, std::vector<Vector2>& texCoords, std::vector<Vector4>& colours) {
-	int endChar = startChar + numChars;
+    // set the unpack alignment to 1 to avoid any byte alignment issues
+    glPixelStorei(GL_UNPACK_ALIGNMENT, 1); // Disable byte-alignment restriction (default is 4 but we're using single byte per pixel)
 
-	float currentX = 0.0f;
-	float currentY = startPos.y;
+    for (unsigned char c = 0; c < 128; c++)
+    {
+        // load character glyph
+        if (FT_Load_Char(face, c, FT_LOAD_RENDER))
+        {
+            std::cout << "ERROR::FREETYPE: Failed to load Glyph" << std::endl;
+            continue;
+        }
 
-	positions.reserve(positions.size() + (text.length() * 6));
-	colours.reserve(colours.size() + (text.length() * 6));
-	texCoords.reserve(texCoords.size() + (text.length() * 6));
+        // generate texture
+        unsigned int texture;
+        glGenTextures(1, &texture);
+        glBindTexture(GL_TEXTURE_2D, texture);
+        glTexImage2D(
+            GL_TEXTURE_2D,
+            0,
+            GL_RED, // format of the texture, we're using a single channel for the bitmap
+            face->glyph->bitmap.width,
+            face->glyph->bitmap.rows,
+            0,
+            GL_RED,
+            GL_UNSIGNED_BYTE,
+            face->glyph->bitmap.buffer
+        );
 
-	for (char charIndex : text) {
-		if (charIndex == '\n') {
-			currentX = 0;
-			currentY += 0.25f * size;
-			continue;
-		}
-		if (charIndex == '\r') {
-			continue;
-		}
-		if (charIndex < startChar) {
-			continue;
-		}
-		if (charIndex > endChar) {
-			continue;
-		}
-		FontChar& charData = allCharData[charIndex - startChar];
+        // set texture options
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-		float scale = size;
-		//For basic vertex buffers, we're assuming we should add 6 vertices
+        // now store character for later use
+        Character character = {
+            texture,
+            Vector2(face->glyph->bitmap.width, face->glyph->bitmap.rows),
+            Vector2(face->glyph->bitmap_left, face->glyph->bitmap_top),
+            face->glyph->advance.x
+        };
 
-		float charWidth = (float)((charData.x1 - charData.x0) / texWidth) * scale;
-		float charHeight = (float)(charData.y1 - charData.y0);
+        characters.insert(std::pair<char, Character>(c, character));
+    }
 
-		float xStart = ((charData.xOff + currentX) * texWidthRecip) * scale;
-		float yStart = currentY;
-		float yHeight = (charHeight * texHeightRecip) * scale;
-		float yOff = ((charHeight + charData.yOff) * texHeightRecip) * scale;
-
-		positions.emplace_back(Vector3(startPos.x + xStart, yStart + yOff, 0));
-		positions.emplace_back(Vector3(startPos.x + xStart, yStart + yOff - yHeight, 0));
-		positions.emplace_back(Vector3(startPos.x + xStart + charWidth, yStart + yOff - yHeight, 0));
-
-		positions.emplace_back(Vector3(startPos.x + xStart + charWidth, yStart + yOff - yHeight, 0));
-		positions.emplace_back(Vector3(startPos.x + xStart + charWidth, yStart + yOff, 0));
-		positions.emplace_back(Vector3(startPos.x + xStart, yStart + yOff, 0));
-
-		colours.emplace_back(colour);
-		colours.emplace_back(colour);
-		colours.emplace_back(colour);
-
-		colours.emplace_back(colour);
-		colours.emplace_back(colour);
-		colours.emplace_back(colour);
-
-		texCoords.emplace_back(Vector2(charData.x0 * texWidthRecip, charData.y1 * texHeightRecip));
-		texCoords.emplace_back(Vector2(charData.x0 * texWidthRecip, charData.y0 * texHeightRecip));
-		texCoords.emplace_back(Vector2(charData.x1 * texWidthRecip, charData.y0 * texHeightRecip));
-
-		texCoords.emplace_back(Vector2(charData.x1 * texWidthRecip, charData.y0 * texHeightRecip));
-		texCoords.emplace_back(Vector2(charData.x1 * texWidthRecip, charData.y1 * texHeightRecip));
-		texCoords.emplace_back(Vector2(charData.x0 * texWidthRecip, charData.y1 * texHeightRecip));
-
-		currentX += charData.xAdvance;
-	}
-}
-
-void SimpleFont::BuildInterleavedVerticesForString(const std::string& text, const Maths::Vector2& startPos, const Maths::Vector4& colour, float size, std::vector<InterleavedTextVertex>& vertices) {
-	int endChar = startChar + numChars;
-
-	float currentX = 0.0f;
-	float currentY = startPos.y;
-
-	vertices.reserve(text.length() * 6);
-
-	InterleavedTextVertex verts[6];
-
-	for (char charIndex : text) {
-		if (charIndex == '\n') {
-			currentX = 0;
-			currentY += 0.25f * size;
-			continue;
-		}
-		if (charIndex == '\r') {
-			continue;
-		}
-		if (charIndex < startChar) {
-			continue;
-		}
-		if (charIndex > endChar) {
-			continue;
-		}
-		FontChar& charData = allCharData[charIndex - startChar];
-
-		float scale = size;
-		//For basic vertex buffers, we're assuming we should add 6 vertices
-
-		float charWidth = (float)((charData.x1 - charData.x0) / texWidth) * scale;
-		float charHeight = (float)(charData.y1 - charData.y0);
-
-		float xStart = ((charData.xOff + currentX) * texWidthRecip) * scale;
-		float yStart = currentY;
-		float yHeight = (charHeight * texHeightRecip) * scale;
-		float yOff = ((charHeight + charData.yOff) * texHeightRecip) * scale;
-
-		verts[0].pos = Vector2(startPos.x + xStart, yStart + yOff);
-		verts[1].pos = Vector2(startPos.x + xStart, yStart + yOff - yHeight);
-		verts[2].pos = Vector2(startPos.x + xStart + charWidth, yStart + yOff - yHeight);
-
-		verts[3].pos = (Vector2(startPos.x + xStart + charWidth, yStart + yOff - yHeight));
-		verts[4].pos = Vector2(startPos.x + xStart + charWidth, yStart + yOff);
-		verts[5].pos = Vector2(startPos.x + xStart, yStart + yOff);
-
-		verts[0].colour = colour;
-		verts[1].colour = colour;
-		verts[2].colour = colour;
-
-		verts[3].colour = colour;
-		verts[4].colour = colour;
-		verts[5].colour = colour;
-
-		verts[0].texCoord = Vector2(charData.x0 * texWidthRecip, charData.y1 * texHeightRecip);
-		verts[1].texCoord = Vector2(charData.x0 * texWidthRecip, charData.y0 * texHeightRecip);
-		verts[2].texCoord = Vector2(charData.x1 * texWidthRecip, charData.y0 * texHeightRecip);
-
-		verts[3].texCoord = Vector2(charData.x1 * texWidthRecip, charData.y0 * texHeightRecip);
-		verts[4].texCoord = Vector2(charData.x1 * texWidthRecip, charData.y1 * texHeightRecip);
-		verts[5].texCoord = Vector2(charData.x0 * texWidthRecip, charData.y1 * texHeightRecip);
-
-		vertices.emplace_back(verts[0]);
-		vertices.emplace_back(verts[1]);
-		vertices.emplace_back(verts[2]);
-
-		vertices.emplace_back(verts[3]);
-		vertices.emplace_back(verts[4]);
-		vertices.emplace_back(verts[5]);
-
-		currentX += charData.xAdvance;
-	}
+    // clear the face and free the FreeType library
+    FT_Done_Face(face);
+    FT_Done_FreeType(ft);
 }

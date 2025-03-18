@@ -15,47 +15,21 @@ namespace NCL {
 
 		class SimpleFont {
 		public:
-			SimpleFont(const std::string&fontName, Texture& tex);
+			SimpleFont(const std::string&fontName);
 			~SimpleFont();
 
             int InitializeFreeType(const std::string& filename);
 
-			struct InterleavedTextVertex {
-				NCL::Maths::Vector2 pos;
-				NCL::Maths::Vector2 texCoord;
-				NCL::Maths::Vector4 colour;
-			};
-
-			int  GetVertexCountForString(const std::string& text);
-			void BuildVerticesForString(const std::string& text, const Maths::Vector2& startPos, const Maths::Vector4& colour, float size, std::vector<Maths::Vector3>& positions, std::vector<Maths::Vector2>& texCoords, std::vector<Maths::Vector4>& colours);
-			void BuildInterleavedVerticesForString(const std::string& text, const Maths::Vector2& startPos, const Maths::Vector4& colour, float size, std::vector<InterleavedTextVertex>& vertices);
-			
-			const Texture* GetTexture() const {
-				return &texture;
-			}
-
 		protected:
-			//matches stbtt_bakedchar
-			struct FontChar {
-				unsigned short x0;
-				unsigned short y0;
-				unsigned short x1;
-				unsigned short y1;
-				float xOff;
-				float yOff;
-				float xAdvance;
+            // Metrics of a character glyph
+			struct Character {
+                unsigned int textureID; // ID handle of the glyph texture
+                Vector2 size;      // Size of glyph
+                Vector2   bearing;   // Offset from baseline to left/top of glyph
+                unsigned int advance;   // Offset to advance to next glyph
 			};
 
-			FontChar*	allCharData;
-			Texture&	texture;
-
-			int startChar;
-			int numChars;
-
-			float texWidth;
-			float texHeight;
-			float texWidthRecip;
-			float texHeightRecip;
+            std::map<char, Character> characters;
 		};
 	}
 }
