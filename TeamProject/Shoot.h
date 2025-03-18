@@ -66,7 +66,6 @@ namespace NCL {
 			std::string decalTexturePath3 = "paintball_splash_3.png";
 			std::string decalTexturePath4 = "paintball_splash_4.png";
 
-			void SpawnBulletMesh(btVector3 startPos, btVector3 dir, btQuaternion bulletRotation, ShotInfo* rayInfo);
 			void SpawnDecal(ShotInfo* shotinfo);
 			inline static Shoot* instance = nullptr;
 			btDiscreteDynamicsWorld* bulletWorld;
