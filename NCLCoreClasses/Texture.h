@@ -31,9 +31,14 @@ namespace NCL::Rendering {
 			assetID = newID;
 		}
 
+		const std::string& getFileName() {
+			return fileName;
+		}
+
 	protected:
 		Texture();
 
+		std::string fileName;
 		Vector2ui		dimensions;
 		uint32_t		assetID;
 	};
