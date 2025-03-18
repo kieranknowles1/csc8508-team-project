@@ -71,7 +71,7 @@ namespace WorldState {
         inline bool HasState() const { return m_states.size() > 0; }
 
         void Clear() {
-            std::unique_lock(m_stateLock);
+            std::unique_lock lock(m_stateLock);
             m_states.clear();
         }
 

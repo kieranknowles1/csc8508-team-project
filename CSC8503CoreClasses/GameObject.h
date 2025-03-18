@@ -84,27 +84,10 @@ namespace NCL::CSC8503 {
             //std::cout << "OnCollisionStay: " << this->GetWorldID() << " is still colliding with " << otherObject->GetWorldID() << std::endl;
         }
 
-        virtual void Update(float dt) {
-            GetPhysicsObject()->GetRigidBody()->setLinearVelocity(std::get<btVector3>(objectWorldState.ReadState(WorldState::StateType::LinearVelocity)));
-            GetPhysicsObject()->GetRigidBody()->setAngularVelocity(std::get<btVector3>(objectWorldState.ReadState(WorldState::StateType::AngularVelocity)));
-            GetPhysicsObject()->GetRigidBody()->getWorldTransform().setOrigin(std::get<btVector3>(objectWorldState.ReadState(WorldState::StateType::Position)));
-            GetPhysicsObject()->GetRigidBody()->getWorldTransform().setRotation(std::get<btQuaternion>(objectWorldState.ReadState(WorldState::StateType::Rotation)));
+        virtual void UpdateObjectState();
+        virtual void UpdateFromState();
 
-            std::vector<std::pair<WorldState::StateType, WorldState::StateValue>> stateUpdates;
-            stateUpdates.push_back(
-                { WorldState::StateType::LinearVelocity, GetPhysicsObject()->GetRigidBody()->getLinearVelocity() }
-            );
-            stateUpdates.push_back(
-                { WorldState::StateType::AngularVelocity, GetPhysicsObject()->GetRigidBody()->getAngularVelocity() }
-            );
-            stateUpdates.push_back(
-                { WorldState::StateType::Position, GetPhysicsObject()->GetRigidBody()->getWorldTransform().getOrigin() }
-            );
-            stateUpdates.push_back(
-                { WorldState::StateType::Rotation, GetPhysicsObject()->GetRigidBody()->getWorldTransform().getRotation() }
-            );
-            objectWorldState.UpdateStates(stateUpdates);
-        }
+        virtual void Update(float dt) {}
 
         void SetWorldID(int newID) {
             worldID = newID;

@@ -1,6 +1,7 @@
 #include "PlayerObject.h"
 #include "TutorialGame.h"
 #include "Multiplayer/GamePackets.hpp"
+#include "Multiplayer/Server.hpp"
 
 #include <memory>
 
@@ -21,7 +22,9 @@ void PlayerObject::Update(float dt) {
         health += 25 * dt;
         if (health > maxHealth) health = maxHealth;
     }
+}
 
+void PlayerObject::UpdateObjectState() {
     std::vector<std::pair<WorldState::StateType, WorldState::StateValue>> stateUpdates;
     stateUpdates.push_back(
         { WorldState::StateType::LinearVelocity, GetPhysicsObject()->GetRigidBody()->getLinearVelocity() }
@@ -39,6 +42,23 @@ void PlayerObject::Update(float dt) {
         { WorldState::StateType::UpVector, upDirection }
     );
     objectWorldState.UpdateStates(stateUpdates);
+}
+
+void PlayerObject::UpdateFromState() {
+    if (objectWorldState.HasState()) {
+        btRigidBody* body = GetPhysicsObject()->GetRigidBody();
+
+        objectWorldState.AcquireReadLock();
+
+        body->setLinearVelocity(std::get<btVector3>(objectWorldState.UnsafeReadState(WorldState::StateType::LinearVelocity)));
+        body->setAngularVelocity(std::get<btVector3>(objectWorldState.UnsafeReadState(WorldState::StateType::AngularVelocity)));
+
+        body->getWorldTransform().setOrigin(std::get<btVector3>(objectWorldState.UnsafeReadState(WorldState::StateType::Position)));
+        body->getWorldTransform().setRotation(std::get<btQuaternion>(objectWorldState.UnsafeReadState(WorldState::StateType::Rotation)));
+
+        objectWorldState.ReleaseReadLock();
+        objectWorldState.Clear();
+    }
 }
 
 void PlayerObject::OnCollisionEnter(const CollisionInfo& collisionInfo){

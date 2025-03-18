@@ -49,7 +49,6 @@ public:
 		renderer->updateLaser(GetWorldID(), startPos, endPos);
 	}
 
-
 	void setUpDirection(btVector3 target) {
 		upDirection = target;
 		targetWorldRotation = target;
@@ -138,8 +137,9 @@ public:
 	void setGun(GameObject* gunIn) { gun = gunIn; }
 	void SetGunTransform(float pitch, float yaw, btVector3 camPos);
 
+	void UpdateObjectState() override;
+	void UpdateFromState() override;
 private:
-
 	//Player Variables
 	float gravityScale = 400.0f;
 	float rotateTime = 0.5f;
