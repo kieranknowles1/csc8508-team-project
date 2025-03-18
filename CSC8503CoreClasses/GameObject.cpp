@@ -41,18 +41,26 @@ void GameObject::UpdateObjectState() {
 }
 
 void GameObject::UpdateFromState() {
-    if (objectWorldState.Size() == 4) {
-        btRigidBody* body = GetPhysicsObject()->GetRigidBody();
+    btRigidBody* body = GetPhysicsObject()->GetRigidBody();
+    objectWorldState.AcquireReadLock();
 
-        objectWorldState.AcquireReadLock();
-
+    if (objectWorldState.UnsafeHasValue(WorldState::StateType::LinearVelocity)) {
         body->setLinearVelocity(std::get<btVector3>(objectWorldState.UnsafeReadState(WorldState::StateType::LinearVelocity)));
-        body->setAngularVelocity(std::get<btVector3>(objectWorldState.UnsafeReadState(WorldState::StateType::AngularVelocity)));
-
-        body->getWorldTransform().setOrigin(std::get<btVector3>(objectWorldState.UnsafeReadState(WorldState::StateType::Position)));
-        body->getWorldTransform().setRotation(std::get<btQuaternion>(objectWorldState.UnsafeReadState(WorldState::StateType::Rotation)));
-
-        objectWorldState.ReleaseReadLock();
-        objectWorldState.Clear();
     }
+
+    if (objectWorldState.UnsafeHasValue(WorldState::StateType::AngularVelocity)) {
+        body->setAngularVelocity(std::get<btVector3>(objectWorldState.UnsafeReadState(WorldState::StateType::AngularVelocity)));
+    }
+
+    if (objectWorldState.UnsafeHasValue(WorldState::StateType::Position)) {
+        btVector3 position = std::get<btVector3>(objectWorldState.UnsafeReadState(WorldState::StateType::Position));
+        body->getWorldTransform().setOrigin(position);
+    }
+
+    if (objectWorldState.UnsafeHasValue(WorldState::StateType::Rotation)) {
+        body->getWorldTransform().setRotation(std::get<btQuaternion>(objectWorldState.UnsafeReadState(WorldState::StateType::Rotation)));
+    }
+
+    objectWorldState.UnsafeClear();
+    objectWorldState.ReleaseReadLock();
 }

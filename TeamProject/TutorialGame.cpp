@@ -625,7 +625,7 @@ void TutorialGame::Start() {
     instance->LoadWorldFromFile(9);
     
     // Spawn in player.
-    std::array<PlayerObject*, 2> players;
+    std::array<PlayerObject*, 4> players;
 
     for (int i = 0; i < players.size(); i++) {
         User user(i);

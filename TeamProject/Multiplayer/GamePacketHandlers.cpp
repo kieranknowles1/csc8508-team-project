@@ -12,6 +12,8 @@ namespace Packet {
 
         if (object == nullptr) return;
 
+        if (TutorialGame::getInstance()->GetServerInstance()->IsOwnerOf(object)) return;
+
         object->GetWorldState().UpdateState({ WorldState::StateType::LinearVelocity, deltaPacket->GetLinearVelocity() });
         object->GetWorldState().UpdateState({ WorldState::StateType::AngularVelocity, deltaPacket->GetAngularVelocity() });
     }
@@ -177,13 +179,14 @@ namespace Packet {
 #pragma region PositonPacketHandler
     void PositionPacketHandler::Handle(const std::shared_ptr<Packet> packet) {
         const PositionPacket* positionPacket = std::static_pointer_cast<PositionPacket>(packet).get();
-        GameObject* targetObject = GameObject::GetGameObjectByID(positionPacket->GetTargetID());
+        GameObject* object = GameObject::GetGameObjectByID(positionPacket->GetTargetID());
 
-        if (targetObject == nullptr) return;
+        if (object == nullptr) return;
 
-        btRigidBody* body = targetObject->GetPhysicsObject()->GetRigidBody();
-        body->getWorldTransform().setOrigin(positionPacket->GetPosition());
-        body->getWorldTransform().setRotation(positionPacket->GetOrientation());
+        if (TutorialGame::getInstance()->GetServerInstance()->IsOwnerOf(object)) return;
+
+        object->GetWorldState().UpdateState({ WorldState::StateType::Position, positionPacket->GetPosition() });
+        object->GetWorldState().UpdateState({ WorldState::StateType::Rotation, positionPacket->GetOrientation() });
     }
 
     std::shared_ptr<Packet> PositionPacketHandler::Translate(const ENetEvent* event) const {
@@ -277,11 +280,13 @@ namespace Packet {
 #pragma region ObjectChangeGravityPacketHandler
     void ObjectChangeGravityPacketHandler::Handle(const std::shared_ptr<Packet> packet) {
         const ObjectChangeGravityPacket* gravityPacket = std::static_pointer_cast<ObjectChangeGravityPacket>(packet).get();
-        PlayerObject* targetObject = (PlayerObject*) GameObject::GetGameObjectByID(gravityPacket->GetTargetID());
+        PlayerObject* object = (PlayerObject*) GameObject::GetGameObjectByID(gravityPacket->GetTargetID());
 
-        if (targetObject == nullptr) return;
+        if (object == nullptr) return;
 
-        targetObject->setUpDirection(gravityPacket->GetUpDirection());
+        if (TutorialGame::getInstance()->GetServerInstance()->IsOwnerOf(object)) return;
+
+        object->GetWorldState().UpdateState({ WorldState::StateType::UpVector, gravityPacket->GetUpDirection() });
     }
 
     std::shared_ptr<Packet> ObjectChangeGravityPacketHandler::Translate(const ENetEvent* event) const {

@@ -68,10 +68,21 @@ namespace WorldState {
             return m_states[type];
         }
 
+        /**
+         * @brief Check if a key exists. Must be called in conjunction with an
+         * acquired read lock to prevent threading issues.
+         */
+        bool UnsafeHasValue(StateType type) {
+            return m_states.contains(type);
+        }
+
         inline int Size() const { return m_states.size(); }
 
-        void Clear() {
-            std::unique_lock lock(m_stateLock);
+
+        /**
+         * @brief Clear states without a lock.
+         */
+        void UnsafeClear() {
             m_states.clear();
         }
 

@@ -92,7 +92,6 @@ namespace Multiplayer {
 
     void Server::SendState(bool endOfTick) {
         if (endOfTick) return;
-        //if (!m_isHost) return;
         
         if (m_isHost && m_game->GetState() == GameState::STARTING) {
             std::shared_ptr<Packet::StartGamePacket> startGame = std::make_shared<Packet::StartGamePacket>();
@@ -150,7 +149,6 @@ namespace Multiplayer {
         // enough time has passed for all the packets to arrive.
         std::shared_ptr<Packet::Packet> currentPacket = m_network->Fetch();
         while (currentPacket.get() != nullptr) {
-
             // Process packets that have a sequence of zero (usually high priority).
             if (currentPacket->GetChannel() == (uint8_t) Channel::RELIABLE ) {
                 Packet::PacketRegister::GetHandler(currentPacket->GetType())->Handle(currentPacket);
@@ -162,7 +160,12 @@ namespace Multiplayer {
                 if (currentPacket->GetSequenceNumber() >= m_processTick) {
                     m_buffer[m_tickCount % TICK_BUFFER_SIZE].push_back(currentPacket);
                 }
+                // Pass packets on to clients.
+                if (m_isHost) {
+                    m_network->Broadcast(currentPacket);
+                }
             }
+
             currentPacket = m_network->Fetch();
         }
 

@@ -7,7 +7,7 @@
 namespace Multiplayer {
 
     constexpr ENetAddress hostAddress = { ENET_HOST_ANY, DEFAULT_PORT };
-    const int TICK_BUFFER_SIZE = 5;
+    const int TICK_BUFFER_SIZE = 12;
 
     /**
      * @brief Server used to communicate with other players.

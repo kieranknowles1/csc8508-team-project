@@ -45,20 +45,42 @@ void PlayerObject::UpdateObjectState() {
 }
 
 void PlayerObject::UpdateFromState() {
-    if (objectWorldState.Size() == 4) {
-        btRigidBody* body = GetPhysicsObject()->GetRigidBody();
+    btRigidBody* body = GetPhysicsObject()->GetRigidBody();
+    objectWorldState.AcquireReadLock();
 
-        objectWorldState.AcquireReadLock();
-
+    if (objectWorldState.UnsafeHasValue(WorldState::StateType::LinearVelocity)) {
         body->setLinearVelocity(std::get<btVector3>(objectWorldState.UnsafeReadState(WorldState::StateType::LinearVelocity)));
-        body->setAngularVelocity(std::get<btVector3>(objectWorldState.UnsafeReadState(WorldState::StateType::AngularVelocity)));
-
-        body->getWorldTransform().setOrigin(std::get<btVector3>(objectWorldState.UnsafeReadState(WorldState::StateType::Position)));
-        body->getWorldTransform().setRotation(std::get<btQuaternion>(objectWorldState.UnsafeReadState(WorldState::StateType::Rotation)));
-
-        objectWorldState.ReleaseReadLock();
-        objectWorldState.Clear();
     }
+
+    if (objectWorldState.UnsafeHasValue(WorldState::StateType::AngularVelocity)) {
+        body->setAngularVelocity(std::get<btVector3>(objectWorldState.UnsafeReadState(WorldState::StateType::AngularVelocity)));
+    }
+
+    if (objectWorldState.UnsafeHasValue(WorldState::StateType::Position)) {
+        btVector3 position = std::get<btVector3>(objectWorldState.UnsafeReadState(WorldState::StateType::Position));
+        btVector3 offset = body->getWorldTransform().getOrigin() - position;
+
+        if (offset.length() > 100.0f) {
+            body->getWorldTransform().setOrigin(position);
+        }
+        else {
+            if (offset.length() > 0) {
+                btVector3 impulse = offset.normalized() * std::max(offset.length(), 10.0f);
+                body->applyCentralImpulse(impulse);
+            }
+        }
+    }
+
+    if (objectWorldState.UnsafeHasValue(WorldState::StateType::Rotation)) {
+        body->getWorldTransform().setRotation(std::get<btQuaternion>(objectWorldState.UnsafeReadState(WorldState::StateType::Rotation)));
+    }
+
+    if (objectWorldState.UnsafeHasValue(WorldState::StateType::UpVector)) {
+        setUpDirection(std::get<btVector3>(objectWorldState.UnsafeReadState(WorldState::StateType::UpVector)));
+    }
+
+    objectWorldState.UnsafeClear();
+    objectWorldState.ReleaseReadLock();
 }
 
 void PlayerObject::OnCollisionEnter(const CollisionInfo& collisionInfo){

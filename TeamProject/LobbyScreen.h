@@ -84,6 +84,7 @@ namespace NCL {
                 if (game->GetState() == GameState::STARTING) {
                     game->Start();
                     game->GetServerInstance()->ResetTick();
+                    game->SetState(GameState::ACTIVE);
                     *newState = new GameScreen(controller, game);
                     return PushdownResult::Push;
                 }
