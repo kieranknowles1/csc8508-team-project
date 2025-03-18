@@ -132,6 +132,7 @@ void TutorialGame::UpdateGame(float dt) {
     //post processing time variable effect:
     pulse += dt;
     renderer->SetVignettePulse(pulse);
+    renderer->SetDelta(dt);
 }
 
 

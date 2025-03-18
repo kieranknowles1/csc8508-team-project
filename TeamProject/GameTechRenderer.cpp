@@ -643,7 +643,7 @@ void GameTechRenderer::RenderUI() {
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	glEnable(GL_BLEND);
 	glDisable(GL_DEPTH_TEST);
-	glBlendFunc(GL_SRC_ALPHA, GL_ZERO);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	//RenderPostProcessing();
 	UseShader(*uiShader);
 
@@ -731,7 +731,7 @@ void GameTechRenderer::RenderLasers() {
 	glActiveTexture(GL_TEXTURE1);
 	glBindTexture(GL_TEXTURE_2D, laserTexOld);
 	glUniform1i(glGetUniformLocation(laserPreProcess->GetProgramID(), "oldLaserTex"), 1);
-	glUniform1f(glGetUniformLocation(laserPreProcess->GetProgramID(), "dt"), vignettePulse);
+	glUniform1f(glGetUniformLocation(laserPreProcess->GetProgramID(), "dt"), delta);
 	glUniformMatrix4fv(glGetUniformLocation(laserPreProcess->GetProgramID(), "currViewProjMatrix"), 1, false, (float*)&viewProjMatrix);
 	glUniformMatrix4fv(glGetUniformLocation(laserPreProcess->GetProgramID(), "prevViewProjMatrix"), 1, false, (float*)&laserPreviousViewProjMatrix);
 	DrawBoundMesh();
@@ -988,9 +988,9 @@ void GameTechRenderer::GenerateScreenTexture(GLuint& into, bool depth) {
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 
-	GLuint format = depth ? GL_DEPTH_COMPONENT24 : GL_RGBA16F; //using floating point textures to allow HDR rendering
+	GLuint format = depth ? GL_DEPTH_COMPONENT32F : GL_RGBA16F; //using floating point textures to allow HDR rendering
 	GLuint type = depth ? GL_DEPTH_COMPONENT : GL_RGBA;
-	GLuint datatype = depth ? GL_UNSIGNED_BYTE : GL_FLOAT;
+	GLuint datatype = depth ? GL_FLOAT : GL_FLOAT;
 
 	glTexImage2D(GL_TEXTURE_2D, 0, format, windowSize.x, windowSize.y, 0, type, datatype, NULL);
 	glBindTexture(GL_TEXTURE_2D, 0);

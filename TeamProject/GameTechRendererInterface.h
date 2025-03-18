@@ -117,6 +117,11 @@ namespace NCL::CSC8503 {
 			vignetteIntensity = intensityIn;
 		}
 
+		void SetDelta(float dt) {
+			delta = dt;
+		}
+
+
 		void initLasers() {
 			for (int i = 0; i < 8; i++) {
 				std::shared_ptr<Laser> newLaser = std::make_shared<Laser>(btVector3(0, 0, 0), btVector3(0, 0, 0), i + 1);
@@ -148,7 +153,7 @@ namespace NCL::CSC8503 {
 		float vignettePulse = 0;
 		float vignetteIntensity = 0;
 		btVector3 vignetteColour = btVector3(0.05f, 0.0f, 0.0f);
-
+		float delta = 0;
 		Window* window;
 		Camera* camera = nullptr;
 

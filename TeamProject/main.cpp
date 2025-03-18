@@ -83,6 +83,7 @@ Controller* createController(Window* window) {
 #endif // !__PROSPERO__
 
 }
+bool locked = true;
 
 int main(int argc, char** argv) {
     auto config = Config("user-config.jsonc", Assets::DEFAULTCONFIG);
@@ -106,6 +107,11 @@ int main(int argc, char** argv) {
 
     bool quit = false;
     while (window->UpdateWindow() && !window->GetKeyboard()->KeyPressed(KeyCodes::ESCAPE) && !quit) {
+        if (window->GetKeyboard()->KeyPressed(KeyCodes::NUM1)) {
+            locked = !locked;
+            window->ShowOSPointer(!locked);
+            window->LockMouseToWindow(locked);
+        }
         float dt = window->GetTimer().GetTimeDeltaSeconds();
         controller->Update(dt);
         window->SetTitle("Gametech frame time:" + std::to_string(1000.0f * dt));

@@ -12,10 +12,11 @@ in Vertex {
 out vec4 fragColor;
 
 void main() {
+    float multiplier = (15.0f * dt);
     vec4 oldLaser = texture(oldLaserTex, IN.correctedTexCoord);
 
     // Fade out the previous frame's laser
-    oldLaser.a *= 0.925;
+    oldLaser.a *= multiplier;
     if (oldLaser.a <= 0.01) {
         oldLaser.a = 0;
     }
