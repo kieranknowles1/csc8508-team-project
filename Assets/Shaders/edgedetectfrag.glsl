@@ -4,6 +4,7 @@ uniform sampler2D depthTex;
 double depthSample(vec2 coord) {
     return texture(depthTex, coord).r;
 }
+#define mul(a, b) ((a) * (b))
 #include "include/post/edgedetect.glsl"
 
 uniform sampler2D sceneTex;
