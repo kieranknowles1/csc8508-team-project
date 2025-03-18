@@ -27,6 +27,9 @@ namespace NCL {
 				colour = c;
 			}
 
+			std::shared_ptr<Material> getMaterial() const { return material; }
+			void setMaterial(std::shared_ptr<Material> mat) { material = mat; }
+
 			Vector4 GetColour() const {
 				return  colour;
 			}
@@ -65,13 +68,6 @@ namespace NCL {
 			Buffer* GetGPUBuffer() {
 				return buffer;
 			}
-
-            const std::vector<std::shared_ptr<Texture>>& GetTextures() const { return textures; }
-            const std::vector<std::shared_ptr<Texture>>& GetNormalMaps() const { return normalMaps; }
-
-            void SetTextures(const std::initializer_list<std::shared_ptr<Texture>>& texs) { textures = texs; }
-            void SetNormalMaps(const std::initializer_list<std::shared_ptr<Texture>> norms) { normalMaps = norms; }
-
 		protected:
 			GameObject* parent;
 			Buffer* buffer;
@@ -81,8 +77,7 @@ namespace NCL {
 			bool texRepeating = false; // added to allow repeating textures per object
 			float texScaleMultiplier = 0.005f; //unless set to something else, all scaled textures will be scaled with this and their renderScale
 
-            std::vector<std::shared_ptr<Texture>> textures;
-            std::vector<std::shared_ptr<Texture>> normalMaps;
+			std::shared_ptr<Material> material;
 		};
 	}
 }

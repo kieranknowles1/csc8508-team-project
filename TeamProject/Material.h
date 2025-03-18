@@ -22,6 +22,7 @@ namespace NCL {
 		struct Layer {
 			std::shared_ptr<Rendering::Texture> diffuse;
 			std::shared_ptr<Rendering::Texture> normal;
+			bool invertY = false;
 		};
 
 		// Load from a MeshMaterial file
@@ -30,6 +31,12 @@ namespace NCL {
 		//  - Bump: The path to the normal map
 		//  - InvertY: If true, the texture will be flipped vertically, default is false
 		Material(CSC8503::ResourceManager* rm, const std::string& filename);		
+
+		Material(std::shared_ptr<Rendering::Texture> diffuse, std::shared_ptr<Rendering::Texture> normal) {
+			Layer l;
+			l.diffuse = diffuse; l.normal = normal;
+			layers.push_back(l);
+		}
 
 		int GetLayerCount() const { return layers.size(); }
 		const Layer* GetLayer(int i) {

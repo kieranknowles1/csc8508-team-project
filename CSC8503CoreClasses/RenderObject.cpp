@@ -10,8 +10,10 @@ RenderObject::RenderObject(GameObject* parent, std::shared_ptr<Mesh> mesh, std::
 	this->parent	= parent;
 	this->mesh		= mesh;
 	this->colour	= Vector4(1.0f, 1.0f, 1.0f, 1.0f);
-    this->textures.push_back(tex);
-    this->normalMaps.push_back(normal);
+
+    this->material = std::make_shared<Material>(
+        tex, normal
+    );
 }
 
 NCL::CSC8503::RenderObject::RenderObject(GameObject* parent, std::shared_ptr<Mesh> mesh, std::shared_ptr<Material> mat)
@@ -19,25 +21,7 @@ NCL::CSC8503::RenderObject::RenderObject(GameObject* parent, std::shared_ptr<Mes
     this->parent = parent;
     this->mesh = mesh;
     this->colour = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
-
-    // Check if the number of submeshes matches the material layers
-    int subMeshCount = mesh->GetSubMeshCount();
-    int materialCount = mat->GetLayerCount();
-
-    // Assign materials per submesh
-    for (int i = 0; i < subMeshCount; i++) {
-        if (i < materialCount) { // Ensure we don't go out of bounds
-            auto materialLayer = mat->GetLayer(i);
-            if (materialLayer) {
-                textures.push_back(materialLayer->diffuse);
-                normalMaps.push_back(materialLayer->normal);
-            }
-            else {
-                textures.push_back(nullptr);
-                normalMaps.push_back(nullptr);
-            }
-        }
-    }
+    this->material = mat;
 }
 
 RenderObject::~RenderObject() {

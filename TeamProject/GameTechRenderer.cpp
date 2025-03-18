@@ -357,6 +357,7 @@ void GameTechRenderer::RenderCamera() {
 	int hasNormalLocation = glGetUniformLocation(deferredsceneShader->GetProgramID(), "hasNormalMap");
 	int texRepeatingLocation = glGetUniformLocation(deferredsceneShader->GetProgramID(), "texRepeating");
 	int texScaleLocation = glGetUniformLocation(deferredsceneShader->GetProgramID(), "texScale");
+	int invertYLocation = glGetUniformLocation(deferredsceneShader->GetProgramID(), "invertY");
 
 	/*
 	int lightPosLocation	= glGetUniformLocation(sceneShader->GetProgramID(), "lightPos"); Lighting to be deferred
@@ -388,15 +389,17 @@ void GameTechRenderer::RenderCamera() {
         size_t subMeshCount = i->GetMesh()->GetSubMeshCount();
 
         for (size_t subMeshIndex = 0; subMeshIndex < subMeshCount; ++subMeshIndex) {
-            bool hasTex = (subMeshIndex < i->GetTextures().size()) && i->GetTextures()[subMeshIndex];
-            bool hasNormal = (subMeshIndex < i->GetNormalMaps().size()) && i->GetNormalMaps()[subMeshIndex];
+			const Material::Layer* layer = i->getMaterial() ? i->getMaterial()->GetLayer(subMeshIndex) : nullptr;
+
+			bool hasTex = layer && layer->diffuse;
+			bool hasNormal = layer && layer->normal;
             //Bind textures per submesh
             if (hasTex) {
-                BindTextureToShader(*(i->GetTextures()[subMeshIndex]), "diffuseTex", 0);
+                BindTextureToShader(*layer->diffuse, "diffuseTex", 0);
             }
 
             if (hasNormal) {
-                BindTextureToShader(*(i->GetNormalMaps()[subMeshIndex]), "normalTex", 1);
+                BindTextureToShader(*layer->normal, "normalTex", 1);
             }
             Vector3 texScale;
             // TODO: Proper flag to control this, named something like scaleTextureWithSize (but shorter)
@@ -407,6 +410,7 @@ void GameTechRenderer::RenderCamera() {
                 texScale = Vector3(1, 1, 1);
             }
 			glUniform1i(texRepeatingLocation, i->GetTexRepeating());
+			glUniform1i(invertYLocation, layer && layer->invertY);
             glUniform3fv(texScaleLocation, 1, texScale.array);
             // TODO: Add metallic maps
             /*if (subMeshIndex < i->GetMetallicMaps().size() && i->GetMetallicMaps()[subMeshIndex]) {
