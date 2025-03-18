@@ -37,6 +37,8 @@ namespace NCL {
 
 		static void DrawAxisLines(const Matrix4& modelMatrix, float scaleBoost = 1.0f, float time = 0.0f);
 
+		static void AddDebugTexture(Texture* tex, const Vector2& pos, const Vector2& scale, const Vector4& colour = Vector4(1, 1, 1, 1));
+
 		static void UpdateRenderables(float dt);
 
 		static SimpleFont* GetDebugFont();

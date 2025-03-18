@@ -11,6 +11,7 @@
 #include "GameTechRendererInterface.h"
 #include "LobbyScreen.h"
 
+
 namespace NCL::CSC8503 {
 
     enum class GameMode {
@@ -26,10 +27,13 @@ class MainMenuScreen : public PushdownState {
     bool inMenu;
     TutorialGame* game;
     Controller* controller;
-    //GameTechRendererInterface* renderer; //Including this now so I can use AddUIElement to replace Debug::Print later
-
+    Texture* fmodLogoTex;
+    GameTechRendererInterface* renderer;
 public:
-    MainMenuScreen(Controller* controller, TutorialGame* game) : controller(controller), game(game), selection(0), inMenu(true) {}
+    MainMenuScreen(Controller* controller, TutorialGame* game, GameTechRendererInterface* renderer) : controller(controller), game(game), selection(0), inMenu(true), renderer(renderer) {
+        fmodLogoTex = renderer->LoadTexture("FMOD Logo Black - White Background.png");
+
+    }
 
     PushdownResult OnUpdate(float dt, PushdownState** newState) override {
 
@@ -88,9 +92,11 @@ public:
 
             Debug::Print(currentItem, Vector2(0.35f, 0.32f + (0.1f * i)));
         }
+        Debug::AddDebugTexture(fmodLogoTex, Vector2(90.0f, 90.0f), Vector2(10.0f, 8.0f));
         return PushdownResult::NoChange;
 
-        //Add FMOD Logo here as well as the line "Audio Engine: FMOD Studio by Firelight Technologies Pty Ltd."
+        //Add FMOD Logo here
+        //Debug::AddDebugTexture(fmodLogoTex, Vector2(0.2f, 0.2f), Vector2(10.0f, 10.0f));
     }
 
     void OnAwake() override {

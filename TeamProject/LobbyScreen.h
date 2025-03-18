@@ -10,8 +10,16 @@
 #include "Colors.h"
 #include <vector>
 #include <unordered_map>
-
 namespace NCL::CSC8503 {
+
+	enum class HostLobbyItems : uint8_t {
+		StartGame,
+		CloseLobby
+	};
+
+	enum class ClientLobbyItems : uint8_t {
+		LeaveLobby
+	};
 
 	class LobbyScreen : public PushdownState {
 	public:
