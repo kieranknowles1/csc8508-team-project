@@ -12,7 +12,6 @@
 #include "PhysicsObject.h"
 #include "RenderObject.h"
 #include "BulletDebug.h"
-#include "Paintball.h"
 #include "CustomCollisionCallback.h"
 #include <btBulletDynamicsCommon.h>
 #include <btBulletCollisionCommon.h>

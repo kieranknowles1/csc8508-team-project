@@ -22,7 +22,7 @@ std::optional<ShotInfo> Shoot::RayClosest(btVector3 startPos, btVector3 dir, Gam
         float smallestDist = INFINITY;
         for (int i = 0; i < callback.m_collisionObjects.size(); i++) { // loop all hits
             GameObject* hit = static_cast<GameObject*>(callback.m_collisionObjects[i]->getUserPointer());
-            if (!hit->getIsPaintball() && hit != player && hit != gun) { // ignore paintballs
+            if (hit != player && hit != gun) { // ignore paintballs
                 if (ignore) {
                     if (hit == ignore) continue;
                 }
@@ -77,41 +77,6 @@ std::optional<ShotInfo> Shoot::ShootBulletAI(btVector3 startPos, btVector3 dir, 
     return rayInfo;
 }
 
-void Shoot::SpawnBulletMesh(btVector3 startPos, btVector3 dir, btQuaternion rotation, ShotInfo* rayInfo) {
-
-    btMatrix3x3 rotationMatrix(rotation);
-    btVector3 adjustedOffset = rotationMatrix * bulletCameraOffset;
-    btVector3 bulletPos = startPos + adjustedOffset;
-    btVector3 shorDirection = (rayInfo->hitPos - bulletPos).normalize();
-
-    Paintball* paintball = new Paintball();
-    paintball->Initialise(player);
-    Vector3 bulletSize(0.5f, 0.5f, 0.5f);
-    paintball->setInitialPosition(bulletPos);
-    paintball->setRenderScale(bulletSize);
-    paintball->SetRenderObject(new RenderObject(
-        paintball,
-        resourceManager->getMeshes().get("Sphere.msh"),
-        nullptr
-    ));
-    paintball->GetRenderObject()->SetIsFlat(true);
-    paintball->SetPhysicsObject(new PhysicsObject(paintball));
-    paintballColor = btVector4(rand()%2, rand() % 2 , rand() % 2 ,1);
-    paintball->GetRenderObject()->SetColour(paintballColor);
-
-    btCollisionShape* shape = new btSphereShape(1.0f);
-    shape->setMargin(0.01f);
-    paintball->GetPhysicsObject()->InitBulletPhysics(bulletWorld, shape, 1.0f);
-    world->AddGameObject(paintball);
-
-    btVector3 playerVelocity = player->GetPhysicsObject()->GetRigidBody()->getLinearVelocity();
-    btVector3 bulletVelocity = playerVelocity + (shorDirection * bulletSpeed);
-    // Apply impulse
-    paintball->setIsPaintball(true);
-    paintball->GetPhysicsObject()->GetRigidBody()->setGravity(btVector3(0, 0, 0));
-    paintball->GetPhysicsObject()->GetRigidBody()->applyCentralImpulse(bulletVelocity);
-    paintball->GetPhysicsObject()->GetRigidBody()->activate();
-}
 
 void Shoot::SpawnDecal(ShotInfo* shotinfo) {
     if (shotinfo->hitObj != nullptr) {
