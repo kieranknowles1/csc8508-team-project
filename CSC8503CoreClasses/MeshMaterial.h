@@ -8,44 +8,35 @@ https://research.ncl.ac.uk/game/
 */
 #pragma once
 
-using std::string;
-using std::vector;
-using std::map;
+#include <string>
+#include <optional>
 
 namespace NCL {
-	namespace Rendering {
-		class Texture;
-	}
 	class MeshMaterialEntry {
 		friend class MeshMaterial;
 	public:
-		bool GetEntry(const string& name, const string** output) const {
+		bool GetEntry(const std::string& name, const std::string** output) const {
 			auto i = entries.find(name);
 			if (i == entries.end()) {
 				return false;
 			}
-			*output = &i->second.first;
+			*output = &i->second;
 			return true;
 		}
-		Rendering::Texture* GetEntry(const string& name) const {
-			auto i = entries.find(name);
-			if (i == entries.end()) {
-				return nullptr;
-			}
-			return i->second.second;
-		}
-		void LoadTextures();
 
 	protected:
-		std::map<string, std::pair<string, Rendering::Texture*>> entries;
+		std::map<std::string, std::string> entries;
 	};
 
 	class MeshMaterial	{
-		MeshMaterial(const std::string& filename);
+    public:
+		MeshMaterial( const std::string& filename);
 		~MeshMaterial() {}
 		const MeshMaterialEntry* GetMaterialForLayer(int i) const;
 
-		void LoadTextures();
+        int GetLayerCount() const {
+            return meshLayers.size();
+        }
 
 	protected:
 		std::vector<MeshMaterialEntry>	materialLayers;

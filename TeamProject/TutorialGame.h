@@ -191,6 +191,7 @@ namespace NCL {
             Controller* controller;
 
             std::shared_ptr<Texture> defaultTexture;
+            std::shared_ptr<Texture> paintballTexture;
 
             //Coursework Additional functionality
             GameObject* lockedObject	= nullptr;
@@ -217,7 +218,6 @@ namespace NCL {
             //Player things
             PlayerObject* InitPlayer(btVector3 position, btVector3 upDir);
             PerspectiveCamera* mainCamera;
-            GameObject* gun;
             std::unique_ptr<PlayerController> playerController;
             bool freeCam = false;
             bool thirdPerson = false;
@@ -247,6 +247,8 @@ namespace NCL {
 
             std::vector<Wanderer*> wanderers;
             Wanderer* AddWandererToWorld(NavMesh* navMesh, char side);
+
+            GameObject* AddGunToWorld(const Vector3& position, Vector3 dimensions, float inverseMass, bool hasCollision);
 
             //post processing time variable effects
             float pulse = 0;

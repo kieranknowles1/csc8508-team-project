@@ -17,6 +17,7 @@ using namespace PS5;
 
 AGCTexture::AGCTexture(const std::string& filename, const MemoryAllocator& a) {
 	std::filesystem::path path(filename + ".gnf");
+	this->fileName = filename;
 	//path.replace_extension(".gnf");
 	std::string realFile = Assets::TEXTUREDIR + path.string();
 	FILE* fp = fopen(realFile.c_str(), "rb");
