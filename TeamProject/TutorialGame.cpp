@@ -625,15 +625,23 @@ void TutorialGame::Start() {
     instance->LoadWorldFromFile(9);
     
     // Spawn in player.
-    RespawnPoint* respawnPoint = Respawn::GetInstance()->GetRespawn(0);
-    instance->player = instance->InitPlayer(respawnPoint->position,respawnPoint->orientation);
-    User user(0);
-    instance->player->SetOwner(0);
-    instance->player->SetPlayerID(0);
-    instance->player->SetWorldID(user.GetUserID());
+    std::array<PlayerObject*, 2> players;
+
+    for (int i = 0; i < players.size(); i++) {
+        User user(i);
+        RespawnPoint* playerRespawn = Respawn::GetInstance()->GetRespawn(user.GetUserID());
+        PlayerObject* player = instance->InitPlayer(playerRespawn->position, playerRespawn->orientation);
+        player->SetOwner(user);
+        player->SetPlayerID(user.GetUserID());
+        player->SetWorldID(user.GetUserID());
+        player->setType(GameObject::Type::Player);
+        players[i] = player;
+    }
+
+    User* owner = instance->server->GetUser();
+    instance->player = players[owner->GetUserID()];
+    instance->playerController = std::make_unique<PlayerController>(instance->player, instance->gun, instance->controller, instance->mainCamera, instance->bulletWorld, instance->renderer);
     //instance->player->GetRenderObject()->SetColour(Vector4(Color::GetPlayerColor(user->GetUserID())));
-    instance->player->setType(GameObject::Type::Player);
-    instance->playerController = std::make_unique<PlayerController>(instance->player, instance->gun, instance->controller, instance->mainCamera, instance->bulletWorld,instance->renderer);
 
     instance->navMeshDebug = false;
     instance->enableAI = false;

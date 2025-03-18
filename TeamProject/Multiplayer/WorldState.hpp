@@ -68,7 +68,7 @@ namespace WorldState {
             return m_states[type];
         }
 
-        inline bool HasState() const { return m_states.size() > 0; }
+        inline int Size() const { return m_states.size(); }
 
         void Clear() {
             std::unique_lock lock(m_stateLock);

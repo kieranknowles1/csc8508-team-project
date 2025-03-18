@@ -41,7 +41,7 @@ void GameObject::UpdateObjectState() {
 }
 
 void GameObject::UpdateFromState() {
-    if (objectWorldState.HasState()) {
+    if (objectWorldState.Size() == 4) {
         btRigidBody* body = GetPhysicsObject()->GetRigidBody();
 
         objectWorldState.AcquireReadLock();

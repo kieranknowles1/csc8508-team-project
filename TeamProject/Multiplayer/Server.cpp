@@ -92,7 +92,7 @@ namespace Multiplayer {
 
     void Server::SendState(bool endOfTick) {
         if (endOfTick) return;
-        if (!m_isHost) return;
+        //if (!m_isHost) return;
         
         if (m_isHost && m_game->GetState() == GameState::STARTING) {
             std::shared_ptr<Packet::StartGamePacket> startGame = std::make_shared<Packet::StartGamePacket>();
@@ -104,7 +104,8 @@ namespace Multiplayer {
 
         m_game->GetWorld()->OperateOnContents([&](GameObject* object) {
             if (object->isStatic()) return;
-            if (!object->GetWorldState().HasState()) return;
+            if (object->GetOwner() != *m_user) return;
+            if (object->GetWorldState().Size() <= 0) return;
 
             WorldState::ObjectState& worldState = object->GetWorldState();
             worldState.AcquireReadLock(); // ACQUIRE LOCK.
@@ -168,7 +169,7 @@ namespace Multiplayer {
         // Reading.
         if (m_processTick >= 0) {
             for (std::shared_ptr<Packet::Packet> packet : m_buffer[m_processTick % TICK_BUFFER_SIZE]) {
-                Packet::PacketRegister::GetHandler(currentPacket->GetType())->Handle(packet);
+                Packet::PacketRegister::GetHandler(packet->GetType())->Handle(packet);
             }
             m_buffer[m_processTick % TICK_BUFFER_SIZE].clear();
         }

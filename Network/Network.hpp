@@ -18,7 +18,7 @@ const float NETWORK_RATE = 1 / 120.0f; // Seconds
 const int BUFFER_SIZE = 1024;
 
 // Default binding port.
-const int DEFAULT_PORT = 49834;
+const int DEFAULT_PORT = 49835;
 
 
 /**
