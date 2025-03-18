@@ -1,4 +1,7 @@
 #include "LevelImporter.h"
+
+#include <chrono>
+
 #include "PointLight.h"
 #include "Respawn.h"
 #include <nlohmann/json.hpp>
@@ -57,6 +60,7 @@ void LevelImporter::ClearObjects() {
 }
 
 void LevelImporter::LoadLevel(int level) {
+    auto start = std::chrono::high_resolution_clock::now();
     ClearObjects();
 
     std::string filePath = Assets::LEVELDIR + "/level_" + std::to_string(level) + ".json";
@@ -94,6 +98,9 @@ void LevelImporter::LoadLevel(int level) {
     // Immediately free anything not needed by the new scene that was loaded for the old one
     resourceManager->collectGarbage();
     std::cout << "Loaded level " << level << "; Contained " << count << " GameObjects" << std::endl;
+
+    auto end = std::chrono::high_resolution_clock::now();
+    std::cout << "Time taken: " << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << "ms" << std::endl;
 }
 
 void LevelImporter::AddObjectToWorld(ObjectData* data) {
