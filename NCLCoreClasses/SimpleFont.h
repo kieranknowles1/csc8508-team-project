@@ -18,7 +18,7 @@ namespace NCL {
 			SimpleFont(const std::string&fontName, Texture& tex);
 			~SimpleFont();
 
-            int InitializeFreeType();
+            int InitializeFreeType(const std::string& filename);
 
 			struct InterleavedTextVertex {
 				NCL::Maths::Vector2 pos;

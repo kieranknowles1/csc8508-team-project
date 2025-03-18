@@ -65,6 +65,8 @@ int SimpleFont::InitializeFreeType(const std::string& filename) {
         std::cout << "ERROR::FREETYPE: Failed to load font" << std::endl;
         return -1;
     }
+
+    FT_Set_Pixel_Sizes(face, 0, 48); // 0 width lets FreeType calculate the width based on the height
 }
 
 int SimpleFont::GetVertexCountForString(const std::string& text) {
