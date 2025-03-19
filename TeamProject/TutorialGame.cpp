@@ -625,8 +625,8 @@ void TutorialGame::StartMultiplayerGame() {
 
 void TutorialGame::Start() {
     instance->state = GameState::ACTIVE;
-    instance->LoadWorldFromFile(9);
-
+    instance->LoadWorldFromFile(10);
+    
     // Init user for single players.
     if (!user.has_value()) user.emplace(GenerateUserID());
 
