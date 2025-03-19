@@ -165,7 +165,7 @@ void AGCRenderer::SwapBuffers() {
 		// to finish before it can start the next frame. Instead, we could ask it to drain all graphics work
 		// first, but that would be more aggressive than we need to be here.
 		sce::Agc::Core::SyncWaitMode::kAsynchronous,
-		// Request dirty cache lines in GL2 to be written to memory. 
+		// Request dirty cache lines in GL2 to be written to memory.
 		sce::Agc::Core::SyncCacheOp::kGl2Writeback,
 		// Write the flip label and make it visible to the CPU.
 		sce::Agc::Core::SyncLabelVisibility::kCpu,
@@ -234,12 +234,7 @@ void AGCRenderer::EndFrame() {
 }
 
 void AGCRenderer::DrawBoundMesh(sce::Agc::Core::BasicContext& context, AGCMesh& m) {
-	if (m.GetIndexCount() > 0) {
-		context.drawIndex(m.GetIndexCount(), m.GetAGCIndexData());
-	}
-	else {
-		context.drawIndexAuto(m.GetVertexCount());
-	}
+	DrawBoundMeshInstanced(context, m, 1);
 }
 
 void AGCRenderer::DrawBoundMeshInstanced(sce::Agc::Core::BasicContext& context, AGCMesh& m, uint32_t instanceCount) {
@@ -251,18 +246,4 @@ void AGCRenderer::DrawBoundMeshInstanced(sce::Agc::Core::BasicContext& context, 
 		context.drawIndexAuto(m.GetVertexCount());
 	}
 	context.m_dcb.setNumInstances(1);
-}
-
-void AGCRenderer::CreateTriangle(AGCMesh* m) {
-	m->SetVertexPositions({
-		Vector3(0, 0.5, 0),
-		Vector3(0.5, -0.5, 0),
-		Vector3(-0.5, -0.5, 0)
-	});
-
-	m->SetVertexTextureCoords({
-		Vector2(0.5, 1.0),
-		Vector2(1.0, 0.0),
-		Vector2(0.0, 0.0)
-	});
 }

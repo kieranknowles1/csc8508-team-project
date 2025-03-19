@@ -8,6 +8,8 @@ uniform vec3 endPosition;
 uniform float thickness;
 uniform float time;
 
+out float depth;
+
 layout(location = 0) in vec3 position;
 layout(location = 2) in vec2 texCoord;
 
@@ -41,7 +43,7 @@ void main(void) {
     float rippleSpeed = time * -50.0;
     float rippleAngle1 = zMapped * rippleFreq * 6.283185 + rippleSpeed;
     float rippleAngle2 = zMapped * rippleFreq * 8.283185 + rippleSpeed * 0.5;
-    float rippleStrength = 0.03 * waveDistortionFactor * sqrt(laserLength);  // Small contribution
+    float rippleStrength = 0.04 * waveDistortionFactor * sqrt(laserLength);  // Small contribution
     vec3 rippleOffset = (
         (perp1 * sin(rippleAngle1)) + (perp2 * cos(rippleAngle2))
     ) * rippleStrength;
@@ -54,5 +56,9 @@ void main(void) {
                   + baseWaveOffset
                   + rippleOffset;
 
-    gl_Position = projMatrix * viewMatrix * vec4(worldPos, 1.0);
+
+    vec4 clipSpacePos = projMatrix * viewMatrix * vec4(worldPos, 1.0);
+    gl_Position = clipSpacePos;
+    depth = (clipSpacePos.z / clipSpacePos.w) * 0.5 + 0.5; //world space position
+
 }

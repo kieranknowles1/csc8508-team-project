@@ -1,9 +1,6 @@
 #include "ShaderConstants.psslh"
 #include "glinterop.h"
 
-#include "../include/post/vingette.glsl"
-#include "../include/post/deferred.glsl"
-
 Texture2D<float4> texture : register(t0);
 SamplerState sampler : register(s0);
 
@@ -12,6 +9,17 @@ SamplerState lightDifSampler : register(s1);
 
 Texture2D<float4> lightSpec : register(t2);
 SamplerState lightSpecSampler : register(s2);
+
+Texture2D<float> sceneDepthTex : register(t3);
+SamplerState sceneDepthSampler : register(s3);
+
+double depthSample(float2 coord) {
+    return sceneDepthTex.Sample(sceneDepthSampler, coord);
+}
+
+#include "../include/post/vingette.glsl"
+#include "../include/post/deferred.glsl"
+#include "../include/post/edgedetect.glsl"
 
 struct VS_OUTPUT
 {
@@ -23,6 +31,12 @@ struct VS_OUTPUT
 float4 main(VS_OUTPUT vertex) : S_TARGET_OUTPUT
 {
     float4 result = texture.Sample(sampler, vertex.uv);
+
+    float2 invScreenSize = float2(1.0f / Constants.screenSize.x, 1.0f / Constants.screenSize.y);
+    EdgeDetectMatrices mats;
+    mats.invProj = Constants.inverseProjMatrix;
+    mats.invView = Constants.inverseViewMatrix;
+    result = doEdgeDetect(result, vertex.uv, invScreenSize, mats);
 
     float4 lightVal = lightDiffuse.Sample(lightDifSampler, vertex.uv);
     float4 specVal = lightSpec.Sample(lightSpecSampler, vertex.uv);

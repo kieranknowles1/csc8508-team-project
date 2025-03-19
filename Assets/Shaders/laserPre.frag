@@ -12,14 +12,19 @@ in Vertex {
 out vec4 fragColor;
 
 void main() {
+    float multiplier = (25.0f * dt);
     vec4 oldLaser = texture(oldLaserTex, IN.correctedTexCoord);
 
     // Fade out the previous frame's laser
-    oldLaser.a *= 0.925;
+    oldLaser.a *= multiplier;
     if (oldLaser.a <= 0.01) {
-        oldLaser.a = 0;
+        oldLaser = vec4(0,0,0,0);
     }
 
     vec4 newLaser = texture(laserTex, IN.originalTexCoord);
-    fragColor = max(oldLaser, newLaser);
+    if(newLaser.a > oldLaser.a){
+        oldLaser = newLaser;
+    }
+
+    fragColor = oldLaser;
 }

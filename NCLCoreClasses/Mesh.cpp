@@ -17,6 +17,30 @@ Mesh::Mesh()	{
 Mesh::~Mesh()	{
 }
 
+bool Mesh::operator==(const Mesh& rhs) const {
+#define EQUAL(field) (field == rhs. field)
+	if (this == &rhs) return true;
+
+	return EQUAL(primType)
+		&& EQUAL(debugName)
+		&& EQUAL(assetID)
+		&& EQUAL(boundingRadius)
+		&& EQUAL(positions)
+		&& EQUAL(texCoords)
+		&& EQUAL(colours)
+		&& EQUAL(normals)
+		&& EQUAL(tangents)
+		&& EQUAL(indices)
+		&& EQUAL(subMeshes)
+		&& EQUAL(subMeshNames)
+		&& EQUAL(skinWeights)
+		&& EQUAL(skinIndices)
+		&& EQUAL(jointNames)
+		&& EQUAL(bindPose)
+		&& EQUAL(inverseBindPose);
+#undef EQUAL
+}
+
 bool Mesh::HasTriangle(unsigned int i) const {
 	int triCount = 0;
 	if (GetIndexCount() > 0) {

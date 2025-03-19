@@ -52,7 +52,6 @@ void PlayerObject::Update(float dt) {
 }
 
 void PlayerObject::OnCollisionEnter(const CollisionInfo& collisionInfo){
-	if (collisionInfo.otherObject->getIsPaintball()) return;
 	btVector3 playerPos = this->GetPhysicsObject()->GetRigidBody()->getWorldTransform().getOrigin();
 	btVector3 objPos = collisionInfo.contactPointA;
 	btVector3 direction = (objPos - playerPos).normalized();
@@ -63,18 +62,23 @@ void PlayerObject::OnCollisionEnter(const CollisionInfo& collisionInfo){
 		collidedObjects.push_back(collisionInfo.otherObject);
 	}
 
-	// set special type collision
-    collisionType = collisionInfo.otherObject->getType();
-    if (collisionInfo.otherObject->getType() == GameObject::Type::JumpPad || collisionInfo.otherObject->getType() == GameObject::Type::Slime) {
-		collisionNormal = collisionInfo.contactNormal;
-		collisionPoint = collisionInfo.contactPointA;
-	}
+    // set special type collision
+    if (angle <= 25.0f) {
+        if (collisionInfo.otherObject->getType() == Type::Ice) {
+            collisionType = Type::Ice;
+        }
+    }
+    if (collisionInfo.otherObject->getType() == Type::JumpPad || collisionInfo.otherObject->getType() == Type::Slime) {
+        collisionNormal = collisionInfo.contactNormal;
+        collisionPoint = collisionInfo.contactPointA;
+        collisionType = collisionInfo.otherObject->getType();
+    }
 }
 
 void PlayerObject::OnCollisionExit(const CollisionInfo& collisionInfo){
-	if (collisionInfo.otherObject->getIsPaintball()) return;
 	auto it = std::find(collidedObjects.begin(), collidedObjects.end(), collisionInfo.otherObject);
 	if (it != collidedObjects.end()) {
+        resetCollisionType();
 		collidedObjects.erase(it);
 		if (collided > 0) {
 			collided--;
@@ -83,7 +87,6 @@ void PlayerObject::OnCollisionExit(const CollisionInfo& collisionInfo){
 }
 
 void PlayerObject::OnCollisionStay(const CollisionInfo& collision){
-	if (collision.otherObject->getIsPaintball()) return;
 	btVector3 playerPos = this->GetPhysicsObject()->GetRigidBody()->getWorldTransform().getOrigin();
 	btVector3 objPos = collision.contactPointA;
 	btVector3 direction = (objPos - playerPos).normalized();
@@ -100,15 +103,22 @@ void PlayerObject::OnCollisionStay(const CollisionInfo& collision){
 	}
 	else { // not counted as floor yet
 		if (angle <= 25.0f) {
+         
 			collided++;
 			collidedObjects.push_back(collision.otherObject);
 		}
 	}
+
 	// set special type collision
-    collisionType = collision.otherObject->getType();
-    if (collision.otherObject->getType() == GameObject::Type::JumpPad || collision.otherObject->getType() == GameObject::Type::Slime) {
+    if (angle <= 25.0f) {
+        if (collision.otherObject->getType() == Type::Ice) {
+            collisionType = Type::Ice;
+        }
+    }
+    if (collision.otherObject->getType() == Type::JumpPad || collision.otherObject->getType() == Type::Slime) {
 		collisionNormal = collision.contactNormal;
 		collisionPoint = collision.contactPointA;
+        collisionType = collision.otherObject->getType();
 	}
 }
 
@@ -225,16 +235,32 @@ btVector3 PlayerObject::CalculateForwardDirection(btVector3 upDir, btVector3 rig
 
 //attaches gun to the camera position/rotation
 void PlayerObject::SetGunTransform(float pitch, float yaw, btVector3 camPos) {
-    //float pitchRadians = Maths::DegreesToRadians(camera->GetPitch());
-    //float yawRadians = Maths::DegreesToRadians(camera->GetYaw());
     float pitchRadians = Maths::DegreesToRadians(pitch);
     float yawRadians = Maths::DegreesToRadians(yaw);
     btQuaternion yawQuat(btVector3(0, 1, 0), yawRadians);
     btQuaternion pitchQuat(btVector3(1, 0, 0), pitchRadians);
-    btQuaternion gunRotation = camRotOffset * yawQuat * pitchQuat; // Yaw first, then pitch
+
+    btQuaternion extraOffset = btQuaternion(Maths::DegreesToRadians(90), 0, 0);
+    btQuaternion gunRotation = camRotOffset * yawQuat * pitchQuat * extraOffset; // Yaw first, then pitch
 
     btMatrix3x3 rotationMatrixCam(gunRotation);
     btVector3 adjustedOffset = rotationMatrixCam * gunCameraOffset; // Apply rotation to the offset
+
+    // Gun Animation starts here
+    float speed = GetPhysicsObject()->GetRigidBody()->getLinearVelocity().length();
+
+    if (speed > 0.1f) {
+        float frequency = 1.0f; // Adjust for faster/slower blobbing
+        float amplitude = 0.01f; // Adjust for bigger/smaller blobbing
+        float time = Maths::DegreesToRadians(elapsedTime * 360.0f); // Convert to radians
+
+        // Apply bobbing effect
+        float bobbingOffsetY = sin(time * frequency) * (amplitude * 0.2) * (speed / 5.0f);
+        float bobbingOffsetX = cos(time * frequency * 0.5f) * (amplitude * 0.1f) * (speed / 5.0f);
+
+        adjustedOffset += btVector3(bobbingOffsetX, bobbingOffsetY, 0);
+    }
+
 
     btTransform transformGun = gun->GetPhysicsObject()->GetRigidBody()->getWorldTransform();
     transformGun.setOrigin(camPos + adjustedOffset);
@@ -242,5 +268,3 @@ void PlayerObject::SetGunTransform(float pitch, float yaw, btVector3 camPos) {
 
     gun->GetPhysicsObject()->GetRigidBody()->setWorldTransform(transformGun);
 }
-
-

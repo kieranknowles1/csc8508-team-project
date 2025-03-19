@@ -14,7 +14,8 @@ using namespace Maths;
 
 bool MshLoader::LoadMesh(const std::string& filename, Mesh& destinationMesh) {
 	auto binFile(Assets::MESHDIR + filename + "b");
-	if (std::filesystem::exists(binFile)) {
+	//if (std::filesystem::exists(binFile)) {
+    if (false) {
 		return LoadBinaryMesh(binFile, destinationMesh);
 	}
 	else {
@@ -38,6 +39,14 @@ std::vector<T> readVector(std::ifstream& fs, int size) {
 	return out;
 }
 
+// Read a vector with a size stored before it
+template <typename T>
+std::vector<T> readSizedVector(std::ifstream& fs) {
+	size_t count; read<size_t>(fs, count);
+	return readVector<T>(fs, count);
+}
+
+// Read a vector of null-terminated strings
 std::vector<std::string> readStrings(std::ifstream& fs, int size) {
 	std::vector<std::string> out;
 	for (int i = 0; i < size; i++) {
@@ -49,6 +58,7 @@ std::vector<std::string> readStrings(std::ifstream& fs, int size) {
 				value += ch;
 			}
 			else {
+				out.push_back(value);
 				break;
 			}
 
@@ -118,6 +128,11 @@ bool NCL::Rendering::MshLoader::LoadBinaryMesh(const std::string& filename, Mesh
 		} case GeometryChunkTypes::VWeightValues: {
 			auto weights = readVector<Vector4>(fs, numVertexes);
 			destinationMesh.SetVertexSkinWeights(weights);
+			break;
+		} case GeometryChunkTypes::VWeightIndices: {
+			auto weights = readVector<Vector4i>(fs, numVertexes);
+			destinationMesh.SetVertexSkinIndices(weights);
+			break;
 		} case GeometryChunkTypes::Indices: {
 			auto indexes = readVector<unsigned int>(fs, numIndexes);
 			destinationMesh.SetVertexIndices(indexes);
@@ -129,6 +144,23 @@ bool NCL::Rendering::MshLoader::LoadBinaryMesh(const std::string& filename, Mesh
 		} case GeometryChunkTypes::SubMeshNames: {
 			auto names = readStrings(fs, numMeshes);
 			destinationMesh.SetSubMeshNames(names);
+			break;
+		} case GeometryChunkTypes::JointNames: {
+			size_t count; read(fs, count);
+			auto names = readStrings(fs, count);
+			destinationMesh.SetJointNames(names);
+			break;
+		} case GeometryChunkTypes::JointParents: {
+			auto parents = readSizedVector<int>(fs);
+			destinationMesh.SetJointParents(parents);
+			break;
+		} case GeometryChunkTypes::BindPose: {
+			auto pose = readSizedVector<Matrix4>(fs);
+			destinationMesh.SetBindPose(pose);
+			break;
+		} case GeometryChunkTypes::BindPoseInv: {
+			auto pose = readSizedVector<Matrix4>(fs);
+			destinationMesh.SetInverseBindPose(pose);
 			break;
 		} default: {
 			std::cerr << __FUNCTION__ << " Unknown chunk type " << (int)type << " at offset 0x" << std::hex << fs.tellg() << std::dec << " in " << filename << std::endl;

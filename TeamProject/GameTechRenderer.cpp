@@ -357,6 +357,7 @@ void GameTechRenderer::RenderCamera() {
 	int hasNormalLocation = glGetUniformLocation(deferredsceneShader->GetProgramID(), "hasNormalMap");
 	int texRepeatingLocation = glGetUniformLocation(deferredsceneShader->GetProgramID(), "texRepeating");
 	int texScaleLocation = glGetUniformLocation(deferredsceneShader->GetProgramID(), "texScale");
+	int invertYLocation = glGetUniformLocation(deferredsceneShader->GetProgramID(), "invertY");
 
 	/*
 	int lightPosLocation	= glGetUniformLocation(sceneShader->GetProgramID(), "lightPos"); Lighting to be deferred
@@ -385,44 +386,59 @@ void GameTechRenderer::RenderCamera() {
 	//glBindTexture(GL_TEXTURE_2D, shadowTex);
 
 	for (const auto&i : frameObjects) {
+        size_t subMeshCount = i->GetMesh()->GetSubMeshCount();
 
-		if ((*i).GetDefaultTexture()) {
-			BindTextureToShader(*(OGLTexture*)(*i).GetDefaultTexture(), "diffuseTex", 0); //was maintTex for scenefrag. Using diffuseTex for deferredscenefrag
-			//figure out scale of object:
-			Vector3 scale = i->getParent()->getRenderScale() * i->GetTexScaleMultiplier();
-			glUniform3fv(texScaleLocation, 1, scale.array);
+        for (size_t subMeshIndex = 0; subMeshIndex < subMeshCount; ++subMeshIndex) {
+			const Material::Layer* layer = i->getMaterial() ? i->getMaterial()->GetLayer(subMeshIndex) : nullptr;
 
-		}
+			bool hasTex = layer && layer->diffuse;
+			bool hasNormal = layer && layer->normal;
+            //Bind textures per submesh
+            if (hasTex) {
+                BindTextureToShader(*layer->diffuse, "diffuseTex", 0);
+            }
 
-		//normal map capabilities added:
-		if ((*i).GetNormalMap()) { //changed texture unit to 1 instead of 2 while there are no shadows
-			BindTextureToShader(*(OGLTexture*)(*i).GetNormalMap(), "normalTex", 1); //need a shader that utilises normal maps, has a uniform sampler2D called "normalTex" in texture unit 2
-		}
+            if (hasNormal) {
+                BindTextureToShader(*layer->normal, "normalTex", 1);
+            }
+            Vector3 texScale;
+            // TODO: Proper flag to control this, named something like scaleTextureWithSize (but shorter)
+            if (i->GetTexRepeating()) {
+                texScale = i->getParent()->getRenderScale() * i->GetTexScaleMultiplier();
+            }
+            else {
+                texScale = Vector3(1, 1, 1);
+            }
+			glUniform1i(texRepeatingLocation, i->GetTexRepeating());
+			glUniform1i(invertYLocation, layer && layer->invertY);
+            glUniform3fv(texScaleLocation, 1, texScale.array);
+            // TODO: Add metallic maps
+            /*if (subMeshIndex < i->GetMetallicMaps().size() && i->GetMetallicMaps()[subMeshIndex]) {
+                BindTextureToShader(*(i->GetMetallicMaps()[subMeshIndex]), "metallicTex", 2);
+            }*/
 
-		//Matrix4 modelMatrix = (*i).GetTransform()->GetMatrix();
-		Matrix4 modelMatrix;
-		i->getParent()->GetTransform().getOpenGLMatrix((btScalar*)&modelMatrix);
-		modelMatrix = modelMatrix * Matrix::Scale(i->getParent()->getRenderScale());
-		glUniformMatrix4fv(modelLocation, 1, false, (float*)&modelMatrix);
+            Matrix4 modelMatrix;
+            i->getParent()->GetTransform().getOpenGLMatrix((btScalar*)&modelMatrix);
+            modelMatrix = modelMatrix * Matrix::Scale(i->getParent()->getRenderScale());
+            glUniformMatrix4fv(modelLocation, 1, false, (float*)&modelMatrix);
 
-		//Matrix4 fullShadowMat = shadowMatrix * modelMatrix; //TEMPORARILY REMOVING SHADOWS
-		//glUniformMatrix4fv(shadowLocation, 1, false, (float*)&fullShadowMat);
+            //Matrix4 fullShadowMat = shadowMatrix * modelMatrix; //TEMPORARILY REMOVING SHADOWS
+            //glUniformMatrix4fv(shadowLocation, 1, false, (float*)&fullShadowMat);
 
-		Vector4 colour = i->GetColour();
-		glUniform4fv(colourLocation, 1, &colour.x);
+            Vector4 colour = i->GetColour();
+            glUniform4fv(colourLocation, 1, &colour.x);
 
-		glUniform1i(hasVColLocation, !(*i).GetMesh()->GetColourData().empty());
+            glUniform1i(hasVColLocation, !(*i).GetMesh()->GetColourData().empty());
 
-		glUniform1i(hasTexLocation, (OGLTexture*)(*i).GetDefaultTexture() ? 1:0);
-		glUniform1i(hasFlatLocation, i->GetIsFlat());
-		glUniform1i(hasNormalLocation, i->GetHasNormal());
-		glUniform1i(texRepeatingLocation, i->GetTexRepeating());
+            glUniform1i(hasTexLocation, hasTex);
+            // TODO: Add metallic maps
+            //glUniform1i(hasMetallicLocation, i->GetMetallicMaps().size() > subMeshIndex && i->GetMetallicMaps()[subMeshIndex] != nullptr);
+            glUniform1i(hasFlatLocation, i->GetIsFlat());
+            glUniform1i(hasNormalLocation, hasNormal);
 
-		BindMesh((OGLMesh&)*(*i).GetMesh());
-		size_t layerCount = (*i).GetMesh()->GetSubMeshCount();
-		for (size_t i = 0; i < layerCount; ++i) {
-			DrawBoundMesh((uint32_t)i);
-		}
+            BindMesh((OGLMesh&)*(*i).GetMesh());
+            DrawBoundMesh((uint32_t)subMeshIndex);
+        }
 	}
 }
 
@@ -643,7 +659,7 @@ void GameTechRenderer::RenderUI() {
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	glEnable(GL_BLEND);
 	glDisable(GL_DEPTH_TEST);
-	glBlendFunc(GL_SRC_ALPHA, GL_ZERO);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	//RenderPostProcessing();
 	UseShader(*uiShader);
 
@@ -694,8 +710,6 @@ void GameTechRenderer::RenderUI() {
 }
 
 void GameTechRenderer::RenderLasers() {
-
-
 	//draw lasers
 	glBindFramebuffer(GL_FRAMEBUFFER, laserFBO);
 	glClearColor(0, 0, 0, 0);
@@ -708,12 +722,17 @@ void GameTechRenderer::RenderLasers() {
 	glUniformMatrix4fv(glGetUniformLocation(laserShader->GetProgramID(), "viewMatrix"), 1, false, (float*)&viewMatrix);
 	glUniformMatrix4fv(glGetUniformLocation(laserShader->GetProgramID(), "projMatrix"), 1, false, (float*)&projMatrix);
 
+	glActiveTexture(GL_TEXTURE1);
+	glBindTexture(GL_TEXTURE_2D, bufferDepthTex);
+	glUniform1i(glGetUniformLocation(laserShader->GetProgramID(), "depthTex"), 1);
+	glUniform2f(glGetUniformLocation(laserShader->GetProgramID(), "windowSize"), windowSize.x, windowSize.y);
+
 	BindMesh(*highResSphere);
 	for (std::shared_ptr<Laser> laser : lasers) {
 		if (laser->startPos == btVector3(0, 0, 0) && laser->endPos == btVector3(0, 0, 0)) continue;
 		glUniform3fv(glGetUniformLocation(laserShader->GetProgramID(), "startPosition"), 1, (float*)&laser->startPos);
 		glUniform3fv(glGetUniformLocation(laserShader->GetProgramID(), "endPosition"), 1, (float*)&laser->endPos);
-		glUniform1f(glGetUniformLocation(laserShader->GetProgramID(), "thickness"), 0.5f);
+		glUniform1f(glGetUniformLocation(laserShader->GetProgramID(), "thickness"), 0.25f);
 		glUniform1f(glGetUniformLocation(laserShader->GetProgramID(), "time"), vignettePulse);
 		btVector4 color = Color::GetPlayerColor(laser->id);
 		glUniform4fv(glGetUniformLocation(laserShader->GetProgramID(), "inColour"), 1, (float*)&color);
@@ -731,7 +750,7 @@ void GameTechRenderer::RenderLasers() {
 	glActiveTexture(GL_TEXTURE1);
 	glBindTexture(GL_TEXTURE_2D, laserTexOld);
 	glUniform1i(glGetUniformLocation(laserPreProcess->GetProgramID(), "oldLaserTex"), 1);
-	glUniform1f(glGetUniformLocation(laserPreProcess->GetProgramID(), "dt"), vignettePulse);
+	glUniform1f(glGetUniformLocation(laserPreProcess->GetProgramID(), "dt"), delta);
 	glUniformMatrix4fv(glGetUniformLocation(laserPreProcess->GetProgramID(), "currViewProjMatrix"), 1, false, (float*)&viewProjMatrix);
 	glUniformMatrix4fv(glGetUniformLocation(laserPreProcess->GetProgramID(), "prevViewProjMatrix"), 1, false, (float*)&laserPreviousViewProjMatrix);
 	DrawBoundMesh();
@@ -988,9 +1007,9 @@ void GameTechRenderer::GenerateScreenTexture(GLuint& into, bool depth) {
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 
-	GLuint format = depth ? GL_DEPTH_COMPONENT24 : GL_RGBA16F; //using floating point textures to allow HDR rendering
+	GLuint format = depth ? GL_DEPTH_COMPONENT32F : GL_RGBA16F; //using floating point textures to allow HDR rendering
 	GLuint type = depth ? GL_DEPTH_COMPONENT : GL_RGBA;
-	GLuint datatype = depth ? GL_UNSIGNED_BYTE : GL_FLOAT;
+	GLuint datatype = depth ? GL_FLOAT : GL_FLOAT;
 
 	glTexImage2D(GL_TEXTURE_2D, 0, format, windowSize.x, windowSize.y, 0, type, datatype, NULL);
 	glBindTexture(GL_TEXTURE_2D, 0);

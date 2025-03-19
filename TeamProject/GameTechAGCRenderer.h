@@ -115,6 +115,7 @@ namespace NCL {
 				};
 
 				UniformArray<ObjectState> objects;
+				int objectCount = 0;
 				UniformArray<UiState> ui;
 				UniformArray<LightState> lights;
 
