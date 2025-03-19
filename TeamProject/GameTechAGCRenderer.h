@@ -193,7 +193,7 @@ namespace NCL {
 
 			std::unique_ptr<PS5::AGCShader> laserVertexShader;
 			std::unique_ptr<PS5::AGCShader> laserPixelShader;
-			std::unique_ptr<PS5::AGCShader> laserCombineShader;
+			std::unique_ptr<PS5::AGCShader> laserPreShader;
 
 			struct FrameBuffer {
 				enum class Slot {
@@ -211,6 +211,8 @@ namespace NCL {
 
 			// Configure a viewport that takes up the requested size
 			void useViewPort(sce::Agc::Core::BasicContext* context, Vector2i size) const;
+
+			void prepPostProcessing(sce::Agc::CxRenderTarget& target);
 
 			FrameBuffer sceneBuffer;
 			FrameBuffer sceneNormalBuffer;

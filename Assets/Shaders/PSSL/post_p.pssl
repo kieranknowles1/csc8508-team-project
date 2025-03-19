@@ -48,7 +48,7 @@ float4 main(VS_OUTPUT vertex) : S_TARGET_OUTPUT
     // Do not apply edge detection or lighting to lasers
     float4 laserVal = laserTex.Sample(laserSampler, vertex.uv);
     if (laserVal.a > 0.0f) {
-        result = laserVal;
+        result = laserVal * laserVal.a;
     }
 
     if (Constants.vingetteSettings.enabled) {

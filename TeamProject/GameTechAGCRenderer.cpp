@@ -50,6 +50,25 @@ void GameTechAGCRenderer::useViewPort(sce::Agc::Core::BasicContext* context, Vec
 	context->m_sb.setState(viewPort);
 }
 
+void GameTechAGCRenderer::prepPostProcessing(sce::Agc::CxRenderTarget& target)
+{
+	sce::Agc::CxRenderTargetMask rtMask = sce::Agc::CxRenderTargetMask().init().setMask(0, 0xFF);
+	frameContext->m_sb.setState(rtMask);
+	frameContext->m_sb.setState(target);
+
+	sce::Agc::CxBlendControl blendControl;
+	blendControl.init().setBlend(sce::Agc::CxBlendControl::Blend::kDisable);
+	frameContext->m_sb.setState(blendControl);
+
+	frameContext->m_sb.setState(sce::Agc::CxPrimitiveSetup().init().setCullFace(sce::Agc::CxPrimitiveSetup::CullFace::kBack));
+
+	sce::Agc::CxDepthStencilControl depthControl;
+	depthControl.init().setDepth(sce::Agc::CxDepthStencilControl::Depth::kDisable).setDepthFunction(sce::Agc::CxDepthStencilControl::DepthFunction::kAlways);
+	frameContext->m_sb.setState(depthControl);
+
+	frameContext->m_sb.setState(sce::Agc::CxPrimitiveSetup().init().setCullFace(sce::Agc::CxPrimitiveSetup::CullFace::kBack));
+}
+
 GameTechAGCRenderer::GameTechAGCRenderer(Window* window) : AGCRenderer(window), GameTechRendererInterface(window) {
 	bindlessTextures = (sce::Agc::Core::Texture*)allocator.Allocate(BINDLESS_TEX_COUNT * sizeof(sce::Agc::Core::Texture), sce::Agc::Alignment::kBuffer);
 	sce::Agc::Core::BufferSpec texSpec;
@@ -93,7 +112,7 @@ GameTechAGCRenderer::GameTechAGCRenderer(Window* window) : AGCRenderer(window), 
 
 	laserVertexShader = std::make_unique<AGCShader>("laser_vv.ags", allocator);
 	laserPixelShader = std::make_unique<AGCShader>("laser_p.ags", allocator);
-	//laserCombineShader = std::make_unique<AGCShader>("laser_combine_p.ags", allocator);
+	laserPreShader = std::make_unique<AGCShader>("laser_pre_p.ags", allocator);
 
 	allFrames = new FrameData[FRAMES_IN_FLIGHT];
 	for (int i = 0; i < FRAMES_IN_FLIGHT; ++i) {
@@ -217,11 +236,13 @@ void GameTechAGCRenderer::WriteRenderPassConstants() {
 	frameData.orthoMatrix = Matrix::Orthographic(0.0f, 1.0f, 1.0f, 0.0f, -1.0f, 1.0f, true);
 
 	frameData.time = vignettePulse;
+	frameData.dt = delta;
 
 	frameData.vingetteSettings.enabled = GetVignetteOn();
 	frameData.vingetteSettings.color = vignetteColour;
 	frameData.vingetteSettings.intensity = vignetteIntensity;
 	frameData.vingetteSettings.pulse = vignettePulse;
+
 
 	currentFrame->data.WriteData<ShaderConstants>(frameData); //Let's start filling up our frame data!
 
@@ -387,8 +408,17 @@ void GameTechAGCRenderer::LightPass()
 
 void GameTechAGCRenderer::LaserPass()
 {
-	auto result = sce::Agc::Toolkit::clearRenderTargetCs(&frameContext->m_dcb, &laserBuffer.target, sce::Agc::Toolkit::RenderTargetClearOp::kAuto);
-	frameContext->resetToolkitChangesAndSyncToGl2(result);
+	// Use a faded version of the previos frame's lasers as a base
+	frameContext->setShaders(nullptr, postVertexShader->GetAGCPointer(), laserPreShader->GetAGCPointer(), sce::Agc::UcPrimitiveType::Type::kTriList);
+	useViewPort(frameContext, ScreenSize);
+	prepPostProcessing(laserBuffer.target);
+
+	frameContext->m_bdr.getStage(sce::Agc::ShaderType::kPs)
+		.setConstantBuffers(0, 1, &currentFrame->constantBuffer)
+		.setSamplers(0, 1, &previousLaserBuffer.sampler).setTextures(0, 1, previousLaserBuffer.texture->GetAGCPointer());
+	unitQuad->BindVertexBuffers(frameContext->m_bdr.getStage(sce::Agc::ShaderType::kGs));
+	DrawBoundMesh(*frameContext, *unitQuad);
+
 	frameContext->setShaders(nullptr, laserVertexShader->GetAGCPointer(), laserPixelShader->GetAGCPointer(), sce::Agc::UcPrimitiveType::Type::kTriList);
 	useViewPort(frameContext, ScreenSize);
 
@@ -429,6 +459,7 @@ void GameTechAGCRenderer::LaserPass()
 	highResSphere->BindVertexBuffers(frameContext->m_bdr.getStage(sce::Agc::ShaderType::kGs));
 	DrawBoundMeshInstanced(*frameContext, *highResSphere, lasers.size());
 
+	std::swap(laserBuffer, previousLaserBuffer);
 }
 
 void GameTechAGCRenderer::PostProcessPass()
@@ -436,19 +467,7 @@ void GameTechAGCRenderer::PostProcessPass()
 	frameContext->setShaders(nullptr, postVertexShader->GetAGCPointer(), postPixelShader->GetAGCPointer(), sce::Agc::UcPrimitiveType::Type::kTriList);
 	useViewPort(frameContext, ScreenSize);
 
-	sce::Agc::CxRenderTargetMask rtMask = sce::Agc::CxRenderTargetMask().init().setMask(0, 0xFF);
-	frameContext->m_sb.setState(rtMask);
-	frameContext->m_sb.setState(screenBuffer.target);
-
-	sce::Agc::CxBlendControl blendControl;
-	blendControl.init().setBlend(sce::Agc::CxBlendControl::Blend::kDisable);
-	frameContext->m_sb.setState(blendControl);
-
-	frameContext->m_sb.setState(sce::Agc::CxPrimitiveSetup().init().setCullFace(sce::Agc::CxPrimitiveSetup::CullFace::kBack));
-
-	sce::Agc::CxDepthStencilControl depthControl;
-	depthControl.init().setDepth(sce::Agc::CxDepthStencilControl::Depth::kDisable).setDepthFunction(sce::Agc::CxDepthStencilControl::DepthFunction::kAlways);
-	frameContext->m_sb.setState(depthControl);
+	prepPostProcessing(screenBuffer.target);
 
 	frameContext->m_bdr.getStage(sce::Agc::ShaderType::kPs)
 		.setConstantBuffers(0, 1, &currentFrame->constantBuffer)
