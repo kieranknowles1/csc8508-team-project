@@ -18,6 +18,7 @@ namespace WorldState {
         UpVector
     };
 
+
     /**
      * @brief A thread safe class for storing different states.
      */
@@ -25,19 +26,6 @@ namespace WorldState {
     public:
         ObjectState() {}
         ~ObjectState() {}
-
-        /**
-         * @brief Lock this object for reading if you want to read multiple
-         * states at once without allowing writes.
-         * @see ReleaseReadLock();
-         */
-        inline void AcquireReadLock() { m_stateLock.lock_shared(); }
-
-        /**
-         * @brief Release previously acquired read lock.
-         * @see AcquireReadLock
-         */
-        inline void ReleaseReadLock() { m_stateLock.unlock_shared(); }
 
         /**
          * @brief Update a state.
@@ -49,45 +37,154 @@ namespace WorldState {
         }
 
         /**
-         * @brief Write multiple state updates at once.
-         * This function blocks reading until it has finished.
+         * @brief Read a state. If the state does not exist returns false.
          */
-        void UpdateStates(std::vector<std::pair<StateType, StateValue>>& stateUpdates) {
-            std::unique_lock lock(m_stateLock);
-            for (const std::pair<StateType, StateValue>& stateUpdate:stateUpdates) {
-                m_states[stateUpdate.first] = stateUpdate.second;
-            }
-        }
-
-        StateValue ReadState(StateType type) {
+        bool ReadState(StateType type, StateValue& value) {
             std::shared_lock lock(m_stateLock);
-            return m_states[type];
-        }
 
-        StateValue UnsafeReadState(StateType type) {
-            return m_states[type];
+            if (m_states.contains(type)) {
+                value = m_states[type];
+                return true;
+            }
+            return false;
         }
-
+        
         /**
-         * @brief Check if a key exists. Must be called in conjunction with an
-         * acquired read lock to prevent threading issues.
+         * @brief Remove all states and their values.
          */
-        bool UnsafeHasValue(StateType type) {
-            return m_states.contains(type);
-        }
-
-        inline int Size() const { return m_states.size(); }
-
-
-        /**
-         * @brief Clear states without a lock.
-         */
-        void UnsafeClear() {
+        void Clear() {
+            std::unique_lock lock(m_stateLock);
             m_states.clear();
         }
+
+        /**
+         * @brief The number of states stored in this object.
+         */
+        inline int Size() const { return m_states.size(); }
 
     private:
         std::shared_mutex m_stateLock;
         std::unordered_map<StateType, StateValue> m_states;
+    };
+
+
+    /**
+     * @brief An object returned by the state buffer for reading and writing to
+     * a state buffer.
+     * 
+     * The reading mutex does not handling reading and writing operations to
+     * the state but handles locking / unlocking the state buffer update.
+     */
+    class StateReader {
+    public:
+        StateReader(ObjectState* state, std::shared_mutex* readingMutex) {
+            m_state = state;
+            m_readingMutex = readingMutex;
+
+            m_readingMutex->lock_shared();
+        }
+
+        // Prevent copying as locking the same mutex multiple times on the same
+        // Thread is undefined behaviour.
+        StateReader(const StateReader& other) = delete;
+
+        ~StateReader() {
+            Unlock();
+        }
+
+        /**
+         * @brief Unlock the reading mutex.
+         *
+         * This function invalidates this object and any attempt to use this
+         * object after calling this function is undefined behaviour.
+         */
+        void Unlock() {
+            m_readingMutex->unlock_shared();
+        }
+
+        ObjectState* GetState() const { return m_state; }
+
+    private:
+        ObjectState* m_state;
+        std::shared_mutex* m_readingMutex;
+    };
+
+    /**
+     * @brief State buffer contains 3 different buffers for reading, writing
+     * and interpolating world states.
+     * 
+     * It's main use it to interpolate world states between current and read
+     * while still allowing writes to the write state so that state swapping is
+     * smooth and without delay.
+     */
+    class StateBuffer {
+    public:
+        StateBuffer() {}
+        ~StateBuffer() {}
+
+        /**
+         * @brief Get the current ObjectState.
+         * 
+         * Calling this function multiple times on the same thread without the
+         * previous object going out of scope or without calling Unlock() is
+         * undefined behaviour and will likely result in a deadlock.
+         */
+        StateReader GetCurrentState() { return StateReader(&m_states[current], &m_stateMutexes[current]); }
+
+        /**
+         * @brief Get the ObjectState to read from.
+         * 
+         * Calling this function multiple times on the same thread without the
+         * previous object going out of scope or without calling Unlock() is
+         * undefined behaviour and will likely result in a deadlock.
+         */
+        StateReader GetReadState() { return StateReader(&m_states[read], &m_stateMutexes[read]); }
+
+        /**
+         * @brief Get the ObjectState to write to.
+         * 
+         * Calling this function multiple times on the same thread without the
+         * previous object going out of scope or without calling Unlock() is
+         * undefined behaviour and will likely result in a deadlock.
+         */
+        StateReader GetWriteState() { return StateReader(&m_states[write], &m_stateMutexes[write]); }
+
+        /**
+         * @brief Update the world states.
+         * 
+         * Current becomes the previous read object state.
+         * Read becomes the previous write object state.
+         * Write is cleared.
+         */
+        void UpdateBuffer() {
+            LockAll();
+
+            current = read;
+            read = write;
+            write = (write + 1) % m_states.size();
+            m_states[write].Clear();
+
+            UnlockAll();
+        }
+
+    private:
+        void LockAll() {
+            for (int i = 0; i < m_stateMutexes.size(); i++) {
+                m_stateMutexes[i].lock();
+            }
+        }
+
+        void UnlockAll() {
+            for (int i = 0; i < m_stateMutexes.size(); i++) {
+                m_stateMutexes[i].unlock();
+            }
+        }
+
+        std::array<ObjectState, 3> m_states;
+        std::array<std::shared_mutex, 3> m_stateMutexes;
+        
+        int current = 0;
+        int read = 1;
+        int write = 2;
     };
 }
