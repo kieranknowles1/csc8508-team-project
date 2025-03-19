@@ -10,7 +10,7 @@
 #include "CreditsScreen.h"
 #include "GameTechRendererInterface.h"
 #include "LobbyScreen.h"
-
+#include "TextureUiElement.h"
 
 namespace NCL::CSC8503 {
 
@@ -27,12 +27,20 @@ class MainMenuScreen : public PushdownState {
     bool inMenu;
     TutorialGame* game;
     Controller* controller;
-    Texture* fmodLogoTex;
+    //Texture* fmodLogoTex;
+    std::shared_ptr<NCL::Rendering::Texture> fmodLogoTex;
     GameTechRendererInterface* renderer;
+    ResourceManager* resourceManager;
+    std::unique_ptr<TextureUiElement> textureUiElement;
 public:
     MainMenuScreen(Controller* controller, TutorialGame* game, GameTechRendererInterface* renderer) : controller(controller), game(game), selection(0), inMenu(true), renderer(renderer) {
-        fmodLogoTex = renderer->LoadTexture("FMOD Logo Black - White Background.png");
-
+        //fmodLogoTex = renderer->LoadTexture("FMOD Logo Black - White Background.png");
+        resourceManager = game->GetResourceManager();
+        fmodLogoTex = resourceManager->getTextures().get("FMOD Logo White - Black Background1.png");
+        UiSprite fmodLogo = { Vector2(0.9f, 0.1f), Vector2(0.2f, 0.2f), Vector4(1,1,1,1), fmodLogoTex };
+        textureUiElement = std::make_unique<TextureUiElement>(fmodLogo);
+        renderer->AddUiElement(textureUiElement.get());
+        textureUiElement->SetActive(true);
     }
 
     PushdownResult OnUpdate(float dt, PushdownState** newState) override {
@@ -55,22 +63,26 @@ public:
             switch (mode)
             {
             case GameMode::SINGLEPLAYER:
+                textureUiElement->SetActive(false);
                 *newState = new LobbyScreen(controller, game, true);
                 inMenu = false;
                 return PushdownResult::Push;
-                //game->Start();
                 break;
             case GameMode::HOST_GAME:
+                textureUiElement->SetActive(false);
                 game->JoinGame(true); //This is host game
                 break;
             case GameMode::JOIN_GAME:
+                textureUiElement->SetActive(false);
                 game->JoinGame(false); //This is join game
                 break;
             case GameMode::CREDITS:
+                textureUiElement->SetActive(false);
                 *newState = new CreditsScreen(controller, Assets::CREDITS);
                 return PushdownResult::Push;
                 break;
             case GameMode::QUIT:
+                renderer->ClearUIElemets();
                 return PushdownResult::Pop;
             default: assert(false);
             }
@@ -92,7 +104,7 @@ public:
 
             Debug::Print(currentItem, Vector2(0.35f, 0.32f + (0.1f * i)));
         }
-        Debug::AddDebugTexture(fmodLogoTex, Vector2(90.0f, 90.0f), Vector2(10.0f, 8.0f));
+        //Debug::AddDebugTexture(fmodLogoTex, Vector2(90.0f, 90.0f), Vector2(10.0f, 8.0f));
         return PushdownResult::NoChange;
 
         //Add FMOD Logo here
@@ -100,7 +112,13 @@ public:
     }
 
     void OnAwake() override {
-
+        if (!textureUiElement) {  // Check if the element exists
+            fmodLogoTex = resourceManager->getTextures().get("FMOD Logo Black - White Background1.png");
+            UiSprite fmodLogo = { Vector2(0.8f, 0.5f), Vector2(0.2f, 0.2f), Vector4(1,1,1,1), fmodLogoTex };
+            textureUiElement = std::make_unique<TextureUiElement>(fmodLogo);
+        }
+        renderer->AddUiElement(textureUiElement.get());
+        textureUiElement->SetActive(true);
     }
 };
 

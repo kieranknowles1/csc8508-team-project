@@ -12,7 +12,7 @@ void main() {
 	if (hasTexture) {
 		vec4 texColor = texture(mainTex, texCoord);
 		fragColor = texColor * Color;
-		//fragColor = vec4(1,1,1,1);
+		//fragColor = vec4(texCoord ,0.0 ,1.0);
 		}
 	else {
 		fragColor = Color;

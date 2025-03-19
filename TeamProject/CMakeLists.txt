@@ -37,6 +37,7 @@ set(SOURCES
     GameScreen.h
     PauseScreen.h
     LobbyScreen.h
+    TextureUiElement.h
     Colors.h
     Multiplayer/GamePackets.hpp
     Multiplayer/GamePacketHandlers.hpp
