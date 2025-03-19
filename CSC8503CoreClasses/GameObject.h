@@ -124,7 +124,7 @@ namespace NCL::CSC8503 {
             return renderScale;
         }
 
-        void SetOwner(Lobbies::User user) {
+        virtual void SetOwner(Lobbies::User user) {
             owner.emplace(user);
         }
 

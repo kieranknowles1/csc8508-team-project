@@ -88,6 +88,12 @@ public:
 		return collisionType;
 	}
 
+
+    void SetOwner(Lobbies::User user) override {
+		gun->SetOwner(user);
+        owner.emplace(user);
+    }
+
 	void Rotate(bool positive, bool rolling, float yaw);
 
 
