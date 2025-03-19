@@ -641,7 +641,6 @@ void TutorialGame::Start() {
     instance->player->setType(GameObject::Type::Player);
     instance->playerController = std::make_unique<PlayerController>(instance->player, instance->controller, instance->mainCamera, instance->bulletWorld,instance->renderer);
 
-    instance->spGameController = new SPGameController(instance->player, instance, instance->renderer);
 
     btQuaternion emptyRot;
 
@@ -675,6 +674,9 @@ void TutorialGame::Start() {
             newPlayer->SetWorldID(newUser.GetUserID());
             newPlayer->GetRenderObject()->SetColour(Vector4(Color::GetPlayerColor(newUser.GetUserID())));
         }
+    }
+    else {
+        instance->spGameController = new SPGameController(instance->player, instance, instance->renderer);
     }
 
     Shoot::GetInstance()->Initialise(instance->bulletWorld,instance->resourceManager.get(), instance->world.get(), instance->renderer->GetDecalSystem());
