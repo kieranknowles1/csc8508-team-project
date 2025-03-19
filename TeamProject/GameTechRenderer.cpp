@@ -734,13 +734,15 @@ void GameTechRenderer::RenderLasers() {
 		glUniform3fv(glGetUniformLocation(laserShader->GetProgramID(), "endPosition"), 1, (float*)&laser->endPos);
 		glUniform1f(glGetUniformLocation(laserShader->GetProgramID(), "thickness"), 0.25f);
 		glUniform1f(glGetUniformLocation(laserShader->GetProgramID(), "time"), vignettePulse);
-		btVector4 color;
+		/*btVector4 color;
 		if (laser->id > 100) { //AI IDs starting at 101
 			color = Color::GetPlayerColor(5); //Using pink player color as default for now
 		}
 		else {
 			color = Color::GetPlayerColor(laser->id);
-		}
+		}*/
+		//AI IDs starting at 101, using pink player color as default for now
+		btVector4 color = laser->id > 100 ? Color::GetPlayerColor(5) : color = Color::GetPlayerColor(laser->id);
 		glUniform4fv(glGetUniformLocation(laserShader->GetProgramID(), "inColour"), 1, (float*)&color);
 		DrawBoundMesh();
 	}

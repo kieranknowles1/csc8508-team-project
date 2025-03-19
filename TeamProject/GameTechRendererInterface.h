@@ -124,9 +124,11 @@ namespace NCL::CSC8503 {
 
 		void initLasers(bool sp) {
 			if (sp) {
-				std::shared_ptr<Laser> newLaser = std::make_shared<Laser>(btVector3(0, 0, 0), btVector3(0, 0, 0), 0);
+				//Player in SP is ID 1 and AI id is 101-150 for now
+				std::shared_ptr<Laser> newLaser = std::make_shared<Laser>(btVector3(0, 0, 0), btVector3(0, 0, 0), 1);
+				lasers.push_back(newLaser);
 				for (int i = 101; i < 151; i++) {
-					std::shared_ptr<Laser> newLaser = std::make_shared<Laser>(btVector3(0, 0, 0), btVector3(0, 0, 0), i + 1);
+					std::shared_ptr<Laser> newLaser = std::make_shared<Laser>(btVector3(0, 0, 0), btVector3(0, 0, 0), i);
 					lasers.push_back(newLaser);
 				}
 			}
