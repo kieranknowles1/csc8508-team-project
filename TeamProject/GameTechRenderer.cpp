@@ -95,6 +95,7 @@ GameTechRenderer::GameTechRenderer(Window* window) : OGLRenderer(window), GameTe
 	glGenFramebuffers(1, &laserPostFBO);
 	glGenFramebuffers(1, &laserPostFBO2);
 	glGenFramebuffers(1, &laserAddFBO);
+	glGenFramebuffers(1, &edgeNormalsFBO);
 
 	GLenum buffers[2] = {
 	GL_COLOR_ATTACHMENT0,
@@ -114,6 +115,7 @@ GameTechRenderer::GameTechRenderer(Window* window) : OGLRenderer(window), GameTe
 	GenerateScreenTexture(laserPostTex);
 	GenerateScreenTexture(laserPostTex2);
 	GenerateScreenTexture(laserAddedTex);
+	GenerateScreenTexture(edgeNormalsTex);
 	//attach textures to FBOS:
 	//first pass:
 	glBindFramebuffer(GL_FRAMEBUFFER, bufferFBO);
@@ -171,6 +173,12 @@ GameTechRenderer::GameTechRenderer(Window* window) : OGLRenderer(window), GameTe
 		return;
 	}
 
+	glBindFramebuffer(GL_FRAMEBUFFER, edgeNormalsFBO);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, edgeNormalsTex, 0);
+	glDrawBuffers(1, buffers);
+	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE || !edgeNormalsTex) {
+		return;
+	}
 
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	//not enabling depth test etc here as this is done in the rendering functions
@@ -186,6 +194,7 @@ GameTechRenderer::GameTechRenderer(Window* window) : OGLRenderer(window), GameTe
 
 	vignetteShader = std::make_unique<OGLShader>("texturevert.glsl", "vignettefrag.glsl");
 	edgedetectShader = std::make_unique<OGLShader>("texturevert.glsl", "edgedetectfrag.glsl");
+	edgeNormals = std::make_unique<OGLShader>("texturevert.glsl", "edgeNormals.glsl");
 
  	//start setting up framebuffers for post processing:
 	//first generate the textures to store the rendered scene:
@@ -271,6 +280,8 @@ GameTechRenderer::~GameTechRenderer() {
 	glDeleteFramebuffers(1, &laserPreFBO);
 	glDeleteTextures(1, &laserPreTex);
 	glDeleteTextures(1, &laserTexOld);
+	glDeleteFramebuffers(1, &edgeNormalsFBO);
+	glDeleteTextures(1, &edgeNormalsTex);
 
 }
 
@@ -917,6 +928,29 @@ void GameTechRenderer::RenderDecals() {
 }
 
 void GameTechRenderer::RenderPostProcessing() { //gonna try putting edge detection first:
+
+		//Edge detection:
+		glBindFramebuffer(GL_FRAMEBUFFER, edgeNormalsFBO);//was BFBO
+		glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+		glDisable(GL_CULL_FACE);
+		glDisable(GL_BLEND);
+		glDisable(GL_DEPTH_TEST);
+		UseShader(*edgeNormals);
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, bufferDepthTex);
+		glUniform1i(glGetUniformLocation(edgeNormals->GetProgramID(), "depthTex"), 0);
+		glUniform2f(glGetUniformLocation(edgeNormals->GetProgramID(), "windowSize"), windowSize.x, windowSize.y);
+		//using the same proj and view matrices from RenderCamera():
+		Matrix4 viewMatrix = camera->BuildViewMatrix();
+		Matrix4 projMatrix = camera->BuildProjectionMatrix(hostWindow->GetScreenAspect());
+		Matrix4 invProj = Matrix::Inverse(projMatrix);
+		Matrix4 invView = Matrix::Inverse(viewMatrix);
+		glUniformMatrix4fv(glGetUniformLocation(edgeNormals->GetProgramID(), "inverseProjMatrix"), 1, false, (float*)&invProj);
+		glUniformMatrix4fv(glGetUniformLocation(edgeNormals->GetProgramID(), "inverseViewMatrix"), 1, false, (float*)&invView);
+		BindMesh(*fullscreenQuad);
+		DrawBoundMesh();
+
+
         //Edge detection:
 	    glBindFramebuffer(GL_FRAMEBUFFER, hdrFBO);//was BFBO
 		glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
@@ -924,23 +958,13 @@ void GameTechRenderer::RenderPostProcessing() { //gonna try putting edge detecti
 		glDisable(GL_BLEND);
 		glDisable(GL_DEPTH_TEST);
 		UseShader(*edgedetectShader);
+		glUniform2f(glGetUniformLocation(edgedetectShader->GetProgramID(), "windowSize"), windowSize.x, windowSize.y);
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, BTex); //currently holds the scene, gonna have to change up the vignette part to accomodate this //was bufferColourTex
 		glUniform1i(glGetUniformLocation(edgedetectShader->GetProgramID(), "sceneTex"), 0);
 		glActiveTexture(GL_TEXTURE1);
-		glBindTexture(GL_TEXTURE_2D, bufferDepthTex);
-		glUniform1i(glGetUniformLocation(edgedetectShader->GetProgramID(), "depthTex"), 1);
-		glUniform2f(glGetUniformLocation(edgedetectShader->GetProgramID(), "windowSize"), windowSize.x, windowSize.y);
-		glUniform1f(glGetUniformLocation(edgedetectShader->GetProgramID(), "nearPlane"), camera->GetNearPlane());
-		glUniform1f(glGetUniformLocation(edgedetectShader->GetProgramID(), "farPlane"), camera->GetFarPlane());
-		//using the same proj and view matrices from RenderCamera():
-		Matrix4 viewMatrix = camera->BuildViewMatrix();
-		Matrix4 projMatrix = camera->BuildProjectionMatrix(hostWindow->GetScreenAspect());
-		Matrix4 invProj = Matrix::Inverse(projMatrix);
-		Matrix4 invView = Matrix::Inverse(viewMatrix);
-
-		glUniformMatrix4fv(glGetUniformLocation(edgedetectShader->GetProgramID(), "inverseProjMatrix"), 1, false, (float*)&invProj);
-		glUniformMatrix4fv(glGetUniformLocation(edgedetectShader->GetProgramID(), "inverseViewMatrix"), 1, false, (float*)&invView);
+		glBindTexture(GL_TEXTURE_2D, edgeNormalsTex);
+		glUniform1i(glGetUniformLocation(edgedetectShader->GetProgramID(), "normalTex"), 1);
 		BindMesh(*fullscreenQuad);
 		DrawBoundMesh();
 
