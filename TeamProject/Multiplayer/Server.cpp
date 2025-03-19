@@ -130,14 +130,13 @@ namespace Multiplayer {
             bool hasRotation = read->ReadState(StateType::Rotation, &rotation);
 
             read->Unlock_Shared();
-            readReader.Unlock();
 
             if (hasLinear && hasAngular) {
                 std::shared_ptr<Packet::DeltaPacket> deltaPacket = std::make_shared<Packet::DeltaPacket>(
                     object->GetWorldID(),
                     std::get<btVector3>(linearVelocity),
                     std::get<btVector3>(angularVelocity),
-                    m_tickCount + (m_isHost ? 0 : 5)
+                    m_tickCount
                 );
                 m_network->Broadcast(deltaPacket);
             }
@@ -147,23 +146,27 @@ namespace Multiplayer {
                     object->GetWorldID(),
                     std::get<btVector3>(position),
                     std::get<btQuaternion>(rotation),
-                    m_tickCount + (m_isHost ? 0 : 1)
+                    m_tickCount
                 );
                 m_network->Broadcast(positionPacket);
             }
 
-            //// Create change gravity packet for players.
-            //if (object->getType() == GameObject::Type::Player) {
-            //    PlayerObject* playerObj = static_cast<PlayerObject*>(object);
+            // Create change gravity packet for players.
+            if (object->getType() == GameObject::Type::Player) {
+                StateValue upVectorValue;
 
-            //    std::shared_ptr<Packet::ObjectChangeGravityPacket> gravity = std::make_shared<Packet::ObjectChangeGravityPacket>(
-            //        playerObj->GetWorldID(),
-            //        std::get<btVector3>(worldState.UnsafeReadState(WorldState::StateType::UpVector)),
-            //        m_tickCount
-            //    );
-            //    m_network->Broadcast(gravity);
-            //}
-            //worldState.ReleaseReadLock(); // RELEASE LOCK.
+                read->Lock_Shared();
+                bool hasUpVector = read->ReadState(StateType::UpVector, &upVectorValue);
+                read->Unlock_Shared();
+
+                std::shared_ptr<Packet::ObjectChangeGravityPacket> gravity = std::make_shared<Packet::ObjectChangeGravityPacket>(
+                    object->GetWorldID(),
+                    std::get<btVector3>(upVectorValue),
+                    m_tickCount
+                );
+                m_network->Broadcast(gravity);
+            }
+            readReader.Unlock();
         });
     }
 

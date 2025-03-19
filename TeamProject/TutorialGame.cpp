@@ -62,12 +62,12 @@ void TutorialGame::InitialiseAssets() {
 }
 
 TutorialGame::~TutorialGame()	{
-    instance = nullptr;
     DestroyBullet();
     audioEngine.Shutdown();
 
     delete server;
     delete stateMutex;
+    instance = nullptr;
 }
 
 static bool BulletRaycast(btDynamicsWorld* world, const btVector3& start, const btVector3& end, btCollisionWorld::ClosestRayResultCallback& resultCallback) {
@@ -537,7 +537,7 @@ void TutorialGame::Start() {
     instance->LoadWorldFromFile(10);
     
     // Spawn in player.
-    std::array<PlayerObject*, 4> players;
+    std::array<PlayerObject*, 2> players;
 
     for (int i = 0; i < players.size(); i++) {
         User user(i);
