@@ -10,27 +10,27 @@ SPGameController::SPGameController(GameObject* p, TutorialGame* g)
     btDiscreteDynamicsWorld* bulletWorld = game->getBulletWorld();
 
     bottom = new NavMesh(bulletWorld);
-    bottom->LoadFromFile("Assets/Meshes/NavMeshes/bottom.navmesh");
+    bottom->LoadFromFile("bottom.navmesh");
     navMeshes.push_back(bottom);
 
     top = new NavMesh(bulletWorld);
-    top->LoadFromFile("Assets/Meshes/NavMeshes/top.navmesh");
+    top->LoadFromFile("top.navmesh");
     navMeshes.push_back(top);
 
     front = new NavMesh(bulletWorld);
-    front->LoadFromFile("Assets/Meshes/NavMeshes/front.navmesh");
+    front->LoadFromFile("front.navmesh");
     navMeshes.push_back(front);
 
     back = new NavMesh(bulletWorld);
-    back->LoadFromFile("Assets/Meshes/NavMeshes/back.navmesh");
+    back->LoadFromFile("back.navmesh");
     navMeshes.push_back(back);
 
     left = new NavMesh(bulletWorld);
-    left->LoadFromFile("Assets/Meshes/NavMeshes/left.navmesh");
+    left->LoadFromFile("left.navmesh");
     navMeshes.push_back(left);
 
     right = new NavMesh(bulletWorld);
-    right->LoadFromFile("Assets/Meshes/NavMeshes/right.navmesh");
+    right->LoadFromFile("right.navmesh");
     navMeshes.push_back(right);
 
     for (int i = 0; i < 5; i++) {
