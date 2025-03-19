@@ -35,6 +35,14 @@ struct UiState {
     int texture = NULLTEX;
 };
 
+struct LaserState {
+	float3 start;
+	int __pad1;
+	float3 end;
+	float thickness;
+	float4 colour;
+};
+
 struct VS_OUTPUT
 {
 	float4 Position SLOT(S_POSITION);
@@ -59,6 +67,13 @@ struct DEFERRED_VS_OUTPUT
 {
 	float4 position SLOT(S_POSITION);
 	int stateId SLOT(TEXCOORD0);
+};
+
+struct LASER_VS_OUTPUT
+{
+	float4 position SLOT(S_POSITION);
+	float4 color SLOT(TEXCOORD0);
+	float depth SLOT(TEXCOORD1);
 };
 
 #undef SLOT

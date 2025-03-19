@@ -70,6 +70,7 @@ namespace NCL {
 
 			void UiPass();
 			void LightPass();
+			void LaserPass();
 			void PostProcessPass();
 
 			void DisplayRenderPass();
@@ -128,6 +129,7 @@ namespace NCL {
 				int objectCount = 0;
 				UniformArray<UiState> ui;
 				UniformArray<LightState> lights;
+				UniformArray<LaserState> lasers;
 
 				sce::Agc::Core::Buffer constantBuffer;
 
@@ -155,7 +157,8 @@ namespace NCL {
 
 			std::unique_ptr<PS5::AGCMesh> unitQuad;
 			std::unique_ptr<PS5::AGCMesh> halfUnitQuad;
-			PS5::AGCMesh* sphere;
+			std::unique_ptr<PS5::AGCMesh> sphere;
+			std::unique_ptr<PS5::AGCMesh> highResSphere;
 
 			sce::Agc::Core::Texture*	bindlessTextures;
 			sce::Agc::Core::Buffer*		bindlessBuffers;
@@ -188,6 +191,10 @@ namespace NCL {
 			std::unique_ptr<PS5::AGCShader> postVertexShader;
 			std::unique_ptr<PS5::AGCShader> postPixelShader;
 
+			std::unique_ptr<PS5::AGCShader> laserVertexShader;
+			std::unique_ptr<PS5::AGCShader> laserPixelShader;
+			std::unique_ptr<PS5::AGCShader> laserPreShader;
+
 			struct FrameBuffer {
 				enum class Slot {
 					Color,
@@ -205,8 +212,13 @@ namespace NCL {
 			// Configure a viewport that takes up the requested size
 			void useViewPort(sce::Agc::Core::BasicContext* context, Vector2i size) const;
 
+			void prepPostProcessing(sce::Agc::CxRenderTarget& target);
+
 			FrameBuffer sceneBuffer;
 			FrameBuffer sceneNormalBuffer;
+
+			FrameBuffer laserBuffer;
+			FrameBuffer previousLaserBuffer;
 
 			FrameBuffer lightDiffuse;
 			FrameBuffer lightSpecular;
