@@ -626,6 +626,7 @@ void TutorialGame::StartMultiplayerGame() {
 
 void TutorialGame::Start() {
     instance->state = GameState::ACTIVE;
+    instance->renderer->initLasers(instance->gameMode == GameMode::SINGLEPLAYER ? true : false);
     instance->LoadWorldFromFile(9);
     
     // Init user for single players.

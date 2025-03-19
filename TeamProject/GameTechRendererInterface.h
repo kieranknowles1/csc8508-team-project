@@ -122,10 +122,18 @@ namespace NCL::CSC8503 {
 		}
 
 
-		void initLasers() {
-			for (int i = 0; i < 8; i++) {
-				std::shared_ptr<Laser> newLaser = std::make_shared<Laser>(btVector3(0, 0, 0), btVector3(0, 0, 0), i + 1);
-				lasers.push_back(newLaser);
+		void initLasers(bool sp) {
+			if (sp) {
+				for (int i = 0; i < 50; i++) {
+					std::shared_ptr<Laser> newLaser = std::make_shared<Laser>(btVector3(0, 0, 0), btVector3(0, 0, 0), i + 1);
+					lasers.push_back(newLaser);
+				}
+			}
+			else {
+				for (int i = 0; i < 8; i++) {
+					std::shared_ptr<Laser> newLaser = std::make_shared<Laser>(btVector3(0, 0, 0), btVector3(0, 0, 0), i + 1);
+					lasers.push_back(newLaser);
+				}
 			}
 		}
 
