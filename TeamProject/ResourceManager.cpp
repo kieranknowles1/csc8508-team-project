@@ -7,9 +7,18 @@
 #include "MshLoader.h"
 #include "TextureLoader.h"
 
-#ifdef __PROSPERO__
+#ifndef __PROSPERO__
+#include "OGLTexture.h"
+#include "OGLMesh.h"
+using PlatformTexture = NCL::Rendering::OGLTexture;
+using PlatformMesh = NCL::Rendering::OGLMesh;
+#else
+#include <PS5Core/AGCTexture.h>
+#include <PS5Core/AGCMesh.h>
 #include "GameTechAGCRenderer.h"
-#endif // __PROSPERO__
+using PlatformTexture = NCL::PS5::AGCTexture;
+using PlatformMesh = NCL::PS5::AGCMesh;
+#endif
 
 
 namespace NCL::CSC8503 {
@@ -19,6 +28,7 @@ ResourceManager::ResourceManager(GameTechRendererInterface* renderer, float thre
 	, meshes(this)
 	, textures(this)
     , materials(this)
+	, timeSinceGc(0)
 {
 	auto pwd = std::filesystem::current_path().string();
 	std::cout << "Using working directory: " << pwd << std::endl;
@@ -93,28 +103,54 @@ std::unique_ptr<Job> ResourceManager::getJob() {
 }
 
 template<>
-void ResourceMap<std::string, PlatformMesh>::load(const std::string& key, PlatformMesh* outMesh) {
+void ResourceMap<std::string, Rendering::Mesh>::load(const std::string& key, Rendering::Mesh* outMesh) {
 	Rendering::MshLoader::LoadMesh(key, *outMesh);
 }
 
 template<>
-void ResourceMap<std::string, PlatformTexture>::load(const std::string& key, PlatformTexture* outTexture) {
+void ResourceMap<std::string, Rendering::Texture>::load(const std::string& key, Rendering::Texture* outTexture) {
 	outTexture->load(key);
 #ifdef __PROSPERO__
 	auto renderer = (GameTechAGCRenderer*)owner->getRenderer()->getBase();
-	renderer->RegisterTexture(key, outTexture);
+	renderer->RegisterTexture(key, (AGCTexture*)outTexture);
 #endif // __PROSPERO__
 
 }
 
 template<>
-void ResourceMap<std::string, PlatformMesh>::upload(PlatformMesh* mesh) {
+void ResourceMap<std::string, Rendering::Mesh>::upload(Rendering::Mesh* mesh) {
 	mesh->UploadToGPU(owner->getRenderer()->getBase());
 }
 
 template<>
-void ResourceMap<std::string, PlatformTexture>::upload(PlatformTexture* tex) {
+void ResourceMap<std::string, Rendering::Texture>::upload(Rendering::Texture* tex) {
 	tex->upload();
+}
+
+template<>
+void ResourceMap<std::string, Material>::load(const std::string& key, Material* mat) {
+	// We load during construction
+}
+
+template<>
+void ResourceMap<std::string, Material>::upload(Material* mat) {
+	// Nothing to do, all uploads are done by the textures
+}
+
+
+template<>
+std::shared_ptr<Rendering::Mesh> ResourceMap<std::string, Rendering::Mesh>::construct(const std::string& key) {
+	return std::make_shared<PlatformMesh>();
+}
+
+template<>
+std::shared_ptr<Rendering::Texture> ResourceMap<std::string, Rendering::Texture>::construct(const std::string& key) {
+	return std::make_shared<PlatformTexture>();
+}
+
+template<>
+std::shared_ptr<Material> ResourceMap<std::string, Material>::construct(const std::string& key) {
+	return std::make_shared<Material>(owner, key);
 }
 
 }

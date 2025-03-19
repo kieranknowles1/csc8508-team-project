@@ -17,18 +17,6 @@
 #include "Shader.h"
 #include "Material.h"
 
-#ifndef __PROSPERO__
-#include "OGLTexture.h"
-#include "OGLMesh.h"
-using PlatformTexture = NCL::Rendering::OGLTexture;
-using PlatformMesh = NCL::Rendering::OGLMesh;
-#else
-#include <PS5Core/AGCTexture.h>
-#include <PS5Core/AGCMesh.h>
-using PlatformTexture = NCL::PS5::AGCTexture;
-using PlatformMesh = NCL::PS5::AGCMesh;
-#endif
-
 namespace NCL::CSC8503 {
     class GameTechRenderer;
 
@@ -89,12 +77,14 @@ namespace NCL::CSC8503 {
 
     private:
         ResourceManager* owner;
+        std::shared_ptr<V> construct(const K& key);
         void load(const K& key, V* out);
         void upload(V* res);
         // Keep a strong reference and periodically check the use count
         // in order to keep resources that are frequently added/removed to the scene
         // from being loaded/unloaded constantly
         std::map<K, std::shared_ptr<V>> resources;
+        std::mutex resMtx;
 
         std::vector<std::shared_ptr<V>> queuedUploads;
     };
@@ -122,8 +112,8 @@ namespace NCL::CSC8503 {
         GameTechRendererInterface* getRenderer() { return renderer; }
 
         //ResourceMap<std::string, Rendering::Texture>& getCubeMaps() { return cubeMaps; }
-        ResourceMap<std::string, PlatformMesh>& getMeshes() { return meshes; }
-        ResourceMap<std::string, PlatformTexture>& getTextures() { return textures; }
+        ResourceMap<std::string, Rendering::Mesh>& getMeshes() { return meshes; }
+        ResourceMap<std::string, Rendering::Texture>& getTextures() { return textures; }
         ResourceMap<std::string, Material>& getMaterials() { return materials; }
 
         void addJob(std::unique_ptr<Job> job) {
@@ -164,8 +154,8 @@ namespace NCL::CSC8503 {
         GameTechRendererInterface* renderer;
 
         //ResourceMap<std::string, Rendering::Texture> cubeMaps;
-        ResourceMap<std::string, PlatformMesh> meshes;
-        ResourceMap<std::string, PlatformTexture> textures;
+        ResourceMap<std::string, Rendering::Mesh> meshes;
+        ResourceMap<std::string, Rendering::Texture> textures;
         ResourceMap<std::string, Material> materials;
 
         float gcFrequency = 30.0f;
@@ -175,10 +165,11 @@ namespace NCL::CSC8503 {
     template <typename K, typename V>
     std::shared_ptr<V> ResourceMap<K, V>::get(const K& key)
     {
+        std::lock_guard lock(resMtx);
         auto it = resources.find(key);
         if (it == resources.end())
         {
-            auto resource = std::make_shared<V>();
+            auto resource = construct(key);
             queuedUploads.push_back(resource);
             auto job = std::make_unique<LoadResourceJob>(this, key, resource);
             owner->addJob(std::move(job));
