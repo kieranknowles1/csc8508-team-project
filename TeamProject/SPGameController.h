@@ -7,10 +7,11 @@ namespace NCL {
         class NavMesh;
         class Wanderer;
         class Turret;
+        class GameTechRendererInterface;
 
 		class SPGameController {
 		public:
-			SPGameController(GameObject* p, TutorialGame* g);
+			SPGameController(GameObject* p, TutorialGame* g, GameTechRendererInterface* r);
             void Update(float dt);
 		private:
 			GameObject* player;
@@ -32,6 +33,8 @@ namespace NCL {
 
             Turret* AddTurretToWorld();
             Turret* testTurret = nullptr;
+
+            GameTechRendererInterface* renderer;
 		};
 	}
 }

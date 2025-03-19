@@ -4,8 +4,8 @@
 using namespace NCL;
 using namespace CSC8503;
 
-SPGameController::SPGameController(GameObject* p, TutorialGame* g)
-	: player(p), game(g) {
+SPGameController::SPGameController(GameObject* p, TutorialGame* g, GameTechRendererInterface* r)
+	: player(p), game(g), renderer(r) {
 
     btDiscreteDynamicsWorld* bulletWorld = game->getBulletWorld();
 
@@ -53,7 +53,7 @@ void SPGameController::Update(float dt) {
 }
 
 Wanderer* SPGameController::AddWandererToWorld(NavMesh* navMesh, char side, int laserID) {
-    Wanderer* wanderer = new Wanderer(player, navMesh, side, laserID);
+    Wanderer* wanderer = new Wanderer(player, navMesh, side, laserID, renderer);
 
     float height = 4.0f;
     float radius = 2.0f;

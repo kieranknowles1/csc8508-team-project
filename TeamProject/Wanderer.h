@@ -7,7 +7,7 @@ namespace NCL {
 		class StateMachine;
 		class Wanderer : public NavEntity {
 		public:
-			Wanderer(GameObject* p, NavMesh* nav, char side, int lID);
+			Wanderer(GameObject* p, NavMesh* nav, char side, int lID, GameTechRendererInterface* r);
 			~Wanderer();
 
 			void Update(float dt);
@@ -30,11 +30,14 @@ namespace NCL {
 
 			float maxShootTimer = 5.0f;
 			float shootTimer;
+			bool isShooting = true;
 
 			float maxUpdatePlayerPathTimer = 2.0f;
 			float updateplayerPathTimer;
 
 			int laserID;
+
+			GameTechRendererInterface* renderer;
 		};
 	}
 }

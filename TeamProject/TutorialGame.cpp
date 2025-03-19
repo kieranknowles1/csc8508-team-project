@@ -641,7 +641,7 @@ void TutorialGame::Start() {
     instance->player->setType(GameObject::Type::Player);
     instance->playerController = std::make_unique<PlayerController>(instance->player, instance->controller, instance->mainCamera, instance->bulletWorld,instance->renderer);
 
-    instance->spGameController = new SPGameController(instance->player, instance);
+    instance->spGameController = new SPGameController(instance->player, instance, instance->renderer);
 
     btQuaternion emptyRot;
 
