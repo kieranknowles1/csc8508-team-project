@@ -20,25 +20,34 @@ using namespace Rendering;
 using namespace Maths;
 
 SimpleFont::SimpleFont(const std::string&filename) {
+    ft = nullptr; // Initialize the pointer
     InitializeFreeType(filename);
 }
 
 
 SimpleFont::~SimpleFont()	{
-    FT_Done_FreeType(ft);
+    for (auto& c : characters) {
+        glDeleteTextures(1, &c.second.textureID);
+    }
+
+    characters.clear();
+
+    if (ft) {
+        FT_Done_FreeType(reinterpret_cast<FT_Library>(ft)); // Cast back to FreeType and free it
+    }
 }
 
 int SimpleFont::InitializeFreeType(const std::string& filename) {
-    
-    if (FT_Init_FreeType(&ft)) {
+    FT_Library lib;
+    if (FT_Init_FreeType(&lib)) {
         std::cout << "ERROR::FREETYPE: Could not init FreeType Library" << std::endl;
         return -1;
     }
 
     FT_Face face;
-    if (FT_New_Face(ft, (Assets::FONTSSDIR + filename).c_str(), 0, &face)) {
+    if (FT_New_Face(lib, (Assets::FONTSSDIR + filename).c_str(), 0, &face)) {
         std::cout << "ERROR::FREETYPE: Failed to load font" << std::endl;
-        FT_Done_FreeType(ft); // Free library before returning (not needed but good practice for resource management)
+        FT_Done_FreeType(lib); // Free library before returning (not needed but good practice for resource management)
         return -1;
     }
 
@@ -98,5 +107,5 @@ int SimpleFont::InitializeFreeType(const std::string& filename) {
 
     // clear the face and free the FreeType library
     FT_Done_Face(face);
-    FT_Done_FreeType(ft);
+    return 0;
 }
