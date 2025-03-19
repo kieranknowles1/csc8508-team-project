@@ -107,8 +107,6 @@ public:
         //Debug::AddDebugTexture(fmodLogoTex, Vector2(90.0f, 90.0f), Vector2(10.0f, 8.0f));
         return PushdownResult::NoChange;
 
-        //Add FMOD Logo here
-        //Debug::AddDebugTexture(fmodLogoTex, Vector2(0.2f, 0.2f), Vector2(10.0f, 10.0f));
     }
 
     void OnAwake() override {
