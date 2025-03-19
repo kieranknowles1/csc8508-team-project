@@ -93,10 +93,12 @@ namespace NCL::CSC8503 {
     // This should be called immediately before rendering to ensure everything is available.
     //
     // Resources are loaded by worker threads, then uploaded by the main thread to the GPU
+    //
+    // A number of worker threads are allocated according to max(1, ceil(physicalThreads * threadMult))
     class ResourceManager
     {
     public:
-        ResourceManager(GameTechRendererInterface* renderer, int workerThreadCount);
+        ResourceManager(GameTechRendererInterface* renderer, float threadMult);
         ~ResourceManager();
         
         // Run periodic garbage collection and upload all pending assets

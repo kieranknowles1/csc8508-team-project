@@ -36,7 +36,7 @@ TutorialGame::TutorialGame(GameTechRendererInterface* renderer, Controller* cont
     world->GetMainCamera().SetController(controller);
     mainCamera = &world->GetMainCamera();
 
-    resourceManager = std::make_unique<ResourceManager>(renderer, config.get<int>("resourceLoaderThreads"));
+    resourceManager = std::make_unique<ResourceManager>(renderer, config.get<float>("resourceThreadMult"));
     new Shoot(); //Shoot and Respawn have new before them but are not being deleted to my knowledge
     new Respawn();
 

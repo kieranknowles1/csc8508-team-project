@@ -21,13 +21,17 @@ using PlatformMesh = NCL::PS5::AGCMesh;
 
 namespace NCL::CSC8503 {
 
-ResourceManager::ResourceManager(GameTechRendererInterface* renderer, int workerThreadCount)
+ResourceManager::ResourceManager(GameTechRendererInterface* renderer, float threadMult)
 	: renderer(renderer)
 	, meshes(this)
 	, textures(this)
 {
 	auto pwd = std::filesystem::current_path().string();
 	std::cout << "Using working directory: " << pwd << std::endl;
+
+	// Includes hyperthreading
+	int hardwareThreads = std::thread::hardware_concurrency();
+	int workerThreadCount = std::max(1, int(std::ceil(threadMult * hardwareThreads)));
 
 	std::cout << "Spawning " << workerThreadCount << " worker threads" << std::endl;
 	for (int i = 0; i < workerThreadCount; i++) {
