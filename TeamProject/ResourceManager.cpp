@@ -112,7 +112,7 @@ void ResourceMap<std::string, Rendering::Texture>::load(const std::string& key, 
 	outTexture->load(key);
 #ifdef __PROSPERO__
 	auto renderer = (GameTechAGCRenderer*)owner->getRenderer()->getBase();
-	renderer->RegisterTexture(key, (AGCTexture*)outTexture);
+	renderer->RegisterTexture(key, (PS5::AGCTexture*)outTexture);
 #endif // __PROSPERO__
 
 }
