@@ -132,7 +132,7 @@ namespace Multiplayer {
                     object->GetWorldID(),
                     std::get<btVector3>(linearVelocity),
                     std::get<btVector3>(angularVelocity),
-                    m_tickCount
+                    m_tickCount + (m_isHost ? 0 : 5)
                 );
                 m_network->Broadcast(deltaPacket);
             }
@@ -142,7 +142,7 @@ namespace Multiplayer {
                     object->GetWorldID(),
                     std::get<btVector3>(position),
                     std::get<btQuaternion>(rotation),
-                    m_tickCount
+                    m_tickCount + (m_isHost ? 0 : 1)
                 );
                 m_network->Broadcast(positionPacket);
             }
@@ -168,6 +168,8 @@ namespace Multiplayer {
         // TODO: place packets into a buffer to add a little delay before processing so that
         // enough time has passed for all the packets to arrive.
         std::shared_ptr<Packet::Packet> currentPacket = m_network->Fetch();
+        int smallestIncoming = INT32_MAX;
+
         while (currentPacket.get() != nullptr) {
             // Process packets that have a sequence of zero (usually high priority).
             if (currentPacket->GetChannel() == (uint8_t) Channel::RELIABLE ) {
@@ -179,9 +181,15 @@ namespace Multiplayer {
                 // Drop old packets.
                 if (currentPacket->GetSequenceNumber() >= m_processTick) {
                     m_buffer[m_tickCount % TICK_BUFFER_SIZE].push_back(currentPacket);
+
+                    if (currentPacket->GetSequenceNumber() < smallestIncoming) {
+                        smallestIncoming = currentPacket->GetSequenceNumber();
+                    }
                 }
+
                 // Pass packets on to clients.
                 if (m_isHost) {
+                    currentPacket->SetSequenceNumber(currentPacket->GetSequenceNumber() + 1);
                     m_network->Broadcast(currentPacket);
                 }
             }
@@ -195,6 +203,12 @@ namespace Multiplayer {
                 Packet::PacketRegister::GetHandler(packet->GetType())->Handle(packet);
             }
             m_buffer[m_processTick % TICK_BUFFER_SIZE].clear();
+        }
+
+        // Speeding up to match others pace.
+        if (smallestIncoming > m_tickCount && smallestIncoming != INT32_MAX) {
+            m_processTick += smallestIncoming - m_tickCount;
+            m_tickCount = smallestIncoming;
         }
 
         m_tickCount++;

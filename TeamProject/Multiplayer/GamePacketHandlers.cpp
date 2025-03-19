@@ -20,6 +20,8 @@ namespace Packet {
         StateReader writeReader = object->GetObjectStates()->GetWriteState();
         ObjectState* writeState = writeReader.GetState();
 
+        std::cout << "Updating delta state.\n";
+
         writeState->UpdateState(StateType::LinearVelocity, deltaPacket->GetLinearVelocity());
         writeState->UpdateState(StateType::AngularVelocity, deltaPacket->GetAngularVelocity());
     }
@@ -213,6 +215,8 @@ namespace Packet {
 
         StateReader writeReader = object->GetObjectStates()->GetWriteState();
         ObjectState* writeState = writeReader.GetState();
+        
+        std::cout << "Updating position state.\n";
 
         writeState->UpdateState(StateType::Position, positionPacket->GetPosition());
         writeState->UpdateState(StateType::Rotation, positionPacket->GetOrientation());
