@@ -132,6 +132,7 @@ int main(int argc, char** argv) {
         window->SetTitle("Gametech frame time:" + std::to_string(1000.0f * dt));
 
         quit |= !machine.Update(dt);
+        game->GetResourceManager()->update(dt);
         renderer->collectFrameObjects(game->getWorld());
         renderer->drawFrame(dt);
         Debug::UpdateRenderables(dt);
