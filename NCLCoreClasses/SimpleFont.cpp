@@ -12,7 +12,7 @@ https://research.ncl.ac.uk/game/
 #include "Assets.h"
 
 #include <ft2build.h>
-#include "../OpenGLRendering/glad/gl.h"
+#include "../OpenGLRendering/glad/gl.h" // TODO: find a way to include glad/gl.h without the path
 #include FT_FREETYPE_H
 
 using namespace NCL;
@@ -26,11 +26,12 @@ SimpleFont::SimpleFont(const std::string&filename) {
 
 
 SimpleFont::~SimpleFont()	{
+    // Clean up the textures
     for (auto& c : characters) {
         glDeleteTextures(1, &c.second.textureID);
     }
 
-    characters.clear();
+    characters.clear(); // Explicitly clear the map, good practice
 
     if (ft) {
         FT_Done_FreeType(reinterpret_cast<FT_Library>(ft)); // Cast back to FreeType and free it

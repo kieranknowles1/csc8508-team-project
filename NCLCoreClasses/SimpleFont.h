@@ -3,6 +3,8 @@
 #include <string>
 #include <map>
 
+using namespace NCL::Maths;
+
 namespace NCL {
 	namespace Rendering {
 		class Texture;
@@ -22,6 +24,10 @@ namespace NCL {
 			~SimpleFont();
 
             int InitializeFreeType(const std::string& filename);
+
+            Character GetCharacter(unsigned char c) const {
+                return characters.at(c);
+            }
 
 		protected:
             void* ft; // Store as void* to avoid including FreeType headers
