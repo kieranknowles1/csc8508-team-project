@@ -28,7 +28,7 @@ namespace NCL {
             void VisualiseNavMesh();
 
             std::vector<Wanderer*> wanderers;
-            Wanderer* AddWandererToWorld(NavMesh* navMesh, char side);
+            Wanderer* AddWandererToWorld(NavMesh* navMesh, char side, int laserID);
 
             Turret* AddTurretToWorld();
             Turret* testTurret = nullptr;

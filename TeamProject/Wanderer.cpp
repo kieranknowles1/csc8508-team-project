@@ -8,8 +8,8 @@
 using namespace NCL;
 using namespace CSC8503;
 
-Wanderer::Wanderer(GameObject* p, NavMesh* mesh, char side) :
-	player(p), navMesh(mesh), shootTimer(maxShootTimer), updateplayerPathTimer(maxUpdatePlayerPathTimer){
+Wanderer::Wanderer(GameObject* p, NavMesh* mesh, char side, int lID) :
+	player(p), navMesh(mesh), shootTimer(maxShootTimer), updateplayerPathTimer(maxUpdatePlayerPathTimer), laserID(lID){
 	this->side = side;
 	stateMachine = new StateMachine();
 
