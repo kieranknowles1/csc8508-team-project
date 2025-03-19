@@ -320,10 +320,14 @@ namespace Packet {
         PlayerObject* object = (PlayerObject*) GameObject::GetGameObjectByID(gravityPacket->GetTargetID());
 
         if (object == nullptr) return;
-
         if (TutorialGame::getInstance()->GetServerInstance()->IsOwnerOf(object)) return;
 
-        //object->GetWorldState().UpdateState({ WorldState::StateType::UpVector, gravityPacket->GetUpDirection() });
+        StateReader writeReader = object->GetObjectStates()->GetWriteState();
+        ObjectState* writeState = writeReader.GetState();
+        
+        writeState->Lock();
+        writeState->UpdateState(StateType::UpVector, gravityPacket->GetUpDirection());
+        writeState->Unlock();
     }
 
     std::shared_ptr<Packet> ObjectChangeGravityPacketHandler::Translate(const ENetEvent* event) const {
