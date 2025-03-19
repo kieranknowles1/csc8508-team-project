@@ -18,6 +18,7 @@ ResourceManager::ResourceManager(GameTechRendererInterface* renderer, float thre
 	: renderer(renderer)
 	, meshes(this)
 	, textures(this)
+    , materials(this)
 {
 	auto pwd = std::filesystem::current_path().string();
 	std::cout << "Using working directory: " << pwd << std::endl;
@@ -62,6 +63,7 @@ void ResourceManager::collectGarbage()
 	timeSinceGc = 0;
 	meshes.collectGarbage();
 	textures.collectGarbage();
+    materials.collectGarbage();
 }
 
 void ResourceManager::threadFunc() {

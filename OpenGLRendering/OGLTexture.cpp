@@ -40,6 +40,7 @@ UniqueOGLTexture OGLTexture::TextureFromFile(const std::string&name) {
 	UniqueOGLTexture tex = std::make_unique<OGLTexture>();
 	tex->load(name);
 	tex->upload();
+	tex->fileName = name;
 	return tex;
 }
 

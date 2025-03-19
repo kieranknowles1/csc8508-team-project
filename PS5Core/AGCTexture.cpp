@@ -34,6 +34,7 @@ AGCTexture::~AGCTexture() {
 void AGCTexture::load(const std::string& filename)
 {
 	std::filesystem::path path(filename + ".gnf");
+	this->fileName = filename;
 	//path.replace_extension(".gnf");
 	std::string realFile = Assets::TEXTUREDIR + path.string();
 	FILE* fp = fopen(realFile.c_str(), "rb");

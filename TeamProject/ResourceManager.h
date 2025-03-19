@@ -15,6 +15,7 @@
 #include "Mesh.h"
 #include "Texture.h"
 #include "Shader.h"
+#include "Material.h"
 
 #ifndef __PROSPERO__
 #include "OGLTexture.h"
@@ -111,7 +112,7 @@ namespace NCL::CSC8503 {
     public:
         ResourceManager(GameTechRendererInterface* renderer, float threadMult);
         ~ResourceManager();
-        
+
         // Run periodic garbage collection and upload all pending assets
         void update(float dt);
         // Free any resources that are not in active use
@@ -123,6 +124,7 @@ namespace NCL::CSC8503 {
         //ResourceMap<std::string, Rendering::Texture>& getCubeMaps() { return cubeMaps; }
         ResourceMap<std::string, PlatformMesh>& getMeshes() { return meshes; }
         ResourceMap<std::string, PlatformTexture>& getTextures() { return textures; }
+        ResourceMap<std::string, Material>& getMaterials() { return materials; }
 
         void addJob(std::unique_ptr<Job> job) {
             {
@@ -164,6 +166,7 @@ namespace NCL::CSC8503 {
         //ResourceMap<std::string, Rendering::Texture> cubeMaps;
         ResourceMap<std::string, PlatformMesh> meshes;
         ResourceMap<std::string, PlatformTexture> textures;
+        ResourceMap<std::string, Material> materials;
 
         float gcFrequency = 30.0f;
         float timeSinceGc;

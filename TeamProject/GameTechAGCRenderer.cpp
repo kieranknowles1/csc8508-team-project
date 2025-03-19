@@ -10,6 +10,8 @@
 
 #include "../CSC8503CoreClasses/Debug.h"
 
+#include "Material.h"
+
 using namespace NCL;
 using namespace Rendering;
 using namespace CSC8503;
@@ -156,6 +158,7 @@ void GameTechAGCRenderer::RenderFrame() {
 	currentFrame->data.Reset();
 
 	currentFrame->globalDataOffset	= 0;
+	currentFrame->objectCount = 0;
 	currentFrame->debugTextOffset	= 0;
 	currentFrame->textVertCount		= 0;
 	currentFrame->lineVertCount		= 0;
@@ -223,39 +226,31 @@ void GameTechAGCRenderer::DrawObjects() {
 	AGCMesh* prevMesh = (AGCMesh*)frameObjects[0]->GetMesh();
 	int instanceCount = 0;
 
-	for (int i = 0; i < frameObjects.size(); ++i) {
-		AGCMesh* objectMesh = (AGCMesh*)frameObjects[i]->GetMesh();
+	auto drawInstances = [&](AGCMesh* mesh) {
+		mesh->BindVertexBuffers(frameContext->m_bdr.getStage(sce::Agc::ShaderType::kGs));
+		uint32_t* objID = static_cast<uint32_t*>(frameContext->m_dcb.allocateTopDown(sizeof(uint32_t), sce::Agc::Alignment::kBuffer));
+		*objID = startingIndex;
+		frameContext->m_bdr.getStage(sce::Agc::ShaderType::kGs).setUserSrtBuffer(objID, 1);
 
-	//The new mesh is different than previous meshes, flush out the old list
+		DrawBoundMeshInstanced(*frameContext, *prevMesh, instanceCount);
+	};
+
+	for (auto obj : frameObjects) {
+		AGCMesh* objectMesh = (AGCMesh*)obj->GetMesh();
+
+		//The new mesh is different than previous meshes, flush out the old list
 		if( prevMesh != objectMesh) {
-			prevMesh->BindVertexBuffers(frameContext->m_bdr.getStage(sce::Agc::ShaderType::kGs));
-
-			uint32_t* objID = static_cast<uint32_t*>(frameContext->m_dcb.allocateTopDown(sizeof(uint32_t), sce::Agc::Alignment::kBuffer));
-			*objID = startingIndex;
-			frameContext->m_bdr.getStage(sce::Agc::ShaderType::kGs).setUserSrtBuffer(objID, 1);
-
-			DrawBoundMeshInstanced(*frameContext, *prevMesh, instanceCount);
-			prevMesh = objectMesh;
+			drawInstances(prevMesh);
+			startingIndex += instanceCount;
 			instanceCount = 0;
-			startingIndex = i;
 		}
-		if (i == frameObjects.size() - 1) {
-			objectMesh->BindVertexBuffers(frameContext->m_bdr.getStage(sce::Agc::ShaderType::kGs));
-
-			uint32_t* objID = static_cast<uint32_t*>(frameContext->m_dcb.allocateTopDown(sizeof(uint32_t), sce::Agc::Alignment::kBuffer));
-			*objID = startingIndex;
-			frameContext->m_bdr.getStage(sce::Agc::ShaderType::kGs).setUserSrtBuffer(objID, 1);
-
-			if (prevMesh == objectMesh) {
-				instanceCount++;
-			}
-
-			DrawBoundMeshInstanced(*frameContext, *objectMesh, instanceCount);
-		}
-		else {
-			instanceCount++;
-		}
+		prevMesh = objectMesh;
+		instanceCount += objectMesh->GetSubMeshCount();
 	}
+
+	drawInstances(prevMesh);
+	// Check that we used all the buffers we expected
+	assert(instanceCount + startingIndex == currentFrame->objectCount);
 }
 
 void GameTechAGCRenderer::MainRenderPass() {
@@ -542,12 +537,6 @@ void GameTechAGCRenderer::UpdateObjectList() {
 		state.texScale = g->getParent()->getRenderScale() * g->GetTexScaleMultiplier();
 		state.skinningIndex = NULLTEX;
 
-		Texture* t = g->GetDefaultTexture();
-		state.texIndex = t ? t->GetAssetID() : NULLTEX;
-
-		Texture* normal = g->GetNormalMap();
-		state.normalIndex = normal ? normal->GetAssetID() : NULLTEX;
-
 		AGCMesh* m = (AGCMesh*)g->GetMesh();
 		if (m && m->GetJointCount() > 0) {//It's a skeleton mesh, need to update transformed vertices buffer
 
@@ -578,7 +567,30 @@ void GameTechAGCRenderer::UpdateObjectList() {
 
 			frameJobs.push_back({ g, b->GetAssetID() });
 		}
-		currentFrame->data.WriteData<ObjectState>(state);
+
+		assert(g->GetMesh()->GetSubMeshCount() > 0);
+		for (int i = 0; i < g->GetMesh()->GetSubMeshCount(); i++) {
+			auto subMesh = g->GetMesh()->GetSubMesh(i);
+			auto layer = g->getMaterial() ? g->getMaterial()->GetLayer(i) : nullptr;
+
+			auto t = layer ? layer->diffuse : nullptr;
+			state.texIndex = t ? t->GetAssetID() : NULLTEX;
+			if (!t) {
+				state.colour = Vector4(0, 0, 0, 0);
+				std::cout << i << std::endl;
+			}
+
+			auto  normal = layer ? layer->normal : nullptr;
+			state.normalIndex = normal ? normal->GetAssetID() : NULLTEX;
+
+			state.startIndex = subMesh->start;
+			state.numElements = subMesh->count;
+			// This behaviour is inverted from OpenGL for compatibility with HLSL UVs
+			state.invertY = !(layer && layer->invertY);
+			currentFrame->data.WriteData<ObjectState>(state);
+			currentFrame->objectCount++;
+		}
+
 	}
 	currentFrame->objects.end(currentFrame);
 

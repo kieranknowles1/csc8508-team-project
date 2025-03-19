@@ -55,6 +55,7 @@ for this module, even in the coursework, but you can add it if you like!
 */
 void TutorialGame::InitialiseAssets() {
     defaultTexture = resourceManager->getTextures().get("checkerboard.png");
+    paintballTexture = resourceManager->getTextures().get("paintball_basecolor.png");
 }
 
 TutorialGame::~TutorialGame()	{
@@ -88,12 +89,7 @@ void TutorialGame::UpdateGame(float dt) {
 
     profiler.startSection("Update World");
 
-    if (enableAI) {
-        for (Wanderer* wanderer : wanderers) {
-            wanderer->Update(dt);
-        }
-        if (navMeshDebug) VisualiseNavMesh();
-    }
+    if(spGameController) spGameController->Update(dt);
 
     UpdateKeys();
     world->UpdateWorld(dt);
@@ -156,7 +152,7 @@ void TutorialGame::UpdatePlayer(float dt) {
     // Press F for freeCam, press G for thirdPerson
     if (freeCam) {
         //freeCam Movement
-        world->GetMainCamera().UpdateCamera(dt * 10.0f, true);
+        world->GetMainCamera().UpdateCamera(dt, true);
     }
     else {
         //player Movement
@@ -215,25 +211,6 @@ void TutorialGame::ThirdPersonControls() {
     btVector3 cameraPosition = transformPlayer.getOrigin() + cameraOffset;
     mainCamera->SetPosition(cameraPosition);
     mainCamera->SetPitch(-15.0f);
-}
-
-void TutorialGame::VisualiseNavMesh() {
-    for (NavMesh* mesh : navMeshes) {
-        mesh->VisualiseNavMesh();
-    }
-
-    /*btVector3 startPoint(94, 0.5833334, 26);
-    btVector3 endPoint(68, 0.5833334, 34);
-
-    btIDebugDraw* debugDrawer = bulletWorld->getDebugDrawer();
-
-    // Draw vertical lines at start and end points
-    debugDrawer->drawLine(startPoint, startPoint + btVector3(0, 10, 0), btVector3(0, 1, 0));
-    debugDrawer->drawLine(endPoint, endPoint + btVector3(0, 10, 0), btVector3(0, 0, 1));
-
-    // Find path and draw it
-    std::vector<btVector3> path = navMesh->FindPath(startPoint, endPoint);
-    //navMesh->DebugDrawPath(path);*/
 }
 
 
@@ -339,43 +316,6 @@ void TutorialGame::LoadWorldFromFile(int levelNum) {
 
 }
 
-void TutorialGame::InitAI() {
-    if (navMeshDebug) freeCam = true;
-
-    bottom = new NavMesh(bulletWorld);
-    bottom->LoadFromFile("Assets/Meshes/NavMeshes/bottom.navmesh");
-    navMeshes.push_back(bottom);
-
-    top = new NavMesh(bulletWorld);
-    top->LoadFromFile("Assets/Meshes/NavMeshes/top.navmesh");
-    navMeshes.push_back(top);
-
-    front = new NavMesh(bulletWorld);
-    front->LoadFromFile("Assets/Meshes/NavMeshes/front.navmesh");
-    navMeshes.push_back(front);
-
-    back = new NavMesh(bulletWorld);
-    back->LoadFromFile("Assets/Meshes/NavMeshes/back.navmesh");
-    navMeshes.push_back(back);
-
-    left = new NavMesh(bulletWorld);
-    left->LoadFromFile("Assets/Meshes/NavMeshes/left.navmesh");
-    navMeshes.push_back(left);
-
-    right = new NavMesh(bulletWorld);
-    right->LoadFromFile("Assets/Meshes/NavMeshes/right.navmesh");
-    navMeshes.push_back(right);
-
-    for (int i = 0; i < 5; i++) {
-        AddWandererToWorld(bottom, 'b');
-        AddWandererToWorld(top, 't');
-        AddWandererToWorld(front, 'f');
-        AddWandererToWorld(back, 'k');
-        AddWandererToWorld(left, 'l');
-        AddWandererToWorld(right, 'r');
-    }
-}
-
 
 void TutorialGame::ClearWorld() {
     DestroyBullet();
@@ -406,58 +346,32 @@ PlayerObject* TutorialGame::InitPlayer(btVector3 position, btVector3 upDir) {
     return newPlayer;
 }
 
-Turret* TutorialGame::AddTurretToWorld() {
-    Turret* turret = new Turret(player);
 
-    Vector3 dimensions = Vector3(5, 5, 5);
-    turret->setInitialPosition(btVector3(5, 5, 5));
-    turret->setRenderScale(dimensions);
 
-    turret->SetRenderObject(new RenderObject(turret, resourceManager->getMeshes().get("Kitten.msh"), defaultTexture));
+
+
+GameObject* TutorialGame::AddGunToWorld(const Vector3& position, Vector3 dimensions, float inverseMass, bool hasCollision)
+{
+    GameObject* gun = new GameObject();
+
+    // Setting the transform properties for the gun
+    gun->setInitialPosition(position);
+    gun->setRenderScale(dimensions);
 
     btCollisionShape* shape = new btBoxShape(btVector3(dimensions.x / 2.0f, dimensions.y / 2.0f, dimensions.z / 2.0f));
 
-    shape->setMargin(0.01f);
+    // Setting the physics object for the gun
+    gun->SetPhysicsObject(new PhysicsObject(gun));
 
-    PhysicsObject* physicsObject = new PhysicsObject(turret);
-    physicsObject->InitBulletPhysics(bulletWorld, shape, 0);
+    // Initialize Bullet physics for the gun
+    gun->GetPhysicsObject()->InitBulletPhysics(bulletWorld, shape, inverseMass, hasCollision);
 
-    turret->SetPhysicsObject(physicsObject);
+    // Setting render object
+    gun->SetRenderObject(new RenderObject(gun, resourceManager->getMeshes().get("VD_Raygun_Cartoony_Rigged1.msh"), resourceManager->getMaterials().get("VD_Raygun_Cartoony_Rigged1.mat")));
 
-    turret->GetRenderObject()->SetColour(Vector4(1, 0, 0, 1));
+    world->AddGameObject(gun);
 
-    world->AddGameObject(turret);
-
-    testTurret = turret;
-
-    return turret;
-}
-
-Wanderer* TutorialGame::AddWandererToWorld(NavMesh* navMesh, char side) {
-    Wanderer* wanderer = new Wanderer(player, navMesh, side);
-
-    float height = 4.0f;
-    float radius = 2.0f;
-
-    wanderer->setInitialPosition(navMesh->GetRandomPointInNavMesh());
-    wanderer->setRenderScale(btVector3(radius * 2, height, radius + 2));
-
-    btCollisionShape* shape = new btCapsuleShape(radius, height);
-
-    wanderer->SetRenderObject(new RenderObject(wanderer, resourceManager->getMeshes().get("Capsule.msh"), defaultTexture));
-
-    PhysicsObject* physicsObject = new PhysicsObject(wanderer);
-    physicsObject->InitBulletPhysics(bulletWorld, shape, 0);
-    wanderer->SetPhysicsObject(physicsObject);
-
-	wanderer->GetRenderObject()->SetColour(Vector4(0, 1, 0, 1));
-
-    wanderer->InitPosAndOffset();
-
-    world->AddGameObject(wanderer);
-
-    wanderers.push_back(wanderer);
-    return wanderer;
+    return gun;
 }
 
 /* Adding an object to test the bullet physics */
@@ -495,30 +409,28 @@ GameObject* TutorialGame::AddCubeToWorld(const Vector3& position, Vector3 dimens
 }
 
 PlayerObject* TutorialGame::AddPlayerCapsuleToWorld(const Vector3& position, float height, float radius, float inverseMass) {
-    PlayerObject* capsule = new PlayerObject();
+    PlayerObject* player = new PlayerObject();
 
     // Setting the transform properties for the capsule
-    capsule->setInitialPosition(position);
-    capsule->setRenderScale(Vector3(radius * 2, height, radius * 2));
-
-    // TODO: Set the orientation of the capsule
-    //capsule->SetOrientation(rotation);
+    player->setInitialPosition(position);
+    player->setRenderScale(Vector3(radius * 2, height, radius * 2));
 
     // Creating a Bullet collision shape for the capsule
-    btCollisionShape* shape = new btCapsuleShape(radius, height);
+    btCollisionShape* playerShape = new btCapsuleShape(radius, height);
 
     // Setting the render object for the capsule
-    capsule->SetRenderObject(new RenderObject(capsule, resourceManager->getMeshes().get("Capsule.msh"), defaultTexture));
+    player->SetRenderObject(new RenderObject(player, resourceManager->getMeshes().get("Capsule.msh"), defaultTexture));
     // Setting the physics object for the capsule
-    capsule->SetPhysicsObject(new PhysicsObject(capsule));
+    player->SetPhysicsObject(new PhysicsObject(player));
 
     // Initializing the physics object for the capsule
-    capsule->GetPhysicsObject()->InitBulletPhysics(bulletWorld, shape, inverseMass);
-    GameObject* newGun = AddCubeToWorld(Vector3(10, 2, 20), Vector3(0.6, 0.6, 1.6), 0, false);
-    capsule->setGun(newGun);
-    world->AddGameObject(capsule);
+    player->GetPhysicsObject()->InitBulletPhysics(bulletWorld, playerShape, inverseMass);
+    //GameObject* newGun = AddCubeToWorld(Vector3(-300, 20, 40), Vector3(0.5, 0.5, 0.3), 0, false);
+    GameObject* newGun = AddGunToWorld(Vector3(-900, 20, 40), Vector3(2, 2, 2), 0, false);
+    player->setGun(newGun);
+    world->AddGameObject(player);
 
-    return capsule;
+    return player;
 }
 
 GameObject* TutorialGame::AddCapsuleToWorld(const Vector3& position, float height, float radius, float inverseMass) {
@@ -725,13 +637,9 @@ void TutorialGame::Start() {
     instance->player->SetWorldID(user->GetUserID());
     instance->player->GetRenderObject()->SetColour(Vector4(Color::GetPlayerColor(user->GetUserID())));
     instance->player->setType(GameObject::Type::Player);
-    instance->playerController = std::make_unique<PlayerController>(instance->player, instance->gun, instance->controller, instance->mainCamera, instance->bulletWorld,instance->renderer);
+    instance->playerController = std::make_unique<PlayerController>(instance->player, instance->controller, instance->mainCamera, instance->bulletWorld,instance->renderer);
 
-    instance->navMeshDebug = false;
-    instance->enableAI = false;
-    if (instance->enableAI) {
-        instance->InitAI();
-    }
+    instance->spGameController = new SPGameController(instance->player, instance);
 
     btQuaternion emptyRot;
 
@@ -768,5 +676,5 @@ void TutorialGame::Start() {
     }
 
     Shoot::GetInstance()->Initialise(instance->bulletWorld,instance->resourceManager.get(), instance->world.get(), instance->renderer->GetDecalSystem());
-    Shoot::GetInstance()->InitShotMasks(instance->player, instance->gun);
+    Shoot::GetInstance()->InitShotMasks(instance->player, instance->player->getGun());
 }

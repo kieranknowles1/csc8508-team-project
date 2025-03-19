@@ -33,6 +33,10 @@ namespace NCL::Rendering {
 
 		virtual void load(const std::string& name) = 0;
 		virtual void upload() = 0;
+		const std::string& getFileName() {
+			return fileName;
+		}
+
 	protected:
 		char* texData		= nullptr;
 		uint32_t width		= 0;
@@ -42,6 +46,7 @@ namespace NCL::Rendering {
 
 		Texture();
 
+		std::string fileName;
 		Vector2ui		dimensions;
 		uint32_t		assetID;
 	};
