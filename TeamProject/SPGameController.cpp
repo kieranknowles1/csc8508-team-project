@@ -4,8 +4,8 @@
 using namespace NCL;
 using namespace CSC8503;
 
-SPGameController::SPGameController(GameObject* p, TutorialGame* g)
-	: player(p), game(g) {
+SPGameController::SPGameController(GameObject* p, TutorialGame* g, GameTechRendererInterface* r)
+	: player(p), game(g), renderer(r) {
 
     btDiscreteDynamicsWorld* bulletWorld = game->getBulletWorld();
 
@@ -33,13 +33,14 @@ SPGameController::SPGameController(GameObject* p, TutorialGame* g)
     right->LoadFromFile("right.navmesh");
     navMeshes.push_back(right);
 
+    int aicount = 101;
     for (int i = 0; i < 5; i++) {
-        AddWandererToWorld(bottom, 'b');
-        AddWandererToWorld(top, 't');
-        AddWandererToWorld(front, 'f');
-        AddWandererToWorld(back, 'k');
-        AddWandererToWorld(left, 'l');
-        AddWandererToWorld(right, 'r');
+        AddWandererToWorld(bottom, 'b', aicount++);
+        AddWandererToWorld(top, 't', aicount++);
+        AddWandererToWorld(front, 'f', aicount++);
+        AddWandererToWorld(back, 'k', aicount++);
+        AddWandererToWorld(left, 'l', aicount++);
+        AddWandererToWorld(right, 'r', aicount++);
     }
 
 }
@@ -51,8 +52,8 @@ void SPGameController::Update(float dt) {
     if (navMeshDebug) VisualiseNavMesh();
 }
 
-Wanderer* SPGameController::AddWandererToWorld(NavMesh* navMesh, char side) {
-    Wanderer* wanderer = new Wanderer(player, navMesh, side);
+Wanderer* SPGameController::AddWandererToWorld(NavMesh* navMesh, char side, int laserID) {
+    Wanderer* wanderer = new Wanderer(player, navMesh, side, laserID, renderer);
 
     float height = 4.0f;
     float radius = 2.0f;
