@@ -13,6 +13,9 @@ SamplerState lightSpecSampler : register(s2);
 Texture2D<float> sceneDepthTex : register(t3);
 SamplerState sceneDepthSampler : register(s3);
 
+Texture2D<float4> laserTex : register(t4);
+SamplerState laserSampler : register(s4);
+
 double depthSample(float2 coord) {
     return sceneDepthTex.Sample(sceneDepthSampler, coord);
 }
@@ -41,6 +44,12 @@ float4 main(VS_OUTPUT vertex) : S_TARGET_OUTPUT
     float4 lightVal = lightDiffuse.Sample(lightDifSampler, vertex.uv);
     float4 specVal = lightSpec.Sample(lightSpecSampler, vertex.uv);
     result.rgb = doDeferredLight(result.rgb, lightVal.rgb, specVal.rgb);
+
+    // Do not apply edge detection or lighting to lasers
+    float4 laserVal = laserTex.Sample(laserSampler, vertex.uv);
+    if (laserVal.a > 0.0f) {
+        result = laserVal;
+    }
 
     if (Constants.vingetteSettings.enabled) {
         result.rgb = applyVingette(

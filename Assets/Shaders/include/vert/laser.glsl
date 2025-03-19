@@ -54,7 +54,7 @@ LaserVertOut doLaserVert(LaserVertIn state, vec3 position, mat4 viewMatrix, mat4
                   + rippleOffset;
 
 
-    vec4 clipSpacePos = projMatrix * viewMatrix * vec4(worldPos, 1.0);
+    vec4 clipSpacePos = mul(projMatrix, mul(viewMatrix, vec4(worldPos, 1.0)));
     LaserVertOut result;
     result.position = clipSpacePos;
     result.depth = (clipSpacePos.z / clipSpacePos.w) * 0.5 + 0.5; //world space position
