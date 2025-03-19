@@ -33,10 +33,14 @@ void GameObject::UpdateObjectState() {
     btRigidBody* body = GetPhysicsObject()->GetRigidBody();
     btTransform transform = body->getWorldTransform();
 
+    writeState->Lock();
+
     writeState->UpdateState(StateType::LinearVelocity, body->getLinearVelocity());
     writeState->UpdateState(StateType::AngularVelocity, body->getAngularVelocity());
     writeState->UpdateState(StateType::Position, transform.getOrigin());
     writeState->UpdateState(StateType::Rotation, transform.getRotation());
+
+    writeState->Unlock();
 }
 
 void GameObject::UpdateFromState(float dt) {
@@ -53,12 +57,41 @@ void GameObject::UpdateFromState(float dt) {
 
     btRigidBody* body = GetPhysicsObject()->GetRigidBody();
 
-    // Linear Velocity.
-    StateValue currentLinearValue = StateValue();
+    StateValue currentLinearValue;
     StateValue targetLinearValue;
+
+    StateValue currentAngularValue;
+    StateValue targetAngularValue;
+    
+    StateValue currentPositionValue;
+    StateValue targetPositionValue;
+    
+    StateValue currentRotationValue;
+    StateValue targetRotationValue;
+
+    // Reading.
+    current->Lock_Shared();
+    read->Lock_Shared();
+
     bool hasCurrentLinear = current->ReadState(StateType::LinearVelocity, &currentLinearValue);
     bool hasTargetLinear = read->ReadState(StateType::LinearVelocity, &targetLinearValue);
 
+    bool hasCurrentAngular = current->ReadState(StateType::AngularVelocity, &currentAngularValue);
+    bool hasTargetAngular = read->ReadState(StateType::AngularVelocity, &targetAngularValue);
+
+    bool hasCurrentPosition = current->ReadState(StateType::Position, &currentPositionValue);
+    bool hasTargetPosition = read->ReadState(StateType::Position, &targetPositionValue);
+
+    bool hasCurrentRotation = current->ReadState(StateType::Rotation, &currentRotationValue);
+    bool hasTargetRotation = read->ReadState(StateType::Rotation, &targetRotationValue);
+
+    current->Unlock_Shared();
+    read->Unlock_Shared();
+
+    currentReader.Unlock();
+    readReader.Unlock();
+
+    // Linear Velocity.
     if (hasCurrentLinear && hasTargetLinear) {
         btVector3 currentLinear = std::get<btVector3>(currentLinearValue);
         btVector3 targetLinear = std::get<btVector3>(targetLinearValue);
@@ -71,11 +104,6 @@ void GameObject::UpdateFromState(float dt) {
     } 
 
     // Angular Velocity.
-    StateValue currentAngularValue = StateValue();
-    StateValue targetAngularValue;
-    bool hasCurrentAngular = current->ReadState(StateType::AngularVelocity, &currentAngularValue);
-    bool hasTargetAngular = read->ReadState(StateType::AngularVelocity, &targetAngularValue);
-
     if (hasCurrentAngular && hasTargetAngular) {
         btVector3 currentAngular = std::get<btVector3>(currentAngularValue);
         btVector3 targetAngular = std::get<btVector3>(targetAngularValue);
@@ -88,11 +116,6 @@ void GameObject::UpdateFromState(float dt) {
     }
 
     // Position.
-    StateValue currentPositionValue = StateValue();
-    StateValue targetPositionValue;
-    bool hasCurrentPosition = current->ReadState(StateType::Position, &currentPositionValue);
-    bool hasTargetPosition = read->ReadState(StateType::Position, &targetPositionValue);
-
     if (hasCurrentPosition && hasTargetPosition) {
         btVector3 currentPosition = std::get<btVector3>(currentPositionValue);
         btVector3 targetPosition = std::get<btVector3>(targetPositionValue);
@@ -105,11 +128,6 @@ void GameObject::UpdateFromState(float dt) {
     } 
 
     // Rotation.
-    StateValue currentRotationValue = StateValue();
-    StateValue targetRotationValue;
-    bool hasCurrentRotation = current->ReadState(StateType::Rotation, &currentRotationValue);
-    bool hasTargetRotation = read->ReadState(StateType::Rotation, &targetRotationValue);
-
     if (hasCurrentRotation && hasTargetRotation) {
         btQuaternion currentRotation = std::get<btQuaternion>(currentRotationValue);
         btQuaternion targetRotation = std::get<btQuaternion>(targetRotationValue);

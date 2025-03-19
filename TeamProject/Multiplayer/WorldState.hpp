@@ -27,12 +27,27 @@ namespace WorldState {
         ObjectState() {}
         ~ObjectState() {}
 
+        void Lock() {
+            m_stateLock.lock();
+        }
+
+        void Lock_Shared() {
+            m_stateLock.lock_shared();
+        }
+
+        void Unlock() {
+            m_stateLock.unlock();
+        }
+
+        void Unlock_Shared() {
+            m_stateLock.unlock_shared();
+        }
+
         /**
          * @brief Update a state.
          * This function blocks reading until it has finished.
          */
         void UpdateState(const StateType type, const StateValue& value) {
-            std::unique_lock lock(m_stateLock);
             m_states[type] = value;
         }
 
@@ -40,8 +55,6 @@ namespace WorldState {
          * @brief Read a state. If the state does not exist returns false.
          */
         bool ReadState(StateType type, StateValue* value) {
-            std::shared_lock lock(m_stateLock);
-
             if (m_states.contains(type)) {
                 *value = m_states[type];
                 return true;
@@ -53,7 +66,6 @@ namespace WorldState {
          * @brief Remove all states and their values.
          */
         void Clear() {
-            std::unique_lock lock(m_stateLock);
             m_states.clear();
         }
 
@@ -99,12 +111,16 @@ namespace WorldState {
          * object after calling this function is undefined behaviour.
          */
         void Unlock() {
-            m_readingMutex->unlock_shared();
+            if (m_locked) {
+                m_locked = false;
+                m_readingMutex->unlock_shared();
+            }
         }
 
         ObjectState* GetState() const { return m_state; }
 
     private:
+        bool m_locked = true;
         ObjectState* m_state;
         std::shared_mutex* m_readingMutex;
     };

@@ -121,11 +121,16 @@ namespace Multiplayer {
             StateValue position;
             StateValue rotation;
 
+            read->Lock_Shared();
+
             bool hasLinear = read->ReadState(StateType::LinearVelocity, &linearVelocity);
             bool hasAngular = read->ReadState(StateType::AngularVelocity, &angularVelocity);
 
             bool hasPosition = read->ReadState(StateType::Position, &position);
             bool hasRotation = read->ReadState(StateType::Rotation, &rotation);
+
+            read->Unlock_Shared();
+            readReader.Unlock();
 
             if (hasLinear && hasAngular) {
                 std::shared_ptr<Packet::DeltaPacket> deltaPacket = std::make_shared<Packet::DeltaPacket>(
