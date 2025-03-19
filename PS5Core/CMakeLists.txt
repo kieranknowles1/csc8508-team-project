@@ -16,7 +16,6 @@ set(Header_Files
 source_group("Header Files" FILES ${Header_Files})
 
 set(Source_Files
-    "AGCBuffer.cpp"
     "AGCMesh.cpp"
 	"AGCShader.cpp"
 	"AGCTexture.cpp"
