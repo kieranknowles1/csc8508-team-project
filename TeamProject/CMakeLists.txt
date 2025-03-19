@@ -58,6 +58,7 @@ set(SOURCES
 	SPGameController.cpp
     Material.h
     Material.cpp
+    EndScreenMP.h
 )
 
 set(ASSET_ROOT "${CMAKE_SOURCE_DIR}/Assets")
