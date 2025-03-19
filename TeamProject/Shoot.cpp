@@ -23,8 +23,7 @@ std::optional<ShotInfo> Shoot::RayClosest(btVector3 startPos, btVector3 dir, boo
         float smallestDist = INFINITY;
         for (int i = 0; i < callback.m_collisionObjects.size(); i++) { // loop all hits
             GameObject* hit = static_cast<GameObject*>(callback.m_collisionObjects[i]->getUserPointer());
-            //if ((hit != player || hitPlayer) && hit != gun) {
-            if (hit != player && hit != gun){
+            if (hit != gun && (hitPlayer || hit != player)) {
                 // ignore paintballs
                 btVector3 posHit = callback.m_hitPointWorld[i];
                 float distance = startPos.distance(posHit);
@@ -70,7 +69,7 @@ std::optional<ShotInfo> Shoot::ShootBulletAI(btVector3 startPos, btVector3 dir, 
     if (rayInfo.has_value()) {
         if (rayInfo.value().hitObj->getType() == GameObject::Type::Player) {
             PlayerObject* hit = (PlayerObject*)rayInfo.value().hitObj;
-            hit->Damage(20.0f * dt); // TODO: Don't hard code this.
+            hit->Damage(5.0f * dt); // TODO: Don't hard code this.
         }
         SpawnDecal(rayInfo.value().hitPos, rayInfo.value().hitNormal, 1);
     }
