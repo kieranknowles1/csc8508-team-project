@@ -54,6 +54,8 @@ set(SOURCES
     Respawn.h
     Overheat.h
     Overheat.cpp
+	SPGameController.h
+	SPGameController.cpp
     Material.h
     Material.cpp
 )
