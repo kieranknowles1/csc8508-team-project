@@ -98,7 +98,8 @@ namespace NCL::CSC8503 {
     public:
         ResourceManager(GameTechRendererInterface* renderer, int workerThreadCount);
         ~ResourceManager();
-
+        
+        // Run periodic garbage collection and upload all pending assets
         void update(float dt);
         // Free any resources that are not in active use
         // Called automatically every gcFrequency seconds
@@ -114,7 +115,9 @@ namespace NCL::CSC8503 {
             {
                 std::lock_guard lock(jobsMtx);
                 jobs.push_back(std::move(job));
+                incompleteJobs++;
             }
+            // Wake up a worker thread to complete the job
             jobsCv.notify_one();
         }
     protected:
@@ -122,6 +125,7 @@ namespace NCL::CSC8503 {
         bool quitting = false;
         std::vector<std::thread> workerThreads;
         std::vector<std::unique_ptr<Job>> jobs;
+        int incompleteJobs = 0;
         std::mutex jobsMtx;
         std::condition_variable jobsCv;
 
@@ -129,6 +133,17 @@ namespace NCL::CSC8503 {
 
         // Get a job once one is ready, or return nullptr when quitting
         std::unique_ptr<Job> getJob();
+
+        void completeJob() {
+            {
+                std::lock_guard lock(jobsMtx);
+                incompleteJobs--;
+            }
+            // Let the main thread know something's changed
+            // notify_one cannot be used as it could be consumed by
+            // a worker without anything to do, and would not fall back
+            jobsCv.notify_all();
+        }
 
         // Needed to upload platform-specific data to GPU
         GameTechRendererInterface* renderer;

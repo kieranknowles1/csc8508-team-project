@@ -33,6 +33,7 @@ UniqueOGLTexture OGLTexture::TextureFromData(char* data, uint32_t width, uint32_
 	tex->height = height;
 	tex->channels = channels;
 	tex->upload();
+	return tex;
 }
 
 UniqueOGLTexture OGLTexture::TextureFromFile(const std::string&name) {

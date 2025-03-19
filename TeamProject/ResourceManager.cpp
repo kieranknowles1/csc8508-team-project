@@ -53,8 +53,7 @@ void ResourceManager::update(float dt)
 
 	{
 		std::unique_lock lock(jobsMtx);
-
-		jobsCv.wait(lock, [&]{ return jobs.empty(); });
+		jobsCv.wait(lock, [&]{ return incompleteJobs == 0; });
 	}
 
 	meshes.update();
@@ -73,7 +72,9 @@ void ResourceManager::threadFunc() {
 		auto job = getJob();
 		if (job != nullptr) {
 			(*job)();
+			completeJob();
 		} else {
+			std::cout << "Worker thread " << std::this_thread::get_id() << " exiting" << std::endl;
 			return; // We are quitting
 		}
 	}
@@ -89,8 +90,6 @@ std::unique_ptr<Job> ResourceManager::getJob() {
 
 	auto j = std::move(jobs.back());
 	jobs.pop_back();
-	lock.unlock();
-	jobsCv.notify_one();
 	return j;
 }
 
