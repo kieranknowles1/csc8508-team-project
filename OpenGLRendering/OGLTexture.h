@@ -35,6 +35,7 @@ namespace NCL::Rendering {
 			return texID;
 		}
 	protected:
+        std::string fileName;
 		GLuint texID;
 	};
 }

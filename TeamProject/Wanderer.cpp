@@ -154,7 +154,7 @@ void Wanderer::PlayerNear(float dt) {
 		btVector3 pPos = player->GetTransform().getOrigin();
 		btVector3 dir = (pPos - curPos) == 0 ? btVector3(0, 0, 0) : (pPos - curPos).normalized();
 
-		Shoot::GetInstance()->ShootBulletPlayer(curPos, dir, GetTransform().getRotation(),dt);
+		Shoot::GetInstance()->ShootBulletAI(curPos, dir, GetTransform().getRotation(),dt);
 
 		shootTimer = maxShootTimer;
 	}

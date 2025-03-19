@@ -129,12 +129,6 @@ namespace NCL::CSC8503 {
 		void setRenderScale(const Vector3& scale) {
 			renderScale = scale;
 		}
-		void setIsPaintball(bool paintballIn) {
-			paintball = paintballIn;
-		}
-		bool getIsPaintball() {
-			return paintball;
-		}
 		void setType(Type typeIn) {
 			type = typeIn;
 		}
@@ -174,7 +168,6 @@ namespace NCL::CSC8503 {
 		bool deleted = false;
 
 		bool		isActive;
-		bool paintball = false;
 		int			worldID;
 		std::string	name;
 		Type type;

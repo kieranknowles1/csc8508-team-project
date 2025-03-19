@@ -60,9 +60,13 @@ UniqueOGLTexture OGLTexture::TextureFromFile(const std::string&name) {
 	uint32_t height		= 0;
 	uint32_t channels	= 0;
 	uint32_t flags		= 0;
-	TextureLoader::LoadTexture(name, texData, width, height, channels, flags);
+	bool ok = TextureLoader::LoadTexture(name, texData, width, height, channels, flags);
+    if (!ok) {
+        std::cerr << "Could not load texture file " << name << std::endl;
+    }
 
 	UniqueOGLTexture glTex = TextureFromData(texData, width, height, channels);
+    glTex->fileName = name;
 
 	free(texData);
 
