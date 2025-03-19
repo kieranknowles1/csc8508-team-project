@@ -1,5 +1,7 @@
 #pragma once
 
+#include <mutex>
+
 #include "GameTechRendererInterface.h"
 
 #include "../PS5Core/AGCRenderer.h"
@@ -31,10 +33,18 @@ namespace NCL {
 			GameTechAGCRenderer(Window* window);
 			~GameTechAGCRenderer();
 
+			RendererBase* getBase() override {
+				return this;
+			}
+
 			virtual Mesh*		LoadMesh(const std::string& name)				override;
 			virtual Texture*	LoadTexture(const std::string& name)			override;
 
+			void RegisterTexture(const std::string& name, PS5::AGCTexture* outTex);
+
 		protected:
+			std::mutex texMapMtx;
+
 			void checkError(SceError err) {
 				assert(err == SCE_OK);
 			}
@@ -152,7 +162,7 @@ namespace NCL {
 			uint32_t bufferCount;
 
 			sce::Agc::Core::Buffer textureBuffer;
-			std::map<std::string, std::unique_ptr<PS5::AGCTexture>> textureMap;
+			std::map<std::string, PS5::AGCTexture*> textureMap;
 
 			sce::Agc::Core::Buffer arrayBuffer;
 

@@ -36,7 +36,7 @@ TutorialGame::TutorialGame(GameTechRendererInterface* renderer, Controller* cont
     world->GetMainCamera().SetController(controller);
     mainCamera = &world->GetMainCamera();
 
-    resourceManager = std::make_unique<ResourceManager>(renderer);
+    resourceManager = std::make_unique<ResourceManager>(renderer, config.get<float>("resourceThreadMult"));
     new Shoot(); //Shoot and Respawn have new before them but are not being deleted to my knowledge
     new Respawn();
 
@@ -162,7 +162,6 @@ void TutorialGame::UpdatePlayer(float dt) {
             ThirdPersonControls();
         }
     }
-    resourceManager->update(dt);
 }
 
 void TutorialGame::UpdateKeys() {
@@ -627,7 +626,7 @@ void TutorialGame::StartMultiplayerGame() {
 void TutorialGame::Start() {
     instance->state = GameState::ACTIVE;
     instance->LoadWorldFromFile(9);
-    
+
     // Init user for single players.
     if (!user.has_value()) user.emplace(GenerateUserID());
 

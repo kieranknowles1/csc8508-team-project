@@ -34,6 +34,9 @@ namespace NCL::Rendering {
 		GLuint GetObjectID() const	{
 			return texID;
 		}
+
+		void load(const std::string& name) override;
+		void upload() override;
 	protected:
         std::string fileName;
 		GLuint texID;
