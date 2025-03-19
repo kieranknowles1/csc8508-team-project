@@ -105,7 +105,7 @@ namespace Multiplayer {
         if (m_game->GetState() != GameState::ACTIVE) return;
 
         m_game->GetWorld()->OperateOnContents([&](GameObject* object) {
-            if (object->isStatic()) return;
+            if (object->isStatic() && object->getType() != GameObject::Type::Gun) return;
 
             object->GetObjectStates()->UpdateBuffer();
 

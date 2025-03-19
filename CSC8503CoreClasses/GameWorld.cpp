@@ -72,5 +72,13 @@ void GameWorld::UpdateWorld(float dt) {
 
 	for (auto& i : gameObjects) {
 		i->Update(dt);
+		if (i->getType() == GameObject::Type::Gun) {
+            btVector3 origin = i->GetPhysicsObject()->GetRigidBody()->getWorldTransform().getOrigin();
+			std::cout << i->GetWorldID() << " Gun at: ";
+			std::cout << origin.x() << ", ";
+			std::cout << origin.y() << ", ";
+			std::cout << origin.z() << "\n";
+		}
+
 	}
 }

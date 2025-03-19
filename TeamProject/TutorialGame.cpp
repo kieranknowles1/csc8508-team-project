@@ -90,6 +90,14 @@ void TutorialGame::UpdateGame(float dt) {
     float maxDt = btMin(PHYSICS_PERIOD, dt);
     int steps = bulletWorld->stepSimulation(maxDt, substeps, PHYSICS_PERIOD);
 
+    profiler.startSection("Network Updates");
+    if (server != nullptr) {
+        world->OperateOnContents([&](GameObject* obj) {
+            if (server->IsOwnerOf(obj)) obj->UpdateObjectState();
+            else obj->UpdateFromState(dt);
+            });
+    }
+
     profiler.startSection("Update World");
 
     if(spGameController) spGameController->Update(dt);
@@ -105,14 +113,6 @@ void TutorialGame::UpdateGame(float dt) {
     profiler.startSection("Update Audio");
     audioEngine.Update(&world->GetMainCamera());
     
-    profiler.startSection("Network Updates");
-    if (server != nullptr) {
-        world->OperateOnContents([&](GameObject* obj) {
-            if (server->IsOwnerOf(obj)) obj->UpdateObjectState();
-            else obj->UpdateFromState(dt);
-            });
-    }
-
     clearGraveyard();
     profiler.startSection("Prepare Render");
     bulletWorld->debugDrawWorld();
@@ -538,14 +538,14 @@ void TutorialGame::Start() {
     instance->LoadWorldFromFile(10);
     
     // Spawn in player.
-    std::array<PlayerObject*, 2> players;
+    std::array<PlayerObject*, 4> players;
 
     for (int i = 0; i < players.size(); i++) {
         User user(i);
         RespawnPoint* playerRespawn = Respawn::GetInstance()->GetRespawn(user.GetUserID());
         PlayerObject* player = instance->InitPlayer(playerRespawn->position, playerRespawn->orientation);
-        player->SetOwner(user);
         player->SetWorldID(user.GetUserID());
+        player->SetOwner(user);
         player->setType(GameObject::Type::Player);
         players[i] = player;
     }

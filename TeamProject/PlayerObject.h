@@ -91,7 +91,8 @@ public:
 
     void SetOwner(Lobbies::User user) override {
 		gun->SetOwner(user);
-        owner.emplace(user);
+		gun->SetWorldID(GetWorldID() + 100);
+		owner.emplace(user);
     }
 
 	void Rotate(bool positive, bool rolling, float yaw);
