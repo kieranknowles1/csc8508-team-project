@@ -150,11 +150,11 @@ void LevelImporter::AddObjectToWorld(ObjectData* data) {
 btVector4 LevelImporter::LightColour() {
     switch (lightCount) {
     case 0: return btVector4(1.0f, 0.0f, 0.0f, 1.0f); // Red
-    case 1: return btVector4(0.0f, 1.0f, 0.0f, 1.0f); // Green
-    case 2: return btVector4(0.0f, 0.0f, 1.0f, 1.0f); // Blue
-    case 3: return btVector4(0.0f, 1.0f, 1.0f, 1.0f); // Cyan
+    case 1: return btVector4(1.0f, 1.0f, 0.0f, 1.0f); // Yellow
+    case 2: return btVector4(0.0f, 1.0f, 0.0f, 1.0f); // Green
+    case 3: return btVector4(0.0f, 0.0f, 1.0f, 1.0f); // Blue
     case 4: return btVector4(1.0f, 0.0f, 1.0f, 1.0f); // Magenta
-    case 5: return btVector4(1.0f, 1.0f, 0.0f, 1.0f); // Yellow
+    case 5: return btVector4(0.0f, 1.0f, 1.0f, 1.0f); // Cyan
     default: return btVector4(1.0f, 1.0f, 1.0f, 1.0f); // White (fallback, shouldn't be hit)
     }
 }
