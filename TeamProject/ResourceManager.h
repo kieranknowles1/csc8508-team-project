@@ -16,6 +16,18 @@
 #include "Texture.h"
 #include "Shader.h"
 
+#ifndef __PROSPERO__
+#include "OGLTexture.h"
+#include "OGLMesh.h"
+using PlatformTexture = NCL::Rendering::OGLTexture;
+using PlatformMesh = NCL::Rendering::OGLMesh;
+#else
+#include <PS5Core/AGCTexture.h>
+#include <PS5Core/AGCMesh.h>
+using PlatformTexture = NCL::PS5::AGCTexture;
+using PlatformMesh = NCL::PS5::AGCMesh;
+#endif
+
 namespace NCL::CSC8503 {
     class GameTechRenderer;
 
@@ -76,7 +88,6 @@ namespace NCL::CSC8503 {
 
     private:
         ResourceManager* owner;
-        std::shared_ptr<V> construct();
         void load(const K& key, V* out);
         void upload(V* res);
         // Keep a strong reference and periodically check the use count
@@ -110,8 +121,8 @@ namespace NCL::CSC8503 {
         GameTechRendererInterface* getRenderer() { return renderer; }
 
         //ResourceMap<std::string, Rendering::Texture>& getCubeMaps() { return cubeMaps; }
-        ResourceMap<std::string, Rendering::Mesh>& getMeshes() { return meshes; }
-        ResourceMap<std::string, Rendering::Texture>& getTextures() { return textures; }
+        ResourceMap<std::string, PlatformMesh>& getMeshes() { return meshes; }
+        ResourceMap<std::string, PlatformTexture>& getTextures() { return textures; }
 
         void addJob(std::unique_ptr<Job> job) {
             {
@@ -151,8 +162,8 @@ namespace NCL::CSC8503 {
         GameTechRendererInterface* renderer;
 
         //ResourceMap<std::string, Rendering::Texture> cubeMaps;
-        ResourceMap<std::string, Rendering::Mesh> meshes;
-        ResourceMap<std::string, Rendering::Texture> textures;
+        ResourceMap<std::string, PlatformMesh> meshes;
+        ResourceMap<std::string, PlatformTexture> textures;
 
         float gcFrequency = 30.0f;
         float timeSinceGc;
@@ -164,7 +175,7 @@ namespace NCL::CSC8503 {
         auto it = resources.find(key);
         if (it == resources.end())
         {
-            auto resource = construct();
+            auto resource = std::make_shared<V>();
             queuedUploads.push_back(resource);
             auto job = std::make_unique<LoadResourceJob>(this, key, resource);
             owner->addJob(std::move(job));

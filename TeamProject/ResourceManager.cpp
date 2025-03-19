@@ -7,18 +7,6 @@
 #include "MshLoader.h"
 #include "TextureLoader.h"
 
-#ifndef __PROSPERO__
-#include "OGLTexture.h"
-#include "OGLMesh.h"
-using PlatformTexture = NCL::Rendering::OGLTexture;
-using PlatformMesh = NCL::Rendering::OGLMesh;
-#else
-#include "AGCTexture.h"
-#include "AGCMesh.h"
-using PlatformTexture = NCL::PS5::AGCTexture;
-using PlatformMesh = NCL::PS5::AGCMesh;
-#endif
-
 namespace NCL::CSC8503 {
 
 ResourceManager::ResourceManager(GameTechRendererInterface* renderer, float threadMult)
@@ -98,32 +86,22 @@ std::unique_ptr<Job> ResourceManager::getJob() {
 }
 
 template<>
-std::shared_ptr<Rendering::Texture> ResourceMap<std::string, Rendering::Texture>::construct() {
-	return std::make_shared<PlatformTexture>();
-}
-
-template<>
-std::shared_ptr<Rendering::Mesh> ResourceMap<std::string, Rendering::Mesh>::construct() {
-	return std::make_shared<PlatformMesh>();
-}
-
-template<>
-void ResourceMap<std::string, Rendering::Mesh>::load(const std::string& key, Rendering::Mesh* outMesh) {
+void ResourceMap<std::string, PlatformMesh>::load(const std::string& key, PlatformMesh* outMesh) {
 	Rendering::MshLoader::LoadMesh(key, *outMesh);
 }
 
 template<>
-void ResourceMap<std::string, Rendering::Texture>::load(const std::string& key, Rendering::Texture* outTexture) {
+void ResourceMap<std::string, PlatformTexture>::load(const std::string& key, PlatformTexture* outTexture) {
 	outTexture->load(key);
 }
 
 template<>
-void ResourceMap<std::string, Rendering::Mesh>::upload(Rendering::Mesh* mesh) {
-	mesh->UploadToGPU();
+void ResourceMap<std::string, PlatformMesh>::upload(PlatformMesh* mesh) {
+	mesh->UploadToGPU(owner->getRenderer()->getBase());
 }
 
 template<>
-void ResourceMap<std::string, Rendering::Texture>::upload(Rendering::Texture* tex) {
+void ResourceMap<std::string, PlatformTexture>::upload(PlatformTexture* tex) {
 	tex->upload();
 }
 
