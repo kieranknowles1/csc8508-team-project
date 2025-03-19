@@ -37,19 +37,24 @@ public:
             switch (mode)
             {
             case GameMode::SINGLEPLAYER:
+                game->SetGameMode(GameMode::SINGLEPLAYER);
                 game->Start();
                 break;
             case GameMode::HOST_GAME:
+                game->SetGameMode(GameMode::HOST_GAME);
                 game->JoinGame(true); //This is host game
                 break;
             case GameMode::JOIN_GAME:
+                game->SetGameMode(GameMode::JOIN_GAME);
                 game->JoinGame(false); //This is join game
                 break;
             case GameMode::CREDITS:
+                game->SetGameMode(GameMode::CREDITS);
                 *newState = new CreditsScreen(controller, Assets::CREDITS);
                 return PushdownResult::Push;
                 break;
             case GameMode::QUIT:
+                game->SetGameMode(GameMode::QUIT);
                 return PushdownResult::Pop;
             default: assert(false);
             }

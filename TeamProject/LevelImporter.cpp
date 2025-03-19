@@ -1,4 +1,5 @@
 #include "LevelImporter.h"
+
 #include "PointLight.h"
 #include "Respawn.h"
 #include <nlohmann/json.hpp>
@@ -37,6 +38,7 @@ void from_json(const json& j, ObjectData& obj) {
     j.at("mainTextureName").get_to(obj.mainTextureName);
     j.at("normalTextureName").get_to(obj.normalTextureName);
     j.at("type").get_to(obj.type);
+    j.at("jumpPadStrength").get_to(obj.jumpPadStrength);
 }
 
 LevelImporter::LevelImporter(ResourceManager* resourceManager, GameWorld* worldIn, btDiscreteDynamicsWorld* bulletWorldIn) {
@@ -142,6 +144,7 @@ void LevelImporter::AddObjectToWorld(ObjectData* data) {
     world->AddGameObject(cube);
     cube->GetRenderObject()->SetTexRepeating(true);//sets texture to repeat and scale
     cube->setType(data->type);
+    cube->setJumpPadStrength(data->jumpPadStrength);
     HandleTypes(cube);
 }
 
@@ -150,9 +153,9 @@ btVector4 LevelImporter::LightColour() {
     case 0: return btVector4(1.0f, 0.0f, 0.0f, 1.0f); // Red
     case 1: return btVector4(1.0f, 1.0f, 0.0f, 1.0f); // Yellow
     case 2: return btVector4(0.0f, 1.0f, 0.0f, 1.0f); // Green
-    case 3: return btVector4(0.0f, 1.0f, 1.0f, 1.0f); // Cyan
+    case 3: return btVector4(0.0f, 0.0f, 1.0f, 1.0f); // Blue
     case 4: return btVector4(1.0f, 0.0f, 1.0f, 1.0f); // Magenta
-    case 5: return btVector4(0.0f, 0.0f, 1.0f, 1.0f); // Blue
+    case 5: return btVector4(0.0f, 1.0f, 1.0f, 1.0f); // Cyan
     default: return btVector4(1.0f, 1.0f, 1.0f, 1.0f); // White (fallback, shouldn't be hit)
     }
 }

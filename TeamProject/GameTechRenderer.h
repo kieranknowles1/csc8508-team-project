@@ -29,6 +29,10 @@ namespace NCL {
 			GameTechRenderer(Window* window);
 			~GameTechRenderer() override;
 
+			RendererBase* getBase() override {
+				return this;
+			}
+
 			OGLMesh* LoadMesh(const std::string& name) override; /////WAS Mesh* instead of OGLMesh*
 			Texture* LoadTexture(const std::string& name) override;
 
