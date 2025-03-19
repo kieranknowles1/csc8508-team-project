@@ -8,9 +8,12 @@
 #include "Multiplayer/GamePacketHandlers.hpp"
 #include "Multiplayer/Lobby.hpp"
 #include "Multiplayer/User.hpp"
+#include "Multiplayer/WorldState.hpp"
 
 
 namespace Multiplayer {
+    using namespace WorldState;
+
     Server::Server(TutorialGame* game, bool isHost) : m_game(game), m_isHost(isHost) {
         m_lobby = new Lobbies::Lobby(MAX_PLAYERS);
 
@@ -103,42 +106,59 @@ namespace Multiplayer {
 
         m_game->GetWorld()->OperateOnContents([&](GameObject* object) {
             if (object->isStatic()) return;
+
+            object->GetObjectStates()->UpdateBuffer();
+
             if (object->GetOwner() != *m_user) return;
-            if (object->GetWorldState().Size() <= 0) return;
 
-            WorldState::ObjectState& worldState = object->GetWorldState();
-            worldState.AcquireReadLock(); // ACQUIRE LOCK.
+            StateReader readReader = object->GetObjectStates()->GetReadState();
+            ObjectState* read = readReader.GetState();
 
-            // TODO: Move packet creation to virtual function inside GameObject.
-            // Create packets.
-            std::shared_ptr<Packet::DeltaPacket> delta = std::make_shared<Packet::DeltaPacket>(
-                object->GetWorldID(),
-                std::get<btVector3>(worldState.UnsafeReadState(WorldState::StateType::LinearVelocity)),
-                std::get<btVector3>(worldState.UnsafeReadState(WorldState::StateType::AngularVelocity)),
-                m_tickCount
-            );
-            m_network->Broadcast(delta);
+            if (read->Size() <= 0) return;
 
-            std::shared_ptr<Packet::PositionPacket> position = std::make_shared<Packet::PositionPacket>(
-                object->GetWorldID(),
-                std::get<btVector3>(worldState.UnsafeReadState(WorldState::StateType::Position)),
-                std::get<btQuaternion>(worldState.UnsafeReadState(WorldState::StateType::Rotation)),
-                m_tickCount
-            );
-            m_network->Broadcast(position);
+            StateValue linearVelocity;
+            StateValue angularVelocity;
+            StateValue position;
+            StateValue rotation;
 
-            // Create change gravity packet for players.
-            if (object->getType() == GameObject::Type::Player) {
-                PlayerObject* playerObj = static_cast<PlayerObject*>(object);
+            bool hasLinear = read->ReadState(StateType::LinearVelocity, &linearVelocity);
+            bool hasAngular = read->ReadState(StateType::AngularVelocity, &angularVelocity);
 
-                std::shared_ptr<Packet::ObjectChangeGravityPacket> gravity = std::make_shared<Packet::ObjectChangeGravityPacket>(
-                    playerObj->GetWorldID(),
-                    std::get<btVector3>(worldState.UnsafeReadState(WorldState::StateType::UpVector)),
+            bool hasPosition = read->ReadState(StateType::Position, &position);
+            bool hasRotation = read->ReadState(StateType::Rotation, &rotation);
+
+            if (hasLinear && hasAngular) {
+                std::shared_ptr<Packet::DeltaPacket> deltaPacket = std::make_shared<Packet::DeltaPacket>(
+                    object->GetWorldID(),
+                    std::get<btVector3>(linearVelocity),
+                    std::get<btVector3>(angularVelocity),
                     m_tickCount
                 );
-                m_network->Broadcast(gravity);
+                m_network->Broadcast(deltaPacket);
             }
-            worldState.ReleaseReadLock(); // RELEASE LOCK.
+
+            if (hasPosition && hasRotation) {
+                std::shared_ptr<Packet::PositionPacket> positionPacket = std::make_shared<Packet::PositionPacket>(
+                    object->GetWorldID(),
+                    std::get<btVector3>(position),
+                    std::get<btQuaternion>(rotation),
+                    m_tickCount
+                );
+                m_network->Broadcast(positionPacket);
+            }
+
+            //// Create change gravity packet for players.
+            //if (object->getType() == GameObject::Type::Player) {
+            //    PlayerObject* playerObj = static_cast<PlayerObject*>(object);
+
+            //    std::shared_ptr<Packet::ObjectChangeGravityPacket> gravity = std::make_shared<Packet::ObjectChangeGravityPacket>(
+            //        playerObj->GetWorldID(),
+            //        std::get<btVector3>(worldState.UnsafeReadState(WorldState::StateType::UpVector)),
+            //        m_tickCount
+            //    );
+            //    m_network->Broadcast(gravity);
+            //}
+            //worldState.ReleaseReadLock(); // RELEASE LOCK.
         });
     }
 

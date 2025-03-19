@@ -5,6 +5,7 @@
 #include "../TeamProject/Multiplayer/WorldState.hpp"
 
 using namespace NCL::CSC8503;
+using namespace WorldState;
 
 GameObject::GameObject(const std::string& objectName)	{
 	name			= objectName;
@@ -13,6 +14,8 @@ GameObject::GameObject(const std::string& objectName)	{
 	physicsObject	= nullptr;
 	renderObject	= nullptr;
 	networkObject	= nullptr;
+
+    states = std::make_unique<StateBuffer>();
 }
 
 GameObject::~GameObject()	{
@@ -24,43 +27,98 @@ GameObject::~GameObject()	{
 }
 
 void GameObject::UpdateObjectState() {
-    std::vector<std::pair<WorldState::StateType, WorldState::StateValue>> stateUpdates;
-    stateUpdates.push_back(
-        { WorldState::StateType::LinearVelocity, GetPhysicsObject()->GetRigidBody()->getLinearVelocity() }
-    );
-    stateUpdates.push_back(
-        { WorldState::StateType::AngularVelocity, GetPhysicsObject()->GetRigidBody()->getAngularVelocity() }
-    );
-    stateUpdates.push_back(
-        { WorldState::StateType::Position, GetPhysicsObject()->GetRigidBody()->getWorldTransform().getOrigin() }
-    );
-    stateUpdates.push_back(
-        { WorldState::StateType::Rotation, GetPhysicsObject()->GetRigidBody()->getWorldTransform().getRotation() }
-    );
-    objectWorldState.UpdateStates(stateUpdates);
+    StateReader writeReader = states->GetWriteState();
+    ObjectState* writeState = writeReader.GetState();
+    
+    btRigidBody* body = GetPhysicsObject()->GetRigidBody();
+    btTransform transform = body->getWorldTransform();
+
+    writeState->UpdateState(StateType::LinearVelocity, body->getLinearVelocity());
+    writeState->UpdateState(StateType::AngularVelocity, body->getAngularVelocity());
+    writeState->UpdateState(StateType::Position, transform.getOrigin());
+    writeState->UpdateState(StateType::Rotation, transform.getRotation());
 }
 
-void GameObject::UpdateFromState() {
+void GameObject::UpdateFromState(float dt) {
+    elapsedTickTime += dt;
+
+    std::function lerp = [](float x, float y, float w) { return x + ((y - x) * w); };
+    float weight = TICK_UPDATE_RATE / fmod(elapsedTickTime, TICK_UPDATE_RATE);
+
+    StateReader currentReader = states->GetCurrentState();
+    StateReader readReader = states->GetReadState();
+
+    ObjectState* current = currentReader.GetState();
+    ObjectState* read = currentReader.GetState();
+
     btRigidBody* body = GetPhysicsObject()->GetRigidBody();
-    objectWorldState.AcquireReadLock();
 
-    if (objectWorldState.UnsafeHasValue(WorldState::StateType::LinearVelocity)) {
-        body->setLinearVelocity(std::get<btVector3>(objectWorldState.UnsafeReadState(WorldState::StateType::LinearVelocity)));
+    // Linear Velocity.
+    StateValue currentLinearValue = StateValue();
+    StateValue targetLinearValue;
+    bool hasCurrentLinear = current->ReadState(StateType::LinearVelocity, &currentLinearValue);
+    bool hasTargetLinear = read->ReadState(StateType::LinearVelocity, &targetLinearValue);
+
+    if (hasCurrentLinear && hasTargetLinear) {
+        btVector3 currentLinear = std::get<btVector3>(currentLinearValue);
+        btVector3 targetLinear = std::get<btVector3>(targetLinearValue);
+        btVector3 interpolated = btVector3(
+            lerp(currentLinear.x(), targetLinear.x(), weight),
+            lerp(currentLinear.y(), targetLinear.y(), weight),
+            lerp(currentLinear.z(), targetLinear.z(), weight)
+        );
+        body->setLinearVelocity(interpolated);
+    } 
+
+    // Angular Velocity.
+    StateValue currentAngularValue = StateValue();
+    StateValue targetAngularValue;
+    bool hasCurrentAngular = current->ReadState(StateType::AngularVelocity, &currentAngularValue);
+    bool hasTargetAngular = read->ReadState(StateType::AngularVelocity, &targetAngularValue);
+
+    if (hasCurrentAngular && hasTargetAngular) {
+        btVector3 currentAngular = std::get<btVector3>(currentAngularValue);
+        btVector3 targetAngular = std::get<btVector3>(targetAngularValue);
+        btVector3 interpolated = btVector3(
+            lerp(currentAngular.x(), targetAngular.x(), weight),
+            lerp(currentAngular.y(), targetAngular.y(), weight),
+            lerp(currentAngular.z(), targetAngular.z(), weight)
+        );
+        body->setAngularVelocity(interpolated);
     }
 
-    if (objectWorldState.UnsafeHasValue(WorldState::StateType::AngularVelocity)) {
-        body->setAngularVelocity(std::get<btVector3>(objectWorldState.UnsafeReadState(WorldState::StateType::AngularVelocity)));
-    }
+    // Position.
+    StateValue currentPositionValue = StateValue();
+    StateValue targetPositionValue;
+    bool hasCurrentPosition = current->ReadState(StateType::Position, &currentPositionValue);
+    bool hasTargetPosition = read->ReadState(StateType::Position, &targetPositionValue);
 
-    if (objectWorldState.UnsafeHasValue(WorldState::StateType::Position)) {
-        btVector3 position = std::get<btVector3>(objectWorldState.UnsafeReadState(WorldState::StateType::Position));
-        body->getWorldTransform().setOrigin(position);
-    }
+    if (hasCurrentPosition && hasTargetPosition) {
+        btVector3 currentPosition = std::get<btVector3>(currentPositionValue);
+        btVector3 targetPosition = std::get<btVector3>(targetPositionValue);
+        btVector3 interpolated = btVector3(
+            lerp(currentPosition.x(), targetPosition.x(), weight),
+            lerp(currentPosition.y(), targetPosition.y(), weight),
+            lerp(currentPosition.z(), targetPosition.z(), weight)
+        );
+        body->getWorldTransform().setOrigin(interpolated);
+    } 
 
-    if (objectWorldState.UnsafeHasValue(WorldState::StateType::Rotation)) {
-        body->getWorldTransform().setRotation(std::get<btQuaternion>(objectWorldState.UnsafeReadState(WorldState::StateType::Rotation)));
-    }
+    // Rotation.
+    StateValue currentRotationValue = StateValue();
+    StateValue targetRotationValue;
+    bool hasCurrentRotation = current->ReadState(StateType::Rotation, &currentRotationValue);
+    bool hasTargetRotation = read->ReadState(StateType::Rotation, &targetRotationValue);
 
-    objectWorldState.UnsafeClear();
-    objectWorldState.ReleaseReadLock();
+    if (hasCurrentRotation && hasTargetRotation) {
+        btQuaternion currentRotation = std::get<btQuaternion>(currentRotationValue);
+        btQuaternion targetRotation = std::get<btQuaternion>(targetRotationValue);
+        btQuaternion interpolated = btQuaternion(
+            lerp(currentRotation.x(), targetRotation.x(), weight),
+            lerp(currentRotation.y(), targetRotation.y(), weight),
+            lerp(currentRotation.z(), targetRotation.z(), weight),
+            lerp(currentRotation.w(), targetRotation.w(), weight)
+        );
+        body->getWorldTransform().setRotation(interpolated);
+    }
 }

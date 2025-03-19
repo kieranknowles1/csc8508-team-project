@@ -16,6 +16,8 @@ namespace NCL::CSC8503 {
     class RenderObject;
     class PhysicsObject;
 
+    const float TICK_UPDATE_RATE = 1.0f / 60.0f;
+
 	class GameObject	{
 	public:
 		enum class Type {
@@ -85,7 +87,7 @@ namespace NCL::CSC8503 {
         }
 
         virtual void UpdateObjectState();
-        virtual void UpdateFromState();
+        virtual void UpdateFromState(float dt);
 
         virtual void Update(float dt) {}
 
@@ -161,7 +163,27 @@ namespace NCL::CSC8503 {
             return light;
         }
 
-        WorldState::ObjectState& GetWorldState() { return objectWorldState; }
+        WorldState::StateBuffer* GetObjectStates() { return states.get(); }
+
+        void Tick() {
+            std::unique_lock lock(tickMutex);
+            currentTick++;
+        }
+
+        int ReadCurrentTick() {
+            std::shared_lock lock(tickMutex);
+            return currentTick;
+        }
+
+        int ReadLastTick() {
+            std::shared_lock lock(tickMutex);
+            return currentTick;
+        }
+
+        void UpdateLastTick() {
+            std::unique_lock lock(tickMutex);
+            lastTick = currentTick;
+        }
 
         void setDeleted() { deleted = true; }
         bool isDeleted() { return deleted; }
@@ -185,8 +207,14 @@ namespace NCL::CSC8503 {
         inline static std::unordered_map<int, GameObject*> objects;
 
         PointLight* light = nullptr;
-
         std::optional<Lobbies::User> owner;
-        WorldState::ObjectState objectWorldState;
+
+        std::unique_ptr<WorldState::StateBuffer> states;
+        std::shared_mutex tickMutex;
+        int currentTick = 0;
+        int lastTick = 0;
+	    
+        float elapsedTickTime = 0;
+        float elapsedTime = 0;
     };
 }

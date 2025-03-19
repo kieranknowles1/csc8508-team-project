@@ -76,13 +76,6 @@ static bool BulletRaycast(btDynamicsWorld* world, const btVector3& start, const 
 
 void TutorialGame::UpdateGame(float dt) {
     profiler.beginFrame();
-    profiler.startSection("Network Updates");
-    if (server != nullptr) {
-        world->OperateOnContents([&](GameObject* obj) {
-            if (server->IsOwnerOf(obj)) obj->UpdateObjectState();
-            else obj->UpdateFromState();
-            });
-    }
 
 
     profiler.startSection("Physics");
@@ -115,6 +108,14 @@ void TutorialGame::UpdateGame(float dt) {
 
     profiler.startSection("Update Audio");
     audioEngine.Update(&world->GetMainCamera());
+    
+    profiler.startSection("Network Updates");
+    if (server != nullptr) {
+        world->OperateOnContents([&](GameObject* obj) {
+            if (server->IsOwnerOf(obj)) obj->UpdateObjectState();
+            else obj->UpdateFromState(dt);
+            });
+    }
 
     clearGraveyard();
     profiler.startSection("Prepare Render");

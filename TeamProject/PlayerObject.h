@@ -138,7 +138,7 @@ public:
 	void SetGunTransform(float pitch, float yaw, btVector3 camPos);
 
 	void UpdateObjectState() override;
-	void UpdateFromState() override;
+	void UpdateFromState(float dt) override;
 private:
 	//Player Variables
 	float gravityScale = 400.0f;
@@ -173,7 +173,6 @@ private:
 	btVector3 CalculateForwardFromYaw(float yaw);
 	btVector3 CalculateRightFromYaw(float yaw);
 
-	float elapsedTime = 0;
 	float lastHit = 0;
 
 

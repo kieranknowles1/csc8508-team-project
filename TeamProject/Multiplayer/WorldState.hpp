@@ -31,19 +31,19 @@ namespace WorldState {
          * @brief Update a state.
          * This function blocks reading until it has finished.
          */
-        void UpdateState(const std::pair<StateType, StateValue>& stateUpdate) {
+        void UpdateState(const StateType type, const StateValue& value) {
             std::unique_lock lock(m_stateLock);
-            m_states[stateUpdate.first] = stateUpdate.second;
+            m_states[type] = value;
         }
 
         /**
          * @brief Read a state. If the state does not exist returns false.
          */
-        bool ReadState(StateType type, StateValue& value) {
+        bool ReadState(StateType type, StateValue* value) {
             std::shared_lock lock(m_stateLock);
 
             if (m_states.contains(type)) {
-                value = m_states[type];
+                *value = m_states[type];
                 return true;
             }
             return false;
@@ -108,6 +108,7 @@ namespace WorldState {
         ObjectState* m_state;
         std::shared_mutex* m_readingMutex;
     };
+
 
     /**
      * @brief State buffer contains 3 different buffers for reading, writing

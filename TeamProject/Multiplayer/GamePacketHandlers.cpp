@@ -2,8 +2,10 @@
 #include "GameObject.h"
 #include "Multiplayer/GamePacketHandlers.hpp"
 #include "Multiplayer/Server.hpp"
+#include "Multiplayer/WorldState.hpp"
 
 namespace Packet {
+    using namespace WorldState;
 
 #pragma region DeltaPacketHandler
     void DeltaPacketHandler::Handle(const std::shared_ptr<Packet> packet) {
@@ -14,8 +16,11 @@ namespace Packet {
 
         if (TutorialGame::getInstance()->GetServerInstance()->IsOwnerOf(object)) return;
 
-        object->GetWorldState().UpdateState({ WorldState::StateType::LinearVelocity, deltaPacket->GetLinearVelocity() });
-        object->GetWorldState().UpdateState({ WorldState::StateType::AngularVelocity, deltaPacket->GetAngularVelocity() });
+        StateReader writeReader = object->GetObjectStates()->GetWriteState();
+        ObjectState* writeState = writeReader.GetState();
+
+        writeState->UpdateState(StateType::LinearVelocity, deltaPacket->GetLinearVelocity());
+        writeState->UpdateState(StateType::AngularVelocity, deltaPacket->GetAngularVelocity());
     }
     
     std::shared_ptr<Packet> DeltaPacketHandler::Translate(const ENetEvent* event) const {
@@ -185,8 +190,11 @@ namespace Packet {
 
         if (TutorialGame::getInstance()->GetServerInstance()->IsOwnerOf(object)) return;
 
-        object->GetWorldState().UpdateState({ WorldState::StateType::Position, positionPacket->GetPosition() });
-        object->GetWorldState().UpdateState({ WorldState::StateType::Rotation, positionPacket->GetOrientation() });
+        StateReader writeReader = object->GetObjectStates()->GetWriteState();
+        ObjectState* writeState = writeReader.GetState();
+
+        writeState->UpdateState(StateType::Position, positionPacket->GetPosition());
+        writeState->UpdateState(StateType::Rotation, positionPacket->GetOrientation());
     }
 
     std::shared_ptr<Packet> PositionPacketHandler::Translate(const ENetEvent* event) const {
@@ -286,7 +294,7 @@ namespace Packet {
 
         if (TutorialGame::getInstance()->GetServerInstance()->IsOwnerOf(object)) return;
 
-        object->GetWorldState().UpdateState({ WorldState::StateType::UpVector, gravityPacket->GetUpDirection() });
+        //object->GetWorldState().UpdateState({ WorldState::StateType::UpVector, gravityPacket->GetUpDirection() });
     }
 
     std::shared_ptr<Packet> ObjectChangeGravityPacketHandler::Translate(const ENetEvent* event) const {
@@ -666,6 +674,5 @@ namespace Packet {
         return enetPacket;
     }
 #pragma endregion Pong
-
 
 }
