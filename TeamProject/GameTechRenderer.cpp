@@ -1039,6 +1039,7 @@ void GameTechRenderer::DrawScene() { //the basic rendering for the scene, curren
 	glClearColor(1, 1, 1, 0); //doesn't seem to change anything regardless of alpha
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     RenderCamera();
+	RenderAnimations(); /////////////////////////////////////////////////////////////////////////////////////TESTING FOR NOW
 	// Render Decals to it's own buffer
 	RenderDecals();
 
@@ -1207,6 +1208,9 @@ void GameTechRenderer::RenderAnimations() {
 	//define the locations here since they don't change per mesh:
 	int colourLocation = glGetUniformLocation(animationShader->GetProgramID(), "objectColour");
 	int hasVColLocation = glGetUniformLocation(animationShader->GetProgramID(), "hasVertexColours"); 
+	int hasTexLocation = glGetUniformLocation(animationShader->GetProgramID(), "hasTexture");
+	int hasNormalLocation = glGetUniformLocation(animationShader->GetProgramID(), "hasNormalMap");
+	int isFlatLocation = glGetUniformLocation(animationShader->GetProgramID(), "isFLat");
 
 	int projLocation = glGetUniformLocation(animationShader->GetProgramID(), "projMatrix");
 	int viewLocation = glGetUniformLocation(animationShader->GetProgramID(), "viewMatrix");
@@ -1220,7 +1224,7 @@ void GameTechRenderer::RenderAnimations() {
 	glUniformMatrix4fv(viewLocation, 1, false, (float*)&viewMatrix);
 
 	for (const auto& i : animatedObjects) {
-		glUniform1i(glGetUniformLocation(animationShader->GetProgramID(), "diffuseTex"), 0); //not binding texture here?
+		glUniform1i(glGetUniformLocation(animationShader->GetProgramID(), "diffuseTex"), 0); //not binding texture here? PROBABLY SHOULDN'T BE HERE
 
 		//std::vector<std::vector<Matrix4>> frameMatrices; //storing a vector of Matrix4 vectors
 		std::vector<Matrix4> frameMatrices;
@@ -1259,9 +1263,16 @@ void GameTechRenderer::RenderAnimations() {
 		for (size_t subMeshIndex = 0; subMeshIndex < subMeshCount; ++subMeshIndex) { //should the int be size_t instead?     
 			const Material::Layer* layer = i->getMaterial() ? i->getMaterial()->GetLayer(subMeshIndex) : nullptr; //shouldn't return nullptr since all animated objects have materials
 		    //Bind textures per submesh:
-			BindTextureToShader(*layer->diffuse, "diffuseTex", 0); //should all have a diffuse texture
+			bool hasTex = layer && layer->diffuse;
+			bool hasNormal = layer && layer->normal;
+			if (hasTex) {
+				BindTextureToShader(*layer->diffuse, "diffuseTex", 0);
+			}
+			if (hasNormal) {
+				BindTextureToShader(*layer->diffuse, "normalTex", 1);
+			}
 
-			Matrix4 modelMatrix;
+			Matrix4 modelMatrix; //do I need to send model matrix here or is that taken care of by the framematrices?
 			i->getParent()->GetTransform().getOpenGLMatrix((btScalar*)&modelMatrix);
 			modelMatrix = modelMatrix * Matrix::Scale(i->getParent()->getRenderScale());
 			glUniformMatrix4fv(modelLocation, 1, false, (float*)&modelMatrix);
@@ -1270,7 +1281,7 @@ void GameTechRenderer::RenderAnimations() {
 			glUniform4fv(colourLocation, 1, &Colour.x);
 
 			glUniform1i(hasVColLocation, !(*i).GetMesh()->GetColourData().empty());
-
+			
 
 
 			BindMesh((OGLMesh&)*(*i).GetMesh());

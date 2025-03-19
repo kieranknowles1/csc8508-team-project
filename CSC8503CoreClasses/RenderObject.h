@@ -93,7 +93,9 @@ namespace NCL {
 			float texScaleMultiplier = 0.005f; //unless set to something else, all scaled textures will be scaled with this and their renderScale
 
 			//Animation stuff:
-			MeshAnimation* test; //InitPlayer will set animated from gameObject to true
+			//MeshAnimation* test; //InitPlayer will set animated from gameObject to true
+			//std::shared_ptr<MeshAnimation> test;
+			MeshAnimation* test;
 		
 
 
