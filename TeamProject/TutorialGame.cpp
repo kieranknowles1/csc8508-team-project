@@ -137,11 +137,6 @@ void TutorialGame::UpdateGame(float dt) {
     pulse += dt;
     renderer->SetVignettePulse(pulse);
 
-    //Mesh Animation additions:
-    /*aniFrameTime = renderer->GetFrameTime();
-    aniFrameTime -= dt;
-    renderer->SetFrameTime(aniFrameTime);
-    */
     renderer->SetDelta(dt);
 
 }
@@ -413,9 +408,7 @@ PlayerObject* TutorialGame::InitPlayer(btVector3 position, btVector3 upDir) {
     newPlayer->GetRenderObject()->SetColour(Vector4(playerColour));
     newPlayer->setUpDirection(upDir);
     newPlayer->SetIsAnimated(true); //maybe better to manage this wherever animations are being applied rather than here but for testing this is probably fine
-   // newPlayer->GetRenderObject()->SetMesh(resourceManager->getMeshes().get("/MaleGuard/Male_Guard.msh")); //Think this is now correct, console not angry at me
-    //newPlayer->GetRenderObject()->SetAnimation()
-    newPlayer->setRenderer(renderer); //What is this?
+    newPlayer->setRenderer(renderer); 
     return newPlayer;
 }
 
@@ -544,7 +537,7 @@ PlayerObject* TutorialGame::AddPlayerCapsuleToWorld(const Vector3& position, flo
     // Setting the render object for the capsule
    // player->SetRenderObject(new RenderObject(player, resourceManager->getMeshes().get("Capsule.msh"), defaultTexture)); ORIGINAL RENDER OBJECT COMMENTED OUT FOR TESTING
     player->SetRenderObject(new RenderObject(player, resourceManager->getMeshes().get("/MaleGuard/Male_Guard.msh"), resourceManager->getMaterials().get("Male_Guard.mat")));
-    player->GetRenderObject()->SetAnimation(new MeshAnimation("/MaleGuard/StepLeft.anm")); //For Testing only
+    player->GetRenderObject()->SetAnimation(new MeshAnimation("/MaleGuard/Taunt.anm")); //For Testing only StepLeft.anm
     // Setting the physics object for the capsule
     player->SetPhysicsObject(new PhysicsObject(player));
 

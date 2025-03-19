@@ -244,11 +244,7 @@ GameTechRenderer::GameTechRenderer(Window* window) : OGLRenderer(window), GameTe
 
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-	//Mesh Animation addditions:
-	//MaleGuard = LoadMesh("/MaleGuard/Male_Guard.msh");
-	//test = new MeshAnimation("/MaleGuard/Flinches.anm");
-	//material = new MeshMaterial("/MaleGuard/Male_Guard");// not sure if this is the right one. Currently, resourceManager doesn't support submeshes => no materials
-	animationShader = new OGLShader("skinningvert.glsl", "deferredscenefrag.glsl"); //not yet sure if this fragment shader can work here
+	animationShader = new OGLShader("skinningvert.glsl", "deferredscenefrag.glsl"); 
 
 }
 
@@ -279,7 +275,7 @@ GameTechRenderer::~GameTechRenderer() {
 	glDeleteTextures(1, &laserTexOld);
 
 	//delete MaleGuard;
-	//delete animationShader;
+   delete animationShader;
 	
 
 }
@@ -1193,7 +1189,7 @@ void GameTechRenderer::RenderAnimations() {
 	//and send the necessary info to shader. This should render players anyway even if animations not currently playing
 	std::vector<RenderObject*> animatedObjects;
 	for (const auto& i : frameObjects) { //iterate over all render objects
-		if (i->getParent()->GetIsAnimated() == true) { //==true
+		if (i->getParent()->GetIsAnimated() == true) { 
 			animatedObjects.emplace_back(i); //should add all animated objects to animatedObjects
 		}
 	}
@@ -1224,18 +1220,13 @@ void GameTechRenderer::RenderAnimations() {
 	glUniformMatrix4fv(viewLocation, 1, false, (float*)&viewMatrix);
 
 	for (const auto& i : animatedObjects) {
-		glUniform1i(glGetUniformLocation(animationShader->GetProgramID(), "diffuseTex"), 0); //not binding texture here? PROBABLY SHOULDN'T BE HERE
+		//glUniform1i(glGetUniformLocation(animationShader->GetProgramID(), "diffuseTex"), 0); // PROBABLY SHOULDN'T BE HERE
 
-		//std::vector<std::vector<Matrix4>> frameMatrices; //storing a vector of Matrix4 vectors
+	
 		std::vector<Matrix4> frameMatrices;
 
 		//These two changed to fit the datatypes as defined in this codebase:
-		//const std::vector<Matrix4> invBindPose = (*i).GetMesh()->GetInverseBindPose(); //InverseBindPose in mesh.h is a vector of matrix4 not a Matrix4*
-		//const Matrix4 invBindPose = (*i).GetMesh()->GetInverseBindPose()[1]; //Defining it here creates eldritch beings
-		const Matrix4* frameData = (*i).GetAnimation()->GetJointData((*i).GetAnimation()->GetCurrentFrame());//joint data is a Matrix4* SHOULD THESE BE CALCULATED PER JOINT?
-
-		//in mesh.h InverseBindPose is a vector of matrix4 instead of just a Matrix4. This may be to allow each submesh to have its own bindpose. It may not be needed though so
-		//may be able to assume the bindpose will be the first element? Perhaps the possibility of any number of bindposes should be accounted for?
+		const Matrix4* frameData = (*i).GetAnimation()->GetJointData((*i).GetAnimation()->GetCurrentFrame());// SHOULD THESE BE CALCULATED PER JOINT?
 
 		for (unsigned int q = 0; q < (*i).GetMesh()->GetJointCount(); ++q) {
 			const Matrix4 invBindPose = (*i).GetMesh()->GetInverseBindPose()[q]; //need to get the inverse bind pose per joint to "undo" the bind pose for each joint
@@ -1245,23 +1236,10 @@ void GameTechRenderer::RenderAnimations() {
 		int j = glGetUniformLocation(animationShader->GetProgramID(), "joints"); 
 		glUniformMatrix4fv(j, frameMatrices.size(), false, (float*)frameMatrices.data()); 
 
-		//all the vertex data is already sent to shader when the mesh is loaded in
-
-		/*for (int k = 0; k < (*i).GetMesh()->GetSubMeshCount(); ++k) {
-			glActiveTexture(GL_TEXTURE0);
-			glBindTexture(GL_TEXTURE_2D, matTextures[k]); //still need to properly set up where to put matTextures
-			BindMesh((OGLMesh&)*(*i).GetMesh());
-			size_t layerCount = (*i).GetMesh()->GetSubMeshCount();
-			for (size_t p = 0; p < layerCount; ++p) {
-				DrawBoundMesh((uint32_t)i);
-			} THIS BLOCK WILL PROBABLY BE REMOVED
-		}*/
-
-
 		//for consistency with renderCamera:
 		size_t subMeshCount = i->GetMesh()->GetSubMeshCount();
 
-		for (size_t subMeshIndex = 0; subMeshIndex < subMeshCount; ++subMeshIndex) { //should the int be size_t instead?     
+		for (size_t subMeshIndex = 0; subMeshIndex < subMeshCount; ++subMeshIndex) { 
 			const Material::Layer* layer = i->getMaterial() ? i->getMaterial()->GetLayer(subMeshIndex) : nullptr; //shouldn't return nullptr since all animated objects have materials
 		    //Bind textures per submesh:
 			bool hasTex = layer && layer->diffuse;
@@ -1273,7 +1251,7 @@ void GameTechRenderer::RenderAnimations() {
 				BindTextureToShader(*layer->diffuse, "normalTex", 1);
 			}
 
-			Matrix4 modelMatrix; //do I need to send model matrix here or is that taken care of by the framematrices?
+			Matrix4 modelMatrix; 
 			i->getParent()->GetTransform().getOpenGLMatrix((btScalar*)&modelMatrix);
 			modelMatrix = modelMatrix * Matrix::Scale(i->getParent()->getRenderScale());
 			glUniformMatrix4fv(modelLocation, 1, false, (float*)&modelMatrix);
@@ -1281,7 +1259,7 @@ void GameTechRenderer::RenderAnimations() {
 			Vector4 Colour = i->GetColour();
 			glUniform4fv(colourLocation, 1, &Colour.x);
 
-			glUniform1i(hasVColLocation, !(*i).GetMesh()->GetColourData().empty());
+			glUniform1i(hasVColLocation, !(*i).GetMesh()->GetColourData().empty()); 
 			
 
 
@@ -1290,52 +1268,3 @@ void GameTechRenderer::RenderAnimations() {
 		}
 	}
 }
-
-//for reference: 
-/*
-if ((*i).getParent()->GetIsAnimated() == true) {//if object is a player, don't want it to be drawn here
-	continue; //go to next renderObject in loop
-}
-
-//if ((*i).getParent()->getType() == Player); //could instead check based on type
-size_t subMeshCount = i->GetMesh()->GetSubMeshCount();
-
-for (size_t subMeshIndex = 0; subMeshIndex < subMeshCount; ++subMeshIndex) {
-	const Material::Layer* layer = i->getMaterial() ? i->getMaterial()->GetLayer(subMeshIndex) : nullptr;
-
-	bool hasTex = layer && layer->diffuse;
-	bool hasNormal = layer && layer->normal;
-	//Bind textures per submesh
-	if (hasTex) {
-		BindTextureToShader(*layer->diffuse, "diffuseTex", 0);
-	}
-
-	if (hasNormal) {
-		BindTextureToShader(*layer->normal, "normalTex", 1);
-	}*/
-
-//FURTHER REFERENCE:
-
-/*
-		 Matrix4 modelMatrix;
-			i->getParent()->GetTransform().getOpenGLMatrix((btScalar*)&modelMatrix);
-			modelMatrix = modelMatrix * Matrix::Scale(i->getParent()->getRenderScale());
-			glUniformMatrix4fv(modelLocation, 1, false, (float*)&modelMatrix);
-
-			//Matrix4 fullShadowMat = shadowMatrix * modelMatrix; //TEMPORARILY REMOVING SHADOWS
-			//glUniformMatrix4fv(shadowLocation, 1, false, (float*)&fullShadowMat);
-
-			Vector4 colour = i->GetColour();
-			glUniform4fv(colourLocation, 1, &colour.x);
-
-			glUniform1i(hasVColLocation, !(*i).GetMesh()->GetColourData().empty());
-
-			glUniform1i(hasTexLocation, hasTex);//////////////////////////////////////////////////////
-			// TODO: Add metallic maps
-			//glUniform1i(hasMetallicLocation, i->GetMetallicMaps().size() > subMeshIndex && i->GetMetallicMaps()[subMeshIndex] != nullptr);
-			glUniform1i(hasFlatLocation, i->GetIsFlat()); ////////////////////////////////////////////////////////////
-			glUniform1i(hasNormalLocation, hasNormal); //////////////////////////////////////////
-
-			BindMesh((OGLMesh&)*(*i).GetMesh());
-			DrawBoundMesh((uint32_t)subMeshIndex);
-*/

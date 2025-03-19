@@ -156,10 +156,6 @@ namespace NCL {
 			std::unique_ptr<OGLShader> edgedetectShader;
 
 			//Mesh Animation Additions:
-			//OGLMesh* MaleGuard; //trying out unique pointers for now
-			//MeshAnimation* test;
-			//MeshMaterial* material;
-			//vector<GLuint> matTextures; //could instead give each render object a matTextures as a vector of textures
 			void RenderAnimations();
 			OGLShader* animationShader;
 

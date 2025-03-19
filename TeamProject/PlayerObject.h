@@ -176,10 +176,6 @@ private:
 	float elapsedTime = 0;
 	float lastHit = 0;
 
-	//Skeletal Animation stuff:
-	//MeshAnimation* test;
-
-
 	GameTechRendererInterface* renderer;
 
 

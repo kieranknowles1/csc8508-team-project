@@ -13,7 +13,7 @@ void PlayerObject::Update(float dt) {
     forwardDirection = CalculateForwardDirection(upDirection, rightDirection);
     updateGravity(dt);
 
-    //Animation: Not checking for if animated == true since all players should be animated
+    //Animation: 
     if (animated == true) {
         renderObject->GetAnimation()->UpdateAnimation(dt);
     }

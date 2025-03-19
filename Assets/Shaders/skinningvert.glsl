@@ -11,13 +11,13 @@ layout(location = 2) in vec2 texCoord;
 layout(location = 3) in vec3 normal;
 layout(location = 4) in vec4 tangent;
 layout(location = 5) in vec4 jointWeights; //location 5 to match enum in struct in mesh.h
-layout(location = 6) in ivec4 jointIndices; //not sure if ivec is correct here
+layout(location = 6) in ivec4 jointIndices; 
 
 uniform vec4 objectColour; //added to fit with scene.vert
 
-uniform mat4 joints[128];//not sure if this is the right number atm
+uniform mat4 joints[128];
 
-out Vertex { //changing this to match with deferredscenefrag.glsl. Originally only texCoord was here
+out Vertex { 
     vec4 colour;
     vec2 texCoord;
     vec3 normal;
@@ -30,7 +30,7 @@ void main(void) {
      vec4 localPos = vec4(position, 1.0f);
      vec4 skelPos  = vec4(0, 0, 0, 0);
 
-     for (int i = 0; i < 4; ++i) { //not currently sure why 4 specifically. Maybe not right in this case
+     for (int i = 0; i < 4; ++i) { 
          int jointIndex = jointIndices[i];
          float jointWeight = jointWeights[i];
 
@@ -48,7 +48,7 @@ void main(void) {
 	OUT.binormal    = cross ( OUT.tangent, OUT.normal) * tangent.w; //calculate the binormal for normal mapping
 	OUT.colour		= objectColour;
 }
-//if possible might be nice to add all the necessary stuff from scene.vert to allow the model to be lit
+
 
 
 

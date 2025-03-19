@@ -76,11 +76,7 @@ namespace NCL {
 			}
 
 			void SetAnimation(MeshAnimation* name) {
-				test = name; //idk if this is how it should be handled. Might also be an issue if changing where the pointer is pointing
-			}
-
-			void SetMesh(std::shared_ptr<Mesh> M) { //Temporarily added
-				mesh = M;
+				test = name; 
 			}
 
 		protected:
@@ -93,8 +89,6 @@ namespace NCL {
 			float texScaleMultiplier = 0.005f; //unless set to something else, all scaled textures will be scaled with this and their renderScale
 
 			//Animation stuff:
-			//MeshAnimation* test; //InitPlayer will set animated from gameObject to true
-			//std::shared_ptr<MeshAnimation> test;
 			MeshAnimation* test;
 		
 
