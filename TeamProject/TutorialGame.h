@@ -18,6 +18,7 @@
 
 #include <shared_mutex>
 #include <btBulletDynamicsCommon.h>
+#include "SPGameController.h"
 
 namespace Multiplayer {
     class Server;
@@ -106,14 +107,24 @@ namespace NCL {
             void StartMultiplayerGame(bool isHost);
             void ClearWorld();
 
-            GameWorld* getWorld() {
-                return world.get();
+            GameWorld* GetWorld() const { return world.get(); }
+
+            btDiscreteDynamicsWorld* getBulletWorld() {
+                return bulletWorld;
             }
 
-            GameWorld* GetWorld() const { return world.get(); }
+            ResourceManager* getResourceManager() {
+                return resourceManager.get();
+            }
+
+            std::shared_ptr<Texture> getDefaultTexture() {
+                return defaultTexture;
+            }
 
             // FIX ME make this protected/private.
             PlayerObject* player;
+
+            void SetGameMode(GameMode gm) { gameMode = gm; }
 
         protected:
             void InitialiseAssets();
@@ -123,13 +134,7 @@ namespace NCL {
             void ThirdPersonControls();
 
             void InitWorld();
-            //void ResetWorld();
-
-            void SetupHost() {};
-
             void UpdatePlayer(float dt);
-
-            Turret* AddTurretToWorld();
 
             GameObject* AddFloorToWorld(const Vector3& position, const Vector3& size, const Vector3& rotation);
             GameObject* AddSphereToWorld(const Vector3& position, float radius, float inverseMass = 10.0f);
@@ -154,6 +159,7 @@ namespace NCL {
             Controller* controller;
 
             std::shared_ptr<Texture> defaultTexture;
+            std::shared_ptr<Texture> paintballTexture;
 
             //Coursework Additional functionality
             GameObject* lockedObject	= nullptr;
@@ -180,7 +186,6 @@ namespace NCL {
             //Player things
             PlayerObject* InitPlayer(btVector3 position, btVector3 upDir);
             PerspectiveCamera* mainCamera;
-            GameObject* gun;
             std::unique_ptr<PlayerController> playerController;
             bool freeCam = false;
             bool thirdPerson = false;
@@ -190,26 +195,12 @@ namespace NCL {
             float accumulator = 0.0f;
             float fixedDeltaTime = 1.0f / 60.0f;
 
-            //AI
-            Turret* testTurret = nullptr;
-
             //Level import
             bool loadFromLevel;
 
-            NavMesh* bottom;
-            NavMesh* top;
-            NavMesh* front;
-            NavMesh* back;
-            NavMesh* left;
-            NavMesh* right;
-            std::vector<NavMesh*> navMeshes;
-            bool navMeshDebug = false;
-            bool enableAI = true;
-            void VisualiseNavMesh();
-            void InitAI();
+            SPGameController* spGameController = nullptr;
 
-            std::vector<Wanderer*> wanderers;
-            Wanderer* AddWandererToWorld(NavMesh* navMesh, char side);
+            GameObject* AddGunToWorld(const Vector3& position, Vector3 dimensions, float inverseMass, bool hasCollision);
 
             //post processing time variable effects
             float pulse = 0;
@@ -218,6 +209,8 @@ namespace NCL {
             Multiplayer::Server* server = nullptr;
             std::shared_mutex* stateMutex = nullptr;
             GameState state = GameState::IDLE;
+
+            GameMode gameMode;
         };
     }
 }

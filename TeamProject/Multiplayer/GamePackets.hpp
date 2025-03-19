@@ -82,19 +82,21 @@ namespace Packet {
     */
     class LaserPacket : public Packet {
     public:
-        LaserPacket(int objectID, const btVector3& startPos, const btVector3& endPos, int sequenceNum) :
+        LaserPacket(int objectID, const btVector3& startPos, const btVector3& endPos, const btVector3& hitNormal, int sequenceNum) :
             Packet(static_cast<Type>(PacketType::LASER), static_cast<int>(Channel::FREQUENT), sequenceNum),
-            m_objectID(objectID), m_startPos(startPos), m_endPos(endPos)
+            m_objectID(objectID), m_startPos(startPos), m_endPos(endPos), m_hitNormal(hitNormal)
         {}
 
         inline int GetTargetID() const { return m_objectID; }
         inline btVector3 GetStartPos() const { return m_startPos; }
         inline btVector3 GetEndPos() const { return m_endPos; }
+        inline btVector3 GetHitNormal() const { return m_hitNormal; }
 
     private:
         const int m_objectID;
         const btVector3 m_startPos;
         const btVector3 m_endPos;
+        const btVector3 m_hitNormal;
     };
 
 

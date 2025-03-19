@@ -16,7 +16,6 @@
 #include <btBulletCollisionCommon.h>
 #include "DecalSystem.h"
 #include "Shoot.h"
-#include "Paintball.h"
 #include "Crosshair.h"
 #include "Scoreboard.h"
 #include "Overheat.h"
@@ -28,9 +27,8 @@ namespace NCL {
 
 		class PlayerController {
 		public:
-			PlayerController(PlayerObject* playerIn, GameObject* gunIn, const Controller* c, Camera* cam, btDiscreteDynamicsWorld* bulletWorldIn, GameTechRendererInterface* rendererIn) {
+			PlayerController(PlayerObject* playerIn, const Controller* c, Camera* cam, btDiscreteDynamicsWorld* bulletWorldIn, GameTechRendererInterface* rendererIn) {
 				player = playerIn;
-				gun = gunIn;
 				controller = c;
 				camera = cam;
 				bulletWorld = bulletWorldIn;
@@ -84,13 +82,10 @@ namespace NCL {
 			float slidingCameraBackwards = 2.5f;
 
 			//Gun Variables
-			btVector3 gunCameraOffset = btVector3(1.3, -0.7, -2.5f);
+			btVector3 gunCameraOffset = btVector3(0, 0.22f, -1.5f);
 
 			//Rotation Variables
 			float rotateTime = 0.5f;
-
-			//Special Types Variables
-			float bouncePadHeight = 7000.0f;
 
 
 			GameTechRendererInterface* renderer;
@@ -108,7 +103,6 @@ namespace NCL {
 			float inAirTime = 0;
 			btDiscreteDynamicsWorld* bulletWorld;
 			PlayerObject* player;
-			GameObject* gun;
 			const Controller* controller = nullptr;
 			Camera* camera = nullptr;
 			float yaw = 0;

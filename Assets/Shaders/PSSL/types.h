@@ -10,7 +10,7 @@
 #define SLOT(slot) : slot
 #endif
 
-#define NULLTEX 0
+#define NULLTEX -1
 
 struct ObjectState {
 		matrix modelMatrix;
@@ -23,6 +23,9 @@ struct ObjectState {
 		int skinningIndex = NULLTEX;
 		bool texRepeats;
 		float3 texScale;
+		int startIndex;
+		int numElements;
+		bool invertY;
 };
 
 struct UiState {

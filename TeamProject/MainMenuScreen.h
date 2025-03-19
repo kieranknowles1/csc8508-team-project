@@ -35,6 +35,7 @@ public:
             switch (mode)
             {
             case GameMode::SINGLEPLAYER:
+                game->SetGameMode(GameMode::SINGLEPLAYER);
                 game->Start();
                 *newState = new GameScreen(controller, game);
                 return PushdownResult::Push;
@@ -50,10 +51,12 @@ public:
                 return PushdownResult::Push;
 
             case GameMode::CREDITS:
+                game->SetGameMode(GameMode::CREDITS);
                 *newState = new CreditsScreen(controller, Assets::CREDITS);
                 return PushdownResult::Push;
                 break;
             case GameMode::QUIT:
+                game->SetGameMode(GameMode::QUIT);
                 return PushdownResult::Pop;
             default: assert(false);
             }

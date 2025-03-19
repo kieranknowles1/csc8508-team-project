@@ -6,12 +6,13 @@
 #include <memory>
 #include "PointLight.h"
 
-#include <NCLCoreClasses/Vector.h>
+#include "Vector.h"
 
 namespace NCL::Rendering {
 	class Mesh;
 	class Texture;
 	class Shader;
+	class RendererBase;
 }
 
 namespace NCL {
@@ -67,6 +68,7 @@ namespace NCL::CSC8503 {
 	class GameTechRendererInterface
 	{
 	public:
+		virtual Rendering::RendererBase* getBase() = 0;
 		virtual void drawFrame(float dt) = 0;
 
 		GameTechRendererInterface(Window* window);

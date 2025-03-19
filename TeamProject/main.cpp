@@ -158,7 +158,8 @@ int main(int argc, char** argv) {
         //}
 
         quit |= !machine.Update(dt);
-        renderer->collectFrameObjects(game->getWorld());
+        game->GetResourceManager()->update(dt);
+        renderer->collectFrameObjects(game->GetWorld());
         renderer->drawFrame(dt);
         Debug::UpdateRenderables(dt);
     }

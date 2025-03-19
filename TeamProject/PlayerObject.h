@@ -13,7 +13,7 @@
 #include <btBulletCollisionCommon.h>
 #include <mutex>
 
-using namespace NCL::CSC8503;
+namespace NCL::CSC8503 {
 
 enum class PlayerState {
 	DEAD,
@@ -24,8 +24,6 @@ enum class PlayerState {
 class PlayerObject : public GameObject {
 public:
 
-	inline unsigned int GetPlayerID() const { return playerID; }
-	void SetPlayerID(unsigned intplayerIDIn) {playerID = intplayerIDIn; }
 
 	void Update(float dt) override;
 
@@ -123,6 +121,7 @@ public:
 			RespawnPoint* point = Respawn::GetInstance()->GetRespawn(worldID - 1);
 			GetPhysicsObject()->GetRigidBody()->getWorldTransform().setOrigin(point->position);
 			setUpDirection(point->orientation);
+			resetCollisionType();
 			setCollided(0);
 			// TODO: Create Change State packet.
 		}
@@ -131,10 +130,14 @@ public:
 	float GetMaxHealth() {
 		return maxHealth;
 	}
+	float getCollisionJumpPadStrength(){
+		return jumpPadHeight;
+}
 
 	float health = 100.0f;
 
 	void setGun(GameObject* gunIn) { gun = gunIn; }
+	GameObject* getGun() {return gun;}
 	void SetGunTransform(float pitch, float yaw, btVector3 camPos);
 
 	void UpdateObjectState() override;
@@ -145,15 +148,15 @@ private:
 	float rotateTime = 0.5f;
 	float maxHealth = 100.0f;
 
-	unsigned int playerID;
 	int collided = 0;
 	btVector3 collisionNormal = btVector3(0, 1, 0);
 	btVector3 collisionPoint = btVector3(0, 0, 0);
+	float jumpPadHeight = 0.0f;
 	std::list<GameObject*> collidedObjects;
 	Type collisionType;
 	PlayerState state;
 
-	btQuaternion camRotOffset = btQuaternion::getIdentity();
+    btQuaternion camRotOffset;
 	btQuaternion oldcamRotOffset = btQuaternion::getIdentity();
 	btQuaternion targetcamRotOffset = btQuaternion::getIdentity();
 	btVector3 targetWorldRotation = btVector3(0, 1, 0);
@@ -163,7 +166,7 @@ private:
 	btVector3 forwardDirection;
 	float rotateTimer = 0.0f;
 	bool rotationChanging = false;
-	btVector3 gunCameraOffset = btVector3(1.3, -0.7, -1.2);
+    btVector3 gunCameraOffset = btVector3(3.0, -1.0, 1.5); // x axis is forward (front +ve/ back -ve), y is up, z is right (left -ve/ right +ve)
 	GameObject* gun;
 
 
@@ -180,3 +183,4 @@ private:
 
 
 };
+}

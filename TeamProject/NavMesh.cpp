@@ -2,6 +2,9 @@
 #include "NavMesh.h"
 #include "stdio.h"
 
+using namespace NCL;
+using namespace CSC8503;
+
 NavMesh::NavMesh(btDiscreteDynamicsWorld* bulletWorld) :
     world(bulletWorld) {}
 

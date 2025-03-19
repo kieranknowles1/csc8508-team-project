@@ -15,8 +15,26 @@ License: MIT (see LICENSE file at the top of the source tree)
 using namespace NCL;
 using namespace PS5;
 
-AGCTexture::AGCTexture(const std::string& filename, const MemoryAllocator& a) {
+AGCTexture::AGCTexture(const std::string& filename, const MemoryAllocator& a)
+{
+	allocator = &a;
+	load(filename);
+}
+
+AGCTexture::AGCTexture()
+{
+	gpuAllocation = 0;
+
+}
+
+AGCTexture::~AGCTexture() {
+
+}
+
+void AGCTexture::load(const std::string& filename)
+{
 	std::filesystem::path path(filename + ".gnf");
+	this->fileName = filename;
 	//path.replace_extension(".gnf");
 	std::string realFile = Assets::TEXTUREDIR + path.string();
 	FILE* fp = fopen(realFile.c_str(), "rb");
@@ -38,7 +56,7 @@ AGCTexture::AGCTexture(const std::string& filename, const MemoryAllocator& a) {
 	fseek(fp, 0, SEEK_SET);
 
 
-	gpuAllocation = a.Allocate(sz, 64 * 1024);
+	gpuAllocation = allocator->Allocate(sz, 64 * 1024);
 	printf("%s(%s): p=%p, sz=%lu\n", __func__, filename.c_str(), gpuAllocation, sz);
 	size_t bytesRead = fread(gpuAllocation, 1, sz, fp);
 	if (bytesRead != sz)
@@ -54,13 +72,4 @@ AGCTexture::AGCTexture(const std::string& filename, const MemoryAllocator& a) {
 	//{
 	//	sce::Agc::Core::registerResource(&agcTex, "%s", filename.c_str());
 	//}
-}
-
-AGCTexture::AGCTexture(const MemoryAllocator& a) {
-	gpuAllocation = 0;
-
-}
-
-AGCTexture::~AGCTexture() {
-
 }

@@ -134,22 +134,23 @@ namespace NCL::CSC8503 {
         void setRenderScale(const Vector3& scale) {
             renderScale = scale;
         }
-        void setIsPaintball(bool paintballIn) {
-            paintball = paintballIn;
-        }
-        bool getIsPaintball() {
-            return paintball;
-        }
+
         void setType(Type typeIn) {
             type = typeIn;
         }
         Type getType() {
             return type;
         }
-
         bool isStatic() const {
             return GetPhysicsObject()->GetRigidBody()->getInvMass() == 0.0f;
         }
+
+		float getJumpPadStrength() {
+			return jumpPadStrength;
+		}
+		void setJumpPadStrength(float jumpIn) {
+			jumpPadStrength = jumpIn;
+		}
 
         static GameObject* GetGameObjectByID(int id) {
             if (objects.contains(id)) return objects[id];
@@ -164,26 +165,6 @@ namespace NCL::CSC8503 {
         }
 
         WorldState::StateBuffer* GetObjectStates() { return states.get(); }
-
-        void Tick() {
-            std::unique_lock lock(tickMutex);
-            currentTick++;
-        }
-
-        int ReadCurrentTick() {
-            std::shared_lock lock(tickMutex);
-            return currentTick;
-        }
-
-        int ReadLastTick() {
-            std::shared_lock lock(tickMutex);
-            return currentTick;
-        }
-
-        void UpdateLastTick() {
-            std::unique_lock lock(tickMutex);
-            lastTick = currentTick;
-        }
 
         void setDeleted() { deleted = true; }
         bool isDeleted() { return deleted; }
@@ -216,5 +197,7 @@ namespace NCL::CSC8503 {
 	    
         float elapsedTickTime = 0;
         float elapsedTime = 0;
-    };
+
+		float jumpPadStrength = 0.0f;
+	};
 }

@@ -95,6 +95,7 @@ void PlayerController::HandleShooting(float dt) {
                     player->GetWorldID(),
                     btVector3(0, 0, 0),
                     btVector3(0, 0, 0),
+                    btVector3(0, 0, 0),
                     0
                 );
                 //TutorialGame::GetServerInstance()->Broadcast(laserPacket);
@@ -103,6 +104,7 @@ void PlayerController::HandleShooting(float dt) {
         }
     }
 }
+
 
 
 
@@ -117,20 +119,18 @@ void PlayerController::FireShot(float dt) {
     btVector3 forwardDir = rotationMatrix * btVector3(0, 0, -1);
     btVector3 adjustedOffset = rotationMatrix * gunCameraOffset; // Apply rotation to the offset
 
-   std::optional<ShotInfo> info = Shoot::GetInstance()->ShootBulletPlayer(camera->GetPosition(), forwardDir, bulletRotation,dt);
-    renderer->updateLaser(laserID, camera->GetPosition() + adjustedOffset, info.value().hitPos);
-
+    std::optional<ShotInfo> info = Shoot::GetInstance()->ShootBulletPlayer(player->getGun()->GetPhysicsObject()->GetRigidBody()->getWorldTransform().getOrigin() + adjustedOffset, forwardDir, bulletRotation, dt,laserID);
+    renderer->updateLaser(laserID, player->getGun()->GetPhysicsObject()->GetRigidBody()->getWorldTransform().getOrigin() + adjustedOffset, info.value().hitPos);
     if (TutorialGame::getInstance()->GetServerInstance() != nullptr) {
         std::shared_ptr<Packet::LaserPacket> laserPacket = std::make_shared<Packet::LaserPacket>(
             player->GetWorldID(),
-            camera->GetPosition() + adjustedOffset,
+            player->getGun()->GetPhysicsObject()->GetRigidBody()->getWorldTransform().getOrigin() + adjustedOffset,
             info.value().hitPos,
+            info.value().hitNormal,
             0
         );
         //TutorialGame::GetServerInstance()->Broadcast(laserPacket);
     }
-   
-
 }
 
 
@@ -215,7 +215,7 @@ void PlayerController::SpecialTypeCalculations() {
         btVector3 normal = player->getCollisionNormal();
         float dotProduct = normal.dot(upDirection.absolute());
         btVector3 movement = btVector3(0, 0, 0);
-        movement += (bouncePadHeight * -player->getCollisionNormal());
+        movement += (player->getCollisionJumpPadStrength() * -player->getCollisionNormal());
         rb->setLinearVelocity(btVector3(0, 0, 0));
         player->setCollided(0);
         inAirTime = 0.2f;

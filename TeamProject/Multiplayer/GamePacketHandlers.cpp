@@ -3,6 +3,7 @@
 #include "Multiplayer/GamePacketHandlers.hpp"
 #include "Multiplayer/Server.hpp"
 #include "Multiplayer/WorldState.hpp"
+#include "Shoot.h"
 
 namespace Packet {
     using namespace WorldState;
@@ -102,10 +103,20 @@ namespace Packet {
         PlayerObject* targetObject = (PlayerObject*)GameObject::GetGameObjectByID(laserPacket->GetTargetID());
         // Skip updates for objects the user owns.
 
-        // Check if last update was newer.
-        targetObject->updateLaser(laserPacket->GetStartPos(), laserPacket->GetEndPos());
+        //// Check if last update was newer.
+        //targetObject->updateLaser(laserPacket->GetStartPos(), laserPacket->GetEndPos());
 
-        // Passing on packet to other users if user is host.
+        //// Passing on packet to other users if user is host.
+        //if (laserPacket->GetSequenceNumber() > targetObject->GetLastPacketSequence(laserPacket->GetType())) {
+        //    targetObject->updateLaser(laserPacket->GetStartPos(), laserPacket->GetEndPos());
+        //    if (laserPacket->GetHitNormal() != btVector3(0, 0, 0)) {
+        //        Shoot::GetInstance()->SpawnDecal(laserPacket->GetEndPos(), laserPacket->GetHitNormal(), laserPacket->GetTargetID());
+        //    }
+        //    targetObject->UpdatePacketSequence(laserPacket->GetType(), laserPacket->GetSequenceNumber());
+        //    // Passing on packet to other users if user is host.
+        //    if (TutorialGame::IsHost()) TutorialGame::GetServerInstance()->Broadcast(packet);
+        //}
+        //// Dropping old packets.
     }
 
     std::shared_ptr<Packet> LaserPacketHandler::Translate(const ENetEvent* event) const {
@@ -117,6 +128,7 @@ namespace Packet {
         int objectID;
         btVector3 startPos;
         btVector3 endPos;
+        btVector3 hitNormal;
         size_t offset = sizeof(Type) + sizeof(uint8_t) + sizeof(uint32_t);
 
         GetBaseData(packet, &type, &channel, &sequenceNumber);
@@ -130,7 +142,10 @@ namespace Packet {
         memcpy(&endPos, packet->data + offset, sizeof(btVector3));
         offset += sizeof(btVector3);
 
-        return std::make_shared<LaserPacket>(objectID, startPos, endPos, sequenceNumber);
+        memcpy(&hitNormal, packet->data + offset, sizeof(btVector3));
+        offset += sizeof(btVector3);
+
+        return std::make_shared<LaserPacket>(objectID, startPos, endPos, hitNormal, sequenceNumber);
     }
 
     ENetPacket* LaserPacketHandler::ToENetPacket(const std::shared_ptr<Packet> packet) const {
@@ -139,6 +154,7 @@ namespace Packet {
                 + sizeof(uint8_t)
                 + sizeof(uint32_t)
                 + sizeof(int)
+                + sizeof(btVector3)
                 + sizeof(btVector3)
                 + sizeof(btVector3)
         ];
@@ -168,6 +184,11 @@ namespace Packet {
 
         btVector3 endPos = laserPacket.GetEndPos();
         memcpy(buffer + offset, &endPos, sizeof(btVector3));
+        offset = offset + sizeof(btVector3);
+
+
+        btVector3 hitNormal = laserPacket.GetHitNormal();
+        memcpy(buffer + offset, &hitNormal, sizeof(btVector3));
         offset = offset + sizeof(btVector3);
 
         int packetFlags = 0;
