@@ -12,6 +12,10 @@
     // The default host to use when joining a game
     "defaultHost": "10.70.33.113",
 
+    // Allocate a number of resource loader threads equal to
+    // max(1, ceil(physicalThreads * threadMult))
+    "resourceThreadMult": 0.9,
+
     // Immediately start the game, without showing the main menu
     "quickStart": false
 }
