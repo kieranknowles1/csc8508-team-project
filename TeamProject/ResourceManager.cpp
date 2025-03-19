@@ -7,6 +7,11 @@
 #include "MshLoader.h"
 #include "TextureLoader.h"
 
+#ifdef __PROSPERO__
+#include "GameTechAGCRenderer.h"
+#endif // __PROSPERO__
+
+
 namespace NCL::CSC8503 {
 
 ResourceManager::ResourceManager(GameTechRendererInterface* renderer, float threadMult)
@@ -93,6 +98,11 @@ void ResourceMap<std::string, PlatformMesh>::load(const std::string& key, Platfo
 template<>
 void ResourceMap<std::string, PlatformTexture>::load(const std::string& key, PlatformTexture* outTexture) {
 	outTexture->load(key);
+#ifdef __PROSPERO__
+	auto renderer = (GameTechAGCRenderer*)owner->getRenderer()->getBase();
+	renderer->RegisterTexture(key, outTexture);
+#endif // __PROSPERO__
+
 }
 
 template<>
