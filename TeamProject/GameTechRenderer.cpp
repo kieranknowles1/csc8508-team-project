@@ -1193,8 +1193,8 @@ void GameTechRenderer::RenderAnimations() {
 	//and send the necessary info to shader. This should render players anyway even if animations not currently playing
 	std::vector<RenderObject*> animatedObjects;
 	for (const auto& i : frameObjects) { //iterate over all render objects
-		if (i->getParent()->GetIsAnimated() == true) {
-			animatedObjects.emplace_back(); //should add all animated objects to animatedObjects
+		if (i->getParent()->GetIsAnimated() == true) { //==true
+			animatedObjects.emplace_back(i); //should add all animated objects to animatedObjects
 		}
 	}
 	//From here pretty much like Render Camera but for animated meshes using the animation Shader instead
@@ -1231,18 +1231,19 @@ void GameTechRenderer::RenderAnimations() {
 
 		//These two changed to fit the datatypes as defined in this codebase:
 		//const std::vector<Matrix4> invBindPose = (*i).GetMesh()->GetInverseBindPose(); //InverseBindPose in mesh.h is a vector of matrix4 not a Matrix4*
-		const Matrix4 invBindPose = (*i).GetMesh()->GetInverseBindPose()[0]; //need to figure out the correct element to access. Why is InverseBindPose a vector?
+		//const Matrix4 invBindPose = (*i).GetMesh()->GetInverseBindPose()[1]; //Defining it here creates eldritch beings
 		const Matrix4* frameData = (*i).GetAnimation()->GetJointData((*i).GetAnimation()->GetCurrentFrame());//joint data is a Matrix4* SHOULD THESE BE CALCULATED PER JOINT?
 
 		//in mesh.h InverseBindPose is a vector of matrix4 instead of just a Matrix4. This may be to allow each submesh to have its own bindpose. It may not be needed though so
 		//may be able to assume the bindpose will be the first element? Perhaps the possibility of any number of bindposes should be accounted for?
 
 		for (unsigned int q = 0; q < (*i).GetMesh()->GetJointCount(); ++q) {
+			const Matrix4 invBindPose = (*i).GetMesh()->GetInverseBindPose()[q]; //need to get the inverse bind pose per joint to "undo" the bind pose for each joint
 			frameMatrices.emplace_back(frameData[q] * invBindPose); 
 		}
 
-		int j = glGetUniformLocation(animationShader->GetProgramID(), "joints");
-		glUniformMatrix4fv(j, frameMatrices.size(), false, (float*)frameMatrices.data());
+		int j = glGetUniformLocation(animationShader->GetProgramID(), "joints"); 
+		glUniformMatrix4fv(j, frameMatrices.size(), false, (float*)frameMatrices.data()); 
 
 		//all the vertex data is already sent to shader when the mesh is loaded in
 

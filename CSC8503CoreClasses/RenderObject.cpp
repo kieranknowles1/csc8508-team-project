@@ -15,7 +15,8 @@ RenderObject::RenderObject(GameObject* parent, std::shared_ptr<Mesh> mesh, std::
         tex, normal
     );
     
-    this->test = new MeshAnimation("StepLeft.anm"); ///VERY TEMPORARY, JUST FOR TESTING
+   /* this->test = new MeshAnimation("/MaleGuard/StepLeft.anm"); ///VERY TEMPORARY, JUST FOR TESTING*/
+    this->test = nullptr; 
 }
 
 NCL::CSC8503::RenderObject::RenderObject(GameObject* parent, std::shared_ptr<Mesh> mesh, std::shared_ptr<Material> mat)
@@ -25,8 +26,8 @@ NCL::CSC8503::RenderObject::RenderObject(GameObject* parent, std::shared_ptr<Mes
     this->colour = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
     this->material = mat;
 
-    this->test = new MeshAnimation("StepLeft.anm"); //VERY TEMPORARY
-
+    /*this->test = new MeshAnimation("/MaleGuard/StepLeft.anm"); //VERY TEMPORARY*/ //NOTE THAT SETTING ANIMATIONS FOR ALL RENDER OBJECTS MIGHT BE BAD FOR PERFORMANCE...
+    this->test = nullptr;
 }
 
 RenderObject::~RenderObject() { 
