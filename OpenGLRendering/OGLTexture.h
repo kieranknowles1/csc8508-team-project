@@ -17,6 +17,7 @@ namespace NCL::Rendering {
 	public:
 		OGLTexture();
 		OGLTexture(GLuint texToOwn);
+        OGLTexture(const void* data, int width, int height, int channels);
 		~OGLTexture();
 
 		static UniqueOGLTexture TextureFromData(char* data, uint32_t width, uint32_t height, uint32_t channels);
@@ -34,6 +35,7 @@ namespace NCL::Rendering {
 		GLuint GetObjectID() const	{
 			return texID;
 		}
+
 	protected:
 		GLuint texID;
 	};

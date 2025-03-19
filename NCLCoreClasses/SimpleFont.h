@@ -14,7 +14,7 @@ namespace NCL {
 
             // Metrics of a character glyph
             struct Character {
-                unsigned int textureID; // ID handle of the glyph texture
+                std::shared_ptr<Texture> texture; // Texture object
                 Vector2 size;      // Size of glyph
                 Vector2   bearing;   // Offset from baseline to left/top of glyph
                 unsigned int advance;   // Offset to advance to next glyph

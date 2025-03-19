@@ -474,7 +474,7 @@ void GameTechRenderer::NewRenderText() {
 		return;
 	}
 
-	UseShader(*debugShader);
+	UseShader(*freetypeFontShader);
 
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -520,7 +520,7 @@ void GameTechRenderer::NewRenderText() {
             };
 
             glActiveTexture(GL_TEXTURE0); // Activate texture unit 0
-            glBindTexture(GL_TEXTURE_2D, ch.textureID); // Bind the character texture
+            glBindTexture(GL_TEXTURE_2D, ch.texture->GetAssetID());
 
             // Update VBO for each character
             glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vertices), vertices);

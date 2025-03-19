@@ -1,18 +1,9 @@
-/*
-Part of Newcastle University's Game Engineering source code.
-
-Use as you see fit!
-
-Comments and queries to: richard-gordon.davison AT ncl.ac.uk
-https://research.ncl.ac.uk/game/
-*/
 #include "SimpleFont.h"
 #include "Texture.h"
 #include "TextureLoader.h"
 #include "Assets.h"
 
 #include <ft2build.h>
-#include "../OpenGLRendering/glad/gl.h" // TODO: find a way to include glad/gl.h without the path
 #include FT_FREETYPE_H
 
 using namespace NCL;
@@ -26,11 +17,6 @@ SimpleFont::SimpleFont(const std::string&filename) {
 
 
 SimpleFont::~SimpleFont()	{
-    // Clean up the textures
-    for (auto& c : characters) {
-        glDeleteTextures(1, &c.second.textureID);
-    }
-
     characters.clear(); // Explicitly clear the map, good practice
 
     if (ft) {
@@ -61,9 +47,6 @@ int SimpleFont::InitializeFreeType(const std::string& filename) {
         return -1;
     }
 
-    // set the unpack alignment to 1 to avoid any byte alignment issues
-    glPixelStorei(GL_UNPACK_ALIGNMENT, 1); // Disable byte-alignment restriction (default is 4 but we're using single byte per pixel)
-
     for (unsigned char c = 0; c < 128; c++)
     {
         // load character glyph
@@ -73,27 +56,13 @@ int SimpleFont::InitializeFreeType(const std::string& filename) {
             continue;
         }
 
-        // generate texture
-        unsigned int texture;
-        glGenTextures(1, &texture);
-        glBindTexture(GL_TEXTURE_2D, texture);
-        glTexImage2D(
-            GL_TEXTURE_2D,
-            0,
-            GL_RED, // format of the texture, we're using a single channel for the bitmap
-            face->glyph->bitmap.width,
-            face->glyph->bitmap.rows,
-            0,
-            GL_RED,
-            GL_UNSIGNED_BYTE,
-            face->glyph->bitmap.buffer
+        // Create Texture from glyph bitmap
+        SharedTexture texture = std::make_shared<Texture>(
+            face->glyph->bitmap.buffer, 
+            face->glyph->bitmap.width, 
+            face->glyph->bitmap.rows, 
+            1 // single channel
         );
-
-        // set texture options
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
         // now store character for later use
         Character character = {

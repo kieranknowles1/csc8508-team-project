@@ -21,6 +21,28 @@ OGLTexture::OGLTexture(GLuint texToOwn) {
 	texID = texToOwn;
 }
 
+OGLTexture::OGLTexture(const void* data, int width, int height, int channels)
+{
+    // set the unpack alignment to 1 to avoid any byte alignment issues
+    glPixelStorei(GL_UNPACK_ALIGNMENT, 1); // Disable byte-alignment restriction (default is 4 but we're using single byte per pixel)
+
+    dimensions = Vector2ui(width, height);
+
+    glGenTextures(1, &texID);
+    glBindTexture(GL_TEXTURE_2D, texID);
+
+    GLenum format = (channels == 1) ? GL_RED : GL_RGBA;
+
+    glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+    glBindTexture(GL_TEXTURE_2D, 0);
+}
+
 OGLTexture::~OGLTexture()	{
 	glDeleteTextures(1, &texID);
 }
