@@ -120,6 +120,10 @@ namespace NCL {
             void JoinGame(bool host);
             void ClearWorld();
 
+            GameTechRendererInterface* GetUIRenderer() {
+                return renderer;
+            }
+
             GameWorld* getWorld() {
                 return world.get();
             }
