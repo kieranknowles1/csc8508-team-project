@@ -11,6 +11,7 @@
 #include "GameTechRendererInterface.h"
 #include "LobbyScreen.h"
 #include "TextureUiElement.h"
+#include "AudioEngine.h"
 
 namespace NCL::CSC8503 {
 
@@ -49,10 +50,12 @@ public:
 
         if (controller->GetDigital(Controller::DigitalControl::MenuDown)) {
             selection = std::min(menuItems.size() - 1, selection + 1);
+            audioEngine.PlaySounds("MenuScroll.wav", Vector3(0,0,0), 0.1f);
         }
         if (controller->GetDigital(Controller::DigitalControl::MenuUp)) {
             if (selection > 0) {
                 selection--;
+                audioEngine.PlaySounds("MenuScroll.wav", Vector3(0, 0, 0), 0.1f);
             }
         }
         if (controller->GetDigital(Controller::DigitalControl::MenuConfirm)) {
