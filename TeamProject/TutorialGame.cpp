@@ -419,7 +419,8 @@ PlayerObject* TutorialGame::AddPlayerCapsuleToWorld(const Vector3& position, flo
     btCollisionShape* playerShape = new btCapsuleShape(radius, height);
 
     // Setting the render object for the capsule
-    player->SetRenderObject(new RenderObject(player, resourceManager->getMeshes().get("Capsule.msh"), defaultTexture));
+    //player->SetRenderObject(new RenderObject(player, resourceManager->getMeshes().get("Capsule.msh"), defaultTexture));
+    player->SetRenderObject(new RenderObject(player, resourceManager->getMeshes().get("/RacerGuy/Ch20_nonPBR@Pistol Run.msh"), defaultTexture));
     // Setting the physics object for the capsule
     player->SetPhysicsObject(new PhysicsObject(player));
 
