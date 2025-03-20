@@ -63,7 +63,7 @@ void LaserObject::UpdateFromState(float dt) {
     // Start Position.
     if (hasCurrentStartPos && hasCurrentEndPos) {
         btVector3 currentStartPos = std::get<btVector3>(currentStartPosValue);
-        btVector3 targetStartPos = std::get<btVector3>(currentEndPosValue);
+        btVector3 targetStartPos = std::get<btVector3>(currentStartPosValue);
         btVector3 interpolated = btVector3(
             lerp(currentStartPos.x(), targetStartPos.x(), weight),
             lerp(currentStartPos.y(), targetStartPos.y(), weight),
@@ -87,7 +87,7 @@ void LaserObject::UpdateFromState(float dt) {
     // Collision Normal.
     if (hasCurrentCollisionNormal && hasCurrentEndPos) {
         btVector3 currentCollisionNormal = std::get<btVector3>(currentCollisionNormalValue);
-        btVector3 targetCollisionNormal = std::get<btVector3>(currentEndPosValue);
+        btVector3 targetCollisionNormal = std::get<btVector3>(currentCollisionNormalValue);
         btVector3 interpolated = btVector3(
             lerp(currentCollisionNormal.x(), targetCollisionNormal.x(), weight),
             lerp(currentCollisionNormal.y(), targetCollisionNormal.y(), weight),

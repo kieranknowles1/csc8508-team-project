@@ -192,7 +192,6 @@ namespace Packet {
         memcpy(buffer + offset, &endPos, sizeof(btVector3));
         offset = offset + sizeof(btVector3);
 
-
         btVector3 hitNormal = laserPacket.GetHitNormal();
         memcpy(buffer + offset, &hitNormal, sizeof(btVector3));
         offset = offset + sizeof(btVector3);
