@@ -162,18 +162,41 @@ namespace NCL::CSC8503 {
 		}
 
 		void UpdateSelection() {
+			size_t startSelection = selection;
+
+			// Check if all colors are taken
+			bool allColorsTaken = std::all_of(colourTaken.begin(), colourTaken.end(), [](bool taken) { return taken; });
+
 			if (controller->GetDigital(Controller::DigitalControl::MenuDown)) {
-				size_t startSelection = selection;
 				do {
+					if (selection == menuItems.size() - 1) break; // Prevent going out of bounds
 					selection = std::min(menuItems.size() - 1, selection + 1);
-				} while (selection < 8 && colourTaken[selection] && selection != startSelection); // Skip taken colours
+				} while (selection < 8 && colourTaken[selection]); // Skip taken colors
+
+				if (selection != startSelection) {
+					audioEngine.PlaySounds("MenuScroll.wav", Vector3(0, 0, 0), -6.0f);
+				}
 			}
 
 			if (controller->GetDigital(Controller::DigitalControl::MenuUp)) {
-				size_t startSelection = selection;
 				do {
+					if (selection == 0) break; // Prevent going out of bounds
 					selection = selection > 0 ? selection - 1 : selection;
-				} while (selection < 8 && colourTaken[selection] && selection != startSelection); // Skip taken colours
+				} while (selection < 8 && colourTaken[selection]); // Skip taken colors
+
+				//Prevent Cursor from Moving to the Top if All Colors Above are Taken**
+				if (selection == 0 && colourTaken[selection]) {
+					selection = startSelection; // Stay in place if top color is taken
+				}
+
+				if (selection != startSelection) {
+					audioEngine.PlaySounds("MenuScroll.wav", Vector3(0, 0, 0), -6.0f);
+				}
+			}
+
+			//Prevent moving back to colors if all are taken**
+			if (allColorsTaken && selection < 8) {
+				selection = 8; // Force cursor to "Close Lobby"
 			}
 		}
 
@@ -187,12 +210,14 @@ namespace NCL::CSC8503 {
 						for (auto& player : playerList) {
 							if (player == "Empty") {
 								player = menuItems[selection]; // Assign colour to first empty slot
+								audioEngine.PlaySounds("MenuSelect.wav", Vector3(0, 0, 0), -18.0f);
 								break;
 							}
 						}
 					}
 				}
-				else if (selection == 8) {  // Leave button
+				else if (selection == 8) {  // Close lobby button
+					audioEngine.PlaySounds("MenuSelect.wav", Vector3(0, 0, 0), -18.0f);
 					return PushdownResult::Pop;
 				}
 			}
