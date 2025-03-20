@@ -23,15 +23,15 @@ void SimpleFont::BuildVerticesForString(const std::string& text, const Maths::Ve
     for (auto ch : text) {
         if (ch == '\n') {
             currentX = startPos.x;
-            currentY += 0.35f * size;
+            currentY += 0.1f * size;
         }
         if (ch == '\r') continue;
         auto data = characters.find(ch);
         if (data == characters.end()) continue;
         auto& info = data->second;
 
-        Vector3 topLeft = Vector3(currentX, currentY, 0);
-        Vector3 bottomRight = topLeft + Vector3(info.size, 0);
+        Vector3 topLeft = Vector3(currentX, currentY, 0) * size;
+        Vector3 bottomRight = topLeft + Vector3(info.size, 0) * size;
         Vector3 bottomLeft(topLeft.x, bottomRight.y, 0);
         Vector3 topRight(bottomRight.x, topLeft.y, 0);
 
@@ -105,6 +105,7 @@ int SimpleFont::InitializeFreeType(const std::string& filename, std::shared_ptr<
             continue;
         }
         GlyphData data;
+        data.ch = c;
         data.advance = face->glyph->advance.x;
         data.bearing = { float(face->glyph->bitmap_left), float(face->glyph->bitmap_top) };
         data.size = {
@@ -144,7 +145,7 @@ int SimpleFont::InitializeFreeType(const std::string& filename, std::shared_ptr<
         ch.uvTopLeft = Vector2((1.0f / AtlasSize) * col, (1.0f / AtlasSize) * row);
         ch.uvBottomRight = ch.uvTopLeft + (pixelSize * sizeVec);
         ch.advance = glyph.advance;
-        characters[i] = ch;
+        characters[glyph.ch] = ch;
     }
 
     texture->upload();

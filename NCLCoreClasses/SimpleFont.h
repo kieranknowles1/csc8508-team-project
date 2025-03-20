@@ -16,6 +16,7 @@ namespace NCL {
                 Vector2 bearing;
                 int advance;
                 std::vector<char> data;
+                char ch;
             };
 
             // Metrics of a character glyph
@@ -45,10 +46,10 @@ namespace NCL {
             // Assume a constant size in pixels
             const static constexpr Vector2 ScreenSize = Vector2(1920, 1080);
 
-            const static constexpr int StartChar = 0;
-            const static constexpr int EndChar = 128;
-            const static constexpr int AtlasSize = 12;
-            static_assert(StartChar == 0, "Not tested");
+            // Start/end of ASCII printable characters
+            const static constexpr int StartChar = 32;
+            const static constexpr int EndChar = 126;
+            const static constexpr int AtlasSize = 10;
             static_assert((AtlasSize* AtlasSize) > (StartChar - EndChar), "Atlas too small for characters");
 
 
