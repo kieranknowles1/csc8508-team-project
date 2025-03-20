@@ -34,6 +34,7 @@ GameTechRenderer::GameTechRenderer(Window* window) : OGLRenderer(window), GameTe
 	laserPostProcess2 = std::make_unique<OGLShader>("texturevert.glsl", "laserPost2.frag");
 	addLaserShader = std::make_unique<OGLShader>("texturevert.glsl", "laserCombine.frag");
 	laserPreProcess = std::make_unique<OGLShader>("laserPre.vert", "laserPre.frag");
+    freetypeFontShader = std::make_unique<OGLShader>("freetypefont.vert", "freetypefont.frag");
 
 	glGenTextures(1, &shadowTex);
 	glBindTexture(GL_TEXTURE_2D, shadowTex);
@@ -68,7 +69,8 @@ GameTechRenderer::GameTechRenderer(Window* window) : OGLRenderer(window), GameTe
 	glGenBuffers(1, &textColourVBO);
 	glGenBuffers(1, &textTexVBO);
 
-	Debug::CreateDebugFont("PressStart2P.fnt", *LoadTexture("PressStart2P.png"));
+    auto fontTex = std::make_shared<OGLTexture>();
+	Debug::CreateDebugFont("Comicy.ttf", fontTex);
 
 	unitQuad = Mesh::Quad<OGLMesh>(1.0f);
 	unitQuad->UploadToGPU();
@@ -494,6 +496,7 @@ void GameTechRenderer::NewRenderLines() {
 	glBindVertexArray(0);
 }
 
+
 void GameTechRenderer::NewRenderText() {
 	const std::vector<Debug::DebugStringEntry>& strings = Debug::GetDebugStrings();
 	if (strings.empty()) {
@@ -502,7 +505,7 @@ void GameTechRenderer::NewRenderText() {
 
 	UseShader(*debugShader);
 
-	OGLTexture* t = (OGLTexture*)Debug::GetDebugFont()->GetTexture();
+	OGLTexture* t = (OGLTexture*)Debug::GetDebugFont()->getTexture().get();
 
 	if (t) {
 		glActiveTexture(GL_TEXTURE0);
@@ -527,13 +530,12 @@ void GameTechRenderer::NewRenderText() {
 
 	int frameVertCount = 0;
 	for (const auto& s : strings) {
-		frameVertCount += Debug::GetDebugFont()->GetVertexCountForString(s.data);
+		frameVertCount += s.data.size() * 6;
 	}
 	SetDebugStringBufferSizes(frameVertCount);
 
 	for (const auto& s : strings) {
-		float size = 0.2f * s.scale;
-		Debug::GetDebugFont()->BuildVerticesForString(s.data, s.position, s.colour, size, debugTextPos, debugTextUVs, debugTextColours);
+		Debug::GetDebugFont()->BuildVerticesForString(s.data, s.position, s.colour, s.scale, debugTextPos, debugTextUVs, debugTextColours);
 	}
 
 	glBindBuffer(GL_ARRAY_BUFFER, textVertVBO);

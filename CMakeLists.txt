@@ -61,6 +61,7 @@ set(BULLET_INCLUDE_DIRS "${CMAKE_SOURCE_DIR}/ThirdParty/bullet3/src")
 set(BULLET_LIBRARIES BulletDynamics BulletCollision LinearMath)
 
 add_subdirectory(ThirdParty/bullet3)
+add_subdirectory(ThirdParty/freetype)
 add_subdirectory(ThirdParty/nlohmann_json)
 
 add_subdirectory(fmod-cmake)

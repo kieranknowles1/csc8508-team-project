@@ -14,15 +14,37 @@ using namespace NCL;
 using namespace NCL::Rendering;
 
 OGLTexture::OGLTexture()	{
-	glGenTextures(1, &texID);
+	glGenTextures(1, &assetID);
 }
 
 OGLTexture::OGLTexture(GLuint texToOwn) {
-	texID = texToOwn;
+	assetID = texToOwn;
+}
+
+OGLTexture::OGLTexture(const void* data, int width, int height, int channels)
+{
+    // set the unpack alignment to 1 to avoid any byte alignment issues
+    glPixelStorei(GL_UNPACK_ALIGNMENT, 1); // Disable byte-alignment restriction (default is 4 but we're using single byte per pixel)
+
+    dimensions = Vector2ui(width, height);
+
+    glGenTextures(1, &assetID);
+    glBindTexture(GL_TEXTURE_2D, assetID);
+
+    GLenum format = (channels == 1) ? GL_RED : GL_RGBA;
+
+    glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+    glBindTexture(GL_TEXTURE_2D, 0);
 }
 
 OGLTexture::~OGLTexture()	{
-	glDeleteTextures(1, &texID);
+	glDeleteTextures(1, &assetID);
 	free(texData);
 }
 
@@ -94,7 +116,7 @@ void OGLTexture::load(const std::string& name)
 	TextureLoader::LoadTexture(name, texData, width, height, channels, flags);
 }
 
-void OGLTexture::upload()
+void OGLTexture::upload(bool freeData)
 {
 	int dataSize = width * height * channels; //This always assumes data is 1 byte per channel
 
@@ -107,7 +129,7 @@ void OGLTexture::upload()
 		case 4: sourceType = GL_RGBA; break;
 	}
 
-	glBindTexture(GL_TEXTURE_2D, texID);
+	glBindTexture(GL_TEXTURE_2D, assetID);
 
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, sourceType, GL_UNSIGNED_BYTE, texData);
 
@@ -117,6 +139,7 @@ void OGLTexture::upload()
 	glGenerateMipmap(GL_TEXTURE_2D);
 
 	glBindTexture(GL_TEXTURE_2D, 0);
-	free(texData);
+	if (freeData)
+		free(texData);
 	texData = nullptr;
 }
