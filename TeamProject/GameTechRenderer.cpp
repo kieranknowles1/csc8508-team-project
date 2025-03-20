@@ -740,6 +740,7 @@ void GameTechRenderer::RenderLasers() {
 
 		// Draw laser.
 		if (!(laser->GetStartPos() == laser->GetEndPos())) {
+
 			glUniform3fv(glGetUniformLocation(laserShader->GetProgramID(), "startPosition"), 1, (float*)&laser->GetStartPos());
 			glUniform3fv(glGetUniformLocation(laserShader->GetProgramID(), "endPosition"), 1, (float*)&laser->GetEndPos());
 			glUniform1f(glGetUniformLocation(laserShader->GetProgramID(), "thickness"), laser->GetThickness());

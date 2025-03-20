@@ -31,7 +31,6 @@ void PlayerController::Initialise() {
     renderer->AddUiElement(overheat.get());
     crosshair->SetActive(true);
     overheat->SetActive(true);
-    laserID = player->GetWorldID();
 }
 
 btVector3 GetEulerAngles(btQuaternion quat) {
@@ -108,18 +107,10 @@ void PlayerController::FireShot(float dt) {
     btVector3 forwardDir = rotationMatrix * btVector3(0, 0, -1);
     btVector3 adjustedOffset = rotationMatrix * gunCameraOffset; // Apply rotation to the offset
 
-    std::optional<ShotInfo> info = Shoot::GetInstance()->ShootBulletPlayer(player->getGun()->GetPhysicsObject()->GetRigidBody()->getWorldTransform().getOrigin() + adjustedOffset, forwardDir, bulletRotation, dt,laserID);
+
+    std::optional<ShotInfo> info = Shoot::GetInstance()->ShootBulletPlayer(player->getGun()->GetPhysicsObject()->GetRigidBody()->getWorldTransform().getOrigin() + adjustedOffset, forwardDir, bulletRotation, dt, player->GetWorldID());
+    player->GetLaser()->SetCollisionNormal(info.value().hitNormal);
     player->updateLaser(player->getGun()->GetPhysicsObject()->GetRigidBody()->getWorldTransform().getOrigin() + adjustedOffset, info.value().hitPos);
-    if (TutorialGame::getInstance()->GetServerInstance() != nullptr) {
-        std::shared_ptr<Packet::LaserPacket> laserPacket = std::make_shared<Packet::LaserPacket>(
-            player->GetWorldID(),
-            player->getGun()->GetPhysicsObject()->GetRigidBody()->getWorldTransform().getOrigin() + adjustedOffset,
-            info.value().hitPos,
-            info.value().hitNormal,
-            0
-        );
-        //TutorialGame::GetServerInstance()->Broadcast(laserPacket);
-    }
 }
 
 

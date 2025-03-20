@@ -107,23 +107,22 @@ namespace Packet {
 #pragma region LaserPacketHandler
     void LaserPacketHandler::Handle(const std::shared_ptr<Packet> packet) {
         const LaserPacket* laserPacket = std::static_pointer_cast<LaserPacket>(packet).get();
-        PlayerObject* targetObject = (PlayerObject*)GameObject::GetGameObjectByID(laserPacket->GetTargetID());
-        // Skip updates for objects the user owns.
+        LaserObject* object = (LaserObject*)GameObject::GetGameObjectByID(laserPacket->GetTargetID());
 
-        //// Check if last update was newer.
-        //targetObject->updateLaser(laserPacket->GetStartPos(), laserPacket->GetEndPos());
+        if (object == nullptr) return;
 
-        //// Passing on packet to other users if user is host.
-        //if (laserPacket->GetSequenceNumber() > targetObject->GetLastPacketSequence(laserPacket->GetType())) {
-        //    targetObject->updateLaser(laserPacket->GetStartPos(), laserPacket->GetEndPos());
-        //    if (laserPacket->GetHitNormal() != btVector3(0, 0, 0)) {
-        //        Shoot::GetInstance()->SpawnDecal(laserPacket->GetEndPos(), laserPacket->GetHitNormal(), laserPacket->GetTargetID());
-        //    }
-        //    targetObject->UpdatePacketSequence(laserPacket->GetType(), laserPacket->GetSequenceNumber());
-        //    // Passing on packet to other users if user is host.
-        //    if (TutorialGame::IsHost()) TutorialGame::GetServerInstance()->Broadcast(packet);
-        //}
-        //// Dropping old packets.
+        if (TutorialGame::getInstance()->GetServerInstance()->IsOwnerOf(object)) return;
+
+        StateReader writeReader = object->GetObjectStates()->GetWriteState();
+        ObjectState* writeState = writeReader.GetState();
+
+        writeState->Lock();
+
+        writeState->UpdateState(StateType::StartPos, laserPacket->GetStartPos());
+        writeState->UpdateState(StateType::EndPos, laserPacket->GetEndPos());
+        writeState->UpdateState(StateType::Normal, laserPacket->GetHitNormal());
+
+        writeState->Unlock();
     }
 
     std::shared_ptr<Packet> LaserPacketHandler::Translate(const ENetEvent* event) const {

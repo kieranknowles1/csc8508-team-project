@@ -549,22 +549,24 @@ void TutorialGame::Start() {
     // Setup for a multiplayer game.
     if (instance->server) {
         Lobby* lobby = instance->server->GetLobby();
-        int userCount = 1;
 
         //for (auto place : lobby->GetUserColors()) {
         //    if (!place.GetUser().has_value()) continue;
         //    User user = place.GetUser().value();
         for (User user:lobby->GetConnectedUsers()) {
-            RespawnPoint* respawn = Respawn::GetInstance()->GetRespawn(userCount - 1);
+            RespawnPoint* respawn = Respawn::GetInstance()->GetRespawn(user.GetUserID());
             PlayerObject* player = instance->InitPlayer(respawn->position, respawn->orientation);
-            player->SetWorldID(userCount);
+            player->SetWorldID(user.GetUserID());
             player->SetOwner(user);
+
+            LaserObject* laser = player->GetLaser();
+            laser->SetColor(Color::GetPlayerColor(user.GetUserID()));
+            instance->renderer->TrackLaser(laser);
 
             if (user == *(instance->server->GetUser())) {
                 instance->player = player;
                 instance->playerController = std::make_unique<PlayerController>(instance->player, instance->controller, instance->mainCamera, instance->bulletWorld, instance->renderer);
             }
-            userCount++;
         }
     }
 
