@@ -26,6 +26,8 @@ namespace NCL {
                 Vector2 uvBottomRight;
                 unsigned int advance;   // Offset to advance to next glyph
             };
+
+            void BuildVerticesForString(const std::string& text, const Maths::Vector2& startPos, const Maths::Vector4& colour, float size, std::vector<Maths::Vector3>& positions, std::vector<Maths::Vector2>& texCoords, std::vector<Maths::Vector4>& colours);
 #
             // Texture will be filled with the font's glyphs
 			SimpleFont(const std::string&fontName, std::shared_ptr<Texture> texture);
@@ -40,6 +42,9 @@ namespace NCL {
             std::shared_ptr<Texture> getTexture() { return texture; }
 
 		protected:
+            // Assume a constant size in pixels
+            const static constexpr Vector2 ScreenSize = Vector2(1920, 1080);
+
             const static constexpr int StartChar = 0;
             const static constexpr int EndChar = 128;
             const static constexpr int AtlasSize = 12;

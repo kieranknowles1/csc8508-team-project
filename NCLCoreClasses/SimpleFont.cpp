@@ -11,6 +11,61 @@ using namespace NCL;
 using namespace Rendering;
 using namespace Maths;
 
+void SimpleFont::BuildVerticesForString(const std::string& text, const Maths::Vector2& startPos, const Maths::Vector4& colour, float size, std::vector<Maths::Vector3>& positions, std::vector<Maths::Vector2>& texCoords, std::vector<Maths::Vector4>& colours)
+{
+    float currentX = startPos.x;
+    float currentY = startPos.y;
+
+    positions.reserve(positions.size() + (text.length() * 6));
+    colours.reserve(colours.size() + (text.length() * 6));
+    texCoords.reserve(texCoords.size() + (text.length() * 6));
+
+    for (auto ch : text) {
+        if (ch == '\n') {
+            currentX = startPos.x;
+            currentY += 0.35f * size;
+        }
+        if (ch == '\r') continue;
+        auto data = characters.find(ch);
+        if (data == characters.end()) continue;
+        auto& info = data->second;
+
+        Vector3 topLeft = Vector3(currentX, currentY, 0);
+        Vector3 bottomRight = topLeft + Vector3(info.size, 0);
+        Vector3 bottomLeft(topLeft.x, bottomRight.y, 0);
+        Vector3 topRight(bottomRight.x, topLeft.y, 0);
+
+        Vector2 uvBottomLeft(info.uvTopLeft.x, info.uvBottomRight.y);
+        Vector2 uvTopRight(info.uvBottomRight.x, info.uvTopLeft.y);
+
+        for (int i = 0; i < 6; i++) {
+            colours.push_back(colour);
+        }
+
+        // OpenGL uses counter-clockwise winding
+        // topLeft -> bottomLeft -> topRight
+        // topRight -> bottomRight -> bottomLeft
+
+        positions.push_back(topLeft);
+        texCoords.push_back(info.uvTopLeft);
+        positions.push_back(bottomLeft);
+        texCoords.push_back(uvBottomLeft);
+        positions.push_back(topRight);
+        texCoords.push_back(uvTopRight);
+
+        positions.push_back(topRight);
+        texCoords.push_back(uvTopRight);
+        positions.push_back(bottomRight);
+        texCoords.push_back(info.uvBottomRight);
+        positions.push_back(bottomLeft);
+        texCoords.push_back(uvBottomLeft);
+
+        // TODO: Handle advance properly
+        //currentX += (topRight.x - topLeft.x);
+        currentX += (info.advance / 64) / ScreenSize.x;
+    }
+}
+
 SimpleFont::SimpleFont(const std::string&filename, std::shared_ptr<Texture> texture) {
     this->texture = texture;
     InitializeFreeType(filename, texture);
@@ -50,7 +105,7 @@ int SimpleFont::InitializeFreeType(const std::string& filename, std::shared_ptr<
             continue;
         }
         GlyphData data;
-        data.advance = face->glyph->advance.x * 64;
+        data.advance = face->glyph->advance.x;
         data.bearing = { float(face->glyph->bitmap_left), float(face->glyph->bitmap_top) };
         data.size = {
             face->glyph->bitmap.width, face->glyph->bitmap.rows
@@ -83,10 +138,11 @@ int SimpleFont::InitializeFreeType(const std::string& filename, std::shared_ptr<
         }
 
         Character ch;
-        ch.size = Vector2(glyph.size.x, glyph.size.y);
+        Vector2 sizeVec = Vector2(glyph.size.x, glyph.size.y);
+        ch.size = sizeVec / ScreenSize;
         ch.bearing = glyph.bearing;
-        ch.uvTopLeft = Vector2((1.0f / AtlasSize) * row, (1.0f / AtlasSize) * col);
-        ch.uvBottomRight = ch.uvTopLeft * (pixelSize * ch.size);
+        ch.uvTopLeft = Vector2((1.0f / AtlasSize) * col, (1.0f / AtlasSize) * row);
+        ch.uvBottomRight = ch.uvTopLeft + (pixelSize * sizeVec);
         ch.advance = glyph.advance;
         characters[i] = ch;
     }

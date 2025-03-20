@@ -496,71 +496,59 @@ void GameTechRenderer::NewRenderLines() {
 	glBindVertexArray(0);
 }
 
+
 void GameTechRenderer::NewRenderText() {
 	const std::vector<Debug::DebugStringEntry>& strings = Debug::GetDebugStrings();
 	if (strings.empty()) {
 		return;
 	}
 
-	UseShader(*freetypeFontShader);
+	UseShader(*debugShader);
 
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	OGLTexture* t = (OGLTexture*)Debug::GetDebugFont()->getTexture().get();
 
-    // Set up an orthographic projection matrix for screen-space text rendering
-	Matrix4 proj = Matrix::Orthographic(0.0f, 1.0f, 1.0f, 0.0f, -1.0f, 1.0f, true);
-    glUniformMatrix4fv(glGetUniformLocation(freetypeFontShader->GetProgramID(), "projMatrix"), 1, false, (float*)proj.array);
-
-    // Set the text sampler uniform to use texture unit 0
-    glUniform1i(glGetUniformLocation(freetypeFontShader->GetProgramID(), "text"), 0);
-
-    // Activate the VAO
-    glBindVertexArray(textVAO);
-    glBindBuffer(GL_ARRAY_BUFFER, textVAO);
-
-    for (const auto& s : strings) {
-        float x = s.position.x * 800.0f;
-        float y = s.position.y * 600.0f;
-        float scale = 0.2 * s.scale;
-
-        // Set the text colour uniform
-        glUniform3f(glGetUniformLocation(freetypeFontShader->GetProgramID(), "textColour"), s.colour.x, s.colour.y, s.colour.z);
-
-		auto font = Debug::GetDebugFont();
-        std::string text = s.data;
+	if (t) {
 		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, font->getTexture()->GetAssetID());
+		glBindTexture(GL_TEXTURE_2D, t->GetObjectID());
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+		glBindTexture(GL_TEXTURE_2D, 0);
+		BindTextureToShader(*t, "mainTex", 0);
+	}
 
-        for (char c : text) {
-            // Get the character from the font
-            SimpleFont::Character ch = font->GetCharacter(c);
-            
-            // Calculate the position and size of the character
-            float xpos = x + ch.bearing.x * scale;
-            float ypos = y - (ch.size.y - ch.bearing.y) * scale;
-            float w = ch.size.x * scale;
-            float h = ch.size.y * scale;
-            
-            float vertices[6][4] = {
-                { xpos,     ypos + h,   0.0, 0.0 },
-                { xpos,     ypos,       0.0, 1.0 },
-                { xpos + w, ypos,       1.0, 1.0 },
-                { xpos,     ypos + h,   0.0, 0.0 },
-                { xpos + w, ypos,       1.0, 1.0 },
-                { xpos + w, ypos + h,   1.0, 0.0}
-            };
+	Matrix4 proj = Matrix::Orthographic(0.0f, 1.0f, 1.0f, 0.0f, -1.0f, 1.0f, true);
 
-            // Update VBO for each character
-            glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vertices), vertices);
-            glDrawArrays(GL_TRIANGLES, 0, 6);
+	int matSlot = glGetUniformLocation(debugShader->GetProgramID(), "viewProjMatrix");
+	glUniformMatrix4fv(matSlot, 1, false, (float*)proj.array);
 
-            x += (ch.advance >> 6) * scale;
-        }
-    }
+	GLuint texSlot = glGetUniformLocation(debugShader->GetProgramID(), "useTexture");
+	glUniform1i(texSlot, 1);
 
-    glBindVertexArray(0);
-    glBindTexture(GL_TEXTURE_2D, 0);
-    glDisable(GL_BLEND);
+	debugTextPos.clear();
+	debugTextColours.clear();
+	debugTextUVs.clear();
+
+	int frameVertCount = 0;
+	for (const auto& s : strings) {
+		frameVertCount += s.data.size() * 6;
+	}
+	SetDebugStringBufferSizes(frameVertCount);
+
+	for (const auto& s : strings) {
+		float size = 0.2f * s.scale;
+		Debug::GetDebugFont()->BuildVerticesForString(s.data, s.position, s.colour, size, debugTextPos, debugTextUVs, debugTextColours);
+	}
+
+	glBindBuffer(GL_ARRAY_BUFFER, textVertVBO);
+	glBufferSubData(GL_ARRAY_BUFFER, 0, frameVertCount * sizeof(Vector3), debugTextPos.data());
+	glBindBuffer(GL_ARRAY_BUFFER, textColourVBO);
+	glBufferSubData(GL_ARRAY_BUFFER, 0, frameVertCount * sizeof(Vector4), debugTextColours.data());
+	glBindBuffer(GL_ARRAY_BUFFER, textTexVBO);
+	glBufferSubData(GL_ARRAY_BUFFER, 0, frameVertCount * sizeof(Vector2), debugTextUVs.data());
+
+	glBindVertexArray(textVAO);
+	glDrawArrays(GL_TRIANGLES, 0, frameVertCount);
+	glBindVertexArray(0);
 }
 
 void GameTechRenderer::NewRenderTextures() {
