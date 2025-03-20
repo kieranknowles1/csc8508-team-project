@@ -1,5 +1,7 @@
 #pragma once
 
+#include <mutex>
+
 #include "GameTechRendererInterface.h"
 
 #include "../PS5Core/AGCRenderer.h"
@@ -33,10 +35,18 @@ namespace NCL {
 			GameTechAGCRenderer(Window* window);
 			~GameTechAGCRenderer();
 
+			RendererBase* getBase() override {
+				return this;
+			}
+
 			virtual Mesh*		LoadMesh(const std::string& name)				override;
 			virtual Texture*	LoadTexture(const std::string& name)			override;
 
+			void RegisterTexture(const std::string& name, PS5::AGCTexture* outTex);
+
 		protected:
+			std::mutex texMapMtx;
+
 			void checkError(SceError err) {
 				assert(err == SCE_OK);
 			}
@@ -62,6 +72,7 @@ namespace NCL {
 
 			void UiPass();
 			void LightPass();
+			void LaserPass();
 			void PostProcessPass();
 
 			void DisplayRenderPass();
@@ -118,10 +129,12 @@ namespace NCL {
 				};
 
 				UniformArray<ObjectState> objects;
+				int objectCount = 0;
 				UniformArray<UiState> ui;
 				UniformArray<LightState> lights;
 				UniformArray<LineState> debugLines;
 				UniformArray<TextState> debugText;
+				UniformArray<LaserState> lasers;
 
 				sce::Agc::Core::Buffer constantBuffer;
 
@@ -139,14 +152,15 @@ namespace NCL {
 
 			std::unique_ptr<PS5::AGCMesh> unitQuad;
 			std::unique_ptr<PS5::AGCMesh> halfUnitQuad;
-			PS5::AGCMesh* sphere;
+			std::unique_ptr<PS5::AGCMesh> sphere;
+			std::unique_ptr<PS5::AGCMesh> highResSphere;
 
 			sce::Agc::Core::Texture*	bindlessTextures;
 			sce::Agc::Core::Buffer*		bindlessBuffers;
 			uint32_t bufferCount;
 
 			sce::Agc::Core::Buffer textureBuffer;
-			std::map<std::string, std::unique_ptr<PS5::AGCTexture>> textureMap;
+			std::map<std::string, PS5::AGCTexture*> textureMap;
 
 			sce::Agc::Core::Buffer arrayBuffer;
 
@@ -172,6 +186,10 @@ namespace NCL {
 			std::unique_ptr<PS5::AGCShader> postVertexShader;
 			std::unique_ptr<PS5::AGCShader> postPixelShader;
 
+			std::unique_ptr<PS5::AGCShader> laserVertexShader;
+			std::unique_ptr<PS5::AGCShader> laserPixelShader;
+			std::unique_ptr<PS5::AGCShader> laserPreShader;
+
 			struct FrameBuffer {
 				enum class Slot {
 					Color,
@@ -189,8 +207,13 @@ namespace NCL {
 			// Configure a viewport that takes up the requested size
 			void useViewPort(sce::Agc::Core::BasicContext* context, Vector2i size) const;
 
+			void prepPostProcessing(sce::Agc::CxRenderTarget& target);
+
 			FrameBuffer sceneBuffer;
 			FrameBuffer sceneNormalBuffer;
+
+			FrameBuffer laserBuffer;
+			FrameBuffer previousLaserBuffer;
 
 			FrameBuffer lightDiffuse;
 			FrameBuffer lightSpecular;

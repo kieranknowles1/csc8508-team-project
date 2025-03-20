@@ -10,6 +10,9 @@
 
 #include "../CSC8503CoreClasses/Debug.h"
 
+#include "Material.h"
+#include "Colors.h"
+
 using namespace NCL;
 using namespace Rendering;
 using namespace CSC8503;
@@ -44,6 +47,25 @@ void GameTechAGCRenderer::useViewPort(sce::Agc::Core::BasicContext* context, Vec
 	context->m_sb.setState(viewPort);
 }
 
+void GameTechAGCRenderer::prepPostProcessing(sce::Agc::CxRenderTarget& target)
+{
+	sce::Agc::CxRenderTargetMask rtMask = sce::Agc::CxRenderTargetMask().init().setMask(0, 0xFF);
+	frameContext->m_sb.setState(rtMask);
+	frameContext->m_sb.setState(target);
+
+	sce::Agc::CxBlendControl blendControl;
+	blendControl.init().setBlend(sce::Agc::CxBlendControl::Blend::kDisable);
+	frameContext->m_sb.setState(blendControl);
+
+	frameContext->m_sb.setState(sce::Agc::CxPrimitiveSetup().init().setCullFace(sce::Agc::CxPrimitiveSetup::CullFace::kBack));
+
+	sce::Agc::CxDepthStencilControl depthControl;
+	depthControl.init().setDepth(sce::Agc::CxDepthStencilControl::Depth::kDisable).setDepthFunction(sce::Agc::CxDepthStencilControl::DepthFunction::kAlways);
+	frameContext->m_sb.setState(depthControl);
+
+	frameContext->m_sb.setState(sce::Agc::CxPrimitiveSetup().init().setCullFace(sce::Agc::CxPrimitiveSetup::CullFace::kBack));
+}
+
 GameTechAGCRenderer::GameTechAGCRenderer(Window* window) : AGCRenderer(window), GameTechRendererInterface(window) {
 	bindlessTextures = (sce::Agc::Core::Texture*)allocator.Allocate(BINDLESS_TEX_COUNT * sizeof(sce::Agc::Core::Texture), sce::Agc::Alignment::kBuffer);
 	sce::Agc::Core::BufferSpec texSpec;
@@ -61,7 +83,8 @@ GameTechAGCRenderer::GameTechAGCRenderer(Window* window) : AGCRenderer(window), 
 	halfUnitQuad = Mesh::Quad<AGCMesh>(0.5f);
 	halfUnitQuad->UploadToGPU(this);
 
-	sphere = (AGCMesh*)LoadMesh("Sphere.msh");
+	sphere = std::unique_ptr<AGCMesh>((AGCMesh*)LoadMesh("Sphere.msh"));
+	highResSphere = std::unique_ptr<PS5::AGCMesh>((AGCMesh*)LoadMesh("Sphere_HighRes.msh"));
 
 	skinningCompute = std::make_unique<AGCShader>("Skinning_c.ags", allocator);
 	gammaCompute	= std::make_unique<AGCShader>("Gamma_c.ags", allocator);
@@ -83,6 +106,10 @@ GameTechAGCRenderer::GameTechAGCRenderer(Window* window) : AGCRenderer(window), 
 
 	postVertexShader = std::make_unique<AGCShader>("post_vv.ags", allocator);
 	postPixelShader = std::make_unique<AGCShader>("post_p.ags", allocator);
+
+	laserVertexShader = std::make_unique<AGCShader>("laser_vv.ags", allocator);
+	laserPixelShader = std::make_unique<AGCShader>("laser_p.ags", allocator);
+	laserPreShader = std::make_unique<AGCShader>("laser_pre_p.ags", allocator);
 
 	allFrames = new FrameData[FRAMES_IN_FLIGHT];
 	for (int i = 0; i < FRAMES_IN_FLIGHT; ++i) {
@@ -107,10 +134,12 @@ GameTechAGCRenderer::GameTechAGCRenderer(Window* window) : AGCRenderer(window), 
 	lightDiffuse = createBuffer("LightsDiffuse", FrameBuffer::Slot::Color);
 	lightSpecular = createBuffer("LightsSpecular", FrameBuffer::Slot::Specular);
 	screenBuffer = createBuffer("Screen", FrameBuffer::Slot::Color);
+
+	laserBuffer = createBuffer("Laser1", FrameBuffer::Slot::Color);
+	previousLaserBuffer = createBuffer("Laser2", FrameBuffer::Slot::Color);
 }
 
 GameTechAGCRenderer::~GameTechAGCRenderer()	{
-	delete sphere;
 }
 
 Mesh* GameTechAGCRenderer::LoadMesh(const std::string& name) {
@@ -122,28 +151,29 @@ Mesh* GameTechAGCRenderer::LoadMesh(const std::string& name) {
 
 NCL::PS5::AGCTexture* GameTechAGCRenderer::CreateFrameBufferTextureSlot(const std::string& name) {
 	uint32_t index = textureMap.size();
-	auto t = std::make_unique<AGCTexture>(allocator);
-	t->SetAssetID(index);
-	bindlessTextures[t->GetAssetID()] = *t->GetAGCPointer();
-
-	auto ptr = t.get();
-	textureMap.insert({ name, std::move(t) });
-	return ptr;
+	auto t = new AGCTexture(allocator);
+	RegisterTexture(name, t);
+	return t;
 }
 
 Texture* GameTechAGCRenderer::LoadTexture(const std::string& name) {
 	auto found = textureMap.find(name);
 	if (found != textureMap.end()) {
-		return (Texture*)found->second.get();
+		return (Texture*)found->second;
 	}
-	auto t = std::make_unique<AGCTexture>(name, allocator);
-	t->SetAssetID(textureMap.size());
-	bindlessTextures[t->GetAssetID()] = *t->GetAGCPointer();
+	auto t = new AGCTexture(name, allocator);
+	RegisterTexture(name, t);
+	return t;
+}
 
-	auto ptr = t.get();
-	textureMap.insert({name, std::move(t)});
+void GameTechAGCRenderer::RegisterTexture(const std::string& name, AGCTexture* outTex)
+{
+	std::unique_lock lock(texMapMtx);
+	// FIXME: Handle the texture already being loaded
+	outTex->SetAssetID(textureMap.size());
+	bindlessTextures[outTex->GetAssetID()] = *outTex->GetAGCPointer();
 
-	return ptr;
+	textureMap.insert({ name, outTex });
 }
 
 void GameTechAGCRenderer::RenderFrame() {
@@ -161,6 +191,7 @@ void GameTechAGCRenderer::RenderFrame() {
 
 	// Step 7: Apply post processing to the scene buffer
 	LightPass();
+	LaserPass();
 	PostProcessPass();
 
 	////Step 8: Draw UI to the post-processed scene
@@ -195,10 +226,14 @@ void GameTechAGCRenderer::WriteRenderPassConstants() {
 
 	frameData.orthoMatrix = Matrix::Orthographic(0.0f, 1.0f, 1.0f, 0.0f, -1.0f, 1.0f, true);
 
+	frameData.time = vignettePulse;
+	frameData.dt = delta;
+
 	frameData.vingetteSettings.enabled = GetVignetteOn();
 	frameData.vingetteSettings.color = vignetteColour;
 	frameData.vingetteSettings.intensity = vignetteIntensity;
 	frameData.vingetteSettings.pulse = vignettePulse;
+
 
 	currentFrame->data.WriteData<ShaderConstants>(frameData); //Let's start filling up our frame data!
 
@@ -214,39 +249,31 @@ void GameTechAGCRenderer::DrawObjects() {
 	AGCMesh* prevMesh = (AGCMesh*)frameObjects[0]->GetMesh();
 	int instanceCount = 0;
 
-	for (int i = 0; i < frameObjects.size(); ++i) {
-		AGCMesh* objectMesh = (AGCMesh*)frameObjects[i]->GetMesh();
+	auto drawInstances = [&](AGCMesh* mesh) {
+		mesh->BindVertexBuffers(frameContext->m_bdr.getStage(sce::Agc::ShaderType::kGs));
+		uint32_t* objID = static_cast<uint32_t*>(frameContext->m_dcb.allocateTopDown(sizeof(uint32_t), sce::Agc::Alignment::kBuffer));
+		*objID = startingIndex;
+		frameContext->m_bdr.getStage(sce::Agc::ShaderType::kGs).setUserSrtBuffer(objID, 1);
 
-	//The new mesh is different than previous meshes, flush out the old list
+		DrawBoundMeshInstanced(*frameContext, *prevMesh, instanceCount);
+	};
+
+	for (auto obj : frameObjects) {
+		AGCMesh* objectMesh = (AGCMesh*)obj->GetMesh();
+
+		//The new mesh is different than previous meshes, flush out the old list
 		if( prevMesh != objectMesh) {
-			prevMesh->BindVertexBuffers(frameContext->m_bdr.getStage(sce::Agc::ShaderType::kGs));
-
-			uint32_t* objID = static_cast<uint32_t*>(frameContext->m_dcb.allocateTopDown(sizeof(uint32_t), sce::Agc::Alignment::kBuffer));
-			*objID = startingIndex;
-			frameContext->m_bdr.getStage(sce::Agc::ShaderType::kGs).setUserSrtBuffer(objID, 1);
-
-			DrawBoundMeshInstanced(*frameContext, *prevMesh, instanceCount);
-			prevMesh = objectMesh;
+			drawInstances(prevMesh);
+			startingIndex += instanceCount;
 			instanceCount = 0;
-			startingIndex = i;
 		}
-		if (i == frameObjects.size() - 1) {
-			objectMesh->BindVertexBuffers(frameContext->m_bdr.getStage(sce::Agc::ShaderType::kGs));
-
-			uint32_t* objID = static_cast<uint32_t*>(frameContext->m_dcb.allocateTopDown(sizeof(uint32_t), sce::Agc::Alignment::kBuffer));
-			*objID = startingIndex;
-			frameContext->m_bdr.getStage(sce::Agc::ShaderType::kGs).setUserSrtBuffer(objID, 1);
-
-			if (prevMesh == objectMesh) {
-				instanceCount++;
-			}
-
-			DrawBoundMeshInstanced(*frameContext, *objectMesh, instanceCount);
-		}
-		else {
-			instanceCount++;
-		}
+		prevMesh = objectMesh;
+		instanceCount += objectMesh->GetSubMeshCount();
 	}
+
+	drawInstances(prevMesh);
+	// Check that we used all the buffers we expected
+	assert(instanceCount + startingIndex == currentFrame->objectCount);
 }
 
 void GameTechAGCRenderer::MainRenderPass() {
@@ -374,33 +401,76 @@ void GameTechAGCRenderer::LightPass()
 	DrawBoundMeshInstanced(*frameContext, *sphere, lights.size());
 }
 
+void GameTechAGCRenderer::LaserPass()
+{
+	// Use a faded version of the previos frame's lasers as a base
+	frameContext->setShaders(nullptr, postVertexShader->GetAGCPointer(), laserPreShader->GetAGCPointer(), sce::Agc::UcPrimitiveType::Type::kTriList);
+	useViewPort(frameContext, ScreenSize);
+	prepPostProcessing(laserBuffer.target);
+
+	frameContext->m_bdr.getStage(sce::Agc::ShaderType::kPs)
+		.setConstantBuffers(0, 1, &currentFrame->constantBuffer)
+		.setSamplers(0, 1, &previousLaserBuffer.sampler).setTextures(0, 1, previousLaserBuffer.texture->GetAGCPointer());
+	unitQuad->BindVertexBuffers(frameContext->m_bdr.getStage(sce::Agc::ShaderType::kGs));
+	DrawBoundMesh(*frameContext, *unitQuad);
+
+	frameContext->setShaders(nullptr, laserVertexShader->GetAGCPointer(), laserPixelShader->GetAGCPointer(), sce::Agc::UcPrimitiveType::Type::kTriList);
+	useViewPort(frameContext, ScreenSize);
+
+
+	sce::Agc::CxRenderTargetMask rtMask = sce::Agc::CxRenderTargetMask().init().setMask(0, 0xFF);
+	frameContext->m_sb.setState(rtMask);
+	frameContext->m_sb.setState(laserBuffer.target);
+	frameContext->m_sb.setState(depthTarget);
+
+	sce::Agc::CxBlendControl blendControl;
+	blendControl.init()
+		.setBlend(sce::Agc::CxBlendControl::Blend::kEnable)
+		.setColorSourceMultiplier(sce::Agc::CxBlendControl::ColorSourceMultiplier::kSrcAlpha)
+		.setColorDestMultiplier(sce::Agc::CxBlendControl::ColorDestMultiplier::kOneMinusSrcAlpha)
+		.setColorBlendFunc(sce::Agc::CxBlendControl::ColorBlendFunc::kAdd);
+	frameContext->m_sb.setState(blendControl);
+
+	sce::Agc::CxDepthStencilControl depthControl;
+	depthControl.init();
+	depthControl.setDepth(sce::Agc::CxDepthStencilControl::Depth::kEnable);
+	depthControl.setDepthFunction(sce::Agc::CxDepthStencilControl::DepthFunction::kLessEqual);
+	depthControl.setDepthWrite(sce::Agc::CxDepthStencilControl::DepthWrite::kDisable);
+	frameContext->m_sb.setState(depthControl);
+
+	sce::Agc::CxPrimitiveSetup primitiveSetup;
+	primitiveSetup.init()
+		.setCullFace(sce::Agc::CxPrimitiveSetup::CullFace::kBack);
+	frameContext->m_sb.setState(primitiveSetup);
+
+	frameContext->m_bdr.getStage(sce::Agc::ShaderType::kGs)
+		.setConstantBuffers(0, 1, &currentFrame->constantBuffer)
+		.setBuffers(0, 1, &currentFrame->lasers.buffer)
+		.setBuffers(1, 1, &arrayBuffer);
+
+	frameContext->m_bdr.getStage(sce::Agc::ShaderType::kPs)
+		.setConstantBuffers(0, 1, &currentFrame->constantBuffer);
+
+	highResSphere->BindVertexBuffers(frameContext->m_bdr.getStage(sce::Agc::ShaderType::kGs));
+	DrawBoundMeshInstanced(*frameContext, *highResSphere, lasers.size());
+
+	std::swap(laserBuffer, previousLaserBuffer);
+}
+
 void GameTechAGCRenderer::PostProcessPass()
 {
 	frameContext->setShaders(nullptr, postVertexShader->GetAGCPointer(), postPixelShader->GetAGCPointer(), sce::Agc::UcPrimitiveType::Type::kTriList);
 	useViewPort(frameContext, ScreenSize);
 
-	sce::Agc::CxRenderTargetMask rtMask = sce::Agc::CxRenderTargetMask().init().setMask(0, 0xFF);
-	frameContext->m_sb.setState(rtMask);
-	frameContext->m_sb.setState(screenBuffer.target);
-
-	sce::Agc::CxBlendControl blendControl;
-	blendControl.init().setBlend(sce::Agc::CxBlendControl::Blend::kDisable);
-	frameContext->m_sb.setState(blendControl);
-
-	frameContext->m_sb.setState(sce::Agc::CxPrimitiveSetup().init().setCullFace(sce::Agc::CxPrimitiveSetup::CullFace::kBack));
-
-	sce::Agc::CxDepthStencilControl depthControl;
-	depthControl.init();
-	depthControl.setDepth(sce::Agc::CxDepthStencilControl::Depth::kDisable);
-	depthControl.setDepthFunction(sce::Agc::CxDepthStencilControl::DepthFunction::kAlways);
-	depthControl.setDepthWrite(sce::Agc::CxDepthStencilControl::DepthWrite::kDisable);
-	frameContext->m_sb.setState(depthControl);
+	prepPostProcessing(screenBuffer.target);
 
 	frameContext->m_bdr.getStage(sce::Agc::ShaderType::kPs)
 		.setConstantBuffers(0, 1, &currentFrame->constantBuffer)
 		.setSamplers(0, 1, &sceneBuffer.sampler).setTextures(0, 1, sceneBuffer.texture->GetAGCPointer())
 		.setSamplers(1, 1, &lightDiffuse.sampler).setTextures(1, 1, lightDiffuse.texture->GetAGCPointer())
-		.setSamplers(2, 1, &lightSpecular.sampler).setTextures(2, 1, lightSpecular.texture->GetAGCPointer());
+		.setSamplers(2, 1, &lightSpecular.sampler).setTextures(2, 1, lightSpecular.texture->GetAGCPointer())
+		.setSamplers(3, 1, &depthSampler).setTextures(3, 1, depthTexture->GetAGCPointer())
+		.setSamplers(4, 1, &laserBuffer.sampler).setTextures(4, 1, laserBuffer.texture->GetAGCPointer());
 
 	unitQuad->BindVertexBuffers(frameContext->m_bdr.getStage(sce::Agc::ShaderType::kGs));
 	DrawBoundMesh(*frameContext, *unitQuad);
@@ -524,14 +594,6 @@ void GameTechAGCRenderer::UpdateObjectList() {
 		state.texScale = g->getParent()->getRenderScale() * g->GetTexScaleMultiplier();
 		state.skinningIndex = NULLTEX;
 
-		// TODO: Handle multiple layers
-		state.texIndex = g->GetTextures().empty()
-			? NULLTEX
-			: g->GetTextures()[0]->GetAssetID();
-		state.normalIndex = g->GetNormalMaps().empty()
-			? NULLTEX
-			: g->GetNormalMaps()[0]->GetAssetID();
-
 		AGCMesh* m = (AGCMesh*)g->GetMesh();
 		if (m && m->GetJointCount() > 0) {//It's a skeleton mesh, need to update transformed vertices buffer
 
@@ -562,7 +624,30 @@ void GameTechAGCRenderer::UpdateObjectList() {
 
 			frameJobs.push_back({ g, b->GetAssetID() });
 		}
-		currentFrame->data.WriteData<ObjectState>(state);
+
+		assert(g->GetMesh()->GetSubMeshCount() > 0);
+		for (int i = 0; i < g->GetMesh()->GetSubMeshCount(); i++) {
+			auto subMesh = g->GetMesh()->GetSubMesh(i);
+			auto layer = g->getMaterial() ? g->getMaterial()->GetLayer(i) : nullptr;
+
+			auto t = layer ? layer->diffuse : nullptr;
+			state.texIndex = t ? t->GetAssetID() : NULLTEX;
+			if (!t) {
+				state.colour = Vector4(0, 0, 0, 0);
+				std::cout << i << std::endl;
+			}
+
+			auto  normal = layer ? layer->normal : nullptr;
+			state.normalIndex = normal ? normal->GetAssetID() : NULLTEX;
+
+			state.startIndex = subMesh->start;
+			state.numElements = subMesh->count;
+			// This behaviour is inverted from OpenGL for compatibility with HLSL UVs
+			state.invertY = !(layer && layer->invertY);
+			currentFrame->data.WriteData<ObjectState>(state);
+			currentFrame->objectCount++;
+		}
+
 	}
 	currentFrame->objects.end(currentFrame);
 
@@ -587,6 +672,17 @@ void GameTechAGCRenderer::UpdateObjectList() {
 		currentFrame->data.WriteData(state);
 	}
 	currentFrame->lights.end(currentFrame);
+
+	currentFrame->lasers.begin(currentFrame);
+	for (auto& laser : lasers) {
+		LaserState state;
+		state.start = laser->startPos;
+		state.end = laser->endPos;
+		state.thickness = 0.25f;
+		state.colour = Color::GetPlayerColor(laser->id);
+		currentFrame->data.WriteData(state);
+	}
+	currentFrame->lasers.end(currentFrame);
 }
 
 template<typename T>

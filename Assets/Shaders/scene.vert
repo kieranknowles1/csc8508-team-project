@@ -1,6 +1,6 @@
 #version 400 core
 
-#include "include/vert/texscale.glsl" 
+#include "include/vert/texscale.glsl"
 
 uniform mat4 modelMatrix 	= mat4(1.0f);
 uniform mat4 viewMatrix 	= mat4(1.0f);
@@ -20,6 +20,7 @@ uniform bool hasVertexColours = false;
 uniform bool isFlat = false;
 uniform vec3 texScale;
 uniform bool  texRepeating;
+uniform bool invertY;
 
 out Vertex
 {
@@ -35,10 +36,10 @@ out Vertex
 
 void main(void)
 {
-	// FIXME: Use a texture matrix, not this hack
-	// OUT.texCoord = scaleUv(texCoord, texScale, normal, texRepeating);1
-	OUT.texCoord = texCoord;
-	OUT.texCoord.y = 1.0 - OUT.texCoord.y; //flip y axis
+	OUT.texCoord = scaleUv(texCoord, texScale, normal, texRepeating);
+	if (invertY) {
+		OUT.texCoord.y = 1.0f - OUT.texCoord.y;
+	}
 
 	mat4 mvp 		  = (projMatrix * viewMatrix * modelMatrix);
 	mat3 normalMatrix = transpose ( inverse ( mat3 ( modelMatrix )));

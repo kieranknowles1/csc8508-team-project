@@ -3,15 +3,12 @@
 #include <fstream>
 #include "../TeamProject/ResourceManager.h"
 
-using namespace NCL;
-using namespace NCL::Rendering;
-using std::ifstream;
-using std::string;
+namespace NCL {
 
-MeshMaterial::MeshMaterial(CSC8503::ResourceManager* resourceManager, const std::string& filename) {
-    ifstream file(Assets::MATERIALDIR + filename);
+MeshMaterial::MeshMaterial(const std::string& filename) {
+	std::ifstream file(Assets::MATERIALDIR + filename);
 
-	string dataType;
+	std::string dataType;
 	file >> dataType;
 
 	if (dataType != "MeshMat") {
@@ -34,21 +31,19 @@ MeshMaterial::MeshMaterial(CSC8503::ResourceManager* resourceManager, const std:
 	materialLayers.resize(matCount);
 
 	for (int i = 0; i < matCount; ++i) {
-		string name;
+		std::string name;
 		int count;
 		file >> name;
 		file >> count;
 
 		for (int j = 0; j < count; ++j) {
-			string entryData;
+			std::string entryData;
 			file >> entryData;
-			string channel;
-			string file;
 			size_t split = entryData.find_first_of(':');
-			channel = entryData.substr(0, split);
-			file = entryData.substr(split + 1);
+			std::string key = entryData.substr(0, split);
+			std::string value = entryData.substr(split + 1);
 
-			materialLayers[i].entries.insert(std::make_pair(channel, std::make_pair(file, nullptr)));
+			materialLayers[i].entries.insert(std::make_pair(key, value));
 		}
 	}
 
@@ -66,18 +61,4 @@ const MeshMaterialEntry* MeshMaterial::GetMaterialForLayer(int i) const {
 	return meshLayers[i];
 }
 
-void MeshMaterial::LoadTextures(CSC8503::ResourceManager* resourceManager) {
-	for(auto& i : meshLayers) {
-		i->LoadTextures(resourceManager);
-	}
-}
-
-void MeshMaterialEntry::LoadTextures(CSC8503::ResourceManager* resourceManager) {
-	for (auto& i : entries) {
-        i.second.second = resourceManager->getTextures().get(i.second.first);
-
-		//Texture* t = TextureLoader::LoadAPITexture(filename);
-
-		//i.second.second = t;
-	}
 }

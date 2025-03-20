@@ -32,7 +32,6 @@ public:
 
 private:
     void UpdateCrosshairData();
-
     Vector2 screenCenter = Vector2(0.5f, 0.5f);
     float lineLength = 0.02f;
     float lineThickness = 0.0025f;
@@ -44,7 +43,7 @@ private:
     float startTime = 1.0f;
     float endTime = 1.0f;
     float timeElapsed = 0.0f;
-    float maxExpansion = 4.0f;
+    float maxExpansion = 2.0f;
     CrosshairState currentState = Idle;
     float currentTimer = 0.0f;
     bool reversing = false;

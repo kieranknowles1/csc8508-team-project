@@ -60,6 +60,10 @@ namespace NCL::Rendering {
 		int start = 0;
 		int count = 0;
 		//int base  = 0;
+
+		bool operator==(const SubMesh& rhs) const {
+			return start == rhs.start && count == rhs.count;
+		}
 	};
 
 	class Mesh	{
@@ -77,6 +81,8 @@ namespace NCL::Rendering {
 
 		Mesh();
 		virtual ~Mesh();
+
+		bool operator==(const Mesh& rhs) const;
 
 		GeometryPrimitive::Type GetPrimitiveType() const {
 			return primType;

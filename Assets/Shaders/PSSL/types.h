@@ -10,7 +10,7 @@
 #define SLOT(slot) : slot
 #endif
 
-#define NULLTEX 0
+#define NULLTEX -1
 
 struct ObjectState {
 		matrix modelMatrix;
@@ -23,6 +23,9 @@ struct ObjectState {
 		int skinningIndex = NULLTEX;
 		bool texRepeats;
 		float3 texScale;
+		int startIndex;
+		int numElements;
+		bool invertY;
 };
 
 struct UiState {
@@ -42,6 +45,12 @@ struct LineState {
 	float4 pos;
 	float4 colour;
 };
+struct LaserState {
+	float3 start;
+	int __pad1;
+	float3 end;
+	float thickness;
+
 
 struct VS_OUTPUT
 {
@@ -80,6 +89,13 @@ struct LINE_VS_OUTPUT
 {
 	float4 Position SLOT(S_POSITION);
 	float4 Colour SLOT(TEXCOORD1);
+};
+
+struct LASER_VS_OUTPUT
+{
+	float4 position SLOT(S_POSITION);
+	float4 color SLOT(TEXCOORD0);
+	float depth SLOT(TEXCOORD1);
 };
 
 #undef SLOT

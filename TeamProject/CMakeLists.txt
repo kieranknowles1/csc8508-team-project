@@ -48,14 +48,16 @@ set(SOURCES
 	Wanderer.cpp
     Shoot.cpp
     Shoot.h
-    Paintball.h
-    Paintball.cpp
     PointLight.h
     Crosshair.h
     Crosshair.cpp
     Respawn.h
     Overheat.h
     Overheat.cpp
+	SPGameController.h
+	SPGameController.cpp
+    Material.h
+    Material.cpp
 )
 
 set(ASSET_ROOT "${CMAKE_SOURCE_DIR}/Assets")
