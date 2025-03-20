@@ -5,11 +5,14 @@
 #include "RenderObject.h"
 #include <stdio.h>
 
+#include "TutorialGame.h"
+
 using namespace NCL;
 using namespace CSC8503;
 
 Wanderer::Wanderer(GameObject* p, NavMesh* mesh, char side, int lID, GameTechRendererInterface* r) :
 	player(p), navMesh(mesh), shootTimer(maxShootTimer), updateplayerPathTimer(maxUpdatePlayerPathTimer), laserID(lID), renderer(r) {
+	type = GameObject::Type::AI;
 	this->side = side;
 	stateMachine = new StateMachine();
 
@@ -44,6 +47,7 @@ Wanderer::Wanderer(GameObject* p, NavMesh* mesh, char side, int lID, GameTechRen
 			GetRenderObject()->SetColour(Vector4(0, 1, 0, 1));
 			curPath = navMesh->FindPath(curPathPoint, navMesh->GetRandomPointInNavMesh());
 			NewPath(curPath);
+			renderer->updateLaser(laserID, btVector3(0, 0, 0), btVector3(0, 0, 0));
 			return true;
 		}
 		else {
@@ -57,6 +61,12 @@ Wanderer::~Wanderer() {
 }
 
 void Wanderer::Update(float dt) {
+
+	if (health <= 0) {
+		renderer->updateLaser(laserID, btVector3(0, 0, 0), btVector3(0, 0, 0));
+		TutorialGame::getInstance()->delayedRemoveObject(this);
+		return;
+	}
 
 	UpdatePlayerDistance();
 	stateMachine->Update(dt);

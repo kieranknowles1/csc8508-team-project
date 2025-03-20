@@ -46,9 +46,20 @@ SPGameController::SPGameController(GameObject* p, TutorialGame* g, GameTechRende
 }
 
 void SPGameController::Update(float dt) {
+    // Remove deleted wanderers
+    wanderers.erase(
+        std::remove_if(wanderers.begin(), wanderers.end(),
+            [](const Wanderer* wanderer) {
+                return wanderer->isDeleted();
+            }),
+        wanderers.end()
+    );
+
+    // Update remaining wanderers
     for (Wanderer* wanderer : wanderers) {
         wanderer->Update(dt);
     }
+
     if (navMeshDebug) VisualiseNavMesh();
 }
 
@@ -59,7 +70,7 @@ Wanderer* SPGameController::AddWandererToWorld(NavMesh* navMesh, char side, int 
     float radius = 2.0f;
 
     wanderer->setInitialPosition(navMesh->GetRandomPointInNavMesh());
-    wanderer->setRenderScale(btVector3(radius * 2, height, radius + 2));
+    wanderer->setRenderScale(btVector3(radius * 2, height, radius * 2));
 
     btCollisionShape* shape = new btCapsuleShape(radius, height);
 

@@ -13,6 +13,11 @@ namespace NCL {
 			void Update(float dt);
 			void InitPosAndOffset();
 
+			void DamageAI(float d) { health -= d; }
+			float GetHealth() { return health; }
+
+			bool isDeleted() const { return deleted; }
+
 		private:
 			void PlayerNear(float dt);
 			void PlayerFar(float dt);
@@ -38,6 +43,8 @@ namespace NCL {
 			int laserID;
 
 			GameTechRendererInterface* renderer;
+
+			float health = 50;
 		};
 	}
 }
