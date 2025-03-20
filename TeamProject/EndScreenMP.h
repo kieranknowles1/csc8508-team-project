@@ -25,15 +25,10 @@ struct Button {
     Vector4 color = Vector4(0.4f, 0.4f, 0.4f, 1);
 };
 
-struct ButtonText {
+struct Text {
     Vector2 position;
     std::string text;
     Vector4 color = Vector4(1, 1, 1, 1);
-};
-
-struct text {
-    Vector2 position;
-    std::string text;
 };
 
 class EndScreenUI : public UiElement {
@@ -51,17 +46,48 @@ public:
 
     void UpdateMenu(unsigned int);
 
+    void AddPlayer(Player playerData) {
+        players.push_back(playerData);
+    }
+
 private:
+	void PopulateLeaderboard();
+    
     UIBox background;
     std::vector<Button> buttons;
-    std::vector<ButtonText> buttonTexts;
-    std::vector<UIBox> leaderboardBorder;
-    std::vector<UIBox> leaderboard;
-    std::vector<ButtonText> leaderboardTexts;
+    std::vector<Text> buttonTexts;
     Vector4 activeButton = Vector4(1, 1, 1, 1);
     Vector4 inactiveButton = Vector4(0, 0, 0, 1);
     Vector4 activeText = Vector4(0, 0, 0, 1);
     Vector4 inactiveText = Vector4(1, 1, 1, 1);
+
+    Vector2 leaderboardCenter = Vector2(0.5f, 0.6f);
+    Vector2 leaderboardSize = Vector2(0.7f, 0.7f);
+    std::array<ScoreboardBoxes, 27> boxes;
+    std::array<Text, 27> leaderboardTexts;
+    std::vector<Player> players;
+    int columns = 3;
+    int rows = 9;
+
+    std::string TeamColorToString(TeamColor color) {
+        switch (color) {
+        case TeamColor::RED: return "Red";
+        case TeamColor::BLUE: return "Blue";
+        case TeamColor::GREEN: return "Green";
+        case TeamColor::YELLOW: return "Yellow";
+        case TeamColor::ORANGE: return "Orange";
+        case TeamColor::PURPLE: return "Purple";
+        case TeamColor::PINK: return "Pink";
+        case TeamColor::CYAN: return "Cyan";
+        default: return "Unknown";
+        }
+    }
+
+    void SortPlayers() {
+        std::sort(players.begin(), players.end(), [](const Player& a, const Player& b) {
+            return a.score > b.score;
+            });
+    }
 };
 
 
@@ -95,8 +121,12 @@ public:
             {
             case 0:
                 //Main Menu
+                break;
             case 1:
                 //Quit
+                break;
+            default:
+                break;
             }
         }
 

@@ -47,6 +47,23 @@ public:
         }
     }
 
+    void SetColor(unsigned int playerID, TeamColor color) {
+        for (auto& player : players) {
+            if (player.playerID == playerID) {
+                player.color = color;
+            }
+        }
+    }
+
+private:
+    Vector2 screenCenter = Vector2(0.5f, 0.5f);
+    Vector2 scoreboardSize = Vector2(0.7f, 0.7f);
+    std::array<ScoreboardBoxes, 27> boxes;
+    std::array<ScoreboardText, 27> Uitexts;
+    std::vector<Player> players;
+    int columns = 3;
+    int rows = 9;
+
     std::string TeamColorToString(TeamColor color) {
         switch (color) {
         case TeamColor::RED:
@@ -70,26 +87,9 @@ public:
         }
     }
 
-    void SetColor(unsigned int playerID, TeamColor color) {
-        for (auto& player : players) {
-            if (player.playerID == playerID) {
-                player.color = color;
-            }
-        }
-    }
-
     void SortPlayers() {
         std::sort(players.begin(), players.end(), [](const Player& a, const Player& b) {
             return a.score > b.score;
-        });
+            });
     }
-
-private:
-    Vector2 screenCenter = Vector2(0.5f, 0.5f);
-    Vector2 scoreboardSize = Vector2(0.7f, 0.7f);
-    std::array<ScoreboardBoxes, 27> boxes;
-    std::array<ScoreboardText, 27> Uitexts;
-    std::vector<Player> players;
-    int columns = 3;
-    int rows = 9;
 };
