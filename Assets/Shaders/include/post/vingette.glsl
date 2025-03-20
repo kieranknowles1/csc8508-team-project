@@ -21,6 +21,3 @@ vec3 applyVingette(vec3 original, vec2 ndcPos, float intensity, vec3 effectColor
 }
 
 #endif
-//    vec3 outColor = mix(effectColor, original, mixFactor);
-    //we want to make sure the weighting is clamped between 0 and 1.
- //   return outColor;
