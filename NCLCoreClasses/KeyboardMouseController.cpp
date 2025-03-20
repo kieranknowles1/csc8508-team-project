@@ -46,6 +46,8 @@ bool KeyboardMouseController::GetDigital(DigitalControl button)  const {
 
 	case DigitalControl::MenuDown: return keyboard.KeyPressed(KeyCodes::DOWN) || keyboard.KeyPressed(KeyCodes::S);
 	case DigitalControl::MenuUp: return keyboard.KeyPressed(KeyCodes::UP) || keyboard.KeyPressed(KeyCodes::W);
+	case DigitalControl::MenuLeft: return keyboard.KeyPressed(KeyCodes::LEFT) || keyboard.KeyPressed(KeyCodes::A);
+	case DigitalControl::MenuRight: return keyboard.KeyPressed(KeyCodes::RIGHT) || keyboard.KeyPressed(KeyCodes::D);
 	case DigitalControl::MenuConfirm: return keyboard.KeyPressed(KeyCodes::RETURN);
 	case DigitalControl::Pause: case DigitalControl::Unpause:
 		return keyboard.KeyPressed(KeyCodes::P);
