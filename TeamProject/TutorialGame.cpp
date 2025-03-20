@@ -18,6 +18,7 @@
 
 using namespace NCL;
 using namespace CSC8503;
+using namespace Lobbies;
 
 TutorialGame* TutorialGame::instance = nullptr;
 

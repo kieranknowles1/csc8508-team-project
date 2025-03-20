@@ -4,6 +4,9 @@
 #include "Multiplayer/Server.hpp"
 #include "Multiplayer/WorldState.hpp"
 #include "Shoot.h"
+#include "Network/Network.hpp"
+
+using namespace Lobbies;
 
 namespace Packet {
     using namespace WorldState;

@@ -49,12 +49,14 @@ enum class Channel {
 /**
  * @brief Different states the network can be in.
  */
-enum class NetworkState {
-    CLOSED,
-    OFF,
-    ERRORED,
-    ON
-};
+namespace NetworkStates {
+    enum class NetworkState {
+        CLOSED,
+        OFF,
+        ERRORED,
+        ON
+    };
+}
 
 
 class Network {
@@ -132,7 +134,7 @@ public:
      * Is Threadsafe.
      * @return 
      */
-    NetworkState GetState() {
+    NetworkStates::NetworkState GetState() {
         std::lock_guard<std::mutex> lock(m_stateMut);
         return m_state;
     }
@@ -195,7 +197,7 @@ private:
     std::mutex m_connectCallbackMut;
     std::mutex m_listenerMut;
 
-    NetworkState m_state = NetworkState::CLOSED;
+    NetworkStates::NetworkState m_state = NetworkStates::NetworkState::CLOSED;
 
     Packet::PacketBuffer m_receiveBuffer = Packet::PacketBuffer(BUFFER_SIZE);
     std::vector<std::pair<std::shared_ptr<Packet::Packet>, ENetPeer*>> m_sendBuffer = std::vector<std::pair<std::shared_ptr<Packet::Packet>, ENetPeer*>>(BUFFER_SIZE);

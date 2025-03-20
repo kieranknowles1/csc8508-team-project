@@ -1,5 +1,6 @@
 #pragma once
 
+#include <vector>
 #include <mutex>
 #include <unordered_map>
 #include <nlohmann/json.hpp>
@@ -10,7 +11,15 @@
 #include "../TeamProject/PointLight.h"
 #include "../TeamProject/Multiplayer/User.hpp"
 #include "../TeamProject/Multiplayer/WorldState.hpp"
-#include <../Network/Packet.hpp>
+
+namespace Packet {
+    class Packet;
+}
+
+enum class PlayerState {
+    DEAD,
+    ALIVE
+};
 
 namespace NCL::CSC8503 {
     class NetworkObject;
@@ -90,7 +99,7 @@ namespace NCL::CSC8503 {
 
         virtual void UpdateObjectState();
         virtual void UpdateFromState(float dt);
-        virtual std::pair<std::shared_ptr<Packet::Packet[]>, int> CreatePackets() { return { 0, 0 }; }
+        virtual std::vector<std::shared_ptr<Packet::Packet>> CreatePackets(int sequenceNum);
 
         virtual void Update(float dt) {}
 

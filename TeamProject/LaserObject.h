@@ -3,13 +3,13 @@
 #include "GameObject.h"
 
 namespace NCL::CSC8503 {
-
     class LaserObject : public GameObject {
     public:
         LaserObject(float thickness, btVector4 color) : thickness(thickness), color(color) {}
 
         void UpdateObjectState() override;
         void UpdateFromState(float dt) override;
+        std::vector<std::shared_ptr<Packet::Packet>> CreatePackets(int sequenceNum) override;
 
         void SetCollisionNormal(btVector3 n) { collisionNormal = n; }
         void SetStartPos(btVector3 s) { startPos = s; }

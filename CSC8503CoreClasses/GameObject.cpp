@@ -4,6 +4,9 @@
 #include "NetworkObject.h"
 #include "../TeamProject/Multiplayer/WorldState.hpp"
 
+#include "../TeamProject/Multiplayer/GamePackets.hpp"
+#include "LinearMath/btQuaternion.h"
+
 using namespace NCL::CSC8503;
 using namespace WorldState;
 
@@ -139,4 +142,46 @@ void GameObject::UpdateFromState(float dt) {
         );
         body->getWorldTransform().setRotation(interpolated);
     }
+}
+
+std::vector<std::shared_ptr<Packet::Packet>> GameObject::CreatePackets(int sequenceNum) {
+    std::vector<std::shared_ptr<Packet::Packet>> packets;
+
+    StateReader readReader = GetObjectStates()->GetReadState();
+    ObjectState* read = readReader.GetState();
+
+    StateValue linearValue;
+    StateValue angularValue;
+    StateValue positionValue;
+    StateValue rotationValue;
+
+    read->Lock_Shared();
+    
+    bool hasLinear = read->ReadState(StateType::LinearVelocity, &linearValue);
+    bool hasAngular = read->ReadState(StateType::AngularVelocity, &angularValue);
+
+    bool hasPosition = read->ReadState(StateType::Position, &positionValue);
+    bool hasRotation = read->ReadState(StateType::Rotation, &rotationValue);
+
+    read->Unlock_Shared();
+    readReader.Unlock();
+    
+    if (hasLinear && hasAngular) {
+        packets.push_back(std::move(std::make_shared<Packet::DeltaPacket>(
+            GetOwner()->GetUserID(),
+            std::get<btVector3>(linearValue),
+            std::get<btVector3>(angularValue),
+            sequenceNum
+        )));
+    }
+
+    if (hasPosition && hasRotation) {
+        packets.push_back(std::move(std::make_shared<Packet::PositionPacket>(
+            GetOwner()->GetUserID(),
+            std::get<btVector3>(positionValue),
+            std::get<btQuaternion>(rotationValue),
+            sequenceNum
+        )));
+    }
+    return packets;
 }

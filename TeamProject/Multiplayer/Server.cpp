@@ -10,6 +10,7 @@
 #include "Multiplayer/User.hpp"
 #include "Multiplayer/WorldState.hpp"
 
+using namespace Lobbies;
 
 namespace Multiplayer {
     using namespace WorldState;
@@ -111,63 +112,12 @@ namespace Multiplayer {
 
             if (object->GetOwner() != *m_user) return;
 
-            StateReader readReader = object->GetObjectStates()->GetReadState();
-            ObjectState* read = readReader.GetState();
-
-            if (read->Size() <= 0) {
-                readReader.Unlock();
-                return;
+            if (object->getType() == GameObject::Type::Gun) {
+                int x = 5;
             }
 
-            StateValue linearVelocity;
-            StateValue angularVelocity;
-            StateValue position;
-            StateValue rotation;
-
-            read->Lock_Shared();
-
-            bool hasLinear = read->ReadState(StateType::LinearVelocity, &linearVelocity);
-            bool hasAngular = read->ReadState(StateType::AngularVelocity, &angularVelocity);
-
-            bool hasPosition = read->ReadState(StateType::Position, &position);
-            bool hasRotation = read->ReadState(StateType::Rotation, &rotation);
-
-            read->Unlock_Shared();
-
-            if (hasLinear && hasAngular) {
-                std::shared_ptr<Packet::DeltaPacket> deltaPacket = std::make_shared<Packet::DeltaPacket>(
-                    object->GetWorldID(),
-                    std::get<btVector3>(linearVelocity),
-                    std::get<btVector3>(angularVelocity),
-                    m_tickCount
-                );
-                m_network->Broadcast(deltaPacket);
-            }
-
-            if (hasPosition && hasRotation) {
-                std::shared_ptr<Packet::PositionPacket> positionPacket = std::make_shared<Packet::PositionPacket>(
-                    object->GetWorldID(),
-                    std::get<btVector3>(position),
-                    std::get<btQuaternion>(rotation),
-                    m_tickCount
-                );
-                m_network->Broadcast(positionPacket);
-            }
-
-            // Create change gravity packet for players.
-            if (object->getType() == GameObject::Type::Player) {
-                StateValue upVectorValue;
-
-                read->Lock_Shared();
-                bool hasUpVector = read->ReadState(StateType::UpVector, &upVectorValue);
-                read->Unlock_Shared();
-
-                std::shared_ptr<Packet::ObjectChangeGravityPacket> gravity = std::make_shared<Packet::ObjectChangeGravityPacket>(
-                    object->GetWorldID(),
-                    std::get<btVector3>(upVectorValue),
-                    m_tickCount
-                );
-                m_network->Broadcast(gravity);
+            for (std::shared_ptr<Packet::Packet> packet : object->CreatePackets(m_tickCount)) {
+                m_network->Broadcast(packet);
             }
         });
     }

@@ -2,13 +2,21 @@
 
 #include <LinearMath/btVector3.h>
 #include <LinearMath/btQuaternion.h>
+#include "GameObject.h"
 
+#ifdef BUILD_PRE
+
+#include "../Network/Packet.hpp"
+#include "../Network/Network.hpp"
+#include "../TeamProject/Multiplayer/User.hpp"
+#include "../TeamProject/Multiplayer/Lobby.hpp"
+
+#else
+#include "Network/Packet.hpp"
 #include "Network/Network.hpp"
-#include "PlayerObject.h"
-#include "User.hpp"
-#include "Lobby.hpp"
-
-using namespace Lobbies;
+#include "Multiplayer/User.hpp"
+#include "Multiplayer/Lobby.hpp"
+#endif
 
 namespace Packet {
     /**
@@ -199,17 +207,17 @@ namespace Packet {
      */
     class UserInfoPacket : public Packet {
     public:
-        UserInfoPacket(User user, LobbyAction action) :
+        UserInfoPacket(Lobbies::User user, Lobbies::LobbyAction action) :
             Packet(static_cast<Type>(PacketType::USER_INFO), static_cast<uint8_t>(Channel::RELIABLE), 0),
             m_user(user), m_action(action)
         {}
 
-        User GetUser() const { return m_user; }
-        LobbyAction GetAction() const { return m_action; }
+        Lobbies::User GetUser() const { return m_user; }
+        Lobbies::LobbyAction GetAction() const { return m_action; }
 
     private:
-        const User m_user;
-        const LobbyAction m_action;
+        const Lobbies::User m_user;
+        const Lobbies::LobbyAction m_action;
     };
 
 

@@ -5,6 +5,7 @@
 
 #include <memory>
 
+using namespace WorldState;
 using namespace NCL;
 using namespace CSC8503;
 
@@ -31,6 +32,33 @@ void PlayerObject::UpdateObjectState() {
 void PlayerObject::UpdateFromState(float dt) {
     GameObject::UpdateFromState(dt);
 }
+
+std::vector<std::shared_ptr<Packet::Packet>> PlayerObject::CreatePackets(int sequenceNum) {
+    std::vector<std::shared_ptr<Packet::Packet>> packets = GameObject::CreatePackets(sequenceNum);
+
+    StateReader readReader = GetObjectStates()->GetReadState();
+    ObjectState* read = readReader.GetState();
+
+    StateValue upVector;
+
+    read->Lock_Shared();
+    
+    bool hasUpVector = read->ReadState(StateType::UpVector, &upVector);
+
+    read->Unlock_Shared();
+    readReader.Unlock();
+    
+    if (hasUpVector) {
+        packets.push_back(std::move(std::make_shared<Packet::ObjectChangeGravityPacket>(
+            GetOwner()->GetUserID(),
+            std::get<btVector3>(upVector),
+            sequenceNum
+        )));
+    }
+    return packets;
+}
+
+
 
 void PlayerObject::OnCollisionEnter(const CollisionInfo& collisionInfo){
 	btVector3 playerPos = this->GetPhysicsObject()->GetRigidBody()->getWorldTransform().getOrigin();

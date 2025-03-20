@@ -68,7 +68,6 @@ namespace NCL {
 
             /**
              * @brief Get the Network Instance of the Server.
-             * @return
              */
             Multiplayer::Server* GetServerInstance() { return server; }
 

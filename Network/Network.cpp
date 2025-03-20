@@ -18,12 +18,12 @@ Network::Network(const ENetAddress* address, int maxConnections) : m_maxConnecti
     }
 
     std::lock_guard<std::mutex> lock(m_stateMut);
-    m_state = NetworkState::OFF;
+    m_state = NetworkStates::NetworkState::OFF;
 }
 
 
 Network::~Network() {
-    if (GetState() != NetworkState::CLOSED) {
+    if (GetState() != NetworkStates::NetworkState::CLOSED) {
         Close();
     }
 }
@@ -31,20 +31,20 @@ Network::~Network() {
 
 void Network::Start() {
     std::lock_guard<std::mutex> lock(m_stateMut);
-    if (m_state != NetworkState::OFF) return;
+    if (m_state != NetworkStates::NetworkState::OFF) return;
 
-    m_state = NetworkState::ON;
+    m_state = NetworkStates::NetworkState::ON;
     m_networkThread = std::thread(&Network::Run, this);
 }
 
 
 void Network::Stop() {
     m_stateMut.lock();
-    if (!(m_state == NetworkState::ON)) {
+    if (!(m_state == NetworkStates::NetworkState::ON)) {
         m_stateMut.unlock();
         return;
     }
-    m_state = NetworkState::OFF;
+    m_state = NetworkStates::NetworkState::OFF;
     m_stateMut.unlock();
     m_networkThread.join();
 }
@@ -58,7 +58,7 @@ void Network::Close() {
     m_connections = 1;
 
     std::lock_guard<std::mutex> lock(m_stateMut);
-    m_state = NetworkState::CLOSED;
+    m_state = NetworkStates::NetworkState::CLOSED;
 }
 
 
@@ -98,7 +98,7 @@ void Network::Run() {
     bool running = true;
 
     while (running) {
-        if (GetState() != NetworkState::ON) {
+        if (GetState() != NetworkStates::NetworkState::ON) {
             running = false;
             return;
         }
@@ -115,7 +115,7 @@ void Network::Run() {
 void Network::Tick(float dt) {
     m_elapsedTime += dt;
 
-    while (m_elapsedTime - m_lastTick >= NETWORK_RATE && m_state == NetworkState::ON) {
+    while (m_elapsedTime - m_lastTick >= NETWORK_RATE && m_state == NetworkStates::NetworkState::ON) {
         std::lock_guard<std::mutex> lock(m_listenerMut);
         for (auto func : m_tickListeners) func(false);
 
@@ -172,7 +172,7 @@ void Network::SendAll() {
 
 void Network::SetErrored() {
     std::lock_guard<std::mutex> lock(m_stateMut);
-    m_state = NetworkState::ERRORED;
+    m_state = NetworkStates::NetworkState::ERRORED;
 }
 
 

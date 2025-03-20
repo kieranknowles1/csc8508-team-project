@@ -15,10 +15,7 @@
 
 namespace NCL::CSC8503 {
 
-enum class PlayerState {
-	DEAD,
-	ALIVE
-};
+
 
 // Player class derived from GameObject
 class PlayerObject : public GameObject {
@@ -149,6 +146,8 @@ public:
 
 	void UpdateObjectState() override;
 	void UpdateFromState(float dt) override;
+	std::vector<std::shared_ptr<Packet::Packet>> CreatePackets(int sequenceNum) override;
+
 private:
 	//Player Variables
 	float gravityScale = 400.0f;
