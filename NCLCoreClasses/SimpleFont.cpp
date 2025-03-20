@@ -3,6 +3,7 @@
 #include "TextureLoader.h"
 #include "Assets.h"
 
+// FreeType includes
 #include <ft2build.h>
 #include FT_FREETYPE_H
 
@@ -10,9 +11,9 @@ using namespace NCL;
 using namespace Rendering;
 using namespace Maths;
 
-SimpleFont::SimpleFont(const std::string&filename) {
+SimpleFont::SimpleFont(const std::string&filename, std::shared_ptr<Texture> texture) {
     ft = nullptr; // Initialize the pointer
-    InitializeFreeType(filename);
+    InitializeFreeType(filename, texture);
 }
 
 
@@ -24,7 +25,7 @@ SimpleFont::~SimpleFont()	{
     }
 }
 
-int SimpleFont::InitializeFreeType(const std::string& filename) {
+int SimpleFont::InitializeFreeType(const std::string& filename, std::shared_ptr<Texture> texture) {
     FT_Library lib;
     if (FT_Init_FreeType(&lib)) {
         std::cout << "ERROR::FREETYPE: Could not init FreeType Library" << std::endl;
@@ -56,13 +57,11 @@ int SimpleFont::InitializeFreeType(const std::string& filename) {
             continue;
         }
 
-        // Create Texture from glyph bitmap
-        SharedTexture texture = std::make_shared<Texture>(
-            face->glyph->bitmap.buffer, 
-            face->glyph->bitmap.width, 
-            face->glyph->bitmap.rows, 
-            1 // single channel
-        );
+        texture->channels = 1;
+        texture->width = face->glyph->bitmap.width;
+        texture->height = face->glyph->bitmap.rows;
+        texture->texData =  (char*)face->glyph->bitmap.buffer;
+        texture->upload(false);
 
         // now store character for later use
         Character character = {

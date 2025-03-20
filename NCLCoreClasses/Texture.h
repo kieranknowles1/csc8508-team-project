@@ -34,17 +34,17 @@ namespace NCL::Rendering {
 		}
 
 		virtual void load(const std::string& name) = 0;
-		virtual void upload() = 0;
+		virtual void upload(bool freeData = true) = 0;
 		const std::string& getFileName() {
 			return fileName;
 		}
 
-	protected:
 		char* texData		= nullptr;
 		uint32_t width		= 0;
 		uint32_t height		= 0;
 		uint32_t channels	= 0;
 		uint32_t flags		= 0;
+	protected:
 
 		Texture();
 

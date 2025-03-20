@@ -19,11 +19,12 @@ namespace NCL {
                 Vector2   bearing;   // Offset from baseline to left/top of glyph
                 unsigned int advance;   // Offset to advance to next glyph
             };
-
-			SimpleFont(const std::string&fontName);
+#
+            // Texture will be filled with the font's glyphs
+			SimpleFont(const std::string&fontName, std::shared_ptr<Texture> texture);
 			~SimpleFont();
 
-            int InitializeFreeType(const std::string& filename);
+            int InitializeFreeType(const std::string& filename, std::shared_ptr<Texture> texture);
 
             Character GetCharacter(unsigned char c) const {
                 return characters.at(c);

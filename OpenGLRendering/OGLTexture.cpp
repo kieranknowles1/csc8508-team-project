@@ -116,7 +116,7 @@ void OGLTexture::load(const std::string& name)
 	TextureLoader::LoadTexture(name, texData, width, height, channels, flags);
 }
 
-void OGLTexture::upload()
+void OGLTexture::upload(bool freeData)
 {
 	int dataSize = width * height * channels; //This always assumes data is 1 byte per channel
 
@@ -139,6 +139,7 @@ void OGLTexture::upload()
 	glGenerateMipmap(GL_TEXTURE_2D);
 
 	glBindTexture(GL_TEXTURE_2D, 0);
-	free(texData);
+	if (freeData)
+		free(texData);
 	texData = nullptr;
 }
