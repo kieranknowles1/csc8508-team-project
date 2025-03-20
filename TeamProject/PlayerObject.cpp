@@ -245,9 +245,7 @@ void PlayerObject::SetGunTransform(float pitch, float yaw, btVector3 camPos) {
     }
 
 
-    btTransform transformGun = gun->GetPhysicsObject()->GetRigidBody()->getWorldTransform();
+    btTransform& transformGun = gun->GetPhysicsObject()->GetRigidBody()->getWorldTransform();
     transformGun.setOrigin(camPos + adjustedOffset);
     transformGun.setRotation(gunRotation);
-
-    gun->GetPhysicsObject()->GetRigidBody()->setWorldTransform(transformGun);
 }
