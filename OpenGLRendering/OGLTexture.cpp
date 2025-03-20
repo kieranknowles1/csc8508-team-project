@@ -14,11 +14,11 @@ using namespace NCL;
 using namespace NCL::Rendering;
 
 OGLTexture::OGLTexture()	{
-	glGenTextures(1, &texID);
+	glGenTextures(1, &assetID);
 }
 
 OGLTexture::OGLTexture(GLuint texToOwn) {
-	texID = texToOwn;
+	assetID = texToOwn;
 }
 
 OGLTexture::OGLTexture(const void* data, int width, int height, int channels)
@@ -28,8 +28,8 @@ OGLTexture::OGLTexture(const void* data, int width, int height, int channels)
 
     dimensions = Vector2ui(width, height);
 
-    glGenTextures(1, &texID);
-    glBindTexture(GL_TEXTURE_2D, texID);
+    glGenTextures(1, &assetID);
+    glBindTexture(GL_TEXTURE_2D, assetID);
 
     GLenum format = (channels == 1) ? GL_RED : GL_RGBA;
 
@@ -44,7 +44,7 @@ OGLTexture::OGLTexture(const void* data, int width, int height, int channels)
 }
 
 OGLTexture::~OGLTexture()	{
-	glDeleteTextures(1, &texID);
+	glDeleteTextures(1, &assetID);
 	free(texData);
 }
 
@@ -129,7 +129,7 @@ void OGLTexture::upload(bool freeData)
 		case 4: sourceType = GL_RGBA; break;
 	}
 
-	glBindTexture(GL_TEXTURE_2D, texID);
+	glBindTexture(GL_TEXTURE_2D, assetID);
 
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, sourceType, GL_UNSIGNED_BYTE, texData);
 

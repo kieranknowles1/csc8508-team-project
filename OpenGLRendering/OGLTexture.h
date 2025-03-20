@@ -33,13 +33,12 @@ namespace NCL::Rendering {
 			const std::string& zNegFile);
 
 		GLuint GetObjectID() const	{
-			return texID;
+			return assetID;
 		}
 
 		void load(const std::string& name) override;
 		void upload(bool freeData = true) override;
 	protected:
         std::string fileName;
-		GLuint texID;
 	};
 }

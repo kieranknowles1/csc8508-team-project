@@ -526,11 +526,14 @@ void GameTechRenderer::NewRenderText() {
         // Set the text colour uniform
         glUniform3f(glGetUniformLocation(freetypeFontShader->GetProgramID(), "textColour"), s.colour.x, s.colour.y, s.colour.z);
 
+		auto font = Debug::GetDebugFont();
         std::string text = s.data;
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, font->getTexture()->GetAssetID());
 
         for (char c : text) {
             // Get the character from the font
-            SimpleFont::Character ch = Debug::GetDebugFont()->GetCharacter(c);
+            SimpleFont::Character ch = font->GetCharacter(c);
             
             // Calculate the position and size of the character
             float xpos = x + ch.bearing.x * scale;
@@ -546,9 +549,6 @@ void GameTechRenderer::NewRenderText() {
                 { xpos + w, ypos,       1.0, 1.0 },
                 { xpos + w, ypos + h,   1.0, 0.0}
             };
-
-            glActiveTexture(GL_TEXTURE0); // Activate texture unit 0
-            glBindTexture(GL_TEXTURE_2D, ch.texture->GetAssetID());
 
             // Update VBO for each character
             glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vertices), vertices);

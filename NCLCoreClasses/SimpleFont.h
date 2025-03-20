@@ -11,12 +11,19 @@ namespace NCL {
 
 		class SimpleFont {
 		public:
+            struct GlyphData {
+                Vector2ui size;
+                Vector2 bearing;
+                int advance;
+                std::vector<char> data;
+            };
 
             // Metrics of a character glyph
             struct Character {
-                std::shared_ptr<Texture> texture; // Texture object
                 Vector2 size;      // Size of glyph
                 Vector2   bearing;   // Offset from baseline to left/top of glyph
+                Vector2 uvTopLeft;
+                Vector2 uvBottomRight;
                 unsigned int advance;   // Offset to advance to next glyph
             };
 #
@@ -30,8 +37,17 @@ namespace NCL {
                 return characters.at(c);
             }
 
+            std::shared_ptr<Texture> getTexture() { return texture; }
+
 		protected:
-            void* ft; // Store as void* to avoid including FreeType headers
+            const static constexpr int StartChar = 0;
+            const static constexpr int EndChar = 128;
+            const static constexpr int AtlasSize = 12;
+            static_assert(StartChar == 0, "Not tested");
+            static_assert((AtlasSize* AtlasSize) > (StartChar - EndChar), "Atlas too small for characters");
+
+
+            std::shared_ptr<Texture> texture;
             std::map<unsigned char, Character> characters;
 		};
 	}
