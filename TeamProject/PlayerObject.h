@@ -7,6 +7,8 @@
 #include "PhysicsObject.h"
 #include "CollisionInfo.h"
 #include "Respawn.h"
+#include "Colors.h"
+#include "RenderObject.h"
 #include "GameTechRendererInterface.h"
 
 #include <btBulletDynamicsCommon.h>
@@ -41,6 +43,7 @@ public:
 
 	void setRenderer(GameTechRendererInterface* rendIn) {
 		renderer = rendIn;
+		gun->GetRenderObject()->SetColour(Color::GetPlayerColor(worldID));
 	}
 
 	void updateLaser(btVector3 startPos, btVector3 endPos) {
