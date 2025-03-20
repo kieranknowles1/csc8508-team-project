@@ -51,24 +51,25 @@ void EndScreenUI::InitMenu()
 	buttonTexts.push_back({ Vector2(0.7f - buttonSize.x / 6, 0.9f + buttonSize.y / 8), "Quit" });
 
 	//created leaderboard
-	//Vector2 leaderboardSize = Vector2(0.7f, 0.7f);
-	//Vector2 leaderboardPosition = Vector2(0.5f, 0.6f);
-	//Vector2 borderSize = Vector2(0.7f, leaderboardSize.y / 9);
-	//Vector2 rowSize = Vector2(borderSize.x - 0.005f, borderSize.y - 0.005f);
+	Vector2 leaderboardSize = Vector2(0.7f, 0.7f);
+	Vector2 leaderboardPosition = Vector2(0.5f, 0.6f);
+	Vector2 borderSize = Vector2(0.7f, leaderboardSize.y / 9);
+	Vector2 rowSize = Vector2(borderSize.x - 0.005f, borderSize.y - 0.005f);
 
-	//for (int i = 0; i < 9; i++)
-	//{
-	//	Vector2 boxPosition = Vector2(leaderboardPosition.x, (leaderboardPosition.y * 1.5f) - (i * borderSize.y));
-	//	leaderboardBorder.push_back({ boxPosition, borderSize });
-	//	leaderboard.push_back({ boxPosition, rowSize });
+	for (int i = 0; i < 9; i++)
+	{
+		Vector2 boxPosition = Vector2(leaderboardPosition.x, (leaderboardPosition.y * 1.5f) - (i * borderSize.y));
+		leaderboardBorder.push_back({ boxPosition, borderSize });
+		leaderboard.push_back({ boxPosition, rowSize });
 
-	//}
+	}
 }
 
-void EndScreenUI::UpdateMenu(int selection)
+void EndScreenUI::UpdateMenu(unsigned int selection)
 {
 	for (int i = 0; i < buttons.size(); i++)
 	{
+		std::cout << selection << std::endl;
 		if (i == selection)
 		{
 			buttons[i].color = activeButton;

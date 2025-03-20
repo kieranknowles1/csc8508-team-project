@@ -49,7 +49,7 @@ public:
 
     void InitMenu();
 
-    void UpdateMenu(int);
+    void UpdateMenu(unsigned int);
 
 private:
     UIBox background;
@@ -62,12 +62,11 @@ private:
     Vector4 inactiveButton = Vector4(0, 0, 0, 1);
     Vector4 activeText = Vector4(0, 0, 0, 1);
     Vector4 inactiveText = Vector4(1, 1, 1, 1);
-    //unsigned int selection = 0;
 };
 
 
 class EndScreenMP : public PushdownState {
-    size_t selection = 0;
+    unsigned int selection = 0;
 
 public:
     EndScreenMP(Controller* controller, TutorialGame* game) : controller(controller), game(game), selection(0) {
@@ -75,38 +74,36 @@ public:
         renderer = game->GetUIRenderer();
 		renderer->AddUiElement(ui.get());
 		ui->SetActive(true);
+		ui->UpdateMenu(selection);
     }
     Controller* controller;
     TutorialGame* game;
 
     PushdownResult OnUpdate(float dt, PushdownState** newState) override {
-
-        const std::array<std::string, 2> menuItems = { "Main Menu", "Quit" };
         
         if (controller->GetDigital(Controller::DigitalControl::MenuRight)) {
-            selection = std::min(menuItems.size() - 1, selection + 1);
+            selection = 1;
             UpdateSelection(selection);
         }
         if (controller->GetDigital(Controller::DigitalControl::MenuLeft)) {
-            selection = std::max(size_t(0), selection - 1);
+            selection = 0;
 			UpdateSelection(selection);
         }
         if (controller->GetDigital(Controller::DigitalControl::MenuConfirm)) {
-            const std::string menuSelection = menuItems[selection];
 
-            if (menuSelection == "Quit") {
-                game->SetGameMode(GameMode::QUIT);
-                return PushdownResult::Clear;
-            }
-            else {
-                return PushdownResult::Clear;
+            switch (selection)
+            {
+            case 0:
+                //Main Menu
+            case 1:
+                //Quit
             }
         }
 
         return PushdownResult::NoChange;
     }
 
-    void UpdateSelection(int selection) {
+    void UpdateSelection(unsigned int selection) {
 		ui->UpdateMenu(selection);
     }
 
