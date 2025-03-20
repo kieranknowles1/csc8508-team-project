@@ -70,7 +70,7 @@ GameTechRenderer::GameTechRenderer(Window* window) : OGLRenderer(window), GameTe
 	glGenBuffers(1, &textTexVBO);
 
     auto fontTex = std::make_shared<OGLTexture>();
-	Debug::CreateDebugFont("PressStart2P.fnt", fontTex);
+	Debug::CreateDebugFont("Comicy.ttf", fontTex);
 
 	unitQuad = Mesh::Quad<OGLMesh>(1.0f);
 	unitQuad->UploadToGPU();
