@@ -54,8 +54,8 @@ void EndScreenUI::InitMenu()
 	buttons.push_back({ Vector2(0.3f, 0.1f), buttonSize });
 	buttons.push_back({ Vector2(0.7f, 0.1f), buttonSize });
 
-	buttonTexts.push_back({ Vector2(0.3f - buttonSize.x / 3.5, 0.9f + buttonSize.y / 8), "Main Menu" });
-	buttonTexts.push_back({ Vector2(0.7f - buttonSize.x / 6, 0.9f + buttonSize.y / 8), "Quit" });
+	buttonTexts.push_back({ Vector2(0.3f - buttonSize.x / 3.5, 0.9f - buttonSize.y / 4), "Main Menu" });
+	buttonTexts.push_back({ Vector2(0.7f - buttonSize.x / 6, 0.9f - buttonSize.y / 4), "Quit" });
 
 	//created leaderboard
 	Vector2 boxSize = { leaderboardSize.x / columns, leaderboardSize.y / rows };
@@ -68,7 +68,7 @@ void EndScreenUI::InitMenu()
 			
 			boxes[i * columns + j] = { position, boxSize };
 
-			Vector2 textPosition = { position.x - (boxSize.x / 2.0f) + 0.01f, position.y - 0.2f };
+			Vector2 textPosition = { position.x - (boxSize.x / 2.0f) + 0.01f, position.y - 0.22f };
 			leaderboardTexts[i * columns + j] = { textPosition, "" };
 		}
 		
