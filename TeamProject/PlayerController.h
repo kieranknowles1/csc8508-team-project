@@ -63,7 +63,30 @@ namespace NCL {
 				player->Rotate(false, false,yaw);
 			}
 
+			int getBeamSoundChannel() {
+				return beamSoundChannel;
+			}
+
+			bool getBeamSoundPaused() {
+				return beamSoundPaused;
+			}
+
+			void setBeamSoundChannel(int channelId) {
+				beamSoundPaused = channelId;
+			}
+
+			void setBeamSoundPaused(bool setPaused) {
+				beamSoundPaused = setPaused;
+			}
+
+			const Controller* getController() {
+				return controller;
+			}
+
 		private:
+
+			int beamSoundChannel = -1;
+			bool beamSoundPaused = false;
 
 			//Player Movement Variables
 			float playerSpeed = 130.0f;

@@ -1,5 +1,7 @@
 #pragma once
 
+#include "AudioEngine.h"
+
 using namespace NCL;
 using namespace NCL::CSC8503;
 
@@ -7,9 +9,10 @@ class PauseScreen : public PushdownState {
     int selection = 0;
 
 public:
-    PauseScreen(Controller* controller, TutorialGame* game) : controller(controller), game(game) {}
+    PauseScreen(Controller* controller, TutorialGame* game, PlayerController* playerController) : controller(controller), game(game), playerController(playerController) {}
     Controller* controller;
     TutorialGame* game;
+    PlayerController* playerController;
 
     PushdownResult OnUpdate(float dt, PushdownState** newState) override {
         if (controller->GetDigital(Controller::DigitalControl::Unpause)) {
@@ -53,5 +56,22 @@ public:
         return PushdownResult::NoChange;
     }
     void OnAwake() override {
+        if (playerController->getBeamSoundChannel() != -1) {
+            audioEngine.SetChannelPaused(playerController->getBeamSoundChannel(), true);
+            playerController->setBeamSoundPaused(true);
+        }
+    }
+
+    void OnSleep() override {
+        if (playerController->getBeamSoundChannel() != -1) {
+            if (playerController->getController()->GetDigital(Controller::DigitalControl::Fire)) {
+                audioEngine.SetChannelPaused(playerController->getBeamSoundChannel(), false);
+                playerController->setBeamSoundPaused(false);
+            }
+            else {
+                audioEngine.SetChannelVolume(playerController->getBeamSoundChannel(), -100.0f);
+                playerController->setBeamSoundChannel(-1);
+            }
+        }
     }
 };

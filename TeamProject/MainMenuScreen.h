@@ -70,7 +70,7 @@ public:
                 game->SetGameMode(GameMode::SINGLEPLAYER);
                 audioEngine.PlaySounds("MenuSelect.wav", Vector3(0, 0, 0), -18.0f);
                 game->Start();
-                *newState = new GameScreen(controller, game);
+                *newState = new GameScreen(controller, game, game->GetPlayerController());
                 break;
             case GameMode::HOST_GAME:
                 textureUiElement->SetActive(false);
@@ -106,7 +106,7 @@ public:
             default: assert(false);
             }
 
-            *newState = new GameScreen(controller, game);
+            //*newState = new GameScreen(controller, game, game->GetPlayerController());
             return PushdownResult::Push;
         }
 
@@ -128,6 +128,19 @@ public:
     }
 
     void OnAwake() override {
+
+        //The below while function would fix the sound abruptly cutting off when ex
+        //exiting from the lobby to the main menu by adding a delay, not ideal. 
+         
+        // Wait until no sounds are playing before restarting the audio engine
+        //while (audioEngine.IsAnySoundPlaying()) {
+        //    std::this_thread::sleep_for(std::chrono::milliseconds(100)); // Small delay to check again
+        //}
+
+        // Now restart the audio engine
+        //audioEngine.Shutdown();
+        //audioEngine.Init();
+
         if (!textureUiElement) {  // Check if the element exists
             fmodLogoTex = resourceManager->getTextures().get("FMOD Logo Black - White Background1.png");
             UiSprite fmodLogo = { Vector2(0.95f, 0.05f), Vector2(0.1f, 0.1f), Vector4(1,1,1,1), fmodLogoTex };

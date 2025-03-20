@@ -125,6 +125,22 @@ namespace NCL {
             // FIX ME make this protected/private.
             PlayerObject* player;
 
+            PlayerObject* getPlayerObject() {
+                return player;
+            }
+
+            PerspectiveCamera* getMainCam() {
+                return mainCamera;
+            }
+
+            GameTechRendererInterface* getRenderer() {
+                return renderer;
+            }
+
+            PlayerController* GetPlayerController() {
+                return playerController.get();
+            }
+
             void SetGameMode(GameMode gm) { gameMode = gm; }
 
         protected:

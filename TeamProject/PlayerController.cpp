@@ -75,8 +75,6 @@ void PlayerController::UpdateMovement(float dt) {
 
 
 void PlayerController::HandleShooting(float dt) {
-    static int beamSoundChannel = -1;
-
     if (controller->GetDigital(Controller::DigitalControl::Fire) && overheat->CanFire()) {
         FireShot(dt);
         if (!firing) {
@@ -88,11 +86,19 @@ void PlayerController::HandleShooting(float dt) {
             float overheatPercentage = overheat->GetOverheatPercentage();
             float beamSoundLength = 7.1f; //7 seconds
             unsigned int startTimeMs = static_cast<unsigned int>(overheatPercentage * beamSoundLength * 1000); //Convert to milliseconds
-            beamSoundChannel = audioEngine.PlaySounds("Beam.mp3", camera->GetPosition(), 0.0f);
+            //beamSoundChannel = audioEngine.PlaySounds("Beam.mp3", camera->GetPosition(), 0.0f);
 
-            if (beamSoundChannel != -1) {
+            //If the sound was paused, resume it instead of restarting
+            if (beamSoundPaused && beamSoundChannel != -1) {
                 audioEngine.SetChannel3dPosition(beamSoundChannel, camera->GetPosition());
                 audioEngine.SetChannelPlaybackPosition(beamSoundChannel, startTimeMs);
+            }
+            else {
+                beamSoundChannel = audioEngine.PlaySounds("Beam.mp3", camera->GetPosition(), 0.0f);
+                if (beamSoundChannel != -1) {
+                    audioEngine.SetChannel3dPosition(beamSoundChannel, camera->GetPosition());
+                    audioEngine.SetChannelPlaybackPosition(beamSoundChannel, startTimeMs);
+                }
             }
         }
         else {

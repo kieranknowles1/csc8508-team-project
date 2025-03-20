@@ -315,7 +315,7 @@ namespace NCL::CSC8503 {
 				}
 				else if (selection == 9 && isHost) {  // Start Button (only host can press)
 					game->Start();
-					*newState = new GameScreen(controller, game);
+					*newState = new GameScreen(controller, game, game->GetPlayerController());
 					return PushdownResult::Push;
 				}
 			}
