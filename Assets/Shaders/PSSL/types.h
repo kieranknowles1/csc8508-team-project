@@ -45,12 +45,14 @@ struct LineState {
 	float4 pos;
 	float4 colour;
 };
+
 struct LaserState {
 	float3 start;
 	int __pad1;
 	float3 end;
 	float thickness;
-
+	float4 colour;
+};
 
 struct VS_OUTPUT
 {

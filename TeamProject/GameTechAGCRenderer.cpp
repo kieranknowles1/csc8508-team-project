@@ -273,7 +273,7 @@ void GameTechAGCRenderer::DrawObjects() {
 
 	drawInstances(prevMesh);
 	// Check that we used all the buffers we expected
-	assert(instanceCount + startingIndex == currentFrame->objectCount);
+	assert(instanceCount + startingIndex == currentFrame->objects.count);
 }
 
 void GameTechAGCRenderer::MainRenderPass() {
@@ -645,7 +645,6 @@ void GameTechAGCRenderer::UpdateObjectList() {
 			// This behaviour is inverted from OpenGL for compatibility with HLSL UVs
 			state.invertY = !(layer && layer->invertY);
 			currentFrame->data.WriteData<ObjectState>(state);
-			currentFrame->objectCount++;
 		}
 
 	}
