@@ -14,6 +14,9 @@ namespace NCL {
 			void InitPosAndOffset();
 
 			void DamageAI(float d) { health -= d; }
+			float GetHealth() { return health; }
+
+			bool isDeleted() const { return deleted; }
 
 		private:
 			void PlayerNear(float dt);
@@ -41,9 +44,7 @@ namespace NCL {
 
 			GameTechRendererInterface* renderer;
 
-			float health = 100;
-
-			Type collisionType = GameObject::Type::AI;
+			float health = 50;
 		};
 	}
 }

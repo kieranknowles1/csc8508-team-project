@@ -4,6 +4,7 @@
 #include "TutorialGame.h"
 #include "Colors.h"
 #include "Multiplayer/GamePackets.hpp"
+#include "Wanderer.h"
 
 using namespace NCL;
 using namespace CSC8503;
@@ -56,6 +57,11 @@ std::optional<ShotInfo> Shoot::ShootBulletPlayer(btVector3 startPos, btVector3 d
                 );
                 TutorialGame::GetServerInstance()->Broadcast(damagePacket);
             }
+        }
+        else if (rayInfo.value().hitObj->getType() == GameObject::Type::AI) {
+            std::cout << "hit ai" << std::endl;
+            Wanderer* hit = (Wanderer*)rayInfo.value().hitObj;
+            hit->DamageAI(100.0f * dt);
         }
        // SpawnBulletMesh(startPos, dir, rotation, &rayInfo.value());
         SpawnDecal(rayInfo.value().hitPos, rayInfo.value().hitNormal, shotID);

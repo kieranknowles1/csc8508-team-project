@@ -46,9 +46,20 @@ SPGameController::SPGameController(GameObject* p, TutorialGame* g, GameTechRende
 }
 
 void SPGameController::Update(float dt) {
+    // Remove deleted wanderers
+    wanderers.erase(
+        std::remove_if(wanderers.begin(), wanderers.end(),
+            [](const Wanderer* wanderer) {
+                return wanderer->isDeleted();
+            }),
+        wanderers.end()
+    );
+
+    // Update remaining wanderers
     for (Wanderer* wanderer : wanderers) {
         wanderer->Update(dt);
     }
+
     if (navMeshDebug) VisualiseNavMesh();
 }
 
