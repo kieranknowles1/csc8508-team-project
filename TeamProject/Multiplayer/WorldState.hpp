@@ -95,8 +95,6 @@ namespace WorldState {
         StateReader(ObjectState* state, std::shared_mutex* readingMutex) {
             m_state = state;
             m_readingMutex = readingMutex;
-
-            m_readingMutex->lock_shared();
         }
 
         // Prevent copying as locking the same mutex multiple times on the same
@@ -149,7 +147,10 @@ namespace WorldState {
          * previous object going out of scope or without calling Unlock() is
          * undefined behaviour and will likely result in a deadlock.
          */
-        StateReader GetCurrentState() { return StateReader(&m_states[current], &m_stateMutexes[current]); }
+        StateReader GetCurrentState() { 
+            m_stateMutexes[current].lock_shared();
+            return StateReader(&m_states[current], &m_stateMutexes[current]);
+        }
 
         /**
          * @brief Get the ObjectState to read from.
@@ -158,7 +159,10 @@ namespace WorldState {
          * previous object going out of scope or without calling Unlock() is
          * undefined behaviour and will likely result in a deadlock.
          */
-        StateReader GetReadState() { return StateReader(&m_states[read], &m_stateMutexes[read]); }
+        StateReader GetReadState() {
+            m_stateMutexes[read].lock_shared();
+            return StateReader(&m_states[read], &m_stateMutexes[read]);
+        }
 
         /**
          * @brief Get the ObjectState to write to.
@@ -167,7 +171,10 @@ namespace WorldState {
          * previous object going out of scope or without calling Unlock() is
          * undefined behaviour and will likely result in a deadlock.
          */
-        StateReader GetWriteState() { return StateReader(&m_states[write], &m_stateMutexes[write]); }
+        StateReader GetWriteState() {
+            m_stateMutexes[write].lock_shared();
+            return StateReader(&m_states[write], &m_stateMutexes[write]);
+        }
 
         /**
          * @brief Update the world states.
