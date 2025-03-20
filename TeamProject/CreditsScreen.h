@@ -28,7 +28,7 @@ public:
 		}
 
 		int lineCount = std::count(text.begin(), text.end(), '\n');
-		totalHeight = (lineCount * 0.05f * TextScale);
+		totalHeight = (lineCount * 0.1f * TextScale);
 	}
 
 	PushdownResult OnUpdate(float dt, PushdownState** newState) override {
