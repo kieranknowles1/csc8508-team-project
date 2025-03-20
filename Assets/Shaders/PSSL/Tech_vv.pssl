@@ -28,6 +28,9 @@ VS_OUTPUT main(uint vertID : S_VERTEX_ID, uint objID : S_SRT_DATA, uint instance
 	Output.UV = scaleUv(
 		rawUv, s.texScale, normal, s.texRepeats
 	);
+	if (s.invertY) {
+		Output.UV.y = 1.0f - Output.UV.y;
+	}
 
 	Output.Position = TransformWorldToClip(position);
 	Output.Colour	= s.colour;
@@ -39,6 +42,11 @@ VS_OUTPUT main(uint vertID : S_VERTEX_ID, uint objID : S_SRT_DATA, uint instance
 	Output.normal = normalize(mul(normMat, normalize(normal)));
 	Output.tangent = normalize(mul(normMat, normalize(tangent.xyz)));
 	Output.binormal = cross(Output.tangent, Output.normal) * tangent.w;
+
+	// HACK: Need a proper way of drawing submeshes
+	if (vertID < s.startIndex || vertID >= (s.startIndex + s.numElements)) {
+		Output.Colour = float4(0, 0, 0, 0);
+	}
 
 	return Output;
 }

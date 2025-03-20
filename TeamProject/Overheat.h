@@ -35,7 +35,7 @@ public:
 private:
 
     // Overheating Variables
-    float maxFiringTime = 5.0f;
+    float maxFiringTime = 6.0f;
     float overheatTime = 2.5f;
     float holdTime = 0.5f;
     float cooldownTimeMax = 1.0f;

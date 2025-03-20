@@ -12,7 +12,6 @@
 #include "PhysicsObject.h"
 #include "RenderObject.h"
 #include "BulletDebug.h"
-#include "Paintball.h"
 #include "CustomCollisionCallback.h"
 #include <btBulletDynamicsCommon.h>
 #include <btBulletCollisionCommon.h>
@@ -47,9 +46,10 @@ namespace NCL {
 				player = playerIn; gun = gunIn;
 			};
 
-			std::optional<ShotInfo> RayClosest(btVector3 startPos, btVector3 dir, GameObject * ignore = nullptr);
-			std::optional<ShotInfo> ShootBulletPlayer(btVector3 startPos, btVector3 dir,btQuaternion rotation, float dt);
+			std::optional<ShotInfo> RayClosest(btVector3 startPos, btVector3 dir, bool hitPlayer = false);
+			std::optional<ShotInfo> ShootBulletPlayer(btVector3 startPos, btVector3 dir,btQuaternion rotation, float dt, int shotID);
 			std::optional<ShotInfo> ShootBulletAI(btVector3 startPos, btVector3 dir, btQuaternion rotation,float dt);
+			void SpawnDecal(btVector3 hitPos, btVector3 hitNormal, int shotID);
 
 
 		private:
@@ -67,8 +67,7 @@ namespace NCL {
 			std::string decalTexturePath3 = "paintball_splash_3.png";
 			std::string decalTexturePath4 = "paintball_splash_4.png";
 
-			void SpawnBulletMesh(btVector3 startPos, btVector3 dir, btQuaternion bulletRotation, ShotInfo* rayInfo);
-			void SpawnDecal(ShotInfo* shotinfo);
+	
 			inline static Shoot* instance = nullptr;
 			btDiscreteDynamicsWorld* bulletWorld;
 			GameObject* player;

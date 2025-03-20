@@ -55,7 +55,7 @@ namespace NCL::Rendering {
 		void SwapBuffers()  override;
 
 		void UseShader(const OGLShader& s);
-		void BindTextureToShader(const OGLTexture& t, const std::string& uniform, int texUnit) const;
+		void BindTextureToShader(const Texture& t, const std::string& uniform, int texUnit) const;
 		void BindMesh(const OGLMesh& m);
 		void BindBufferAsUBO(const OGLBuffer& b, uint32_t slotID);
 		void BindBufferAsSSBO(const OGLBuffer& b, uint32_t slotID);

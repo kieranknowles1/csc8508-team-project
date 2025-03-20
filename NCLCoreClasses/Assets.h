@@ -21,11 +21,13 @@ namespace NCL::Assets {
 	const std::string ASSETROOT(ASSETROOTLOCATION);
 	const std::string SHADERDIR(ASSETROOT + "Shaders/");
 	const std::string MESHDIR(ASSETROOT + "Meshes/");
+    const std::string MATERIALDIR(ASSETROOT + "Materials/");
 	const std::string TEXTUREDIR(ASSETROOT + "Textures/");
 	const std::string AUDIODIR(ASSETROOT + "Audio/");
 	const std::string FONTSSDIR(ASSETROOT + "Fonts/");
 	const std::string DATADIR(ASSETROOT + "Data/");
 	const std::string LEVELDIR(ASSETROOT + "Levels/");
+	const std::string NAVMESHDIR(DATADIR + "NavMeshes/");
 
 	extern bool ReadTextFile(const std::string& filepath, std::string& result);
 	extern bool ReadBinaryFile(const std::string& filepath, char** into, size_t& size);
