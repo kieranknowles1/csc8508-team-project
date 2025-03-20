@@ -71,6 +71,9 @@ http://enet.bespin.org/
 
 Modified for PS5 support, see included `enet.patch` in the repository.
 
+Portions of this software are copyright (C) 2024 The FreeType
+Project (www.freetype.org).  All rights reserved.
+
 Some matrix maths ported from OpenGL Mathematics (GLM) under the Happy Bunny
 (modified MIT license).
 Copyright (c) 2005 - G-Truc Creation
