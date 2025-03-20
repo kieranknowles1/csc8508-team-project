@@ -7,11 +7,16 @@ namespace NCL {
 		class StateMachine;
 		class Wanderer : public NavEntity {
 		public:
-			Wanderer(GameObject* p, NavMesh* nav, char side);
+			Wanderer(GameObject* p, NavMesh* nav, char side, int lID, GameTechRendererInterface* r);
 			~Wanderer();
 
 			void Update(float dt);
 			void InitPosAndOffset();
+
+			void DamageAI(float d) { health -= d; }
+			float GetHealth() { return health; }
+
+			bool isDeleted() const { return deleted; }
 
 		private:
 			void PlayerNear(float dt);
@@ -30,9 +35,16 @@ namespace NCL {
 
 			float maxShootTimer = 5.0f;
 			float shootTimer;
+			bool isShooting = true;
 
 			float maxUpdatePlayerPathTimer = 2.0f;
 			float updateplayerPathTimer;
+
+			int laserID;
+
+			GameTechRendererInterface* renderer;
+
+			float health = 50;
 		};
 	}
 }

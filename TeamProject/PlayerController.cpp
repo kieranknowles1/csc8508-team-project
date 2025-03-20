@@ -32,6 +32,7 @@ void PlayerController::Initialise() {
     crosshair->SetActive(true);
     overheat->SetActive(true);
     laserID = player->GetWorldID();
+    renderer->SetVignetteOn(true);
 }
 
 btVector3 GetEulerAngles(btQuaternion quat) {
@@ -214,30 +215,22 @@ void PlayerController::SpecialTypeCalculations() {
         onIce = false;
         break;
     case GameObject::Type::JumpPad: {
+        onIce = false;
         btVector3 normal = player->getCollisionNormal();
         float dotProduct = normal.dot(upDirection.absolute());
         btVector3 movement = btVector3(0, 0, 0);
         movement += (player->getCollisionJumpPadStrength() * -player->getCollisionNormal());
         rb->setLinearVelocity(btVector3(0, 0, 0));
-        player->setCollided(0);
         inAirTime = 0.2f;
         rb->applyCentralImpulse(movement);
         break;
     } case GameObject::Type::Slime: {
+        onIce = false;
         if (inAirTime <= 0) {
             btVector3 normal = player->getCollisionNormal();
             float dampening = 0.85f;
             btVector3 reflectedVelocity = previousVelocity - (2 * previousVelocity.dot(normal) * normal);
-            if (fabs(10 * previousVelocity.dot(normal)) <= 0.25f) {
-                btVector3 direction = (player->getCollisionPoint() - transformPlayer.getOrigin()).normalized();
-                float dot = direction.dot(-upDirection);
-                float angle = acos(dot) * (180.0f / SIMD_PI);
-                if (angle <= 25.0f) { // come to rest on floor
-                    player->setCollided(1);
-                    break;
-                }
-            }
-            else {
+            if (fabs(10 * previousVelocity.dot(normal)) > 800.0f) {
                 reflectedVelocity *= dampening;
                 inAirTime = 0.1f;
                 rb->setLinearVelocity(reflectedVelocity);
@@ -342,16 +335,8 @@ void PlayerController::HandleJumping() {
 };
 
 void PlayerController::HandleHurtEffects() {
-    renderer->SetVignetteOn(true);
     float healthLossPercent = (player->GetMaxHealth() - player->health) / player->GetMaxHealth();
-    if (healthLossPercent <= 0.001f) {
-        renderer->SetVignetteOn(false);
-    }
-    else {
-        renderer->SetVignetteOn(true);
-        renderer->SetVignetteIntesnity((1.75f * healthLossPercent));
-    }
-
+    renderer->SetVignetteIntesnity((healthLossPercent));
 }
 
 void PlayerController::GetAllDirections() {

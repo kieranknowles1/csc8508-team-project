@@ -1,18 +1,14 @@
-#version 400 core
+#version 420 core
 
-uniform sampler2D depthTex;
-double depthSample(vec2 coord) {
-    return texture(depthTex, coord).r;
+uniform sampler2D normalTex;
+vec3 normalSample(vec2 coord) {
+    return texture(normalTex, coord).rgb;
 }
 #define mul(a, b) ((a) * (b))
-#include "include/post/edgedetect.glsl"
+#include "include/post/edgeapply.glsl"
 
 uniform sampler2D sceneTex;
-
 uniform vec2 windowSize;
-
-uniform mat4 inverseProjMatrix;
-uniform mat4 inverseViewMatrix;
 
 
 in Vertex {
@@ -21,12 +17,8 @@ in Vertex {
 
 out vec4 fragColor;
 
-
 void main(void) {
-    vec4 colour = texture(sceneTex, IN.texCoord); //initially just render scene as is ////////
     vec2 invWinSize = vec2(1.0f / windowSize.x, 1.0f / windowSize.y);
-    EdgeDetectMatrices mats;
-    mats.invView = inverseViewMatrix;
-    mats.invProj = inverseProjMatrix;
-    fragColor = doEdgeDetect(colour, IN.texCoord, invWinSize, mats);
+    vec4 colour = texture(sceneTex, IN.texCoord); //initially just render scene as is ////////
+    fragColor = doEdgeDetect(colour, IN.texCoord,invWinSize);
  }

@@ -205,8 +205,8 @@ void TutorialGame::ThirdPersonControls() {
     btMatrix3x3 rotationMatrix(player->getCamOffset() * playerRotation1);
     btVector3 forward = rotationMatrix * btVector3(0,0,-1);
     btVector3 upwards = rotationMatrix * btVector3(0, 1, 0);
-    float camHeight = 15.0f;
-    float camDist = -50.0f;
+    float camHeight = 35.0f;
+    float camDist = -100.0f;
     btVector3 cameraOffset = (forward.normalize() * camDist) + (upwards.normalize() * camHeight);
     btVector3 cameraPosition = transformPlayer.getOrigin() + cameraOffset;
     mainCamera->SetPosition(cameraPosition);
@@ -625,6 +625,8 @@ void TutorialGame::StartMultiplayerGame() {
 
 void TutorialGame::Start() {
     instance->state = GameState::ACTIVE;
+
+    instance->renderer->initLasers(instance->gameMode == GameMode::SINGLEPLAYER ? true : false);
     instance->LoadWorldFromFile(10);
     
     // Init user for single players.
@@ -639,7 +641,6 @@ void TutorialGame::Start() {
     instance->player->setType(GameObject::Type::Player);
     instance->playerController = std::make_unique<PlayerController>(instance->player, instance->controller, instance->mainCamera, instance->bulletWorld,instance->renderer);
 
-    instance->spGameController = new SPGameController(instance->player, instance);
 
     btQuaternion emptyRot;
 
@@ -673,6 +674,9 @@ void TutorialGame::Start() {
             newPlayer->SetWorldID(newUser.GetUserID());
             newPlayer->GetRenderObject()->SetColour(Vector4(Color::GetPlayerColor(newUser.GetUserID())));
         }
+    }
+    else {
+        instance->spGameController = new SPGameController(instance->player, instance, instance->renderer);
     }
 
     Shoot::GetInstance()->Initialise(instance->bulletWorld,instance->resourceManager.get(), instance->world.get(), instance->renderer->GetDecalSystem());

@@ -92,7 +92,10 @@ SimpleFont* Debug::GetDebugFont() {
 	return debugFont;
 }
 
-void Debug::CreateDebugFont(const std::string& dataFile, Texture& tex) {
+// TODO: Remove Texture& tex parameter, as the texture is not managed internally by the
+// the SimpleFont class (as part of the character initialization), so there's no need to pass
+// a Texture object from the calling code.
+void Debug::CreateDebugFont(const std::string& dataFile, std::shared_ptr<Texture> tex) {
 	debugFont = new SimpleFont(dataFile, tex);
 }
 

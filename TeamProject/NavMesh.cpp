@@ -1,6 +1,7 @@
 #include <random>
 #include "NavMesh.h"
 #include "stdio.h"
+#include "Assets.h"
 
 using namespace NCL;
 using namespace CSC8503;
@@ -9,7 +10,8 @@ NavMesh::NavMesh(btDiscreteDynamicsWorld* bulletWorld) :
     world(bulletWorld) {}
 
 bool NavMesh::LoadFromFile(const std::string& filename) {
-    std::ifstream file(filename);
+    auto fullPath = Assets::NAVMESHDIR + filename;
+    std::ifstream file(fullPath);
     if (!file.is_open()) {
         std::cerr << "Failed to open NavMesh file: " << filename << std::endl;
         return false;

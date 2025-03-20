@@ -1,0 +1,8 @@
+#include "types.h"
+
+[CxxSymbol("Laser::ps")]
+float4 main(LASER_VS_OUTPUT vertex) : S_TARGET_OUTPUT
+{
+    // TODO: Handle depth/blur
+    return vertex.color;
+}

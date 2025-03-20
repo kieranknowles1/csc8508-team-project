@@ -133,7 +133,7 @@ public:
 	}
 	float getCollisionJumpPadStrength(){
 		return jumpPadHeight;
-}
+	}
 
 	float health = 100.0f;
 
@@ -147,7 +147,6 @@ private:
 	float gravityScale = 400.0f;
 	float rotateTime = 0.5f;
 	float maxHealth = 100.0f;
-
 	int collided = 0;
 	btVector3 collisionNormal = btVector3(0, 1, 0);
 	btVector3 collisionPoint = btVector3(0, 0, 0);

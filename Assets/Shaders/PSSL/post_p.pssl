@@ -13,13 +13,27 @@ SamplerState lightSpecSampler : register(s2);
 Texture2D<float> sceneDepthTex : register(t3);
 SamplerState sceneDepthSampler : register(s3);
 
+Texture2D<float4> laserTex : register(t4);
+SamplerState laserSampler : register(s4);
+
 double depthSample(float2 coord) {
     return sceneDepthTex.Sample(sceneDepthSampler, coord);
 }
+#include "../include/post/edgedetect.glsl"
+
+float3 normalSample(float2 coord) {
+    EdgeDetectMatrices mats;
+    mats.invProj = Constants.inverseProjMatrix;
+    mats.invView = Constants.inverseViewMatrix;
+    float2 invWinSize = float2(1.0f / Constants.screenSize.x, 1.0f / Constants.screenSize.y);
+
+    return calculateNormal(coord, mats, invWinSize);
+}
+
 
 #include "../include/post/vingette.glsl"
 #include "../include/post/deferred.glsl"
-#include "../include/post/edgedetect.glsl"
+#include "../include/post/edgeapply.glsl"
 
 struct VS_OUTPUT
 {
@@ -33,14 +47,17 @@ float4 main(VS_OUTPUT vertex) : S_TARGET_OUTPUT
     float4 result = texture.Sample(sampler, vertex.uv);
 
     float2 invScreenSize = float2(1.0f / Constants.screenSize.x, 1.0f / Constants.screenSize.y);
-    EdgeDetectMatrices mats;
-    mats.invProj = Constants.inverseProjMatrix;
-    mats.invView = Constants.inverseViewMatrix;
-    result = doEdgeDetect(result, vertex.uv, invScreenSize, mats);
+    result = doEdgeDetect(result, vertex.uv, invScreenSize);
 
     float4 lightVal = lightDiffuse.Sample(lightDifSampler, vertex.uv);
     float4 specVal = lightSpec.Sample(lightSpecSampler, vertex.uv);
     result.rgb = doDeferredLight(result.rgb, lightVal.rgb, specVal.rgb);
+
+    // Do not apply edge detection or lighting to lasers
+    float4 laserVal = laserTex.Sample(laserSampler, vertex.uv);
+    if (laserVal.a > 0.0f) {
+        result = laserVal * laserVal.a;
+    }
 
     if (Constants.vingetteSettings.enabled) {
         result.rgb = applyVingette(
