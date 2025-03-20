@@ -184,6 +184,10 @@ void LevelImporter::HandleTypes(GameObject* obj) {
     case GameObject::Type::Centre:
         obj->GetRenderObject()->SetTexScaleMultiplier(0.0025f);
         break;
+    case GameObject::Type::ZigZag:
+        obj->GetRenderObject()->SetTexScaleMultiplier(0.0025f);
+        obj->GetRenderObject()->SetColour(btVector4((250.0f/255.0f), (232.0f / 255.0f), (40.0f / 255.0f), 1));
+        break;
 
 
     case GameObject::Type::PointLight:

@@ -140,7 +140,7 @@ void PlayerController::FireShot(float dt) {
 // finds surface normal of floor below
 btVector3 PlayerController::FindFloorNormal() {
     btVector3 btBelowPlayerPos = btPlayerPos;
-    btBelowPlayerPos -= (upDirection * 16);
+    btBelowPlayerPos -= (upDirection * 30);
     btCollisionWorld::ClosestRayResultCallback callback(btPlayerPos, btBelowPlayerPos);
     bulletWorld->rayTest(btPlayerPos, btBelowPlayerPos, callback);
     if (callback.hasHit()) {
