@@ -59,6 +59,7 @@ set(SOURCES
     Material.h
     Material.cpp
     EndScreenMP.h
+    EndScreenMP.cpp
 )
 
 set(ASSET_ROOT "${CMAKE_SOURCE_DIR}/Assets")

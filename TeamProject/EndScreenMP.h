@@ -1,7 +1,16 @@
 #pragma once
 
+#include <string>
+#include <algorithm>
+#include "PushdownState.h"
+#include "Controller.h"
+#include "TutorialGame.h"
+#include "Debug.h"
+
 using namespace NCL;
 using namespace NCL::CSC8503;
+
+
 
 class EndScreenMP : public PushdownState {
     int selection = 0;
@@ -12,46 +21,40 @@ public:
     TutorialGame* game;
 
     PushdownResult OnUpdate(float dt, PushdownState** newState) override {
-        if (controller->GetDigital(Controller::DigitalControl::Unpause)) {
-            return PushdownResult::Pop;
+
+		std::string menuItems[2] = { "Main Menu", "Quit" };
+        if (controller->GetDigital(Controller::DigitalControl::MenuRight)) {
+            selection = std::min(1, selection + 1);
+            UpdateSelection();
         }
+        if (controller->GetDigital(Controller::DigitalControl::MenuLeft)) {
+            selection = std::max(0, selection - 1);
+			UpdateSelection();
+        }
+        if (controller->GetDigital(Controller::DigitalControl::MenuConfirm)) {
+            const std::string menuSelection = menuItems[selection];
 
-        const std::string resumeGame = "Resume";
-        const std::string exitGame = "Exit";
-
-        bool inMenu = true;
-
-        std::string menuItems[2] = { resumeGame, exitGame };
-
-        if (inMenu) {
-            if (controller->GetDigital(Controller::DigitalControl::MenuDown)) {
-                selection = std::min(1, selection + 1);
+            if (menuSelection == "Quit") {
+                game->SetGameMode(GameMode::QUIT);
+                return PushdownResult::Clear;
             }
-            if (controller->GetDigital(Controller::DigitalControl::MenuUp)) {
-                selection = std::max(0, selection - 1);
-            }
-            if (controller->GetDigital(Controller::DigitalControl::MenuConfirm)) {
-                const std::string pauseSelection = menuItems[selection];
-
-                if (pauseSelection == "Resume") {
-                    return PushdownResult::Pop;
-                }
-                else {
-                    game->ClearWorld();
-                    return PushdownResult::Clear;
-                }
-                inMenu = false;
-            }
-
-            for (int i = 0; i < 2; i++) {
-                std::string currentItem = menuItems[i];
-                if (i == selection) currentItem = currentItem + " <";
-                Debug::Print(currentItem, Vector2(0, 0.50 + (0.10 * i)));
+            else {
+                return PushdownResult::Clear;
             }
         }
 
         return PushdownResult::NoChange;
     }
+
+    void UpdateSelection();
+
     void OnAwake() override {
     }
+};
+
+class EndScreenUI : public UiElement {
+public:
+    EndScreen();
+    void render(std::vector<UiSprite>& sprites) override;
+    void render(std::vector<UiText>& texts) override;
 };
