@@ -44,6 +44,7 @@ Textures by TextureCan, under Creative Commons CC0
 https://www.texturecan.com/
 
 Double Click by NenadSimic -- https://freesound.org/s/157538/ -- License: Creative Commons 0
+Select 2.wav by NIKOS34 -- https://freesound.org/s/656394/ -- License: Creative Commons 0
 
 ================================================================================
 Libraries

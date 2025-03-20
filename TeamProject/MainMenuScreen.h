@@ -50,7 +50,7 @@ public:
 
         if (controller->GetDigital(Controller::DigitalControl::MenuDown)) {
             selection = std::min(menuItems.size() - 1, selection + 1);
-            audioEngine.PlaySounds("MenuScroll.wav", Vector3(0,0,0), 0.1f);
+            audioEngine.PlaySounds("MenuScroll.wav", Vector3(0, 0, 0), 0.1f);
         }
         if (controller->GetDigital(Controller::DigitalControl::MenuUp)) {
             if (selection > 0) {
@@ -66,11 +66,13 @@ public:
             case GameMode::SINGLEPLAYER:
                 textureUiElement->SetActive(false);
                 game->SetGameMode(GameMode::SINGLEPLAYER);
+                audioEngine.PlaySounds("MenuSelect.wav");
                 game->Start();
                 *newState = new GameScreen(controller, game);
                 break;
             case GameMode::HOST_GAME:
                 textureUiElement->SetActive(false);
+                audioEngine.PlaySounds("MenuSelect.wav");
                 *newState = new HostLobbyScreen(controller, game);
                 return PushdownResult::Push;
                 //game->StartMultiplayerGame(true);
@@ -81,6 +83,7 @@ public:
                 break;
             case GameMode::JOIN_GAME:
                 textureUiElement->SetActive(false);
+                audioEngine.PlaySounds("MenuSelect.wav");
                 *newState = new ClientLobbyScreen(controller, game);
                 return PushdownResult::Push;
                 //game->SetGameMode(GameMode::JOIN_GAME);
@@ -89,6 +92,7 @@ public:
             case GameMode::CREDITS:
                 textureUiElement->SetActive(false);
                 game->SetGameMode(GameMode::CREDITS);
+                audioEngine.PlaySounds("MenuSelect.wav");
                 *newState = new CreditsScreen(controller, Assets::CREDITS);
                 return PushdownResult::Push;
                 break;
