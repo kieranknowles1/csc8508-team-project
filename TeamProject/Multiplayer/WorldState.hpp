@@ -15,7 +15,10 @@ namespace WorldState {
         AngularVelocity,
         Position,
         Rotation,
-        UpVector
+        UpVector,
+        StartPos,
+        EndPos,
+        Normal
     };
 
 
