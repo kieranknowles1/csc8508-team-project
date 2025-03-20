@@ -67,7 +67,9 @@ public:
                 *newState = new GameScreen(controller, game);
                 break;
             case GameMode::HOST_GAME:
-                //textureUiElement->SetActive(false);
+                textureUiElement->SetActive(false);
+                *newState = new HostLobbyScreen(controller, game);
+                return PushdownResult::Push;
                 //game->StartMultiplayerGame(true);
                 //*newState = new HostLobbyScreen(controller, game);
                 //return PushdownResult::Push
@@ -76,6 +78,8 @@ public:
                 break;
             case GameMode::JOIN_GAME:
                 textureUiElement->SetActive(false);
+                *newState = new ClientLobbyScreen(controller, game);
+                return PushdownResult::Push;
                 //game->SetGameMode(GameMode::JOIN_GAME);
                 //game->JoinGame(false); //This is join game
                 break;
