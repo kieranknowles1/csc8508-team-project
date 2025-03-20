@@ -176,7 +176,6 @@ private:
     btVector3 gunCameraOffset = btVector3(8.5f, -4.5f, 5.5f); // x axis is forward (front +ve/ back -ve), y is up, z is right (left -ve/ right +ve)
 	GameObject* gun;
 
-
 	btVector3 CalculateRightDirection(btVector3 upDir);
 	btVector3 CalculateForwardDirection(btVector3 upDir, btVector3 rightDir);
 	btVector3 CalculateUpDirection(float dt);

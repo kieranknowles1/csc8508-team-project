@@ -21,6 +21,8 @@ set(SOURCES
     GameTechRendererInterface.cpp
     GameTechRendererInterface.h
 
+    LaserObject.cpp
+    LaserObject.h
     LevelImporter.cpp
     LevelImporter.h
     LobbyScreen.h
