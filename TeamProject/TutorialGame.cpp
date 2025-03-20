@@ -310,6 +310,13 @@ void TutorialGame::ClearWorld() {
     world->ClearAndErase();
     renderer->GetDecalSystem().ClearDecalsFromWorld();
     renderer->ClearUIElemets();
+
+
+    //These two lines fix the problem of the audio not playing in the
+    //main menu after quitting from the pause menu, but it cuts off
+    //MenuSelect.wav very quickly
+    audioEngine.Shutdown();
+    audioEngine.Init();
 }
 
 void TutorialGame::InitWorld() {
