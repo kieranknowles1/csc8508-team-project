@@ -43,9 +43,10 @@ Evil Genius Assets used with permission from Rebellion.
 Textures by TextureCan, under Creative Commons CC0
 https://www.texturecan.com/
 
-Double Click by NenadSimic -- https://freesound.org/s/157538/ -- License: Creative Commons 0
-Select 2.wav by NIKOS34 -- https://freesound.org/s/656394/ -- License: Creative Commons 0
+Metallic Ting by GammaGool -- https://freesound.org/s/728088/ -- License: Creative Commons 0
 jump2.wav by LloydEvans09 -- https://freesound.org/s/187024/ -- License: Attribution 4.0
+UI Series: Tonal by brandondelehoy -- https://freesound.org/s/333435/ -- License: Creative Commons 0
+
 
 ================================================================================
 Libraries

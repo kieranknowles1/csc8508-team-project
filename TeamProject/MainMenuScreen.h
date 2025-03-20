@@ -49,8 +49,10 @@ public:
         const std::array<std::string, 5> menuItems = { "Singleplayer", "Host Game", "Join Game", "Credits", "Quit"};
 
         if (controller->GetDigital(Controller::DigitalControl::MenuDown)) {
-            selection = std::min(menuItems.size() - 1, selection + 1);
-            audioEngine.PlaySounds("MenuScroll.wav", Vector3(0, 0, 0), -6.0f);
+            if (selection < menuItems.size() - 1) {  // Only increase if not at the last option
+                selection++;
+                audioEngine.PlaySounds("MenuScroll.wav", Vector3(0, 0, 0), -6.0f);
+            }
         }
         if (controller->GetDigital(Controller::DigitalControl::MenuUp)) {
             if (selection > 0) {
@@ -133,6 +135,9 @@ public:
         }
         renderer->AddUiElement(textureUiElement.get());
         textureUiElement->SetActive(true);
+
+        audioEngine.Shutdown();
+        audioEngine.Init();
     }
 };
 
