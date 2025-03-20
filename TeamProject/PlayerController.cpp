@@ -32,6 +32,7 @@ void PlayerController::Initialise() {
     crosshair->SetActive(true);
     overheat->SetActive(true);
     laserID = player->GetWorldID();
+    renderer->SetVignetteOn(true);
 }
 
 btVector3 GetEulerAngles(btQuaternion quat) {
@@ -342,16 +343,8 @@ void PlayerController::HandleJumping() {
 };
 
 void PlayerController::HandleHurtEffects() {
-    renderer->SetVignetteOn(true);
     float healthLossPercent = (player->GetMaxHealth() - player->health) / player->GetMaxHealth();
-    if (healthLossPercent <= 0.001f) {
-        renderer->SetVignetteOn(false);
-    }
-    else {
-        renderer->SetVignetteOn(true);
-        renderer->SetVignetteIntesnity((1.75f * healthLossPercent));
-    }
-
+    renderer->SetVignetteIntesnity((healthLossPercent));
 }
 
 void PlayerController::GetAllDirections() {
