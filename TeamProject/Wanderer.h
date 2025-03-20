@@ -42,6 +42,8 @@ namespace NCL {
 			GameTechRendererInterface* renderer;
 
 			float health = 100;
+
+			Type collisionType = GameObject::Type::AI;
 		};
 	}
 }

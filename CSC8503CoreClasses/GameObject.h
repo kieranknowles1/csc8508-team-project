@@ -27,7 +27,8 @@ namespace NCL::CSC8503 {
 			Player,
 			Centre,
 			SlimeCastle,
-			Courtyard
+			Courtyard,
+			AI
 		};
 
 		GameObject(const std::string& name = "");
