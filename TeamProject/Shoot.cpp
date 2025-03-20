@@ -59,7 +59,6 @@ std::optional<ShotInfo> Shoot::ShootBulletPlayer(btVector3 startPos, btVector3 d
             }
         }
         else if (rayInfo.value().hitObj->getType() == GameObject::Type::AI) {
-            std::cout << "hit ai" << std::endl;
             Wanderer* hit = (Wanderer*)rayInfo.value().hitObj;
             hit->DamageAI(100.0f * dt);
         }

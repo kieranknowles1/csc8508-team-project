@@ -70,7 +70,7 @@ Wanderer* SPGameController::AddWandererToWorld(NavMesh* navMesh, char side, int 
     float radius = 2.0f;
 
     wanderer->setInitialPosition(navMesh->GetRandomPointInNavMesh());
-    wanderer->setRenderScale(btVector3(radius * 2, height, radius + 2));
+    wanderer->setRenderScale(btVector3(radius * 2, height, radius * 2));
 
     btCollisionShape* shape = new btCapsuleShape(radius, height);
 
