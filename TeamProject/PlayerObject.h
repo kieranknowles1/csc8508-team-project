@@ -125,7 +125,7 @@ public:
 		if (health <= 0) {
 			//state = PlayerState::DEAD;
 			health = 100;
-			RespawnPoint* point = Respawn::GetInstance()->GetRespawn(worldID - 1);
+			RespawnPoint* point = Respawn::GetInstance()->GetRespawn(worldID);
 			GetPhysicsObject()->GetRigidBody()->getWorldTransform().setOrigin(point->position);
 			setUpDirection(point->orientation);
 			resetCollisionType();

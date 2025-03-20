@@ -386,7 +386,13 @@ void GameTechRenderer::RenderCamera() {
 	//glBindTexture(GL_TEXTURE_2D, shadowTex);
 
 	for (const auto&i : frameObjects) {
-        size_t subMeshCount = i->GetMesh()->GetSubMeshCount();
+		size_t subMeshCount = i->GetMesh()->GetSubMeshCount();
+
+        Matrix4 modelMatrix;
+        i->getParent()->GetTransform().getOpenGLMatrix((btScalar*)&modelMatrix);
+
+        modelMatrix = modelMatrix * Matrix::Scale(i->getParent()->getRenderScale());
+        glUniformMatrix4fv(modelLocation, 1, false, (float*)&modelMatrix);
 
         for (size_t subMeshIndex = 0; subMeshIndex < subMeshCount; ++subMeshIndex) {
 			const Material::Layer* layer = i->getMaterial() ? i->getMaterial()->GetLayer(subMeshIndex) : nullptr;
@@ -417,10 +423,6 @@ void GameTechRenderer::RenderCamera() {
                 BindTextureToShader(*(i->GetMetallicMaps()[subMeshIndex]), "metallicTex", 2);
             }*/
 
-            Matrix4 modelMatrix;
-            i->getParent()->GetTransform().getOpenGLMatrix((btScalar*)&modelMatrix);
-            modelMatrix = modelMatrix * Matrix::Scale(i->getParent()->getRenderScale());
-            glUniformMatrix4fv(modelLocation, 1, false, (float*)&modelMatrix);
 
             //Matrix4 fullShadowMat = shadowMatrix * modelMatrix; //TEMPORARILY REMOVING SHADOWS
             //glUniformMatrix4fv(shadowLocation, 1, false, (float*)&fullShadowMat);

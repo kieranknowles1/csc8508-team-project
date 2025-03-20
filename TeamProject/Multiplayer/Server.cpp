@@ -114,7 +114,10 @@ namespace Multiplayer {
             StateReader readReader = object->GetObjectStates()->GetReadState();
             ObjectState* read = readReader.GetState();
 
-            if (read->Size() <= 0) return;
+            if (read->Size() <= 0) {
+                readReader.Unlock();
+                return;
+            }
 
             StateValue linearVelocity;
             StateValue angularVelocity;
@@ -166,7 +169,6 @@ namespace Multiplayer {
                 );
                 m_network->Broadcast(gravity);
             }
-            readReader.Unlock();
         });
     }
 

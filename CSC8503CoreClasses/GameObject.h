@@ -101,7 +101,7 @@ namespace NCL::CSC8503 {
             return worldID;
         }
 
-        btTransform GetTransform() const {
+        btTransform& GetTransform() const {
             return physicsObject->GetRigidBody()->getWorldTransform();
         }
 
