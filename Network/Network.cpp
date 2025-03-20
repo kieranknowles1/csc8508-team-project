@@ -116,22 +116,26 @@ void Network::Tick(float dt) {
     m_elapsedTime += dt;
 
     while (m_elapsedTime - m_lastTick >= NETWORK_RATE && m_state == NetworkState::ON) {
+		std::lock_guard<std::mutex> lock(m_listenerMut);
+        for (auto func : m_tickListeners) func(false);
 
         SendAll();
         enet_host_flush(m_host);
 
         // Fast Forward, skipping updates.
         do m_lastTick += NETWORK_RATE; while (m_lastTick < m_elapsedTime);
+		for (auto func : m_tickListeners) func(true);
     }
     ENetEvent event;
 
-    while (enet_host_service(m_host, &event, 10) > 0) {
+    while (enet_host_service(m_host, &event, 1) > 0) {
         switch (event.type) {
         case ENET_EVENT_TYPE_CONNECT:
             if (!ConnectPeer()) {
                 enet_peer_disconnect(event.peer, 0);
             }
             else if (m_connectCallback != nullptr) {
+				std::lock_guard<std::mutex> lock(m_connectCallbackMut);
                 m_connectCallback(event.peer);
             }
             break;

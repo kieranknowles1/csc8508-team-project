@@ -75,6 +75,7 @@ void PlayerController::UpdateMovement(float dt) {
 
 
 void PlayerController::HandleShooting(float dt) {
+    static int beamSoundChannel = -1;
 
     if (controller->GetDigital(Controller::DigitalControl::Fire) && overheat->CanFire()) {
         FireShot(dt);
@@ -82,6 +83,22 @@ void PlayerController::HandleShooting(float dt) {
             crosshair->fire();
             overheat->fire();
             firing = true;
+
+            //Get the playback position of the sound to be played
+            float overheatPercentage = overheat->GetOverheatPercentage();
+            float beamSoundLength = 7.1f; //7 seconds
+            unsigned int startTimeMs = static_cast<unsigned int>(overheatPercentage * beamSoundLength * 1000); //Convert to milliseconds
+            beamSoundChannel = audioEngine.PlaySounds("Beam.mp3", camera->GetPosition(), 0.0f);
+
+            if (beamSoundChannel != -1) {
+                audioEngine.SetChannel3dPosition(beamSoundChannel, camera->GetPosition());
+                audioEngine.SetChannelPlaybackPosition(beamSoundChannel, startTimeMs);
+            }
+        }
+        else {
+            if (beamSoundChannel != -1) {
+                audioEngine.SetChannel3dPosition(beamSoundChannel, camera->GetPosition());
+            }
         }
     }
     else {
@@ -89,17 +106,22 @@ void PlayerController::HandleShooting(float dt) {
             renderer->updateLaser(laserID,btVector3(0,0,0),btVector3(0,0,0));
             crosshair->stopFiring();
             overheat->stopFiring();
-            if (TutorialGame::GetServerInstance().has_value()) {
+            if (TutorialGame::getInstance()->GetServerInstance() != nullptr) {
                 std::shared_ptr<Packet::LaserPacket> laserPacket = std::make_shared<Packet::LaserPacket>(
                     player->GetWorldID(),
                     btVector3(0, 0, 0),
                     btVector3(0, 0, 0),
                     btVector3(0, 0, 0),
-                    player->GetLastPacketSequence((uint8_t)Packet::PacketType::LASER) + 1
+                    0
                 );
-                player->UpdatePacketSequence((uint8_t)Packet::PacketType::LASER, laserPacket->GetSequenceNumber());
-                TutorialGame::GetServerInstance()->Broadcast(laserPacket);
+                //TutorialGame::GetServerInstance()->Broadcast(laserPacket);
             }
+            
+            if (beamSoundChannel != -1) {
+                audioEngine.SetChannelVolume(beamSoundChannel, -100.0f);
+                beamSoundChannel = -1;
+            }
+
             firing = false;
         }
     }
@@ -118,18 +140,17 @@ void PlayerController::FireShot(float dt) {
     btVector3 forwardDir = rotationMatrix * btVector3(0, 0, -1);
     btVector3 adjustedOffset = rotationMatrix * gunCameraOffset; // Apply rotation to the offset
 
-   std::optional<ShotInfo> info = Shoot::GetInstance()->ShootBulletPlayer(player->getGun()->GetPhysicsObject()->GetRigidBody()->getWorldTransform().getOrigin() + adjustedOffset, forwardDir, bulletRotation, dt,laserID);
+    std::optional<ShotInfo> info = Shoot::GetInstance()->ShootBulletPlayer(player->getGun()->GetPhysicsObject()->GetRigidBody()->getWorldTransform().getOrigin() + adjustedOffset, forwardDir, bulletRotation, dt, laserID);
     renderer->updateLaser(laserID, player->getGun()->GetPhysicsObject()->GetRigidBody()->getWorldTransform().getOrigin() + adjustedOffset, info.value().hitPos);
-    if (TutorialGame::GetServerInstance().has_value()) {
+    if (TutorialGame::getInstance()->GetServerInstance() != nullptr) {
         std::shared_ptr<Packet::LaserPacket> laserPacket = std::make_shared<Packet::LaserPacket>(
             player->GetWorldID(),
             player->getGun()->GetPhysicsObject()->GetRigidBody()->getWorldTransform().getOrigin() + adjustedOffset,
             info.value().hitPos,
             info.value().hitNormal,
-            player->GetLastPacketSequence((uint8_t)Packet::PacketType::LASER) + 1
+            0
         );
-        player->UpdatePacketSequence((uint8_t)Packet::PacketType::LASER, laserPacket->GetSequenceNumber());
-        TutorialGame::GetServerInstance()->Broadcast(laserPacket);
+        //TutorialGame::GetServerInstance()->Broadcast(laserPacket);
     }
    
 

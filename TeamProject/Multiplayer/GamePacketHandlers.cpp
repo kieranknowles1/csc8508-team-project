@@ -1,29 +1,33 @@
 #include "TutorialGame.h"
 #include "GameObject.h"
 #include "Multiplayer/GamePacketHandlers.hpp"
+#include "Multiplayer/Server.hpp"
+#include "Multiplayer/WorldState.hpp"
 #include "Shoot.h"
 
 namespace Packet {
+    using namespace WorldState;
 
 #pragma region DeltaPacketHandler
     void DeltaPacketHandler::Handle(const std::shared_ptr<Packet> packet) {
         const DeltaPacket* deltaPacket = std::static_pointer_cast<DeltaPacket>(packet).get();
         GameObject* object = GameObject::GetGameObjectByID(deltaPacket->GetTargetID());
 
-        // Skip updates for objects the user owns.
-        if (object->GetOwner().value() == TutorialGame::GetUser().value()) { return; }
+        if (object == nullptr) return;
 
-        // Check if last update was newer.
-        if (deltaPacket->GetSequenceNumber() > object->GetLastPacketSequence(deltaPacket->GetType())) {
-            object->GetPhysicsObject()->GetRigidBody()->setLinearVelocity(deltaPacket->GetLinearVelocity());
-            object->GetPhysicsObject()->GetRigidBody()->setAngularVelocity(deltaPacket->GetAngularVelocity());
-            object->UpdatePacketSequence(deltaPacket->GetType(), deltaPacket->GetSequenceNumber());
+        if (TutorialGame::getInstance()->GetServerInstance()->IsOwnerOf(object)) return;
 
-            // Passing on packet to other users if user is host.
-            if (TutorialGame::IsHost()) TutorialGame::GetServerInstance()->Broadcast(packet);
-        }
-        // Dropping old packets.
+        StateReader writeReader = object->GetObjectStates()->GetWriteState();
+        ObjectState* writeState = writeReader.GetState();
+
+        writeState->Lock();
+
+        writeState->UpdateState(StateType::LinearVelocity, deltaPacket->GetLinearVelocity());
+        writeState->UpdateState(StateType::AngularVelocity, deltaPacket->GetAngularVelocity());
+
+        writeState->Unlock();
     }
+
     
     std::shared_ptr<Packet> DeltaPacketHandler::Translate(const ENetEvent* event) const {
         ENetPacket* packet = event->packet;
@@ -102,19 +106,20 @@ namespace Packet {
         const LaserPacket* laserPacket = std::static_pointer_cast<LaserPacket>(packet).get();
         PlayerObject* targetObject = (PlayerObject*)GameObject::GetGameObjectByID(laserPacket->GetTargetID());
         // Skip updates for objects the user owns.
-        if (targetObject->GetOwner().value() == TutorialGame::GetUser().value()) { return; }
+        //// Check if last update was newer.
+        //targetObject->updateLaser(laserPacket->GetStartPos(), laserPacket->GetEndPos());
 
-        // Check if last update was newer.
-        if (laserPacket->GetSequenceNumber() > targetObject->GetLastPacketSequence(laserPacket->GetType())) {
-            targetObject->updateLaser(laserPacket->GetStartPos(), laserPacket->GetEndPos());
-            if (laserPacket->GetHitNormal() != btVector3(0, 0, 0)) {
-                Shoot::GetInstance()->SpawnDecal(laserPacket->GetEndPos(), laserPacket->GetHitNormal(), laserPacket->GetTargetID());
-            }
-            targetObject->UpdatePacketSequence(laserPacket->GetType(), laserPacket->GetSequenceNumber());
-            // Passing on packet to other users if user is host.
-            if (TutorialGame::IsHost()) TutorialGame::GetServerInstance()->Broadcast(packet);
-        }
-        // Dropping old packets.
+        //// Passing on packet to other users if user is host.
+        //if (laserPacket->GetSequenceNumber() > targetObject->GetLastPacketSequence(laserPacket->GetType())) {
+        //    targetObject->updateLaser(laserPacket->GetStartPos(), laserPacket->GetEndPos());
+        //    if (laserPacket->GetHitNormal() != btVector3(0, 0, 0)) {
+        //        Shoot::GetInstance()->SpawnDecal(laserPacket->GetEndPos(), laserPacket->GetHitNormal(), laserPacket->GetTargetID());
+        //    }
+        //    targetObject->UpdatePacketSequence(laserPacket->GetType(), laserPacket->GetSequenceNumber());
+        //    // Passing on packet to other users if user is host.
+        //    if (TutorialGame::IsHost()) TutorialGame::GetServerInstance()->Broadcast(packet);
+        //}
+        //// Dropping old packets.
     }
 
     std::shared_ptr<Packet> LaserPacketHandler::Translate(const ENetEvent* event) const {
@@ -204,23 +209,21 @@ namespace Packet {
 #pragma region PositonPacketHandler
     void PositionPacketHandler::Handle(const std::shared_ptr<Packet> packet) {
         const PositionPacket* positionPacket = std::static_pointer_cast<PositionPacket>(packet).get();
-        GameObject* targetObject = GameObject::GetGameObjectByID(positionPacket->GetTargetID());
-        btRigidBody* body = targetObject->GetPhysicsObject()->GetRigidBody();
 
+        GameObject* object = GameObject::GetGameObjectByID(positionPacket->GetTargetID());
+        if (object == nullptr) return;
 
-        // Skip updates for objects the user owns.
-        if (targetObject->GetOwner().value() == TutorialGame::GetUser().value()) return; 
+        if (TutorialGame::getInstance()->GetServerInstance()->IsOwnerOf(object)) return;
 
-        // Check if last update was newer.
-        if (positionPacket->GetSequenceNumber() > targetObject->GetLastPacketSequence(positionPacket->GetType())) {
-            body->getWorldTransform().setOrigin(positionPacket->GetPosition());
-            body->getWorldTransform().setRotation(positionPacket->GetOrientation());
-            targetObject->UpdatePacketSequence(positionPacket->GetType(), positionPacket->GetSequenceNumber());
+        StateReader writeReader = object->GetObjectStates()->GetWriteState();
+        ObjectState* writeState = writeReader.GetState();
 
-            // Passing on packet to other users if user is host.
-            if (TutorialGame::IsHost()) TutorialGame::GetServerInstance()->Broadcast(packet);
-        }
-        // Dropping old packets.
+        writeState->Lock();
+
+        writeState->UpdateState(StateType::Position, positionPacket->GetPosition());
+        writeState->UpdateState(StateType::Rotation, positionPacket->GetOrientation());
+
+        writeState->Unlock();
     }
 
     std::shared_ptr<Packet> PositionPacketHandler::Translate(const ENetEvent* event) const {
@@ -314,19 +317,17 @@ namespace Packet {
 #pragma region ObjectChangeGravityPacketHandler
     void ObjectChangeGravityPacketHandler::Handle(const std::shared_ptr<Packet> packet) {
         const ObjectChangeGravityPacket* gravityPacket = std::static_pointer_cast<ObjectChangeGravityPacket>(packet).get();
-        PlayerObject* targetObject = (PlayerObject*) GameObject::GetGameObjectByID(gravityPacket->GetTargetID());
+        PlayerObject* object = (PlayerObject*)GameObject::GetGameObjectByID(gravityPacket->GetTargetID());
 
-        // Skip updates for objects the user owns.
-        if (targetObject->GetOwner().value() == TutorialGame::GetUser().value()) return;
+        if (object == nullptr) return;
+        if (TutorialGame::getInstance()->GetServerInstance()->IsOwnerOf(object)) return;
 
-        // Check if last update was newer.
-        if (gravityPacket->GetSequenceNumber() > targetObject->GetLastPacketSequence(gravityPacket->GetType())) {
-            targetObject->setUpDirection(gravityPacket->GetUpDirection());
-            targetObject->UpdatePacketSequence(gravityPacket->GetType(), gravityPacket->GetSequenceNumber());
+        StateReader writeReader = object->GetObjectStates()->GetWriteState();
+        ObjectState* writeState = writeReader.GetState();
 
-            // Passing on packet to other users if user is host.
-            if (TutorialGame::IsHost()) TutorialGame::GetServerInstance()->Broadcast(packet);
-        }
+        writeState->Lock();
+        writeState->UpdateState(StateType::UpVector, gravityPacket->GetUpDirection());
+        writeState->Unlock();
     }
 
     std::shared_ptr<Packet> ObjectChangeGravityPacketHandler::Translate(const ENetEvent* event) const {
@@ -396,7 +397,8 @@ namespace Packet {
 
 #pragma region StartGamePacketHandler
     void StartGamePacketHandler::Handle(const std::shared_ptr<Packet> packet) {
-        TutorialGame::Start();
+        TutorialGame* game = TutorialGame::getInstance();
+        game->SetState(GameState::STARTING);
     }
 
     std::shared_ptr<Packet> StartGamePacketHandler::Translate(const ENetEvent* event) const {
@@ -436,89 +438,24 @@ namespace Packet {
 #pragma endregion StartGamePacketHandler
 
 
-#pragma region AssignHostPacketHandler
-    void AssignHostPacketHandler::Handle(const std::shared_ptr<Packet> packet) {
-        const AssignHostPacket* hostPacket = std::static_pointer_cast<AssignHostPacket>(packet).get();
-        std::optional<Lobby>& lobby = TutorialGame::GetLobby();
-        if (lobby.has_value()) lobby->SetHost(hostPacket->GetHostID());
-    }
-
-    std::shared_ptr<Packet> AssignHostPacketHandler::Translate(const ENetEvent* event) const {
-        ENetPacket* packet = event->packet;
-        Type type;
-        uint8_t channel;
-        uint32_t sequenceNumber;
-        
-        int hostID;
-        size_t offset = sizeof(Type) + sizeof(uint8_t) + sizeof(uint32_t);
-
-        GetBaseData(packet, &type, &channel, &sequenceNumber);
-
-        memcpy(&hostID, packet->data + offset, sizeof(int));
-        offset += sizeof(int);
-
-        return std::make_shared<AssignHostPacket>(hostID, event->peer);
-    }
-
-    ENetPacket* AssignHostPacketHandler::ToENetPacket(const std::shared_ptr<Packet> packet) const {
-        char* buffer = new char[
-            sizeof(Type) +
-            sizeof(uint8_t) +
-            sizeof(uint32_t) +
-            sizeof(int)
-        ];
-        
-        AssignHostPacket assignHostPacket = (*static_cast<AssignHostPacket*>(packet.get()));
-        size_t offset = 0;
-
-        Type type = assignHostPacket.GetType();
-        memcpy(buffer, &type, sizeof(Type));
-        offset = offset + sizeof(Type);
-
-        uint8_t channel = assignHostPacket.GetChannel();
-        memcpy(buffer + offset, &channel, sizeof(uint8_t));
-        offset = offset + sizeof(uint8_t);
-
-        uint32_t sequenceNumber = assignHostPacket.GetSequenceNumber();
-        memcpy(buffer + offset, &sequenceNumber, sizeof(uint32_t));
-        offset = offset + sizeof(uint32_t);
-
-        int hostID = assignHostPacket.GetHostID();
-        memcpy(buffer + offset, &hostID, sizeof(int));
-        offset = offset + sizeof(int);
-
-        int packetFlags = 0;
-        if (channel == static_cast<int>(Channel::RELIABLE)) packetFlags = ENET_PACKET_FLAG_RELIABLE;
-        else if (channel == static_cast<int>(Channel::UNSEQUENCED)) packetFlags = ENET_PACKET_FLAG_UNSEQUENCED;
-
-        ENetPacket* enetPacket = enet_packet_create(buffer, offset, packetFlags);
-        delete[] buffer;
-        return enetPacket;
-    }
-#pragma endregion AssignHostPacketHandler
-
-
 #pragma region UserInfoPacketHandler
     void UserInfoPacketHandler::Handle(const std::shared_ptr<Packet> packet) {
 
         const UserInfoPacket* userInfo = std::static_pointer_cast<UserInfoPacket>(packet).get();
-        std::optional<Lobby>& lobby = TutorialGame::GetLobby();
-        TutorialGame::UpdateUserID(userInfo->GetUser().GetUserID());
-
-        if (!lobby.has_value()) return;
+        Multiplayer::Server* server = TutorialGame::getInstance()->GetServerInstance();
 
         switch (userInfo->GetAction()) {
         case LobbyAction::CREATE:
-            TutorialGame::SetUser(userInfo->GetUser());
+            server->SetUser(userInfo->GetUser());
             break;
         case LobbyAction::JOIN:
-            lobby->AddUser(userInfo->GetUser());
+            server->AddUserToLobby(userInfo->GetUser());
             break;
         case LobbyAction::LEAVE:
-            lobby->RemoveUser(userInfo->GetUser());
+            server->RemoveUserFromLobby(userInfo->GetUser());
             break;
         case LobbyAction::SET_HOST:
-            lobby->SetHost(userInfo->GetUser());
+            server->AssignLobbyHost(userInfo->GetUser());
         }
     }
 
@@ -585,78 +522,18 @@ namespace Packet {
 #pragma endregion UserInfoPacketHandler
 
 
-#pragma region RequestUserIDPacketHandler
-    void RequestUserIDPacketHandler::Handle(const std::shared_ptr<Packet> packet) {
-        const RequestUserIDPacket* request = std::static_pointer_cast<RequestUserIDPacket>(packet).get();
-
-        int newUserID = TutorialGame::GenerateUserID();
-        User newUser(newUserID);
-        
-        std::shared_ptr<UserInfoPacket> infoPacket = std::make_shared<UserInfoPacket>(newUser, LobbyAction::CREATE);
-        TutorialGame::GetServerInstance()->Send(infoPacket, request->GetPeer());
-
-        std::shared_ptr<UserInfoPacket> hostPacket = std::make_shared<UserInfoPacket>(TutorialGame::GetUser().value(), LobbyAction::SET_HOST);
-        TutorialGame::GetServerInstance()->Send(hostPacket, request->GetPeer());
-
-        // Insert into host lobby. Only server creator (host) receives Request packets.
-        TutorialGame::GetLobby()->AddUser(newUser);
-
-        // Send information about every user in the lobby.
-        for (User user : TutorialGame::GetLobby()->GetConnectedUsers()) {
-            infoPacket = std::make_shared<UserInfoPacket>(user, LobbyAction::JOIN);
-            TutorialGame::GetServerInstance()->Broadcast(infoPacket);
-        }
-    }
-
-    std::shared_ptr<Packet> RequestUserIDPacketHandler::Translate(const ENetEvent* event) const {
-        return std::make_shared<RequestUserIDPacket>(event->peer);
-    }
-
-    ENetPacket* RequestUserIDPacketHandler::ToENetPacket(const std::shared_ptr<Packet> packet) const {
-        RequestUserIDPacket request = (*static_cast<RequestUserIDPacket*>(packet.get()));
-
-        char* buffer = new char[
-            sizeof(Type) +
-            sizeof(uint8_t) +
-            sizeof(uint32_t)
-        ];
-        size_t offset = 0;
-
-        Type type = request.GetType();
-        memcpy(buffer, &type, sizeof(Type));
-        offset = offset + sizeof(Type);
-
-        uint8_t channel = request.GetChannel();
-        memcpy(buffer + offset, &channel, sizeof(uint8_t));
-        offset = offset + sizeof(uint8_t);
-
-        uint32_t sequenceNumber = request.GetSequenceNumber();
-        memcpy(buffer + offset, &sequenceNumber, sizeof(uint32_t));
-        offset = offset + sizeof(uint32_t);
-
-        int packetFlags = 0;
-        if (channel == static_cast<int>(Channel::RELIABLE)) packetFlags = ENET_PACKET_FLAG_RELIABLE;
-        else if (channel == static_cast<int>(Channel::UNSEQUENCED)) packetFlags = ENET_PACKET_FLAG_UNSEQUENCED;
-
-        ENetPacket* enetPacket = enet_packet_create(buffer, offset, packetFlags);
-        delete[] buffer;
-        return enetPacket;
-    }
-#pragma endregion RequestUserIDPacketHandler
-
-
 #pragma region DamageHandler
     void DamagePacketHandler::Handle(const std::shared_ptr<Packet> packet) {
         const DamagePacket* damagePacket = std::static_pointer_cast<DamagePacket>(packet).get();
         PlayerObject* targetObject = (PlayerObject*) GameObject::GetGameObjectByID(damagePacket->GetTargetID());
-
+        if (targetObject == nullptr) return;
         // Dealer handles damage on their side so ignore packet.
-        if (TutorialGame::GetUser()->GetUserID() != damagePacket->GetDamageDealer()) {
-            targetObject->Damage(damagePacket->GetDamage());
-        }
+        //if (TutorialGame::GetUser()->GetUserID() != damagePacket->GetDamageDealer()) {
+        //    targetObject->Damage(damagePacket->GetDamage());
+        //}
 
         // Pass the parcel.
-        if (TutorialGame::IsHost()) TutorialGame::GetServerInstance()->Broadcast(packet);
+        //if (TutorialGame::IsHost()) TutorialGame::GetServerInstance()->Broadcast(packet);
     }
 
     std::shared_ptr<Packet> DamagePacketHandler::Translate(const ENetEvent* event) const {
@@ -730,4 +607,106 @@ namespace Packet {
     }
 
 #pragma endregion DamageHandler
+
+
+#pragma region Ping
+    void PingPacketHandler::Handle(const std::shared_ptr<Packet> packet) {
+    }
+
+    std::shared_ptr<Packet> PingPacketHandler::Translate(const ENetEvent* event) const {
+        ENetPacket* packet = event->packet;
+        Type type;
+        uint8_t channel;
+        uint32_t sequenceNumber;
+
+        size_t offset = sizeof(Type) + sizeof(uint8_t) + sizeof(uint32_t);
+        GetBaseData(packet, &type, &channel, &sequenceNumber);
+
+        return std::make_shared<PingPacket>();
+    }
+
+    ENetPacket* PingPacketHandler::ToENetPacket(const std::shared_ptr<Packet> packet) const {
+        char* buffer = new char[
+            sizeof(Type)
+                + sizeof(uint8_t)
+                + sizeof(uint32_t)
+        ];
+
+        PingPacket pingPacket = (*static_cast<PingPacket*>(packet.get()));
+        size_t offset = 0;
+
+        Type type = pingPacket.GetType();
+        memcpy(buffer, &type, sizeof(Type));
+        offset = offset + sizeof(Type);
+
+        uint8_t channel = pingPacket.GetChannel();
+        memcpy(buffer + offset, &channel, sizeof(uint8_t));
+        offset = offset + sizeof(uint8_t);
+
+        uint32_t sequenceNumber = pingPacket.GetSequenceNumber();
+        memcpy(buffer + offset, &sequenceNumber, sizeof(uint32_t));
+        offset = offset + sizeof(uint32_t);
+
+        int packetFlags = 0;
+        if (channel == static_cast<int>(Channel::RELIABLE)) packetFlags = ENET_PACKET_FLAG_RELIABLE;
+        else if (channel == static_cast<int>(Channel::UNSEQUENCED)) packetFlags = ENET_PACKET_FLAG_UNSEQUENCED;
+
+        ENetPacket* enetPacket = enet_packet_create(buffer, offset, packetFlags);
+        delete[] buffer;
+        return enetPacket;
+    }
+
+
+#pragma endregion Ping
+
+
+#pragma region Pong
+    void PongPacketHandler::Handle(const std::shared_ptr<Packet> packet) {
+    }
+
+    std::shared_ptr<Packet> PongPacketHandler::Translate(const ENetEvent* event) const {
+        ENetPacket* packet = event->packet;
+        Type type;
+        uint8_t channel;
+        uint32_t sequenceNumber;
+
+        size_t offset = sizeof(Type) + sizeof(uint8_t) + sizeof(uint32_t);
+        GetBaseData(packet, &type, &channel, &sequenceNumber);
+
+        return std::make_shared<PongPacket>();
+    }
+
+    ENetPacket* PongPacketHandler::ToENetPacket(const std::shared_ptr<Packet> packet) const {
+        char* buffer = new char[
+            sizeof(Type)
+                + sizeof(uint8_t)
+                + sizeof(uint32_t)
+        ];
+
+        PongPacket pongPacket = (*static_cast<PongPacket*>(packet.get()));
+        size_t offset = 0;
+
+        Type type = pongPacket.GetType();
+        memcpy(buffer, &type, sizeof(Type));
+        offset = offset + sizeof(Type);
+
+        uint8_t channel = pongPacket.GetChannel();
+        memcpy(buffer + offset, &channel, sizeof(uint8_t));
+        offset = offset + sizeof(uint8_t);
+
+        uint32_t sequenceNumber = pongPacket.GetSequenceNumber();
+        memcpy(buffer + offset, &sequenceNumber, sizeof(uint32_t));
+        offset = offset + sizeof(uint32_t);
+
+        int packetFlags = 0;
+        if (channel == static_cast<int>(Channel::RELIABLE)) packetFlags = ENET_PACKET_FLAG_RELIABLE;
+        else if (channel == static_cast<int>(Channel::UNSEQUENCED)) packetFlags = ENET_PACKET_FLAG_UNSEQUENCED;
+
+        ENetPacket* enetPacket = enet_packet_create(buffer, offset, packetFlags);
+        delete[] buffer;
+        return enetPacket;
+    }
+#pragma endregion Pong
+
+
 }

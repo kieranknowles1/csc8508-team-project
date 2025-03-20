@@ -47,6 +47,8 @@ namespace NCL {
 		static const std::vector<Debug::DebugLineEntry>& GetDebugLines();
 		static const std::vector<Debug::DebugTexEntry>& GetDebugTex();
 
+		static void AddDebugTexture(Texture* tex, const Vector2& pos, const Vector2& scale, const Vector4& colour = Vector4(1, 1, 1, 1));
+
 
 		static const Vector4 RED;
 		static const Vector4 GREEN;

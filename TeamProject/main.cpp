@@ -35,22 +35,6 @@ size_t sceLibcHeapSize = 256 * 1024 * 1024;
 using namespace NCL;
 using namespace NCL::CSC8503;
 
-
-void TestPacketHandlers() {
-
-    Packet::RequestUserIDPacketHandler infoHandler;
-    Packet::PacketRegister::Register(&infoHandler);
-
-    std::shared_ptr<Packet::RequestUserIDPacket> testInfoPacket = std::make_shared<Packet::RequestUserIDPacket>(nullptr);
-
-    ENetPacket* userInfoENetPacket = infoHandler.ToENetPacket(testInfoPacket);
-    ENetEvent event;
-    event.packet = userInfoENetPacket;
-
-    std::shared_ptr<Packet::Packet> infoPacketReturned = infoHandler.Translate(&event);
-    std::shared_ptr<Packet::RequestUserIDPacket> infoPacketConverted = std::static_pointer_cast<Packet::RequestUserIDPacket>(infoPacketReturned);
-}
-
 std::unique_ptr<Window> createWindow(const Config& config) {
 #ifndef __PROSPERO__
     WindowInitialisation options = {
@@ -115,7 +99,7 @@ int main(int argc, char** argv) {
     auto game = std::make_unique<TutorialGame>(renderer.get(), controller, config);
 
     //PushdownMachine machine(new GameScreen(controller, game.get(), "Singleplayer"));
-    PushdownMachine machine(new MainMenuScreen(controller, game.get()));
+    PushdownMachine machine(new MainMenuScreen(controller, game.get(), renderer.get()));
 
     // Clear delta time to exclude start up time
     window->GetTimer().GetTimeDeltaSeconds();
@@ -133,7 +117,7 @@ int main(int argc, char** argv) {
 
         quit |= !machine.Update(dt);
         game->GetResourceManager()->update(dt);
-        renderer->collectFrameObjects(game->getWorld());
+        renderer->collectFrameObjects(game->GetWorld());
         renderer->drawFrame(dt);
         Debug::UpdateRenderables(dt);
     }

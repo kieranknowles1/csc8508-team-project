@@ -2,8 +2,7 @@
 
 #include <PauseScreen.h>
 
-using namespace NCL;
-using namespace NCL::CSC8503;
+namespace NCL::CSC8503{
 
 class GameScreen : public PushdownState {
 public:
@@ -29,3 +28,5 @@ public:
         std::cout << "Game state active\n";
     }
 };
+
+}

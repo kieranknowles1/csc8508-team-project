@@ -107,3 +107,9 @@ const std::vector<Debug::DebugLineEntry>& Debug::GetDebugLines() {
 const std::vector<Debug::DebugTexEntry>& Debug::GetDebugTex() {
 	return texEntries;
 }
+
+void Debug::AddDebugTexture(Texture* tex, const Vector2& pos, const Vector2& scale, const Vector4& colour) {
+	if (!tex) return;
+
+	texEntries.push_back({ tex, pos, scale, colour });
+}

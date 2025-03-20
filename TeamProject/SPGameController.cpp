@@ -73,7 +73,7 @@ Wanderer* SPGameController::AddWandererToWorld(NavMesh* navMesh, char side, int 
 
     wanderer->InitPosAndOffset();
 
-    game->getWorld()->AddGameObject(wanderer);
+    game->GetWorld()->AddGameObject(wanderer);
 
     wanderers.push_back(wanderer);
     return wanderer;
@@ -99,7 +99,7 @@ Turret* SPGameController::AddTurretToWorld() {
 
     turret->GetRenderObject()->SetColour(Vector4(1, 0, 0, 1));
 
-    game->getWorld()->AddGameObject(turret);
+    game->GetWorld()->AddGameObject(turret);
 
     testTurret = turret;
 

@@ -102,7 +102,7 @@ void LevelImporter::AddObjectToWorld(ObjectData* data) {
     GameObject* cube = new GameObject();
 
     // Initializing variables for meshes and textures
-    Mesh* selectedMesh = nullptr;
+    //Mesh* selectedMesh = nullptr;
     // TODO: Don't hard code this
     bool isFloor = data->meshName == "corridor_walls_and_floor/Corridor_Floor_Basic";
     cube->setInitialPosition(data->position * scale);

@@ -1,6 +1,7 @@
 #pragma once
 
 //Link of tutorial followed https://codyclaborn.me/tutorials/making-a-basic-fmod-audio-engine-in-c/#implementation-source
+//With a few custom functions written by Ameya
 
 #ifndef _AUDIO_ENGINE_H_
 #define _AUDIO_ENGINE_H_
@@ -85,11 +86,15 @@ public:
 	void SetEventParameter(const std::string& strEventName, const std::string& strParameterName, float fValue);
 	void StopAllChannels();
 	void SetChannel3dPosition(int nChannelId, const NCL::Maths::Vector3& vPosition);
+	void SetChannelPlaybackPosition(int channelId, unsigned int positionMs);
 	void SetChannelVolume(int nChannelId, float fVolumedB);
 	bool IsPlaying(int nChannelId) const;
 	bool IsEventPlaying(const std::string& strEventName) const;
 	float dbToVolume(float dB);
 	float VolumeTodB(float volume);
+	void SetChannelPaused(int channelId, bool paused);
+	void SetChannelVolumeRamp(int channelId, bool enable);
+	void SetChannelMute(int channelId, bool mute);
 	static FMOD_VECTOR VectorToFmod(const NCL::Maths::Vector3& vPosition);
 };
 

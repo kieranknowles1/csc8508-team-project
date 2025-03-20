@@ -5,9 +5,8 @@ TODO: Credit ourselves, add in what each of us did
   Assisted in Graphics Engineering
 
 - Ameya Ghuman
-  ...
-  ...
-
+  Head of Audio Programming
+  Head of UI Programming
 - Billy Connors
   Head of AI and Single Player Game Mode
 

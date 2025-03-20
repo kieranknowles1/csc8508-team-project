@@ -8,6 +8,7 @@
 #include "BulletDebug.h"
 #include "Multiplayer/GamePackets.hpp"
 #include "Multiplayer/GamePacketHandlers.hpp"
+#include "Multiplayer/Server.hpp"
 #include <CSC8503CoreClasses/Debug.h>
 #include "Colors.h"
 #include "Shoot.h"
@@ -27,6 +28,8 @@ TutorialGame::TutorialGame(GameTechRendererInterface* renderer, Controller* cont
 {
     assert(instance == nullptr && "TutorialGame must be unique");
     instance = this;
+
+    stateMutex = new std::shared_mutex();
 
     world = std::make_unique<GameWorld>();
     renderer->setCamera(&world->GetMainCamera());
@@ -59,11 +62,14 @@ void TutorialGame::InitialiseAssets() {
 }
 
 TutorialGame::~TutorialGame()	{
-    instance = nullptr;
+    //instance = nullptr;
     DestroyBullet();
     audioEngine.Shutdown();
 
-    if (server.has_value()) server->Close();
+    //if (server.has_value()) server->Close();
+    delete server;
+    delete stateMutex;
+    instance = nullptr;
 }
 
 static bool BulletRaycast(btDynamicsWorld* world, const btVector3& start, const btVector3& end, btCollisionWorld::ClosestRayResultCallback& resultCallback) {
@@ -74,8 +80,8 @@ static bool BulletRaycast(btDynamicsWorld* world, const btVector3& start, const 
 void TutorialGame::UpdateGame(float dt) {
     profiler.beginFrame();
 
-    profiler.startSection("Network Updates.");
-    ExecuteIncomingPackets();
+    //profiler.startSection("Network Updates.");
+    //ExecuteIncomingPackets();
 
     profiler.startSection("Physics");
     // Old
@@ -102,6 +108,14 @@ void TutorialGame::UpdateGame(float dt) {
     profiler.startSection("Update Audio");
     audioEngine.Update(&world->GetMainCamera());
 
+    profiler.startSection("Network Updates");
+    if (server != nullptr) {
+        world->OperateOnContents([&](GameObject* obj) {
+            if (server->IsOwnerOf(obj)) obj->UpdateObjectState();
+            else obj->UpdateFromState(dt);
+            });
+    }
+
     clearGraveyard();
     profiler.startSection("Prepare Render");
     bulletWorld->debugDrawWorld();
@@ -115,36 +129,10 @@ void TutorialGame::UpdateGame(float dt) {
         profiler.printTimes();
     }
 
-    if (state == GameState::IDLE) {
-        if (user.has_value() && lobby.has_value()) {
-            if (lobby->IsHost(user.value())) {
-                Debug::Print("> Start Game <", Vector2(0.4f, 0.5f));
-                if (controller->GetDigital(Controller::DigitalControl::MenuConfirm)) {
-                    StartMultiplayerGame();
-                }
-            }
-            Debug::Print("Connected: " + std::to_string(lobby->GetConnectedUsers().size()) + "/8", Vector2(0.6f, 0.9f));
-        }
-    }
-
     //post processing time variable effect:
     pulse += dt;
     renderer->SetVignettePulse(pulse);
     renderer->SetDelta(dt);
-}
-
-
-void TutorialGame::ExecuteIncomingPackets() {
-    bool isPackets = true;
-    while (isPackets && server.has_value()) {
-        std::shared_ptr<Packet::Packet> packet = server->Fetch();
-        if (packet.get() != nullptr) {
-            Packet::PacketRegister::GetHandler(packet->GetType())->Handle(packet);
-        }
-        else {
-            isPackets = false;
-        }
-    }
 }
 
 void TutorialGame::UpdatePlayer(float dt) {
@@ -369,13 +357,15 @@ GameObject* TutorialGame::AddGunToWorld(const Vector3& position, Vector3 dimensi
     // Setting render object
     gun->SetRenderObject(new RenderObject(gun, resourceManager->getMeshes().get("VD_Raygun_Cartoony_Rigged1.msh"), resourceManager->getMaterials().get("VD_Raygun_Cartoony_Rigged1.mat")));
 
+    gun->setType(GameObject::Type::Gun);
+
     world->AddGameObject(gun);
 
     return gun;
 }
 
 /* Adding an object to test the bullet physics */
-GameObject* TutorialGame::AddCubeToWorld(const Vector3& position, Vector3 dimensions, float inverseMass,bool hasCollision) {
+GameObject* TutorialGame::AddCubeToWorld(const Vector3& position, Vector3 dimensions, float inverseMass, bool hasCollision) {
     GameObject* cube = new GameObject();
 
     // Setting the transform properties for the cube
@@ -534,150 +524,62 @@ GameObject* TutorialGame::AddSphereToWorld(const Vector3& position, float radius
     return sphere;
 }
 
+void TutorialGame::StartMultiplayerGame(bool isHost) {
+    server = new Multiplayer::Server(this, isHost);
+    server->InitPacketHandlers();
+    server->Start();
 
-void TutorialGame::CreateLocal() {
-    lobby.emplace(MAX_PLAYERS);
-}
-
-
-void TutorialGame::InitNetwork(bool host) {
-    ENetAddress address;
-    enet_address_set_host(&address, host ? "0.0.0.0" : "127.0.0.1");
-    address.host = ENET_HOST_ANY;
-    address.port = host ? DEFAULT_PORT : 0;
-
-    server.emplace(&address, MAX_PLAYERS);
-    server.value().Start();
-}
-
-
-void TutorialGame::ConnectToServer(ENetAddress& address) {
-    server->ConnectTo(&address);
-    while (server->GetConnectionCount() < 1) {
-        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    if (!isHost){
+        server->JoinGame("127.0.0.1", 30.0f);
     }
-}
-
-
-void TutorialGame::InitPacketHandlers() {
-    Packet::RequestUserIDPacketHandler* requestHandler = new Packet::RequestUserIDPacketHandler();
-    Packet::PacketRegister::Register(requestHandler);
-
-    Packet::UserInfoPacketHandler* infoHandler = new Packet::UserInfoPacketHandler();
-    Packet::PacketRegister::Register(infoHandler);
-
-    Packet::PositionPacketHandler* positionHandler = new Packet::PositionPacketHandler();
-    Packet::PacketRegister::Register(positionHandler);
-
-    Packet::DeltaPacketHandler* deltaHandler = new Packet::DeltaPacketHandler();
-    Packet::PacketRegister::Register(deltaHandler);
-
-    Packet::StartGamePacketHandler* startGameHandler = new Packet::StartGamePacketHandler();
-    Packet::PacketRegister::Register(startGameHandler);
-
-    Packet::ObjectChangeGravityPacketHandler* objectChangeGravityHandler = new Packet::ObjectChangeGravityPacketHandler();
-    Packet::PacketRegister::Register(objectChangeGravityHandler);
-
-    Packet::DamagePacketHandler* damageHandler = new Packet::DamagePacketHandler();
-    Packet::PacketRegister::Register(damageHandler);
-
-    Packet::LaserPacketHandler* laserHandler = new Packet::LaserPacketHandler();
-    Packet::PacketRegister::Register(laserHandler);
-}
-
-
-void TutorialGame::JoinGame(bool host) {
-    CreateLocal();
-    InitPacketHandlers();
-    InitNetwork(host);
-
-    if (!host) {
-        ENetAddress dest;
-
-        std::string host = config.get<std::string>("defaultHost");
-        std::cout << "Connecting to " << host << std::endl;
-
-        //enet_address_set_host(&dest, "127.0.0.1");
-        enet_address_set_host(&dest, host.c_str());
-
-        dest.port = DEFAULT_PORT;
-
-        ConnectToServer(dest);
-
-        std::shared_ptr<Packet::RequestUserIDPacket> request = std::make_shared<Packet::RequestUserIDPacket>(nullptr);
-        server.value().Broadcast(request);
-    }
-    else {
-        user.emplace(GenerateUserID());
-        lobby->AddUser(user.value());
-        lobby->SetHost(user.value());
-    }
-}
-
-
-void TutorialGame::StartMultiplayerGame() {
-    std::shared_ptr<Packet::StartGamePacket> startGame = std::make_shared<Packet::StartGamePacket>();
-    server->Broadcast(startGame);
-    Start();
-    host = true;
 }
 
 
 void TutorialGame::Start() {
-    instance->state = GameState::ACTIVE;
+    instance->SetState(GameState::STARTING);
 
     instance->renderer->initLasers(instance->gameMode == GameMode::SINGLEPLAYER ? true : false);
     instance->LoadWorldFromFile(10);
-    
-    // Init user for single players.
-    if (!user.has_value()) user.emplace(GenerateUserID());
 
-    // Spawn in player.
-    RespawnPoint* respawnPoint = Respawn::GetInstance()->GetRespawn(user->GetUserID() - 1);
-    instance->player = instance->InitPlayer(respawnPoint->position,respawnPoint->orientation);
-    instance->player->SetOwner(user->GetUserID());
-    instance->player->SetWorldID(user->GetUserID());
-    instance->player->GetRenderObject()->SetColour(Vector4(Color::GetPlayerColor(user->GetUserID())));
-    instance->player->setType(GameObject::Type::Player);
-    instance->playerController = std::make_unique<PlayerController>(instance->player, instance->controller, instance->mainCamera, instance->bulletWorld,instance->renderer);
+    //Spawn in player.
+    std::array<PlayerObject*, 2> players;
 
-
-    btQuaternion emptyRot;
-
-    // Send initial position to everyone if multiplayer.
-    if (server.has_value()) {
-        std::shared_ptr<Packet::PositionPacket> position = std::make_shared<Packet::PositionPacket>(
-            user->GetUserID(),
-            respawnPoint->position,
-            emptyRot,
-            instance->player->GetLastPacketSequence((uint8_t)Packet::PacketType::POSITION) + 1
-        );
-        instance->player->UpdatePacketSequence((uint8_t)Packet::PacketType::POSITION, position->GetSequenceNumber());
-        server->Broadcast(position);
-
-        std::shared_ptr<Packet::ObjectChangeGravityPacket> gravity = std::make_shared<Packet::ObjectChangeGravityPacket>(
-            user->GetUserID(),
-            respawnPoint->orientation,
-            instance->player->GetLastPacketSequence((uint8_t)Packet::PacketType::OBJECT_CHANGE_GRAVITY) + 1
-        );
-        instance->player->UpdatePacketSequence((uint8_t)Packet::PacketType::OBJECT_CHANGE_GRAVITY, gravity->GetSequenceNumber());
-        server->Broadcast(gravity);
-
-        // Spawn in player objects for other players.
-        for (const User& newUser: lobby->GetConnectedUsers()) {
-            if (newUser.GetUserID() == user->GetUserID()) continue;
-
-            RespawnPoint* respawnPoint = Respawn::GetInstance()->GetRespawn(newUser.GetUserID() - 1);
-            PlayerObject* newPlayer = instance->InitPlayer(respawnPoint->position,respawnPoint->orientation);
-            newPlayer->setType(GameObject::Type::Player);
-            newPlayer->SetOwner(newUser.GetUserID());
-            newPlayer->SetWorldID(newUser.GetUserID());
-            newPlayer->GetRenderObject()->SetColour(Vector4(Color::GetPlayerColor(newUser.GetUserID())));
-        }
+    for (int i = 0; i < players.size(); i++) {
+        User user(i);
+        RespawnPoint* playerRespawn = Respawn::GetInstance()->GetRespawn(user.GetUserID());
+        PlayerObject* player = instance->InitPlayer(playerRespawn->position, playerRespawn->orientation);
+        player->SetOwner(user);
+        player->SetWorldID(user.GetUserID());
+        player->setType(GameObject::Type::Player);
+        players[i] = player;
     }
-    else {
-        instance->spGameController = new SPGameController(instance->player, instance, instance->renderer);
+
+    User owner(0);
+    if (instance->server != nullptr) {
+        owner = *(instance->server->GetUser());
     }
+    instance->player = players[owner.GetUserID()];
+    instance->playerController = std::make_unique<PlayerController>(instance->player, instance->controller, instance->mainCamera, instance->bulletWorld, instance->renderer);
+    //instance->player->GetRenderObject()->SetColour(Vector4(Color::GetPlayerColor(user->GetUserID())));
+    //instance->spGameController = new SPGameController(instance->player, instance);
+
+    //btQuaternion emptyRot;
+
+    //// Send initial position to everyone if multiplayer.
+    //if (server.has_value()) {
+    //    // Spawn in player objects for other players.
+    //    for (const User& newUser: lobby->GetConnectedUsers()) {
+    //        if (newUser.GetUserID() == user->GetUserID()) continue;
+
+    //        RespawnPoint* respawnPoint = Respawn::GetInstance()->GetRespawn(newUser.GetUserID() - 1);
+    //        PlayerObject* newPlayer = instance->InitPlayer(respawnPoint->position,respawnPoint->orientation);
+    //        newPlayer->setType(GameObject::Type::Player);
+    //        newPlayer->SetOwner(newUser.GetUserID());
+    //        newPlayer->SetWorldID(newUser.GetUserID());
+    //        newPlayer->GetRenderObject()->SetColour(Vector4(Color::GetPlayerColor(newUser.GetUserID())));
+    //    }
+    //}
+
 
     Shoot::GetInstance()->Initialise(instance->bulletWorld,instance->resourceManager.get(), instance->world.get(), instance->renderer->GetDecalSystem());
     Shoot::GetInstance()->InitShotMasks(instance->player, instance->player->getGun());

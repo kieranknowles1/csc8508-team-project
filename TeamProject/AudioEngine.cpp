@@ -7,6 +7,7 @@
 
 
 //Link of tutorial followed https://codyclaborn.me/tutorials/making-a-basic-fmod-audio-engine-in-c/#implementation-source
+//With a few custom functions written by Ameya
 
 CAudioEngine audioEngine;
 
@@ -138,6 +139,16 @@ void CAudioEngine::SetChannel3dPosition(int nChannelId, const NCL::Maths::Vector
 
     FMOD_VECTOR position = VectorToFmod(vPosition);
     CAudioEngine::ErrorCheck(tFoundIt->second->set3DAttributes(&position, NULL));
+}
+
+void CAudioEngine::SetChannelPlaybackPosition(int channelId, unsigned int positionMs) {
+    auto tFoundIt = sgpImplementation->mChannels.find(channelId);
+    if (tFoundIt == sgpImplementation->mChannels.end()) {
+        return;
+    }
+
+    FMOD_RESULT result = tFoundIt->second->setPosition(positionMs, FMOD_TIMEUNIT_MS);
+    ErrorCheck(result);
 }
 
 void CAudioEngine::Set3dListenerAndOrientation(const NCL::Maths::Vector3& vPosition, const NCL::Maths::Vector3& vLook, const NCL::Maths::Vector3& vUp) {
@@ -273,6 +284,36 @@ float CAudioEngine::dbToVolume(float dB) {
 //Converts linear volume to decibels
 float CAudioEngine::VolumeTodB(float volume) {
     return 20.0f * log10f(volume);
+}
+
+void CAudioEngine::SetChannelPaused(int channelId, bool paused) {
+    auto tFoundIt = sgpImplementation->mChannels.find(channelId);
+    if (tFoundIt == sgpImplementation->mChannels.end()) {
+        return;
+    }
+
+    FMOD_RESULT result = tFoundIt->second->setPaused(paused);
+    ErrorCheck(result);
+}
+
+void CAudioEngine::SetChannelVolumeRamp(int channelId, bool enable) {
+    auto tFoundIt = sgpImplementation->mChannels.find(channelId);
+    if (tFoundIt == sgpImplementation->mChannels.end()) {
+        return;
+    }
+
+    FMOD_RESULT result = tFoundIt->second->setVolumeRamp(enable);
+    ErrorCheck(result);
+}
+
+void CAudioEngine::SetChannelMute(int channelId, bool mute) {
+    auto tFoundIt = sgpImplementation->mChannels.find(channelId);
+    if (tFoundIt == sgpImplementation->mChannels.end()) {
+        return;
+    }
+
+    FMOD_RESULT result = tFoundIt->second->setMute(mute);
+    ErrorCheck(result);
 }
 
 //Checks FMod function return values and logs errors if found

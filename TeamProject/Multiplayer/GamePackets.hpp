@@ -23,10 +23,11 @@ namespace Packet {
         OBJECT_CHANGE_GRAVITY = CUSTOM_TYPE + 3,
         START_GAME = CUSTOM_TYPE + 4,
         USER_INFO = CUSTOM_TYPE + 5,
-        ASSIGN_HOST = CUSTOM_TYPE + 6,
-        REQUEST_USERID = CUSTOM_TYPE + 7,
-        DAMAGE = CUSTOM_TYPE + 8,
-        LASER = CUSTOM_TYPE + 9
+        REQUEST_USERID = CUSTOM_TYPE + 6,
+        DAMAGE = CUSTOM_TYPE + 7,
+        LASER = CUSTOM_TYPE + 8,
+        PING = CUSTOM_TYPE + 9,
+        PONG = CUSTOM_TYPE + 10
     };
 
 
@@ -187,31 +188,6 @@ namespace Packet {
         {}
     };
 
-
-    /**
-     * @brief A packet for assigning the host of a lobby.
-     */
-    class AssignHostPacket : public Packet {
-    public:
-        /**
-         * @brief Constructor for AssignHostPacket.
-         * @param hostID The ID of the host user.
-         * @param destination - If nullptr, will broadcast.
-         */
-        AssignHostPacket(int hostID, ENetPeer* destination = nullptr) :
-            Packet(static_cast<Type>(PacketType::ASSIGN_HOST), static_cast<uint8_t>(Channel::UNSEQUENCED), 0),
-            m_hostID(hostID), m_peer(destination)
-        {}
-
-        int GetHostID() const { return m_hostID; }
-        ENetPeer* GetPeer() const { return m_peer; }
-
-    private:
-        const int m_hostID;
-        ENetPeer* m_peer; // Only used when sending direct. Is not translated.
-    };
-
-
     /**
      * @brief A packet for sending user data over the network.
      * 
@@ -234,29 +210,6 @@ namespace Packet {
         const User m_user;
         const LobbyAction m_action;
     };
-
-
-    /**
-     * @brief A simple packet for requesting a unique user id from the server.
-     */
-    class RequestUserIDPacket : public Packet {
-    public:
-        /**
-         * @brief Constructor for RequestUserIDPacket.
-         * @param destination - nullptr for broadcasting, otherwise, direct.
-         * Used for responding.
-         */
-        RequestUserIDPacket(ENetPeer* destination) :
-            Packet(static_cast<Type>(PacketType::REQUEST_USERID), static_cast<uint8_t>(Channel::UNSEQUENCED), 0),
-            m_peer(destination)
-        {}
-
-        ENetPeer* GetPeer() const { return m_peer; }
-
-    private:
-        ENetPeer* m_peer;
-    };
-
 
     /**
      * @brief Simple packet for sending damage across the network.
@@ -283,5 +236,28 @@ namespace Packet {
         float m_damage;
         int m_dealer;
     };
+
+    /**
+     * @brief Ping the server or client.
+     */
+    class PingPacket : public Packet {
+    public:
+        PingPacket() :
+            Packet(static_cast<Type>(PacketType::PING), static_cast<uint8_t>(Channel::RELIABLE), 0)
+        {}
+    };
+
+
+    /**
+     * @brief Pong a ping.
+     */
+    class PongPacket : public Packet {
+    public:
+        PongPacket() :
+            Packet(static_cast<Type>(PacketType::PONG), static_cast<uint8_t>(Channel::RELIABLE), 0)
+        {}
+    };
+
+
 }
 

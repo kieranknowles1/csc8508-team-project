@@ -18,7 +18,7 @@ const float NETWORK_RATE = 1 / 120.0f; // Seconds
 const int BUFFER_SIZE = 1024;
 
 // Default binding port.
-const int DEFAULT_PORT = 49834;
+const int DEFAULT_PORT = 49835;
 
 
 /**
@@ -113,7 +113,10 @@ public:
      * 
      * @param callback The function to call.
      */
-    inline void SetConnectCallback(std::function<void(ENetPeer*)> callback) { m_connectCallback = callback; }
+    inline void SetConnectCallback(std::function<void(ENetPeer*)> callback) { 
+        std::lock_guard<std::mutex> lock(m_connectCallbackMut);
+        m_connectCallback = callback;
+    }
 
     /**
      * @brief Fetch a packet from the buffer.
@@ -138,7 +141,23 @@ public:
      * @brief Get the number of external connections.
      * @return int representing the number of external connections.
      */
-    int GetConnectionCount() const { return m_connections - 1; }
+    int GetConnectionCount() const { return m_connections; }
+
+    /**
+     * @brief Add a function to be called when the server Ticks.
+     * The function is called before SendAll() is called.
+     * 
+     * PLEASE ENSURE THE FUNCTION CALL IS THREADSAFE. IT IS CALLED FROM WITHIN
+     * THE NETWORK THREAD.
+     * 
+     * If the value passed to the function is true, it is the end of the tick.
+     * 
+     * @param func - the function to call.
+     */
+    inline void AddTickListener(std::function<void(bool)> func) {
+        std::lock_guard<std::mutex> lock(m_listenerMut);
+        m_tickListeners.push_back(func);
+    }
 
 
 protected:
@@ -173,6 +192,8 @@ private:
     std::thread m_networkThread;
     std::mutex m_stateMut;
     std::mutex m_sendMut;
+	std::mutex m_connectCallbackMut;
+    std::mutex m_listenerMut;
 
     NetworkState m_state = NetworkState::CLOSED;
 
@@ -184,9 +205,10 @@ private:
     float m_lastTick = 0;
     int m_lastMaxSequence = 0; // Each tick will drop optional packets that didn't make the first tick.
 
-    int m_connections = 1;
+    int m_connections = 0;
     int m_maxConnections;
 
     ENetHost* m_host = nullptr;
     std::function<void(ENetPeer*)> m_connectCallback;
+	std::vector<std::function<void(bool)>> m_tickListeners;
 };
