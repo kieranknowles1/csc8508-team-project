@@ -112,10 +112,6 @@ namespace Multiplayer {
 
             if (object->GetOwner() != *m_user) return;
 
-            if (object->getType() == GameObject::Type::Gun) {
-                int x = 5;
-            }
-
             for (std::shared_ptr<Packet::Packet> packet : object->CreatePackets(m_tickCount)) {
                 m_network->Broadcast(packet);
             }
