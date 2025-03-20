@@ -37,7 +37,7 @@ namespace NCL::Rendering {
 		}
 
 		void load(const std::string& name) override;
-		void upload(bool freeData) override;
+		void upload(bool freeData = true) override;
 	protected:
         std::string fileName;
 		GLuint texID;

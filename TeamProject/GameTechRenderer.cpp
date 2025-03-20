@@ -69,7 +69,8 @@ GameTechRenderer::GameTechRenderer(Window* window) : OGLRenderer(window), GameTe
 	glGenBuffers(1, &textColourVBO);
 	glGenBuffers(1, &textTexVBO);
 
-	Debug::CreateDebugFont("PressStart2P.fnt", *LoadTexture("PressStart2P.png"));
+    auto fontTex = std::make_shared<OGLTexture>();
+	Debug::CreateDebugFont("PressStart2P.fnt", fontTex);
 
 	unitQuad = Mesh::Quad<OGLMesh>(1.0f);
 	unitQuad->UploadToGPU();
