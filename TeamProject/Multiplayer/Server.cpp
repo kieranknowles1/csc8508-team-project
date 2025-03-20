@@ -56,6 +56,9 @@ namespace Multiplayer {
         m_handlers.push_back(std::make_unique<Packet::DeltaPacketHandler>());
         Packet::PacketRegister::Register(m_handlers.back().get());
 
+        m_handlers.push_back(std::make_unique<Packet::LaserPacketHandler>());
+        Packet::PacketRegister::Register(m_handlers.back().get());
+
         m_handlers.push_back(std::make_unique<Packet::StartGamePacketHandler>());
         Packet::PacketRegister::Register(m_handlers.back().get());
 
@@ -91,7 +94,7 @@ namespace Multiplayer {
     }
 
     bool Server::IsOwnerOf(GameObject* obj) {
-        return obj->GetOwner() == *m_user;
+        return *(obj->GetOwner()) == *m_user;
     }
 
     void Server::SendState(bool endOfTick) {
@@ -106,11 +109,11 @@ namespace Multiplayer {
         if (m_game->GetState() != GameState::ACTIVE) return;
 
         m_game->GetWorld()->OperateOnContents([&](GameObject* object) {
-            if (object->isStatic() && object->getType() != GameObject::Type::Gun) return;
+            if (object->GetOwner() == nullptr) return;
 
             object->GetObjectStates()->UpdateBuffer();
 
-            if (object->GetOwner() != *m_user) return;
+            if (*(object->GetOwner()) != *m_user) return;
 
             for (std::shared_ptr<Packet::Packet> packet : object->CreatePackets(m_tickCount)) {
                 m_network->Broadcast(packet);

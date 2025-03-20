@@ -108,7 +108,7 @@ namespace NCL::CSC8503 {
             objects[worldID] = this;
         }
 
-        int		GetWorldID() {
+        int		GetWorldID() const {
             return worldID;
         }
 
@@ -136,10 +136,10 @@ namespace NCL::CSC8503 {
         }
 
         virtual void SetOwner(Lobbies::User user) {
-            owner.emplace(user);
+            owner = new Lobbies::User(user);
         }
 
-        std::optional<Lobbies::User> GetOwner() {
+        Lobbies::User* GetOwner() {
             return owner;
         }
 
@@ -179,7 +179,7 @@ namespace NCL::CSC8503 {
         WorldState::StateBuffer* GetObjectStates() { return states.get(); }
 
         void setDeleted() { deleted = true; }
-        bool isDeleted() { return deleted; }
+        bool isDeleted() const { return deleted; }
     protected:
         PhysicsObject*		physicsObject;
         RenderObject*		renderObject;
@@ -200,7 +200,7 @@ namespace NCL::CSC8503 {
         inline static std::unordered_map<int, GameObject*> objects;
 
         PointLight* light = nullptr;
-        std::optional<Lobbies::User> owner;
+        Lobbies::User* owner = nullptr;
 
         std::unique_ptr<WorldState::StateBuffer> states;
         std::shared_mutex tickMutex;

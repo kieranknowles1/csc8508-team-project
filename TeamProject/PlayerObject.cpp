@@ -50,7 +50,7 @@ std::vector<std::shared_ptr<Packet::Packet>> PlayerObject::CreatePackets(int seq
     
     if (hasUpVector) {
         packets.push_back(std::move(std::make_shared<Packet::ObjectChangeGravityPacket>(
-            GetOwner()->GetUserID(),
+            GetWorldID(),
             std::get<btVector3>(upVector),
             sequenceNum
         )));

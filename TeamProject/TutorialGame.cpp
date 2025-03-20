@@ -94,6 +94,7 @@ void TutorialGame::UpdateGame(float dt) {
     profiler.startSection("Network Updates");
     if (server != nullptr) {
         world->OperateOnContents([&](GameObject* obj) {
+            if (obj->GetOwner() == nullptr) return;
             if (server->IsOwnerOf(obj)) obj->UpdateObjectState();
             else obj->UpdateFromState(dt);
             });
@@ -330,6 +331,7 @@ PlayerObject* TutorialGame::InitPlayer(btVector3 position, btVector3 upDir) {
     newPlayer->GetRenderObject()->SetColour(Vector4(playerColour));
     newPlayer->setUpDirection(upDir);
     newPlayer->setRenderer(renderer);
+    newPlayer->setType(GameObject::Type::Player);
     return newPlayer;
 }
 
@@ -418,6 +420,12 @@ PlayerObject* TutorialGame::AddPlayerCapsuleToWorld(const Vector3& position, flo
     player->setGun(newGun);
     world->AddGameObject(player);
 
+    // Insert a laser object the player will use.
+    LaserObject* laser = new LaserObject(player);
+    laser->SetThickness(0.25f);
+    world->AddGameObject(laser);
+
+    player->SetLaser(laser);
     return player;
 }
 
@@ -537,47 +545,62 @@ void TutorialGame::StartMultiplayerGame(bool isHost) {
 void TutorialGame::Start() {
     instance->SetState(GameState::STARTING);
     instance->LoadWorldFromFile(10);
+
+    // Setup for a multiplayer game.
+    if (instance->server) {
+        Lobby* lobby = instance->server->GetLobby();
+        int userCount = 1;
+
+        //for (auto place : lobby->GetUserColors()) {
+        //    if (!place.GetUser().has_value()) continue;
+        //    User user = place.GetUser().value();
+        for (User user:lobby->GetConnectedUsers()) {
+            RespawnPoint* respawn = Respawn::GetInstance()->GetRespawn(userCount - 1);
+            PlayerObject* player = instance->InitPlayer(respawn->position, respawn->orientation);
+            player->SetWorldID(userCount);
+            player->SetOwner(user);
+
+            if (user == *(instance->server->GetUser())) {
+                instance->player = player;
+                instance->playerController = std::make_unique<PlayerController>(instance->player, instance->controller, instance->mainCamera, instance->bulletWorld, instance->renderer);
+            }
+            userCount++;
+        }
+    }
+
+    // Setup for a single player game.
+    else {
+        RespawnPoint* playerRespawn = Respawn::GetInstance()->GetRespawn(0);
+        instance->player = instance->InitPlayer(playerRespawn->position, playerRespawn->orientation);
+        instance->player->SetWorldID(0);
+
+        instance->playerController = std::make_unique<PlayerController>(instance->player, instance->controller, instance->mainCamera, instance->bulletWorld, instance->renderer);
+        instance->spGameController = new SPGameController(instance->player, instance);
+    }
+
+
     
-    // Spawn in player.
-    std::array<PlayerObject*, 4> players;
+    //// Spawn in player.
+    //std::array<PlayerObject*, 4> players;
 
-    for (int i = 0; i < players.size(); i++) {
-        User user(i);
-        RespawnPoint* playerRespawn = Respawn::GetInstance()->GetRespawn(user.GetUserID());
-        PlayerObject* player = instance->InitPlayer(playerRespawn->position, playerRespawn->orientation);
-        player->SetWorldID(user.GetUserID());
-        player->SetOwner(user);
-        player->setType(GameObject::Type::Player);
-        players[i] = player;
-    }
-
-    User owner(0);
-
-    if (instance->server != nullptr) {
-        owner = *(instance->server->GetUser());
-    }
-
-    instance->player = players[owner.GetUserID()];
-    instance->playerController = std::make_unique<PlayerController>(instance->player, instance->controller, instance->mainCamera, instance->bulletWorld,instance->renderer);
-    //instance->player->GetRenderObject()->SetColour(Vector4(Color::GetPlayerColor(user->GetUserID())));
-    //instance->spGameController = new SPGameController(instance->player, instance);
-
-    //btQuaternion emptyRot;
-
-    //// Send initial position to everyone if multiplayer.
-    //if (server.has_value()) {
-    //    // Spawn in player objects for other players.
-    //    for (const User& newUser: lobby->GetConnectedUsers()) {
-    //        if (newUser.GetUserID() == user->GetUserID()) continue;
-
-    //        RespawnPoint* respawnPoint = Respawn::GetInstance()->GetRespawn(newUser.GetUserID() - 1);
-    //        PlayerObject* newPlayer = instance->InitPlayer(respawnPoint->position,respawnPoint->orientation);
-    //        newPlayer->setType(GameObject::Type::Player);
-    //        newPlayer->SetOwner(newUser.GetUserID());
-    //        newPlayer->SetWorldID(newUser.GetUserID());
-    //        newPlayer->GetRenderObject()->SetColour(Vector4(Color::GetPlayerColor(newUser.GetUserID())));
-    //    }
+    //for (int i = 0; i < players.size(); i++) {
+    //    User user(i);
+    //    RespawnPoint* playerRespawn = Respawn::GetInstance()->GetRespawn(user.GetUserID());
+    //    PlayerObject* player = instance->InitPlayer(playerRespawn->position, playerRespawn->orientation);
+    //    player->SetWorldID(user.GetUserID());
+    //    player->SetOwner(user);
+    //    players[i] = player;
     //}
+
+    //User owner(0);
+
+    //if (instance->server != nullptr) {
+    //    owner = *(instance->server->GetUser());
+    //}
+
+    //instance->player = players[owner.GetUserID()];
+    //instance->playerController = std::make_unique<PlayerController>(instance->player, instance->controller, instance->mainCamera, instance->bulletWorld,instance->renderer);
+    ////instance->player->GetRenderObject()->SetColour(Vector4(Color::GetPlayerColor(user->GetUserID())));
 
     Shoot::GetInstance()->Initialise(instance->bulletWorld,instance->resourceManager.get(), instance->world.get(), instance->renderer->GetDecalSystem());
     Shoot::GetInstance()->InitShotMasks(instance->player, instance->player->getGun());

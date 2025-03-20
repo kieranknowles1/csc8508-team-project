@@ -86,20 +86,9 @@ void PlayerController::HandleShooting(float dt) {
     }
     else {
         if (firing) {
-            renderer->updateLaser(laserID,btVector3(0,0,0),btVector3(0,0,0));
+            player->updateLaser(btVector3(0,0,0), btVector3(0,0,0));
             crosshair->stopFiring();
             overheat->stopFiring();
-
-            if (TutorialGame::getInstance()->GetServerInstance() != nullptr) {
-                std::shared_ptr<Packet::LaserPacket> laserPacket = std::make_shared<Packet::LaserPacket>(
-                    player->GetWorldID(),
-                    btVector3(0, 0, 0),
-                    btVector3(0, 0, 0),
-                    btVector3(0, 0, 0),
-                    0
-                );
-                //TutorialGame::GetServerInstance()->Broadcast(laserPacket);
-            }
             firing = false;
         }
     }
@@ -120,7 +109,7 @@ void PlayerController::FireShot(float dt) {
     btVector3 adjustedOffset = rotationMatrix * gunCameraOffset; // Apply rotation to the offset
 
     std::optional<ShotInfo> info = Shoot::GetInstance()->ShootBulletPlayer(player->getGun()->GetPhysicsObject()->GetRigidBody()->getWorldTransform().getOrigin() + adjustedOffset, forwardDir, bulletRotation, dt,laserID);
-    renderer->updateLaser(laserID, player->getGun()->GetPhysicsObject()->GetRigidBody()->getWorldTransform().getOrigin() + adjustedOffset, info.value().hitPos);
+    player->updateLaser(player->getGun()->GetPhysicsObject()->GetRigidBody()->getWorldTransform().getOrigin() + adjustedOffset, info.value().hitPos);
     if (TutorialGame::getInstance()->GetServerInstance() != nullptr) {
         std::shared_ptr<Packet::LaserPacket> laserPacket = std::make_shared<Packet::LaserPacket>(
             player->GetWorldID(),

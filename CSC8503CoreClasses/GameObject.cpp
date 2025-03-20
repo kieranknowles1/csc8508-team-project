@@ -26,6 +26,8 @@ GameObject::~GameObject()	{
 	delete renderObject;
 	delete networkObject;
 
+    if (owner) delete owner;
+
 	if (objects.contains(worldID)) objects.erase(worldID);
 }
 
@@ -168,7 +170,7 @@ std::vector<std::shared_ptr<Packet::Packet>> GameObject::CreatePackets(int seque
     
     if (hasLinear && hasAngular) {
         packets.push_back(std::move(std::make_shared<Packet::DeltaPacket>(
-            GetOwner()->GetUserID(),
+            GetWorldID(),
             std::get<btVector3>(linearValue),
             std::get<btVector3>(angularValue),
             sequenceNum
@@ -177,7 +179,7 @@ std::vector<std::shared_ptr<Packet::Packet>> GameObject::CreatePackets(int seque
 
     if (hasPosition && hasRotation) {
         packets.push_back(std::move(std::make_shared<Packet::PositionPacket>(
-            GetOwner()->GetUserID(),
+            GetWorldID(),
             std::get<btVector3>(positionValue),
             std::get<btQuaternion>(rotationValue),
             sequenceNum

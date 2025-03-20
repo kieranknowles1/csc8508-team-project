@@ -1,17 +1,16 @@
 #include "LaserObject.h"
 #include "Multiplayer/WorldState.hpp"
 #include "Multiplayer/GamePackets.hpp"
+#include "GameTechRenderer.h"
 
 using namespace WorldState;
 using namespace NCL::CSC8503;
+
 
 void LaserObject::UpdateObjectState() {
     StateReader writeReader = states->GetWriteState();
     ObjectState* writeState = writeReader.GetState();
     
-    btRigidBody* body = GetPhysicsObject()->GetRigidBody();
-    btTransform transform = body->getWorldTransform();
-
     writeState->Lock();
 
     writeState->UpdateState(StateType::StartPos, startPos);
@@ -32,8 +31,6 @@ void LaserObject::UpdateFromState(float dt) {
 
     ObjectState* current = currentReader.GetState();
     ObjectState* read = currentReader.GetState();
-
-    btRigidBody* body = GetPhysicsObject()->GetRigidBody();
 
     StateValue currentStartPosValue;
     StateValue targetStartPosValue;
@@ -121,7 +118,7 @@ std::vector<std::shared_ptr<Packet::Packet>> LaserObject::CreatePackets(int sequ
     
     if (hasStartPos && hasEndPos && hasCollisionNormal) {
         packets.push_back(std::move(std::make_shared<Packet::LaserPacket>(
-            GetOwner()->GetUserID(),
+            GetWorldID(),
             std::get<btVector3>(startPosValue),
             std::get<btVector3>(endPosValue),
             std::get<btVector3>(collisionNormalValue),

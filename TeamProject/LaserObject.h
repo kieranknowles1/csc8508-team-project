@@ -3,9 +3,10 @@
 #include "GameObject.h"
 
 namespace NCL::CSC8503 {
+
     class LaserObject : public GameObject {
     public:
-        LaserObject(float thickness, btVector4 color) : thickness(thickness), color(color) {}
+        LaserObject(GameObject* parent) {}
 
         void UpdateObjectState() override;
         void UpdateFromState(float dt) override;
@@ -20,7 +21,7 @@ namespace NCL::CSC8503 {
         btVector3& GetCollisionNormal() { return collisionNormal; }
         btVector3& GetStartPos() { return startPos; }
         btVector3& GetEndPos() { return endPos; }
-        btVector4 GetColor() const { return color; }
+        btVector4& GetColor() { return color; }
         float GetThickness() const { return thickness; }
 
     private:
@@ -29,5 +30,18 @@ namespace NCL::CSC8503 {
         btVector3 endPos;
         btVector4 color;
         float thickness;
+
+        GameObject* parent;
+    };
+
+    /**
+     * @brief Compare 2 pointers to LaserObjects.
+     * For user by renderer for tracking lasers.
+     */
+    class LaserComparator {
+    public:
+        bool operator()(const LaserObject* laser1, const LaserObject* laser2) const {
+            return laser1->GetWorldID() < laser2->GetWorldID();
+        }
     };
 }

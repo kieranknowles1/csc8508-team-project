@@ -115,6 +115,8 @@ void Network::Run() {
 void Network::Tick(float dt) {
     m_elapsedTime += dt;
 
+    int ticksProcessed = 0;
+
     while (m_elapsedTime - m_lastTick >= NETWORK_RATE && m_state == NetworkStates::NetworkState::ON) {
         std::lock_guard<std::mutex> lock(m_listenerMut);
         for (auto func : m_tickListeners) func(false);
@@ -122,12 +124,20 @@ void Network::Tick(float dt) {
         SendAll();
         enet_host_flush(m_host);
 
-        // Fast Forward, skipping updates.
-        do m_lastTick += NETWORK_RATE; while (m_lastTick < m_elapsedTime);
+        m_lastTick += NETWORK_RATE;
+        ticksProcessed++;
         for (auto func : m_tickListeners) func(true);
     }
-    ENetEvent event;
 
+#ifndef NDEBUG
+    if (ticksProcessed > 1) {
+        std::cout << ConsoleTextColor::RED;
+        std::cout << "[Network] Was behind by " << ticksProcessed - 1 << " ticks.\n";
+        std::cout << ConsoleTextColor::DEFAULT;
+    }
+#endif
+
+    ENetEvent event;
     while (enet_host_service(m_host, &event, 1) > 0) {
         switch (event.type) {
         case ENET_EVENT_TYPE_CONNECT:

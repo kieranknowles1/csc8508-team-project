@@ -4,6 +4,7 @@
 #include "Camera.h"
 #include "Controller.h"
 #include "GameObject.h"
+#include "LaserObject.h"
 #include "PhysicsObject.h"
 #include "CollisionInfo.h"
 #include "Respawn.h"
@@ -15,13 +16,9 @@
 
 namespace NCL::CSC8503 {
 
-
-
 // Player class derived from GameObject
 class PlayerObject : public GameObject {
 public:
-
-
 	void Update(float dt) override;
 
 	void OnCollisionEnter(const CollisionInfo& collisionInfo) override;
@@ -41,7 +38,8 @@ public:
 	}
 
 	void updateLaser(btVector3 startPos, btVector3 endPos) {
-		renderer->updateLaser(GetWorldID(), startPos, endPos);
+		laser->SetStartPos(startPos);
+		laser->SetEndPos(endPos);
 	}
 
 	void setUpDirection(btVector3 target) {
@@ -85,15 +83,17 @@ public:
 		return collisionType;
 	}
 
-
     void SetOwner(Lobbies::User user) override {
 		gun->SetOwner(user);
+		laser->SetOwner(user);
+
 		gun->SetWorldID(GetWorldID() + 100);
-		owner.emplace(user);
+		laser->SetWorldID(GetWorldID() * 1000);
+
+        owner = new Lobbies::User(user);
     }
 
 	void Rotate(bool positive, bool rolling, float yaw);
-
 
 	void resetCollisionType() {
 		collisionType = GameObject::Type::Default;
@@ -142,6 +142,10 @@ public:
 
 	void setGun(GameObject* gunIn) { gun = gunIn; }
 	GameObject* getGun() {return gun;}
+
+	void SetLaser(LaserObject* laser) { this->laser = laser; }
+	LaserObject* GetLaser() const { return laser; }
+
 	void SetGunTransform(float pitch, float yaw, btVector3 camPos);
 
 	void UpdateObjectState() override;
@@ -174,6 +178,7 @@ private:
 	bool rotationChanging = false;
     btVector3 gunCameraOffset = btVector3(8.5f, -4.5f, 5.5f); // x axis is forward (front +ve/ back -ve), y is up, z is right (left -ve/ right +ve)
 	GameObject* gun;
+	LaserObject* laser = nullptr;
 
 	btVector3 CalculateRightDirection(btVector3 upDir);
 	btVector3 CalculateForwardDirection(btVector3 upDir, btVector3 rightDir);

@@ -25,6 +25,7 @@ const int DEFAULT_PORT = 49835;
  * @brief Character codes for console colors.
  */
 namespace ConsoleTextColor {
+    inline const char* RED = "\x1b[31m";
     inline const char* GREEN = "\x1b[32m";
     inline const char* YELLOW = "\x1b[33m";
     inline const char* DEFAULT = "\x1b[0m";
