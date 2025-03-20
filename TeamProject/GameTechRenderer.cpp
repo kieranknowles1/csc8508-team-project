@@ -730,15 +730,15 @@ void GameTechRenderer::RenderLasers() {
 	glUniform2f(glGetUniformLocation(laserShader->GetProgramID(), "windowSize"), windowSize.x, windowSize.y);
 
 	BindMesh(*highResSphere);
-	for (std::shared_ptr<Laser> laser : lasers) {
-		if (laser->startPos == btVector3(0, 0, 0) && laser->endPos == btVector3(0, 0, 0)) continue;
-		glUniform3fv(glGetUniformLocation(laserShader->GetProgramID(), "startPosition"), 1, (float*)&laser->startPos);
-		glUniform3fv(glGetUniformLocation(laserShader->GetProgramID(), "endPosition"), 1, (float*)&laser->endPos);
-		glUniform1f(glGetUniformLocation(laserShader->GetProgramID(), "thickness"), 0.25f);
-		glUniform1f(glGetUniformLocation(laserShader->GetProgramID(), "time"), vignettePulse);
-		btVector4 color = Color::GetPlayerColor(laser->id);
-		glUniform4fv(glGetUniformLocation(laserShader->GetProgramID(), "inColour"), 1, (float*)&color);
-		DrawBoundMesh();
+	for (const LaserObject* laser : lasers) {
+		if (!(laser->GetStartPos() == laser->GetEndPos())) {
+			glUniform3fv(glGetUniformLocation(laserShader->GetProgramID(), "startPosition"), 1, (float*)&laser->GetStartPos());
+			glUniform3fv(glGetUniformLocation(laserShader->GetProgramID(), "endPosition"), 1, (float*)&laser->GetEndPos());
+			glUniform1f(glGetUniformLocation(laserShader->GetProgramID(), "thickness"), laser->GetThickness());
+			glUniform1f(glGetUniformLocation(laserShader->GetProgramID(), "time"), vignettePulse);
+			glUniform4fv(glGetUniformLocation(laserShader->GetProgramID(), "inColour"), 1, (float*)&laser->GetColor());
+			DrawBoundMesh();
+		}
 	}
 
 	// motion blur
