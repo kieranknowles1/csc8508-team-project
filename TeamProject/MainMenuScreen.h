@@ -37,7 +37,7 @@ public:
     
         resourceManager = game->GetResourceManager();
         fmodLogoTex = resourceManager->getTextures().get("FMOD Logo White - Black Background1.png");
-        UiSprite fmodLogo = { Vector2(0.9f, 0.1f), Vector2(0.2f, 0.2f), Vector4(1,1,1,1), fmodLogoTex };
+        UiSprite fmodLogo = { Vector2(0.95f, 0.05f), Vector2(0.1f, 0.1f), Vector4(1,1,1,1), fmodLogoTex };
         textureUiElement = std::make_unique<TextureUiElement>(fmodLogo);
         renderer->AddUiElement(textureUiElement.get());
         textureUiElement->SetActive(true);
@@ -130,7 +130,7 @@ public:
     void OnAwake() override {
         if (!textureUiElement) {  // Check if the element exists
             fmodLogoTex = resourceManager->getTextures().get("FMOD Logo Black - White Background1.png");
-            UiSprite fmodLogo = { Vector2(0.8f, 0.5f), Vector2(0.2f, 0.2f), Vector4(1,1,1,1), fmodLogoTex };
+            UiSprite fmodLogo = { Vector2(0.95f, 0.05f), Vector2(0.1f, 0.1f), Vector4(1,1,1,1), fmodLogoTex };
             textureUiElement = std::make_unique<TextureUiElement>(fmodLogo);
         }
         renderer->AddUiElement(textureUiElement.get());

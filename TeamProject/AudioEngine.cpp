@@ -244,6 +244,16 @@ bool CAudioEngine::IsEventPlaying(const std::string& strEventName) const {
     return false;
 }
 
+bool CAudioEngine::IsAnySoundPlaying() const {
+    for (const auto & channel : sgpImplementation->mChannels) {
+        bool isPlaying = false;
+        if (channel.second->isPlaying(&isPlaying) == FMOD_OK && isPlaying) {
+            return true; // At least one sound is playing
+        }
+    }
+    return false; // No sounds are playing
+}
+
 //Retrieves the current value of an FMod event parameter
 void CAudioEngine::GetEventParameter(const std::string& strEventName, const std::string& strParameterName, float* parameter) {
     auto tFoundIt = sgpImplementation->mEvents.find(strEventName);

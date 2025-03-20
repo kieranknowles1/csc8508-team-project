@@ -89,6 +89,7 @@ public:
 	void SetChannelPlaybackPosition(int channelId, unsigned int positionMs);
 	void SetChannelVolume(int nChannelId, float fVolumedB);
 	bool IsPlaying(int nChannelId) const;
+	bool IsAnySoundPlaying() const;
 	bool IsEventPlaying(const std::string& strEventName) const;
 	float dbToVolume(float dB);
 	float VolumeTodB(float volume);
