@@ -219,6 +219,8 @@ void GameTechAGCRenderer::WriteRenderPassConstants() {
 
 	frameData.viewMatrix = camera->BuildViewMatrix();
 	frameData.projMatrix = camera->BuildProjectionMatrix(hostWindow->GetScreenAspect());
+	frameData.nearPlane = camera->GetNearPlane();
+	frameData.farPlane = camera->GetFarPlane();
 
 	frameData.viewProjMatrix = frameData.projMatrix * frameData.viewMatrix;
 
@@ -299,8 +301,10 @@ void GameTechAGCRenderer::DrawDecals() {
 		.setBuffers(0, 1, &currentFrame->decals.buffer);
 
 	frameContext->m_bdr.getStage(sce::Agc::ShaderType::kPs)
+		.setConstantBuffers(0, 1, &currentFrame->constantBuffer)
 		.setBuffers(0, 1, &textureBuffer)
-		.setSamplers(0, 1, &defaultSampler);
+		.setSamplers(0, 1, &defaultSampler)
+		.setSamplers(1, 1, &depthSampler).setTextures(1, 1, depthTexture->GetAGCPointer());
 
 	unitQuad->BindVertexBuffers(frameContext->m_bdr.getStage(sce::Agc::ShaderType::kGs));
 	DrawBoundMeshInstanced(*frameContext, *unitQuad, currentFrame->decals.count);

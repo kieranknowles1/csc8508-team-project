@@ -113,6 +113,7 @@ struct DECAL_VS_OUTPUT
 	float4 color SLOT(TEXCOORD0);
 	float2 uv SLOT(TEXCOORD1);
 	int texId SLOT(TEXCOORD2);
+	float depth SLOT(TEXCOORD3);
 };
 
 #undef SLOT

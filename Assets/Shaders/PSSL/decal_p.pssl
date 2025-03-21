@@ -1,11 +1,31 @@
 #include "types.h"
+#include "ShaderConstants.psslh"
 
 RegularBuffer<sce::Agc::Core::Texture> textures : register(t0);
 SamplerState sampler : register(s0);
 
+Texture2D<float> depth : register(t1);
+SamplerState depthSampler : register(s1);
+
+// https://stackoverflow.com/questions/51108596/linearize-depth
+// Works differently to OpenGL
+float LinearizeDepth(float depth) {
+    return Constants.nearPlane * Constants.farPlane / (Constants.farPlane + depth * (Constants.nearPlane - Constants.farPlane));
+}
+
 [CxxSymbol("DecalShader::p")]
 float4 main(DECAL_VS_OUTPUT vertex) : S_TARGET_OUTPUT
 {
+    float2 screenTexCoord = vertex.position.xy / Constants.screenSize;
+    float originalDepth = depth.Sample(depthSampler, screenTexCoord).r;
+
+    float thisDistance = LinearizeDepth(vertex.depth);
+    float originalDistance = LinearizeDepth(originalDepth);
+
+    if (abs(thisDistance - originalDistance) > 0.5f) {
+        discard;
+    }
+
     Texture2D<float4> tex = Texture2D<float4>(textures[NonUniformResourceIndex(vertex.texId)]);
     return tex.Sample(sampler, vertex.uv) * vertex.color;
 }

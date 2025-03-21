@@ -18,5 +18,6 @@ DECAL_VS_OUTPUT main(uint vertID : S_VERTEX_ID, uint instanceID : S_INSTANCE_ID)
     output.texId = state.textureId;
     output.uv = TextureCoords[vertID];
     output.position = TransformWorldToClip(vertexPos);
+    output.depth = output.position.z / output.position.w;
     return output;
 }
