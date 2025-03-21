@@ -35,13 +35,8 @@ SPGameController::SPGameController(GameObject* p, TutorialGame* g, GameTechRende
 
     for (int i = 101; i <= 150; i++) { laserIDs.push_back(i); }
 
-    for (int i = 0; i < 5; i++) {
+    for (int i = 0; i < 10; i++) {
         AddWandererToWorld(bottom, Side::BOTTOM);
-        AddWandererToWorld(top, Side::TOP);
-        AddWandererToWorld(front, Side::FRONT);
-        AddWandererToWorld(back, Side::BACK);
-        AddWandererToWorld(left, Side::LEFT);
-        AddWandererToWorld(right, Side::RIGHT);
     }
 
 }
@@ -62,6 +57,15 @@ void SPGameController::Update(float dt) {
     }
 
     if (navMeshDebug) VisualiseNavMesh();
+}
+
+void SPGameController::ClearAIs() {
+    while (wanderers.size() > 0) {
+        Wanderer* wanderer = wanderers.back();
+        AddIDToPool(wanderer->laserID);
+        wanderer->DestroyWanderer();
+        wanderers.pop_back();
+    }
 }
 
 Wanderer* SPGameController::AddWandererToWorld(NavMesh* navMesh, Side side) {

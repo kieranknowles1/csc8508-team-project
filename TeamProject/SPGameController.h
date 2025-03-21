@@ -52,6 +52,10 @@ namespace NCL {
                 laserIDs.pop_back();
                 return id;
             }
+
+            int score;
+            int level;
+            void ClearAIs();
             
 		};
 	}

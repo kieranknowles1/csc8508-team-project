@@ -17,7 +17,10 @@ namespace NCL {
 			void DamageAI(float d) { health -= d; }
 			float GetHealth() { return health; }
 
+			void DestroyWanderer();
 			bool isDeleted() const { return deleted; }
+
+			int laserID;
 
 		private:
 			void PlayerNear(float dt);
@@ -40,8 +43,6 @@ namespace NCL {
 
 			float maxUpdatePlayerPathTimer = 2.0f;
 			float updateplayerPathTimer;
-
-			int laserID;
 
 			GameTechRendererInterface* renderer;
 
