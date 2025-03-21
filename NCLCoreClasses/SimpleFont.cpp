@@ -66,6 +66,25 @@ void SimpleFont::BuildVerticesForString(const std::string& text, const Maths::Ve
     }
 }
 
+void SimpleFont::BuildInterleavedVerticesForString(const std::string& text, const Maths::Vector2& startPos, const Maths::Vector4& colour, float size, std::vector<InterleavedTextVertex>& vertices)
+{
+    // Rich's code duplicated all of this, so consider this version less bad
+    std::vector<Vector3> positions;
+    std::vector<Vector4> colours;
+    std::vector<Vector2> uvs;
+    BuildVerticesForString(text, startPos, colour, size, positions, uvs, colours);
+    assert(positions.size() == colours.size());
+    assert(positions.size() == uvs.size());
+
+    for (int i = 0; i < positions.size(); i++) {
+        InterleavedTextVertex vtx;
+        vtx.colour = colours[i];
+        vtx.pos = Vector2(positions[i].x, positions[i].y);
+        vtx.texCoord = uvs[i];
+        vertices.push_back(vtx);
+    }
+}
+
 SimpleFont::SimpleFont(const std::string&filename, std::shared_ptr<Texture> texture) {
     this->texture = texture;
     InitializeFreeType(filename, texture);
@@ -73,6 +92,14 @@ SimpleFont::SimpleFont(const std::string&filename, std::shared_ptr<Texture> text
 
 
 SimpleFont::~SimpleFont()	{
+}
+
+int nextPower2(int i) {
+    int candidate = 1;
+    while (candidate < i) {
+        candidate = candidate * 2;
+    }
+    return candidate;
 }
 
 int SimpleFont::InitializeFreeType(const std::string& filename, std::shared_ptr<Texture> texture) {
@@ -127,8 +154,9 @@ int SimpleFont::InitializeFreeType(const std::string& filename, std::shared_ptr<
     }
 
     // Create an atlas for our texture
-    texture->width = maxSize.x * AtlasSize;
-    texture->height = maxSize.y * AtlasSize;
+    // PS5 textures are very sensitive to alignment, rounding sizes up to a power of 2 seems safer
+    texture->width = nextPower2(maxSize.x * AtlasSize);
+    texture->height = nextPower2(maxSize.y * AtlasSize);
     texture->channels = 1;
     size_t bytes = texture->width * texture->height;
     texture->texData = (char*)malloc(bytes);
@@ -149,9 +177,14 @@ int SimpleFont::InitializeFreeType(const std::string& filename, std::shared_ptr<
         Vector2 sizeVec = Vector2(glyph.size.x, glyph.size.y);
         ch.size = sizeVec / ScreenSize;
         ch.bearing = glyph.bearing;
-        ch.uvTopLeft = Vector2((1.0f / AtlasSize) * col, (1.0f / AtlasSize) * row);
+
+        int pixelsLeft = col * maxSize.x;
+        int pixelsTop = row * maxSize.y;
+
+        ch.uvTopLeft = Vector2(pixelsLeft, pixelsTop) * pixelSize;
         ch.uvBottomRight = ch.uvTopLeft + (pixelSize * sizeVec);
         ch.advance = glyph.advance;
+
         characters[glyph.ch] = ch;
     }
 

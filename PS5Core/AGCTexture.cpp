@@ -73,3 +73,32 @@ void AGCTexture::load(const std::string& filename)
 	//	sce::Agc::Core::registerResource(&agcTex, "%s", filename.c_str());
 	//}
 }
+
+void AGCTexture::upload(bool freeData)
+{
+	if (texData == nullptr) return;
+	assert(channels == 1 && "Multiple channels are not supported.");
+
+	size_t sz = width * height * sizeof(float);
+	gpuAllocation = allocator->Allocate(sz, 64 * 1024);
+
+	// HACK: Manually convert the uint8 data to float32
+	// Core::translate could probably do this, but there's over 100 overloads to look through
+	unsigned char* ptr = (unsigned char*)texData;
+	float* gpuPtr = (float*)gpuAllocation;
+	for (int i = 0; i < width * height; i++) {
+		*gpuPtr = float(*ptr / 256.0f);
+		gpuPtr++;
+		ptr++;
+	}
+
+	agcTex.init()
+		.setType(sce::Agc::Core::Texture::Type::k2d)
+		.setSwizzle(sce::Agc::Core::Swizzle::kR000_S1) // 1 channel
+		.setFormat(sce::Agc::Core::TypedFormat::k32Float) // 1 float
+		.setNumMipLevels(1)
+		.setWidth(width).setHeight(height)
+		.setDataAddress(gpuAllocation);
+
+	//agcTex.
+}
