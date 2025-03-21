@@ -108,11 +108,18 @@ int SimpleFont::InitializeFreeType(const std::string& filename, std::shared_ptr<
         data.ch = c;
         data.advance = face->glyph->advance.x;
         data.bearing = { float(face->glyph->bitmap_left), float(face->glyph->bitmap_top) };
+
         data.size = {
             face->glyph->bitmap.width, face->glyph->bitmap.rows
         };
-        data.data.resize(data.size.x * data.size.y);
-        std::memcpy(data.data.data(), face->glyph->bitmap.buffer, data.size.x * data.size.y);
+        size_t bytes = data.size.x * data.size.y;
+        // https://en.cppreference.com/w/c/string/byte/memcpy
+        // data or glyph.bitmap.buffer could be nullptr for an empty
+        // glyph, which is undefined behaviour even if size is 0
+        if (bytes > 0) {
+            data.data.resize(bytes);
+            memcpy(data.data.data(), face->glyph->bitmap.buffer, bytes);
+        }
 
         maxSize.x = std::max(maxSize.x, data.size.x);
         maxSize.y = std::max(maxSize.y, data.size.y);
