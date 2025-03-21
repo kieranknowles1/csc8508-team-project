@@ -238,6 +238,8 @@ void GameTechAGCRenderer::WriteRenderPassConstants() {
 	frameData.vingetteSettings.intensity = vignetteIntensity;
 	frameData.vingetteSettings.pulse = vignettePulse;
 
+	frameData.ambient = 0.1f;
+
 
 	currentFrame->data.WriteData<ShaderConstants>(frameData); //Let's start filling up our frame data!
 

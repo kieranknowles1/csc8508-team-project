@@ -29,7 +29,8 @@ struct ShaderConstants
 
 	float nearPlane;
 	float farPlane;
-	float2 __pad;
+	float ambient;
+	float __pad;
 
 	float3 cameraPos;
 	float time;
