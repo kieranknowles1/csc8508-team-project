@@ -57,12 +57,12 @@ void Overheat::Animate(float dt) {
         else {
             barColour = Vector4(0.7f, 0.1f, 0.1f, 0.4f);
         }
-   
+  
         break;
     case Holding:
         currentTimer -= dt;
         if (currentTimer <= 0.0f) {
-            cooldownTimeCurrent = cooldownTimeMax * (overheatTime/stoppedAtTime);
+            cooldownTimeCurrent = cooldownTimeMax * (1-(stoppedAtTime/maxFiringTime));
             currentTimer = cooldownTimeCurrent;
             currentState = Cooling;
         }
