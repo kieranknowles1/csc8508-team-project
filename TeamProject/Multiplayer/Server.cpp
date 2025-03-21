@@ -147,6 +147,22 @@ namespace Multiplayer {
                     }
                 }
 
+                // Moving too fast.
+                if (currentPacket->GetSequenceNumber() > m_tickCount) {
+                    std::cout << ConsoleTextColor::YELLOW;
+                    std::cout << "Someone's network is ticking faster!\n";
+                    std::cout << "Catching up...\n";
+                    std::cout << ConsoleTextColor::DEFAULT;
+
+                    int diff = currentPacket->GetSequenceNumber() - m_tickCount;
+
+                    for (diff; diff > 0; diff--) {
+                        m_buffer[m_processTick % TICK_BUFFER_SIZE].clear();
+                        m_processTick++;
+                    }
+                    m_tickCount = currentPacket->GetSequenceNumber();
+                }
+
                 // Pass packets on to clients.
                 if (m_isHost) {
                     currentPacket->SetSequenceNumber(currentPacket->GetSequenceNumber() + 1);
@@ -165,11 +181,11 @@ namespace Multiplayer {
             m_buffer[m_processTick % TICK_BUFFER_SIZE].clear();
         }
 
-        // Speeding up to match others pace.
-        if (smallestIncoming > m_tickCount && smallestIncoming != INT32_MAX) {
-            m_processTick += smallestIncoming - m_tickCount;
-            m_tickCount = smallestIncoming;
-        }
+        //// Speeding up to match others pace.
+        //if (smallestIncoming > m_tickCount && smallestIncoming != INT32_MAX) {
+        //    m_processTick += smallestIncoming - m_tickCount;
+        //    m_tickCount = smallestIncoming;
+        //}
 
         m_tickCount++;
         m_processTick++;

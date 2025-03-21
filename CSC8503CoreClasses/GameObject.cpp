@@ -49,7 +49,7 @@ void GameObject::UpdateFromState(float dt) {
     elapsedTickTime += dt;
 
     std::function lerp = [](float x, float y, float w) { return x + ((y - x) * w); };
-    float weight = TICK_UPDATE_RATE / fmod(elapsedTickTime, TICK_UPDATE_RATE);
+    float weight = fmod(elapsedTickTime, TICK_UPDATE_RATE) / TICK_UPDATE_RATE;
 
     auto [current, currentLock] = states->GetCurrentState();
     auto [read, readLock] = states->GetReadState();
