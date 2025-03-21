@@ -42,7 +42,7 @@ namespace WorldState {
          * @brief Update a state.
          * This function blocks reading until it has finished.
          */
-        void UpdateState(const StateType type, const StateValue& value) {
+        void UpdateState(const StateType type, const StateValue value) {
             m_states[type] = value;
         }
 
@@ -61,7 +61,8 @@ namespace WorldState {
          * @brief Remove all states and their values.
          */
         void Clear() {
-            m_states = std::unordered_map<StateType, StateValue>();
+            m_states.clear();
+            //m_states = std::unordered_map<StateType, StateValue>();
         }
 
         /**
@@ -183,9 +184,9 @@ namespace WorldState {
          * Write is cleared.
          */
         void UpdateBuffer() {
-            std::shared_lock currentLock(m_stateMutexes[current]);
-            std::shared_lock readLock(m_stateMutexes[read]);
-            std::shared_lock writeLock(m_stateMutexes[write]);
+            std::unique_lock currentLock(m_stateMutexes[current]);
+            std::unique_lock readLock(m_stateMutexes[read]);
+            std::unique_lock writeLock(m_stateMutexes[write]);
 
             current = read;
             read = write;
@@ -194,19 +195,6 @@ namespace WorldState {
         }
 
     private:
-        void LockAll() {
-            for (int i = 0; i < 3; i++) {
-                m_stateMutexes[i].lock();
-            }
-        }
-
-
-        void UnlockAll() {
-            for (int i = 0; i < 3; i++) {
-                m_stateMutexes[i].unlock();
-            }
-        }
-
         std::array<ObjectState, 3> m_states;
         std::shared_mutex* m_stateMutexes;
 
