@@ -7,13 +7,12 @@ using namespace WorldState;
 using namespace NCL::CSC8503;
 
 
-void LaserObject::UpdateObjectState() {
-    auto [writeState, lock] = states->GetWriteState();
+void LaserObject::UpdateObjectState(ObjectState* buffer) {
     
-    std::unique_lock stateLock = writeState->Lock();
-    writeState->UpdateState(StateType::StartPos, startPos);
-    writeState->UpdateState(StateType::EndPos, endPos);
-    writeState->UpdateState(StateType::Normal, collisionNormal);
+    std::unique_lock stateLock = buffer->Lock();
+    buffer->UpdateState(StateType::StartPos, startPos);
+    buffer->UpdateState(StateType::EndPos, endPos);
+    buffer->UpdateState(StateType::Normal, collisionNormal);
 }
 
 void LaserObject::UpdateFromState(float dt) {

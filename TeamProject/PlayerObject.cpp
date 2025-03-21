@@ -25,12 +25,43 @@ void PlayerObject::Update(float dt) {
     }
 }
 
-void PlayerObject::UpdateObjectState() {
-    GameObject::UpdateObjectState();
-}
-
 void PlayerObject::UpdateFromState(float dt) {
     GameObject::UpdateFromState(dt);
+
+    elapsedTickTime += dt;
+
+    std::function lerp = [](float x, float y, float w) { return x + ((y - x) * w); };
+    float weight = fmod(elapsedTickTime, TICK_UPDATE_RATE) / TICK_UPDATE_RATE;
+
+    auto [current, currentLock] = states->GetCurrentState();
+    auto [read, readLock] = states->GetReadState();
+
+    StateValue currentUpVectorValue;
+    StateValue targetUpVectorValue;
+
+    std::shared_lock currentStateLock = current->Lock_Shared();
+    std::shared_lock readStateLock = read->Lock_Shared();
+
+    bool hasCurrentUpVector = current->ReadState(StateType::LinearVelocity, &currentUpVectorValue);
+    bool hasTargetUpVector = read->ReadState(StateType::LinearVelocity, &targetUpVectorValue);
+
+    currentStateLock.unlock();
+    readStateLock.unlock();
+
+    currentLock.unlock();
+    readLock.unlock();
+
+    // Interpolate up vector.
+    if (hasCurrentUpVector && hasTargetUpVector) {
+        btVector3 currentUpVector = std::get<btVector3>(currentUpVectorValue);
+        btVector3 targetUpVector = std::get<btVector3>(targetUpVectorValue);
+        btVector3 interpolated = btVector3(
+            lerp(currentUpVector.x(), targetUpVector.x(), weight),
+            lerp(currentUpVector.y(), targetUpVector.y(), weight),
+            lerp(currentUpVector.z(), targetUpVector.z(), weight)
+        );
+        upDirection = interpolated;
+    }
 }
 
 std::vector<std::shared_ptr<Packet::Packet>> PlayerObject::CreatePackets(int sequenceNum) {

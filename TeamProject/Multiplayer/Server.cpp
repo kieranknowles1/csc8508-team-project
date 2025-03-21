@@ -113,7 +113,10 @@ namespace Multiplayer {
 
             object->GetObjectStates()->UpdateBuffer();
 
-            if (*(object->GetOwner()) != *m_user) return;
+            if (*(object->GetOwner()) != *m_user) {
+                object->WriteCurrentState();
+                return;
+            }
 
             std::vector<std::shared_ptr<Packet::Packet>> packets = object->CreatePackets(m_tickCount);
             for (auto packet = packets.begin(); packet != packets.end(); packet++) {
@@ -149,13 +152,14 @@ namespace Multiplayer {
 
                 // Moving too fast.
                 if (currentPacket->GetSequenceNumber() > m_tickCount) {
-                    std::cout << ConsoleTextColor::YELLOW;
-                    std::cout << "Someone's network is ticking faster!\n";
-                    std::cout << "Catching up...\n";
-                    std::cout << ConsoleTextColor::DEFAULT;
-
                     int diff = currentPacket->GetSequenceNumber() - m_tickCount;
 
+#ifndef NDEBUG
+                    std::cout << ConsoleTextColor::YELLOW;
+                    std::cout << "Someone's network is ticking faster!\n";
+                    std::cout << "Skipping " << diff << " ticks.\n";
+                    std::cout << ConsoleTextColor::DEFAULT;
+#endif
                     for (diff; diff > 0; diff--) {
                         m_buffer[m_processTick % TICK_BUFFER_SIZE].clear();
                         m_processTick++;
