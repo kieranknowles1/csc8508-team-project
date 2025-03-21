@@ -45,7 +45,7 @@ Wanderer::Wanderer(GameObject* p, NavMesh* mesh, Side side, int lID, GameTechRen
 		if (playerDist > senseDistance * 2) {
 			GetRenderObject()->SetColour(Vector4(0, 1, 0, 1));
 			curPath = navMesh->FindPath(curPathPoint, navMesh->GetRandomPointInNavMesh());
-			NewPath(curPath);
+			if (curPath.size() > 0) NewPath(curPath);
 			renderer->updateLaser(laserID, btVector3(0, 0, 0), btVector3(0, 0, 0));
 			return true;
 		}
@@ -244,7 +244,7 @@ void Wanderer::PlayerFar(float dt) {
 	}
 	else {
 		curPath = navMesh->FindPath(curPathPoint, navMesh->GetRandomPointInNavMesh());
-		NewPath(curPath);
+		if (curPath.size() > 0) NewPath(curPath);
 	}
 
 }
