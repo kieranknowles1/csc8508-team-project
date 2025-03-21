@@ -35,21 +35,40 @@ SPGameController::SPGameController(GameObject* p, TutorialGame* g, GameTechRende
 
     for (int i = 101; i <= 150; i++) { laserIDs.push_back(i); }
 
-    for (int i = 0; i < 10; i++) {
+    score = 0;
+    level = 1;
+    defeated = 0;
+
+    InitLevel(level);
+}
+
+void SPGameController::InitLevel(int curLevel) {
+    ClearAIs();
+
+    for (int i = 0; i < 5 + curLevel; i++) {
         AddWandererToWorld(bottom, Side::BOTTOM);
     }
-
 }
 
 void SPGameController::Update(float dt) {
     // Remove deleted wanderers
     wanderers.erase(
         std::remove_if(wanderers.begin(), wanderers.end(),
-            [](const Wanderer* wanderer) {
-                return wanderer->isDeleted();
+            [this](const Wanderer* wanderer) {
+                if (wanderer->isDeleted()) {
+                    defeated++;
+                    return true;
+                }
+                return false;
             }),
         wanderers.end()
     );
+
+    if (defeated > level) {
+        level++;
+        defeated = 0;
+        InitLevel(level);
+    }
 
     // Update remaining wanderers
     for (Wanderer* wanderer : wanderers) {

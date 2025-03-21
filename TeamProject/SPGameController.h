@@ -56,6 +56,9 @@ namespace NCL {
             int score;
             int level;
             void ClearAIs();
+            int defeated;
+
+            void InitLevel(int curLevel);
             
 		};
 	}
