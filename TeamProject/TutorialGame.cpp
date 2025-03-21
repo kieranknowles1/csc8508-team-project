@@ -11,6 +11,7 @@
 #include <CSC8503CoreClasses/Debug.h>
 #include "Colors.h"
 #include "Shoot.h"
+#include "MeshAnimation.h" //temporarily added for testing 
 
 #include "Window.h"
 #include "Config.h"
@@ -130,7 +131,9 @@ void TutorialGame::UpdateGame(float dt) {
     //post processing time variable effect:
     pulse += dt;
     renderer->SetVignettePulse(pulse);
+
     renderer->SetDelta(dt);
+
 }
 
 
@@ -342,6 +345,10 @@ PlayerObject* TutorialGame::InitPlayer(btVector3 position, btVector3 upDir) {
 
     newPlayer->GetRenderObject()->SetColour(Vector4(playerColour));
     newPlayer->setUpDirection(upDir);
+
+    //newPlayer->SetIsAnimated(true); //maybe better to manage this wherever animations are being applied rather than here but for testing this is probably fine
+    newPlayer->setRenderer(renderer); 
+
     return newPlayer;
 }
 
@@ -418,7 +425,9 @@ PlayerObject* TutorialGame::AddPlayerCapsuleToWorld(const Vector3& position, flo
     btCollisionShape* playerShape = new btCapsuleShape(radius, height);
 
     // Setting the render object for the capsule
-    player->SetRenderObject(new RenderObject(player, resourceManager->getMeshes().get("Capsule.msh"), defaultTexture));
+    player->SetRenderObject(new RenderObject(player, resourceManager->getMeshes().get("Capsule.msh"), defaultTexture)); 
+   // player->SetRenderObject(new RenderObject(player, resourceManager->getMeshes().get("/MaleGuard/Male_Guard.msh"), resourceManager->getMaterials().get("Male_Guard.mat")));
+  //  player->GetRenderObject()->SetAnimation(new MeshAnimation("/MaleGuard/Taunt.anm")); //For Testing only StepLeft.anm
     // Setting the physics object for the capsule
     player->SetPhysicsObject(new PhysicsObject(player));
 

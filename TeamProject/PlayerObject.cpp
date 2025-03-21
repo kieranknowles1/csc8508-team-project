@@ -12,7 +12,12 @@ void PlayerObject::Update(float dt) {
     rightDirection = CalculateRightDirection(upDirection);
     forwardDirection = CalculateForwardDirection(upDirection, rightDirection);
     updateGravity(dt);
-    
+
+    //Animation: 
+    if (animated == true) {
+        renderObject->GetAnimation()->UpdateAnimation(dt);
+    }
+
     elapsedTime += dt;
 
     // 2 seconds before healing.

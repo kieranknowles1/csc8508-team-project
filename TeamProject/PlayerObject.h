@@ -7,8 +7,11 @@
 #include "PhysicsObject.h"
 #include "CollisionInfo.h"
 #include "Respawn.h"
+#include "MeshAnimation.h"
+
 #include "Colors.h"
 #include "RenderObject.h"
+
 #include "GameTechRendererInterface.h"
 
 #include <btBulletDynamicsCommon.h>
@@ -180,7 +183,6 @@ private:
 
 	float elapsedTime = 0;
 	float lastHit = 0;
-
 
 	GameTechRendererInterface* renderer;
 
