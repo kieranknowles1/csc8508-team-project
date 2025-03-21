@@ -21,6 +21,8 @@ namespace NCL::CSC8503 {
 // Player class derived from GameObject
 class PlayerObject : public GameObject {
 public:
+	~PlayerObject();
+
 	void Update(float dt) override;
 
 	void OnCollisionEnter(const CollisionInfo& collisionInfo) override;

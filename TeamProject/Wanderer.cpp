@@ -46,7 +46,8 @@ Wanderer::Wanderer(GameObject* p, NavMesh* mesh, Side side, GameTechRendererInte
 			GetRenderObject()->SetColour(Vector4(0, 1, 0, 1));
 			curPath = navMesh->FindPath(curPathPoint, navMesh->GetRandomPointInNavMesh());
 			if (curPath.size() > 0) NewPath(curPath);
-			//renderer->updateLaser(laserID, btVector3(0, 0, 0), btVector3(0, 0, 0));
+			laser->SetStartPos({ 0, 0, 0 });
+			laser->SetEndPos({ 0, 0, 0 });
 			return true;
 		}
 		else {
@@ -56,6 +57,9 @@ Wanderer::Wanderer(GameObject* p, NavMesh* mesh, Side side, GameTechRendererInte
 }
 
 Wanderer::~Wanderer() {
+	if (laser && TutorialGame::getInstance()) TutorialGame::getInstance()->GetWorld()->RemoveGameObject(laser);
+
+	laser = nullptr;
 	delete stateMachine;
 }
 
@@ -176,7 +180,8 @@ void Wanderer::PlayerNear(float dt) {
 		btVector3 pPos = player->GetTransform().getOrigin();
 		btVector3 dir = (pPos - curPos) == 0 ? btVector3(0, 0, 0) : (pPos - curPos).normalized();
 		std::optional<ShotInfo> info = Shoot::GetInstance()->ShootBulletAI(curPos, dir, trans.getRotation(), dt);
-		//renderer->updateLaser(laserID, curPos, info.value().hitPos);
+		laser->SetEndPos(info.value().hitPos);
+		laser->SetStartPos(curPos);
 
 		shootTimer -= dt;
 		if (shootTimer <= 0) isShooting = false;
@@ -193,7 +198,8 @@ void Wanderer::PlayerNear(float dt) {
 		trans.setOrigin(newPos);
 		physicsObject->GetRigidBody()->setWorldTransform(trans);
 
-		//renderer->updateLaser(laserID, btVector3(0, 0, 0), btVector3(0, 0, 0));
+		laser->SetEndPos({ 0, 0, 0 });
+		laser->SetStartPos({ 0, 0, 0 });
 
 		shootTimer += dt;
 		if (shootTimer >= maxShootTimer) isShooting = true;

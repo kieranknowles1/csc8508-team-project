@@ -39,6 +39,7 @@ void GameWorld::AddGameObject(GameObject* o) {
 
 void GameWorld::RemoveGameObject(GameObject* o) {
 	gameObjects.erase(std::remove(gameObjects.begin(), gameObjects.end(), o), gameObjects.end());
+	o->setDeleted();
 	worldStateCounter++;
 }
 

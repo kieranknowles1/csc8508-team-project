@@ -9,6 +9,11 @@ using namespace WorldState;
 using namespace NCL;
 using namespace CSC8503;
 
+PlayerObject::~PlayerObject() {
+    if (laser && TutorialGame::getInstance()) TutorialGame::getInstance()->GetWorld()->RemoveGameObject(laser);
+    laser = nullptr;
+}
+
 void PlayerObject::Update(float dt) {
     upDirection = CalculateUpDirection(dt);
 
