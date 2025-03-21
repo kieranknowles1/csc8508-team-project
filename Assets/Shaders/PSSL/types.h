@@ -69,9 +69,9 @@ struct VS_OUTPUT
 	int	texID SLOT(TEXCOORD2);
 	int normId SLOT(TEXCOORD3);
 
-	float3 tangent;
-	float3 normal;
-	float3 binormal;
+	float3 tangent SLOT(TEXCOORD4);
+	float3 normal SLOT(TEXCOORD5);
+	float3 binormal SLOT(TEXCOORD6);
 };
 
 struct UI_VS_OUTPUT {

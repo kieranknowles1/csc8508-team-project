@@ -39,7 +39,7 @@ VS_OUTPUT main(uint vertID : S_VERTEX_ID, uint objID : S_SRT_DATA, uint instance
 	Output.texID	= s.texIndex;
 	Output.normId = s.normalIndex;
 
-	float3x3 normMat = float3x3(s.normalMatrix);
+	float3x3 normMat = transpose(float3x3(s.normalMatrix));
 
 	Output.normal = normalize(mul(normMat, normalize(normal)));
 	Output.tangent = normalize(mul(normMat, normalize(tangent.xyz)));
