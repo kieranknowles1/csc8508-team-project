@@ -31,26 +31,18 @@ GameObject::~GameObject()	{
 	if (objects.contains(worldID)) objects.erase(worldID);
 }
 
-void GameObject::UpdateObjectState(ObjectState* buffer) {
+void GameObject::UpdateObjectState() {
+    auto [writeState, lock] = states->GetWriteState();
+    
     btRigidBody* body = GetPhysicsObject()->GetRigidBody();
     btTransform transform = body->getWorldTransform();
 
-    std::unique_lock<std::shared_mutex> stateLock(buffer->Lock());
+    std::unique_lock<std::shared_mutex> stateLock(writeState->Lock());
 
-    buffer->UpdateState(StateType::LinearVelocity, body->getLinearVelocity());
-    buffer->UpdateState(StateType::AngularVelocity, body->getAngularVelocity());
-    buffer->UpdateState(StateType::Position, transform.getOrigin());
-    buffer->UpdateState(StateType::Rotation, transform.getRotation());
-}
-
-void GameObject::WriteCurrentState() {
-    auto [current, currentLock] = states->GetCurrentState();
-    UpdateObjectState(current);
-}
-
-void GameObject::WriteSendState() {
-    auto [write, writeLock] = states->GetWriteState();
-    UpdateObjectState(write);
+    writeState->UpdateState(StateType::LinearVelocity, body->getLinearVelocity());
+    writeState->UpdateState(StateType::AngularVelocity, body->getAngularVelocity());
+    writeState->UpdateState(StateType::Position, transform.getOrigin());
+    writeState->UpdateState(StateType::Rotation, transform.getRotation());
 }
 
 void GameObject::UpdateFromState(float dt) {

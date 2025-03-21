@@ -97,11 +97,8 @@ namespace NCL::CSC8503 {
             //std::cout << "OnCollisionStay: " << this->GetWorldID() << " is still colliding with " << otherObject->GetWorldID() << std::endl;
         }
 
-        virtual void UpdateObjectState(WorldState::ObjectState* buffer);
+        virtual void UpdateObjectState();
         virtual void UpdateFromState(float dt);
-        void WriteCurrentState();
-        void WriteSendState();
-
         virtual std::vector<std::shared_ptr<Packet::Packet>> CreatePackets(int sequenceNum);
 
         virtual void Update(float dt) {}

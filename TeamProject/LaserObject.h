@@ -4,12 +4,11 @@
 
 namespace NCL::CSC8503 {
 
-
     class LaserObject : public GameObject {
     public:
         LaserObject(GameObject* parent) {}
 
-        void UpdateObjectState(WorldState::ObjectState* buffer) override;
+        void UpdateObjectState() override;
         void UpdateFromState(float dt) override;
         std::vector<std::shared_ptr<Packet::Packet>> CreatePackets(int sequenceNum) override;
 
