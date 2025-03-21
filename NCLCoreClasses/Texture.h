@@ -8,6 +8,8 @@ https://research.ncl.ac.uk/game/
 */
 #pragma once
 #include "Vector.h"
+#include <memory>
+#include <cstdint>
 
 namespace NCL::Rendering {
 	using namespace Maths;
@@ -31,11 +33,19 @@ namespace NCL::Rendering {
 			assetID = newID;
 		}
 
+		virtual void load(const std::string& name) = 0;
+		virtual void upload(bool freeData = true) = 0;
 		const std::string& getFileName() {
 			return fileName;
 		}
 
+		char* texData		= nullptr;
+		uint32_t width		= 0;
+		uint32_t height		= 0;
+		uint32_t channels	= 0;
+		uint32_t flags		= 0;
 	protected:
+
 		Texture();
 
 		std::string fileName;

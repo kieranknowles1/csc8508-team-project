@@ -36,6 +36,7 @@ public:
     std::string mainTextureName;
     std::string normalTextureName;
     GameObject::Type type;
+    float jumpPadStrength;
 };
 
 using namespace NCL;

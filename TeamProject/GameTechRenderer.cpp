@@ -34,6 +34,7 @@ GameTechRenderer::GameTechRenderer(Window* window) : OGLRenderer(window), GameTe
 	laserPostProcess2 = std::make_unique<OGLShader>("texturevert.glsl", "laserPost2.frag");
 	addLaserShader = std::make_unique<OGLShader>("texturevert.glsl", "laserCombine.frag");
 	laserPreProcess = std::make_unique<OGLShader>("laserPre.vert", "laserPre.frag");
+    freetypeFontShader = std::make_unique<OGLShader>("freetypefont.vert", "freetypefont.frag");
 
 	glGenTextures(1, &shadowTex);
 	glBindTexture(GL_TEXTURE_2D, shadowTex);
@@ -68,7 +69,8 @@ GameTechRenderer::GameTechRenderer(Window* window) : OGLRenderer(window), GameTe
 	glGenBuffers(1, &textColourVBO);
 	glGenBuffers(1, &textTexVBO);
 
-	Debug::CreateDebugFont("PressStart2P.fnt", *LoadTexture("PressStart2P.png"));
+    auto fontTex = std::make_shared<OGLTexture>();
+	Debug::CreateDebugFont("Comicy.ttf", fontTex);
 
 	unitQuad = Mesh::Quad<OGLMesh>(1.0f);
 	unitQuad->UploadToGPU();
@@ -95,6 +97,7 @@ GameTechRenderer::GameTechRenderer(Window* window) : OGLRenderer(window), GameTe
 	glGenFramebuffers(1, &laserPostFBO);
 	glGenFramebuffers(1, &laserPostFBO2);
 	glGenFramebuffers(1, &laserAddFBO);
+	glGenFramebuffers(1, &edgeNormalsFBO);
 
 	GLenum buffers[2] = {
 	GL_COLOR_ATTACHMENT0,
@@ -114,6 +117,7 @@ GameTechRenderer::GameTechRenderer(Window* window) : OGLRenderer(window), GameTe
 	GenerateScreenTexture(laserPostTex);
 	GenerateScreenTexture(laserPostTex2);
 	GenerateScreenTexture(laserAddedTex);
+	GenerateScreenTexture(edgeNormalsTex);
 	//attach textures to FBOS:
 	//first pass:
 	glBindFramebuffer(GL_FRAMEBUFFER, bufferFBO);
@@ -171,6 +175,12 @@ GameTechRenderer::GameTechRenderer(Window* window) : OGLRenderer(window), GameTe
 		return;
 	}
 
+	glBindFramebuffer(GL_FRAMEBUFFER, edgeNormalsFBO);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, edgeNormalsTex, 0);
+	glDrawBuffers(1, buffers);
+	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE || !edgeNormalsTex) {
+		return;
+	}
 
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	//not enabling depth test etc here as this is done in the rendering functions
@@ -186,6 +196,7 @@ GameTechRenderer::GameTechRenderer(Window* window) : OGLRenderer(window), GameTe
 
 	vignetteShader = std::make_unique<OGLShader>("texturevert.glsl", "vignettefrag.glsl");
 	edgedetectShader = std::make_unique<OGLShader>("texturevert.glsl", "edgedetectfrag.glsl");
+	edgeNormals = std::make_unique<OGLShader>("texturevert.glsl", "edgeNormals.glsl");
 
  	//start setting up framebuffers for post processing:
 	//first generate the textures to store the rendered scene:
@@ -244,6 +255,8 @@ GameTechRenderer::GameTechRenderer(Window* window) : OGLRenderer(window), GameTe
 
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
+	animationShader = new OGLShader("skinningvert.glsl", "deferredscenefrag.glsl"); 
+
 }
 
 GameTechRenderer::~GameTechRenderer() {
@@ -271,6 +284,12 @@ GameTechRenderer::~GameTechRenderer() {
 	glDeleteFramebuffers(1, &laserPreFBO);
 	glDeleteTextures(1, &laserPreTex);
 	glDeleteTextures(1, &laserTexOld);
+	glDeleteFramebuffers(1, &edgeNormalsFBO);
+	glDeleteTextures(1, &edgeNormalsTex);
+
+	//delete MaleGuard;
+   delete animationShader;
+	
 
 }
 
@@ -386,6 +405,12 @@ void GameTechRenderer::RenderCamera() {
 	//glBindTexture(GL_TEXTURE_2D, shadowTex);
 
 	for (const auto&i : frameObjects) {
+
+		if ((*i).getParent()->GetIsAnimated() == true) {//if object is a player, don't want it to be drawn here
+			continue; //go to next renderObject in loop
+		}
+
+		//if ((*i).getParent()->getType() == Player); //could instead check based on type
         size_t subMeshCount = i->GetMesh()->GetSubMeshCount();
 
         for (size_t subMeshIndex = 0; subMeshIndex < subMeshCount; ++subMeshIndex) {
@@ -483,6 +508,7 @@ void GameTechRenderer::NewRenderLines() {
 	glBindVertexArray(0);
 }
 
+
 void GameTechRenderer::NewRenderText() {
 	const std::vector<Debug::DebugStringEntry>& strings = Debug::GetDebugStrings();
 	if (strings.empty()) {
@@ -491,7 +517,7 @@ void GameTechRenderer::NewRenderText() {
 
 	UseShader(*debugShader);
 
-	OGLTexture* t = (OGLTexture*)Debug::GetDebugFont()->GetTexture();
+	OGLTexture* t = (OGLTexture*)Debug::GetDebugFont()->getTexture().get();
 
 	if (t) {
 		glActiveTexture(GL_TEXTURE0);
@@ -516,13 +542,12 @@ void GameTechRenderer::NewRenderText() {
 
 	int frameVertCount = 0;
 	for (const auto& s : strings) {
-		frameVertCount += Debug::GetDebugFont()->GetVertexCountForString(s.data);
+		frameVertCount += s.data.size() * 6;
 	}
 	SetDebugStringBufferSizes(frameVertCount);
 
 	for (const auto& s : strings) {
-		float size = 0.2f * s.scale;
-		Debug::GetDebugFont()->BuildVerticesForString(s.data, s.position, s.colour, size, debugTextPos, debugTextUVs, debugTextColours);
+		Debug::GetDebugFont()->BuildVerticesForString(s.data, s.position, s.colour, s.scale, debugTextPos, debugTextUVs, debugTextColours);
 	}
 
 	glBindBuffer(GL_ARRAY_BUFFER, textVertVBO);
@@ -734,7 +759,15 @@ void GameTechRenderer::RenderLasers() {
 		glUniform3fv(glGetUniformLocation(laserShader->GetProgramID(), "endPosition"), 1, (float*)&laser->endPos);
 		glUniform1f(glGetUniformLocation(laserShader->GetProgramID(), "thickness"), 0.25f);
 		glUniform1f(glGetUniformLocation(laserShader->GetProgramID(), "time"), vignettePulse);
-		btVector4 color = Color::GetPlayerColor(laser->id);
+		/*btVector4 color;
+		if (laser->id > 100) { //AI IDs starting at 101
+			color = Color::GetPlayerColor(5); //Using pink player color as default for now
+		}
+		else {
+			color = Color::GetPlayerColor(laser->id);
+		}*/
+		//AI IDs starting at 101, using pink player color as default for now
+		btVector4 color = laser->id > 100 ? Color::GetPlayerColor(5) : color = Color::GetPlayerColor(laser->id);
 		glUniform4fv(glGetUniformLocation(laserShader->GetProgramID(), "inColour"), 1, (float*)&color);
 		DrawBoundMesh();
 	}
@@ -917,6 +950,29 @@ void GameTechRenderer::RenderDecals() {
 }
 
 void GameTechRenderer::RenderPostProcessing() { //gonna try putting edge detection first:
+
+		//Edge detection:
+		glBindFramebuffer(GL_FRAMEBUFFER, edgeNormalsFBO);//was BFBO
+		glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+		glDisable(GL_CULL_FACE);
+		glDisable(GL_BLEND);
+		glDisable(GL_DEPTH_TEST);
+		UseShader(*edgeNormals);
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, bufferDepthTex);
+		glUniform1i(glGetUniformLocation(edgeNormals->GetProgramID(), "depthTex"), 0);
+		glUniform2f(glGetUniformLocation(edgeNormals->GetProgramID(), "windowSize"), windowSize.x, windowSize.y);
+		//using the same proj and view matrices from RenderCamera():
+		Matrix4 viewMatrix = camera->BuildViewMatrix();
+		Matrix4 projMatrix = camera->BuildProjectionMatrix(hostWindow->GetScreenAspect());
+		Matrix4 invProj = Matrix::Inverse(projMatrix);
+		Matrix4 invView = Matrix::Inverse(viewMatrix);
+		glUniformMatrix4fv(glGetUniformLocation(edgeNormals->GetProgramID(), "inverseProjMatrix"), 1, false, (float*)&invProj);
+		glUniformMatrix4fv(glGetUniformLocation(edgeNormals->GetProgramID(), "inverseViewMatrix"), 1, false, (float*)&invView);
+		BindMesh(*fullscreenQuad);
+		DrawBoundMesh();
+
+
         //Edge detection:
 	    glBindFramebuffer(GL_FRAMEBUFFER, hdrFBO);//was BFBO
 		glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
@@ -924,23 +980,13 @@ void GameTechRenderer::RenderPostProcessing() { //gonna try putting edge detecti
 		glDisable(GL_BLEND);
 		glDisable(GL_DEPTH_TEST);
 		UseShader(*edgedetectShader);
+		glUniform2f(glGetUniformLocation(edgedetectShader->GetProgramID(), "windowSize"), windowSize.x, windowSize.y);
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, BTex); //currently holds the scene, gonna have to change up the vignette part to accomodate this //was bufferColourTex
 		glUniform1i(glGetUniformLocation(edgedetectShader->GetProgramID(), "sceneTex"), 0);
 		glActiveTexture(GL_TEXTURE1);
-		glBindTexture(GL_TEXTURE_2D, bufferDepthTex);
-		glUniform1i(glGetUniformLocation(edgedetectShader->GetProgramID(), "depthTex"), 1);
-		glUniform2f(glGetUniformLocation(edgedetectShader->GetProgramID(), "windowSize"), windowSize.x, windowSize.y);
-		glUniform1f(glGetUniformLocation(edgedetectShader->GetProgramID(), "nearPlane"), camera->GetNearPlane());
-		glUniform1f(glGetUniformLocation(edgedetectShader->GetProgramID(), "farPlane"), camera->GetFarPlane());
-		//using the same proj and view matrices from RenderCamera():
-		Matrix4 viewMatrix = camera->BuildViewMatrix();
-		Matrix4 projMatrix = camera->BuildProjectionMatrix(hostWindow->GetScreenAspect());
-		Matrix4 invProj = Matrix::Inverse(projMatrix);
-		Matrix4 invView = Matrix::Inverse(viewMatrix);
-
-		glUniformMatrix4fv(glGetUniformLocation(edgedetectShader->GetProgramID(), "inverseProjMatrix"), 1, false, (float*)&invProj);
-		glUniformMatrix4fv(glGetUniformLocation(edgedetectShader->GetProgramID(), "inverseViewMatrix"), 1, false, (float*)&invView);
+		glBindTexture(GL_TEXTURE_2D, edgeNormalsTex);
+		glUniform1i(glGetUniformLocation(edgedetectShader->GetProgramID(), "normalTex"), 1);
 		BindMesh(*fullscreenQuad);
 		DrawBoundMesh();
 
@@ -1023,6 +1069,7 @@ void GameTechRenderer::DrawScene() { //the basic rendering for the scene, curren
 	glClearColor(1, 1, 1, 0); //doesn't seem to change anything regardless of alpha
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     RenderCamera();
+	RenderAnimations(); /////////////////////////////////////////////////////////////////////////////////////TESTING FOR NOW
 	// Render Decals to it's own buffer
 	RenderDecals();
 
@@ -1169,4 +1216,89 @@ void GameTechRenderer::CombineBuffers() {//basically final post processing outpu
 	DrawBoundMesh();
 	glBindFramebuffer(GL_FRAMEBUFFER, 0); //hdrTex should now hold full deferred lighting rendered scene
 
+}
+
+void GameTechRenderer::RenderAnimations() {
+	// if gameobject (i.e. renderObject's parent) animation == true then it can be rendered here. Calculate the necessary matrices by accessing the renderObject's animation
+	//and send the necessary info to shader. This should render players anyway even if animations not currently playing
+	std::vector<RenderObject*> animatedObjects;
+	for (const auto& i : frameObjects) { //iterate over all render objects
+		if (i->getParent()->GetIsAnimated() == true) { 
+			animatedObjects.emplace_back(i); //should add all animated objects to animatedObjects
+		}
+	}
+	//From here pretty much like Render Camera but for animated meshes using the animation Shader instead
+	//this should render only animated objects i.e. players which should all have submeshes and materials
+
+	Matrix4 viewMatrix = camera->BuildViewMatrix();
+	Matrix4 projMatrix = camera->BuildProjectionMatrix(hostWindow->GetScreenAspect());
+
+	UseShader(*animationShader);
+
+	//define the locations here since they don't change per mesh:
+	int colourLocation = glGetUniformLocation(animationShader->GetProgramID(), "objectColour");
+	int hasVColLocation = glGetUniformLocation(animationShader->GetProgramID(), "hasVertexColours"); 
+	int hasTexLocation = glGetUniformLocation(animationShader->GetProgramID(), "hasTexture");
+	int hasNormalLocation = glGetUniformLocation(animationShader->GetProgramID(), "hasNormalMap");
+	int isFlatLocation = glGetUniformLocation(animationShader->GetProgramID(), "isFLat");
+
+	int projLocation = glGetUniformLocation(animationShader->GetProgramID(), "projMatrix");
+	int viewLocation = glGetUniformLocation(animationShader->GetProgramID(), "viewMatrix");
+	int modelLocation = glGetUniformLocation(animationShader->GetProgramID(), "modelMatrix");
+
+	int cameraLocation = glGetUniformLocation(animationShader->GetProgramID(), "cameraPos");
+	Vector3 camPos = camera->GetPosition();
+	glUniform3fv(cameraLocation, 1, &camPos.x);
+
+	glUniformMatrix4fv(projLocation, 1, false, (float*)&projMatrix); //projection and view matrix don't vary between meshes so can send uniforms here
+	glUniformMatrix4fv(viewLocation, 1, false, (float*)&viewMatrix);
+
+	for (const auto& i : animatedObjects) {
+		//glUniform1i(glGetUniformLocation(animationShader->GetProgramID(), "diffuseTex"), 0); // PROBABLY SHOULDN'T BE HERE
+
+	
+		std::vector<Matrix4> frameMatrices;
+
+		//These two changed to fit the datatypes as defined in this codebase:
+		const Matrix4* frameData = (*i).GetAnimation()->GetJointData((*i).GetAnimation()->GetCurrentFrame());// SHOULD THESE BE CALCULATED PER JOINT?
+
+		for (unsigned int q = 0; q < (*i).GetMesh()->GetJointCount(); ++q) {
+			const Matrix4 invBindPose = (*i).GetMesh()->GetInverseBindPose()[q]; //need to get the inverse bind pose per joint to "undo" the bind pose for each joint
+			frameMatrices.emplace_back(frameData[q] * invBindPose); 
+		}
+
+		int j = glGetUniformLocation(animationShader->GetProgramID(), "joints"); 
+		glUniformMatrix4fv(j, frameMatrices.size(), false, (float*)frameMatrices.data()); 
+
+		//for consistency with renderCamera:
+		size_t subMeshCount = i->GetMesh()->GetSubMeshCount();
+
+		for (size_t subMeshIndex = 0; subMeshIndex < subMeshCount; ++subMeshIndex) { 
+			const Material::Layer* layer = i->getMaterial() ? i->getMaterial()->GetLayer(subMeshIndex) : nullptr; //shouldn't return nullptr since all animated objects have materials
+		    //Bind textures per submesh:
+			bool hasTex = layer && layer->diffuse;
+			bool hasNormal = layer && layer->normal;
+			if (hasTex) {
+				BindTextureToShader(*layer->diffuse, "diffuseTex", 0);
+			}
+			if (hasNormal) {
+				BindTextureToShader(*layer->diffuse, "normalTex", 1);
+			}
+
+			Matrix4 modelMatrix; 
+			i->getParent()->GetTransform().getOpenGLMatrix((btScalar*)&modelMatrix);
+			modelMatrix = modelMatrix * Matrix::Scale(i->getParent()->getRenderScale());
+			glUniformMatrix4fv(modelLocation, 1, false, (float*)&modelMatrix);
+
+			Vector4 Colour = i->GetColour();
+			glUniform4fv(colourLocation, 1, &Colour.x);
+
+			glUniform1i(hasVColLocation, !(*i).GetMesh()->GetColourData().empty()); 
+			
+
+
+			BindMesh((OGLMesh&)*(*i).GetMesh());
+			DrawBoundMesh((uint32_t)subMeshIndex);
+		}
+	}
 }

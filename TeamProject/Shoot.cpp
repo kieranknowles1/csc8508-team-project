@@ -4,12 +4,13 @@
 #include "TutorialGame.h"
 #include "Colors.h"
 #include "Multiplayer/GamePackets.hpp"
+#include "Wanderer.h"
 
 using namespace NCL;
 using namespace CSC8503;
 
 
-std::optional<ShotInfo> Shoot::RayClosest(btVector3 startPos, btVector3 dir, GameObject * ignore) {
+std::optional<ShotInfo> Shoot::RayClosest(btVector3 startPos, btVector3 dir, bool hitPlayer) {
 	dir.normalize();
     btVector3 shotPos = (startPos + (dir * 10000));
     btCollisionWorld::AllHitsRayResultCallback callback(startPos, shotPos);
@@ -23,10 +24,8 @@ std::optional<ShotInfo> Shoot::RayClosest(btVector3 startPos, btVector3 dir, Gam
         float smallestDist = INFINITY;
         for (int i = 0; i < callback.m_collisionObjects.size(); i++) { // loop all hits
             GameObject* hit = static_cast<GameObject*>(callback.m_collisionObjects[i]->getUserPointer());
-            if (hit != player && hit != gun) { // ignore paintballs
-                if (ignore) {
-                    if (hit == ignore) continue;
-                }
+            if (hit != gun && (hitPlayer || hit != player)) {
+                // ignore paintballs
                 btVector3 posHit = callback.m_hitPointWorld[i];
                 float distance = startPos.distance(posHit);
                 if (distance < smallestDist) { // find closest valid hit
@@ -59,6 +58,10 @@ std::optional<ShotInfo> Shoot::ShootBulletPlayer(btVector3 startPos, btVector3 d
                 TutorialGame::GetServerInstance()->Broadcast(damagePacket);
             }
         }
+        else if (rayInfo.value().hitObj->getType() == GameObject::Type::AI) {
+            Wanderer* hit = (Wanderer*)rayInfo.value().hitObj;
+            hit->DamageAI(100.0f * dt);
+        }
        // SpawnBulletMesh(startPos, dir, rotation, &rayInfo.value());
         SpawnDecal(rayInfo.value().hitPos, rayInfo.value().hitNormal, shotID);
     }
@@ -66,12 +69,12 @@ std::optional<ShotInfo> Shoot::ShootBulletPlayer(btVector3 startPos, btVector3 d
 }
 
 std::optional<ShotInfo> Shoot::ShootBulletAI(btVector3 startPos, btVector3 dir, btQuaternion rotation,float dt) {
-    auto rayInfo = RayClosest(startPos, dir);
+    auto rayInfo = RayClosest(startPos, dir, true);
     // Don't have Rust style and_then until C++23 :(
     if (rayInfo.has_value()) {
         if (rayInfo.value().hitObj->getType() == GameObject::Type::Player) {
             PlayerObject* hit = (PlayerObject*)rayInfo.value().hitObj;
-            hit->Damage(100.0f * dt); // TODO: Don't hard code this.
+            hit->Damage(5.0f * dt); // TODO: Don't hard code this.
         }
         SpawnDecal(rayInfo.value().hitPos, rayInfo.value().hitNormal, 1);
     }

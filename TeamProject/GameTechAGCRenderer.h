@@ -1,5 +1,7 @@
 #pragma once
 
+#include <mutex>
+
 #include "GameTechRendererInterface.h"
 
 #include "../PS5Core/AGCRenderer.h"
@@ -28,13 +30,23 @@ namespace NCL {
 			public NCL::CSC8503::GameTechRendererInterface
 		{
 		public:
+			const static constexpr size_t UboSize = 1024 * 1024 * 64;
+
 			GameTechAGCRenderer(Window* window);
 			~GameTechAGCRenderer();
+
+			RendererBase* getBase() override {
+				return this;
+			}
 
 			virtual Mesh*		LoadMesh(const std::string& name)				override;
 			virtual Texture*	LoadTexture(const std::string& name)			override;
 
+			void RegisterTexture(const std::string& name, PS5::AGCTexture* outTex);
+
 		protected:
+			std::mutex texMapMtx;
+
 			void checkError(SceError err) {
 				assert(err == SCE_OK);
 			}
@@ -51,6 +63,7 @@ namespace NCL {
 
 			void WriteRenderPassConstants();
 			void DrawObjects();
+			void DrawDecals();
 			void UpdateDebugData();
 
 			void RenderDebugLines();
@@ -60,6 +73,7 @@ namespace NCL {
 
 			void UiPass();
 			void LightPass();
+			void LaserPass();
 			void PostProcessPass();
 
 			void DisplayRenderPass();
@@ -82,11 +96,11 @@ namespace NCL {
 
 				template<typename T>
 				void WriteData(T value) {
-					memcpy(data, &value, sizeof(T));
-					data += sizeof(T);
-					bytesWritten += sizeof(T);
+					WriteData(&value, sizeof(T));
 				}
 				void WriteData(void* inData, size_t byteCount) {
+					assert(bytesWritten + byteCount < UboSize && "UBO overflow");
+
 					memcpy(data, inData, byteCount);
 					data += byteCount;
 					bytesWritten += byteCount;
@@ -109,29 +123,23 @@ namespace NCL {
 				struct UniformArray {
 					sce::Agc::Core::Buffer buffer;
 					char* start;
+					size_t count;
 
 					void begin(FrameData* frame);
 					void end(FrameData* frame);
 				};
 
 				UniformArray<ObjectState> objects;
-				int objectCount = 0;
 				UniformArray<UiState> ui;
 				UniformArray<LightState> lights;
+				UniformArray<LineState> debugLines;
+				UniformArray<TextState> debugText;
+				UniformArray<LaserState> lasers;
+				UniformArray<DecalState> decals;
 
 				sce::Agc::Core::Buffer constantBuffer;
 
-				sce::Agc::Core::Buffer debugLineBuffer;
-				sce::Agc::Core::Buffer debugTextBuffer;
-
 				BumpAllocator data;
-
-				int globalDataOffset	= 0;	//Where does the global data start in the buffer?
-				int debugLinesOffset	= 0;	//Where do the debug lines start?
-				int debugTextOffset		= 0;	//Where do the debug text verts start?
-
-				size_t lineVertCount = 0;
-				size_t textVertCount = 0;
 			};
 
 			struct SkinningJob {
@@ -145,14 +153,15 @@ namespace NCL {
 
 			std::unique_ptr<PS5::AGCMesh> unitQuad;
 			std::unique_ptr<PS5::AGCMesh> halfUnitQuad;
-			PS5::AGCMesh* sphere;
+			std::unique_ptr<PS5::AGCMesh> sphere;
+			std::unique_ptr<PS5::AGCMesh> highResSphere;
 
 			sce::Agc::Core::Texture*	bindlessTextures;
 			sce::Agc::Core::Buffer*		bindlessBuffers;
 			uint32_t bufferCount;
 
 			sce::Agc::Core::Buffer textureBuffer;
-			std::map<std::string, std::unique_ptr<PS5::AGCTexture>> textureMap;
+			std::map<std::string, PS5::AGCTexture*> textureMap;
 
 			sce::Agc::Core::Buffer arrayBuffer;
 
@@ -178,6 +187,13 @@ namespace NCL {
 			std::unique_ptr<PS5::AGCShader> postVertexShader;
 			std::unique_ptr<PS5::AGCShader> postPixelShader;
 
+			std::unique_ptr<PS5::AGCShader> laserVertexShader;
+			std::unique_ptr<PS5::AGCShader> laserPixelShader;
+			std::unique_ptr<PS5::AGCShader> laserPreShader;
+
+			std::unique_ptr<PS5::AGCShader> decalVertexShader;
+			std::unique_ptr<PS5::AGCShader> decalPixelShader;
+
 			struct FrameBuffer {
 				enum class Slot {
 					Color,
@@ -195,8 +211,13 @@ namespace NCL {
 			// Configure a viewport that takes up the requested size
 			void useViewPort(sce::Agc::Core::BasicContext* context, Vector2i size) const;
 
+			void prepPostProcessing(sce::Agc::CxRenderTarget& target);
+
 			FrameBuffer sceneBuffer;
 			FrameBuffer sceneNormalBuffer;
+
+			FrameBuffer laserBuffer;
+			FrameBuffer previousLaserBuffer;
 
 			FrameBuffer lightDiffuse;
 			FrameBuffer lightSpecular;

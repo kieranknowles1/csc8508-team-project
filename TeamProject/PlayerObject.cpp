@@ -12,7 +12,12 @@ void PlayerObject::Update(float dt) {
     rightDirection = CalculateRightDirection(upDirection);
     forwardDirection = CalculateForwardDirection(upDirection, rightDirection);
     updateGravity(dt);
-    
+
+    //Animation: 
+    if (animated == true) {
+        renderObject->GetAnimation()->UpdateAnimation(dt);
+    }
+
     elapsedTime += dt;
 
     // 2 seconds before healing.
@@ -57,10 +62,6 @@ void PlayerObject::OnCollisionEnter(const CollisionInfo& collisionInfo){
 	btVector3 direction = (objPos - playerPos).normalized();
 	float dot = direction.dot(-upDirection);
 	float angle = acos(dot) * (180.0f / SIMD_PI);
-	if (angle <= 25.0f) {
-		collided++;
-		collidedObjects.push_back(collisionInfo.otherObject);
-	}
 
     // set special type collision
     if (angle <= 25.0f) {
@@ -72,6 +73,7 @@ void PlayerObject::OnCollisionEnter(const CollisionInfo& collisionInfo){
         collisionNormal = collisionInfo.contactNormal;
         collisionPoint = collisionInfo.contactPointA;
         collisionType = collisionInfo.otherObject->getType();
+        jumpPadHeight = collisionInfo.otherObject->getJumpPadStrength();
     }
 }
 
@@ -101,25 +103,18 @@ void PlayerObject::OnCollisionStay(const CollisionInfo& collision){
 			}
 		}
 	}
-	else { // not counted as floor yet
-		if (angle <= 25.0f) {
-         
-			collided++;
-			collidedObjects.push_back(collision.otherObject);
-		}
+	else if (angle <= 25.0f) {
+        // not counted as floor yet
+		collided++;
+		collidedObjects.push_back(collision.otherObject);
 	}
 
 	// set special type collision
     if (angle <= 25.0f) {
-        if (collision.otherObject->getType() == Type::Ice) {
+        if (collisionType == Type::Default && collision.otherObject->getType() == Type::Ice) {
             collisionType = Type::Ice;
         }
     }
-    if (collision.otherObject->getType() == Type::JumpPad || collision.otherObject->getType() == Type::Slime) {
-		collisionNormal = collision.contactNormal;
-		collisionPoint = collision.contactPointA;
-        collisionType = collision.otherObject->getType();
-	}
 }
 
 

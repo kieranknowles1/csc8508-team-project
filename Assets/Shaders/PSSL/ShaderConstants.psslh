@@ -27,10 +27,16 @@ struct ShaderConstants
 	matrix inverseViewMatrix;
 	matrix inverseProjMatrix;
 
+	float nearPlane;
+	float farPlane;
+	float ambient;
+	float __pad;
+
 	float3 cameraPos;
-	int __pad;
+	float time;
 
 	float2 screenSize;
+	float dt;
 };
 
 #ifndef __cplusplus

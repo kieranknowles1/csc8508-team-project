@@ -35,6 +35,32 @@ struct UiState {
     int texture = NULLTEX;
 };
 
+struct TextState {
+	float2 pos;
+	float2 uv;
+	float4 colour;
+};
+
+struct LineState {
+	float4 pos;
+	float4 colour;
+};
+
+struct LaserState {
+	float3 start;
+	int __pad1;
+	float3 end;
+	float thickness;
+	float4 colour;
+};
+
+struct DecalState {
+	matrix modelMatrix;
+	float4 color;
+	int textureId;
+	float fade;
+};
+
 struct VS_OUTPUT
 {
 	float4 Position SLOT(S_POSITION);
@@ -43,9 +69,9 @@ struct VS_OUTPUT
 	int	texID SLOT(TEXCOORD2);
 	int normId SLOT(TEXCOORD3);
 
-	float3 tangent;
-	float3 normal;
-	float3 binormal;
+	float3 tangent SLOT(TEXCOORD4);
+	float3 normal SLOT(TEXCOORD5);
+	float3 binormal SLOT(TEXCOORD6);
 };
 
 struct UI_VS_OUTPUT {
@@ -59,6 +85,35 @@ struct DEFERRED_VS_OUTPUT
 {
 	float4 position SLOT(S_POSITION);
 	int stateId SLOT(TEXCOORD0);
+};
+
+struct TEXT_VS_OUTPUT
+{
+	float4 Position SLOT(S_POSITION);
+	float2 UV SLOT(TEXCOORD0);
+	float4 Colour SLOT(TEXCOORD1);
+};
+
+struct LINE_VS_OUTPUT
+{
+	float4 Position SLOT(S_POSITION);
+	float4 Colour SLOT(TEXCOORD1);
+};
+
+struct LASER_VS_OUTPUT
+{
+	float4 position SLOT(S_POSITION);
+	float4 color SLOT(TEXCOORD0);
+	float depth SLOT(TEXCOORD1);
+};
+
+struct DECAL_VS_OUTPUT
+{
+	float4 position SLOT(S_POSITION);
+	float4 color SLOT(TEXCOORD0);
+	float2 uv SLOT(TEXCOORD1);
+	int texId SLOT(TEXCOORD2);
+	float depth SLOT(TEXCOORD3);
 };
 
 #undef SLOT

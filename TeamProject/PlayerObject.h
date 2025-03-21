@@ -7,6 +7,11 @@
 #include "PhysicsObject.h"
 #include "CollisionInfo.h"
 #include "Respawn.h"
+#include "MeshAnimation.h"
+
+#include "Colors.h"
+#include "RenderObject.h"
+
 #include "GameTechRendererInterface.h"
 
 #include <btBulletDynamicsCommon.h>
@@ -41,6 +46,7 @@ public:
 
 	void setRenderer(GameTechRendererInterface* rendIn) {
 		renderer = rendIn;
+		gun->GetRenderObject()->SetColour(Color::GetPlayerColor(worldID));
 	}
 
 	void updateLaser(btVector3 startPos, btVector3 endPos) {
@@ -131,6 +137,9 @@ public:
 	float GetMaxHealth() {
 		return maxHealth;
 	}
+	float getCollisionJumpPadStrength(){
+		return jumpPadHeight;
+	}
 
 	float health = 100.0f;
 
@@ -144,10 +153,10 @@ private:
 	float gravityScale = 400.0f;
 	float rotateTime = 0.5f;
 	float maxHealth = 100.0f;
-
 	int collided = 0;
 	btVector3 collisionNormal = btVector3(0, 1, 0);
 	btVector3 collisionPoint = btVector3(0, 0, 0);
+	float jumpPadHeight = 0.0f;
 	std::list<GameObject*> collidedObjects;
 	Type collisionType;
 	PlayerState state;
@@ -174,7 +183,6 @@ private:
 
 	float elapsedTime = 0;
 	float lastHit = 0;
-
 
 	GameTechRendererInterface* renderer;
 

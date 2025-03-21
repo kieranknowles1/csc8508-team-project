@@ -17,6 +17,7 @@ namespace NCL::Rendering {
 	public:
 		OGLTexture();
 		OGLTexture(GLuint texToOwn);
+        OGLTexture(const void* data, int width, int height, int channels);
 		~OGLTexture();
 
 		static UniqueOGLTexture TextureFromData(char* data, uint32_t width, uint32_t height, uint32_t channels);
@@ -32,10 +33,12 @@ namespace NCL::Rendering {
 			const std::string& zNegFile);
 
 		GLuint GetObjectID() const	{
-			return texID;
+			return assetID;
 		}
+
+		void load(const std::string& name) override;
+		void upload(bool freeData = true) override;
 	protected:
         std::string fileName;
-		GLuint texID;
 	};
 }

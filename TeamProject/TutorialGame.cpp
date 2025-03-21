@@ -11,6 +11,7 @@
 #include <CSC8503CoreClasses/Debug.h>
 #include "Colors.h"
 #include "Shoot.h"
+#include "MeshAnimation.h" //temporarily added for testing 
 
 #include "Window.h"
 #include "Config.h"
@@ -36,7 +37,7 @@ TutorialGame::TutorialGame(GameTechRendererInterface* renderer, Controller* cont
     world->GetMainCamera().SetController(controller);
     mainCamera = &world->GetMainCamera();
 
-    resourceManager = std::make_unique<ResourceManager>(renderer);
+    resourceManager = std::make_unique<ResourceManager>(renderer, config.get<float>("resourceThreadMult"));
     new Shoot(); //Shoot and Respawn have new before them but are not being deleted to my knowledge
     new Respawn();
 
@@ -130,7 +131,9 @@ void TutorialGame::UpdateGame(float dt) {
     //post processing time variable effect:
     pulse += dt;
     renderer->SetVignettePulse(pulse);
+
     renderer->SetDelta(dt);
+
 }
 
 
@@ -162,7 +165,6 @@ void TutorialGame::UpdatePlayer(float dt) {
             ThirdPersonControls();
         }
     }
-    resourceManager->update(dt);
 }
 
 void TutorialGame::UpdateKeys() {
@@ -206,8 +208,8 @@ void TutorialGame::ThirdPersonControls() {
     btMatrix3x3 rotationMatrix(player->getCamOffset() * playerRotation1);
     btVector3 forward = rotationMatrix * btVector3(0,0,-1);
     btVector3 upwards = rotationMatrix * btVector3(0, 1, 0);
-    float camHeight = 15.0f;
-    float camDist = -50.0f;
+    float camHeight = 35.0f;
+    float camDist = -100.0f;
     btVector3 cameraOffset = (forward.normalize() * camDist) + (upwards.normalize() * camHeight);
     btVector3 cameraPosition = transformPlayer.getOrigin() + cameraOffset;
     mainCamera->SetPosition(cameraPosition);
@@ -343,7 +345,10 @@ PlayerObject* TutorialGame::InitPlayer(btVector3 position, btVector3 upDir) {
 
     newPlayer->GetRenderObject()->SetColour(Vector4(playerColour));
     newPlayer->setUpDirection(upDir);
-    newPlayer->setRenderer(renderer);
+
+    //newPlayer->SetIsAnimated(true); //maybe better to manage this wherever animations are being applied rather than here but for testing this is probably fine
+    newPlayer->setRenderer(renderer); 
+
     return newPlayer;
 }
 
@@ -420,7 +425,13 @@ PlayerObject* TutorialGame::AddPlayerCapsuleToWorld(const Vector3& position, flo
     btCollisionShape* playerShape = new btCapsuleShape(radius, height);
 
     // Setting the render object for the capsule
+
     player->SetRenderObject(new RenderObject(player, resourceManager->getMeshes().get("RacerGuy/RacerGuy.msh"), defaultTexture));
+
+    //player->SetRenderObject(new RenderObject(player, resourceManager->getMeshes().get("Capsule.msh"), defaultTexture)); 
+   // player->SetRenderObject(new RenderObject(player, resourceManager->getMeshes().get("/MaleGuard/Male_Guard.msh"), resourceManager->getMaterials().get("Male_Guard.mat")));
+  //  player->GetRenderObject()->SetAnimation(new MeshAnimation("/MaleGuard/Taunt.anm")); //For Testing only StepLeft.anm
+
     // Setting the physics object for the capsule
     player->SetPhysicsObject(new PhysicsObject(player));
 
@@ -598,8 +609,8 @@ void TutorialGame::JoinGame(bool host) {
         std::string host = config.get<std::string>("defaultHost");
         std::cout << "Connecting to " << host << std::endl;
 
-        //enet_address_set_host(&dest, "127.0.0.1");
-        enet_address_set_host(&dest, host.c_str());
+        enet_address_set_host(&dest, "127.0.0.1");
+        //enet_address_set_host(&dest, host.c_str());
 
         dest.port = DEFAULT_PORT;
 
@@ -626,7 +637,9 @@ void TutorialGame::StartMultiplayerGame() {
 
 void TutorialGame::Start() {
     instance->state = GameState::ACTIVE;
-    instance->LoadWorldFromFile(9);
+
+    instance->renderer->initLasers(instance->gameMode == GameMode::SINGLEPLAYER ? true : false);
+    instance->LoadWorldFromFile(10);
     
     // Init user for single players.
     if (!user.has_value()) user.emplace(GenerateUserID());
@@ -638,9 +651,9 @@ void TutorialGame::Start() {
     instance->player->SetWorldID(user->GetUserID());
     instance->player->GetRenderObject()->SetColour(Vector4(Color::GetPlayerColor(user->GetUserID())));
     instance->player->setType(GameObject::Type::Player);
+    instance->player->setRenderer(instance->renderer);
     instance->playerController = std::make_unique<PlayerController>(instance->player, instance->controller, instance->mainCamera, instance->bulletWorld,instance->renderer);
 
-    instance->spGameController = new SPGameController(instance->player, instance);
 
     btQuaternion emptyRot;
 
@@ -673,7 +686,11 @@ void TutorialGame::Start() {
             newPlayer->SetOwner(newUser.GetUserID());
             newPlayer->SetWorldID(newUser.GetUserID());
             newPlayer->GetRenderObject()->SetColour(Vector4(Color::GetPlayerColor(newUser.GetUserID())));
+            newPlayer->setRenderer(instance->renderer);
         }
+    }
+    else {
+        instance->spGameController = new SPGameController(instance->player, instance, instance->renderer);
     }
 
     Shoot::GetInstance()->Initialise(instance->bulletWorld,instance->resourceManager.get(), instance->world.get(), instance->renderer->GetDecalSystem());

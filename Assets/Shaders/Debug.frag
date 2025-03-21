@@ -21,11 +21,11 @@ void main(void)
 	}
 	else {
 		float alpha = texture(mainTex, IN.texCoord).r;
-		
+
 		if(alpha < 0.00001f) {
 			discard;
 		}
-		
-		fragColor = IN.colour * vec4(1,1,1,alpha);
+
+		fragColor = IN.colour * vec4(alpha);
 	}
 }

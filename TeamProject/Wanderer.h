@@ -1,17 +1,26 @@
 #pragma once
 #include "NavEntity.h"
 #include "NavMesh.h"
+#include "SPGameController.h"
 
 namespace NCL {
 	namespace CSC8503 {
 		class StateMachine;
 		class Wanderer : public NavEntity {
 		public:
-			Wanderer(GameObject* p, NavMesh* nav, char side);
+			Wanderer(GameObject* p, NavMesh* nav, Side side, int lID, GameTechRendererInterface* r);
 			~Wanderer();
 
 			void Update(float dt);
 			void InitPosAndOffset();
+
+			void DamageAI(float d) { health -= d; }
+			float GetHealth() { return health; }
+
+			void DestroyWanderer();
+			bool isDeleted() const { return deleted; }
+
+			int laserID;
 
 		private:
 			void PlayerNear(float dt);
@@ -30,9 +39,14 @@ namespace NCL {
 
 			float maxShootTimer = 5.0f;
 			float shootTimer;
+			bool isShooting = true;
 
 			float maxUpdatePlayerPathTimer = 2.0f;
 			float updateplayerPathTimer;
+
+			GameTechRendererInterface* renderer;
+
+			float health = 50;
 		};
 	}
 }

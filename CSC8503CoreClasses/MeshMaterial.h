@@ -28,6 +28,7 @@ namespace NCL {
 		std::map<std::string, std::string> entries;
 	};
 
+
 	class MeshMaterial	{
     public:
 		MeshMaterial( const std::string& filename);

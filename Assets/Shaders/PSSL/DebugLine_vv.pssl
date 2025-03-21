@@ -1,22 +1,12 @@
 #include "ShaderConstants.psslh"
-
-struct LineState {
-	float4 pos;
-	float4 colour;
-};
+#include "types.h"
 
 RegularBuffer<LineState> allLines : register(t0);
 
-struct VS_OUTPUT
-{
-	float4 Position		: S_POSITION;
-	float4 Colour		: TEXCOORD1;	
-};
-
 [CxxSymbol("TestShader::gs")]
-VS_OUTPUT main(uint id : S_VERTEX_ID)
+LINE_VS_OUTPUT main(uint id : S_VERTEX_ID)
 {
-	VS_OUTPUT Output;
+	LINE_VS_OUTPUT Output;
 
 	LineState s = allLines[id];
 
