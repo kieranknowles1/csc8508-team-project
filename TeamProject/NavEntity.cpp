@@ -45,7 +45,7 @@ float NavEntity::GroundAdjust(btVector3 pos) {
 	btVector3 upPos, downPos, direction;
 	std::optional<ShotInfo> rayResult;
 	switch (side) {
-	case('b'):
+	case(Side::BOTTOM):
 		upPos = pos + btVector3(0, 10.0f, 0);
 		downPos = pos + btVector3(0, -1000.0f, 0);
 		direction = (downPos - upPos).normalized();

@@ -41,7 +41,7 @@ namespace NCL {
 
 		static SimpleFont* GetDebugFont();
 
-		static void CreateDebugFont(const std::string& dataFile, Texture& tex);
+		static void CreateDebugFont(const std::string& dataFile, std::shared_ptr<Texture> tex);
 
 		static const std::vector<Debug::DebugStringEntry>& GetDebugStrings();
 		static const std::vector<Debug::DebugLineEntry>& GetDebugLines();

@@ -1,59 +1,68 @@
-/*
-Part of Newcastle University's Game Engineering source code.
-
-Use as you see fit!
-
-Comments and queries to: richard-gordon.davison AT ncl.ac.uk
-https://research.ncl.ac.uk/game/
-*/
 #pragma once
 #include "Vector.h"
+#include <string>
+#include <map>
+
+using namespace NCL::Maths;
 
 namespace NCL {
 	namespace Rendering {
 		class Texture;
 
-		class SimpleFont	{
+		class SimpleFont {
 		public:
-			SimpleFont(const std::string&fontName, Texture& tex);
+            struct GlyphData {
+                Vector2ui size;
+                Vector2 bearing;
+                int advance;
+                std::vector<char> data;
+                char ch;
+            };
+
+            // Metrics of a character glyph
+            struct Character {
+                Vector2 size;      // Size of glyph
+                Vector2   bearing;   // Offset from baseline to left/top of glyph
+                Vector2 uvTopLeft;
+                Vector2 uvBottomRight;
+                unsigned int advance;   // Offset to advance to next glyph
+            };
+
+
+            struct InterleavedTextVertex {
+                Maths::Vector2 pos;
+                Maths::Vector2 texCoord;
+                Maths::Vector4 colour;
+            };
+
+            void BuildVerticesForString(const std::string& text, const Maths::Vector2& startPos, const Maths::Vector4& colour, float size, std::vector<Maths::Vector3>& positions, std::vector<Maths::Vector2>& texCoords, std::vector<Maths::Vector4>& colours);
+            void BuildInterleavedVerticesForString(const std::string& text, const Maths::Vector2& startPos, const Maths::Vector4& colour, float size, std::vector<InterleavedTextVertex>& vertices);
+
+            // Texture will be filled with the font's glyphs
+			SimpleFont(const std::string&fontName, std::shared_ptr<Texture> texture);
 			~SimpleFont();
 
-			struct InterleavedTextVertex {
-				NCL::Maths::Vector2 pos;
-				NCL::Maths::Vector2 texCoord;
-				NCL::Maths::Vector4 colour;
-			};
+            int InitializeFreeType(const std::string& filename, std::shared_ptr<Texture> texture);
 
-			int  GetVertexCountForString(const std::string& text);
-			void BuildVerticesForString(const std::string& text, const Maths::Vector2& startPos, const Maths::Vector4& colour, float size, std::vector<Maths::Vector3>& positions, std::vector<Maths::Vector2>& texCoords, std::vector<Maths::Vector4>& colours);
-			void BuildInterleavedVerticesForString(const std::string& text, const Maths::Vector2& startPos, const Maths::Vector4& colour, float size, std::vector<InterleavedTextVertex>& vertices);
-			
-			const Texture* GetTexture() const {
-				return &texture;
-			}
+            Character GetCharacter(unsigned char c) const {
+                return characters.at(c);
+            }
+
+            std::shared_ptr<Texture> getTexture() { return texture; }
 
 		protected:
-			//matches stbtt_bakedchar
-			struct FontChar {
-				unsigned short x0;
-				unsigned short y0;
-				unsigned short x1;
-				unsigned short y1;
-				float xOff;
-				float yOff;
-				float xAdvance;
-			};
+            // Assume a constant size in pixels
+            const static constexpr Vector2 ScreenSize = Vector2(1920, 1080);
 
-			FontChar*	allCharData;
-			Texture&	texture;
+            // Start/end of ASCII printable characters
+            const static constexpr int StartChar = 32;
+            const static constexpr int EndChar = 126;
+            const static constexpr int AtlasSize = 10;
+            static_assert((AtlasSize* AtlasSize) > (StartChar - EndChar), "Atlas too small for characters");
 
-			int startChar;
-			int numChars;
 
-			float texWidth;
-			float texHeight;
-			float texWidthRecip;
-			float texHeightRecip;
+            std::shared_ptr<Texture> texture;
+            std::map<unsigned char, Character> characters;
 		};
 	}
 }

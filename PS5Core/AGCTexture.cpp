@@ -15,7 +15,24 @@ License: MIT (see LICENSE file at the top of the source tree)
 using namespace NCL;
 using namespace PS5;
 
-AGCTexture::AGCTexture(const std::string& filename, const MemoryAllocator& a) {
+AGCTexture::AGCTexture(const std::string& filename, const MemoryAllocator& a)
+{
+	allocator = &a;
+	load(filename);
+}
+
+AGCTexture::AGCTexture()
+{
+	gpuAllocation = 0;
+
+}
+
+AGCTexture::~AGCTexture() {
+
+}
+
+void AGCTexture::load(const std::string& filename)
+{
 	std::filesystem::path path(filename + ".gnf");
 	this->fileName = filename;
 	//path.replace_extension(".gnf");
@@ -39,7 +56,7 @@ AGCTexture::AGCTexture(const std::string& filename, const MemoryAllocator& a) {
 	fseek(fp, 0, SEEK_SET);
 
 
-	gpuAllocation = a.Allocate(sz, 64 * 1024);
+	gpuAllocation = allocator->Allocate(sz, 64 * 1024);
 	printf("%s(%s): p=%p, sz=%lu\n", __func__, filename.c_str(), gpuAllocation, sz);
 	size_t bytesRead = fread(gpuAllocation, 1, sz, fp);
 	if (bytesRead != sz)
@@ -57,11 +74,31 @@ AGCTexture::AGCTexture(const std::string& filename, const MemoryAllocator& a) {
 	//}
 }
 
-AGCTexture::AGCTexture(const MemoryAllocator& a) {
-	gpuAllocation = 0;
+void AGCTexture::upload(bool freeData)
+{
+	if (texData == nullptr) return;
+	assert(channels == 1 && "Multiple channels are not supported.");
 
-}
+	size_t sz = width * height * sizeof(float);
+	gpuAllocation = allocator->Allocate(sz, 64 * 1024);
 
-AGCTexture::~AGCTexture() {
+	// HACK: Manually convert the uint8 data to float32
+	// Core::translate could probably do this, but there's over 100 overloads to look through
+	unsigned char* ptr = (unsigned char*)texData;
+	float* gpuPtr = (float*)gpuAllocation;
+	for (int i = 0; i < width * height; i++) {
+		*gpuPtr = float(*ptr / 256.0f);
+		gpuPtr++;
+		ptr++;
+	}
 
+	agcTex.init()
+		.setType(sce::Agc::Core::Texture::Type::k2d)
+		.setSwizzle(sce::Agc::Core::Swizzle::kR000_S1) // 1 channel
+		.setFormat(sce::Agc::Core::TypedFormat::k32Float) // 1 float
+		.setNumMipLevels(1)
+		.setWidth(width).setHeight(height)
+		.setDataAddress(gpuAllocation);
+
+	//agcTex.
 }

@@ -1,12 +1,7 @@
-
-struct VS_OUTPUT
-{
-	float4 Position		: S_POSITION;
-	float4 Colour		: TEXCOORD1;
-};
+#include "types.h"
 
 [CxxSymbol("TestShader::ps")]
-float4 main(VS_OUTPUT vertex) : S_TARGET_OUTPUT
+float4 main(LINE_VS_OUTPUT vertex) : S_TARGET_OUTPUT
 {
-	return vertex.Colour;  
+	return vertex.Colour;
 }
