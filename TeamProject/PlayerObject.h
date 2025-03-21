@@ -33,13 +33,14 @@ public:
 
 	void updateGravity(float dt);
 
+	void SetColor(btVector4);
+
     btVector3 getUpDirection() {
 		return upDirection;
     }
 
 	void setRenderer(GameTechRendererInterface* rendIn) {
 		renderer = rendIn;
-		gun->GetRenderObject()->SetColour(Color::GetPlayerColor(worldID));
 	}
 
 	void updateLaser(btVector3 startPos, btVector3 endPos) {

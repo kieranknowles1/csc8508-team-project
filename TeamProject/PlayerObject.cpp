@@ -14,6 +14,12 @@ PlayerObject::~PlayerObject() {
     laser = nullptr;
 }
 
+void PlayerObject::SetColor(btVector4 color) {
+    GetRenderObject()->SetColour(color);
+    gun->GetRenderObject()->SetColour(color);
+    laser->SetColor(color);
+}
+
 void PlayerObject::Update(float dt) {
     upDirection = CalculateUpDirection(dt);
 

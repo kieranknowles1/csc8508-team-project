@@ -555,10 +555,12 @@ void TutorialGame::Start() {
             PlayerObject* player = instance->InitPlayer(respawn->position, respawn->orientation);
             player->SetWorldID(user.GetUserID());
             player->SetOwner(user);
-
+            
             LaserObject* laser = player->GetLaser();
-            laser->SetColor(Color::GetPlayerColor(user.GetUserID() - 1));
             instance->renderer->TrackLaser(laser);
+
+            btVector4 playerColor = Color::GetPlayerColor(user.GetUserID() - 1);
+            player->SetColor(playerColor);
 
             if (user == *(instance->server->GetUser())) {
                 instance->player = player;
@@ -576,6 +578,8 @@ void TutorialGame::Start() {
         LaserObject* laser = instance->player->GetLaser();
         laser->SetColor(Color::GetPlayerColor(0));
         instance->renderer->TrackLaser(laser);
+
+        instance->player->getGun()->GetRenderObject()->SetColour(Color::GetPlayerColor(0));
 
         instance->playerController = std::make_unique<PlayerController>(instance->player, instance->controller, instance->mainCamera, instance->bulletWorld, instance->renderer);
         instance->spGameController = new SPGameController(instance->player, instance, instance->renderer);
