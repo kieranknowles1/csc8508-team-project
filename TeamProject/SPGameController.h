@@ -22,7 +22,7 @@ namespace NCL {
 		public:
 			SPGameController(GameObject* p, TutorialGame* g, GameTechRendererInterface* r);
             void Update(float dt);
-            void AddIDToPool(int i) { laserIDs.push_back(i); }
+            //void AddIDToPool(int i) { laserIDs.push_back(i); }
 		private:
 			GameObject* player;
 			TutorialGame* game;
@@ -46,12 +46,12 @@ namespace NCL {
 
             GameTechRendererInterface* renderer;
 
-            std::vector<int> laserIDs;
-            int GetIDFromPool() {
-                int id = laserIDs.back();
-                laserIDs.pop_back();
-                return id;
-            }
+            //std::vector<int> laserIDs;
+            //int GetIDFromPool() {
+            //    int id = laserIDs.back();
+            //    laserIDs.pop_back();
+            //    return id;
+            //}
 
             int score;
             int level;

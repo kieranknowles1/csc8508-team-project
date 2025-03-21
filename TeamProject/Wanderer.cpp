@@ -9,8 +9,8 @@
 using namespace NCL;
 using namespace CSC8503;
 
-Wanderer::Wanderer(GameObject* p, NavMesh* mesh, Side side, int lID, GameTechRendererInterface* r) :
-	player(p), navMesh(mesh), shootTimer(maxShootTimer), updateplayerPathTimer(maxUpdatePlayerPathTimer), laserID(lID), renderer(r) {
+Wanderer::Wanderer(GameObject* p, NavMesh* mesh, Side side, GameTechRendererInterface* r) :
+	player(p), navMesh(mesh), shootTimer(maxShootTimer), updateplayerPathTimer(maxUpdatePlayerPathTimer), renderer(r) {
 	type = GameObject::Type::AI;
 	this->side = side;
 	stateMachine = new StateMachine();
@@ -73,7 +73,7 @@ void Wanderer::Update(float dt) {
 
 void Wanderer::DestroyWanderer() {
 	//renderer->updateLaser(laserID, btVector3(0, 0, 0), btVector3(0, 0, 0));
-	TutorialGame::getInstance()->GetSPMode()->AddIDToPool(laserID);
+	//TutorialGame::getInstance()->GetSPMode()->AddIDToPool(laserID);
 	TutorialGame::getInstance()->delayedRemoveObject(this);
 }
 

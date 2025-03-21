@@ -5,10 +5,12 @@
 
 namespace NCL {
 	namespace CSC8503 {
+		class LaserObject;
 		class StateMachine;
+
 		class Wanderer : public NavEntity {
 		public:
-			Wanderer(GameObject* p, NavMesh* nav, Side side, int lID, GameTechRendererInterface* r);
+			Wanderer(GameObject* p, NavMesh* nav, Side side, GameTechRendererInterface* r);
 			~Wanderer();
 
 			void Update(float dt);
@@ -20,7 +22,8 @@ namespace NCL {
 			void DestroyWanderer();
 			bool isDeleted() const { return deleted; }
 
-			int laserID;
+			void SetLaser(LaserObject* laser) { this->laser = laser; }
+			LaserObject* GetLaser() const { return laser; }
 
 		private:
 			void PlayerNear(float dt);
@@ -36,6 +39,7 @@ namespace NCL {
 			btVector3 offset;
 
 			GameObject* player;
+			LaserObject* laser;
 
 			float maxShootTimer = 5.0f;
 			float shootTimer;
