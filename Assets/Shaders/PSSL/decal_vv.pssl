@@ -1,0 +1,23 @@
+#include "types.h"
+#include "ShaderConstants.psslh"
+#include "Bindless.psslh"
+#include "Skinning.psslh"
+#include "VertexAttributes.psslh"
+#include "Vertex.psslh"
+
+RegularBuffer<DecalState> objects : register(t0);
+
+[CxxSymbol("DecalShader::vv")]
+DECAL_VS_OUTPUT main(uint vertID : S_VERTEX_ID, uint instanceID : S_INSTANCE_ID)
+{
+    DECAL_VS_OUTPUT output;
+    DecalState state = objects[instanceID];
+    float4 vertexPos = mul(state.modelMatrix, float4(Positions[vertID], 1));
+
+    output.color = state.color * state.fade;
+    output.texId = state.textureId;
+    output.uv = TextureCoords[vertID];
+    output.position = TransformWorldToClip(vertexPos);
+    output.depth = output.position.z / output.position.w;
+    return output;
+}
