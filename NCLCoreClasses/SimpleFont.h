@@ -28,8 +28,16 @@ namespace NCL {
                 unsigned int advance;   // Offset to advance to next glyph
             };
 
+
+            struct InterleavedTextVertex {
+                Maths::Vector2 pos;
+                Maths::Vector2 texCoord;
+                Maths::Vector4 colour;
+            };
+
             void BuildVerticesForString(const std::string& text, const Maths::Vector2& startPos, const Maths::Vector4& colour, float size, std::vector<Maths::Vector3>& positions, std::vector<Maths::Vector2>& texCoords, std::vector<Maths::Vector4>& colours);
-#
+            void BuildInterleavedVerticesForString(const std::string& text, const Maths::Vector2& startPos, const Maths::Vector4& colour, float size, std::vector<InterleavedTextVertex>& vertices);
+
             // Texture will be filled with the font's glyphs
 			SimpleFont(const std::string&fontName, std::shared_ptr<Texture> texture);
 			~SimpleFont();

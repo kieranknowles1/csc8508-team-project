@@ -73,3 +73,8 @@ void AGCTexture::load(const std::string& filename)
 	//	sce::Agc::Core::registerResource(&agcTex, "%s", filename.c_str());
 	//}
 }
+
+void AGCTexture::upload(bool freeData)
+{
+	//agcTex.
+}

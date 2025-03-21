@@ -127,7 +127,8 @@ GameTechAGCRenderer::GameTechAGCRenderer(Window* window) : AGCRenderer(window), 
 	currentFrameIndex = 0;
 	currentFrame = &allFrames[currentFrameIndex];
 
-	Debug::CreateDebugFont("PressStart2P.fnt", *LoadTexture("PressStart2P.png"));
+	auto tex = std::make_shared<AGCTexture>();
+	Debug::CreateDebugFont("PressStart2P.fnt", tex);
 
 	sceneBuffer = createBuffer("Scene", FrameBuffer::Slot::Color);
 	sceneNormalBuffer = createBuffer("SceneNormal", FrameBuffer::Slot::Normal);
@@ -569,7 +570,7 @@ void GameTechAGCRenderer::RenderDebugText() {
 		.setConstantBuffers(0, 1, &currentFrame->constantBuffer)
 		.setBuffers(0, 1, &currentFrame->debugText.buffer);
 
-	AGCTexture* debugTex = (AGCTexture*)Debug::GetDebugFont()->GetTexture();
+	AGCTexture* debugTex = (AGCTexture*)Debug::GetDebugFont()->getTexture().get();
 
 	frameContext->m_bdr.getStage(sce::Agc::ShaderType::kPs)
 		.setSamplers(0, 1, &pixelSampler)

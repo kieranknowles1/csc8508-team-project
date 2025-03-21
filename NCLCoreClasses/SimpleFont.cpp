@@ -66,6 +66,25 @@ void SimpleFont::BuildVerticesForString(const std::string& text, const Maths::Ve
     }
 }
 
+void SimpleFont::BuildInterleavedVerticesForString(const std::string& text, const Maths::Vector2& startPos, const Maths::Vector4& colour, float size, std::vector<InterleavedTextVertex>& vertices)
+{
+    // Rich's code duplicated all of this, so consider this version less bad
+    std::vector<Vector3> positions;
+    std::vector<Vector4> colours;
+    std::vector<Vector2> uvs;
+    BuildVerticesForString(text, startPos, colour, size, positions, uvs, colours);
+    assert(positions.size() == colours.size());
+    assert(positions.size() == uvs.size());
+
+    for (int i = 0; i < positions.size(); i++) {
+        InterleavedTextVertex vtx;
+        vtx.colour = colours[i];
+        vtx.pos = Vector2(positions[i].x, positions[i].y);
+        vtx.texCoord = uvs[i];
+        vertices.push_back(vtx);
+    }
+}
+
 SimpleFont::SimpleFont(const std::string&filename, std::shared_ptr<Texture> texture) {
     this->texture = texture;
     InitializeFreeType(filename, texture);
