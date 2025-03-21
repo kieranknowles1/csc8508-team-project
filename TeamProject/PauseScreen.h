@@ -28,10 +28,16 @@ public:
 
         if (inMenu) {
             if (controller->GetDigital(Controller::DigitalControl::MenuDown)) {
-                selection = std::min(1, selection + 1);
+                if (selection < 1) {  // Only increase if not at the last option
+                    selection++;
+                    audioEngine.PlaySounds("MenuScroll.wav", game->getMainCam()->GetPosition(), -6.0f);
+                }
             }
             if (controller->GetDigital(Controller::DigitalControl::MenuUp)) {
-                selection = std::max(0, selection - 1);
+                if (selection > 0) {
+                    selection--;
+                    audioEngine.PlaySounds("MenuScroll.wav", game->getMainCam()->GetPosition(), -6.0f);
+                }
             }
             if (controller->GetDigital(Controller::DigitalControl::MenuConfirm)) {
                 const std::string pauseSelection = menuItems[selection];
@@ -64,6 +70,7 @@ public:
             audioEngine.SetChannelPaused(playerController->getBeamSoundChannel(), true);
             playerController->setBeamSoundPaused(true);
         }
+        audioEngine.PlaySounds("MenuSelect.wav", game->getMainCam()->GetPosition(), -18.0f);
     }
 
     void OnSleep() override {
