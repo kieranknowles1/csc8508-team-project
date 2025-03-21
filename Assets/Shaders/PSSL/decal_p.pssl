@@ -1,0 +1,11 @@
+#include "types.h"
+
+RegularBuffer<sce::Agc::Core::Texture> textures : register(t0);
+SamplerState sampler : register(s0);
+
+[CxxSymbol("DecalShader::p")]
+float4 main(DECAL_VS_OUTPUT vertex) : S_TARGET_OUTPUT
+{
+    Texture2D<float4> tex = Texture2D<float4>(textures[NonUniformResourceIndex(vertex.texId)]);
+    return tex.Sample(sampler, vertex.uv) * vertex.color;
+}

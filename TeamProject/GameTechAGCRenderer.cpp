@@ -109,6 +109,9 @@ GameTechAGCRenderer::GameTechAGCRenderer(Window* window) : AGCRenderer(window), 
 	laserPixelShader = std::make_unique<AGCShader>("laser_p.ags", allocator);
 	laserPreShader = std::make_unique<AGCShader>("laser_pre_p.ags", allocator);
 
+	decalVertexShader = std::make_unique<AGCShader>("decal_vv.ags", allocator);
+	decalPixelShader = std::make_unique<AGCShader>("decal_p.ags", allocator);
+
 	allFrames = new FrameData[FRAMES_IN_FLIGHT];
 	for (int i = 0; i < FRAMES_IN_FLIGHT; ++i) {
 
@@ -275,6 +278,34 @@ void GameTechAGCRenderer::DrawObjects() {
 	assert(instanceCount + startingIndex == currentFrame->objects.count);
 }
 
+void GameTechAGCRenderer::DrawDecals() {
+	if (currentFrame->decals.count <= 0) {
+		return;
+	}
+
+	frameContext->setShaders(nullptr, decalVertexShader->GetAGCPointer(), decalPixelShader->GetAGCPointer(), sce::Agc::UcPrimitiveType::Type::kTriList);
+	// Don't write to the depth buffer, we'll be discarding fragments manually
+	frameContext->m_sb.setState(sce::Agc::CxDepthStencilControl().init()
+		.setDepth(sce::Agc::CxDepthStencilControl::Depth::kDisable).setDepthWrite(sce::Agc::CxDepthStencilControl::DepthWrite::kDisable)
+	);
+	frameContext->m_sb.setState(sce::Agc::CxBlendControl().init()
+		.setBlend(sce::Agc::CxBlendControl::Blend::kEnable)
+		.setColorSourceMultiplier(sce::Agc::CxBlendControl::ColorSourceMultiplier::kSrcAlpha)
+		.setColorDestMultiplier(sce::Agc::CxBlendControl::ColorDestMultiplier::kOneMinusSrcAlpha)
+	);
+
+	frameContext->m_bdr.getStage(sce::Agc::ShaderType::kGs)
+		.setConstantBuffers(0, 1, &currentFrame->constantBuffer)
+		.setBuffers(0, 1, &currentFrame->decals.buffer);
+
+	frameContext->m_bdr.getStage(sce::Agc::ShaderType::kPs)
+		.setBuffers(0, 1, &textureBuffer)
+		.setSamplers(0, 1, &defaultSampler);
+
+	unitQuad->BindVertexBuffers(frameContext->m_bdr.getStage(sce::Agc::ShaderType::kGs));
+	DrawBoundMeshInstanced(*frameContext, *unitQuad, currentFrame->decals.count);
+}
+
 void GameTechAGCRenderer::MainRenderPass() {
 	frameContext->setShaders(nullptr, defaultVertexShader->GetAGCPointer(), defaultPixelShader->GetAGCPointer(), sce::Agc::UcPrimitiveType::Type::kTriList);
 
@@ -324,6 +355,7 @@ void GameTechAGCRenderer::MainRenderPass() {
 		.setBuffers(0, 1, &textureBuffer)
 		.setSamplers(0, 1, &defaultSampler);
 	DrawObjects();
+	DrawDecals();
 }
 
 void GameTechAGCRenderer::UiPass() {
@@ -680,6 +712,19 @@ void GameTechAGCRenderer::UpdateObjectList() {
 		currentFrame->data.WriteData(state);
 	}
 	currentFrame->lasers.end(currentFrame);
+
+	currentFrame->decals.begin(currentFrame);
+	for (auto& decal : decalSystem.GetDecals()) {
+		DecalState state;
+		state.modelMatrix = Matrix::Translation(Vector3(decal.position))
+			* Matrix::RotationAroundNormal(decal.normal, decal.rotation)
+			* Matrix::Scale(Vector3(decal.radius, decal.radius, decal.radius));
+		state.color = decal.color;
+		state.fade = decal.alphaFade;
+		state.textureId = decal.texture != nullptr ? decal.texture->GetAssetID() : NULLTEX;
+		currentFrame->data.WriteData(state);
+	}
+	currentFrame->decals.end(currentFrame);
 }
 
 template<typename T>
