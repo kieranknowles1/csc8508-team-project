@@ -32,8 +32,7 @@ GameObject::~GameObject()	{
 }
 
 void GameObject::UpdateObjectState() {
-    StateReader writeReader = states->GetWriteState();
-    ObjectState* writeState = writeReader.GetState();
+    auto [writeState, lock] = states->GetWriteState();
     
     btRigidBody* body = GetPhysicsObject()->GetRigidBody();
     btTransform transform = body->getWorldTransform();
@@ -54,11 +53,8 @@ void GameObject::UpdateFromState(float dt) {
     std::function lerp = [](float x, float y, float w) { return x + ((y - x) * w); };
     float weight = TICK_UPDATE_RATE / fmod(elapsedTickTime, TICK_UPDATE_RATE);
 
-    StateReader currentReader = states->GetCurrentState();
-    StateReader readReader = states->GetReadState();
-
-    ObjectState* current = currentReader.GetState();
-    ObjectState* read = currentReader.GetState();
+    auto [current, currentLock] = states->GetCurrentState();
+    auto [read, readLock] = states->GetReadState();
 
     btRigidBody* body = GetPhysicsObject()->GetRigidBody();
 
@@ -93,8 +89,8 @@ void GameObject::UpdateFromState(float dt) {
     current->Unlock_Shared();
     read->Unlock_Shared();
 
-    currentReader.Unlock();
-    readReader.Unlock();
+    currentLock.unlock();
+    readLock.unlock();
 
     // Linear Velocity.
     if (hasCurrentLinear && hasTargetLinear) {
@@ -149,8 +145,7 @@ void GameObject::UpdateFromState(float dt) {
 std::vector<std::shared_ptr<Packet::Packet>> GameObject::CreatePackets(int sequenceNum) {
     std::vector<std::shared_ptr<Packet::Packet>> packets;
 
-    StateReader readReader = GetObjectStates()->GetReadState();
-    ObjectState* read = readReader.GetState();
+    auto[read, readLock] = states->GetReadState();
 
     StateValue linearValue;
     StateValue angularValue;
@@ -158,7 +153,7 @@ std::vector<std::shared_ptr<Packet::Packet>> GameObject::CreatePackets(int seque
     StateValue rotationValue;
 
     read->Lock_Shared();
-    
+
     bool hasLinear = read->ReadState(StateType::LinearVelocity, &linearValue);
     bool hasAngular = read->ReadState(StateType::AngularVelocity, &angularValue);
 
@@ -166,7 +161,7 @@ std::vector<std::shared_ptr<Packet::Packet>> GameObject::CreatePackets(int seque
     bool hasRotation = read->ReadState(StateType::Rotation, &rotationValue);
 
     read->Unlock_Shared();
-    readReader.Unlock();
+    readLock.unlock();
     
     if (hasLinear && hasAngular) {
         packets.push_back(std::move(std::make_shared<Packet::DeltaPacket>(

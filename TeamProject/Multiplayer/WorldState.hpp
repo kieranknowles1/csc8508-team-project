@@ -101,6 +101,12 @@ namespace WorldState {
         // Thread is undefined behaviour.
         StateReader(const StateReader& other) = delete;
 
+        StateReader(StateReader&& other) {
+            other.m_state = m_state;
+            other.m_readingMutex = m_readingMutex;
+            other.m_readingMutex = nullptr;
+        }
+
         ~StateReader() {
             Unlock();
         }
@@ -112,7 +118,7 @@ namespace WorldState {
          * object after calling this function is undefined behaviour.
          */
         void Unlock() {
-            if (m_locked) {
+            if (m_locked && m_readingMutex != nullptr) {
                 m_locked = false;
                 m_readingMutex->unlock_shared();
             }
@@ -122,8 +128,8 @@ namespace WorldState {
 
     private:
         bool m_locked = true;
-        ObjectState* m_state;
-        std::shared_mutex* m_readingMutex;
+        ObjectState* m_state = nullptr;
+        std::shared_mutex* m_readingMutex = nullptr;
     };
 
 
@@ -137,43 +143,44 @@ namespace WorldState {
      */
     class StateBuffer {
     public:
-        StateBuffer() {}
-        ~StateBuffer() {}
+        StateBuffer() {
+            m_stateMutexes = new std::shared_mutex[3];
+        }
+        ~StateBuffer() {
+            delete[] m_stateMutexes;
+        }
 
         /**
          * @brief Get the current ObjectState.
          * 
-         * Calling this function multiple times on the same thread without the
-         * previous object going out of scope or without calling Unlock() is
-         * undefined behaviour and will likely result in a deadlock.
+         * Calling this function multiple times on the same thread without
+         * unlocking will most likely result in a deadlock.
          */
-        StateReader GetCurrentState() { 
-            m_stateMutexes[current].lock_shared();
-            return StateReader(&m_states[current], &m_stateMutexes[current]);
+        std::pair<ObjectState*, std::shared_lock<std::shared_mutex>> GetCurrentState() {
+            std::shared_lock lock(m_stateMutexes[current]);
+            return std::make_pair(&m_states[current], std::move(lock));
         }
 
         /**
          * @brief Get the ObjectState to read from.
          * 
-         * Calling this function multiple times on the same thread without the
-         * previous object going out of scope or without calling Unlock() is
-         * undefined behaviour and will likely result in a deadlock.
+         * Calling this function multiple times on the same thread without
+         * unlocking will most likely result in a deadlock.
          */
-        StateReader GetReadState() {
-            m_stateMutexes[read].lock_shared();
-            return StateReader(&m_states[read], &m_stateMutexes[read]);
+        std::pair<ObjectState*, std::shared_lock<std::shared_mutex>> GetReadState() {
+            std::shared_lock lock(m_stateMutexes[read]);
+            return std::make_pair(&m_states[read], std::move(lock));
         }
 
         /**
          * @brief Get the ObjectState to write to.
          * 
-         * Calling this function multiple times on the same thread without the
-         * previous object going out of scope or without calling Unlock() is
-         * undefined behaviour and will likely result in a deadlock.
+         * Calling this function multiple times on the same thread without
+         * unlocking will most likely result in a deadlock.
          */
-        StateReader GetWriteState() {
-            m_stateMutexes[write].lock_shared();
-            return StateReader(&m_states[write], &m_stateMutexes[write]);
+        std::pair<ObjectState*, std::shared_lock<std::shared_mutex>> GetWriteState() {
+            std::shared_lock lock(m_stateMutexes[write]);
+            return std::make_pair(&m_states[write], std::move(lock));
         }
 
         /**
@@ -196,20 +203,21 @@ namespace WorldState {
 
     private:
         void LockAll() {
-            for (int i = 0; i < m_stateMutexes.size(); i++) {
+            for (int i = 0; i < 3; i++) {
                 m_stateMutexes[i].lock();
             }
         }
 
+
         void UnlockAll() {
-            for (int i = 0; i < m_stateMutexes.size(); i++) {
+            for (int i = 0; i < 3; i++) {
                 m_stateMutexes[i].unlock();
             }
         }
 
         std::array<ObjectState, 3> m_states;
-        std::array<std::shared_mutex, 3> m_stateMutexes;
-        
+        std::shared_mutex* m_stateMutexes;
+
         int current = 0;
         int read = 1;
         int write = 2;

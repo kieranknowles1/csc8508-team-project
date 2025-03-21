@@ -8,8 +8,7 @@ using namespace NCL::CSC8503;
 
 
 void LaserObject::UpdateObjectState() {
-    StateReader writeReader = states->GetWriteState();
-    ObjectState* writeState = writeReader.GetState();
+    auto [writeState, lock] = states->GetWriteState();
     
     writeState->Lock();
 
@@ -26,11 +25,8 @@ void LaserObject::UpdateFromState(float dt) {
     std::function lerp = [](float x, float y, float w) { return x + ((y - x) * w); };
     float weight = TICK_UPDATE_RATE / fmod(elapsedTickTime, TICK_UPDATE_RATE);
 
-    StateReader currentReader = states->GetCurrentState();
-    StateReader readReader = states->GetReadState();
-
-    ObjectState* current = currentReader.GetState();
-    ObjectState* read = currentReader.GetState();
+    auto [current, currentLock] = states->GetCurrentState();
+    auto [read, readLock] = states->GetReadState();
 
     StateValue currentStartPosValue;
     StateValue targetStartPosValue;
@@ -57,8 +53,8 @@ void LaserObject::UpdateFromState(float dt) {
     current->Unlock_Shared();
     read->Unlock_Shared();
 
-    currentReader.Unlock();
-    readReader.Unlock();
+    currentLock.unlock();
+    readLock.unlock();
 
     // Start Position.
     if (hasCurrentStartPos && hasCurrentEndPos) {
@@ -100,8 +96,7 @@ void LaserObject::UpdateFromState(float dt) {
 std::vector<std::shared_ptr<Packet::Packet>> LaserObject::CreatePackets(int sequenceNum) {
     std::vector<std::shared_ptr<Packet::Packet>> packets;
 
-    StateReader readReader = GetObjectStates()->GetReadState();
-    ObjectState* read = readReader.GetState();
+    auto [read, readLock] = states->GetReadState();
 
     StateValue startPosValue;
     StateValue endPosValue;
@@ -114,7 +109,7 @@ std::vector<std::shared_ptr<Packet::Packet>> LaserObject::CreatePackets(int sequ
     bool hasCollisionNormal = read->ReadState(StateType::Normal, &collisionNormalValue);
 
     read->Unlock_Shared();
-    readReader.Unlock();
+    readLock.unlock();
     
     if (hasStartPos && hasEndPos && hasCollisionNormal) {
         packets.push_back(std::move(std::make_shared<Packet::LaserPacket>(

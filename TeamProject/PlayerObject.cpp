@@ -36,8 +36,7 @@ void PlayerObject::UpdateFromState(float dt) {
 std::vector<std::shared_ptr<Packet::Packet>> PlayerObject::CreatePackets(int sequenceNum) {
     std::vector<std::shared_ptr<Packet::Packet>> packets = GameObject::CreatePackets(sequenceNum);
 
-    StateReader readReader = GetObjectStates()->GetReadState();
-    ObjectState* read = readReader.GetState();
+    auto [read, readLock] = states->GetReadState();
 
     StateValue upVector;
 
@@ -46,7 +45,7 @@ std::vector<std::shared_ptr<Packet::Packet>> PlayerObject::CreatePackets(int seq
     bool hasUpVector = read->ReadState(StateType::UpVector, &upVector);
 
     read->Unlock_Shared();
-    readReader.Unlock();
+    readLock.unlock();
     
     if (hasUpVector) {
         packets.push_back(std::move(std::make_shared<Packet::ObjectChangeGravityPacket>(

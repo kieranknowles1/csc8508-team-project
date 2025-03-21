@@ -115,8 +115,9 @@ namespace Multiplayer {
 
             if (*(object->GetOwner()) != *m_user) return;
 
-            for (std::shared_ptr<Packet::Packet> packet : object->CreatePackets(m_tickCount)) {
-                m_network->Broadcast(packet);
+            std::vector<std::shared_ptr<Packet::Packet>> packets = object->CreatePackets(m_tickCount);
+            for (auto packet = packets.begin(); packet != packets.end(); packet++) {
+                m_network->Broadcast(*packet);
             }
         });
     }
