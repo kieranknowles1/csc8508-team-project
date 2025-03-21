@@ -62,8 +62,6 @@ void GameTechAGCRenderer::prepPostProcessing(sce::Agc::CxRenderTarget& target)
 	sce::Agc::CxDepthStencilControl depthControl;
 	depthControl.init().setDepth(sce::Agc::CxDepthStencilControl::Depth::kDisable).setDepthFunction(sce::Agc::CxDepthStencilControl::DepthFunction::kAlways);
 	frameContext->m_sb.setState(depthControl);
-
-	frameContext->m_sb.setState(sce::Agc::CxPrimitiveSetup().init().setCullFace(sce::Agc::CxPrimitiveSetup::CullFace::kBack));
 }
 
 GameTechAGCRenderer::GameTechAGCRenderer(Window* window) : AGCRenderer(window), GameTechRendererInterface(window) {
@@ -128,7 +126,7 @@ GameTechAGCRenderer::GameTechAGCRenderer(Window* window) : AGCRenderer(window), 
 	currentFrame = &allFrames[currentFrameIndex];
 
 	auto tex = std::make_shared<AGCTexture>();
-	Debug::CreateDebugFont("PressStart2P.fnt", tex);
+	Debug::CreateDebugFont("Comicy.ttf", tex);
 
 	sceneBuffer = createBuffer("Scene", FrameBuffer::Slot::Color);
 	sceneNormalBuffer = createBuffer("SceneNormal", FrameBuffer::Slot::Normal);
@@ -496,8 +494,7 @@ void GameTechAGCRenderer::UpdateDebugData() {
 	std::vector<SimpleFont::InterleavedTextVertex> verts;
 	static_assert(sizeof(SimpleFont::InterleavedTextVertex) == sizeof(TextState));
 	for (const auto& s : strings) {
-		float size = 0.2f * s.scale;
-		Debug::GetDebugFont()->BuildInterleavedVerticesForString(s.data, s.position, s.colour, size, verts);
+		Debug::GetDebugFont()->BuildInterleavedVerticesForString(s.data, s.position, s.colour, s.scale, verts);
 		currentFrame->data.WriteData(verts.data(), verts.size() * sizeof(TextState));
 		verts.clear();
 	}
