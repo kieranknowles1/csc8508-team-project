@@ -9,6 +9,14 @@ using namespace WorldState;
 using namespace NCL::CSC8503;
 
 
+void LaserObject::Update(float dt) {
+    // Spawning a decal at the end position.
+    if (endPos != startPos) {
+        Shoot::GetInstance()->SpawnDecal(endPos, collisionNormal, color);
+    }
+}
+
+
 void LaserObject::UpdateObjectState() {
     auto [writeState, lock] = states->GetWriteState();
     
@@ -46,7 +54,6 @@ void LaserObject::UpdateFromState(float dt) {
     bool hasCurrentEndPos = current->ReadState(StateType::EndPos, &currentEndPosValue);
     bool hasTargetEndPos = read->ReadState(StateType::EndPos, &targetEndPosValue);
 
-    bool hasCurrentCollisionNormal = current->ReadState(StateType::Normal, &currentCollisionNormalValue);
     bool hasTargetCollisionNormal = read->ReadState(StateType::Normal, &targetCollisionNormalValue);
 
     currentStateLock.unlock();
@@ -67,11 +74,8 @@ void LaserObject::UpdateFromState(float dt) {
         startPos = interpolated;
     } 
 
-
-    collisionNormal = std::get<btVector3>(targetCollisionNormalValue);
-
     // End Position.
-    if (hasCurrentEndPos && hasCurrentEndPos && collisionNormal && initialised) {
+    if (hasCurrentEndPos && hasCurrentEndPos) {
         btVector3 currentEndPos = std::get<btVector3>(currentEndPosValue);
         btVector3 targetEndPos = std::get<btVector3>(currentEndPosValue);
         btVector3 interpolated = btVector3(
@@ -81,11 +85,12 @@ void LaserObject::UpdateFromState(float dt) {
         );
         endPos = interpolated;
 
-        Shoot::GetInstance()->SpawnDecal(endPos, collisionNormal, parent->GetWorldID());
     } 
 
-
-    
+    // Collision Normal (does not want interpolation.
+    if (hasTargetCollisionNormal) {
+        collisionNormal = std::get<btVector3>(targetCollisionNormalValue);
+    }
 }
 
 std::vector<std::shared_ptr<Packet::Packet>> LaserObject::CreatePackets(int sequenceNum) {

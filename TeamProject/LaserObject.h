@@ -8,6 +8,8 @@ namespace NCL::CSC8503 {
     public:
         LaserObject(GameObject* parent) : parent(parent) {}
 
+        void Update(float dt) override;
+
         void UpdateObjectState() override;
         void UpdateFromState(float dt) override;
         std::vector<std::shared_ptr<Packet::Packet>> CreatePackets(int sequenceNum) override;
@@ -15,7 +17,7 @@ namespace NCL::CSC8503 {
         void SetCollisionNormal(btVector3 n) { collisionNormal = n; }
         void SetStartPos(btVector3 s) { startPos = s; }
         void SetEndPos(btVector3 e) { endPos = e; }
-        void SetColor(btVector4 c) { color = c; initialised = true; }
+        void SetColor(btVector4 c) { color = c; }
         void SetThickness(float t) { thickness = t; }
 
         btVector3& GetCollisionNormal() { return collisionNormal; }
@@ -30,7 +32,6 @@ namespace NCL::CSC8503 {
         btVector3 endPos;
         btVector4 color;
         float thickness;
-        bool initialised = false;
         GameObject* parent;
     };
 

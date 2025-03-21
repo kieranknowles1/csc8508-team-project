@@ -573,6 +573,10 @@ void TutorialGame::Start() {
         instance->player = instance->InitPlayer(playerRespawn->position, playerRespawn->orientation);
         instance->player->SetWorldID(0);
 
+        LaserObject* laser = instance->player->GetLaser();
+        laser->SetColor(Color::GetPlayerColor(0));
+        instance->renderer->TrackLaser(laser);
+
         instance->playerController = std::make_unique<PlayerController>(instance->player, instance->controller, instance->mainCamera, instance->bulletWorld, instance->renderer);
         instance->spGameController = new SPGameController(instance->player, instance, instance->renderer);
     }

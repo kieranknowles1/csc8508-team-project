@@ -64,7 +64,7 @@ std::optional<ShotInfo> Shoot::ShootBulletPlayer(btVector3 startPos, btVector3 d
             hit->DamageAI(100.0f * dt);
         }
        // SpawnBulletMesh(startPos, dir, rotation, &rayInfo.value());
-        SpawnDecal(rayInfo.value().hitPos, rayInfo.value().hitNormal, shotID);
+        //SpawnDecal(rayInfo.value().hitPos, rayInfo.value().hitNormal, shotID);
     }
     return rayInfo;
 }
@@ -77,24 +77,21 @@ std::optional<ShotInfo> Shoot::ShootBulletAI(btVector3 startPos, btVector3 dir, 
             PlayerObject* hit = (PlayerObject*)rayInfo.value().hitObj;
             hit->Damage(5.0f * dt); // TODO: Don't hard code this.
         }
-        SpawnDecal(rayInfo.value().hitPos, rayInfo.value().hitNormal, 1);
+        //SpawnDecal(rayInfo.value().hitPos, rayInfo.value().hitNormal, 1);
     }
     return rayInfo;
 }
 
 
-void Shoot::SpawnDecal(btVector3 hitPos,btVector3 hitNormal, int shotID) {
+void Shoot::SpawnDecal(btVector3 hitPos,btVector3 hitNormal, btVector4 color) {
 
 		// Choose a random decal texture
         std::shared_ptr<NCL::Rendering::Texture> pngTexture = decalSystem->PickRandomDecal(decalTextures);
 
-		// Use the same color for the decal as the paintball
-        btVector4 decalColor = Color::GetPlayerColor(shotID-1);
-
 		// Generate a random rotation angle for the decal
         float decalRotation = decalSystem->GetRandomRotation();
 
-        DecalSystem::Decal decal = { hitPos, decalRotation, hitNormal, decalRadius, pngTexture,alphaFade,decalColor };
+        DecalSystem::Decal decal = { hitPos, decalRotation, hitNormal, decalRadius, pngTexture, alphaFade, color };
         decalSystem->ApplyDecal(decal); // Apply the decal using the hit position and normal
     
 }
