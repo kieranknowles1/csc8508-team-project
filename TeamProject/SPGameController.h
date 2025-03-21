@@ -9,6 +9,15 @@ namespace NCL {
         class Turret;
         class GameTechRendererInterface;
 
+        enum class Side {
+            BOTTOM,
+            TOP,
+            FRONT,
+            BACK,
+            LEFT,
+            RIGHT
+        };
+
 		class SPGameController {
 		public:
 			SPGameController(GameObject* p, TutorialGame* g, GameTechRendererInterface* r);
@@ -30,7 +39,7 @@ namespace NCL {
             void VisualiseNavMesh();
 
             std::vector<Wanderer*> wanderers;
-            Wanderer* AddWandererToWorld(NavMesh* navMesh, char side);
+            Wanderer* AddWandererToWorld(NavMesh* navMesh, Side side);
 
             Turret* AddTurretToWorld();
             Turret* testTurret = nullptr;

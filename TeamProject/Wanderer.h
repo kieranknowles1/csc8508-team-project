@@ -1,13 +1,14 @@
 #pragma once
 #include "NavEntity.h"
 #include "NavMesh.h"
+#include "SPGameController.h"
 
 namespace NCL {
 	namespace CSC8503 {
 		class StateMachine;
 		class Wanderer : public NavEntity {
 		public:
-			Wanderer(GameObject* p, NavMesh* nav, char side, int lID, GameTechRendererInterface* r);
+			Wanderer(GameObject* p, NavMesh* nav, Side side, int lID, GameTechRendererInterface* r);
 			~Wanderer();
 
 			void Update(float dt);

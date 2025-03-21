@@ -36,12 +36,12 @@ SPGameController::SPGameController(GameObject* p, TutorialGame* g, GameTechRende
     for (int i = 101; i <= 150; i++) { laserIDs.push_back(i); }
 
     for (int i = 0; i < 5; i++) {
-        AddWandererToWorld(bottom, 'b');
-        AddWandererToWorld(top, 't');
-        AddWandererToWorld(front, 'f');
-        AddWandererToWorld(back, 'k');
-        AddWandererToWorld(left, 'l');
-        AddWandererToWorld(right, 'r');
+        AddWandererToWorld(bottom, Side::BOTTOM);
+        AddWandererToWorld(top, Side::TOP);
+        AddWandererToWorld(front, Side::FRONT);
+        AddWandererToWorld(back, Side::BACK);
+        AddWandererToWorld(left, Side::LEFT);
+        AddWandererToWorld(right, Side::RIGHT);
     }
 
 }
@@ -64,7 +64,7 @@ void SPGameController::Update(float dt) {
     if (navMeshDebug) VisualiseNavMesh();
 }
 
-Wanderer* SPGameController::AddWandererToWorld(NavMesh* navMesh, char side) {
+Wanderer* SPGameController::AddWandererToWorld(NavMesh* navMesh, Side side) {
     if (laserIDs.size() == 0) {
         std::cout << "No AI Laser IDs" << std::endl;
         return nullptr;
