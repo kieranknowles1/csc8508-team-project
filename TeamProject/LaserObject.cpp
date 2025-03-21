@@ -2,6 +2,8 @@
 #include "Multiplayer/WorldState.hpp"
 #include "Multiplayer/GamePackets.hpp"
 #include "GameTechRenderer.h"
+#include "Shoot.h"
+
 
 using namespace WorldState;
 using namespace NCL::CSC8503;
@@ -65,8 +67,11 @@ void LaserObject::UpdateFromState(float dt) {
         startPos = interpolated;
     } 
 
+
+    collisionNormal = std::get<btVector3>(targetCollisionNormalValue);
+
     // End Position.
-    if (hasCurrentEndPos && hasCurrentEndPos) {
+    if (hasCurrentEndPos && hasCurrentEndPos && collisionNormal && initialised) {
         btVector3 currentEndPos = std::get<btVector3>(currentEndPosValue);
         btVector3 targetEndPos = std::get<btVector3>(currentEndPosValue);
         btVector3 interpolated = btVector3(
@@ -75,19 +80,12 @@ void LaserObject::UpdateFromState(float dt) {
             lerp(currentEndPos.z(), targetEndPos.z(), weight)
         );
         endPos = interpolated;
+
+        Shoot::GetInstance()->SpawnDecal(endPos, collisionNormal, parent->GetWorldID());
     } 
 
-    // Collision Normal.
-    if (hasCurrentCollisionNormal && hasCurrentEndPos) {
-        btVector3 currentCollisionNormal = std::get<btVector3>(currentCollisionNormalValue);
-        btVector3 targetCollisionNormal = std::get<btVector3>(currentCollisionNormalValue);
-        btVector3 interpolated = btVector3(
-            lerp(currentCollisionNormal.x(), targetCollisionNormal.x(), weight),
-            lerp(currentCollisionNormal.y(), targetCollisionNormal.y(), weight),
-            lerp(currentCollisionNormal.z(), targetCollisionNormal.z(), weight)
-        );
-        collisionNormal = interpolated;
-    } 
+
+    
 }
 
 std::vector<std::shared_ptr<Packet::Packet>> LaserObject::CreatePackets(int sequenceNum) {

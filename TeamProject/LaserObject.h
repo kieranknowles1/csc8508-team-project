@@ -6,7 +6,7 @@ namespace NCL::CSC8503 {
 
     class LaserObject : public GameObject {
     public:
-        LaserObject(GameObject* parent) {}
+        LaserObject(GameObject* parent) : parent(parent) {}
 
         void UpdateObjectState() override;
         void UpdateFromState(float dt) override;
@@ -15,7 +15,7 @@ namespace NCL::CSC8503 {
         void SetCollisionNormal(btVector3 n) { collisionNormal = n; }
         void SetStartPos(btVector3 s) { startPos = s; }
         void SetEndPos(btVector3 e) { endPos = e; }
-        void SetColor(btVector4 c) { color = c; }
+        void SetColor(btVector4 c) { color = c; initialised = true; }
         void SetThickness(float t) { thickness = t; }
 
         btVector3& GetCollisionNormal() { return collisionNormal; }
@@ -30,7 +30,7 @@ namespace NCL::CSC8503 {
         btVector3 endPos;
         btVector4 color;
         float thickness;
-
+        bool initialised = false;
         GameObject* parent;
     };
 
