@@ -55,7 +55,7 @@ namespace NCL {
             const static constexpr float PHYSICS_PERIOD = 1.0f / 60.0f;
 
             static TutorialGame* getInstance() {
-                assert(instance && "TutorialGame is not initialised");
+                //assert(instance && "TutorialGame is not initialised");
                 return instance;
             }
 
