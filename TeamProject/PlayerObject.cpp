@@ -25,10 +25,6 @@ void PlayerObject::Update(float dt) {
     }
 }
 
-void PlayerObject::UpdateObjectState() {
-    GameObject::UpdateObjectState();
-}
-
 void PlayerObject::UpdateFromState(float dt) {
     GameObject::UpdateFromState(dt);
 

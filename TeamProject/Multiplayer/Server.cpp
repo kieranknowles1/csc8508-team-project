@@ -113,7 +113,10 @@ namespace Multiplayer {
 
             object->GetObjectStates()->UpdateBuffer();
 
-            if (*(object->GetOwner()) != *m_user) return;
+            if (*(object->GetOwner()) != *m_user) {
+                object->WriteCurrentState();
+                return;
+            }
 
             std::vector<std::shared_ptr<Packet::Packet>> packets = object->CreatePackets(m_tickCount);
             for (auto packet = packets.begin(); packet != packets.end(); packet++) {
