@@ -33,14 +33,15 @@ SPGameController::SPGameController(GameObject* p, TutorialGame* g, GameTechRende
     right->LoadFromFile("right.navmesh");
     navMeshes.push_back(right);
 
-    int aicount = 101;
+    for (int i = 101; i <= 150; i++) { laserIDs.push_back(i); }
+
     for (int i = 0; i < 5; i++) {
-        AddWandererToWorld(bottom, 'b', aicount++);
-        AddWandererToWorld(top, 't', aicount++);
-        AddWandererToWorld(front, 'f', aicount++);
-        AddWandererToWorld(back, 'k', aicount++);
-        AddWandererToWorld(left, 'l', aicount++);
-        AddWandererToWorld(right, 'r', aicount++);
+        AddWandererToWorld(bottom, 'b');
+        AddWandererToWorld(top, 't');
+        AddWandererToWorld(front, 'f');
+        AddWandererToWorld(back, 'k');
+        AddWandererToWorld(left, 'l');
+        AddWandererToWorld(right, 'r');
     }
 
 }
@@ -63,8 +64,12 @@ void SPGameController::Update(float dt) {
     if (navMeshDebug) VisualiseNavMesh();
 }
 
-Wanderer* SPGameController::AddWandererToWorld(NavMesh* navMesh, char side, int laserID) {
-    Wanderer* wanderer = new Wanderer(player, navMesh, side, laserID, renderer);
+Wanderer* SPGameController::AddWandererToWorld(NavMesh* navMesh, char side) {
+    if (laserIDs.size() == 0) {
+        std::cout << "No AI Laser IDs" << std::endl;
+        return nullptr;
+    }
+    Wanderer* wanderer = new Wanderer(player, navMesh, side, GetIDFromPool(), renderer);
 
     float height = 4.0f;
     float radius = 2.0f;

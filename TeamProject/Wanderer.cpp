@@ -64,6 +64,7 @@ void Wanderer::Update(float dt) {
 
 	if (health <= 0) {
 		renderer->updateLaser(laserID, btVector3(0, 0, 0), btVector3(0, 0, 0));
+		TutorialGame::getInstance()->GetSPMode()->AddIDToPool(laserID);
 		TutorialGame::getInstance()->delayedRemoveObject(this);
 		return;
 	}

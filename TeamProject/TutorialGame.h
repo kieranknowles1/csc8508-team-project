@@ -143,6 +143,8 @@ namespace NCL {
 
             void SetGameMode(GameMode gm) { gameMode = gm; }
 
+            SPGameController* GetSPMode() { return spGameController; }
+
         protected:
             void InitialiseAssets();
 
