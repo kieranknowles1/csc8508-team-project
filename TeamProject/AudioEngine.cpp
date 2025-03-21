@@ -7,7 +7,7 @@
 
 
 //Link of tutorial followed https://codyclaborn.me/tutorials/making-a-basic-fmod-audio-engine-in-c/#implementation-source
-//With a few custom functions written by Ameya
+//With some custom functions written by Ameya
 
 CAudioEngine audioEngine;
 
@@ -130,6 +130,57 @@ int CAudioEngine::PlaySounds(const std::string& strSoundName, const NCL::Maths::
     return nChannelId;
 }
 
+void CAudioEngine::StopChannel(int nChannelId) {
+    auto tFoundIt = sgpImplementation->mChannels.find(nChannelId);
+    if (tFoundIt != sgpImplementation->mChannels.end()) {
+        if (tFoundIt->second) {
+            tFoundIt->second->stop(); // Stop the sound
+        }
+        sgpImplementation->mChannels.erase(tFoundIt); // Remove from active channels
+    }
+}
+
+void CAudioEngine::StopAllNonUISounds() {
+    for (auto& [channelId, channel] : sgpImplementation->mChannels) {
+        if (channel) {
+            std::string playingSound = GetSoundNameByChannel(channelId);
+            if (playingSound != "MenuScroll.wav" && playingSound != "MenuSelect.wav") {
+                channel->stop();
+            }
+        }
+    }
+}
+
+std::string CAudioEngine::GetSoundNameByChannel(int nChannelId) {
+    auto found = sgpImplementation->mChannels.find(nChannelId);
+    if (found == sgpImplementation->mChannels.end()) {
+        return "";  // Channel ID not found
+    }
+
+    FMOD::Sound* sound = nullptr;
+    if (found->second->getCurrentSound(&sound) != FMOD_OK || !sound) {
+        return "";  // No sound associated with this channel
+    }
+
+    char soundName[256];
+    if (sound->getName(soundName, sizeof(soundName)) == FMOD_OK) {
+        return std::string(soundName);
+    }
+    return "";
+}
+
+bool CAudioEngine::isPlayingByString(const std::string& soundName) {
+    for (auto& [channelId, channel] : sgpImplementation->mChannels) {
+        if (channel) {
+            std::string playingSound = GetSoundNameByChannel(channelId);
+            if (playingSound == soundName) {
+                return true;  // The sound is currently playing
+            }
+        }
+    }
+    return false;
+}
+
 //Sets the 3D position of an FMod channel
 void CAudioEngine::SetChannel3dPosition(int nChannelId, const NCL::Maths::Vector3& vPosition) {
     auto tFoundIt = sgpImplementation->mChannels.find(nChannelId);
@@ -171,6 +222,13 @@ void CAudioEngine::SetChannelVolume(int nChannelId, float fVolumedB) {
     }
 
     CAudioEngine::ErrorCheck(tFoundIt->second->setVolume(dbToVolume(fVolumedB)));
+}
+
+void CAudioEngine::StopAllChannels() {
+    for (auto& [channelId, channel] : sgpImplementation->mChannels) {
+        channel->stop();
+    }
+    sgpImplementation->mChannels.clear();
 }
 
 //Loads an FMod bank file for event-based sounds

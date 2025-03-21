@@ -42,7 +42,8 @@ TutorialGame::TutorialGame(GameTechRendererInterface* renderer, Controller* cont
     resourceManager = std::make_unique<ResourceManager>(renderer, config.get<float>("resourceThreadMult"));
     new Shoot(); //Shoot and Respawn have new before them but are not being deleted to my knowledge
     new Respawn();
-
+    //audioEngine.Init();
+    audioEngine.Init();
     InitialiseAssets();
     InitCamera();
     InitWorld();
@@ -311,6 +312,9 @@ void TutorialGame::ClearWorld() {
     renderer->GetDecalSystem().ClearDecalsFromWorld();
     renderer->ClearUIElemets();
 
+    //audioEngine.StopAllChannels();
+
+    // audioEngine.StopAllNonUISounds();
 
     //These two lines fix the problem of the audio not playing in the
     //main menu after quitting from the pause menu, but it cuts off
@@ -322,7 +326,7 @@ void TutorialGame::ClearWorld() {
 void TutorialGame::InitWorld() {
 
 	InitBullet();
-	audioEngine.Init();
+    //audioEngine.Init();
 
 }
 

@@ -1,7 +1,7 @@
 #pragma once
 
 //Link of tutorial followed https://codyclaborn.me/tutorials/making-a-basic-fmod-audio-engine-in-c/#implementation-source
-//With a few custom functions written by Ameya
+//With some custom functions written by Ameya
 
 #ifndef _AUDIO_ENGINE_H_
 #define _AUDIO_ENGINE_H_
@@ -81,14 +81,17 @@ public:
 	int PlaySounds(const std::string& strSoundName, const NCL::Maths::Vector3& vPos = NCL::Maths::Vector3{ 0, 0, 0 }, float fVolumedB = 0.0f);
 	void PlayEvent(const std::string& strEventName);
 	void StopChannel(int nChannelId);
+	std::string GetSoundNameByChannel(int nChannelId);
 	void StopEvent(const std::string& strEventName, bool bImmediate = false);
 	void GetEventParameter(const std::string& strEventName, const std::string& strEventParameter, float* parameter);
 	void SetEventParameter(const std::string& strEventName, const std::string& strParameterName, float fValue);
 	void StopAllChannels();
+	void StopAllNonUISounds();
 	void SetChannel3dPosition(int nChannelId, const NCL::Maths::Vector3& vPosition);
 	void SetChannelPlaybackPosition(int channelId, unsigned int positionMs);
 	void SetChannelVolume(int nChannelId, float fVolumedB);
 	bool IsPlaying(int nChannelId) const;
+	bool isPlayingByString(const std::string& soundName);
 	bool IsAnySoundPlaying() const;
 	bool IsEventPlaying(const std::string& strEventName) const;
 	float dbToVolume(float dB);

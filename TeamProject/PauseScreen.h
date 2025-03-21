@@ -40,6 +40,10 @@ public:
                     return PushdownResult::Pop;
                 }
                 else {
+                    if (playerController->getBeamSoundChannel() != -1) {
+                        audioEngine.StopChannel(playerController->getBeamSoundChannel());
+                        playerController->setBeamSoundChannel(-1);
+                    }
                     game->ClearWorld();
                     return PushdownResult::Clear;
                 }
@@ -69,7 +73,8 @@ public:
                 playerController->setBeamSoundPaused(false);
             }
             else {
-                audioEngine.SetChannelVolume(playerController->getBeamSoundChannel(), -100.0f);
+                //audioEngine.SetChannelVolume(playerController->getBeamSoundChannel(), -100.0f);
+                //audioEngine.StopChannel(playerController->getBeamSoundChannel());
                 playerController->setBeamSoundChannel(-1);
             }
         }

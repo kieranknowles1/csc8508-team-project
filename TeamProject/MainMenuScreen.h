@@ -99,7 +99,7 @@ public:
                 return PushdownResult::Push;
                 break;
             case GameMode::QUIT:
-                audioEngine.Shutdown();
+                // audioEngine.Shutdown();
                 renderer->ClearUIElemets();
                 game->SetGameMode(GameMode::QUIT);
                 return PushdownResult::Pop;
@@ -140,6 +140,8 @@ public:
         // Now restart the audio engine
         //audioEngine.Shutdown();
         //audioEngine.Init();
+        game->getMainCam()->SetPosition({ 0, 0, 0 });
+        audioEngine.Update(game->getMainCam());
 
         if (!textureUiElement) {  // Check if the element exists
             fmodLogoTex = resourceManager->getTextures().get("FMOD Logo Black - White Background1.png");
@@ -149,8 +151,11 @@ public:
         renderer->AddUiElement(textureUiElement.get());
         textureUiElement->SetActive(true);
 
-        audioEngine.Shutdown();
-        audioEngine.Init();
+        //audioEngine.Update(game->getMainCam());
+         
+         
+        //audioEngine.Shutdown();
+        //audioEngine.Init();
     }
 };
 
