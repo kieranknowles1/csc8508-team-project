@@ -8,6 +8,8 @@
 #include "glinterop.h"
 #include "../include/vert/texscale.glsl"
 
+RegularBuffer<ObjectState> objects							: register(t0);
+
 [CxxSymbol("TestShader::gs")]
 VS_OUTPUT main(uint vertID : S_VERTEX_ID, uint objID : S_SRT_DATA, uint instanceID : S_INSTANCE_ID)
 {
