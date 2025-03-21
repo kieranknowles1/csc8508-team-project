@@ -342,7 +342,6 @@ PlayerObject* TutorialGame::InitPlayer(btVector3 position, btVector3 upDir) {
 
     newPlayer->GetRenderObject()->SetColour(Vector4(playerColour));
     newPlayer->setUpDirection(upDir);
-    newPlayer->setRenderer(renderer);
     return newPlayer;
 }
 
@@ -597,8 +596,8 @@ void TutorialGame::JoinGame(bool host) {
         std::string host = config.get<std::string>("defaultHost");
         std::cout << "Connecting to " << host << std::endl;
 
-        //enet_address_set_host(&dest, "127.0.0.1");
-        enet_address_set_host(&dest, host.c_str());
+        enet_address_set_host(&dest, "127.0.0.1");
+        //enet_address_set_host(&dest, host.c_str());
 
         dest.port = DEFAULT_PORT;
 
@@ -639,6 +638,7 @@ void TutorialGame::Start() {
     instance->player->SetWorldID(user->GetUserID());
     instance->player->GetRenderObject()->SetColour(Vector4(Color::GetPlayerColor(user->GetUserID())));
     instance->player->setType(GameObject::Type::Player);
+    instance->player->setRenderer(instance->renderer);
     instance->playerController = std::make_unique<PlayerController>(instance->player, instance->controller, instance->mainCamera, instance->bulletWorld,instance->renderer);
 
 
@@ -673,6 +673,7 @@ void TutorialGame::Start() {
             newPlayer->SetOwner(newUser.GetUserID());
             newPlayer->SetWorldID(newUser.GetUserID());
             newPlayer->GetRenderObject()->SetColour(Vector4(Color::GetPlayerColor(newUser.GetUserID())));
+            newPlayer->setRenderer(instance->renderer);
         }
     }
     else {
