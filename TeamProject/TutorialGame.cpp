@@ -554,13 +554,13 @@ void TutorialGame::Start() {
         //    if (!place.GetUser().has_value()) continue;
         //    User user = place.GetUser().value();
         for (User user:lobby->GetConnectedUsers()) {
-            RespawnPoint* respawn = Respawn::GetInstance()->GetRespawn(user.GetUserID());
+            RespawnPoint* respawn = Respawn::GetInstance()->GetRespawn(user.GetUserID() - 1);
             PlayerObject* player = instance->InitPlayer(respawn->position, respawn->orientation);
             player->SetWorldID(user.GetUserID());
             player->SetOwner(user);
 
             LaserObject* laser = player->GetLaser();
-            laser->SetColor(Color::GetPlayerColor(user.GetUserID()));
+            laser->SetColor(Color::GetPlayerColor(user.GetUserID() - 1));
             instance->renderer->TrackLaser(laser);
 
             if (user == *(instance->server->GetUser())) {
@@ -572,7 +572,7 @@ void TutorialGame::Start() {
 
     // Setup for a single player game.
     else {
-        RespawnPoint* playerRespawn = Respawn::GetInstance()->GetRespawn(0);
+        RespawnPoint* playerRespawn = Respawn::GetInstance()->GetRespawn(1);
         instance->player = instance->InitPlayer(playerRespawn->position, playerRespawn->orientation);
         instance->player->SetWorldID(0);
 

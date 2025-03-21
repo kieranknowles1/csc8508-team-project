@@ -107,7 +107,7 @@ namespace Multiplayer {
         int m_processTick = -TICK_BUFFER_SIZE + 1;
         bool m_isHost = false;
         bool m_connected = false;
-        unsigned int m_uniqueUserID = 0;
+        unsigned int m_uniqueUserID = 1;
 
         std::array<std::vector<std::shared_ptr<Packet::Packet>>, TICK_BUFFER_SIZE> m_buffer;
     };
