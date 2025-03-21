@@ -94,6 +94,14 @@ SimpleFont::SimpleFont(const std::string&filename, std::shared_ptr<Texture> text
 SimpleFont::~SimpleFont()	{
 }
 
+int nextPower2(int i) {
+    int candidate = 1;
+    while (candidate < i) {
+        candidate = candidate * 2;
+    }
+    return candidate;
+}
+
 int SimpleFont::InitializeFreeType(const std::string& filename, std::shared_ptr<Texture> texture) {
     FT_Library lib;
     if (FT_Init_FreeType(&lib)) {
@@ -146,8 +154,9 @@ int SimpleFont::InitializeFreeType(const std::string& filename, std::shared_ptr<
     }
 
     // Create an atlas for our texture
-    texture->width = maxSize.x * AtlasSize;
-    texture->height = maxSize.y * AtlasSize;
+    // PS5 textures are very sensitive to alignment, rounding sizes up to a power of 2 seems safer
+    texture->width = nextPower2(maxSize.x * AtlasSize);
+    texture->height = nextPower2(maxSize.y * AtlasSize);
     texture->channels = 1;
     size_t bytes = texture->width * texture->height;
     texture->texData = (char*)malloc(bytes);
@@ -168,9 +177,14 @@ int SimpleFont::InitializeFreeType(const std::string& filename, std::shared_ptr<
         Vector2 sizeVec = Vector2(glyph.size.x, glyph.size.y);
         ch.size = sizeVec / ScreenSize;
         ch.bearing = glyph.bearing;
-        ch.uvTopLeft = Vector2((1.0f / AtlasSize) * col, (1.0f / AtlasSize) * row);
+
+        int pixelsLeft = col * maxSize.x;
+        int pixelsTop = row * maxSize.y;
+
+        ch.uvTopLeft = Vector2(pixelsLeft, pixelsTop) * pixelSize;
         ch.uvBottomRight = ch.uvTopLeft + (pixelSize * sizeVec);
         ch.advance = glyph.advance;
+
         characters[glyph.ch] = ch;
     }
 
