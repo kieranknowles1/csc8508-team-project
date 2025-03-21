@@ -140,7 +140,7 @@ void PlayerController::FireShot(float dt) {
 // finds surface normal of floor below
 btVector3 PlayerController::FindFloorNormal() {
     btVector3 btBelowPlayerPos = btPlayerPos;
-    btBelowPlayerPos -= (upDirection * 16);
+    btBelowPlayerPos -= (upDirection * 30);
     btCollisionWorld::ClosestRayResultCallback callback(btPlayerPos, btBelowPlayerPos);
     bulletWorld->rayTest(btPlayerPos, btBelowPlayerPos, callback);
     if (callback.hasHit()) {
@@ -218,8 +218,7 @@ void PlayerController::SpecialTypeCalculations() {
         onIce = false;
         btVector3 normal = player->getCollisionNormal();
         float dotProduct = normal.dot(upDirection.absolute());
-        btVector3 movement = btVector3(0, 0, 0);
-        movement += (player->getCollisionJumpPadStrength() * -player->getCollisionNormal());
+        btVector3 movement = (player->getCollisionJumpPadStrength() * -player->getCollisionNormal());
         rb->setLinearVelocity(btVector3(0, 0, 0));
         inAirTime = 0.2f;
         rb->applyCentralImpulse(movement);
