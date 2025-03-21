@@ -30,20 +30,12 @@ namespace WorldState {
         ObjectState() {}
         ~ObjectState() {}
 
-        void Lock() {
-            m_stateLock.lock();
+        std::unique_lock<std::shared_mutex> Lock() {
+            return std::move(std::unique_lock(m_stateLock));
         }
 
-        void Lock_Shared() {
-            m_stateLock.lock_shared();
-        }
-
-        void Unlock() {
-            m_stateLock.unlock();
-        }
-
-        void Unlock_Shared() {
-            m_stateLock.unlock_shared();
+        std::shared_lock<std::shared_mutex> Lock_Shared() {
+            return std::move(std::shared_lock(m_stateLock));
         }
 
         /**
@@ -69,7 +61,7 @@ namespace WorldState {
          * @brief Remove all states and their values.
          */
         void Clear() {
-            m_states.clear();
+            m_states = std::unordered_map<StateType, StateValue>();
         }
 
         /**
@@ -191,14 +183,14 @@ namespace WorldState {
          * Write is cleared.
          */
         void UpdateBuffer() {
-            LockAll();
+            std::shared_lock currentLock(m_stateMutexes[current]);
+            std::shared_lock readLock(m_stateMutexes[read]);
+            std::shared_lock writeLock(m_stateMutexes[write]);
 
             current = read;
             read = write;
             write = (write + 1) % m_states.size();
             m_states[write].Clear();
-
-            UnlockAll();
         }
 
     private:

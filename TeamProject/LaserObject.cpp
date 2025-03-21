@@ -10,13 +10,10 @@ using namespace NCL::CSC8503;
 void LaserObject::UpdateObjectState() {
     auto [writeState, lock] = states->GetWriteState();
     
-    writeState->Lock();
-
+    std::unique_lock stateLock = writeState->Lock();
     writeState->UpdateState(StateType::StartPos, startPos);
     writeState->UpdateState(StateType::EndPos, endPos);
     writeState->UpdateState(StateType::Normal, collisionNormal);
-
-    writeState->Unlock();
 }
 
 void LaserObject::UpdateFromState(float dt) {
@@ -38,8 +35,8 @@ void LaserObject::UpdateFromState(float dt) {
     StateValue targetCollisionNormalValue;
     
     // Reading.
-    current->Lock_Shared();
-    read->Lock_Shared();
+    std::shared_lock currentStateLock = current->Lock_Shared();
+    std::shared_lock readStateLock = read->Lock_Shared();
 
     bool hasCurrentStartPos = current->ReadState(StateType::StartPos, &currentStartPosValue);
     bool hasTargetStartPos = read->ReadState(StateType::StartPos, &targetStartPosValue);
@@ -50,8 +47,8 @@ void LaserObject::UpdateFromState(float dt) {
     bool hasCurrentCollisionNormal = current->ReadState(StateType::Normal, &currentCollisionNormalValue);
     bool hasTargetCollisionNormal = read->ReadState(StateType::Normal, &targetCollisionNormalValue);
 
-    current->Unlock_Shared();
-    read->Unlock_Shared();
+    currentStateLock.unlock();
+    readStateLock.unlock();
 
     currentLock.unlock();
     readLock.unlock();
@@ -102,13 +99,13 @@ std::vector<std::shared_ptr<Packet::Packet>> LaserObject::CreatePackets(int sequ
     StateValue endPosValue;
     StateValue collisionNormalValue;
 
-    read->Lock_Shared();
+    std::shared_lock readStateLock = read->Lock_Shared();
     
     bool hasStartPos = read->ReadState(StateType::StartPos, &startPosValue);
     bool hasEndPos = read->ReadState(StateType::EndPos, &endPosValue);
     bool hasCollisionNormal = read->ReadState(StateType::Normal, &collisionNormalValue);
 
-    read->Unlock_Shared();
+    readStateLock.unlock();
     readLock.unlock();
     
     if (hasStartPos && hasEndPos && hasCollisionNormal) {

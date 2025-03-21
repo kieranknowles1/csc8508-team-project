@@ -40,11 +40,11 @@ std::vector<std::shared_ptr<Packet::Packet>> PlayerObject::CreatePackets(int seq
 
     StateValue upVector;
 
-    read->Lock_Shared();
+    std::shared_lock readStateLock = read->Lock_Shared();
     
     bool hasUpVector = read->ReadState(StateType::UpVector, &upVector);
 
-    read->Unlock_Shared();
+    readStateLock.unlock();
     readLock.unlock();
     
     if (hasUpVector) {

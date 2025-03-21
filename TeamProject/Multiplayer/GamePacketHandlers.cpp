@@ -20,16 +20,11 @@ namespace Packet {
 
         if (TutorialGame::getInstance()->GetServerInstance()->IsOwnerOf(object)) return;
 
-        std::cout << "- Delta Packet\n";
         auto [writeState, lock] = object->GetObjectStates()->GetWriteState();
 
-        writeState->Lock();
-
+        std::unique_lock stateLock = writeState->Lock();
         writeState->UpdateState(StateType::LinearVelocity, deltaPacket->GetLinearVelocity());
         writeState->UpdateState(StateType::AngularVelocity, deltaPacket->GetAngularVelocity());
-
-        writeState->Unlock();
-        std::cout << "- Delta Packet\n";
     }
     
     std::shared_ptr<Packet> DeltaPacketHandler::Translate(const ENetEvent* event) const {
@@ -114,17 +109,12 @@ namespace Packet {
 
         if (TutorialGame::getInstance()->GetServerInstance()->IsOwnerOf(object)) return;
 
-        std::cout << "- Laser Packet\n";
         auto [writeState, lock] = object->GetObjectStates()->GetWriteState();
 
-        writeState->Lock();
-
+        std::unique_lock stateLock = writeState->Lock();
         writeState->UpdateState(StateType::StartPos, laserPacket->GetStartPos());
         writeState->UpdateState(StateType::EndPos, laserPacket->GetEndPos());
         writeState->UpdateState(StateType::Normal, laserPacket->GetHitNormal());
-
-        writeState->Unlock();
-        std::cout << "- Laser Packet\n";
     }
 
     std::shared_ptr<Packet> LaserPacketHandler::Translate(const ENetEvent* event) const {
@@ -218,16 +208,11 @@ namespace Packet {
 
         if (TutorialGame::getInstance()->GetServerInstance()->IsOwnerOf(object)) return;
 
-        std::cout << "- Position Packet\n";
         auto [writeState, lock] = object->GetObjectStates()->GetWriteState();
         
-        writeState->Lock();
-
+        std::unique_lock stateLock = writeState->Lock();
         writeState->UpdateState(StateType::Position, positionPacket->GetPosition());
         writeState->UpdateState(StateType::Rotation, positionPacket->GetOrientation());
-
-        writeState->Unlock();
-        std::cout << "- Position Packet\n";
     }
 
     std::shared_ptr<Packet> PositionPacketHandler::Translate(const ENetEvent* event) const {
@@ -326,13 +311,10 @@ namespace Packet {
         if (object == nullptr) return;
         if (TutorialGame::getInstance()->GetServerInstance()->IsOwnerOf(object)) return;
 
-        std::cout << "- Change Gravity Packet\n";
         auto [writeState, lock] = object->GetObjectStates()->GetWriteState();
         
-        writeState->Lock();
+        std::unique_lock stateLock = writeState->Lock();
         writeState->UpdateState(StateType::UpVector, gravityPacket->GetUpDirection());
-        writeState->Unlock();
-        std::cout << "- Change Gravity Packet\n";
     }
 
     std::shared_ptr<Packet> ObjectChangeGravityPacketHandler::Translate(const ENetEvent* event) const {

@@ -37,14 +37,12 @@ void GameObject::UpdateObjectState() {
     btRigidBody* body = GetPhysicsObject()->GetRigidBody();
     btTransform transform = body->getWorldTransform();
 
-    writeState->Lock();
+    std::unique_lock<std::shared_mutex> stateLock(writeState->Lock());
 
     writeState->UpdateState(StateType::LinearVelocity, body->getLinearVelocity());
     writeState->UpdateState(StateType::AngularVelocity, body->getAngularVelocity());
     writeState->UpdateState(StateType::Position, transform.getOrigin());
     writeState->UpdateState(StateType::Rotation, transform.getRotation());
-
-    writeState->Unlock();
 }
 
 void GameObject::UpdateFromState(float dt) {
@@ -71,8 +69,8 @@ void GameObject::UpdateFromState(float dt) {
     StateValue targetRotationValue;
 
     // Reading.
-    current->Lock_Shared();
-    read->Lock_Shared();
+    std::shared_lock currentStateLock = current->Lock_Shared();
+    std::shared_lock readStateLock = read->Lock_Shared();
 
     bool hasCurrentLinear = current->ReadState(StateType::LinearVelocity, &currentLinearValue);
     bool hasTargetLinear = read->ReadState(StateType::LinearVelocity, &targetLinearValue);
@@ -86,8 +84,8 @@ void GameObject::UpdateFromState(float dt) {
     bool hasCurrentRotation = current->ReadState(StateType::Rotation, &currentRotationValue);
     bool hasTargetRotation = read->ReadState(StateType::Rotation, &targetRotationValue);
 
-    current->Unlock_Shared();
-    read->Unlock_Shared();
+    currentStateLock.unlock();
+    readStateLock.unlock();
 
     currentLock.unlock();
     readLock.unlock();
@@ -152,7 +150,7 @@ std::vector<std::shared_ptr<Packet::Packet>> GameObject::CreatePackets(int seque
     StateValue positionValue;
     StateValue rotationValue;
 
-    read->Lock_Shared();
+    std::shared_lock readStateLock = read->Lock_Shared();
 
     bool hasLinear = read->ReadState(StateType::LinearVelocity, &linearValue);
     bool hasAngular = read->ReadState(StateType::AngularVelocity, &angularValue);
@@ -160,7 +158,7 @@ std::vector<std::shared_ptr<Packet::Packet>> GameObject::CreatePackets(int seque
     bool hasPosition = read->ReadState(StateType::Position, &positionValue);
     bool hasRotation = read->ReadState(StateType::Rotation, &rotationValue);
 
-    read->Unlock_Shared();
+    readStateLock.unlock();
     readLock.unlock();
     
     if (hasLinear && hasAngular) {
