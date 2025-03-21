@@ -30,7 +30,7 @@ namespace NCL::CSC8503 {
 
 	class GameObject	{
 	public:
-		enum class Type {
+		enum class Type { // Contact Alex if you are adding to this - need to update level importer to line up correctly
 			Default,
 			Floor,
 			JumpPad,
@@ -42,6 +42,10 @@ namespace NCL::CSC8503 {
 			Centre,
 			SlimeCastle,
 			Courtyard,
+			AI,
+			JumpRoom,
+			JumpRoomFloor,
+			ZigZag,
             Gun
 		};
 

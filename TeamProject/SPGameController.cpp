@@ -4,61 +4,82 @@
 using namespace NCL;
 using namespace CSC8503;
 
-SPGameController::SPGameController(GameObject* p, TutorialGame* g)
-	: player(p), game(g) {
+SPGameController::SPGameController(GameObject* p, TutorialGame* g, GameTechRendererInterface* r)
+	: player(p), game(g), renderer(r) {
 
     btDiscreteDynamicsWorld* bulletWorld = game->getBulletWorld();
 
     bottom = new NavMesh(bulletWorld);
-    bottom->LoadFromFile("Assets/Meshes/NavMeshes/bottom.navmesh");
+    bottom->LoadFromFile("bottom.navmesh");
     navMeshes.push_back(bottom);
 
     top = new NavMesh(bulletWorld);
-    top->LoadFromFile("Assets/Meshes/NavMeshes/top.navmesh");
+    top->LoadFromFile("top.navmesh");
     navMeshes.push_back(top);
 
     front = new NavMesh(bulletWorld);
-    front->LoadFromFile("Assets/Meshes/NavMeshes/front.navmesh");
+    front->LoadFromFile("front.navmesh");
     navMeshes.push_back(front);
 
     back = new NavMesh(bulletWorld);
-    back->LoadFromFile("Assets/Meshes/NavMeshes/back.navmesh");
+    back->LoadFromFile("back.navmesh");
     navMeshes.push_back(back);
 
     left = new NavMesh(bulletWorld);
-    left->LoadFromFile("Assets/Meshes/NavMeshes/left.navmesh");
+    left->LoadFromFile("left.navmesh");
     navMeshes.push_back(left);
 
     right = new NavMesh(bulletWorld);
-    right->LoadFromFile("Assets/Meshes/NavMeshes/right.navmesh");
+    right->LoadFromFile("right.navmesh");
     navMeshes.push_back(right);
 
-    for (int i = 0; i < 5; i++) {
-        AddWandererToWorld(bottom, 'b');
-        AddWandererToWorld(top, 't');
-        AddWandererToWorld(front, 'f');
-        AddWandererToWorld(back, 'k');
-        AddWandererToWorld(left, 'l');
-        AddWandererToWorld(right, 'r');
+    for (int i = 101; i <= 150; i++) { laserIDs.push_back(i); }
+
+    for (int i = 0; i < 10; i++) {
+        AddWandererToWorld(bottom, Side::BOTTOM);
     }
 
 }
 
 void SPGameController::Update(float dt) {
+    // Remove deleted wanderers
+    wanderers.erase(
+        std::remove_if(wanderers.begin(), wanderers.end(),
+            [](const Wanderer* wanderer) {
+                return wanderer->isDeleted();
+            }),
+        wanderers.end()
+    );
+
+    // Update remaining wanderers
     for (Wanderer* wanderer : wanderers) {
         wanderer->Update(dt);
     }
+
     if (navMeshDebug) VisualiseNavMesh();
 }
 
-Wanderer* SPGameController::AddWandererToWorld(NavMesh* navMesh, char side) {
-    Wanderer* wanderer = new Wanderer(player, navMesh, side);
+void SPGameController::ClearAIs() {
+    while (wanderers.size() > 0) {
+        Wanderer* wanderer = wanderers.back();
+        AddIDToPool(wanderer->laserID);
+        wanderer->DestroyWanderer();
+        wanderers.pop_back();
+    }
+}
+
+Wanderer* SPGameController::AddWandererToWorld(NavMesh* navMesh, Side side) {
+    if (laserIDs.size() == 0) {
+        std::cout << "No AI Laser IDs" << std::endl;
+        return nullptr;
+    }
+    Wanderer* wanderer = new Wanderer(player, navMesh, side, GetIDFromPool(), renderer);
 
     float height = 4.0f;
     float radius = 2.0f;
 
     wanderer->setInitialPosition(navMesh->GetRandomPointInNavMesh());
-    wanderer->setRenderScale(btVector3(radius * 2, height, radius + 2));
+    wanderer->setRenderScale(btVector3(radius * 2, height, radius * 2));
 
     btCollisionShape* shape = new btCapsuleShape(radius, height);
 

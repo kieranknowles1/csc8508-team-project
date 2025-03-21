@@ -1,0 +1,27 @@
+#include "ShaderConstants.psslh"
+#include "VertexAttributes.psslh"
+#include "types.h"
+
+#include "glinterop.h"
+#include "../include/vert/laser.glsl"
+
+RegularBuffer<LaserState> objects : register(t0);
+
+[CxxSymbol("Laser::gs")]
+LASER_VS_OUTPUT main(uint vertID : S_VERTEX_ID, uint instanceID : S_INSTANCE_ID)
+{
+    LASER_VS_OUTPUT output;
+    LaserState state = objects[instanceID];
+
+    LaserVertIn vertIn;
+    vertIn.start = state.start;
+    vertIn.end = state.end;
+    vertIn.thickness = state.thickness;
+    vertIn.time = Constants.time;
+
+    LaserVertOut vertOut = doLaserVert(vertIn, Positions[vertID], Constants.viewMatrix, Constants.projMatrix);
+    output.position = vertOut.position;
+    output.color = state.colour;
+    output.depth = vertOut.depth;
+    return output;
+}

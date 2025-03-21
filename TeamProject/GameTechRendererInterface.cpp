@@ -11,8 +11,7 @@ namespace NCL::CSC8503 {
 	GameTechRendererInterface::GameTechRendererInterface(Window* window)
 		: window(window)
         , decalSystem(window->GetScreenSize().x, window->GetScreenSize().y)
-	{
-	}
+	{}
 
 	void GameTechRendererInterface::collectFrameObjects(GameWorld* world)
 	{

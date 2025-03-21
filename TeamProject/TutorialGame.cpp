@@ -193,8 +193,8 @@ void TutorialGame::ThirdPersonControls() {
     btMatrix3x3 rotationMatrix(player->getCamOffset() * playerRotation1);
     btVector3 forward = rotationMatrix * btVector3(0,0,-1);
     btVector3 upwards = rotationMatrix * btVector3(0, 1, 0);
-    float camHeight = 15.0f;
-    float camDist = -50.0f;
+    float camHeight = 35.0f;
+    float camDist = -100.0f;
     btVector3 cameraOffset = (forward.normalize() * camDist) + (upwards.normalize() * camHeight);
     btVector3 cameraPosition = transformPlayer.getOrigin() + cameraOffset;
     mainCamera->SetPosition(cameraPosition);
@@ -334,10 +334,6 @@ PlayerObject* TutorialGame::InitPlayer(btVector3 position, btVector3 upDir) {
     newPlayer->setType(GameObject::Type::Player);
     return newPlayer;
 }
-
-
-
-
 
 GameObject* TutorialGame::AddGunToWorld(const Vector3& position, Vector3 dimensions, float inverseMass, bool hasCollision)
 {
@@ -578,7 +574,7 @@ void TutorialGame::Start() {
         instance->player->SetWorldID(0);
 
         instance->playerController = std::make_unique<PlayerController>(instance->player, instance->controller, instance->mainCamera, instance->bulletWorld, instance->renderer);
-        instance->spGameController = new SPGameController(instance->player, instance);
+        instance->spGameController = new SPGameController(instance->player, instance, instance->renderer);
     }
 
 

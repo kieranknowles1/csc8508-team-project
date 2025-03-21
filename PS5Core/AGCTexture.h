@@ -32,7 +32,8 @@ namespace NCL::PS5 {
 
 		// This also uploads on PS5, safe due to its unified memory architecture
 		void load(const std::string& name) override;
-		void upload() override {};
+		// Only needed if manually copying data
+		void upload(bool freeData = true) override;
 	protected:
 
 

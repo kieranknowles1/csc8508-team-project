@@ -1,0 +1,26 @@
+#include "ShaderConstants.psslh"
+#include "glinterop.h"
+
+Texture2D<float4> prevTexture : register(t0);
+SamplerState sampler : register(s0);
+
+struct VS_OUTPUT
+{
+    float4 position : S_POSITION;
+    float2 uv : TEXCOORD0;
+};
+
+[CxxSymbol("LaserPre::ps")]
+float4 main(VS_OUTPUT vertex) : S_TARGET_OUTPUT
+{
+    float multiplier = (25.0f * Constants.dt);
+    float4 oldLaser = prevTexture.Sample(sampler, vertex.uv);
+
+    // Fade out the previous frame's laser
+    oldLaser.a *= multiplier;
+    if (oldLaser.a <= 0.01) {
+        oldLaser = vec4(0,0,0,0);
+    }
+
+    return oldLaser;
+}

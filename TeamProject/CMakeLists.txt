@@ -83,7 +83,7 @@ set(SOURCES
 set(ASSET_ROOT "${CMAKE_SOURCE_DIR}/Assets")
 file(GLOB_RECURSE AUDIO "${ASSET_ROOT}/Audio/*.wav")
 file(GLOB_RECURSE DATA "${ASSET_ROOT}/Data/*")
-file(GLOB_RECURSE FONTS "${ASSET_ROOT}/Fonts/*.fnt")
+file(GLOB_RECURSE FONTS "${ASSET_ROOT}/Fonts/*")
 file(GLOB_RECURSE LEVELS "${ASSET_ROOT}/Levels/*.json")
 file(GLOB_RECURSE MESHES "${ASSET_ROOT}/Meshes/*.msh")
 file(GLOB_RECURSE MATERIALS "${ASSET_ROOT}/Materials/*.mat")
