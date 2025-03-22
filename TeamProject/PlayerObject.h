@@ -165,7 +165,7 @@ private:
 	btQuaternion oldcamRotOffset = btQuaternion::getIdentity();
 	btQuaternion targetcamRotOffset = btQuaternion::getIdentity();
 	btVector3 targetWorldRotation = btVector3(0, 1, 0);
-	btVector3 oldWorldRotation = btVector3(0, 1, 0);
+	btVector3 oldWorldRotation = btVector3(0, 1, 0); 
 	btVector3 upDirection;
 	btVector3 rightDirection;
 	btVector3 forwardDirection;

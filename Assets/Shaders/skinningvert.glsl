@@ -1,4 +1,4 @@
-#version 400 //No core?
+#version 400 core//No core?
 
 uniform mat4 modelMatrix;
 uniform mat4 viewMatrix;
