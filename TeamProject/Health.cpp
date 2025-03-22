@@ -13,3 +13,21 @@ void HitPointedEntity::Damage(float amount) {
     SetCurrentHealth(newHealth);
 }
 
+
+void AttackerEntity::Update(float dt) {
+    if (target) {
+        switch (damageType) {
+        case DamageType::DISCRETE:
+            target->Damage(damage);
+            target = nullptr;
+            break;
+
+        case DamageType::CONTINUOUS:
+            target->Damage(damage * dt);
+            break;
+
+        default:
+            break;
+        }
+    }
+}

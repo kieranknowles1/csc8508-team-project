@@ -1,6 +1,6 @@
 #pragma once
 
-#include "GameObject.h"
+#include "Health.h"
 
 namespace NCL::CSC8503 {
     /**
@@ -13,7 +13,7 @@ namespace NCL::CSC8503 {
      * Singleplayer. Using this for the player is probably unnecessary.
      * 
      */
-    class DamageTrackerObject : public GameObject {
+    class DamageTrackerObject : public HitPointedEntity {
     public:
         DamageTrackerObject(GameObject* parent) : parent(parent) {}
 

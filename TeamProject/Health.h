@@ -9,8 +9,7 @@ namespace NCL::CSC8503 {
     };
 
     class HitPointedEntity : public GameObject {
-        HitPointedEntity() {}
-
+    public:
         void Update(float dt) override;
 
         /**
@@ -26,9 +25,38 @@ namespace NCL::CSC8503 {
         float GetCurrentHealth() const { return currentHealth; }
 
     private:
-        float maxHealth;
-        float currentHealth;
+        float maxHealth = 0;
+        float currentHealth = 0;
 
-        HealthState state;
+        HealthState state = HealthState::DEAD;
+    };
+
+
+    enum class DamageType {
+        CONTINUOUS,     // Does not reset on hit.
+        DISCRETE        // Resets on damage dealt.
+    };
+
+    class AttackerEntity : public GameObject {
+    public:
+        void Update(float dt) override;
+
+        void SetDamageType(DamageType type) { damageType = type; }
+        DamageType GetDamageType() const { return damageType; }
+
+        void SetDamageAmount(float amount) { damage = amount; }
+        float GetDamageAmount() const { return damage; }
+
+        /**
+         * @brief Defines the target to hit next time Update is called.
+         * Use nullptr to hit no one. Is reset to nullptr after Update if
+         * damage type is DISCRETE.
+         */
+        void Hit(HitPointedEntity* target) { target = target; }
+
+    private:
+        float damage = 0;
+        DamageType damageType = DamageType::DISCRETE;
+        HitPointedEntity* target = nullptr;
     };
 }
