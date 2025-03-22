@@ -68,8 +68,10 @@ set(Header_Files
 	"Debug.h"
 	"GameObject.h"
 	"GameWorld.h"
-	"RenderObject.h"
     "MeshMaterial.h"
+	"RenderObject.h"
+    "StateUpdater.h"
+    "WorldState.h"
 )
 source_group("Header Files" FILES ${Header_Files})
 
@@ -79,6 +81,7 @@ set(Source_Files
 	"GameWorld.cpp"
 	"RenderObject.cpp"
     "MeshMaterial.cpp"
+    "StateUpdater.cpp"
 )
 source_group("Source Files" FILES ${Source_Files})
 

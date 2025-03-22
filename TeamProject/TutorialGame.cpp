@@ -95,8 +95,8 @@ void TutorialGame::UpdateGame(float dt) {
     if (server != nullptr) {
         world->OperateOnContents([&](GameObject* obj) {
             if (obj->GetOwner() == nullptr) return;
-            if (server->IsOwnerOf(obj)) obj->UpdateObjectState();
-            else obj->UpdateFromState(dt);
+            if (server->IsOwnerOf(obj)) obj->UpdateWorldState();
+            else obj->UpdateFromWorldState(dt);
             });
     }
 

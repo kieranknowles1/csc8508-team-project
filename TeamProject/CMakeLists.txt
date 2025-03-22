@@ -40,7 +40,6 @@ set(SOURCES
     Multiplayer/GamePackets.hpp
     Multiplayer/Lobby.cpp
     Multiplayer/Lobby.hpp
-    Multiplayer/WorldState.hpp
     Multiplayer/Server.cpp
     Multiplayer/Server.hpp
     Multiplayer/User.hpp

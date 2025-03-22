@@ -2,7 +2,7 @@
 #include "PhysicsObject.h"
 #include "RenderObject.h"
 #include "NetworkObject.h"
-#include "../TeamProject/Multiplayer/WorldState.hpp"
+#include "WorldState.h"
 
 #include "../TeamProject/Multiplayer/GamePackets.hpp"
 #include "LinearMath/btQuaternion.h"
@@ -31,13 +31,13 @@ GameObject::~GameObject()	{
 	if (objects.contains(worldID)) objects.erase(worldID);
 }
 
-void GameObject::UpdateObjectState() {
-    auto [writeState, lock] = states->GetWriteState();
+void GameObject::UpdateWorldState() {
+    auto [writeState, lock] = GetWorldStates()->GetWriteState();
     
     btRigidBody* body = GetPhysicsObject()->GetRigidBody();
     btTransform transform = body->getWorldTransform();
 
-    std::unique_lock<std::shared_mutex> stateLock(writeState->Lock());
+    std::unique_lock stateLock(writeState->Lock());
 
     writeState->UpdateState(StateType::LinearVelocity, body->getLinearVelocity());
     writeState->UpdateState(StateType::AngularVelocity, body->getAngularVelocity());
@@ -45,14 +45,14 @@ void GameObject::UpdateObjectState() {
     writeState->UpdateState(StateType::Rotation, transform.getRotation());
 }
 
-void GameObject::UpdateFromState(float dt) {
+void GameObject::UpdateFromWorldState(float dt) {
     elapsedTickTime += dt;
 
     std::function lerp = [](float x, float y, float w) { return x + ((y - x) * w); };
     float weight = fmod(elapsedTickTime, TICK_UPDATE_RATE) / TICK_UPDATE_RATE;
 
-    auto [current, currentLock] = states->GetCurrentState();
-    auto [read, readLock] = states->GetReadState();
+    auto [current, currentLock] = GetWorldStates()->GetCurrentState();
+    auto [read, readLock] = GetWorldStates()->GetReadState();
 
     btRigidBody* body = GetPhysicsObject()->GetRigidBody();
 
@@ -143,7 +143,7 @@ void GameObject::UpdateFromState(float dt) {
 std::vector<std::shared_ptr<Packet::Packet>> GameObject::CreatePackets(int sequenceNum) {
     std::vector<std::shared_ptr<Packet::Packet>> packets;
 
-    auto[read, readLock] = states->GetReadState();
+    auto[read, readLock] = GetWorldStates()->GetReadState();
 
     StateValue linearValue;
     StateValue angularValue;
@@ -178,5 +178,5 @@ std::vector<std::shared_ptr<Packet::Packet>> GameObject::CreatePackets(int seque
             sequenceNum
         )));
     }
-    return packets;
+    return std::move(packets);
 }

@@ -34,14 +34,14 @@ namespace Packet {
     };
 
 
-    class PlayerStateChangePacketHandler : public PacketHandler {
-    public:
-        PlayerStateChangePacketHandler() : PacketHandler(static_cast<Type>(PacketType::PLAYER_STATE_CHANGE)) {}
+    //class PlayerStateChangePacketHandler : public PacketHandler {
+    //public:
+    //    PlayerStateChangePacketHandler() : PacketHandler(static_cast<Type>(PacketType::PLAYER_STATE_CHANGE)) {}
 
-        void Handle(const std::shared_ptr<Packet> packet) override;
-        std::shared_ptr<Packet> Translate(const ENetEvent* event) const override;
-        ENetPacket* ToENetPacket(const std::shared_ptr<Packet> packet) const override;
-    };
+    //    void Handle(const std::shared_ptr<Packet> packet) override;
+    //    std::shared_ptr<Packet> Translate(const ENetEvent* event) const override;
+    //    ENetPacket* ToENetPacket(const std::shared_ptr<Packet> packet) const override;
+    //};
 
 
     class ObjectChangeGravityPacketHandler : public PacketHandler {

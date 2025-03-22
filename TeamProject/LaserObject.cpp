@@ -1,5 +1,5 @@
 #include "LaserObject.h"
-#include "Multiplayer/WorldState.hpp"
+#include "WorldState.h"
 #include "Multiplayer/GamePackets.hpp"
 #include "GameTechRenderer.h"
 #include "Shoot.h"
@@ -17,8 +17,8 @@ void LaserObject::Update(float dt) {
 }
 
 
-void LaserObject::UpdateObjectState() {
-    auto [writeState, lock] = states->GetWriteState();
+void LaserObject::UpdateWorldState() {
+    auto [writeState, lock] = GetWorldStates()->GetWriteState();
     
     std::unique_lock stateLock = writeState->Lock();
     writeState->UpdateState(StateType::StartPos, startPos);
@@ -26,14 +26,14 @@ void LaserObject::UpdateObjectState() {
     writeState->UpdateState(StateType::Normal, collisionNormal);
 }
 
-void LaserObject::UpdateFromState(float dt) {
+void LaserObject::UpdateFromWorldState(float dt) {
     elapsedTickTime += dt;
 
     std::function lerp = [](float x, float y, float w) { return x + ((y - x) * w); };
     float weight = TICK_UPDATE_RATE / fmod(elapsedTickTime, TICK_UPDATE_RATE);
 
-    auto [current, currentLock] = states->GetCurrentState();
-    auto [read, readLock] = states->GetReadState();
+    auto [current, currentLock] = GetWorldStates()->GetCurrentState();
+    auto [read, readLock] = GetWorldStates()->GetReadState();
 
     StateValue currentStartPosValue;
     StateValue targetStartPosValue;
@@ -96,7 +96,7 @@ void LaserObject::UpdateFromState(float dt) {
 std::vector<std::shared_ptr<Packet::Packet>> LaserObject::CreatePackets(int sequenceNum) {
     std::vector<std::shared_ptr<Packet::Packet>> packets;
 
-    auto [read, readLock] = states->GetReadState();
+    auto [read, readLock] = GetWorldStates()->GetReadState();
 
     StateValue startPosValue;
     StateValue endPosValue;
@@ -121,5 +121,5 @@ std::vector<std::shared_ptr<Packet::Packet>> LaserObject::CreatePackets(int sequ
         )));
     }
 
-    return packets;
+    return std::move(packets);
 }

@@ -10,8 +10,8 @@ namespace NCL::CSC8503 {
 
         void Update(float dt) override;
 
-        void UpdateObjectState() override;
-        void UpdateFromState(float dt) override;
+        void UpdateWorldState() override;
+        void UpdateFromWorldState(float dt) override;
         std::vector<std::shared_ptr<Packet::Packet>> CreatePackets(int sequenceNum) override;
 
         void SetCollisionNormal(btVector3 n) { collisionNormal = n; }

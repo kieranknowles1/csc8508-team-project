@@ -151,8 +151,8 @@ public:
 
 	void SetGunTransform(float pitch, float yaw, btVector3 camPos);
 
-	void UpdateObjectState() override;
-	void UpdateFromState(float dt) override;
+	void UpdateWorldState() override;
+	void UpdateFromWorldState(float dt) override;
 	std::vector<std::shared_ptr<Packet::Packet>> CreatePackets(int sequenceNum) override;
 
 private:

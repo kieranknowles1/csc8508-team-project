@@ -15,7 +15,7 @@ PlayerObject::~PlayerObject() {
 }
 
 void PlayerObject::SetColor(btVector4 color) {
-    GetRenderObject()->SetColour(color);
+    GameObject::GetRenderObject()->SetColour(color);
     gun->GetRenderObject()->SetColour(color);
     laser->SetColor(color);
 }
@@ -36,20 +36,20 @@ void PlayerObject::Update(float dt) {
     }
 }
 
-void PlayerObject::UpdateObjectState() {
-    GameObject::UpdateObjectState();
+void PlayerObject::UpdateWorldState() {
+    GameObject::UpdateWorldState();
 }
 
-void PlayerObject::UpdateFromState(float dt) {
-    GameObject::UpdateFromState(dt);
+void PlayerObject::UpdateFromWorldState(float dt) {
+    GameObject::UpdateFromWorldState(dt);
 
     elapsedTickTime += dt;
 
     std::function lerp = [](float x, float y, float w) { return x + ((y - x) * w); };
     float weight = fmod(elapsedTickTime, TICK_UPDATE_RATE) / TICK_UPDATE_RATE;
 
-    auto [current, currentLock] = states->GetCurrentState();
-    auto [read, readLock] = states->GetReadState();
+    auto [current, currentLock] = GetWorldStates()->GetCurrentState();
+    auto [read, readLock] = GetWorldStates()->GetReadState();
 
     StateValue currentUpVectorValue;
     StateValue targetUpVectorValue;
@@ -82,7 +82,7 @@ void PlayerObject::UpdateFromState(float dt) {
 std::vector<std::shared_ptr<Packet::Packet>> PlayerObject::CreatePackets(int sequenceNum) {
     std::vector<std::shared_ptr<Packet::Packet>> packets = GameObject::CreatePackets(sequenceNum);
 
-    auto [read, readLock] = states->GetReadState();
+    auto [read, readLock] = GetWorldStates()->GetReadState();
 
     StateValue upVector;
 
@@ -100,7 +100,7 @@ std::vector<std::shared_ptr<Packet::Packet>> PlayerObject::CreatePackets(int seq
             sequenceNum
         )));
     }
-    return packets;
+    return std::move(packets);
 }
 
 

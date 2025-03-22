@@ -145,26 +145,26 @@ namespace Packet {
     };
 
 
-    /**
-     * @brief Player Change State Packet class.
-     * 
-     * Used to notify of a player's state change (usually spawning in or
-     * dying).
-     */
-    class PlayerChangeStatePacket : public Packet {
-    public:
-        PlayerChangeStatePacket(int playerID, const ObjectState& state) :
-            Packet(static_cast<Type>(PacketType::PLAYER_STATE_CHANGE), static_cast<int>(Channel::UNSEQUENCED), 0),
-            m_playerID(playerID), m_newState(state)
-        {}
+    ///**
+    // * @brief Player Change State Packet class.
+    // * 
+    // * Used to notify of a player's state change (usually spawning in or
+    // * dying).
+    // */
+    //class PlayerChangeStatePacket : public Packet {
+    //public:
+    //    PlayerChangeStatePacket(int playerID, const ObjectState& state) :
+    //        Packet(static_cast<Type>(PacketType::PLAYER_STATE_CHANGE), static_cast<int>(Channel::UNSEQUENCED), 0),
+    //        m_playerID(playerID), m_newState(state)
+    //    {}
 
-        int GetPlayerID() const { return m_playerID; }
-        ObjectState GetState() const { return m_newState; }
+    //    int GetPlayerID() const { return m_playerID; }
+    //    ObjectState GetState() const { return m_newState; }
 
-    private:
-        int m_playerID;
-        ObjectState m_newState;
-    };
+    //private:
+    //    int m_playerID;
+    //    ObjectState m_newState;
+    //};
 
 
     /**

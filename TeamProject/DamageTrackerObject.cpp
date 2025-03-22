@@ -1,5 +1,5 @@
 #include "DamageTrackerObject.h"
-#include "Multiplayer/WorldState.hpp"
+#include "WorldState.h"
 #include "Multiplayer/GamePackets.hpp"
 
 
@@ -8,24 +8,35 @@ using namespace NCL::CSC8503;
 
 
 void DamageTrackerObject::Update(float dt) {
+    // Handle it's state here with the respawning and scores.
 }
 
 
-void DamageTrackerObject::UpdateObjectState() {
-    auto [writeState, lock] = states->GetWriteState();
+void DamageTrackerObject::UpdateWorldState() {
+    auto [readState, readLock] = GetWorldStates()->GetReadState();
+    auto [writeState, writeLock] = GetWorldStates()->GetWriteState();
     
-    std::unique_lock stateLock = writeState->Lock();
-    //writeState->UpdateState(StateType::Normal, collisionNormal);
+    StateValue previousHealth;
+    StateValue previousHealthState;
+
+    std::shared_lock readStateLock = readState->Lock_Shared();
+    std::unique_lock writeStateLock = writeState->Lock();
+
+    // Read state will contain health at last server tick.
+    if (readState->ReadState(StateType::Health, &previousHealth)) {
+        float damageTaken = std::get<float>(previousHealth) - health;
+        writeState->UpdateState(StateType::DamageTaken, damageTaken);
+    }
 }
 
-void DamageTrackerObject::UpdateFromState(float dt) {
+void DamageTrackerObject::UpdateFromWorldState(float dt) {
     elapsedTickTime += dt;
 
     std::function lerp = [](float x, float y, float w) { return x + ((y - x) * w); };
     float weight = TICK_UPDATE_RATE / fmod(elapsedTickTime, TICK_UPDATE_RATE);
 
-    auto [current, currentLock] = states->GetCurrentState();
-    auto [read, readLock] = states->GetReadState();
+    auto [current, currentLock] = GetWorldStates()->GetCurrentState();
+    auto [read, readLock] = GetWorldStates()->GetReadState();
 
     //StateValue currentStartPosValue;
     //StateValue targetStartPosValue;
@@ -59,7 +70,7 @@ void DamageTrackerObject::UpdateFromState(float dt) {
 std::vector<std::shared_ptr<Packet::Packet>> DamageTrackerObject::CreatePackets(int sequenceNum) {
     std::vector<std::shared_ptr<Packet::Packet>> packets;
 
-    auto [read, readLock] = states->GetReadState();
+    auto [read, readLock] = GetWorldStates()->GetReadState();
 
     //StateValue startPosValue;
 

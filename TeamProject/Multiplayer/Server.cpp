@@ -8,7 +8,7 @@
 #include "Multiplayer/GamePacketHandlers.hpp"
 #include "Multiplayer/Lobby.hpp"
 #include "Multiplayer/User.hpp"
-#include "Multiplayer/WorldState.hpp"
+#include "WorldState.h"
 
 using namespace Lobbies;
 
@@ -111,7 +111,7 @@ namespace Multiplayer {
         m_game->GetWorld()->OperateOnContents([&](GameObject* object) {
             if (object->GetOwner() == nullptr) return;
 
-            object->GetObjectStates()->UpdateBuffer();
+            object->GetWorldStates()->UpdateBuffer();
 
             if (*(object->GetOwner()) != *m_user) return;
 

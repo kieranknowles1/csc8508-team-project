@@ -10,25 +10,27 @@
 #include "CollisionInfo.h"
 #include "../TeamProject/PointLight.h"
 #include "../TeamProject/Multiplayer/User.hpp"
-#include "../TeamProject/Multiplayer/WorldState.hpp"
+#include "WorldState.h"
+#include "StateUpdater.h"
 
 namespace Packet {
     class Packet;
 }
 
-enum class ObjectState {
-    DEAD,
-    ALIVE
-};
-
 namespace NCL::CSC8503 {
+
+    enum class ObjectState {
+        DEAD,
+        ALIVE
+    };
+
     class NetworkObject;
     class RenderObject;
     class PhysicsObject;
 
     const float TICK_UPDATE_RATE = 1.0f / 60.0f;
 
-	class GameObject	{
+	class GameObject : public StateUpdater {
 	public:
 		enum class Type { // Contact Alex if you are adding to this - need to update level importer to line up correctly
 			Default,
@@ -101,9 +103,9 @@ namespace NCL::CSC8503 {
             //std::cout << "OnCollisionStay: " << this->GetWorldID() << " is still colliding with " << otherObject->GetWorldID() << std::endl;
         }
 
-        virtual void UpdateObjectState();
-        virtual void UpdateFromState(float dt);
-        virtual std::vector<std::shared_ptr<Packet::Packet>> CreatePackets(int sequenceNum);
+        virtual void UpdateWorldState() override;
+        virtual void UpdateFromWorldState(float dt) override;
+        virtual std::vector<std::shared_ptr<Packet::Packet>> CreatePackets(int sequenceNum) override;
 
         virtual void Update(float dt) {}
 
@@ -180,8 +182,6 @@ namespace NCL::CSC8503 {
             return light;
         }
 
-        WorldState::StateBuffer* GetObjectStates() { return states.get(); }
-
         void setDeleted() { deleted = true; }
         bool isDeleted() const { return deleted; }
 
@@ -215,7 +215,6 @@ namespace NCL::CSC8503 {
         int currentTick = 0;
         int lastTick = 0;
 	    
-        float elapsedTickTime = 0;
         float elapsedTime = 0;
 
 		float jumpPadStrength = 0.0f;

@@ -2,7 +2,7 @@
 #include "GameObject.h"
 #include "Multiplayer/GamePacketHandlers.hpp"
 #include "Multiplayer/Server.hpp"
-#include "Multiplayer/WorldState.hpp"
+#include "WorldState.h"
 #include "Shoot.h"
 #include "Network/Network.hpp"
 
@@ -20,7 +20,7 @@ namespace Packet {
 
         if (TutorialGame::getInstance()->GetServerInstance()->IsOwnerOf(object)) return;
 
-        auto [writeState, lock] = object->GetObjectStates()->GetWriteState();
+        auto [writeState, lock] = object->GetWorldStates()->GetWriteState();
 
         std::unique_lock stateLock = writeState->Lock();
         writeState->UpdateState(StateType::LinearVelocity, deltaPacket->GetLinearVelocity());
@@ -109,7 +109,7 @@ namespace Packet {
 
         if (TutorialGame::getInstance()->GetServerInstance()->IsOwnerOf(object)) return;
 
-        auto [writeState, lock] = object->GetObjectStates()->GetWriteState();
+        auto [writeState, lock] = object->GetWorldStates()->GetWriteState();
 
         std::unique_lock stateLock = writeState->Lock();
         writeState->UpdateState(StateType::StartPos, laserPacket->GetStartPos());
@@ -208,7 +208,7 @@ namespace Packet {
 
         if (TutorialGame::getInstance()->GetServerInstance()->IsOwnerOf(object)) return;
 
-        auto [writeState, lock] = object->GetObjectStates()->GetWriteState();
+        auto [writeState, lock] = object->GetWorldStates()->GetWriteState();
         
         std::unique_lock stateLock = writeState->Lock();
         writeState->UpdateState(StateType::Position, positionPacket->GetPosition());
@@ -288,19 +288,19 @@ namespace Packet {
 #pragma endregion PositonPacketHandler
 
 
-#pragma region PlayerStateChangePacketHandler
-    void PlayerStateChangePacketHandler::Handle(const std::shared_ptr<Packet> packet) {
-
-    }
-
-    std::shared_ptr<Packet> PlayerStateChangePacketHandler::Translate(const ENetEvent* event) const {
-        return std::make_shared<Packet>();
-    }
-
-    ENetPacket* PlayerStateChangePacketHandler::ToENetPacket(const std::shared_ptr<Packet> packet) const {
-        return nullptr;
-    }
-#pragma endregion PlayerStateChangePacketHandler
+//#pragma region PlayerStateChangePacketHandler
+//    void PlayerStateChangePacketHandler::Handle(const std::shared_ptr<Packet> packet) {
+//
+//    }
+//
+//    std::shared_ptr<Packet> PlayerStateChangePacketHandler::Translate(const ENetEvent* event) const {
+//        return std::make_shared<Packet>();
+//    }
+//
+//    ENetPacket* PlayerStateChangePacketHandler::ToENetPacket(const std::shared_ptr<Packet> packet) const {
+//        return nullptr;
+//    }
+//#pragma endregion PlayerStateChangePacketHandler
 
 
 #pragma region ObjectChangeGravityPacketHandler
@@ -311,7 +311,7 @@ namespace Packet {
         if (object == nullptr) return;
         if (TutorialGame::getInstance()->GetServerInstance()->IsOwnerOf(object)) return;
 
-        auto [writeState, lock] = object->GetObjectStates()->GetWriteState();
+        auto [writeState, lock] = object->GetWorldStates()->GetWriteState();
         
         std::unique_lock stateLock = writeState->Lock();
         writeState->UpdateState(StateType::UpVector, gravityPacket->GetUpDirection());

@@ -1,5 +1,6 @@
 #pragma once
 
+#include <array>
 #include <LinearMath/btVector3.h>
 #include <LinearMath/btQuaternion.h>
 #include <shared_mutex>
@@ -8,7 +9,7 @@
 #include <vector>
 
 namespace WorldState {
-    using StateValue = std::variant<btVector3, btQuaternion>;
+    using StateValue = std::variant<btVector3, btQuaternion, float>;
 
     enum class StateType {
         LinearVelocity,
@@ -18,7 +19,9 @@ namespace WorldState {
         UpVector,
         StartPos,
         EndPos,
-        Normal
+        Normal,
+        DamageTaken,
+        Health,
     };
 
 
@@ -94,7 +97,7 @@ namespace WorldState {
         // Thread is undefined behaviour.
         StateReader(const StateReader& other) = delete;
 
-        StateReader(StateReader&& other) {
+        StateReader(StateReader&& other) noexcept {
             other.m_state = m_state;
             other.m_readingMutex = m_readingMutex;
             other.m_readingMutex = nullptr;

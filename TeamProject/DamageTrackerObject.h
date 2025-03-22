@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Health.h"
+#include "GameObject.h"
 
 namespace NCL::CSC8503 {
     /**
@@ -13,14 +13,14 @@ namespace NCL::CSC8503 {
      * Singleplayer. Using this for the player is probably unnecessary.
      * 
      */
-    class DamageTrackerObject : public HitPointedEntity {
+    class DamageTrackerObject : public GameObject {
     public:
         DamageTrackerObject(GameObject* parent) : parent(parent) {}
 
         void Update(float dt) override;
 
-        void UpdateObjectState() override;
-        void UpdateFromState(float dt) override;
+        void UpdateWorldState() override;
+        void UpdateFromWorldState(float dt) override;
         std::vector<std::shared_ptr<Packet::Packet>> CreatePackets(int sequenceNum) override;
 
     private:

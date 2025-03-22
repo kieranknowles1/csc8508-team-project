@@ -1,6 +1,6 @@
 #pragma once
 
-#include "GameObject.h"
+#include "StateUpdater.h"
 
 namespace NCL::CSC8503 {
     enum class HealthState {
@@ -8,9 +8,20 @@ namespace NCL::CSC8503 {
         DEAD
     };
 
-    class HitPointedEntity : public GameObject {
+    /**
+     * @brief An entity that can be damaged.
+     * 
+     * This entity is to be used as an abstract class to inherit from. It does
+     * NOT update GameObject states. If you want state updates for GameObject,
+     * you must explicitly call base class update functions.
+     */
+    class Health: public StateUpdater {
     public:
-        void Update(float dt) override;
+        void Update(float dt);
+
+        void UpdateWorldState() override;
+        void UpdateFromWorldState(float dt) override;
+        std::vector<std::shared_ptr<Packet::Packet>> CreatePackets(int sequenceNum) override;
 
         /**
          * @brief This function changes the current health by the given amount.
@@ -21,14 +32,21 @@ namespace NCL::CSC8503 {
         void SetMaxHealth(float health) { maxHealth = health; }
         float GetMaxHealth() const { return maxHealth; }
 
-        void SetCurrentHealth(float healt) { currentHealth = std::clamp(health, 0.0f, maxHealth); }
+        void SetCurrentHealth(float health) { currentHealth = std::clamp(health, 0.0f, maxHealth); }
         float GetCurrentHealth() const { return currentHealth; }
+
+        /**
+         * @brief Set how much HP to regenerate per second. 
+         */
+        void SetRegenerationRate(float rate) { regenRate = rate; }
+        float GetRegenerationRate() const { return regenRate; }
+
+        HealthState GetHealthState() { return currentHealth == 0 ? HealthState::DEAD : HealthState::ALIVE; }
 
     private:
         float maxHealth = 0;
         float currentHealth = 0;
-
-        HealthState state = HealthState::DEAD;
+        float regenRate = 0;
     };
 
 
@@ -37,9 +55,9 @@ namespace NCL::CSC8503 {
         DISCRETE        // Resets on damage dealt.
     };
 
-    class AttackerEntity : public GameObject {
+    class AttackerEntity : public StateUpdater {
     public:
-        void Update(float dt) override;
+        void Update(float dt);
 
         void SetDamageType(DamageType type) { damageType = type; }
         DamageType GetDamageType() const { return damageType; }
@@ -52,11 +70,11 @@ namespace NCL::CSC8503 {
          * Use nullptr to hit no one. Is reset to nullptr after Update if
          * damage type is DISCRETE.
          */
-        void Hit(HitPointedEntity* target) { target = target; }
+        void Hit(Health* target) { target = target; }
 
     private:
         float damage = 0;
         DamageType damageType = DamageType::DISCRETE;
-        HitPointedEntity* target = nullptr;
+        Health* target = nullptr;
     };
 }
