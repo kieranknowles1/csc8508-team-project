@@ -3,7 +3,16 @@
 #include "GameObject.h"
 
 namespace NCL::CSC8503 {
-
+    /**
+     * @brief Tracks how much damage is dealt to an entity.
+     * 
+     * Used in multiplayer to send damage packets and update the players
+     * health. Each entity must have their own damage tracker.
+     * 
+     * AI currently use their own system and so this is not needed in
+     * Singleplayer. Using this for the player is probably unnecessary.
+     * 
+     */
     class DamageTrackerObject : public GameObject {
     public:
         DamageTrackerObject(GameObject* parent) : parent(parent) {}

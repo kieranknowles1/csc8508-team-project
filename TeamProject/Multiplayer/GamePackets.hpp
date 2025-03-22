@@ -153,17 +153,17 @@ namespace Packet {
      */
     class PlayerChangeStatePacket : public Packet {
     public:
-        PlayerChangeStatePacket(int playerID, const PlayerState& state) :
+        PlayerChangeStatePacket(int playerID, const ObjectState& state) :
             Packet(static_cast<Type>(PacketType::PLAYER_STATE_CHANGE), static_cast<int>(Channel::UNSEQUENCED), 0),
             m_playerID(playerID), m_newState(state)
         {}
 
         int GetPlayerID() const { return m_playerID; }
-        PlayerState GetState() const { return m_newState; }
+        ObjectState GetState() const { return m_newState; }
 
     private:
         int m_playerID;
-        PlayerState m_newState;
+        ObjectState m_newState;
     };
 
 

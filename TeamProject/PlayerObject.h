@@ -118,9 +118,6 @@ public:
 		return collisionPoint;
 	}
 
-	inline PlayerState GetState() { return state; }
-	inline void SetState(PlayerState state) { this->state = state; }
-
 	void Damage(float amount) {
 		lastHit = elapsedTime;
 
@@ -162,14 +159,12 @@ private:
 	//Player Variables
 	float gravityScale = 400.0f;
 	float rotateTime = 0.5f;
-	float maxHealth = 100.0f;
 	int collided = 0;
 	btVector3 collisionNormal = btVector3(0, 1, 0);
 	btVector3 collisionPoint = btVector3(0, 0, 0);
 	float jumpPadHeight = 0.0f;
 	std::list<GameObject*> collidedObjects;
 	Type collisionType;
-	PlayerState state;
 
     btQuaternion camRotOffset;
 	btQuaternion oldcamRotOffset = btQuaternion::getIdentity();

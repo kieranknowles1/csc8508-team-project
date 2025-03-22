@@ -16,7 +16,7 @@ namespace Packet {
     class Packet;
 }
 
-enum class PlayerState {
+enum class ObjectState {
     DEAD,
     ALIVE
 };
@@ -184,6 +184,10 @@ namespace NCL::CSC8503 {
 
         void setDeleted() { deleted = true; }
         bool isDeleted() const { return deleted; }
+
+        void SetState(ObjectState newState) { state = newState; }
+        ObjectState GetState() const { return state; }
+
     protected:
         PhysicsObject*		physicsObject;
         RenderObject*		renderObject;
@@ -215,5 +219,10 @@ namespace NCL::CSC8503 {
         float elapsedTime = 0;
 
 		float jumpPadStrength = 0.0f;
+
+        float maxHealth = 100.0f;
+        float health = maxHealth;
+
+        ObjectState state;
 	};
 }

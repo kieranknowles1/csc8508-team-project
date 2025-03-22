@@ -23,6 +23,9 @@ set(SOURCES
     GameTechRendererInterface.cpp
     GameTechRendererInterface.h
 
+    Health.cpp
+    Health.h
+
     LaserObject.cpp
     LaserObject.h
     LevelImporter.cpp
