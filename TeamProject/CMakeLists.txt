@@ -14,6 +14,8 @@ set(SOURCES
     Crosshair.cpp
     Crosshair.h
 
+    DamageTrackerObject.cpp
+    DamageTrackerObject.h
     DecalSystem.cpp
     DecalSystem.h
 
