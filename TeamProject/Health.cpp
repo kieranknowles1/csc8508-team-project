@@ -2,57 +2,89 @@
 #include "Multiplayer/GamePackets.hpp"
 #include "WorldState.h"
 
-using namespace NCL::CSC8503;
 using namespace WorldState;
 
-void Health::Update(float dt) {
-    // Regenerating Health.
-    if (GetHealthState() == HealthState::ALIVE) {
-        SetCurrentHealth(currentHealth + (regenRate * dt));
-    }
-}
+namespace NCL {
+    namespace CSC8503 {
+        void HealthAttrib::Update(float dt) {
+            elapsed += dt;
 
-void Health::UpdateWorldState() {
-    auto [writeState, writeLock] = GetWorldStates()->GetWriteState();
-    std::unique_lock writeStateLock(writeState->Lock());
-    writeState->UpdateState(StateType::Health, currentHealth);
-}
-
-void Health::UpdateFromWorldState(float dt) {
-    elapsedTickTime += dt;
-
-    std::function lerp = [](float x, float y, float w) { return x + ((y - x) * w); };
-    float weight = fmod(elapsedTickTime, TICK_UPDATE_RATE) / TICK_UPDATE_RATE;
-
-    auto [read, readLock] = GetWorldStates()->GetReadState();
-
-    StateValue targetHealth;
-}
-
-std::vector<std::shared_ptr<Packet::Packet>> CreatePackets(int seuqnceNum) {
-    return {};
-}
-
-void Health::Damage(float amount) { 
-    float newHealth = currentHealth - amount; 
-    SetCurrentHealth(newHealth);
-}
-
-
-void AttackerEntity::Update(float dt) {
-    if (target) {
-        switch (damageType) {
-        case DamageType::DISCRETE:
-            target->Damage(damage);
-            target = nullptr;
-            break;
-
-        case DamageType::CONTINUOUS:
-            target->Damage(damage * dt);
-            break;
-
-        default:
-            break;
+            // Regenerating HealthAttrib.
+            if (GetHealthState() == HealthState::ALIVE) {
+                SetCurrentHealth(currentHealth+ (regenRate * dt));
+            }
         }
+
+        void HealthAttrib::UpdateWorldState() {
+            auto [writeState, writeLock] = GetWorldStates()->GetWriteState();
+            std::unique_lock writeStateLock(writeState->Lock());
+            writeState->UpdateState(StateType::Health, currentHealth);
+        }
+
+        void HealthAttrib::UpdateFromWorldState(float dt) {
+            elapsedTickTime += dt;
+
+            std::function lerp = [](float x, float y, float w) { return x + ((y - x) * w); };
+            float weight = fmod(elapsedTickTime, TICK_UPDATE_RATE) / TICK_UPDATE_RATE;
+
+            auto [current, currentLock] = GetWorldStates()->GetCurrentState();
+            auto [read, readLock] = GetWorldStates()->GetReadState();
+
+            StateValue currentHealthAttrib;
+            StateValue targetHealthAttrib;
+
+            std::shared_lock currentStateLock = current->Lock_Shared();
+            std::shared_lock readStateLock = read->Lock_Shared();
+
+            bool hasCurrentHealthAttrib = current->ReadState(StateType::Health, &currentHealthAttrib);
+            bool hasTargetHealthAttrib = read->ReadState(StateType::Health, &targetHealthAttrib);
+
+            currentStateLock.unlock();
+            readStateLock.unlock();
+
+            currentLock.unlock();
+            readLock.unlock();
+
+            // Updating health.
+            if (hasCurrentHealthAttrib && hasTargetHealthAttrib) {
+                float current = std::get<float>(currentHealthAttrib);
+                float target = std::get<float>(targetHealthAttrib);
+                SetCurrentHealth(lerp(current, target, weight));
+            }
+        }
+
+        std::vector<std::shared_ptr<Packet::Packet>> HealthAttrib::CreatePackets(int seuqnceNum) {
+            return {};
+        }
+
+        void HealthAttrib::Damage(float amount) {
+            float newHealthAttrib = currentHealth- amount;
+            SetCurrentHealth(newHealthAttrib);
+            lastHit = elapsed;
+        }
+
+        void AttackAttrib::Update(float dt) {
+            if (target) {
+                switch (damageType) {
+                case DamageType::DISCRETE:
+                    target->Damage(damage);
+                    target = nullptr;
+                    break;
+
+                case DamageType::CONTINUOUS:
+                    target->Damage(damage * dt);
+                    break;
+
+                default:
+                    break;
+                }
+            }
+        }
+
+        void AttackAttrib::UpdateWorldState() {}
+
+        void AttackAttrib::UpdateFromWorldState(float dt) {}
+
+        std::vector<std::shared_ptr<Packet::Packet>> AttackAttrib::CreatePackets(int sequenceNum) { return {}; }
     }
 }

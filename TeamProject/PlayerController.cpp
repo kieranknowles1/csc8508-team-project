@@ -312,8 +312,8 @@ void PlayerController::HandleJumping() {
 };
 
 void PlayerController::HandleHurtEffects() {
-    float healthLossPercent = (player->GetMaxHealth() - player->health) / player->GetMaxHealth();
-    renderer->SetVignetteIntesnity((healthLossPercent));
+    //float healthLossPercent = (player->GetMaxHealth() - player->health) / player->GetMaxHealth();
+    //renderer->SetVignetteIntesnity((healthLossPercent));
 }
 
 void PlayerController::GetAllDirections() {

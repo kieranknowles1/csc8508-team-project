@@ -1,5 +1,7 @@
 #pragma once
 
+#include <memory>
+
 #include "StateUpdater.h"
 
 namespace NCL::CSC8503 {
@@ -15,7 +17,7 @@ namespace NCL::CSC8503 {
      * NOT update GameObject states. If you want state updates for GameObject,
      * you must explicitly call base class update functions.
      */
-    class Health: public StateUpdater {
+    class HealthAttrib : public StateUpdater {
     public:
         void Update(float dt);
 
@@ -41,12 +43,22 @@ namespace NCL::CSC8503 {
         void SetRegenerationRate(float rate) { regenRate = rate; }
         float GetRegenerationRate() const { return regenRate; }
 
+        /**
+         * @brief Set the wait time before healing after taking damage.
+         */
+        void SetRegenerationDelay(float delay) { regenDelay = delay; }
+        float GetRegenerationDelay() const { return regenDelay; }
+
         HealthState GetHealthState() { return currentHealth == 0 ? HealthState::DEAD : HealthState::ALIVE; }
 
-    private:
+    protected:
         float maxHealth = 0;
         float currentHealth = 0;
         float regenRate = 0;
+        float regenDelay = 0;
+
+        float lastHit = 0;
+        float elapsed = 0;
     };
 
 
@@ -55,9 +67,13 @@ namespace NCL::CSC8503 {
         DISCRETE        // Resets on damage dealt.
     };
 
-    class AttackerEntity : public StateUpdater {
+    class AttackAttrib : public StateUpdater {
     public:
         void Update(float dt);
+
+        void UpdateWorldState() override;
+        void UpdateFromWorldState(float dt) override;
+        std::vector<std::shared_ptr<Packet::Packet>> CreatePackets(int sequenceNum) override;
 
         void SetDamageType(DamageType type) { damageType = type; }
         DamageType GetDamageType() const { return damageType; }
@@ -70,11 +86,15 @@ namespace NCL::CSC8503 {
          * Use nullptr to hit no one. Is reset to nullptr after Update if
          * damage type is DISCRETE.
          */
-        void Hit(Health* target) { target = target; }
+        void Hit(HealthAttrib* target) { target = target; }
 
-    private:
+        void SetHealthAttrib(HealthAttrib* health) { this->health = health; }
+        HealthAttrib* GetHealthAttrib() { return health; }
+
+    protected:
         float damage = 0;
         DamageType damageType = DamageType::DISCRETE;
-        Health* target = nullptr;
+        HealthAttrib* target = nullptr;
+        HealthAttrib* health = nullptr;
     };
 }

@@ -219,9 +219,6 @@ namespace NCL::CSC8503 {
 
 		float jumpPadStrength = 0.0f;
 
-        float maxHealth = 100.0f;
-        float health = maxHealth;
-
         ObjectState state;
 	};
 }

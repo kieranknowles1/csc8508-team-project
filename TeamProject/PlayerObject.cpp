@@ -2,12 +2,29 @@
 #include "TutorialGame.h"
 #include "Multiplayer/GamePackets.hpp"
 #include "Multiplayer/Server.hpp"
+#include "Health.h"
 
 #include <memory>
 
 using namespace WorldState;
 using namespace NCL;
 using namespace CSC8503;
+
+
+PlayerObject::PlayerObject() {
+    health = std::make_unique<HealthAttrib>();
+    health->SetMaxHealth(PLAYER_HEALTH);
+    health->SetCurrentHealth(PLAYER_HEALTH);
+    health->SetRegenerationDelay(2.0f);
+    health->SetRegenerationRate(50.0f);
+
+    attack = std::make_unique<AttackAttrib>();
+    attack->SetDamageType(DamageType::CONTINUOUS);
+    attack->SetDamageAmount(20.0f);
+
+    attack->SetHealthAttrib(health.get());
+}
+
 
 PlayerObject::~PlayerObject() {
     if (laser && TutorialGame::getInstance()) TutorialGame::getInstance()->GetWorld()->RemoveGameObject(laser);
@@ -28,12 +45,6 @@ void PlayerObject::Update(float dt) {
     updateGravity(dt);
     
     elapsedTime += dt;
-
-    // 2 seconds before healing.
-    if (elapsedTime - lastHit > 4.0f) {
-        health += 25 * dt;
-        if (health > maxHealth) health = maxHealth;
-    }
 }
 
 void PlayerObject::UpdateWorldState() {

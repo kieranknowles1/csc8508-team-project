@@ -47,7 +47,7 @@ std::optional<ShotInfo> Shoot::ShootBulletPlayer(btVector3 startPos, btVector3 d
     if (rayInfo.has_value()) {
         if (rayInfo.value().hitObj->getType() == GameObject::Type::Player) {
             PlayerObject* hit = (PlayerObject*) rayInfo.value().hitObj;
-            hit->Damage(100.0f * dt); // TODO: Don't hard code this.
+            //hit->Damage(100.0f * dt); // TODO: Don't hard code this.
 
             if (TutorialGame::getInstance()->GetServerInstance() != nullptr) {
                 std::shared_ptr<Packet::DamagePacket> damagePacket = std::make_shared<Packet::DamagePacket>(
@@ -75,7 +75,7 @@ std::optional<ShotInfo> Shoot::ShootBulletAI(btVector3 startPos, btVector3 dir, 
     if (rayInfo.has_value()) {
         if (rayInfo.value().hitObj->getType() == GameObject::Type::Player) {
             PlayerObject* hit = (PlayerObject*)rayInfo.value().hitObj;
-            hit->Damage(5.0f * dt); // TODO: Don't hard code this.
+            //hit->Damage(5.0f * dt); // TODO: Don't hard code this.
         }
         //SpawnDecal(rayInfo.value().hitPos, rayInfo.value().hitNormal, 1);
     }
