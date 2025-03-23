@@ -39,7 +39,6 @@ enum AnimationState { // In order of importance - e.g. sliding overrides falling
 	WALKING_RIGHT,
 	IDLE
 };
-
 constexpr std::string_view AnimationNames[] = // For printing - e.g. std::cout << "ANIMATED STATE: " << AnimationNames[animationState] << std::endl;
 {
 	"JUMPING_SPRINT",

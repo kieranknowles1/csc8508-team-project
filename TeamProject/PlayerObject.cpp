@@ -54,7 +54,6 @@ void PlayerObject::Update(float dt) {
         UpdatePacketSequence((uint8_t)Packet::PacketType::OBJECT_CHANGE_GRAVITY, gravityPacket->GetSequenceNumber());
         TutorialGame::GetServerInstance()->Broadcast(gravityPacket);
     }
-    std::cout << "ANIMATED STATE: " << AnimationNames[animationState] << std::endl;
 }
 
 void PlayerObject::OnCollisionEnter(const CollisionInfo& collisionInfo){
