@@ -12,7 +12,7 @@ using namespace CSC8503;
 
 
 PlayerObject::PlayerObject() {
-    health = std::make_unique<HealthAttrib>();
+    health = std::make_unique<HealthAttrib>(this);
     health->SetMaxHealth(PLAYER_HEALTH);
     health->SetCurrentHealth(PLAYER_HEALTH);
     health->SetRegenerationDelay(2.0f);
@@ -20,7 +20,7 @@ PlayerObject::PlayerObject() {
 
     attack = std::make_unique<AttackAttrib>();
     attack->SetDamageType(DamageType::CONTINUOUS);
-    attack->SetDamageAmount(20.0f);
+    attack->SetDamageAmount(50.0f);
 
     attack->SetHealthAttrib(health.get());
 }
@@ -48,10 +48,14 @@ void PlayerObject::Update(float dt) {
 }
 
 void PlayerObject::UpdateWorldState() {
+    attack->UpdateWorldState();
+    health->UpdateWorldState();
     GameObject::UpdateWorldState();
 }
 
 void PlayerObject::UpdateFromWorldState(float dt) {
+    attack->UpdateFromWorldState(dt);
+    health->UpdateFromWorldState(dt);
     GameObject::UpdateFromWorldState(dt);
 
     elapsedTickTime += dt;

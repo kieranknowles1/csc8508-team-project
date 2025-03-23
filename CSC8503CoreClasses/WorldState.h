@@ -9,7 +9,7 @@
 #include <vector>
 
 namespace WorldState {
-    using StateValue = std::variant<btVector3, btQuaternion, float>;
+    using StateValue = std::variant<btVector3, btQuaternion, float, int>;
 
     enum class StateType {
         LinearVelocity,
@@ -20,8 +20,9 @@ namespace WorldState {
         StartPos,
         EndPos,
         Normal,
-        DamageTaken,
+        DamageDealt,
         Health,
+        ObjectID
     };
 
 

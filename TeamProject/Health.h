@@ -5,6 +5,8 @@
 #include "StateUpdater.h"
 
 namespace NCL::CSC8503 {
+    class GameObject;
+
     enum class HealthState {
         ALIVE,
         DEAD
@@ -19,6 +21,8 @@ namespace NCL::CSC8503 {
      */
     class HealthAttrib : public StateUpdater {
     public:
+        HealthAttrib(GameObject* parent) : parent(parent) {}
+
         void Update(float dt);
 
         void UpdateWorldState() override;
@@ -51,7 +55,11 @@ namespace NCL::CSC8503 {
 
         HealthState GetHealthState() { return currentHealth == 0 ? HealthState::DEAD : HealthState::ALIVE; }
 
+        GameObject* GetParent() { return parent; }
+
     protected:
+        GameObject* parent;
+
         float maxHealth = 0;
         float currentHealth = 0;
         float regenRate = 0;
@@ -93,8 +101,11 @@ namespace NCL::CSC8503 {
 
     protected:
         float damage = 0;
+        float damageDealt = 0;
+
         DamageType damageType = DamageType::DISCRETE;
         HealthAttrib* target = nullptr;
+        GameObject* lastHit = nullptr;
         HealthAttrib* health = nullptr;
     };
 }

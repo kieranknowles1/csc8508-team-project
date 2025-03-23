@@ -1,6 +1,7 @@
 #include "Health.h"
 #include "Multiplayer/GamePackets.hpp"
 #include "WorldState.h"
+#include "PlayerObject.h"
 
 using namespace WorldState;
 
@@ -67,24 +68,54 @@ namespace NCL {
             if (target) {
                 switch (damageType) {
                 case DamageType::DISCRETE:
+
                     target->Damage(damage);
-                    target = nullptr;
+                    damageDealt += damage;
                     break;
 
                 case DamageType::CONTINUOUS:
                     target->Damage(damage * dt);
+                    damageDealt += (damage * dt);
                     break;
 
                 default:
+                    damageDealt = 0;
                     break;
                 }
             }
         }
 
-        void AttackAttrib::UpdateWorldState() {}
+        void AttackAttrib::UpdateWorldState() {
+            auto [writeState, lock] = GetWorldStates()->GetWriteState();
 
-        void AttackAttrib::UpdateFromWorldState(float dt) {}
+            std::unique_lock stateLock(writeState->Lock());
 
-        std::vector<std::shared_ptr<Packet::Packet>> AttackAttrib::CreatePackets(int sequenceNum) { return {}; }
+            writeState->UpdateState(StateType::DamageDealt, damageDealt);
+            writeState->UpdateState(StateType::ObjectID, lastHit->GetWorldID());
+        }
+
+        // Receives incoming damage states from other players.
+        void AttackAttrib::UpdateFromWorldState(float dt) {
+            elapsedTickTime += dt;
+            float percent = dt / TICK_UPDATE_RATE;
+
+            auto [read, readLock] = health->GetWorldStates()->GetReadState();
+            StateValue targetDamageDealt;
+
+            std::shared_lock readStateLock = read->Lock_Shared();
+            bool hasTargetDamageDealt = read->ReadState(StateType::DamageDealt, &targetDamageDealt);
+            readStateLock.unlock();
+
+            // Damaging over time.
+            if (hasTargetDamageDealt) {
+                health->Damage(std::get<float>(targetDamageDealt) * percent);
+            }
+        }
+
+        std::vector<std::shared_ptr<Packet::Packet>> AttackAttrib::CreatePackets(int sequenceNum) {
+            
+            
+            return {};
+        }
     }
 }

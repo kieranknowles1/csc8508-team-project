@@ -35,7 +35,8 @@ namespace Packet {
         DAMAGE = CUSTOM_TYPE + 7,
         LASER = CUSTOM_TYPE + 8,
         PING = CUSTOM_TYPE + 9,
-        PONG = CUSTOM_TYPE + 10
+        PONG = CUSTOM_TYPE + 10,
+        DAMAGE = CUSTOM_TYPE + 11
     };
 
 
@@ -269,5 +270,23 @@ namespace Packet {
         {}
     };
 
+    /**
+     * @brief A packet that damaged the target object by the given amount.
+     */
+    class DamagePacket : public Packet {
+    public:
+        DamagePacket(int objectID, int targetID, float amount) :
+            Packet(static_cast<Type>(PacketType::DAMAGE), static_cast<int>(Channel::UNSEQUENCED), 0),
+            m_objectID(objectID), m_targetID(targetID), m_amount(amount)
+        {}
+
+        int GetTargetID() const { return m_objectID; }
+        float GetDamage() const { return m_amount; }
+
+    private:
+        int m_objectID;
+        int m_targetID;
+        float m_amount;
+    };
 }
 

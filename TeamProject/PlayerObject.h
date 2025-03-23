@@ -20,9 +20,7 @@ namespace NCL::CSC8503 {
 	class HealthAttrib;
 	class AttackAttrib;
 
-
 	const float PLAYER_HEALTH = 200.0f;
-
 
 	// Player class derived from GameObject
 	class PlayerObject : public GameObject {
@@ -140,6 +138,9 @@ namespace NCL::CSC8503 {
 		void UpdateWorldState() override;
 		void UpdateFromWorldState(float dt) override;
 		std::vector<std::shared_ptr<Packet::Packet>> CreatePackets(int sequenceNum) override;
+
+		HealthAttrib* GetHealthAttrib() { return health.get(); }
+		AttackAttrib* GetAttackAttrib() { return attack.get(); }
 
 	private:
 		//Player Variables
