@@ -201,10 +201,23 @@ void LevelImporter::HandleTypes(GameObject* obj) {
         break;
     case GameObject::Type::RespawnPoint:
     {
-        btMatrix3x3 rotationMatrixCam(obj->GetTransform().getRotation());
-        btVector3 upwards = rotationMatrixCam * btVector3(0, 1, 0); // Apply rotation to the offset
-        RespawnPoint* respawnPoint = new RespawnPoint(obj->GetTransform().getOrigin(), upwards);
+
+        btQuaternion rot = obj->GetTransform().getRotation();
+        std::cout << "Rotation quaternion: " << rot.x() << ", " << rot.y() << ", " << rot.z() << ", " << rot.w() << std::endl;
+        btMatrix3x3 rotationMatrixCam(rot);
+        btVector3 upwards = rotationMatrixCam * btVector3(0, 1, 0);
+        btVector3 desiredFacing = rotationMatrixCam * btVector3(0, 0, -1);
+        btVector3 worldForward(1, 0, 0); 
+        btVector3 projectedForward = (desiredFacing - upwards * desiredFacing.dot(upwards)).normalized();
+        btVector3 projectedWorldForward = (worldForward - upwards * worldForward.dot(upwards)).normalized();
+        float yaw = atan2(projectedForward.dot(projectedWorldForward.cross(upwards)), projectedForward.dot(projectedWorldForward)) * (180.0f / SIMD_PI);
+        if (yaw < 0) {
+            yaw += 360.0f;
+        }
+        RespawnPoint* respawnPoint = new RespawnPoint(obj->GetTransform().getOrigin(), upwards, yaw);
         Respawn::GetInstance()->InsertRespawn(respawnPoint);
+        std::cout << "YAW: " << yaw << " degrees" << std::endl;
+
         break;
     }
     default:

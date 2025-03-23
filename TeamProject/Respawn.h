@@ -15,6 +15,7 @@ using namespace NCL::CSC8503;
 struct RespawnPoint {
 	btVector3 position;
 	btVector3 orientation;
+	float yaw;
 };
 
 class Respawn {
@@ -32,6 +33,12 @@ public:
 			std::cerr << "RESPAWN POINT NOT FOUND" << std::endl;
 			return nullptr;
 		}
+		return respawnPoints.at(ID);
+	}
+
+
+	RespawnPoint* GetRandomRespawn() {
+		int ID = rand() % respawnPoints.size();
 		return respawnPoints.at(ID);
 	}
 

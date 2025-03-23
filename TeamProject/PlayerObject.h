@@ -128,6 +128,7 @@ public:
 			RespawnPoint* point = Respawn::GetInstance()->GetRespawn(worldID - 1);
 			GetPhysicsObject()->GetRigidBody()->getWorldTransform().setOrigin(point->position);
 			setUpDirection(point->orientation);
+			yawOverride = point->yaw;
 			resetCollisionType();
 			setCollided(0);
 			// TODO: Create Change State packet.
@@ -139,6 +140,16 @@ public:
 	}
 	float getCollisionJumpPadStrength(){
 		return jumpPadHeight;
+	}
+
+	float getYawOverride(float yawIn) {
+		if (yawOverride != -1000.0f) {
+			return yawOverride;
+		}
+		else {
+			yawOverride = -1000.0f;
+			return yawIn;
+		}
 	}
 
 	float health = 100.0f;
@@ -160,6 +171,7 @@ private:
 	std::list<GameObject*> collidedObjects;
 	Type collisionType;
 	PlayerState state;
+	float yawOverride = -1000.0f;
 
     btQuaternion camRotOffset;
 	btQuaternion oldcamRotOffset = btQuaternion::getIdentity();
