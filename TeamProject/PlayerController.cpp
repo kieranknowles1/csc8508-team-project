@@ -59,7 +59,10 @@ void PlayerController::UpdateMovement(float dt) {
         player->setCollided(0);
         inAirTime -= dt;
     }
-    if (isSliding||slideTransition) return;
+    if (isSliding || slideTransition) {
+        player->SetAnimation(AnimationState::SLIDING);
+        return;
+    }
     RotationCalculations();
  
     CameraMovement();
@@ -313,6 +316,28 @@ void PlayerController::MovementCalculations(float dt) {
         movement *= (airMulti * dt);
         movement += rb->getLinearVelocity();
     }
+
+    //animations
+    if (player->getCollided() <= 0) {
+        player->SetAnimation(AnimationState::FALLING);
+    }
+    else if (abs(directionalInput.x) >= 0.01f || abs(directionalInput.y) >= 0.01f) {
+        if (directionalInput.y >= 0.01f) {
+            player->SetAnimation(sprinting ? AnimationState::SPRINTING_FORWARD : AnimationState::WALKING_FORWARD);
+        }
+        else if (directionalInput.y <= -0.01f) {
+            player->SetAnimation(sprinting ? AnimationState::SPRINTING_BACK : AnimationState::WALKING_BACK);
+        }
+        else if (directionalInput.x >= 0.01f) {
+            player->SetAnimation(sprinting ? AnimationState::SPRINTING_RIGHT : AnimationState::WALKING_RIGHT);
+        }
+        else if (directionalInput.x <= -0.01f) {
+            player->SetAnimation(sprinting ? AnimationState::SPRINTING_LEFT : AnimationState::WALKING_LEFT);
+        }  
+    }
+    else {
+        player->SetAnimation(AnimationState::IDLE);
+    }
 };
 
 
@@ -329,6 +354,15 @@ void PlayerController::HandleJumping() {
         }
         player->setCollided(0);
         inAirTime = 0.2f;
+    }
+    if (inAirTime > 0) {
+        if (controller->GetDigital(Controller::DigitalControl::Sprint)) {
+            player->SetAnimation(AnimationState::JUMPING_SPRINT);
+        }
+        else {
+            player->SetAnimation(AnimationState::JUMPING_STANDING);
+        }
+        
     }
 };
 
