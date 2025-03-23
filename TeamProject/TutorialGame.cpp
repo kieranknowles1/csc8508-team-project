@@ -427,7 +427,7 @@ PlayerObject* TutorialGame::AddPlayerCapsuleToWorld(const Vector3& position, flo
     // Setting the render object for the capsule 
     player->SetRenderObject(new RenderObject(player, resourceManager->getMeshes().get("RacerGuy/RacerGuy2.msh"), resourceManager->getMaterials().get("RacerGuy.mat"))); //defaultTexture
    // player->GetRenderObject()->SetAnimation(new MeshAnimation("/RacerGuy/WeaponWalk.anm"));
-    player->GetRenderObject()->SetAnimation(new MeshAnimation("/RacerGuy/WeaponIdle.anm")); 
+    player->GetRenderObject()->SetAnimation(new MeshAnimation("/RacerGuy/Emote.anm")); 
     
     //player->SetRenderObject(new RenderObject(player, resourceManager->getMeshes().get("Capsule.msh"), defaultTexture)); 
    // player->SetRenderObject(new RenderObject(player, resourceManager->getMeshes().get("/MaleGuard/Male_Guard.msh"), resourceManager->getMaterials().get("Male_Guard.mat")));
