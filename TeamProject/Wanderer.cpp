@@ -94,22 +94,18 @@ void Wanderer::InitPosAndOffset() {
 	case(Side::FRONT):
 		offset = btVector3(0, 0, 0);
 		rotation = btQuaternion(btVector3(1, 0, 0), SIMD_PI / 2);
-		trans.setRotation(rotation);
 		break;
 	case(Side::BACK):
 		offset = btVector3(0, halfHeight * 4, 0);
 		rotation = btQuaternion(btVector3(1, 0, 0), -SIMD_PI / 2);
-		trans.setRotation(rotation);
 		break;
 	case(Side::LEFT):
 		offset = btVector3(halfHeight * 2, 0, 0);
 		rotation = btQuaternion(btVector3(0, 0, 1), -SIMD_PI / 2);
-		trans.setRotation(rotation);
 		break;
 	case(Side::RIGHT):
 		offset = btVector3(-halfHeight * 2, 0, 0);
 		rotation = btQuaternion(btVector3(0, 0, 1), -SIMD_PI / 2);
-		trans.setRotation(rotation);
 		break;
 	}
 	trans.setRotation(rotation);
