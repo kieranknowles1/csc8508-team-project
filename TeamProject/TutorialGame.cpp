@@ -44,6 +44,8 @@ TutorialGame::TutorialGame(GameTechRendererInterface* renderer, Controller* cont
     InitCamera();
     InitWorld();
 
+    freeCam = true; //AI debug to be removed
+
 }
 
 /*
@@ -152,7 +154,7 @@ void TutorialGame::UpdatePlayer(float dt) {
     // Press F for freeCam, press G for thirdPerson
     if (freeCam) {
         //freeCam Movement
-        world->GetMainCamera().UpdateCamera(dt, true);
+        world->GetMainCamera().UpdateCamera(dt * 20, true);
     }
     else {
         //player Movement
