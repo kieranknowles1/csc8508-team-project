@@ -39,7 +39,8 @@ void SimpleFont::BuildVerticesForString(const std::string& text, const Maths::Ve
 
         // Calculate the positions of the four corners of the character quad
         Vector3 topLeft = Vector3(currentX, currentY, 0) * size;
-        topLeft -= Vector3(info.bearing, 0) * size;
+        topLeft.x += info.bearing.x * size;
+        topLeft.y -= info.bearing.y * size;
 
         Vector3 bottomRight = topLeft + Vector3(info.size, 0) * size;
         Vector3 bottomLeft(topLeft.x, bottomRight.y, 0);
