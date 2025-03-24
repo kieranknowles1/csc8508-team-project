@@ -6,6 +6,7 @@
 #include "GameObject.h"
 #include "PhysicsObject.h"
 #include "CollisionInfo.h"
+//#include "PlayerObject.h"
 
 #include <btBulletDynamicsCommon.h>
 #include <btBulletCollisionCommon.h>
@@ -36,15 +37,33 @@ public:
 		return respawnPoints.at(ID);
 	}
 
-
-	RespawnPoint* GetRandomRespawn() {
-		std::cout << "RESPAWNS: " << respawnPoints.size() << std::endl;
-		int ID = rand() % respawnPoints.size();
-		return respawnPoints.at(ID);
+	RespawnPoint* GetRandomRespawn(int playerID) {
+	/*	RespawnPoint* chosenSpawn = nullptr;
+		float furthestDist = 0.0f;
+		for (RespawnPoint* point : respawnPoints) {
+			for (PlayerObject* player : players) {
+				if (player->GetWorldID() == playerID) {
+					continue;
+				}
+				float currentDist = point->position.distance(player->GetPhysicsObject()->GetRigidBody()->getWorldTransform().getOrigin());
+				if (currentDist > furthestDist) {
+					furthestDist = currentDist;
+					chosenSpawn = point;
+				}
+			}
+		}
+		return chosenSpawn;*/
+		return respawnPoints.at(0);
 	}
+
+	//void InsertPlayerObj(PlayerObject* playerObj) {
+		//players.push_back(playerObj);
+	//}
 
 private:
 	inline static Respawn* instance = nullptr;
 	std::vector<RespawnPoint*> respawnPoints;
+	//std::vector<PlayerObject*> players;
+
 
 };

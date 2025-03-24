@@ -182,7 +182,7 @@ void TutorialGame::UpdateKeys() {
         freeCam = !freeCam;
     }
     if (controller->GetDigital(DebugRespawnRandom)) {
-        RespawnPoint* respawnPoint = Respawn::GetInstance()->GetRandomRespawn();
+        RespawnPoint* respawnPoint = Respawn::GetInstance()->GetRandomRespawn(player->GetWorldID());
         playerController->setYaw(respawnPoint->yaw);
         player->GetPhysicsObject()->GetRigidBody()->getWorldTransform().setOrigin(respawnPoint->position);
         player->setUpDirection(respawnPoint->orientation);

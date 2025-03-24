@@ -165,7 +165,6 @@ void LevelImporter::HandleTypes(GameObject* obj) {
     btVector4 colourLight = LightColour();
     switch (obj->getType())
     {
-
     case GameObject::Type::JumpPad:
         obj->GetRenderObject()->SetColour(Vector4(0.3f, 0.3f, 0.3f, 1));
         obj->GetRenderObject()->SetTexScaleMultiplier(0.0025f);
@@ -188,10 +187,7 @@ void LevelImporter::HandleTypes(GameObject* obj) {
         obj->GetRenderObject()->SetTexScaleMultiplier(0.0025f);
         obj->GetRenderObject()->SetColour(btVector4((250.0f/255.0f), (232.0f / 255.0f), (40.0f / 255.0f), 1));
         break;
-
-
     case GameObject::Type::PointLight:
-
         obj->GetRenderObject()->setMaterial(nullptr);
         world->AddPointLight(new PointLight(obj->GetPhysicsObject()->GetRigidBody()->getWorldTransform().getOrigin(), 950,1, colourLight));
         colourLight *= 10;
@@ -228,13 +224,7 @@ void LevelImporter::HandleTypes(GameObject* obj) {
         else {
             yaw = (360.0f - 90.0f) - yaw;
         }
-
-        
-        // HACK
-        //if (isIceSide) yaw -= 90.0f;
-        while (yaw < 0) {
-            yaw += 360.0f;
-        }
+        yaw = fmod(yaw, 360.0f);
         RespawnPoint* respawnPoint = new RespawnPoint(obj->GetTransform().getOrigin(), upwards, yaw);
         Respawn::GetInstance()->InsertRespawn(respawnPoint);
         break;
