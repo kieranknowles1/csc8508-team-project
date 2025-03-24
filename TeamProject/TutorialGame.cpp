@@ -88,8 +88,8 @@ void TutorialGame::UpdateGame(float dt) {
 
     ////New
     int substeps = 0;
-    float maxDt = btMin(PHYSICS_PERIOD, dt);
-    int steps = bulletWorld->stepSimulation(maxDt, substeps, PHYSICS_PERIOD);
+    //float maxDt = btMin(PHYSICS_PERIOD, dt);
+    int steps = bulletWorld->stepSimulation(dt, substeps, PHYSICS_PERIOD);
 
     profiler.startSection("Network Updates");
     if (server != nullptr) {
