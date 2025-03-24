@@ -82,13 +82,14 @@ void Wanderer::InitPosAndOffset() {
 	btCapsuleShape* capsule = static_cast<btCapsuleShape*>(shape);
 	float halfHeight = capsule->getHalfHeight();
 	btTransform trans = GetTransform();
-	btQuaternion rotation;
+	btQuaternion rotation = btQuaternion::getIdentity();
+	offset = btVector3(0, halfHeight * 2, 0);
 	switch(side) {
 	case(Side::BOTTOM):
-		offset = btVector3(0, halfHeight * 2, 0);
 		break;
 	case(Side::TOP):
 		offset = btVector3(0, -halfHeight * 2, 0);
+		rotation = btQuaternion(btVector3(1, 0, 0), SIMD_PI);
 		break;
 	case(Side::FRONT):
 		offset = btVector3(0, 0, 0);
@@ -111,6 +112,7 @@ void Wanderer::InitPosAndOffset() {
 		trans.setRotation(rotation);
 		break;
 	}
+	trans.setRotation(rotation);
 	curPathPoint = trans.getOrigin();
 	btVector3 newPos = trans.getOrigin() + offset;
 	trans.setOrigin(newPos);
