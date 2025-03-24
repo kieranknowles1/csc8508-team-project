@@ -74,7 +74,7 @@ void SimpleFont::BuildVerticesForString(const std::string& text, const Maths::Ve
         texCoords.push_back(uvBottomLeft);
 
         // Moves the cursor to the right based on the character's width/advance
-        currentX += info.advance;
+        currentX += info.advance * advanceMult;
     }
 }
 
@@ -104,8 +104,10 @@ void SimpleFont::BuildInterleavedVerticesForString(const std::string& text, cons
     }
 }
 
-SimpleFont::SimpleFont(const std::string&filename, std::shared_ptr<Texture> texture) {
-    this->texture = texture;
+SimpleFont::SimpleFont(const std::string&filename, std::shared_ptr<Texture> texture, float advanceMult)
+    : texture(texture)
+    , advanceMult(advanceMult)
+{
     InitializeFreeType(filename, texture);
 }
 
