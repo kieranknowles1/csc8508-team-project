@@ -29,6 +29,7 @@ void SimpleFont::BuildVerticesForString(const std::string& text, const Maths::Ve
             currentY += 0.1f * size;
         }
         // Skip carriage returns
+        // Ignore windows line endings, LF covers both Windows and Unix
         if (ch == '\r') continue;
 
         // Find the character glyph data in the map
