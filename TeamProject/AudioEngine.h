@@ -90,7 +90,10 @@ public:
 	void SetChannel3dPosition(int nChannelId, const NCL::Maths::Vector3& vPosition);
 	void SetChannelPlaybackPosition(int channelId, unsigned int positionMs);
 	void SetChannelVolume(int nChannelId, float fVolumedB);
+	void SetChannelFrequencyHz(int channelId, float frequency);
+	void SetChannelPitchMultiplier(int channelId, float multiplier);
 	void SetChannelPitchRandom(int channelId, float minPitchScale, float maxPitchScale);
+	void DuckVolume(float duckDb, float durationSec);
 	bool IsPlaying(int nChannelId) const;
 	bool isPlayingByString(const std::string& soundName);
 	bool IsAnySoundPlaying() const;

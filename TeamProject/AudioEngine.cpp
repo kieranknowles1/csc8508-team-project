@@ -224,6 +224,41 @@ void CAudioEngine::SetChannelVolume(int nChannelId, float fVolumedB) {
     CAudioEngine::ErrorCheck(tFoundIt->second->setVolume(dbToVolume(fVolumedB)));
 }
 
+//Sets the frequency of an FMod channel in Hz
+void CAudioEngine::SetChannelFrequencyHz(int channelId, float frequency) {
+    auto it = sgpImplementation->mChannels.find(channelId);
+    if (it == sgpImplementation->mChannels.end()) return;
+
+    FMOD_RESULT result = it->second->setFrequency(frequency);
+    ErrorCheck(result);
+}
+
+//Sets the pitch of a channel using a relative multiplier (e.g., 1.1 = +10% pitch)
+void CAudioEngine::SetChannelPitchMultiplier(int channelId, float multiplier) {
+    auto it = sgpImplementation->mChannels.find(channelId);
+    if (it == sgpImplementation->mChannels.end() || multiplier <= 0.0f) return;
+
+    float currentFrequency = 0.0f;
+    if (it->second->getFrequency(&currentFrequency) == FMOD_OK) {
+        float newFrequency = currentFrequency * multiplier;
+        ErrorCheck(it->second->setFrequency(newFrequency));
+    }
+}
+
+//Reduce volume of all non-essential sounds temporarily
+void CAudioEngine::DuckVolume(float duckDb, float durationSec) {
+    for (auto& [id, channel] : sgpImplementation->mChannels) {
+        if (channel) {
+            float currentVolume;
+            channel->getVolume(&currentVolume);
+            float ducked = dbToVolume(VolumeTodB(currentVolume) + duckDb); // duckDb is negative
+            channel->setVolume(ducked);
+
+            // Optional: store timer to restore after `durationSec` (implement async if needed)
+        }
+    }
+}
+
 void CAudioEngine::StopAllChannels() {
     for (auto& [channelId, channel] : sgpImplementation->mChannels) {
         channel->stop();
