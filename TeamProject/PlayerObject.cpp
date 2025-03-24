@@ -82,6 +82,7 @@ void PlayerObject::OnCollisionEnter(const CollisionInfo& collisionInfo){
 
 
 void PlayerObject::OnCollisionExit(const CollisionInfo& collisionInfo){
+    std::cout << "On Collision Exit" << std::endl;
     // Check if we are still colliding with the same object before removing it from the list
     bool stillColliding = false;
     for (auto obj : collidedObjects) {
