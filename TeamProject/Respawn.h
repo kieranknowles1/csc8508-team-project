@@ -6,7 +6,7 @@
 #include "GameObject.h"
 #include "PhysicsObject.h"
 #include "CollisionInfo.h"
-//#include "PlayerObject.h"
+#include "PlayerObject.h"
 
 #include <btBulletDynamicsCommon.h>
 #include <btBulletCollisionCommon.h>
@@ -38,8 +38,10 @@ public:
 	}
 
 	RespawnPoint* GetRandomRespawn(int playerID) {
-	/*	RespawnPoint* chosenSpawn = nullptr;
+		RespawnPoint* furthestSpawn = respawnPoints.at(0);
+		float minDist = 1000.0f;
 		float furthestDist = 0.0f;
+		std::vector<RespawnPoint*> chosenPoints;
 		for (RespawnPoint* point : respawnPoints) {
 			for (PlayerObject* player : players) {
 				if (player->GetWorldID() == playerID) {
@@ -48,22 +50,30 @@ public:
 				float currentDist = point->position.distance(player->GetPhysicsObject()->GetRigidBody()->getWorldTransform().getOrigin());
 				if (currentDist > furthestDist) {
 					furthestDist = currentDist;
-					chosenSpawn = point;
+					furthestSpawn = point;
+				}
+				if (currentDist > minDist) {
+					chosenPoints.push_back(point);
 				}
 			}
 		}
-		return chosenSpawn;*/
-		return respawnPoints.at(0);
+		if (chosenPoints.size() > 0) {
+			std::cout << chosenPoints.size() << std::endl;
+			return chosenPoints.at(rand() % chosenPoints.size()); // choose random from those far enough away
+		}
+		else {
+			return furthestSpawn; //none within min requirement - choose furthest possible
+		}
 	}
 
-	//void InsertPlayerObj(PlayerObject* playerObj) {
-		//players.push_back(playerObj);
-	//}
+	void InsertPlayerObj(PlayerObject* playerObj) {
+		players.push_back(playerObj);
+	}
 
 private:
 	inline static Respawn* instance = nullptr;
 	std::vector<RespawnPoint*> respawnPoints;
-	//std::vector<PlayerObject*> players;
+	std::vector<PlayerObject*> players;
 
 
 };

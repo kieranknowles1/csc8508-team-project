@@ -357,6 +357,7 @@ PlayerObject* TutorialGame::InitPlayer(btVector3 position, btVector3 upDir) {
 
     //newPlayer->SetIsAnimated(true); //maybe better to manage this wherever animations are being applied rather than here but for testing this is probably fine
     newPlayer->setRenderer(renderer); 
+    Respawn::GetInstance()->InsertPlayerObj(newPlayer);
 
     return newPlayer;
 }
