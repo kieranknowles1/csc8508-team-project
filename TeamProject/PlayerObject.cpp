@@ -12,16 +12,12 @@ void PlayerObject::Update(float dt) {
     rightDirection = CalculateRightDirection(upDirection);
     forwardDirection = CalculateForwardDirection(upDirection, rightDirection);
     updateGravity(dt);
-
-
     //Animation: 
     CorrectAnimation();
 
     if (animated == true) {
         renderObject->GetAnimation()->UpdateAnimation(dt);
     }
-  
-
 
     elapsedTime += dt;
 
@@ -82,13 +78,13 @@ void PlayerObject::OnCollisionEnter(const CollisionInfo& collisionInfo){
     }
 }
 
+
 void PlayerObject::OnCollisionExit(const CollisionInfo& collisionInfo){
 	auto it = std::find(collidedObjects.begin(), collidedObjects.end(), collisionInfo.otherObject);
 	if (it != collidedObjects.end()) {
         resetCollisionType();
 		collidedObjects.erase(it);
 		if (collided > 0) {
-           // std::cout << "EXIT LOSE COLLISION" << std::endl;
 			collided--;
 		}
 	}
@@ -105,14 +101,12 @@ void PlayerObject::OnCollisionStay(const CollisionInfo& collision){
 		if (angle > 25.0f) { // now too steep for floor
 			collidedObjects.erase(it);
 			if (collided > 0) {
-               // std::cout << "STAY LOSE COLLISION" << std::endl;
 				collided--;
 			}
 		}
 	}
 	else if (angle <= 25.0f) {
         // not counted as floor yet
-       // std::cout << "STAY GAIN COLLISION" << std::endl;
 		collided++;
 		collidedObjects.push_back(collision.otherObject);
 	}

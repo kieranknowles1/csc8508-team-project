@@ -87,7 +87,7 @@ namespace NCL {
 			//Rotation Variables
 			float rotateTime = 0.5f;
 
-
+			float airTimeCounter = 0.0f;
 			GameTechRendererInterface* renderer;
 			std::unique_ptr<Crosshair> crosshair;
 			std::unique_ptr<Scoreboard> scoreboard;

@@ -198,7 +198,6 @@ void PlayerController::HandleSliding(float dt) {
             camera->SetPosition(playerPos);
             player->SetGunTransform(camera->GetPitch(), camera->GetYaw(), playerPos);
         }
-        //CheckFloor(dt);
         btVector3 pastMovement = rb->getLinearVelocity();
         pastMovement += upDirection * -(gravityScale * dt);
         previousVelocity = rb->getLinearVelocity();
@@ -261,7 +260,6 @@ void PlayerController::RotationCalculations() {
     btQuaternion playerYaw = btQuaternion(btVector3(0, 1, 0), Maths::DegreesToRadians(yaw));
     btQuaternion finalRotation = camRotOffset * playerYaw;
     transformPlayer.setRotation(finalRotation);
-
     rb->setWorldTransform(transformPlayer);
     //finds player forward and right vectors
     btMatrix3x3 rotationMatrix(finalRotation);
@@ -311,15 +309,21 @@ void PlayerController::MovementCalculations(float dt) {
     float forwardMovement = directionalInput.y;
     float moveMulti = playerSpeed * (sprinting ? sprintMulti : 1) * ((player->getCollided() <= 0|| inAirTime > 0.0f) ? airMulti : 1);
     forwardMovement *= (forwardMovement <= 0) ? backwardsMulti : 1;
-    movement = (right * directionalInput.x * strafeMulti * moveMulti) + (forward * forwardMovement * moveMulti) + (0.1f*-upDirection);
+    movement = (right * directionalInput.x * strafeMulti * moveMulti) + (forward * forwardMovement * moveMulti);
     if (player->getCollided() <= 0 || inAirTime > 0.0f || onIce) {
         movement *= (airMulti * dt);
         movement += rb->getLinearVelocity();
     }
+    if (player->getCollided() > 0) {
+        airTimeCounter = 0;
+    }
 
     //animations
-    if (player->getCollided() <= 0 || inAirTime > 0.0f) {
-        player->SetAnimationState(AnimationState::FALLING);
+    if (player->getCollided() <= 0) {
+        airTimeCounter += dt;
+        if (airTimeCounter > 0.05f) {
+            player->SetAnimationState(AnimationState::FALLING);
+        }
     }
     else if (directionalInput.y >= 0.01f) {
         player->SetAnimationState(sprinting ? AnimationState::SPRINTING_FORWARD : AnimationState::WALKING_FORWARD);
