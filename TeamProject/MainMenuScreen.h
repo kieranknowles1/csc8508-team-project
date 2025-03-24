@@ -58,9 +58,7 @@ public:
         if (controller->GetDigital(Controller::DigitalControl::MenuUp)) {
             if (selection > 0) {
                 selection--;
-                int channelId = audioEngine.PlaySounds("MenuScroll.wav", Vector3(0, 0, 0), -12.0f);
-                audioEngine.SetChannelPitchMultiplier(channelId, 1.1f);
-                //audioEngine.PlaySounds("MenuScroll.wav", Vector3(0, 0, 0), -6.0f);
+                audioEngine.PlaySounds("MenuScroll.wav", Vector3(0, 0, 0), -12.0f);
             }
         }
         if (controller->GetDigital(Controller::DigitalControl::MenuConfirm)) {

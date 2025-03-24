@@ -43,7 +43,8 @@ namespace NCL::CSC8503 {
 				} while (selection < 8 && colourTaken[selection]); // Skip taken colors
 
 				if (selection != startSelection) {
-					audioEngine.PlaySounds("MenuScroll.wav", Vector3(0, 0, 0), -6.0f);
+					int channelId = audioEngine.PlaySounds("MenuScroll.wav", Vector3(0, 0, 0), -12.0f);
+					audioEngine.SetChannelPitchMultiplier(channelId, 0.9f);
 				}
 			}
 
@@ -59,7 +60,7 @@ namespace NCL::CSC8503 {
 				}
 
 				if (selection != startSelection) {
-					audioEngine.PlaySounds("MenuScroll.wav", Vector3(0, 0, 0), -6.0f);
+					audioEngine.PlaySounds("MenuScroll.wav", Vector3(0, 0, 0), -12.0f);
 				}
 			}
 
@@ -174,7 +175,8 @@ namespace NCL::CSC8503 {
 				} while (selection < 8 && colourTaken[selection]); // Skip taken colors
 
 				if (selection != startSelection) {
-					audioEngine.PlaySounds("MenuScroll.wav", Vector3(0, 0, 0), -6.0f);
+					int channelId = audioEngine.PlaySounds("MenuScroll.wav", Vector3(0, 0, 0), -12.0f);
+					audioEngine.SetChannelPitchMultiplier(channelId, 0.9f);
 				}
 			}
 
@@ -190,7 +192,7 @@ namespace NCL::CSC8503 {
 				}
 
 				if (selection != startSelection) {
-					audioEngine.PlaySounds("MenuScroll.wav", Vector3(0, 0, 0), -6.0f);
+					audioEngine.PlaySounds("MenuScroll.wav", Vector3(0, 0, 0), -12.0f);
 				}
 			}
 
