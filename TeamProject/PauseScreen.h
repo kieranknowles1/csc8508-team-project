@@ -30,13 +30,15 @@ public:
             if (controller->GetDigital(Controller::DigitalControl::MenuDown)) {
                 if (selection < 1) {  // Only increase if not at the last option
                     selection++;
-                    audioEngine.PlaySounds("MenuScroll.wav", game->getMainCam()->GetPosition(), -6.0f);
+                    //audioEngine.PlaySounds("MenuScroll.wav", game->getMainCam()->GetPosition(), -6.0f);
+                    int channelId = audioEngine.PlaySounds("MenuScroll.wav", game->getMainCam()->GetPosition(), -12.0f);
+                    audioEngine.SetChannelPitchMultiplier(channelId, 0.9f);
                 }
             }
             if (controller->GetDigital(Controller::DigitalControl::MenuUp)) {
                 if (selection > 0) {
                     selection--;
-                    audioEngine.PlaySounds("MenuScroll.wav", game->getMainCam()->GetPosition(), -6.0f);
+                    audioEngine.PlaySounds("MenuScroll.wav", game->getMainCam()->GetPosition(), -12.0f);
                 }
             }
             if (controller->GetDigital(Controller::DigitalControl::MenuConfirm)) {

@@ -85,6 +85,7 @@ namespace NCL {
 
 		private:
 
+			int heartbeatChannel = -1;
 			int beamSoundChannel = -1;
 			bool beamSoundPaused = false;
 

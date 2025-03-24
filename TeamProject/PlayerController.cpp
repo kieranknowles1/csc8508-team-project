@@ -379,6 +379,19 @@ void PlayerController::HandleHurtEffects() {
         renderer->SetVignetteIntesnity((1.75f * healthLossPercent));
     }
 
+    if (player->GetHealth() < 50.0f) {
+        // Only play if not already playing
+        if (heartbeatChannel == -1 || !audioEngine.IsPlaying(heartbeatChannel)) {
+            heartbeatChannel = audioEngine.PlaySounds("HeartbeatLoop.wav", camera->GetPosition(), -6.0f);
+        }
+    }
+    else {
+        // Stop heartbeat if health is back up
+        if (heartbeatChannel != -1) {
+            audioEngine.StopChannel(heartbeatChannel);
+            heartbeatChannel = -1;
+        }
+    }
 }
 
 void PlayerController::GetAllDirections() {

@@ -46,6 +46,7 @@ https://www.texturecan.com/
 Metallic Ting by GammaGool -- https://freesound.org/s/728088/ -- License: Creative Commons 0
 jump2.wav by LloydEvans09 -- https://freesound.org/s/187024/ -- License: Attribution 4.0
 Menu Selection Click by NenadSimic -- https://freesound.org/s/171697/ -- License: Creative Commons 0
+Heartbeat loop by .name -- https://freesound.org/s/418866/ -- License: Attribution 4.0
 
 ================================================================================
 Libraries

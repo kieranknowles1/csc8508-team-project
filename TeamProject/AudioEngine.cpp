@@ -169,6 +169,16 @@ std::string CAudioEngine::GetSoundNameByChannel(int nChannelId) {
     return "";
 }
 
+bool CAudioEngine::IsPlaying(int nChannelId) const {
+    auto it = sgpImplementation->mChannels.find(nChannelId);
+    if (it == sgpImplementation->mChannels.end()) return false;
+
+    bool isPlaying = false;
+    FMOD_RESULT result = it->second->isPlaying(&isPlaying);
+    ErrorCheck(result);
+    return isPlaying;
+}
+
 bool CAudioEngine::isPlayingByString(const std::string& soundName) {
     for (auto& [channelId, channel] : sgpImplementation->mChannels) {
         if (channel) {

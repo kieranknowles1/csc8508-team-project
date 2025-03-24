@@ -141,6 +141,10 @@ public:
 		return jumpPadHeight;
 }
 
+	float GetHealth() {
+		return health;
+	}
+
 	float health = 100.0f;
 
 	void setGun(GameObject* gunIn) { gun = gunIn; }
