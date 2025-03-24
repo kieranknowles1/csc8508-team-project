@@ -8,6 +8,7 @@
 #include "CollisionInfo.h"
 #include "Respawn.h"
 #include "MeshAnimation.h"
+#include "AnimationObject.h"
 
 #include "Colors.h"
 #include "RenderObject.h"
@@ -173,14 +174,19 @@ public:
 		return jumpPadHeight;
 	}
 
-	void SetAnimation(AnimationState animationIn) { animationState = animationIn; }
-	AnimationState GetAnimation() { return animationState; }
+	void SetAnimationState(AnimationState animationIn) { animationState = animationIn; } 
+	AnimationState GetAnimationState() { return animationState; } 
 
 	float health = 100.0f;
 
 	void setGun(GameObject* gunIn) { gun = gunIn; }
 	GameObject* getGun() {return gun;}
 	void SetGunTransform(float pitch, float yaw, btVector3 camPos);
+
+	void CorrectAnimation(); /////
+	void SetAnimationObject(AnimationObject* animation) {
+		currentAnimation = animation;
+	}
 
 private:
 
@@ -221,6 +227,8 @@ private:
 	float lastHit = 0;
 
 	GameTechRendererInterface* renderer;
+
+	AnimationObject* currentAnimation;
 
 
 };

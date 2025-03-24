@@ -60,7 +60,7 @@ void PlayerController::UpdateMovement(float dt) {
         inAirTime -= dt;
     }
     if (isSliding || slideTransition) {
-        player->SetAnimation(AnimationState::SLIDING);
+        player->SetAnimationState(AnimationState::SLIDING);
         return;
     }
     RotationCalculations();
@@ -318,23 +318,23 @@ void PlayerController::MovementCalculations(float dt) {
     }
 
     //animations
-    if (player->getCollided() <= 0) {
-        player->SetAnimation(AnimationState::FALLING);
+    if (player->getCollided() <= 0) { 
+        player->SetAnimationState(AnimationState::FALLING);
     }
-    if (directionalInput.y >= 0.01f) {
-        player->SetAnimation(sprinting ? AnimationState::SPRINTING_FORWARD : AnimationState::WALKING_FORWARD);
+    else if (directionalInput.y >= 0.01f) {
+        player->SetAnimationState(sprinting ? AnimationState::SPRINTING_FORWARD : AnimationState::WALKING_FORWARD);
     }
     else if (directionalInput.y <= -0.01f) {
-        player->SetAnimation(sprinting ? AnimationState::SPRINTING_BACK : AnimationState::WALKING_BACK);
+        player->SetAnimationState(sprinting ? AnimationState::SPRINTING_BACK : AnimationState::WALKING_BACK);
     }
     else if (directionalInput.x >= 0.01f) {
-        player->SetAnimation(sprinting ? AnimationState::SPRINTING_RIGHT : AnimationState::WALKING_RIGHT);
+        player->SetAnimationState(sprinting ? AnimationState::SPRINTING_RIGHT : AnimationState::WALKING_RIGHT);
     }
     else if (directionalInput.x <= -0.01f) {
-        player->SetAnimation(sprinting ? AnimationState::SPRINTING_LEFT : AnimationState::WALKING_LEFT);
+        player->SetAnimationState(sprinting ? AnimationState::SPRINTING_LEFT : AnimationState::WALKING_LEFT);
     }
     else {
-        player->SetAnimation(AnimationState::IDLE);
+        player->SetAnimationState(AnimationState::IDLE);
     }
 };
 
@@ -355,10 +355,10 @@ void PlayerController::HandleJumping() {
     }
     if (inAirTime > 0) {
         if (controller->GetDigital(Controller::DigitalControl::Sprint)) {
-            player->SetAnimation(AnimationState::JUMPING_SPRINT);
+            player->SetAnimationState(AnimationState::JUMPING_SPRINT);
         }
         else {
-            player->SetAnimation(AnimationState::JUMPING_STANDING);
+            player->SetAnimationState(AnimationState::JUMPING_STANDING);
         }
         
     }

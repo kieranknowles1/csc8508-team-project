@@ -52,8 +52,8 @@ set(SOURCES
     Crosshair.h
     Crosshair.cpp
     Respawn.h
-    AnimatedRenderObject.h
-    AnimatedRenderObject.cpp
+    AnimationObject.h
+    AnimationObject.cpp
     Overheat.h
     Overheat.cpp
 	SPGameController.h
