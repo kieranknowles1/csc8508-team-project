@@ -43,18 +43,22 @@ public:
 		float furthestDist = 0.0f;
 		std::vector<RespawnPoint*> chosenPoints;
 		for (RespawnPoint* point : respawnPoints) {
+			float closestPlayerDist = INFINITY;
 			for (PlayerObject* player : players) {
 				if (player->GetWorldID() == playerID) {
 					continue;
 				}
 				float currentDist = point->position.distance(player->GetPhysicsObject()->GetRigidBody()->getWorldTransform().getOrigin());
-				if (currentDist > furthestDist) {
-					furthestDist = currentDist;
-					furthestSpawn = point;
+				if (currentDist < closestPlayerDist) {
+					closestPlayerDist = currentDist;
 				}
-				if (currentDist > minDist) {
-					chosenPoints.push_back(point);
-				}
+			}
+			if (closestPlayerDist > furthestDist) {
+				furthestDist = closestPlayerDist;
+				furthestSpawn = point;
+			}
+			if (closestPlayerDist > minDist) {
+				chosenPoints.push_back(point);
 			}
 		}
 		if (chosenPoints.size() > 0) {
