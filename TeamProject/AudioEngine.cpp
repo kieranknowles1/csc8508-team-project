@@ -374,6 +374,24 @@ void CAudioEngine::SetChannelVolumeRamp(int channelId, bool enable) {
     ErrorCheck(result);
 }
 
+void CAudioEngine::SetChannelPitchRandom(int channelId, float minPitchScale, float maxPitchScale) {
+    auto tFoundIt = sgpImplementation->mChannels.find(channelId);
+    if (tFoundIt == sgpImplementation->mChannels.end()) {
+        return;
+    }
+
+    float baseFrequency = 0.0f;
+    if (tFoundIt->second->getFrequency(&baseFrequency) != FMOD_OK) {
+        return;
+    }
+
+    // Generate a random pitch scale within the range
+    float pitchScale = minPitchScale + static_cast <float> (rand()) / (static_cast <float> (RAND_MAX / (maxPitchScale - minPitchScale)));
+
+    float newFrequency = baseFrequency * pitchScale;
+    tFoundIt->second->setFrequency(newFrequency);
+}
+
 void CAudioEngine::SetChannelMute(int channelId, bool mute) {
     auto tFoundIt = sgpImplementation->mChannels.find(channelId);
     if (tFoundIt == sgpImplementation->mChannels.end()) {

@@ -51,13 +51,16 @@ public:
         if (controller->GetDigital(Controller::DigitalControl::MenuDown)) {
             if (selection < menuItems.size() - 1) {  // Only increase if not at the last option
                 selection++;
-                audioEngine.PlaySounds("MenuScroll.wav", Vector3(0, 0, 0), -6.0f);
+                int channelId = audioEngine.PlaySounds("MenuScroll.wav", Vector3(0, 0, 0), -6.0f);
+                audioEngine.SetChannelPitchRandom(channelId, 0.8f, 1.2f);
             }
         }
         if (controller->GetDigital(Controller::DigitalControl::MenuUp)) {
             if (selection > 0) {
                 selection--;
-                audioEngine.PlaySounds("MenuScroll.wav", Vector3(0, 0, 0), -6.0f);
+                int channelId = audioEngine.PlaySounds("MenuScroll.wav", Vector3(0, 0, 0), -6.0f);
+                audioEngine.SetChannelPitchRandom(channelId, 0.8f, 1.2f);
+                //audioEngine.PlaySounds("MenuScroll.wav", Vector3(0, 0, 0), -6.0f);
             }
         }
         if (controller->GetDigital(Controller::DigitalControl::MenuConfirm)) {
