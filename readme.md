@@ -38,11 +38,13 @@ Run `cmake` in a build directory. The following declarations must be added
 manually through the CLI:
 - `USE_SDL2=YES`
 - `FMOD_SDK_PATH=/path/to/fmod/install/api`
+- `CMAKE_C_COMPILER=clang` - only Clang is supported, GCC is known not to work
+- `CMAKE_CXX_COMPILER=clang++`
 
 ### PS5
 
 Run `configure-ps5.bat`. This requires the PS5 SDK to be installed which cannot
-be included for obvious reasons.
+be included for licensing reasons.
 
 ## Debug Controls
 
