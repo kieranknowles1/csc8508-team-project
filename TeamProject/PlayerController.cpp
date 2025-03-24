@@ -59,7 +59,10 @@ void PlayerController::UpdateMovement(float dt) {
         player->setCollided(0);
         inAirTime -= dt;
     }
-    if (isSliding||slideTransition) return;
+    if (isSliding || slideTransition) {
+        player->SetAnimation(AnimationState::SLIDING);
+        return;
+    }
     RotationCalculations();
  
     CameraMovement();
@@ -107,7 +110,6 @@ void PlayerController::HandleShooting(float dt) {
 }
 
 
-
 void PlayerController::FireShot(float dt) {
     // Convert camera pitch & yaw to radians
     float pitchRadians = Maths::DegreesToRadians(camera->GetPitch());
@@ -120,20 +122,20 @@ void PlayerController::FireShot(float dt) {
     btVector3 adjustedOffset = rotationMatrix * gunCameraOffset; // Apply rotation to the offset
 
    std::optional<ShotInfo> info = Shoot::GetInstance()->ShootBulletPlayer(player->getGun()->GetPhysicsObject()->GetRigidBody()->getWorldTransform().getOrigin() + adjustedOffset, forwardDir, bulletRotation, dt,laserID);
-    renderer->updateLaser(laserID, player->getGun()->GetPhysicsObject()->GetRigidBody()->getWorldTransform().getOrigin() + adjustedOffset, info.value().hitPos);
-    if (TutorialGame::GetServerInstance().has_value()) {
-        std::shared_ptr<Packet::LaserPacket> laserPacket = std::make_shared<Packet::LaserPacket>(
-            player->GetWorldID(),
-            player->getGun()->GetPhysicsObject()->GetRigidBody()->getWorldTransform().getOrigin() + adjustedOffset,
-            info.value().hitPos,
-            info.value().hitNormal,
-            player->GetLastPacketSequence((uint8_t)Packet::PacketType::LASER) + 1
-        );
-        player->UpdatePacketSequence((uint8_t)Packet::PacketType::LASER, laserPacket->GetSequenceNumber());
-        TutorialGame::GetServerInstance()->Broadcast(laserPacket);
-    }
-   
-
+   if (info != std::nullopt) {
+       renderer->updateLaser(laserID, player->getGun()->GetPhysicsObject()->GetRigidBody()->getWorldTransform().getOrigin() + adjustedOffset, info.value().hitPos);
+       if (TutorialGame::GetServerInstance().has_value()) {
+           std::shared_ptr<Packet::LaserPacket> laserPacket = std::make_shared<Packet::LaserPacket>(
+               player->GetWorldID(),
+               player->getGun()->GetPhysicsObject()->GetRigidBody()->getWorldTransform().getOrigin() + adjustedOffset,
+               info.value().hitPos,
+               info.value().hitNormal,
+               player->GetLastPacketSequence((uint8_t)Packet::PacketType::LASER) + 1
+           );
+           player->UpdatePacketSequence((uint8_t)Packet::PacketType::LASER, laserPacket->GetSequenceNumber());
+           TutorialGame::GetServerInstance()->Broadcast(laserPacket);
+       }
+   }
 }
 
 
@@ -314,6 +316,26 @@ void PlayerController::MovementCalculations(float dt) {
         movement *= (airMulti * dt);
         movement += rb->getLinearVelocity();
     }
+
+    //animations
+    if (player->getCollided() <= 0) {
+        player->SetAnimation(AnimationState::FALLING);
+    }
+    if (directionalInput.y >= 0.01f) {
+        player->SetAnimation(sprinting ? AnimationState::SPRINTING_FORWARD : AnimationState::WALKING_FORWARD);
+    }
+    else if (directionalInput.y <= -0.01f) {
+        player->SetAnimation(sprinting ? AnimationState::SPRINTING_BACK : AnimationState::WALKING_BACK);
+    }
+    else if (directionalInput.x >= 0.01f) {
+        player->SetAnimation(sprinting ? AnimationState::SPRINTING_RIGHT : AnimationState::WALKING_RIGHT);
+    }
+    else if (directionalInput.x <= -0.01f) {
+        player->SetAnimation(sprinting ? AnimationState::SPRINTING_LEFT : AnimationState::WALKING_LEFT);
+    }
+    else {
+        player->SetAnimation(AnimationState::IDLE);
+    }
 };
 
 
@@ -330,6 +352,15 @@ void PlayerController::HandleJumping() {
         }
         player->setCollided(0);
         inAirTime = 0.2f;
+    }
+    if (inAirTime > 0) {
+        if (controller->GetDigital(Controller::DigitalControl::Sprint)) {
+            player->SetAnimation(AnimationState::JUMPING_SPRINT);
+        }
+        else {
+            player->SetAnimation(AnimationState::JUMPING_STANDING);
+        }
+        
     }
 };
 
