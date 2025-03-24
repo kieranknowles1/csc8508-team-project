@@ -47,6 +47,11 @@ void SPGameController::InitLevel(int curLevel) {
 
     for (int i = 0; i < 5 + curLevel; i++) {
         AddWandererToWorld(bottom, Side::BOTTOM);
+        AddWandererToWorld(top, Side::TOP);
+        AddWandererToWorld(front, Side::FRONT);
+        AddWandererToWorld(back, Side::BACK);
+        AddWandererToWorld(left, Side::LEFT);
+        AddWandererToWorld(right, Side::RIGHT);
     }
 }
 
@@ -57,7 +62,7 @@ void SPGameController::Update(float dt) {
             [this](const Wanderer* wanderer) {
                 if (wanderer->isDeleted()) {
                     defeated++;
-                    score += 5 * mult;
+                    score += (4 + level) * mult;
                     std::cout << "Score: " << score << std::endl;
                     mult++;
                     multTimer = maxMultTimer;
@@ -69,9 +74,12 @@ void SPGameController::Update(float dt) {
     );
 
     multTimer -= dt;
-    if (multTimer <= 0) mult = 1;
+    if (multTimer <= 0) {
+        mult = 1;
+        multTimer = 0;
+    }
 
-    if (defeated > level) {
+    if (defeated > level * 3) {
         level++;
         defeated = 0;
         InitLevel(level);
