@@ -58,7 +58,6 @@ void PlayerObject::Update(float dt) {
 }
 
 void PlayerObject::OnCollisionEnter(const CollisionInfo& collisionInfo){
-    std::cout << "On Collision Enter" << std::endl;
 	btVector3 playerPos = this->GetPhysicsObject()->GetRigidBody()->getWorldTransform().getOrigin();
 	btVector3 objPos = collisionInfo.contactPointA;
 	btVector3 direction = (objPos - playerPos).normalized();
@@ -71,7 +70,6 @@ void PlayerObject::OnCollisionEnter(const CollisionInfo& collisionInfo){
             collisionType = Type::Ice;
         }
     }
-
     if (collisionInfo.otherObject->getType() == Type::JumpPad || collisionInfo.otherObject->getType() == Type::Slime) {
         collisionNormal = collisionInfo.contactNormal;
         collisionPoint = collisionInfo.contactPointA;
@@ -82,25 +80,14 @@ void PlayerObject::OnCollisionEnter(const CollisionInfo& collisionInfo){
 
 
 void PlayerObject::OnCollisionExit(const CollisionInfo& collisionInfo){
-    // Check if we are still colliding with the same object before removing it from the list
-    bool stillColliding = false;
-    for (auto obj : collidedObjects) {
-        if (obj == collisionInfo.otherObject) {
-            stillColliding = true;
-            break;
-        }
-    }
-
-    if (!stillColliding) {
+	auto it = std::find(collidedObjects.begin(), collidedObjects.end(), collisionInfo.otherObject);
+	if (it != collidedObjects.end()) {
         resetCollisionType();
-        auto it = std::find(collidedObjects.begin(), collidedObjects.end(), collisionInfo.otherObject);
-        if (it != collidedObjects.end()) {
-            collidedObjects.erase(it);
-            if (collided > 0) {
-                collided--;
-            }
-        }
-    }
+		collidedObjects.erase(it);
+		if (collided > 0) {
+			collided--;
+		}
+	}
 }
 
 void PlayerObject::OnCollisionStay(const CollisionInfo& collision){
