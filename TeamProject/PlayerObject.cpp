@@ -88,7 +88,7 @@ void PlayerObject::OnCollisionExit(const CollisionInfo& collisionInfo){
         resetCollisionType();
 		collidedObjects.erase(it);
 		if (collided > 0) {
-            std::cout << "EXIT LOSE COLLISION" << std::endl;
+           // std::cout << "EXIT LOSE COLLISION" << std::endl;
 			collided--;
 		}
 	}
@@ -105,14 +105,14 @@ void PlayerObject::OnCollisionStay(const CollisionInfo& collision){
 		if (angle > 25.0f) { // now too steep for floor
 			collidedObjects.erase(it);
 			if (collided > 0) {
-                std::cout << "STAY LOSE COLLISION" << std::endl;
+               // std::cout << "STAY LOSE COLLISION" << std::endl;
 				collided--;
 			}
 		}
 	}
 	else if (angle <= 25.0f) {
         // not counted as floor yet
-        std::cout << "STAY GAIN COLLISION" << std::endl;
+       // std::cout << "STAY GAIN COLLISION" << std::endl;
 		collided++;
 		collidedObjects.push_back(collision.otherObject);
 	}

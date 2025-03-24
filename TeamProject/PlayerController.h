@@ -100,7 +100,7 @@ namespace NCL {
 			bool rotationChanging = false;
 			bool thirdPerson = false;
 			float spaceCount = 0;
-			float inAirTime = 0;
+			float inAirTime = 0.0f;
 			btDiscreteDynamicsWorld* bulletWorld;
 			PlayerObject* player;
 			const Controller* controller = nullptr;
