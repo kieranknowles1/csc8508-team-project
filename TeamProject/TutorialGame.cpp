@@ -44,8 +44,6 @@ TutorialGame::TutorialGame(GameTechRendererInterface* renderer, Controller* cont
     InitCamera();
     InitWorld();
 
-    freeCam = true; //AI debug to be removed
-
 }
 
 /*

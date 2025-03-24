@@ -1,5 +1,6 @@
 #include "SPGameController.h"
 #include "TutorialGame.h"
+#include <algorithm>
 
 using namespace NCL;
 using namespace CSC8503;
@@ -45,7 +46,7 @@ SPGameController::SPGameController(GameObject* p, TutorialGame* g, GameTechRende
 void SPGameController::InitLevel(int curLevel) {
     ClearAIs();
 
-    for (int i = 0; i < 5 + curLevel; i++) {
+    for (int i = 0; (i < std::max(5 + curLevel, 49)); i++) {
         AddWandererToWorld(bottom, Side::BOTTOM);
         AddWandererToWorld(top, Side::TOP);
         AddWandererToWorld(front, Side::FRONT);
@@ -104,7 +105,7 @@ void SPGameController::ClearAIs() {
 
 Wanderer* SPGameController::AddWandererToWorld(NavMesh* navMesh, Side side) {
     if (laserIDs.size() == 0) {
-        std::cout << "No AI Laser IDs" << std::endl;
+        //std::cout << "No AI Laser IDs" << std::endl;
         return nullptr;
     }
     Wanderer* wanderer = new Wanderer(player, navMesh, side, GetIDFromPool(), renderer);
