@@ -16,25 +16,33 @@ void SimpleFont::BuildVerticesForString(const std::string& text, const Maths::Ve
     float currentX = startPos.x;
     float currentY = startPos.y;
 
+    // `reserve` is used to pre-allocate memory for the vectors to avoid reallocations
     positions.reserve(positions.size() + (text.length() * 6));
     colours.reserve(colours.size() + (text.length() * 6));
     texCoords.reserve(texCoords.size() + (text.length() * 6));
 
+    // Iterate through each character in the string
     for (auto ch : text) {
+        // Handle newlines
         if (ch == '\n') {
             currentX = startPos.x;
             currentY += 0.1f * size;
         }
+        // Skip carriage returns
         if (ch == '\r') continue;
+
+        // Find the character glyph data in the map
         auto data = characters.find(ch);
         if (data == characters.end()) continue;
         auto& info = data->second;
 
+        // Calculate the positions of the four corners of the character quad
         Vector3 topLeft = Vector3(currentX, currentY, 0) * size;
         Vector3 bottomRight = topLeft + Vector3(info.size, 0) * size;
         Vector3 bottomLeft(topLeft.x, bottomRight.y, 0);
         Vector3 topRight(bottomRight.x, topLeft.y, 0);
 
+        // Calculate the UVs (screen-space positions) for the character quad
         Vector2 uvBottomLeft(info.uvTopLeft.x, info.uvBottomRight.y);
         Vector2 uvTopRight(info.uvBottomRight.x, info.uvTopLeft.y);
 
@@ -46,6 +54,7 @@ void SimpleFont::BuildVerticesForString(const std::string& text, const Maths::Ve
         // topLeft -> bottomLeft -> topRight
         // topRight -> bottomRight -> bottomLeft
 
+        // Store vertex data for the quad into the buffers
         positions.push_back(topLeft);
         texCoords.push_back(info.uvTopLeft);
         positions.push_back(bottomLeft);
@@ -62,6 +71,7 @@ void SimpleFont::BuildVerticesForString(const std::string& text, const Maths::Ve
 
         // TODO: Handle advance properly
         //currentX += (topRight.x - topLeft.x);
+        // Moves the cursor to the right based on the character's width/advance
         currentX += (info.advance / 64) / ScreenSize.x;
     }
 }
@@ -69,13 +79,20 @@ void SimpleFont::BuildVerticesForString(const std::string& text, const Maths::Ve
 void SimpleFont::BuildInterleavedVerticesForString(const std::string& text, const Maths::Vector2& startPos, const Maths::Vector4& colour, float size, std::vector<InterleavedTextVertex>& vertices)
 {
     // Rich's code duplicated all of this, so consider this version less bad
+    // Create the vertex data for the string
     std::vector<Vector3> positions;
     std::vector<Vector4> colours;
     std::vector<Vector2> uvs;
+
+    // Calls BuildVerticesForString to generate the vertex data to fill the vectors (be interleaved)
+    // based on the input text
     BuildVerticesForString(text, startPos, colour, size, positions, uvs, colours);
+
+    // Asserts that all vectors have the same size to ensure data consistency
     assert(positions.size() == colours.size());
     assert(positions.size() == uvs.size());
 
+    // Loops through the filled vectors, creating InterleavedTextVertex objects/structs
     for (int i = 0; i < positions.size(); i++) {
         InterleavedTextVertex vtx;
         vtx.colour = colours[i];
@@ -103,12 +120,14 @@ int nextPower2(int i) {
 }
 
 int SimpleFont::InitializeFreeType(const std::string& filename, std::shared_ptr<Texture> texture) {
+    // Initialize FreeType library
     FT_Library lib;
     if (FT_Init_FreeType(&lib)) {
         std::cout << "ERROR::FREETYPE: Could not init FreeType Library" << std::endl;
         return -1;
     }
 
+    // Load a font face from a file
     FT_Face face;
     if (FT_New_Face(lib, (Assets::FONTSSDIR + filename).c_str(), 0, &face)) {
         std::cout << "ERROR::FREETYPE: Failed to load font" << std::endl;
@@ -116,6 +135,7 @@ int SimpleFont::InitializeFreeType(const std::string& filename, std::shared_ptr<
         return -1;
     }
 
+    // Sets the size of the glyph in pixels
     FT_Set_Pixel_Sizes(face, 0, 48); // 0 width lets FreeType calculate the width based on the height
 
     std::vector<GlyphData> glyphs;
@@ -123,6 +143,8 @@ int SimpleFont::InitializeFreeType(const std::string& filename, std::shared_ptr<
 
     // Setting FT_LOAD_RENDER flag to render the character as an 8-bit grayscale bitmap
     // This is required to extract the glyph's bitmap data and can be accessed through face->glyph->bitmap
+    
+    // Loop through all ASCII characters and extract the glyphs
     for (unsigned char c = StartChar; c < EndChar; c++)
     {
         // load character glyph
@@ -131,6 +153,8 @@ int SimpleFont::InitializeFreeType(const std::string& filename, std::shared_ptr<
             std::cout << "ERROR::FREETYPE: Failed to load Glyph" << std::endl;
             continue;
         }
+
+        // Store the glyph data
         GlyphData data;
         data.ch = c;
         data.advance = face->glyph->advance.x;
@@ -163,21 +187,26 @@ int SimpleFont::InitializeFreeType(const std::string& filename, std::shared_ptr<
     memset(texture->texData, 0, bytes);
 
     Vector2 pixelSize(1.0f / texture->width, 1.0f / texture->height);
+    // Loop through all the glyphs and copy the data into the texture
     for (int i = 0; i < glyphs.size(); i++) {
+        // Get the glyph data
         auto& glyph = glyphs[i];
         int row = int(i / AtlasSize);
         int col = i % AtlasSize;
         char* dataBegin = texture->texData + (row * texture->width * maxSize.y) + (col * maxSize.x);
 
+        // Copy the glyph data into the texture
         for (int y = 0; y < glyph.size.y; y++) {
             memcpy(dataBegin + (y * texture->width), glyph.data.data() + (y * glyph.size.x), glyph.size.x);
         }
 
+        // Store the character data
         Character ch;
         Vector2 sizeVec = Vector2(glyph.size.x, glyph.size.y);
         ch.size = sizeVec / ScreenSize;
         ch.bearing = glyph.bearing;
 
+        // Calculate the UVs for the character
         int pixelsLeft = col * maxSize.x;
         int pixelsTop = row * maxSize.y;
 
@@ -185,9 +214,11 @@ int SimpleFont::InitializeFreeType(const std::string& filename, std::shared_ptr<
         ch.uvBottomRight = ch.uvTopLeft + (pixelSize * sizeVec);
         ch.advance = glyph.advance;
 
+        // Store the character in the map
         characters[glyph.ch] = ch;
     }
 
+    // Upload the texture to the GPU
     texture->upload();
 
     // clear the face and free the FreeType library
