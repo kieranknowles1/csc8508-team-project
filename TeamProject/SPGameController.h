@@ -57,6 +57,9 @@ namespace NCL {
             int level;
             void ClearAIs();
             int defeated;
+            int mult = 1;
+            float multTimer = 5.0f;
+            float maxMultTimer = 5.0f;
 
             void InitLevel(int curLevel);
             

@@ -57,12 +57,19 @@ void SPGameController::Update(float dt) {
             [this](const Wanderer* wanderer) {
                 if (wanderer->isDeleted()) {
                     defeated++;
+                    score += 5 * mult;
+                    std::cout << "Score: " << score << std::endl;
+                    mult++;
+                    multTimer = maxMultTimer;
                     return true;
                 }
                 return false;
             }),
         wanderers.end()
     );
+
+    multTimer -= dt;
+    if (multTimer <= 0) mult = 1;
 
     if (defeated > level) {
         level++;
