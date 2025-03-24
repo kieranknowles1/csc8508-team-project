@@ -321,7 +321,7 @@ void PlayerController::MovementCalculations(float dt) {
     //animations
     if (player->getCollided() <= 0) {
         airTimeCounter += dt;
-        if (airTimeCounter > 0.05f) {
+        if (airTimeCounter > 0.20f) { //0.05
             player->SetAnimationState(AnimationState::FALLING);
         }
     }
