@@ -11,21 +11,25 @@ namespace NCL {
 
 		class SimpleFont {
 		public:
+            // A glyph that hasn't yet been inserted into an atlas
+            // sizes are in pixels
             struct GlyphData {
-                Vector2ui size;
-                Vector2 bearing;
-                int advance;
+                Vector2ui size; // Size of data
+                Vector2i bearing; // Offset from baseline to top/left
+                float advance; // Offset to reach the next glyph
                 std::vector<char> data;
                 char ch;
             };
 
-            // Metrics of a character glyph
+            // A reference to a glyph in an atlas
+            // sizes are in screens, (arbritray unit, but consistent across resolutions)
+            // easier to work with in NDC space
             struct Character {
-                Vector2 size;      // Size of glyph
+                Vector2 size; // Size of glyph
                 Vector2   bearing;   // Offset from baseline to left/top of glyph
                 Vector2 uvTopLeft;
                 Vector2 uvBottomRight;
-                unsigned int advance;   // Offset to advance to next glyph
+                float advance;   // Offset to advance to next glyph
             };
 
 

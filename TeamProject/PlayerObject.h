@@ -23,6 +23,38 @@ enum class PlayerState {
 	ALIVE
 };
 
+enum AnimationState { // In order of importance - e.g. sliding overrides falling if player is doing both at once
+	JUMPING_SPRINT,
+	JUMPING_STANDING,
+	SLIDING,
+	FALLING,
+	SPRINTING_FORWARD,
+	SPRINTING_BACK,
+	SPRINTING_LEFT,
+	SPRINTING_RIGHT,
+	WALKING_FORWARD,
+	WALKING_BACK,
+	WALKING_LEFT,
+	WALKING_RIGHT,
+	IDLE
+};
+constexpr std::string_view AnimationNames[] = // For printing - e.g. std::cout << "ANIMATED STATE: " << AnimationNames[animationState] << std::endl;
+{
+	"JUMPING_SPRINT",
+	"JUMPING_STANDING",
+	"SLIDING",
+	"FALLING",
+	"SPRINTING_FORWARD",
+	"SPRINTING_BACK",
+	"SPRINTING_LEFT",
+	"SPRINTING_RIGHT",
+	"WALKING_FORWARD",
+	"WALKING_BACK",
+	"WALKING_LEFT",
+	"WALKING_RIGHT",
+	"IDLE"
+};
+
 // Player class derived from GameObject
 class PlayerObject : public GameObject {
 public:
@@ -126,15 +158,8 @@ public:
 		return jumpPadHeight;
 	}
 
-	float getYawOverride(float yawIn) {
-		if (yawOverride != -1000.0f) {
-			return yawOverride;
-		}
-		else {
-			yawOverride = -1000.0f;
-			return yawIn;
-		}
-	}
+	void SetAnimation(AnimationState animationIn) { animationState = animationIn; }
+	AnimationState GetAnimation() { return animationState; }
 
 	float health = 100.0f;
 
@@ -169,6 +194,7 @@ private:
 	bool rotationChanging = false;
     btVector3 gunCameraOffset = btVector3(3.0, -1.0, 1.5); // x axis is forward (front +ve/ back -ve), y is up, z is right (left -ve/ right +ve)
 	GameObject* gun;
+	AnimationState animationState = AnimationState::IDLE;
 
 
 	btVector3 CalculateRightDirection(btVector3 upDir);
