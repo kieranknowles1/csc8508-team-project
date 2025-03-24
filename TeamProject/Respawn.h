@@ -38,6 +38,7 @@ public:
 
 
 	RespawnPoint* GetRandomRespawn() {
+		std::cout << "RESPAWNS: " << respawnPoints.size() << std::endl;
 		int ID = rand() % respawnPoints.size();
 		return respawnPoints.at(ID);
 	}
