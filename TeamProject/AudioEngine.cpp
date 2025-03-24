@@ -255,6 +255,14 @@ void CAudioEngine::SetChannelPitchMultiplier(int channelId, float multiplier) {
     }
 }
 
+void CAudioEngine::SetChannelPitch(int channelId, float pitch) {
+    auto it = sgpImplementation->mChannels.find(channelId);
+    if (it != sgpImplementation->mChannels.end() && it->second) {
+        FMOD_RESULT result = it->second->setPitch(pitch);
+        ErrorCheck(result);
+    }
+}
+
 //Reduce volume of all non-essential sounds temporarily
 void CAudioEngine::DuckVolume(float duckDb, float durationSec) {
     for (auto& [id, channel] : sgpImplementation->mChannels) {

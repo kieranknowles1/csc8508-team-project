@@ -93,6 +93,7 @@ public:
 	void SetChannelFrequencyHz(int channelId, float frequency);
 	void SetChannelPitchMultiplier(int channelId, float multiplier);
 	void SetChannelPitchRandom(int channelId, float minPitchScale, float maxPitchScale);
+	void SetChannelPitch(int channelId, float pitch);
 	void DuckVolume(float duckDb, float durationSec);
 	bool IsPlaying(int nChannelId) const;
 	bool isPlayingByString(const std::string& soundName);

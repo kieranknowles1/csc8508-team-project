@@ -371,6 +371,7 @@ void PlayerController::HandleJumping() {
 void PlayerController::HandleHurtEffects() {
     renderer->SetVignetteOn(true);
     float healthLossPercent = (player->GetMaxHealth() - player->health) / player->GetMaxHealth();
+
     if (healthLossPercent <= 0.001f) {
         renderer->SetVignetteOn(false);
     }
@@ -380,13 +381,17 @@ void PlayerController::HandleHurtEffects() {
     }
 
     if (player->GetHealth() < 50.0f) {
-        // Only play if not already playing
         if (heartbeatChannel == -1 || !audioEngine.IsPlaying(heartbeatChannel)) {
             heartbeatChannel = audioEngine.PlaySounds("HeartbeatLoop.wav", camera->GetPosition(), -6.0f);
         }
+
+        // Scale pitch based on low health (e.g. from 1.0 to 1.5 as health goes from 50 -> 0)
+        float lowHealthRatio = 1.0f - (player->GetHealth() / 50.0f); // 0 to 1
+        float pitch = 1.0f + (lowHealthRatio * 1.0f); // pitch from 1.0 to 1.5
+
+        audioEngine.SetChannelPitch(heartbeatChannel, pitch); // You'll define this function below
     }
     else {
-        // Stop heartbeat if health is back up
         if (heartbeatChannel != -1) {
             audioEngine.StopChannel(heartbeatChannel);
             heartbeatChannel = -1;

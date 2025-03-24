@@ -145,7 +145,7 @@ public:
 		return health;
 	}
 
-	float health = 100.0f;
+	float health = 10.0f;
 
 	void setGun(GameObject* gunIn) { gun = gunIn; }
 	GameObject* getGun() {return gun;}
