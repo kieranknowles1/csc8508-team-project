@@ -88,6 +88,7 @@ void PlayerObject::OnCollisionExit(const CollisionInfo& collisionInfo){
         resetCollisionType();
 		collidedObjects.erase(it);
 		if (collided > 0) {
+            std::cout << "EXIT LOSE COLLISION" << std::endl;
 			collided--;
 		}
 	}
@@ -104,12 +105,14 @@ void PlayerObject::OnCollisionStay(const CollisionInfo& collision){
 		if (angle > 25.0f) { // now too steep for floor
 			collidedObjects.erase(it);
 			if (collided > 0) {
+                std::cout << "STAY LOSE COLLISION" << std::endl;
 				collided--;
 			}
 		}
 	}
 	else if (angle <= 25.0f) {
         // not counted as floor yet
+        std::cout << "STAY GAIN COLLISION" << std::endl;
 		collided++;
 		collidedObjects.push_back(collision.otherObject);
 	}
@@ -273,72 +276,8 @@ void PlayerObject::SetGunTransform(float pitch, float yaw, btVector3 camPos) {
 void PlayerObject::CorrectAnimation() {
     //to be called in update. Checks if the animation matches the state, if not sets it to the right animation. Hopefully means it is only set when state changes.#
 
-    switch (animationState) {
-    case (AnimationState::JUMPING_SPRINT):
-        if (renderObject->GetAnimation() != currentAnimation->GetRunningJump()) {
-            renderObject->SetAnimation(currentAnimation->GetRunningJump());
-        }
-        break;
-    case (AnimationState::JUMPING_STANDING):
-        if (renderObject->GetAnimation() != currentAnimation->GetStandingJump()) {
-            renderObject->SetAnimation(currentAnimation->GetStandingJump());
-        }
-        break;
-    case (AnimationState::SLIDING):
-        if (renderObject->GetAnimation() != currentAnimation->GetSliding()) {
-            renderObject->SetAnimation(currentAnimation->GetSliding());
-        }
-        break;
-    case (AnimationState::FALLING):
-        if (renderObject->GetAnimation() != currentAnimation->GetFalling()) {
-            renderObject->SetAnimation(currentAnimation->GetFalling());
-        }
-        break;
-    case (AnimationState::SPRINTING_FORWARD):
-        if (renderObject->GetAnimation() != currentAnimation->GetRun()) {
-            renderObject->SetAnimation(currentAnimation->GetRun());
-        }
-        break;
-    case (AnimationState::SPRINTING_BACK):
-        if (renderObject->GetAnimation() != currentAnimation->GetRunBack()) {
-            renderObject->SetAnimation(currentAnimation->GetRunBack());
-        }
-        break;
-    case (AnimationState::SPRINTING_LEFT):
-        if (renderObject->GetAnimation() != currentAnimation->GetStrafeLeft()) { //Currently using standard strafe left and right even when sprinting
-            renderObject->SetAnimation(currentAnimation->GetStrafeLeft());
-        }
-        break;
-    case (AnimationState::SPRINTING_RIGHT):
-        if (renderObject->GetAnimation() != currentAnimation->GetStrafeRight()) {
-            renderObject->SetAnimation(currentAnimation->GetStrafeRight());
-        }
-        break;
-    case (AnimationState::WALKING_FORWARD):
-        if (renderObject->GetAnimation() != currentAnimation->GetWalk()) {
-            renderObject->SetAnimation(currentAnimation->GetWalk());
-        }
-        break;
-    case (AnimationState::WALKING_BACK):
-        if (renderObject->GetAnimation() != currentAnimation->GetWalkBack()) {
-            renderObject->SetAnimation(currentAnimation->GetWalkBack());
-        }
-        break;
-    case (AnimationState::WALKING_LEFT):
-        if (renderObject->GetAnimation() != currentAnimation->GetStrafeLeft()) {
-            renderObject->SetAnimation(currentAnimation->GetStrafeLeft());
-        }
-        break;
-    case (AnimationState::WALKING_RIGHT):
-        if (renderObject->GetAnimation() != currentAnimation->GetStrafeRight()) {
-            renderObject->SetAnimation(currentAnimation->GetStrafeRight());
-        }
-        break;
-    case (AnimationState::IDLE):
-        if (renderObject->GetAnimation() != currentAnimation->GetIdle()) {
-            renderObject->SetAnimation(currentAnimation->GetStrafeRight());
-        }
-        break;
+    if (renderObject->GetAnimation() != animationObject->getAnimation(animationState)) {
+        renderObject->SetAnimation(animationObject->getAnimation(animationState));
     }
- 
+
 }

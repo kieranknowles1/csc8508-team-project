@@ -2,6 +2,7 @@
 #include "AudioEngine.h"
 #include "TutorialGame.h"
 #include "Multiplayer/GamePackets.hpp"
+#include "AnimationObject.h"
 
 
 using namespace NCL;
@@ -56,7 +57,6 @@ void PlayerController::UpdateMovement(float dt) {
     HandleSliding(dt);
 
     if (inAirTime > 0) {
-        player->setCollided(0);
         inAirTime -= dt;
     }
     if (isSliding || slideTransition) {
@@ -285,7 +285,7 @@ void PlayerController::CameraMovement() {
 
 //if on ground, movement based on floor angle
 void PlayerController::GroundNormalCalculations() {
-    if (player->getCollided() > 0) {
+    if (player->getCollided() > 0 && inAirTime <=0.0f) {
         btVector3 groundNormal = FindFloorNormal();
         if (groundNormal != btVector3(0, 0, 0)) {
             float cosAngleThreshold = cos(btRadians(50.0f));
@@ -309,16 +309,16 @@ void PlayerController::MovementCalculations(float dt) {
     Vector2 directionalInput = getDirectionalInput();
     bool sprinting = controller->GetDigital(Controller::DigitalControl::Sprint);
     float forwardMovement = directionalInput.y;
-    float moveMulti = playerSpeed * (sprinting ? sprintMulti : 1) * (player->getCollided() <= 0 ? airMulti : 1);
+    float moveMulti = playerSpeed * (sprinting ? sprintMulti : 1) * ((player->getCollided() <= 0|| inAirTime >= 0.0f) ? airMulti : 1);
     forwardMovement *= (forwardMovement <= 0) ? backwardsMulti : 1;
     movement = (right * directionalInput.x * strafeMulti * moveMulti) + (forward * forwardMovement * moveMulti);
-    if (player->getCollided() <= 0 || onIce) {
+    if (player->getCollided() <= 0 || inAirTime >= 0.0f || onIce) {
         movement *= (airMulti * dt);
         movement += rb->getLinearVelocity();
     }
 
     //animations
-    if (player->getCollided() <= 0) { 
+    if (player->getCollided() <= 0 || inAirTime >= 0.0f) {
         player->SetAnimationState(AnimationState::FALLING);
     }
     else if (directionalInput.y >= 0.01f) {
@@ -350,7 +350,6 @@ void PlayerController::HandleJumping() {
         else {
             movement += (jumpHeight * upDirection);
         }
-        player->setCollided(0);
         inAirTime = 0.2f;
     }
     if (inAirTime > 0) {

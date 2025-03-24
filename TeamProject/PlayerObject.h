@@ -25,43 +25,14 @@ enum class PlayerState {
 	ALIVE
 };
 
-enum AnimationState { // In order of importance - e.g. sliding overrides falling if player is doing both at once
-	JUMPING_SPRINT,
-	JUMPING_STANDING,
-	SLIDING,
-	FALLING,
-	SPRINTING_FORWARD,
-	SPRINTING_BACK,
-	SPRINTING_LEFT,
-	SPRINTING_RIGHT,
-	WALKING_FORWARD,
-	WALKING_BACK,
-	WALKING_LEFT,
-	WALKING_RIGHT,
-	IDLE
-};
-constexpr std::string_view AnimationNames[] = // For printing - e.g. std::cout << "ANIMATED STATE: " << AnimationNames[animationState] << std::endl;
-{
-	"JUMPING_SPRINT",
-	"JUMPING_STANDING",
-	"SLIDING",
-	"FALLING",
-	"SPRINTING_FORWARD",
-	"SPRINTING_BACK",
-	"SPRINTING_LEFT",
-	"SPRINTING_RIGHT",
-	"WALKING_FORWARD",
-	"WALKING_BACK",
-	"WALKING_LEFT",
-	"WALKING_RIGHT",
-	"IDLE"
-};
 
 // Player class derived from GameObject
 class PlayerObject : public GameObject {
 public:
 
-
+	~PlayerObject() {
+		delete animationObject;
+	}
 	void Update(float dt) override;
 
 	void OnCollisionEnter(const CollisionInfo& collisionInfo) override;
@@ -184,8 +155,8 @@ public:
 	void SetGunTransform(float pitch, float yaw, btVector3 camPos);
 
 	void CorrectAnimation(); /////
-	void SetAnimationObject(AnimationObject* animation) {
-		currentAnimation = animation;
+	void CreateAnimationObject() {
+		animationObject = new AnimationObject(this);
 	}
 
 private:
@@ -228,7 +199,7 @@ private:
 
 	GameTechRendererInterface* renderer;
 
-	AnimationObject* currentAnimation;
+	AnimationObject* animationObject;
 
 
 };
