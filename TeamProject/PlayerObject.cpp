@@ -95,7 +95,8 @@ void PlayerObject::UpdateFromWorldState(float dt) {
             lerp(currentUpVector.y(), targetUpVector.y(), weight),
             lerp(currentUpVector.z(), targetUpVector.z(), weight)
         );
-        upDirection = interpolated;
+
+        setUpDirection(interpolated);
     }
 }
 
