@@ -69,7 +69,6 @@ set(SOURCES
     Profiler.cpp
     Profiler.h
 
-    Score.cpp
     Score.h
     Scoreboard.cpp
     Scoreboard.h
