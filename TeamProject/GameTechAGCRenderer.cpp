@@ -255,29 +255,31 @@ void GameTechAGCRenderer::DrawObjects() {
 	AGCMesh* prevMesh = (AGCMesh*)frameObjects[0]->GetMesh();
 	int instanceCount = 0;
 
-	auto drawInstances = [&](AGCMesh* mesh) {
-		mesh->BindVertexBuffers(frameContext->m_bdr.getStage(sce::Agc::ShaderType::kGs));
+	// Draw all instances of the current mesh that have not yet been rendered
+	auto drawPendingInstances = [&]() {
+		prevMesh->BindVertexBuffers(frameContext->m_bdr.getStage(sce::Agc::ShaderType::kGs));
 		uint32_t* objID = static_cast<uint32_t*>(frameContext->m_dcb.allocateTopDown(sizeof(uint32_t), sce::Agc::Alignment::kBuffer));
 		*objID = startingIndex;
 		frameContext->m_bdr.getStage(sce::Agc::ShaderType::kGs).setUserSrtBuffer(objID, 1);
 
 		DrawBoundMeshInstanced(*frameContext, *prevMesh, instanceCount);
+
+		startingIndex += instanceCount;
+		instanceCount = 0;
 	};
 
 	for (auto obj : frameObjects) {
 		AGCMesh* objectMesh = (AGCMesh*)obj->GetMesh();
 
-		//The new mesh is different than previous meshes, flush out the old list
-		if( prevMesh != objectMesh) {
-			drawInstances(prevMesh);
-			startingIndex += instanceCount;
-			instanceCount = 0;
+		// If the new mesh is different than previous meshes, flush out the old list
+		if (prevMesh != objectMesh) {
+			drawPendingInstances();
 		}
 		prevMesh = objectMesh;
 		instanceCount += objectMesh->GetSubMeshCount();
 	}
 
-	drawInstances(prevMesh);
+	drawPendingInstances();
 	// Check that we used all the buffers we expected
 	assert(instanceCount + startingIndex == currentFrame->objects.count);
 }
