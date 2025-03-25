@@ -32,6 +32,7 @@ public:
     void InitScoreboard();
     void UpdateScoreboardText();
     void UpdatePing();
+    void PopulateScoreboard();
 
     void render(std::vector<UiSprite>& sprites) override;
     void render(std::vector<UiText>& texts) override;

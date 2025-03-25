@@ -1,9 +1,6 @@
 #include "Scoreboard.h"
 
 Scoreboard::Scoreboard() {
-
-	AddPlayer({ "Player1", 10, TeamColor::RED, 1 });
-	AddPlayer({ "Player2", 20, TeamColor::BLUE, 2 });
     InitScoreboard();
 }
 
@@ -42,7 +39,21 @@ void Scoreboard::render(std::vector<UiText>& texts) {
     }
 }
 
+void Scoreboard::PopulateScoreboard() {
+	players.clear();
+	for (unsigned int i = 0; i < 8; ++i) {
+		Player player;
+		player.name = "Player " + std::to_string(i + 1);
+		player.score = 0;
+		player.color = static_cast<TeamColor>(i % 3);
+		player.playerID = i;
+		player.ping = 0;
+		players.push_back(player);
+	}
+}
+
 void Scoreboard::InitScoreboard() {
+	PopulateScoreboard();
     Vector2 boxSize = { scoreboardSize.x / columns, scoreboardSize.y / 9 };
 
     for (int i = 0; i < rows; ++i) {
