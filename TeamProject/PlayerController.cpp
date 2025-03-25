@@ -193,7 +193,7 @@ void PlayerController::HandleSliding(float dt) {
         btVector3 playerPos = transformPlayerMotion.getOrigin();
 
         playerPos -= forward * std::lerp(isSliding ? 0 : slidingCameraBackwards, isSliding ? slidingCameraBackwards : 0, slideFactor);
-        playerPos += upDirection * std::lerp(isSliding ? cameraHeight : slidingCameraHeight, isSliding ? slidingCameraHeight : cameraHeight, slideFactor);
+        playerPos += upDirection * std::lerp(isSliding ? camOffset.y() : slidingCameraHeight, isSliding ? slidingCameraHeight : camOffset.y(), slideFactor);
         if (!thirdPerson) {
             camera->SetPosition(playerPos);
             player->SetGunTransform(camera->GetPitch(), camera->GetYaw(), playerPos);
@@ -274,7 +274,9 @@ void PlayerController::CameraMovement() {
     btTransform transformPlayerMotion;
     player->GetPhysicsObject()->GetMotionState()->getWorldTransform(transformPlayerMotion);
     btVector3 playerCamPos = transformPlayerMotion.getOrigin();
-    playerCamPos += upDirection * cameraHeight;
+    playerCamPos += camOffset.x() * right;
+    playerCamPos += camOffset.y() * up;
+    playerCamPos += camOffset.z() * forward;
     if (!slideTransition && !thirdPerson) {
         camera->SetPosition(playerCamPos);
         player->SetGunTransform(camera->GetPitch(), camera->GetYaw(), playerCamPos);

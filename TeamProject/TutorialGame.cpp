@@ -277,7 +277,7 @@ void TutorialGame::clearGraveyard() {
 
 void TutorialGame::InitCamera() {
     mainCamera->SetFieldOfVision(90);
-    world->GetMainCamera().SetNearPlane(0.1f);
+    world->GetMainCamera().SetNearPlane(1.75f);
     world->GetMainCamera().SetFarPlane(5000.0f);
     world->GetMainCamera().SetPitch(-15.0f);
     world->GetMainCamera().SetYaw(315.0f);

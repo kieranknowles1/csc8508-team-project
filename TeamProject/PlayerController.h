@@ -69,7 +69,7 @@ namespace NCL {
 			float playerSpeed = 130.0f;
 			float jumpHeight = 300.0f;
 			float gravityScale = 300.0f;
-			float cameraHeight = 14.0f;
+			btVector3 camOffset = btVector3(-0.5f, 13.25f, 3.0f);
 
 			float sprintMulti = 2.0f;
 			float strafeMulti = 0.65f;
