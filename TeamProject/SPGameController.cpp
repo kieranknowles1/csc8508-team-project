@@ -97,6 +97,8 @@ void SPGameController::Update(float dt) {
 
     std::string out = "Score: " + std::to_string(score);
     Debug::Print(out, Vector2(0.05f, 0.05f));
+    out = "Mult: " + std::to_string(mult);
+    Debug::Print(out, Vector2(0.05f, 0.1f));
 
     if (navMeshDebug) VisualiseNavMesh();
 }
