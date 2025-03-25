@@ -46,15 +46,16 @@ SPGameController::SPGameController(PlayerObject* p, TutorialGame* g, GameTechRen
 
 void SPGameController::InitLevel(int curLevel) {
     ClearAIs();
+    AddWandererToWorld(bottom, Side::BOTTOM);
 
-    for (int i = 0; (i < std::max(5 + curLevel, 100)); i++) {
+    /*for (int i = 0; (i < std::max(5 + curLevel, 100)); i++) {
         AddWandererToWorld(bottom, Side::BOTTOM);
         AddWandererToWorld(top, Side::TOP);
         AddWandererToWorld(front, Side::FRONT);
         AddWandererToWorld(back, Side::BACK);
         AddWandererToWorld(left, Side::LEFT);
         AddWandererToWorld(right, Side::RIGHT);
-    }
+    }*/
 }
 
 void SPGameController::Update(float dt) {

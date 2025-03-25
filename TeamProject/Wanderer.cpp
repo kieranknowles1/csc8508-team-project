@@ -129,8 +129,9 @@ void Wanderer::UpdatePlayerDistance() {
 	btVector3 wl = trans.getOrigin();
 	btVector3 pl = pTrans.getOrigin();
 
-	std::optional<ShotInfo> shot = Shoot::GetInstance()->RayClosest(wl, pl, true);
-	if (shot.has_value()) playerVisible = (shot.value().hitObj->getType() == GameObject::Type::Player || shot.value().hitObj == player->getGun());
+	btVector3 dir = (pl - wl) == 0 ? btVector3(0, 0, 0) : (pl - wl).normalized();
+	std::optional<ShotInfo> shot = Shoot::GetInstance()->RayClosest(wl, dir, true, static_cast<GameObject*>(this));
+	if (shot.has_value()) playerVisible = (shot.value().hitObj == player || shot.value().hitObj == player->getGun());
 
 	//wl.setY(0);
 	//pl.setY(0);
@@ -245,7 +246,7 @@ void Wanderer::PlayerFar(float dt) {
 		trans.setOrigin(newPos);
 		btRigidBody* body = physicsObject->GetRigidBody();
 		body->setWorldTransform(trans);
-		//navMesh->DebugDrawPath(curPath);
+		navMesh->DebugDrawPath(curPath);
 	}
 	else {
 		curPath = navMesh->FindPath(curPathPoint, navMesh->GetRandomPointInNavMesh());
