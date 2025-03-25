@@ -3,7 +3,7 @@
 #include "TutorialGame.h"
 #include "Multiplayer/GamePackets.hpp"
 #include "Health.h"
-
+#include "AnimationObject.h"
 
 using namespace NCL;
 using namespace CSC8503;
@@ -56,11 +56,10 @@ void PlayerController::UpdateMovement(float dt) {
     HandleSliding(dt);
 
     if (inAirTime > 0) {
-        player->setCollided(0);
         inAirTime -= dt;
     }
     if (isSliding || slideTransition) {
-        player->SetAnimation(AnimationState::SLIDING);
+        player->SetAnimationState(AnimationState::SLIDING);
         return;
     }
     RotationCalculations();
@@ -186,12 +185,11 @@ void PlayerController::HandleSliding(float dt) {
         btVector3 playerPos = transformPlayerMotion.getOrigin();
 
         playerPos -= forward * std::lerp(isSliding ? 0 : slidingCameraBackwards, isSliding ? slidingCameraBackwards : 0, slideFactor);
-        playerPos += upDirection * std::lerp(isSliding ? cameraHeight : slidingCameraHeight, isSliding ? slidingCameraHeight : cameraHeight, slideFactor);
+        playerPos += upDirection * std::lerp(isSliding ? camOffset.y() : slidingCameraHeight, isSliding ? slidingCameraHeight : camOffset.y(), slideFactor);
         if (!thirdPerson) {
             camera->SetPosition(playerPos);
             player->SetGunTransform(camera->GetPitch(), camera->GetYaw(), playerPos);
         }
-        //CheckFloor(dt);
         btVector3 pastMovement = rb->getLinearVelocity();
         pastMovement += upDirection * -(gravityScale * dt);
         previousVelocity = rb->getLinearVelocity();
@@ -254,7 +252,6 @@ void PlayerController::RotationCalculations() {
     btQuaternion playerYaw = btQuaternion(btVector3(0, 1, 0), Maths::DegreesToRadians(yaw));
     btQuaternion finalRotation = camRotOffset * playerYaw;
     transformPlayer.setRotation(finalRotation);
-
     rb->setWorldTransform(transformPlayer);
     //finds player forward and right vectors
     btMatrix3x3 rotationMatrix(finalRotation);
@@ -269,7 +266,9 @@ void PlayerController::CameraMovement() {
     btTransform transformPlayerMotion;
     player->GetPhysicsObject()->GetMotionState()->getWorldTransform(transformPlayerMotion);
     btVector3 playerCamPos = transformPlayerMotion.getOrigin();
-    playerCamPos += upDirection * cameraHeight;
+    playerCamPos += camOffset.x() * right;
+    playerCamPos += camOffset.y() * up;
+    playerCamPos += camOffset.z() * forward;
     if (!slideTransition && !thirdPerson) {
         camera->SetPosition(playerCamPos);
         player->SetGunTransform(camera->GetPitch(), camera->GetYaw(), playerCamPos);
@@ -278,7 +277,7 @@ void PlayerController::CameraMovement() {
 
 //if on ground, movement based on floor angle
 void PlayerController::GroundNormalCalculations() {
-    if (player->getCollided() > 0) {
+    if (player->getCollided() > 0 && inAirTime <=0.0f) {
         btVector3 groundNormal = FindFloorNormal();
         if (groundNormal != btVector3(0, 0, 0)) {
             float cosAngleThreshold = cos(btRadians(50.0f));
@@ -302,32 +301,38 @@ void PlayerController::MovementCalculations(float dt) {
     Vector2 directionalInput = getDirectionalInput();
     bool sprinting = controller->GetDigital(Controller::DigitalControl::Sprint);
     float forwardMovement = directionalInput.y;
-    float moveMulti = playerSpeed * (sprinting ? sprintMulti : 1) * (player->getCollided() <= 0 ? airMulti : 1);
+    float moveMulti = playerSpeed * (sprinting ? sprintMulti : 1) * ((player->getCollided() <= 0|| inAirTime > 0.0f) ? airMulti : 1);
     forwardMovement *= (forwardMovement <= 0) ? backwardsMulti : 1;
     movement = (right * directionalInput.x * strafeMulti * moveMulti) + (forward * forwardMovement * moveMulti);
-    if (player->getCollided() <= 0 || onIce) {
+    if (player->getCollided() <= 0 || inAirTime > 0.0f || onIce) {
         movement *= (airMulti * dt);
         movement += rb->getLinearVelocity();
+    }
+    if (player->getCollided() > 0) {
+        airTimeCounter = 0;
     }
 
     //animations
     if (player->getCollided() <= 0) {
-        player->SetAnimation(AnimationState::FALLING);
+        airTimeCounter += dt;
+        if (airTimeCounter > 0.20f) { //0.05
+            player->SetAnimationState(AnimationState::FALLING);
+        }
     }
-    if (directionalInput.y >= 0.01f) {
-        player->SetAnimation(sprinting ? AnimationState::SPRINTING_FORWARD : AnimationState::WALKING_FORWARD);
+    else if (directionalInput.y >= 0.01f) {
+        player->SetAnimationState(sprinting ? AnimationState::SPRINTING_FORWARD : AnimationState::WALKING_FORWARD);
     }
     else if (directionalInput.y <= -0.01f) {
-        player->SetAnimation(sprinting ? AnimationState::SPRINTING_BACK : AnimationState::WALKING_BACK);
+        player->SetAnimationState(sprinting ? AnimationState::SPRINTING_BACK : AnimationState::WALKING_BACK);
     }
     else if (directionalInput.x >= 0.01f) {
-        player->SetAnimation(sprinting ? AnimationState::SPRINTING_RIGHT : AnimationState::WALKING_RIGHT);
+        player->SetAnimationState(sprinting ? AnimationState::SPRINTING_RIGHT : AnimationState::WALKING_RIGHT);
     }
     else if (directionalInput.x <= -0.01f) {
-        player->SetAnimation(sprinting ? AnimationState::SPRINTING_LEFT : AnimationState::WALKING_LEFT);
+        player->SetAnimationState(sprinting ? AnimationState::SPRINTING_LEFT : AnimationState::WALKING_LEFT);
     }
     else {
-        player->SetAnimation(AnimationState::IDLE);
+        player->SetAnimationState(AnimationState::IDLE);
     }
 };
 
@@ -343,15 +348,14 @@ void PlayerController::HandleJumping() {
         else {
             movement += (jumpHeight * upDirection);
         }
-        player->setCollided(0);
         inAirTime = 0.2f;
     }
     if (inAirTime > 0) {
         if (controller->GetDigital(Controller::DigitalControl::Sprint)) {
-            player->SetAnimation(AnimationState::JUMPING_SPRINT);
+            player->SetAnimationState(AnimationState::JUMPING_SPRINT);
         }
         else {
-            player->SetAnimation(AnimationState::JUMPING_STANDING);
+            player->SetAnimationState(AnimationState::JUMPING_STANDING);
         }
         
     }

@@ -31,6 +31,7 @@ PlayerObject::PlayerObject() {
 PlayerObject::~PlayerObject() {
     if (laser && TutorialGame::getInstance()) TutorialGame::getInstance()->GetWorld()->RemoveGameObject(laser);
     laser = nullptr;
+    delete animationObject;
 }
 
 void PlayerObject::SetColor(btVector4 color) {
@@ -48,8 +49,9 @@ void PlayerObject::Update(float dt) {
     rightDirection = CalculateRightDirection(upDirection);
     forwardDirection = CalculateForwardDirection(upDirection, rightDirection);
     updateGravity(dt);
-
     //Animation: 
+    CorrectAnimation();
+
     if (animated == true) {
         renderObject->GetAnimation()->UpdateAnimation(dt);
     }
@@ -152,6 +154,7 @@ void PlayerObject::OnCollisionEnter(const CollisionInfo& collisionInfo){
         jumpPadHeight = collisionInfo.otherObject->getJumpPadStrength();
     }
 }
+
 
 void PlayerObject::OnCollisionExit(const CollisionInfo& collisionInfo){
 	auto it = std::find(collidedObjects.begin(), collidedObjects.end(), collisionInfo.otherObject);
@@ -336,4 +339,14 @@ void PlayerObject::SetGunTransform(float pitch, float yaw, btVector3 camPos) {
     btTransform& transformGun = gun->GetPhysicsObject()->GetRigidBody()->getWorldTransform();
     transformGun.setOrigin(camPos + adjustedOffset);
     transformGun.setRotation(gunRotation);
+}
+
+
+void PlayerObject::CorrectAnimation() {
+    //to be called in update. Checks if the animation matches the state, if not sets it to the right animation. Hopefully means it is only set when state changes.#
+
+    if (renderObject->GetAnimation() != animationObject->getAnimation(animationState)) {
+        renderObject->SetAnimation(animationObject->getAnimation(animationState));
+    }
+
 }

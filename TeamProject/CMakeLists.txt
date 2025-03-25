@@ -1,6 +1,6 @@
 set(SOURCES
-    AnimatedRenderObject.cpp
-    AnimatedRenderObject.h
+    AnimationObject.cpp
+    AnimationObject.h
     AudioEngine.cpp
     AudioEngine.h
 

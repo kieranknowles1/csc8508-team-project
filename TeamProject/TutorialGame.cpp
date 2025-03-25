@@ -294,7 +294,7 @@ void TutorialGame::clearGraveyard() {
 
 void TutorialGame::InitCamera() {
     mainCamera->SetFieldOfVision(90);
-    world->GetMainCamera().SetNearPlane(0.1f);
+    world->GetMainCamera().SetNearPlane(1.75f);
     world->GetMainCamera().SetFarPlane(5000.0f);
     world->GetMainCamera().SetPitch(-15.0f);
     world->GetMainCamera().SetYaw(315.0f);
@@ -366,7 +366,7 @@ PlayerObject* TutorialGame::InitPlayer(btVector3 position, btVector3 upDir) {
     newPlayer->setRenderer(renderer);
     newPlayer->setType(GameObject::Type::Player);
 
-    //newPlayer->SetIsAnimated(true); //maybe better to manage this wherever animations are being applied rather than here but for testing this is probably fine
+    newPlayer->SetIsAnimated(true); //maybe better to manage this wherever animations are being applied rather than here but for testing this is probably fine
     newPlayer->setRenderer(renderer); 
     Respawn::GetInstance()->InsertPlayerObj(newPlayer);
     return newPlayer;
@@ -441,17 +441,17 @@ PlayerObject* TutorialGame::AddPlayerCapsuleToWorld(const Vector3& position, flo
     // Creating a Bullet collision shape for the capsule
     btCollisionShape* playerShape = new btCapsuleShape(radius, height);
 
-    // Setting the render object for the capsule
-    player->SetRenderObject(new RenderObject(player, resourceManager->getMeshes().get("Capsule.msh"), defaultTexture)); 
-   // player->SetRenderObject(new RenderObject(player, resourceManager->getMeshes().get("/MaleGuard/Male_Guard.msh"), resourceManager->getMaterials().get("Male_Guard.mat")));
-  //  player->GetRenderObject()->SetAnimation(new MeshAnimation("/MaleGuard/Taunt.anm")); //For Testing only StepLeft.anm
+    // Setting the render object for the capsule 
+    player->SetRenderObject(new RenderObject(player, resourceManager->getMeshes().get("RacerGuy/RacerGuy2.msh"), resourceManager->getMaterials().get("RacerGuy.mat"))); //defaultTexture
+    player->CreateAnimationObject();
+    player->CorrectAnimation();
+
     // Setting the physics object for the capsule
     player->SetPhysicsObject(new PhysicsObject(player));
 
     // Initializing the physics object for the capsule
     player->GetPhysicsObject()->InitBulletPhysics(bulletWorld, playerShape, inverseMass);
-    //GameObject* newGun = AddCubeToWorld(Vector3(-300, 20, 40), Vector3(0.5, 0.5, 0.3), 0, false);
-    GameObject* newGun = AddGunToWorld(Vector3(-900, 20, 40), Vector3(5, 5, 5), 0, false);
+    GameObject* newGun = AddGunToWorld(Vector3(-900, 20, 40), Vector3(3, 3, 3), 0, false);
     player->setGun(newGun);
     world->AddGameObject(player);
 

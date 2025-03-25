@@ -29,7 +29,7 @@ void main(void)   {
 
 	vec4 albedo = IN.colour;
 	if(hasTexture) {
-	 albedo *= texture(diffuseTex, IN.texCoord);
+	 albedo *= texture(diffuseTex, IN.texCoord); 
 	 //albedo.rgb = pow(albedo.rgb, vec3(2.2));  //added to transform textures into linear space to later be gamma corrected
 	}
 
