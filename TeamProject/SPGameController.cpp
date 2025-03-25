@@ -95,7 +95,8 @@ void SPGameController::Update(float dt) {
         wanderer->Update(dt);
     }
 
-    Debug::Print("Score: " + score, Vector2(0.05f, 0.05f));
+    std::string out = "Score: " + std::to_string(score);
+    Debug::Print(out, Vector2(0.05f, 0.05f));
 
     if (navMeshDebug) VisualiseNavMesh();
 }
