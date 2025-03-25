@@ -16,6 +16,10 @@ if (PS5_BUILD)
 
     set(FMOD_SDK_PATH "C:/Program Files (x86)/FMOD SoundSystem/FMOD Studio API PS5/api" CACHE STRING "Path to the FMOD SDK")
     set(PS5_SDK_TOOLS "C:/Program Files (x86)/SCE/Prospero SDKs/10.000/host_tools/bin")
+    # Need to use getenv_s on PS5, which has an incompatible signature
+    # Freetype uses environment variables for config, return null to use whatever
+    # the default is
+    add_compile_definitions("getenv(a)=NULL")
 else()
     set(FMOD_SDK_PATH "C:/Program Files (x86)/FMOD SoundSystem/FMOD Studio API Windows/api" CACHE STRING "Path to the FMOD SDK")
 endif()

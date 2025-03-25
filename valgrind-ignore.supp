@@ -43,3 +43,27 @@
    fun:dbus_connection_send_with_reply_and_block
    fun:dbus_bus_register
 }
+
+# Thread issues outside of our control
+{
+   drd_sdl2
+   drd:CondErr
+   ...
+   fun:SDL_*
+}
+
+# DRD is tuned to detect any **potential** race conditions,
+# even if they are unlikely to have an impact in practice.
+# Ignore pulse/fmod warnings to avoid noise
+{
+   drd_pulseaudio
+   drd:ConflictingAccess
+   ...
+   fun:pa_*
+}
+{
+   drd_fmod
+   drd:ConflictingAccess
+   ...
+   obj:*libfmod*
+}

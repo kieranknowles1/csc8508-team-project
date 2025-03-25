@@ -6,7 +6,11 @@
 #include "GameObject.h"
 #include "PhysicsObject.h"
 #include "CollisionInfo.h"
-#include "Respawn.h"
+#include "MeshAnimation.h"
+
+#include "Colors.h"
+#include "RenderObject.h"
+
 #include "GameTechRendererInterface.h"
 
 #include <btBulletDynamicsCommon.h>
@@ -17,6 +21,38 @@ namespace NCL::CSC8503 {
 enum class PlayerState {
 	DEAD,
 	ALIVE
+};
+
+enum AnimationState { // In order of importance - e.g. sliding overrides falling if player is doing both at once
+	JUMPING_SPRINT,
+	JUMPING_STANDING,
+	SLIDING,
+	FALLING,
+	SPRINTING_FORWARD,
+	SPRINTING_BACK,
+	SPRINTING_LEFT,
+	SPRINTING_RIGHT,
+	WALKING_FORWARD,
+	WALKING_BACK,
+	WALKING_LEFT,
+	WALKING_RIGHT,
+	IDLE
+};
+constexpr std::string_view AnimationNames[] = // For printing - e.g. std::cout << "ANIMATED STATE: " << AnimationNames[animationState] << std::endl;
+{
+	"JUMPING_SPRINT",
+	"JUMPING_STANDING",
+	"SLIDING",
+	"FALLING",
+	"SPRINTING_FORWARD",
+	"SPRINTING_BACK",
+	"SPRINTING_LEFT",
+	"SPRINTING_RIGHT",
+	"WALKING_FORWARD",
+	"WALKING_BACK",
+	"WALKING_LEFT",
+	"WALKING_RIGHT",
+	"IDLE"
 };
 
 // Player class derived from GameObject
@@ -41,6 +77,7 @@ public:
 
 	void setRenderer(GameTechRendererInterface* rendIn) {
 		renderer = rendIn;
+		gun->GetRenderObject()->SetColour(Color::GetPlayerColor(worldID));
 	}
 
 	void updateLaser(btVector3 startPos, btVector3 endPos) {
@@ -112,21 +149,7 @@ public:
 	inline PlayerState GetState() { return state; }
 	inline void SetState(PlayerState state) { this->state = state; }
 
-	void Damage(float amount) {
-		lastHit = elapsedTime;
-
-		health -= amount;
-		if (health <= 0) {
-			//state = PlayerState::DEAD;
-			health = 100;
-			RespawnPoint* point = Respawn::GetInstance()->GetRespawn(worldID - 1);
-			GetPhysicsObject()->GetRigidBody()->getWorldTransform().setOrigin(point->position);
-			setUpDirection(point->orientation);
-			resetCollisionType();
-			setCollided(0);
-			// TODO: Create Change State packet.
-		}
-	}
+	void Damage(float amount);
 	
 	float GetMaxHealth() {
 		return maxHealth;
@@ -134,6 +157,9 @@ public:
 	float getCollisionJumpPadStrength(){
 		return jumpPadHeight;
 	}
+
+	void SetAnimation(AnimationState animationIn) { animationState = animationIn; }
+	AnimationState GetAnimation() { return animationState; }
 
 	float health = 100.0f;
 
@@ -154,6 +180,7 @@ private:
 	std::list<GameObject*> collidedObjects;
 	Type collisionType;
 	PlayerState state;
+	float yawOverride = -1000.0f;
 
     btQuaternion camRotOffset;
 	btQuaternion oldcamRotOffset = btQuaternion::getIdentity();
@@ -167,6 +194,7 @@ private:
 	bool rotationChanging = false;
     btVector3 gunCameraOffset = btVector3(3.0, -1.0, 1.5); // x axis is forward (front +ve/ back -ve), y is up, z is right (left -ve/ right +ve)
 	GameObject* gun;
+	AnimationState animationState = AnimationState::IDLE;
 
 
 	btVector3 CalculateRightDirection(btVector3 upDir);
@@ -177,7 +205,6 @@ private:
 
 	float elapsedTime = 0;
 	float lastHit = 0;
-
 
 	GameTechRendererInterface* renderer;
 

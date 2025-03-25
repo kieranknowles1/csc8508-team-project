@@ -4,13 +4,12 @@
 #include "State.h"
 #include "RenderObject.h"
 #include <stdio.h>
-
 #include "TutorialGame.h"
 
 using namespace NCL;
 using namespace CSC8503;
 
-Wanderer::Wanderer(GameObject* p, NavMesh* mesh, char side, int lID, GameTechRendererInterface* r) :
+Wanderer::Wanderer(GameObject* p, NavMesh* mesh, Side side, int lID, GameTechRendererInterface* r) :
 	player(p), navMesh(mesh), shootTimer(maxShootTimer), updateplayerPathTimer(maxUpdatePlayerPathTimer), laserID(lID), renderer(r) {
 	type = GameObject::Type::AI;
 	this->side = side;
@@ -46,7 +45,7 @@ Wanderer::Wanderer(GameObject* p, NavMesh* mesh, char side, int lID, GameTechRen
 		if (playerDist > senseDistance * 2) {
 			GetRenderObject()->SetColour(Vector4(0, 1, 0, 1));
 			curPath = navMesh->FindPath(curPathPoint, navMesh->GetRandomPointInNavMesh());
-			NewPath(curPath);
+			if (curPath.size() > 0) NewPath(curPath);
 			renderer->updateLaser(laserID, btVector3(0, 0, 0), btVector3(0, 0, 0));
 			return true;
 		}
@@ -63,14 +62,19 @@ Wanderer::~Wanderer() {
 void Wanderer::Update(float dt) {
 
 	if (health <= 0) {
-		renderer->updateLaser(laserID, btVector3(0, 0, 0), btVector3(0, 0, 0));
-		TutorialGame::getInstance()->delayedRemoveObject(this);
+		DestroyWanderer();
 		return;
 	}
 
 	UpdatePlayerDistance();
 	stateMachine->Update(dt);
 
+}
+
+void Wanderer::DestroyWanderer() {
+	renderer->updateLaser(laserID, btVector3(0, 0, 0), btVector3(0, 0, 0));
+	TutorialGame::getInstance()->GetSPMode()->AddIDToPool(laserID);
+	TutorialGame::getInstance()->delayedRemoveObject(this);
 }
 
 void Wanderer::InitPosAndOffset() {
@@ -80,28 +84,28 @@ void Wanderer::InitPosAndOffset() {
 	btTransform trans = GetTransform();
 	btQuaternion rotation;
 	switch(side) {
-	case('b'):
+	case(Side::BOTTOM):
 		offset = btVector3(0, halfHeight * 2, 0);
 		break;
-	case('t'):
+	case(Side::TOP):
 		offset = btVector3(0, -halfHeight * 2, 0);
 		break;
-	case('f'):
+	case(Side::FRONT):
 		offset = btVector3(0, 0, 0);
 		rotation = btQuaternion(btVector3(1, 0, 0), SIMD_PI / 2);
 		trans.setRotation(rotation);
 		break;
-	case('k'):
+	case(Side::BACK):
 		offset = btVector3(0, halfHeight * 4, 0);
 		rotation = btQuaternion(btVector3(1, 0, 0), -SIMD_PI / 2);
 		trans.setRotation(rotation);
 		break;
-	case('l'):
+	case(Side::LEFT):
 		offset = btVector3(halfHeight * 2, 0, 0);
 		rotation = btQuaternion(btVector3(0, 0, 1), -SIMD_PI / 2);
 		trans.setRotation(rotation);
 		break;
-	case('r'):
+	case(Side::RIGHT):
 		offset = btVector3(-halfHeight * 2, 0, 0);
 		rotation = btQuaternion(btVector3(0, 0, 1), -SIMD_PI / 2);
 		trans.setRotation(rotation);
@@ -240,7 +244,7 @@ void Wanderer::PlayerFar(float dt) {
 	}
 	else {
 		curPath = navMesh->FindPath(curPathPoint, navMesh->GetRandomPointInNavMesh());
-		NewPath(curPath);
+		if (curPath.size() > 0) NewPath(curPath);
 	}
 
 }

@@ -1,6 +1,7 @@
 #pragma once
 #include "GameObject.h"
 #include "Shoot.h"
+#include "SPGameController.h"
 
 namespace NCL {
 	namespace CSC8503 {
@@ -17,7 +18,7 @@ namespace NCL {
 			btVector3 curPathPoint;
 			btVector3 yAdjustedPoint;
 			float GroundAdjust(btVector3 pos);
-			char side;
+			Side side;
 			float speed = 20;
 		private:
 

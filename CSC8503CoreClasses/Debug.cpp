@@ -92,11 +92,9 @@ SimpleFont* Debug::GetDebugFont() {
 	return debugFont;
 }
 
-// TODO: Remove Texture& tex parameter, as the texture is not managed internally by the
-// the SimpleFont class (as part of the character initialization), so there's no need to pass
-// a Texture object from the calling code.
 void Debug::CreateDebugFont(const std::string& dataFile, std::shared_ptr<Texture> tex) {
-	debugFont = new SimpleFont(dataFile, tex);
+	// Comicy has quite small advances, add a small multiple to make gaps between characters clearer
+	debugFont = new SimpleFont(dataFile, tex, 1.05f);
 }
 
 const std::vector<Debug::DebugStringEntry>& Debug::GetDebugStrings() {

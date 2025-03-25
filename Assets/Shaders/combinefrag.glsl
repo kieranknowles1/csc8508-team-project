@@ -22,7 +22,8 @@ void main(void) {
     colour.rgb = doDeferredLight(
        diffuse,
        light,
-       specular
+       specular,
+       0.05
     );
     colour.a    = 1.0;
 

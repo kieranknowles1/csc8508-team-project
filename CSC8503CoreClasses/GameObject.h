@@ -16,7 +16,7 @@ namespace NCL::CSC8503 {
 
 	class GameObject	{
 	public:
-		enum class Type {
+		enum class Type { // Contact Alex if you are adding to this - need to update level importer to line up correctly
 			Default,
 			Floor,
 			JumpPad,
@@ -28,7 +28,10 @@ namespace NCL::CSC8503 {
 			Centre,
 			SlimeCastle,
 			Courtyard,
-			AI
+			AI,
+			JumpRoom,
+			JumpRoomFloor,
+			ZigZag
 		};
 
 		GameObject(const std::string& name = "");
@@ -83,7 +86,7 @@ namespace NCL::CSC8503 {
 			//std::cout << "OnCollisionStay: " << this->GetWorldID() << " is still colliding with " << otherObject->GetWorldID() << std::endl;
 		}
 
-		virtual void Update(float dt) {
+		virtual void Update(float dt) {//could do the updating for animations in here maybe
 
 		}
 
@@ -169,6 +172,10 @@ namespace NCL::CSC8503 {
 
 		void setDeleted() { deleted = true; }
 		bool isDeleted() { return deleted; }
+
+		bool GetIsAnimated() { return animated; }
+		void SetIsAnimated(bool a) { animated = a; }
+
 	protected:
 		PhysicsObject*		physicsObject;
 		RenderObject*		renderObject;
@@ -177,6 +184,9 @@ namespace NCL::CSC8503 {
 		bool deleted = false;
 
 		bool		isActive;
+		bool paintball = false;
+		bool animated = false;
+
 		int			worldID;
 		std::string	name;
 		Type type;

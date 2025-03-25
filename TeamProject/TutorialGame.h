@@ -147,6 +147,8 @@ namespace NCL {
 
             void SetGameMode(GameMode gm) { gameMode = gm; }
 
+            SPGameController* GetSPMode() { return spGameController; }
+
         protected:
             void InitialiseAssets();
 
@@ -250,6 +252,10 @@ namespace NCL {
 
             //post processing time variable effects
             float pulse = 0;
+
+            //to allow mesh animation to access time:
+            int aniCurrentFrame;
+            float aniFrameTime;
 
         private:
             inline static std::optional<Network> server = std::optional<Network>();

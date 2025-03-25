@@ -11,6 +11,7 @@
 #include <CSC8503CoreClasses/Debug.h>
 #include "Colors.h"
 #include "Shoot.h"
+#include "MeshAnimation.h" //temporarily added for testing 
 
 #include "Window.h"
 #include "Config.h"
@@ -130,7 +131,9 @@ void TutorialGame::UpdateGame(float dt) {
     //post processing time variable effect:
     pulse += dt;
     renderer->SetVignettePulse(pulse);
+
     renderer->SetDelta(dt);
+
 }
 
 
@@ -178,6 +181,15 @@ void TutorialGame::UpdateKeys() {
     if (controller->GetDigital(DebugFreeCam)) {
         freeCam = !freeCam;
     }
+    if (controller->GetDigital(DebugRespawnRandom)) {
+        RespawnPoint* respawnPoint = Respawn::GetInstance()->GetRandomRespawn(player->GetWorldID());
+        playerController->setYaw(respawnPoint->yaw);
+        player->GetPhysicsObject()->GetRigidBody()->getWorldTransform().setOrigin(respawnPoint->position);
+        player->setUpDirection(respawnPoint->orientation);
+        player->resetCollisionType();
+        player->setCollided(0);
+    }
+
 
     if (playerController) {
         if (controller->GetDigital(ThirdPerson)) {
@@ -342,7 +354,11 @@ PlayerObject* TutorialGame::InitPlayer(btVector3 position, btVector3 upDir) {
 
     newPlayer->GetRenderObject()->SetColour(Vector4(playerColour));
     newPlayer->setUpDirection(upDir);
-    newPlayer->setRenderer(renderer);
+
+    //newPlayer->SetIsAnimated(true); //maybe better to manage this wherever animations are being applied rather than here but for testing this is probably fine
+    newPlayer->setRenderer(renderer); 
+    Respawn::GetInstance()->InsertPlayerObj(newPlayer);
+
     return newPlayer;
 }
 
@@ -419,7 +435,9 @@ PlayerObject* TutorialGame::AddPlayerCapsuleToWorld(const Vector3& position, flo
     btCollisionShape* playerShape = new btCapsuleShape(radius, height);
 
     // Setting the render object for the capsule
-    player->SetRenderObject(new RenderObject(player, resourceManager->getMeshes().get("Capsule.msh"), defaultTexture));
+    player->SetRenderObject(new RenderObject(player, resourceManager->getMeshes().get("Capsule.msh"), defaultTexture)); 
+   // player->SetRenderObject(new RenderObject(player, resourceManager->getMeshes().get("/MaleGuard/Male_Guard.msh"), resourceManager->getMaterials().get("Male_Guard.mat")));
+  //  player->GetRenderObject()->SetAnimation(new MeshAnimation("/MaleGuard/Taunt.anm")); //For Testing only StepLeft.anm
     // Setting the physics object for the capsule
     player->SetPhysicsObject(new PhysicsObject(player));
 
@@ -597,8 +615,8 @@ void TutorialGame::JoinGame(bool host) {
         std::string host = config.get<std::string>("defaultHost");
         std::cout << "Connecting to " << host << std::endl;
 
-        //enet_address_set_host(&dest, "127.0.0.1");
-        enet_address_set_host(&dest, host.c_str());
+        enet_address_set_host(&dest, "127.0.0.1");
+        //enet_address_set_host(&dest, host.c_str());
 
         dest.port = DEFAULT_PORT;
 
@@ -639,8 +657,9 @@ void TutorialGame::Start() {
     instance->player->SetWorldID(user->GetUserID());
     instance->player->GetRenderObject()->SetColour(Vector4(Color::GetPlayerColor(user->GetUserID())));
     instance->player->setType(GameObject::Type::Player);
+    instance->player->setRenderer(instance->renderer);
     instance->playerController = std::make_unique<PlayerController>(instance->player, instance->controller, instance->mainCamera, instance->bulletWorld,instance->renderer);
-
+    instance->playerController->setYaw(respawnPoint->yaw);
 
     btQuaternion emptyRot;
 
@@ -673,6 +692,7 @@ void TutorialGame::Start() {
             newPlayer->SetOwner(newUser.GetUserID());
             newPlayer->SetWorldID(newUser.GetUserID());
             newPlayer->GetRenderObject()->SetColour(Vector4(Color::GetPlayerColor(newUser.GetUserID())));
+            newPlayer->setRenderer(instance->renderer);
         }
     }
     else {

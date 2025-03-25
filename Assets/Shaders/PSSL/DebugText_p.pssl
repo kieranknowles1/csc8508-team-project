@@ -2,16 +2,16 @@
 
 SamplerState sampler			: register(s0);
 
-Texture2D<float4> inputTexture	: register(t1);
+Texture2D<float> inputTexture	: register(t1);
 
 [CxxSymbol("TestShader::ps")]
 float4 main(TEXT_VS_OUTPUT vertex) : S_TARGET_OUTPUT
 {
-	float4 texSample = inputTexture.Sample(sampler, vertex.UV) ;
+	float texSample = inputTexture.Sample(sampler, vertex.UV) ;
 
 	//if(texSample.r < 0.00001f) {
 		//discard;
 	//}
 
-	return texSample.rrrr * vertex.Colour;
+	return texSample * vertex.Colour;
 }
