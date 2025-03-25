@@ -629,37 +629,39 @@ void GameTechAGCRenderer::UpdateObjectList() {
 		state.colour = g->GetColour();
 		state.texRepeats = g->GetTexRepeating();
 		state.texScale = g->getParent()->getRenderScale() * g->GetTexScaleMultiplier();
-		state.skinningIndex = NULLTEX;
+		state.animJointsIndex = NULLTEX;
 
 		AGCMesh* m = (AGCMesh*)g->GetMesh();
-		if (m && m->GetJointCount() > 0) {//It's a skeleton mesh, need to update transformed vertices buffer
+		if (g->GetAnimation()) { //It's a skeleton mesh, need to update transformed vertices buffer
 
 			Buffer* b = g->GetGPUBuffer();
 			if (!b) {
-				//We've not yet made a buffer to hold the verts of this mesh!
-				//We need a new mesh to store the positions, normals, and tangents of this mesh
-				size_t vertexSize = sizeof(Vector3) + sizeof(Vector3) + sizeof(Vector4);
-				size_t vertexCount = m->GetVertexCount();
-				size_t bufferSize = vertexCount * vertexSize;
-
-				char* vertexData = (char*)allocator.Allocate((uint64_t)(bufferSize), sce::Agc::Alignment::kBuffer);
+				//We've not yet made a buffer to hold the matrices of this skeleton
+				size_t matCount = m->GetBindPose().size();
+				void* data = allocator.Allocate(matCount * sizeof(Matrix4), sce::Agc::Alignment::kBuffer);
 
 				sce::Agc::Core::BufferSpec bufSpec;
-				bufSpec.initAsRegularBuffer(vertexData, vertexSize, vertexCount);
+				bufSpec.initAsRegularBuffer(data, sizeof(Matrix4), matCount);
 
 				sce::Agc::Core::Buffer vBuffer;
 				checkError(sce::Agc::Core::initialize(&vBuffer, &bufSpec));
 
 				uint32_t bufferID = bufferCount++;
-				b = new AGCBuffer(vBuffer, vertexData);
+				b = new AGCBuffer(vBuffer, data);
 				b->SetAssetID(bufferID);
 				g->SetGPUBuffer(b);
 
 				bindlessBuffers[bufferID] = vBuffer;
 			}
-			state.skinningIndex = b->GetAssetID();
+			auto frameData = g->GetAnimation()->GetJointData(g->GetAnimation()->GetCurrentFrame());
+			Matrix4* bufPtr = (Matrix4*)((AGCBuffer*)b)->GetAllocatedMemory();
+			for (unsigned int q = 0; q < m->GetJointCount(); ++q) {
+				const Matrix4 invBindPose = g->GetMesh()->GetInverseBindPose()[q]; //need to get the inverse bind pose per joint to "undo" the bind pose for each joint
+				*bufPtr = frameData[q] * invBindPose;
+				bufPtr++;
+			}
 
-			frameJobs.push_back({ g, b->GetAssetID() });
+			state.animJointsIndex = b->GetAssetID();
 		}
 
 		assert(g->GetMesh()->GetSubMeshCount() > 0);

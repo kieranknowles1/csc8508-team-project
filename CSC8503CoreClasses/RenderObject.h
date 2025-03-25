@@ -81,7 +81,7 @@ namespace NCL {
 
 		protected:
 			GameObject* parent;
-			Buffer* buffer;
+			Buffer* buffer = nullptr;
 			std::shared_ptr<Mesh> mesh;
 			Vector4		colour = Vector4(1, 1, 0, 0.99);
 			bool isFlat = false;
