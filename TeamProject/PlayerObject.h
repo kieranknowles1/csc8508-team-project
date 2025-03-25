@@ -7,6 +7,7 @@
 #include "PhysicsObject.h"
 #include "CollisionInfo.h"
 #include "MeshAnimation.h"
+#include "AnimationObject.h"
 
 #include "Colors.h"
 #include "RenderObject.h"
@@ -23,43 +24,14 @@ enum class PlayerState {
 	ALIVE
 };
 
-enum AnimationState { // In order of importance - e.g. sliding overrides falling if player is doing both at once
-	JUMPING_SPRINT,
-	JUMPING_STANDING,
-	SLIDING,
-	FALLING,
-	SPRINTING_FORWARD,
-	SPRINTING_BACK,
-	SPRINTING_LEFT,
-	SPRINTING_RIGHT,
-	WALKING_FORWARD,
-	WALKING_BACK,
-	WALKING_LEFT,
-	WALKING_RIGHT,
-	IDLE
-};
-constexpr std::string_view AnimationNames[] = // For printing - e.g. std::cout << "ANIMATED STATE: " << AnimationNames[animationState] << std::endl;
-{
-	"JUMPING_SPRINT",
-	"JUMPING_STANDING",
-	"SLIDING",
-	"FALLING",
-	"SPRINTING_FORWARD",
-	"SPRINTING_BACK",
-	"SPRINTING_LEFT",
-	"SPRINTING_RIGHT",
-	"WALKING_FORWARD",
-	"WALKING_BACK",
-	"WALKING_LEFT",
-	"WALKING_RIGHT",
-	"IDLE"
-};
 
 // Player class derived from GameObject
 class PlayerObject : public GameObject {
 public:
 
-
+	~PlayerObject() {
+		delete animationObject;
+	}
 	void Update(float dt) override;
 
 	void OnCollisionEnter(const CollisionInfo& collisionInfo) override;
@@ -158,14 +130,19 @@ public:
 		return jumpPadHeight;
 	}
 
-	void SetAnimation(AnimationState animationIn) { animationState = animationIn; }
-	AnimationState GetAnimation() { return animationState; }
+	void SetAnimationState(AnimationState animationIn) { animationState = animationIn; } 
+	AnimationState GetAnimationState() { return animationState; } 
 
 	float health = 100.0f;
 
 	void setGun(GameObject* gunIn) { gun = gunIn; }
 	GameObject* getGun() {return gun;}
 	void SetGunTransform(float pitch, float yaw, btVector3 camPos);
+
+	void CorrectAnimation(); /////
+	void CreateAnimationObject() {
+		animationObject = new AnimationObject(this);
+	}
 
 private:
 
@@ -186,13 +163,13 @@ private:
 	btQuaternion oldcamRotOffset = btQuaternion::getIdentity();
 	btQuaternion targetcamRotOffset = btQuaternion::getIdentity();
 	btVector3 targetWorldRotation = btVector3(0, 1, 0);
-	btVector3 oldWorldRotation = btVector3(0, 1, 0);
+	btVector3 oldWorldRotation = btVector3(0, 1, 0); 
 	btVector3 upDirection;
 	btVector3 rightDirection;
 	btVector3 forwardDirection;
 	float rotateTimer = 0.0f;
 	bool rotationChanging = false;
-    btVector3 gunCameraOffset = btVector3(3.0, -1.0, 1.5); // x axis is forward (front +ve/ back -ve), y is up, z is right (left -ve/ right +ve)
+    btVector3 gunCameraOffset = btVector3(5.5, -2.5, 2.0); // x axis is forward (front +ve/ back -ve), y is up, z is right (left -ve/ right +ve)
 	GameObject* gun;
 	AnimationState animationState = AnimationState::IDLE;
 
@@ -207,6 +184,8 @@ private:
 	float lastHit = 0;
 
 	GameTechRendererInterface* renderer;
+
+	AnimationObject* animationObject;
 
 
 };

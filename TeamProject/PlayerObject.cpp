@@ -13,8 +13,9 @@ void PlayerObject::Update(float dt) {
     rightDirection = CalculateRightDirection(upDirection);
     forwardDirection = CalculateForwardDirection(upDirection, rightDirection);
     updateGravity(dt);
-
     //Animation: 
+    CorrectAnimation();
+
     if (animated == true) {
         renderObject->GetAnimation()->UpdateAnimation(dt);
     }
@@ -94,6 +95,7 @@ void PlayerObject::OnCollisionEnter(const CollisionInfo& collisionInfo){
         jumpPadHeight = collisionInfo.otherObject->getJumpPadStrength();
     }
 }
+
 
 void PlayerObject::OnCollisionExit(const CollisionInfo& collisionInfo){
 	auto it = std::find(collidedObjects.begin(), collidedObjects.end(), collisionInfo.otherObject);
@@ -280,4 +282,14 @@ void PlayerObject::SetGunTransform(float pitch, float yaw, btVector3 camPos) {
     transformGun.setRotation(gunRotation);
 
     gun->GetPhysicsObject()->GetRigidBody()->setWorldTransform(transformGun);
+}
+
+
+void PlayerObject::CorrectAnimation() {
+    //to be called in update. Checks if the animation matches the state, if not sets it to the right animation. Hopefully means it is only set when state changes.#
+
+    if (renderObject->GetAnimation() != animationObject->getAnimation(animationState)) {
+        renderObject->SetAnimation(animationObject->getAnimation(animationState));
+    }
+
 }
