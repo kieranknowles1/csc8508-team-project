@@ -25,6 +25,8 @@ namespace NCL {
         class Config;
 
         const int MAX_PLAYERS = 8;
+        // Max duration to wait for a connection when joining, in milliseconds
+        const static constexpr unsigned int ConnectionTimeout = 1000;
 
         enum class GameMode {
             SINGLEPLAYER,
@@ -117,7 +119,7 @@ namespace NCL {
 
             virtual void UpdateGame(float dt);
             void LoadWorldFromFile(int levelNum);
-            void JoinGame(bool host);
+            bool JoinGame(bool host);
             void ClearWorld();
 
             GameWorld* getWorld() {
@@ -169,8 +171,9 @@ namespace NCL {
              * Connection resolution is handled by packet response.
              *
              * @param address ENetAddress of the servers location.
+             * @return was the connection successful
              */
-            void ConnectToServer(ENetAddress& address);
+            bool ConnectToServer(ENetAddress& address);
 
             void StartMultiplayerGame();
 
