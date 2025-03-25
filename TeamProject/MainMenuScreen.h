@@ -13,12 +13,12 @@ namespace NCL::CSC8503 {
 
 class MainMenuScreen : public PushdownState {
     size_t selection = 0;
-    bool inMenu;
     TutorialGame* game;
     Controller* controller;
+    float connectionFailedTime = 0;
 
 public:
-    MainMenuScreen(Controller* controller, TutorialGame* game) : controller(controller), game(game), selection(0), inMenu(true) {}
+    MainMenuScreen(Controller* controller, TutorialGame* game) : controller(controller), game(game), selection(0) {}
 
     PushdownResult OnUpdate(float dt, PushdownState** newState) override {
 
@@ -34,33 +34,32 @@ public:
         if (controller->GetDigital(Controller::DigitalControl::MenuConfirm)) {
             GameMode mode = static_cast<GameMode>(selection);
 
+            game->SetGameMode(mode);
             switch (mode)
             {
             case GameMode::SINGLEPLAYER:
-                game->SetGameMode(GameMode::SINGLEPLAYER);
                 game->Start();
                 break;
             case GameMode::HOST_GAME:
-                game->SetGameMode(GameMode::HOST_GAME);
                 game->JoinGame(true); //This is host game
                 break;
-            case GameMode::JOIN_GAME:
-                game->SetGameMode(GameMode::JOIN_GAME);
-                game->JoinGame(false); //This is join game
+            case GameMode::JOIN_GAME: {
+                bool ok = game->JoinGame(false); //This is join game
+                if (!ok) {
+                    connectionFailedTime = 3.0f;
+                    return PushdownResult::NoChange;
+                }
                 break;
-            case GameMode::CREDITS:
-                game->SetGameMode(GameMode::CREDITS);
+            } case GameMode::CREDITS:
                 *newState = new CreditsScreen(controller, Assets::CREDITS);
                 return PushdownResult::Push;
                 break;
             case GameMode::QUIT:
-                game->SetGameMode(GameMode::QUIT);
                 return PushdownResult::Pop;
             default: assert(false);
             }
 
             *newState = new GameScreen(controller, game);
-            inMenu = false;
             return PushdownResult::Push;
         }
 
@@ -76,6 +75,11 @@ public:
 
             Debug::Print(currentItem, Vector2(0.35f, 0.32f + (0.1f * i)));
         }
+        if (connectionFailedTime > 0) {
+            connectionFailedTime -= dt;
+            Debug::Print("Connection failed", Vector2(0.2f, 0.2f));
+        }
+
         return PushdownResult::NoChange;
 
         //Add FMOD Logo here as well as the line "Audio Engine: FMOD Studio by Firelight Technologies Pty Ltd."
