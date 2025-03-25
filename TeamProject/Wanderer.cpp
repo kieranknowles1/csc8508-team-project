@@ -31,7 +31,18 @@ Wanderer::Wanderer(PlayerObject* p, NavMesh* mesh, Side side, int lID, GameTechR
 	stateMachine->AddState(playerNear);
 
 	stateMachine->AddTransition(new StateTransition(playerFar, playerNear, [&]()->bool {
-		if (playerDist <= senseDistance && playerVisible) {
+		if (playerDist <= senseDistance) {
+			btTransform trans = GetTransform();
+			btTransform pTrans = player->GetTransform();
+
+			btVector3 wl = trans.getOrigin();
+			btVector3 pl = pTrans.getOrigin();
+
+			btVector3 dir = (pl - wl) == 0 ? btVector3(0, 0, 0) : (pl - wl).normalized();
+			std::optional<ShotInfo> shot = Shoot::GetInstance()->RayClosest(wl, dir, true, static_cast<GameObject*>(this));
+			if (shot.has_value()) {
+				if (!(shot.value().hitObj == player || shot.value().hitObj == player->getGun())) return false;
+			}
 			GetRenderObject()->SetColour(Vector4(1, 0, 0, 1));
 			/*btVector3 pPos = player->GetTransform().getOrigin();
 			pPos.setY(navMesh->GetYFromPoint(pPos.getX(), pPos.getZ()));
@@ -46,7 +57,7 @@ Wanderer::Wanderer(PlayerObject* p, NavMesh* mesh, Side side, int lID, GameTechR
 		}));
 
 	stateMachine->AddTransition(new StateTransition(playerNear, playerFar, [&]()->bool {
-		if (playerDist > senseDistance * 2 || !playerVisible) {
+		if (playerDist > senseDistance * 2) {
 			GetRenderObject()->SetColour(Vector4(0, 1, 0, 1));
 			curPath = navMesh->FindPath(curPathPoint, navMesh->GetRandomPointInNavMesh());
 			if (curPath.size() > 0) NewPath(curPath);
@@ -54,6 +65,23 @@ Wanderer::Wanderer(PlayerObject* p, NavMesh* mesh, Side side, int lID, GameTechR
 			return true;
 		}
 		else {
+			btTransform trans = GetTransform();
+			btTransform pTrans = player->GetTransform();
+
+			btVector3 wl = trans.getOrigin();
+			btVector3 pl = pTrans.getOrigin();
+
+			btVector3 dir = (pl - wl) == 0 ? btVector3(0, 0, 0) : (pl - wl).normalized();
+			std::optional<ShotInfo> shot = Shoot::GetInstance()->RayClosest(wl, dir, true, static_cast<GameObject*>(this));
+			if (shot.has_value()) {
+				if (!(shot.value().hitObj == player || shot.value().hitObj == player->getGun())) {
+					GetRenderObject()->SetColour(Vector4(0, 1, 0, 1));
+					curPath = navMesh->FindPath(curPathPoint, navMesh->GetRandomPointInNavMesh());
+					if (curPath.size() > 0) NewPath(curPath);
+					renderer->updateLaser(laserID, btVector3(0, 0, 0), btVector3(0, 0, 0));
+					return true;
+				}
+			}
 			return false;
 		}
 		}));
@@ -128,10 +156,6 @@ void Wanderer::UpdatePlayerDistance() {
 
 	btVector3 wl = trans.getOrigin();
 	btVector3 pl = pTrans.getOrigin();
-
-	btVector3 dir = (pl - wl) == 0 ? btVector3(0, 0, 0) : (pl - wl).normalized();
-	std::optional<ShotInfo> shot = Shoot::GetInstance()->RayClosest(wl, dir, true, static_cast<GameObject*>(this));
-	if (shot.has_value()) playerVisible = (shot.value().hitObj == player || shot.value().hitObj == player->getGun());
 
 	//wl.setY(0);
 	//pl.setY(0);
