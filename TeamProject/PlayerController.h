@@ -104,6 +104,7 @@ namespace NCL {
 			float rotateTimer = 0.0f;
 			bool rotationChanging = false;
 			bool thirdPerson = false;
+			bool scoreboardActive = false;
 			float spaceCount = 0;
 			float inAirTime = 0;
 			btDiscreteDynamicsWorld* bulletWorld;
@@ -157,6 +158,7 @@ namespace NCL {
 			void MovementCalculations(float dt);
 			void HandleJumping();
 			void HandleHurtEffects();
+			void ToggleScoreboard();
 
 		};
 	};

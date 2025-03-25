@@ -12,6 +12,7 @@
 #include "MainMenuScreen.h"
 #include "GameScreen.h"
 #include "PauseScreen.h"
+#include "EndScreenMP.h"
 
 #include "Multiplayer/GamePacketHandlers.hpp"
 
@@ -101,6 +102,7 @@ int main(int argc, char** argv) {
 
     //PushdownMachine machine(new GameScreen(controller, game.get(), "Singleplayer"));
     PushdownMachine machine(new MainMenuScreen(controller, game.get()));
+    //PushdownMachine machine(new EndScreenMP(controller, game.get()));
 
     // Clear delta time to exclude start up time
     window->GetTimer().GetTimeDeltaSeconds();

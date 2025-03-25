@@ -18,6 +18,9 @@ set(SOURCES
 
     DecalSystem.cpp
     DecalSystem.h
+    
+    EndScreenMP.cpp
+    EndScreenMP.h
 
     GameScreen.h
     GameTechRendererInterface.cpp

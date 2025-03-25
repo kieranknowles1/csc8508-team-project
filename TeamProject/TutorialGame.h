@@ -110,6 +110,10 @@ namespace NCL {
 
             GameWorld* GetWorld() const { return world.get(); }
 
+            GameTechRendererInterface* GetUIRenderer() {
+                return renderer;
+            }
+
             btDiscreteDynamicsWorld* getBulletWorld() {
                 return bulletWorld;
             }

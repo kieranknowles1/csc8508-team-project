@@ -625,7 +625,6 @@ void GameTechAGCRenderer::UpdateObjectList() {
 		Matrix3 transMat3 = Matrix::FromMat4(state.modelMatrix);
 		state.normalMatrix = Matrix::FromMat3(Matrix::InverseTranspose(transMat3));
 
-		state.colour = g->GetColour();
 		state.texRepeats = g->GetTexRepeating();
 		state.texScale = g->getParent()->getRenderScale() * g->GetTexScaleMultiplier();
 		state.skinningIndex = NULLTEX;
@@ -665,6 +664,7 @@ void GameTechAGCRenderer::UpdateObjectList() {
 		for (int i = 0; i < g->GetMesh()->GetSubMeshCount(); i++) {
 			auto subMesh = g->GetMesh()->GetSubMesh(i);
 			auto layer = g->getMaterial() ? g->getMaterial()->GetLayer(i) : nullptr;
+			state.colour = (l && l->useColor) ? g->GetColour() : Vector4(1, 1, 1, 1);
 
 			auto t = layer ? layer->diffuse : nullptr;
 			state.texIndex = t ? t->GetAssetID() : NULLTEX;
