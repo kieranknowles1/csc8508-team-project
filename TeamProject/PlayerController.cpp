@@ -109,8 +109,18 @@ void PlayerController::FireShot(float dt) {
     btMatrix3x3 rotationMatrix(bulletRotation);
     btVector3 forwardDir = rotationMatrix * btVector3(0, 0, -1);
     btVector3 adjustedOffset = rotationMatrix * gunCameraOffset; // Apply rotation to the offset
+    
+    // Calculate forward direction based on where crosshair lands.
+    std::optional<ShotInfo> crosshairRay = Shoot::GetInstance()->RayClosest(
+        camera->GetPosition(), forwardDir
+    );
+    if (crosshairRay == std::nullopt) return;
 
-    std::optional<ShotInfo> info = Shoot::GetInstance()->ShootBulletPlayer(player->getGun()->GetPhysicsObject()->GetRigidBody()->getWorldTransform().getOrigin() + adjustedOffset, forwardDir, bulletRotation, dt, player->GetWorldID());
+    btVector3 crosshairLookPoint = crosshairRay->hitPos;
+    btVector3 startPos = player->getGun()->GetPhysicsObject()->GetRigidBody()->getWorldTransform().getOrigin() + adjustedOffset;
+    btVector3 gunForwardDir = (crosshairLookPoint - startPos).normalized();
+
+    std::optional<ShotInfo> info = Shoot::GetInstance()->ShootBulletPlayer(startPos, gunForwardDir, bulletRotation, dt, player->GetWorldID());
     if (info != std::nullopt) {
         player->GetLaser()->SetCollisionNormal(info.value().hitNormal);
         player->updateLaser(player->getGun()->GetPhysicsObject()->GetRigidBody()->getWorldTransform().getOrigin() + adjustedOffset, info.value().hitPos);
