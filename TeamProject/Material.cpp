@@ -21,6 +21,9 @@ Material::Material(CSC8503::ResourceManager* rm, const std::string& filename) {
         if (layer->GetEntry("InvertY", &out)) {
             l.invertY = *out == "true";
         }
+        if (layer->GetEntry("UseColor", &out)) {
+            l.useColor = *out == "true";
+        }
         layers.push_back(l);
     }
 }
