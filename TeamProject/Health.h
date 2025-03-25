@@ -55,8 +55,15 @@ namespace NCL::CSC8503 {
         void SetRegenerationDelay(float delay) { regenDelay = delay; }
         float GetRegenerationDelay() const { return regenDelay; }
 
-        HealthState GetHealthState() { return currentHealth == 0 ? HealthState::DEAD : HealthState::ALIVE; }
+        void SetInvulnerableWindow(float time) { invulnerableWindow = time; }
+        float GetInvulernableWindow() { return invulnerableWindow; }
 
+        void Respawn() { 
+            SetCurrentHealth(GetMaxHealth());
+            lastSpawn = elapsed;
+        }
+
+        HealthState GetHealthState() { return currentHealth == 0 ? HealthState::DEAD : HealthState::ALIVE; }
         GameObject* GetParent() { return parent; }
 
     protected:
@@ -67,9 +74,11 @@ namespace NCL::CSC8503 {
         float currentHealth = 0;
         float regenRate = 0;
         float regenDelay = 0;
+        float invulnerableWindow = 0;
 
-        float lastHit = 0;
         float elapsed = 0;
+        float lastHit = 0;
+        float lastSpawn = 0;
     };
 
 

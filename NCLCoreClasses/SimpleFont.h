@@ -43,7 +43,7 @@ namespace NCL {
             void BuildInterleavedVerticesForString(const std::string& text, const Maths::Vector2& startPos, const Maths::Vector4& colour, float size, std::vector<InterleavedTextVertex>& vertices);
 
             // Texture will be filled with the font's glyphs
-			SimpleFont(const std::string&fontName, std::shared_ptr<Texture> texture);
+			SimpleFont(const std::string&fontName, std::shared_ptr<Texture> texture, float advanceMult = 1.0f);
 			~SimpleFont();
 
             int InitializeFreeType(const std::string& filename, std::shared_ptr<Texture> texture);
@@ -57,6 +57,8 @@ namespace NCL {
 		protected:
             // Assume a constant size in pixels
             const static constexpr Vector2 ScreenSize = Vector2(1920, 1080);
+
+            float advanceMult;
 
             // Start/end of ASCII printable characters
             const static constexpr int StartChar = 32;

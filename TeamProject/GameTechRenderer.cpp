@@ -512,6 +512,7 @@ void GameTechRenderer::NewRenderLines() {
 
 
 void GameTechRenderer::NewRenderText() {
+    // Retrieve the debug strings
 	const std::vector<Debug::DebugStringEntry>& strings = Debug::GetDebugStrings();
 	if (strings.empty()) {
 		return;
@@ -519,8 +520,11 @@ void GameTechRenderer::NewRenderText() {
 
 	UseShader(*debugShader);
 
+    // Retrieve the font texture
 	OGLTexture* t = (OGLTexture*)Debug::GetDebugFont()->getTexture().get();
+    
 
+    // If font texture exists, bind it to the shader
 	if (t) {
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, t->GetObjectID());
@@ -530,28 +534,38 @@ void GameTechRenderer::NewRenderText() {
 		BindTextureToShader(*t, "mainTex", 0);
 	}
 
+    // Set up the orthographic projection matrix
 	Matrix4 proj = Matrix::Orthographic(0.0f, 1.0f, 1.0f, 0.0f, -1.0f, 1.0f, true);
 
+    // Set up the view projection matrix uniform
 	int matSlot = glGetUniformLocation(debugShader->GetProgramID(), "viewProjMatrix");
 	glUniformMatrix4fv(matSlot, 1, false, (float*)proj.array);
 
+    // Send font texture to the shader
 	GLuint texSlot = glGetUniformLocation(debugShader->GetProgramID(), "useTexture");
 	glUniform1i(texSlot, 1);
 
+    // Clear previous frames text vertex data
 	debugTextPos.clear();
 	debugTextColours.clear();
 	debugTextUVs.clear();
 
+    // Calculates buffer sizes for new text
+    // Calculates how many vertices are needed (each character = 6 vertices)
 	int frameVertCount = 0;
 	for (const auto& s : strings) {
 		frameVertCount += s.data.size() * 6;
 	}
 	SetDebugStringBufferSizes(frameVertCount);
 
+    // For each string in the debug strings
+    // Build the vertices for the string
+    // Add the vertices to the text vertex data
 	for (const auto& s : strings) {
 		Debug::GetDebugFont()->BuildVerticesForString(s.data, s.position, s.colour, s.scale, debugTextPos, debugTextUVs, debugTextColours);
 	}
 
+    // Update the text vertex buffer with the new data
 	glBindBuffer(GL_ARRAY_BUFFER, textVertVBO);
 	glBufferSubData(GL_ARRAY_BUFFER, 0, frameVertCount * sizeof(Vector3), debugTextPos.data());
 	glBindBuffer(GL_ARRAY_BUFFER, textColourVBO);
@@ -787,8 +801,6 @@ void GameTechRenderer::RenderLasers() {
 	glBindTexture(GL_TEXTURE_2D, laserTexOld);
 	glUniform1i(glGetUniformLocation(laserPreProcess->GetProgramID(), "oldLaserTex"), 1);
 	glUniform1f(glGetUniformLocation(laserPreProcess->GetProgramID(), "dt"), delta);
-	glUniformMatrix4fv(glGetUniformLocation(laserPreProcess->GetProgramID(), "currViewProjMatrix"), 1, false, (float*)&viewProjMatrix);
-	glUniformMatrix4fv(glGetUniformLocation(laserPreProcess->GetProgramID(), "prevViewProjMatrix"), 1, false, (float*)&laserPreviousViewProjMatrix);
 	DrawBoundMesh();
 
 	// calculate texelSize needed for blur
@@ -808,7 +820,7 @@ void GameTechRenderer::RenderLasers() {
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, laserPreTex);
 	glUniform1i(glGetUniformLocation(laserPostProcess->GetProgramID(), "laserTex"), 0);
-	glUniform1f(glGetUniformLocation(laserPostProcess->GetProgramID(), "blurScale"),1.25f);
+	glUniform1f(glGetUniformLocation(laserPostProcess->GetProgramID(), "blurScale"),1.75f);
 	glUniform2fv(glGetUniformLocation(laserPostProcess->GetProgramID(), "texelSize"), 1, (float*)&texelSize);
 	DrawBoundMesh();
 
@@ -822,10 +834,9 @@ void GameTechRenderer::RenderLasers() {
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, laserPostTex);
 	glUniform1i(glGetUniformLocation(laserPostProcess->GetProgramID(), "laserTex"), 0);
-	glUniform1f(glGetUniformLocation(laserPostProcess->GetProgramID(), "blurScale"), 1.25f);
+	glUniform1f(glGetUniformLocation(laserPostProcess->GetProgramID(), "blurScale"), 1.75f);
 	glUniform2fv(glGetUniformLocation(laserPostProcess->GetProgramID(), "texelSize"), 1, (float*)&texelSize);
 	DrawBoundMesh();
-	laserPreviousViewProjMatrix = viewProjMatrix;
 	laserTexOld = laserPreTex;
 }
 

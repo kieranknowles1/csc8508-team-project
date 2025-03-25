@@ -3,6 +3,7 @@
 #include "Multiplayer/GamePackets.hpp"
 #include "Multiplayer/Server.hpp"
 #include "Health.h"
+#include "Respawn.h"
 
 #include <memory>
 
@@ -17,10 +18,11 @@ PlayerObject::PlayerObject() {
     health->SetCurrentHealth(PLAYER_HEALTH);
     health->SetRegenerationDelay(2.0f);
     health->SetRegenerationRate(50.0f);
+    health->SetInvulnerableWindow(1.0f);
 
     attack = std::make_unique<AttackAttrib>();
     attack->SetDamageType(DamageType::CONTINUOUS);
-    attack->SetDamageAmount(50.0f);
+    attack->SetDamageAmount(150.0f);
 
     attack->SetHealthAttrib(health.get());
 }
@@ -53,7 +55,6 @@ void PlayerObject::Update(float dt) {
     }
 
     elapsedTime += dt;
-
 }
 
 void PlayerObject::UpdateWorldState() {
@@ -130,8 +131,6 @@ std::vector<std::shared_ptr<Packet::Packet>> PlayerObject::CreatePackets(int seq
     }
     return std::move(packets);
 }
-
-
 
 void PlayerObject::OnCollisionEnter(const CollisionInfo& collisionInfo){
 	btVector3 playerPos = this->GetPhysicsObject()->GetRigidBody()->getWorldTransform().getOrigin();

@@ -60,10 +60,12 @@ namespace NCL {
         }
 
         void HealthAttrib::Damage(float amount) {
-            std::scoped_lock lock(damageMutex);
-            float newHealthAttrib = currentHealth - amount;
-            SetCurrentHealth(newHealthAttrib);
-            lastHit = elapsed;
+            if (elapsed - lastSpawn >= invulnerableWindow) {
+                std::scoped_lock lock(damageMutex);
+                float newHealthAttrib = currentHealth - amount;
+                SetCurrentHealth(newHealthAttrib);
+                lastHit = elapsed;
+            }
         }
 
         /**

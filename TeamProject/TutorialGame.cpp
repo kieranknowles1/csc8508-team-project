@@ -143,6 +143,21 @@ void TutorialGame::UpdateGame(float dt) {
 
 
 void TutorialGame::UpdatePlayer(float dt) {
+    if (player->GetHealthAttrib()->GetHealthState() == HealthState::DEAD) {
+        Respawn* instance = Respawn::GetInstance();
+        RespawnPoint* respawn;
+
+        if (player->GetOwner()) respawn = instance->GetRandomRespawn(player->GetOwner()->GetUserID() - 1);
+        else respawn = instance->GetRandomRespawn(1);
+
+        btTransform& transform = player->GetPhysicsObject()->GetRigidBody()->getWorldTransform();
+
+        transform.setOrigin(respawn->position);
+        playerController->setYaw(respawn->yaw);
+
+        player->setCollided(0);
+        player->GetHealthAttrib()->Respawn();
+    }
 
     // Press F for freeCam, press G for thirdPerson
     if (freeCam) {
@@ -173,6 +188,15 @@ void TutorialGame::UpdateKeys() {
     if (controller->GetDigital(DebugFreeCam)) {
         freeCam = !freeCam;
     }
+    if (controller->GetDigital(DebugRespawnRandom)) {
+        RespawnPoint* respawnPoint = Respawn::GetInstance()->GetRandomRespawn(player->GetWorldID());
+        playerController->setYaw(respawnPoint->yaw);
+        player->GetPhysicsObject()->GetRigidBody()->getWorldTransform().setOrigin(respawnPoint->position);
+        player->setUpDirection(respawnPoint->orientation);
+        player->resetCollisionType();
+        player->setCollided(0);
+    }
+
 
     if (playerController) {
         if (controller->GetDigital(ThirdPerson)) {
@@ -343,6 +367,7 @@ PlayerObject* TutorialGame::InitPlayer(btVector3 position, btVector3 upDir) {
 
     //newPlayer->SetIsAnimated(true); //maybe better to manage this wherever animations are being applied rather than here but for testing this is probably fine
     newPlayer->setRenderer(renderer); 
+    Respawn::GetInstance()->InsertPlayerObj(newPlayer);
     return newPlayer;
 }
 
@@ -578,6 +603,7 @@ void TutorialGame::Start() {
             if (user == *(instance->server->GetUser())) {
                 instance->player = player;
                 instance->playerController = std::make_unique<PlayerController>(instance->player, instance->controller, instance->mainCamera, instance->bulletWorld, instance->renderer);
+                instance->playerController->setYaw(respawn->yaw);
             }
         }
     }

@@ -44,6 +44,7 @@ public:
 		DebugBulletOverlay,
 		DebugShowProfiling,
 		DebugFreeCam,
+		DebugRespawnRandom,
 
 		Pause,
 		// TODO: Do we need this one?
