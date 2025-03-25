@@ -2,10 +2,14 @@
 
 uniform sampler2D diffuseTex;
 uniform sampler2D normalTex;
+uniform sampler2D glossTex;
+uniform sampler2D specularTex;
 
 uniform bool hasTexture;
 uniform bool isFlat;
 uniform bool hasNormalMap; 
+uniform bool hasGloss;
+uniform bool hasSpecular;
 
 in Vertex {
     vec4 colour;
@@ -42,9 +46,25 @@ void main(void)   {
 	    vecnormal = mapnormal; //the * 2.0 - 1.0 part converts from the texture space of 0.0 to 1.0 over to vector coordinates ranging from -1.0 to 1.0 so this part is still required
 	}
 
+	if(hasGloss) {
+		albedo.a *= texture(glossTex, IN.texCoord).r;
+	}
+
+	if(hasSpecular) {
+		albedo.a *= texture(specularTex, IN.texCoord).r;
+	}
+
+	// TODO: Remove this after debugging that gloss and specular are working
+	// if (hasSpecular) {
+    // 	fragColour[1] = vec4(texture(glossTex, IN.texCoord).rrr, 1.0); // Output gloss as grayscale
+	// } else {
+	// 	fragColour[1] = vec4(0.0, 0.0, 0.0, 1.0); // Default to black if no gloss map
+	// }
+
+
 	albedo.a = 1;
 	fragColour[0] = albedo; //all the (non-lighting) colour information goes into here
 	fragColour[1] = vec4(vecnormal.xyz * 0.5 + 0.5, 1.0); //(THE *0.5 + 0.5) may be unneccessary for floating point textures
-	}
+}
 
 	
