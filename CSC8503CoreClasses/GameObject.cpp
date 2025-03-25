@@ -45,11 +45,8 @@ void GameObject::UpdateWorldState() {
     writeState->UpdateState(StateType::Rotation, transform.getRotation());
 }
 
-void GameObject::UpdateFromWorldState(float dt) {
-    elapsedTickTime += dt;
-
+void GameObject::UpdateFromWorldState(float tickDT) {
     std::function lerp = [](float x, float y, float w) { return x + ((y - x) * w); };
-    float weight = fmod(elapsedTickTime, TICK_UPDATE_RATE) / TICK_UPDATE_RATE;
 
     auto [current, currentLock] = GetWorldStates()->GetCurrentState();
     auto [read, readLock] = GetWorldStates()->GetReadState();
@@ -95,9 +92,9 @@ void GameObject::UpdateFromWorldState(float dt) {
         btVector3 currentLinear = std::get<btVector3>(currentLinearValue);
         btVector3 targetLinear = std::get<btVector3>(targetLinearValue);
         btVector3 interpolated = btVector3(
-            lerp(currentLinear.x(), targetLinear.x(), weight),
-            lerp(currentLinear.y(), targetLinear.y(), weight),
-            lerp(currentLinear.z(), targetLinear.z(), weight)
+            lerp(currentLinear.x(), targetLinear.x(), tickDT),
+            lerp(currentLinear.y(), targetLinear.y(), tickDT),
+            lerp(currentLinear.z(), targetLinear.z(), tickDT)
         );
         body->setLinearVelocity(interpolated);
     } 
@@ -107,9 +104,9 @@ void GameObject::UpdateFromWorldState(float dt) {
         btVector3 currentAngular = std::get<btVector3>(currentAngularValue);
         btVector3 targetAngular = std::get<btVector3>(targetAngularValue);
         btVector3 interpolated = btVector3(
-            lerp(currentAngular.x(), targetAngular.x(), weight),
-            lerp(currentAngular.y(), targetAngular.y(), weight),
-            lerp(currentAngular.z(), targetAngular.z(), weight)
+            lerp(currentAngular.x(), targetAngular.x(), tickDT),
+            lerp(currentAngular.y(), targetAngular.y(), tickDT),
+            lerp(currentAngular.z(), targetAngular.z(), tickDT)
         );
         body->setAngularVelocity(interpolated);
     }
@@ -119,9 +116,9 @@ void GameObject::UpdateFromWorldState(float dt) {
         btVector3 currentPosition = std::get<btVector3>(currentPositionValue);
         btVector3 targetPosition = std::get<btVector3>(targetPositionValue);
         btVector3 interpolated = btVector3(
-            lerp(currentPosition.x(), targetPosition.x(), weight),
-            lerp(currentPosition.y(), targetPosition.y(), weight),
-            lerp(currentPosition.z(), targetPosition.z(), weight)
+            lerp(currentPosition.x(), targetPosition.x(), tickDT),
+            lerp(currentPosition.y(), targetPosition.y(), tickDT),
+            lerp(currentPosition.z(), targetPosition.z(), tickDT)
         );
         body->getWorldTransform().setOrigin(interpolated);
     } 
@@ -131,10 +128,10 @@ void GameObject::UpdateFromWorldState(float dt) {
         btQuaternion currentRotation = std::get<btQuaternion>(currentRotationValue);
         btQuaternion targetRotation = std::get<btQuaternion>(targetRotationValue);
         btQuaternion interpolated = btQuaternion(
-            lerp(currentRotation.x(), targetRotation.x(), weight),
-            lerp(currentRotation.y(), targetRotation.y(), weight),
-            lerp(currentRotation.z(), targetRotation.z(), weight),
-            lerp(currentRotation.w(), targetRotation.w(), weight)
+            lerp(currentRotation.x(), targetRotation.x(), tickDT),
+            lerp(currentRotation.y(), targetRotation.y(), tickDT),
+            lerp(currentRotation.z(), targetRotation.z(), tickDT),
+            lerp(currentRotation.w(), targetRotation.w(), tickDT)
         );
         body->getWorldTransform().setRotation(interpolated);
     }

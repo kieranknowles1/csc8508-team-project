@@ -90,8 +90,8 @@ namespace NCL {
 
             std::unique_lock stateLock(writeState->Lock());
 
-            writeState->UpdateState(StateType::DamageDealt, damageDealt);
-            writeState->UpdateState(StateType::ObjectID, lastHit->GetWorldID());
+            //writeState->UpdateState(StateType::DamageDealt, damageDealt);
+            //writeState->UpdateState(StateType::ObjectID, lastHit->GetWorldID());
         }
 
         // Receives incoming damage states from other players.

@@ -110,10 +110,8 @@ namespace Multiplayer {
 
         m_game->GetWorld()->OperateOnContents([&](GameObject* object) {
             if (object->GetOwner() == nullptr) return;
-
-            object->GetWorldStates()->UpdateBuffer();
-
             if (*(object->GetOwner()) != *m_user) return;
+            object->GetWorldStates()->UpdateBuffer();
 
             std::vector<std::shared_ptr<Packet::Packet>> packets = object->CreatePackets(m_tickCount);
             for (auto packet = packets.begin(); packet != packets.end(); packet++) {
@@ -181,6 +179,14 @@ namespace Multiplayer {
             }
             m_buffer[m_processTick % TICK_BUFFER_SIZE].clear();
         }
+
+        // Swapping buffers after writing new states.
+        m_game->GetWorld()->OperateOnContents([&](GameObject* object) {
+            if (object->GetOwner() == nullptr) return;
+            if (*(object->GetOwner()) == *m_user) return;
+            object->GetWorldStates()->UpdateBuffer();
+            });
+
 
         //// Speeding up to match others pace.
         //if (smallestIncoming > m_tickCount && smallestIncoming != INT32_MAX) {

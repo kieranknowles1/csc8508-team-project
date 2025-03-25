@@ -93,6 +93,9 @@ void TutorialGame::UpdateGame(float dt) {
 
     profiler.startSection("Network Updates");
     if (server != nullptr) {
+        std::unique_lock ticklock = server->LockTick();
+
+        float tickProgress = server->GetTickProgress();
         world->OperateOnContents([&](GameObject* obj) {
             if (obj->GetOwner() == nullptr) return;
             if (server->IsOwnerOf(obj)) obj->UpdateWorldState();
@@ -327,6 +330,7 @@ PlayerObject* TutorialGame::InitPlayer(btVector3 position, btVector3 upDir) {
     newPlayer->GetPhysicsObject()->GetRigidBody()->setAngularFactor(0);
     newPlayer->GetPhysicsObject()->GetRigidBody()->setFriction(0.0f);
     newPlayer->GetPhysicsObject()->GetRigidBody()->setDamping(0.0, 0);
+    newPlayer->GetPhysicsObject()->GetRigidBody()->setGravity({0, 0, 0});
 
     newPlayer->GetRenderObject()->SetColour(Vector4(playerColour));
     newPlayer->setUpDirection(upDir);

@@ -4,6 +4,7 @@
 #include <array>
 #include <thread>
 #include <mutex>
+#include <shared_mutex>
 #include <functional>
 
 #include <./enet/enet.h>
@@ -162,6 +163,19 @@ public:
         m_tickListeners.push_back(func);
     }
 
+    /**
+     * @brief Return the amount of time that has elapsed since the last tick
+     * represented as a value betweeen 0 and 1.
+     */
+    inline float GetTickProgress() {
+        std::shared_lock lock(m_tickProgressMut);
+        return std::fmod(m_lastTime, NETWORK_RATE) / NETWORK_RATE;
+    }
+
+    std::unique_lock<std::mutex> LockTick() {
+        return std::move(std::unique_lock(m_tickLock));
+    }
+
 
 protected:
     /**
@@ -197,6 +211,8 @@ private:
     std::mutex m_sendMut;
     std::mutex m_connectCallbackMut;
     std::mutex m_listenerMut;
+    std::mutex m_tickLock;
+    std::shared_mutex m_tickProgressMut;
 
     NetworkStates::NetworkState m_state = NetworkStates::NetworkState::CLOSED;
 
@@ -205,6 +221,7 @@ private:
     int m_numPackets = 0;
     
     float m_elapsedTime = 0;
+    float m_lastTime = 0;
     float m_lastTick = 0;
     int m_lastMaxSequence = 0; // Each tick will drop optional packets that didn't make the first tick.
 

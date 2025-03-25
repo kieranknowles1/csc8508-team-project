@@ -36,7 +36,6 @@ namespace Packet {
         LASER = CUSTOM_TYPE + 8,
         PING = CUSTOM_TYPE + 9,
         PONG = CUSTOM_TYPE + 10,
-        DAMAGE = CUSTOM_TYPE + 11
     };
 
 
@@ -234,7 +233,7 @@ namespace Packet {
          * @param dealer - the id of the user who dealt the damage.
          */
         DamagePacket(int targetID, float damage, int dealer) :
-            Packet(static_cast<Type>(PacketType::DAMAGE), static_cast<uint8_t>(Channel::RELIABLE), 0),
+            Packet(static_cast<Type>(PacketType::DAMAGE), static_cast<uint8_t>(Channel::UNSEQUENCED), 0),
             m_targetID(targetID), m_damage(damage), m_dealer(dealer)
         {}
 
@@ -268,25 +267,6 @@ namespace Packet {
         PongPacket() :
             Packet(static_cast<Type>(PacketType::PONG), static_cast<uint8_t>(Channel::RELIABLE), 0)
         {}
-    };
-
-    /**
-     * @brief A packet that damaged the target object by the given amount.
-     */
-    class DamagePacket : public Packet {
-    public:
-        DamagePacket(int objectID, int targetID, float amount) :
-            Packet(static_cast<Type>(PacketType::DAMAGE), static_cast<int>(Channel::UNSEQUENCED), 0),
-            m_objectID(objectID), m_targetID(targetID), m_amount(amount)
-        {}
-
-        int GetTargetID() const { return m_objectID; }
-        float GetDamage() const { return m_amount; }
-
-    private:
-        int m_objectID;
-        int m_targetID;
-        float m_amount;
     };
 }
 

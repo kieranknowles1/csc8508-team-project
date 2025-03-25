@@ -71,6 +71,9 @@ namespace Multiplayer {
             m_processTick = -TICK_BUFFER_SIZE + 1;
         }
 
+        std::unique_lock<std::mutex> LockTick() { return std::move(m_network->LockTick()); }
+        float GetTickProgress() { return m_network->GetTickProgress(); }
+
     private:
         /**
          * @brief Listens to the server tick and sends state when server

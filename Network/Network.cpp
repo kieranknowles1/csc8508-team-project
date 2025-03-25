@@ -113,10 +113,15 @@ void Network::Run() {
 
 
 void Network::Tick(float dt) {
+    std::unique_lock ticklock(m_tickProgressMut);
+    m_lastTime = m_elapsedTime;
+    ticklock.unlock();
+
     m_elapsedTime += dt;
 
     int ticksProcessed = 0;
 
+    LockTick();
     while (m_elapsedTime - m_lastTick >= NETWORK_RATE && m_state == NetworkStates::NetworkState::ON) {
         std::lock_guard<std::mutex> lock(m_listenerMut);
         for (auto func : m_tickListeners) func(false);
