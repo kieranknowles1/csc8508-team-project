@@ -31,7 +31,7 @@ Wanderer::Wanderer(GameObject* p, NavMesh* mesh, Side side, int lID, GameTechRen
 	stateMachine->AddState(playerNear);
 
 	stateMachine->AddTransition(new StateTransition(playerFar, playerNear, [&]()->bool {
-		if (playerDist <= senseDistance) {
+		if (playerDist <= senseDistance && playerVisible) {
 			GetRenderObject()->SetColour(Vector4(1, 0, 0, 1));
 			/*btVector3 pPos = player->GetTransform().getOrigin();
 			pPos.setY(navMesh->GetYFromPoint(pPos.getX(), pPos.getZ()));
@@ -46,7 +46,7 @@ Wanderer::Wanderer(GameObject* p, NavMesh* mesh, Side side, int lID, GameTechRen
 		}));
 
 	stateMachine->AddTransition(new StateTransition(playerNear, playerFar, [&]()->bool {
-		if (playerDist > senseDistance * 2) {
+		if (playerDist > senseDistance * 2 || !playerVisible) {
 			GetRenderObject()->SetColour(Vector4(0, 1, 0, 1));
 			curPath = navMesh->FindPath(curPathPoint, navMesh->GetRandomPointInNavMesh());
 			if (curPath.size() > 0) NewPath(curPath);
@@ -128,6 +128,9 @@ void Wanderer::UpdatePlayerDistance() {
 
 	btVector3 wl = trans.getOrigin();
 	btVector3 pl = pTrans.getOrigin();
+
+	std::optional<ShotInfo> shot = Shoot::GetInstance()->RayClosest(wl, pl, true);
+	if (shot.has_value()) playerVisible = (shot.value().hitObj->getType() == GameObject::Type::Player);
 
 	//wl.setY(0);
 	//pl.setY(0);
