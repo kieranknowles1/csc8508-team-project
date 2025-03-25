@@ -84,7 +84,6 @@ GameTechAGCRenderer::GameTechAGCRenderer(Window* window) : AGCRenderer(window), 
 	sphere = std::unique_ptr<AGCMesh>((AGCMesh*)LoadMesh("Sphere.msh"));
 	highResSphere = std::unique_ptr<PS5::AGCMesh>((AGCMesh*)LoadMesh("Sphere_HighRes.msh"));
 
-	skinningCompute = std::make_unique<AGCShader>("Skinning_c.ags", allocator);
 	gammaCompute	= std::make_unique<AGCShader>("Gamma_c.ags", allocator);
 
 	defaultVertexShader = std::make_unique<AGCShader>("Tech_vv.ags", allocator);

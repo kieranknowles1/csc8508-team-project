@@ -1,7 +1,6 @@
 #include "types.h"
 #include "ShaderConstants.psslh"
 #include "Bindless.psslh"
-#include "Skinning.psslh"
 #include "VertexAttributes.psslh"
 #include "Vertex.psslh"
 
