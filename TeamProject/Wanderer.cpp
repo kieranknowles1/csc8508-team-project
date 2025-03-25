@@ -246,7 +246,7 @@ void Wanderer::PlayerFar(float dt) {
 		trans.setOrigin(newPos);
 		btRigidBody* body = physicsObject->GetRigidBody();
 		body->setWorldTransform(trans);
-		navMesh->DebugDrawPath(curPath);
+		//navMesh->DebugDrawPath(curPath);
 	}
 	else {
 		curPath = navMesh->FindPath(curPathPoint, navMesh->GetRandomPointInNavMesh());

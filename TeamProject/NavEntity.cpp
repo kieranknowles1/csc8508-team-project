@@ -51,7 +51,7 @@ float NavEntity::GroundAdjust(btVector3 pos) {
 		upPos = pos + btVector3(0, 100.0f, 0);
 		downPos = pos + btVector3(0, -1000.0f, 0);
 		
-		debugDrawer->drawLine(upPos, downPos, Vector3(0, 0, 1));
+		//debugDrawer->drawLine(upPos, downPos, Vector3(0, 0, 1));
 		direction = (downPos - upPos).normalized();
 
 		rayResult = Shoot::GetInstance()->RayClosest(upPos, direction, false, static_cast<GameObject*>(this));
@@ -61,7 +61,6 @@ float NavEntity::GroundAdjust(btVector3 pos) {
 		}
 
 		//return (pos.getY() - rayResult->hitPos.getY());
-		std::cout << rayResult->hitPos.getY() << std::endl;
 		return rayResult->hitPos.getY();
 	default:
 		return pos.getY();
