@@ -10,6 +10,8 @@ using namespace CSC8503;
 SPGameController::SPGameController(PlayerObject* p, TutorialGame* g, GameTechRendererInterface* r)
 	: player(p), game(g), renderer(r) {
 
+    if (navMeshDebug) g->SetFreeCam(true);
+
     btDiscreteDynamicsWorld* bulletWorld = game->getBulletWorld();
 
     bottom = new NavMesh(bulletWorld);
