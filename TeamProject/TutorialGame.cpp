@@ -559,11 +559,21 @@ void TutorialGame::InitNetwork(bool host) {
 }
 
 
-void TutorialGame::ConnectToServer(ENetAddress& address) {
+bool TutorialGame::ConnectToServer(ENetAddress& address) {
+    unsigned int checkFrequency = 10;
+
+    unsigned int maxAttempts = ConnectionTimeout / checkFrequency;
+
+    int attempts = 0;
     server->ConnectTo(&address);
     while (server->GetConnectionCount() < 1) {
-        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+        std::this_thread::sleep_for(std::chrono::milliseconds(checkFrequency));
+        attempts++;
+        if (attempts > maxAttempts) {
+            return false;
+        }
     }
+    return true;
 }
 
 
@@ -594,7 +604,7 @@ void TutorialGame::InitPacketHandlers() {
 }
 
 
-void TutorialGame::JoinGame(bool host) {
+bool TutorialGame::JoinGame(bool host) {
     CreateLocal();
     InitPacketHandlers();
     InitNetwork(host);
@@ -610,7 +620,12 @@ void TutorialGame::JoinGame(bool host) {
 
         dest.port = DEFAULT_PORT;
 
-        ConnectToServer(dest);
+        bool ok = ConnectToServer(dest);
+        if (!ok) {
+            server->Close();
+            server = std::nullopt;
+            return false;
+        }
 
         std::shared_ptr<Packet::RequestUserIDPacket> request = std::make_shared<Packet::RequestUserIDPacket>(nullptr);
         server.value().Broadcast(request);
@@ -620,6 +635,8 @@ void TutorialGame::JoinGame(bool host) {
         lobby->AddUser(user.value());
         lobby->SetHost(user.value());
     }
+
+    return true;
 }
 
 
