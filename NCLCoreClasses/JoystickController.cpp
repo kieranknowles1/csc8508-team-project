@@ -57,7 +57,7 @@ namespace NCL {
 
         case DigitalControl::DebugBulletOverlay: return buttonPressed(Button::PadUp, true, true);
         case DigitalControl::DebugFreeCam: return buttonPressed(Button::PadRight, true, true);
-        case DigitalControl::DebugReloadWorld: return buttonPressed(Button::PadLeft, true, true);
+        case DigitalControl::DebugRespawnRandom: return buttonPressed(Button::PadLeft, true, true);
         case DigitalControl::DebugShowProfiling: return buttonPressed(Button::PadDown, true, true);
 
         case DigitalControl::MenuDown: return buttonPressed(Button::PadDown, false, true);
@@ -67,6 +67,7 @@ namespace NCL {
             return buttonPressed(Button::Start, false, true);
         case DigitalControl::PauseQuit: return buttonPressed(Button::Start, true, true);
         case DigitalControl::ThirdPerson:
+        case DigitalControl::DebugReloadWorld:
             return false;
         default:
             assert(false);

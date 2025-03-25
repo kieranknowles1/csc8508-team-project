@@ -135,14 +135,16 @@ void LevelImporter::AddObjectToWorld(ObjectData* data) {
     auto normalTexture = [&](const std::string& tex) {
         return tex.empty() ? nullptr : resourceManager->getTextures().get(tex + ".png");
         };
-    cube->SetRenderObject(new RenderObject(
-        cube,
-        resourceManager->getMeshes().get(data->meshName + ".msh"),
-        mainTexture(data->mainTextureName),
-        normalTexture(data->normalTextureName)
-    ));
+    if (!data->meshName.empty()) {
+        cube->SetRenderObject(new RenderObject(
+            cube,
+            resourceManager->getMeshes().get(data->meshName + ".msh"),
+            mainTexture(data->mainTextureName),
+            normalTexture(data->normalTextureName)
+        ));
+        cube->GetRenderObject()->SetTexRepeating(true);//sets texture to repeat and scale
+    }
     world->AddGameObject(cube);
-    cube->GetRenderObject()->SetTexRepeating(true);//sets texture to repeat and scale
     cube->setType(data->type);
     cube->setJumpPadStrength(data->jumpPadStrength);
     HandleTypes(cube);
