@@ -31,6 +31,8 @@ void SimpleFont::BuildVerticesForString(const std::string& text, const Maths::Ve
         auto& info = data->second;
 
         Vector3 topLeft = Vector3(currentX, currentY, 0) * size;
+        topLeft -= Vector3(info.bearing, 0) * size;
+
         Vector3 bottomRight = topLeft + Vector3(info.size, 0) * size;
         Vector3 bottomLeft(topLeft.x, bottomRight.y, 0);
         Vector3 topRight(bottomRight.x, topLeft.y, 0);
@@ -60,9 +62,7 @@ void SimpleFont::BuildVerticesForString(const std::string& text, const Maths::Ve
         positions.push_back(bottomLeft);
         texCoords.push_back(uvBottomLeft);
 
-        // TODO: Handle advance properly
-        //currentX += (topRight.x - topLeft.x);
-        currentX += (info.advance / 64) / ScreenSize.x;
+        currentX += info.advance;
     }
 }
 
@@ -94,12 +94,18 @@ SimpleFont::SimpleFont(const std::string&filename, std::shared_ptr<Texture> text
 SimpleFont::~SimpleFont()	{
 }
 
+// Get the next power of 2 that is >= `i`
 int nextPower2(int i) {
     int candidate = 1;
     while (candidate < i) {
         candidate = candidate * 2;
     }
     return candidate;
+}
+
+// Convert a 26.6 fixed point integer into a float
+float fixedToFloat(int fixed) {
+    return fixed / 64.0f;
 }
 
 int SimpleFont::InitializeFreeType(const std::string& filename, std::shared_ptr<Texture> texture) {
@@ -133,8 +139,8 @@ int SimpleFont::InitializeFreeType(const std::string& filename, std::shared_ptr<
         }
         GlyphData data;
         data.ch = c;
-        data.advance = face->glyph->advance.x;
-        data.bearing = { float(face->glyph->bitmap_left), float(face->glyph->bitmap_top) };
+        data.advance = fixedToFloat(face->glyph->advance.x);
+        data.bearing = { face->glyph->bitmap_left, face->glyph->bitmap_top };
 
         data.size = {
             face->glyph->bitmap.width, face->glyph->bitmap.rows
@@ -173,17 +179,16 @@ int SimpleFont::InitializeFreeType(const std::string& filename, std::shared_ptr<
             memcpy(dataBegin + (y * texture->width), glyph.data.data() + (y * glyph.size.x), glyph.size.x);
         }
 
+        // Keep everything in screen multiples, for easier use with NDCs
         Character ch;
-        Vector2 sizeVec = Vector2(glyph.size.x, glyph.size.y);
-        ch.size = sizeVec / ScreenSize;
-        ch.bearing = glyph.bearing;
+        ch.size = Vector2(glyph.size.x, glyph.size.y) / ScreenSize;
+        ch.bearing = Vector2(glyph.bearing.x, glyph.bearing.y) / ScreenSize;
+        ch.advance = glyph.advance / ScreenSize.x;
 
         int pixelsLeft = col * maxSize.x;
         int pixelsTop = row * maxSize.y;
-
         ch.uvTopLeft = Vector2(pixelsLeft, pixelsTop) * pixelSize;
-        ch.uvBottomRight = ch.uvTopLeft + (pixelSize * sizeVec);
-        ch.advance = glyph.advance;
+        ch.uvBottomRight = ch.uvTopLeft + (pixelSize * Vector2(glyph.size.x, glyph.size.y));
 
         characters[glyph.ch] = ch;
     }

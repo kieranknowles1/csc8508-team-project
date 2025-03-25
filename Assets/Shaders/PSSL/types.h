@@ -54,6 +54,13 @@ struct LaserState {
 	float4 colour;
 };
 
+struct DecalState {
+	matrix modelMatrix;
+	float4 color;
+	int textureId;
+	float fade;
+};
+
 struct VS_OUTPUT
 {
 	float4 Position SLOT(S_POSITION);
@@ -62,9 +69,9 @@ struct VS_OUTPUT
 	int	texID SLOT(TEXCOORD2);
 	int normId SLOT(TEXCOORD3);
 
-	float3 tangent;
-	float3 normal;
-	float3 binormal;
+	float3 tangent SLOT(TEXCOORD4);
+	float3 normal SLOT(TEXCOORD5);
+	float3 binormal SLOT(TEXCOORD6);
 };
 
 struct UI_VS_OUTPUT {
@@ -98,6 +105,15 @@ struct LASER_VS_OUTPUT
 	float4 position SLOT(S_POSITION);
 	float4 color SLOT(TEXCOORD0);
 	float depth SLOT(TEXCOORD1);
+};
+
+struct DECAL_VS_OUTPUT
+{
+	float4 position SLOT(S_POSITION);
+	float4 color SLOT(TEXCOORD0);
+	float2 uv SLOT(TEXCOORD1);
+	int texId SLOT(TEXCOORD2);
+	float depth SLOT(TEXCOORD3);
 };
 
 #undef SLOT

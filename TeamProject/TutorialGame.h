@@ -206,6 +206,10 @@ namespace NCL {
             //post processing time variable effects
             float pulse = 0;
 
+            //to allow mesh animation to access time:
+            int aniCurrentFrame;
+            float aniFrameTime;
+
         private:
             Multiplayer::Server* server = nullptr;
             std::shared_mutex* stateMutex = nullptr;

@@ -51,7 +51,7 @@ float4 main(VS_OUTPUT vertex) : S_TARGET_OUTPUT
 
     float4 lightVal = lightDiffuse.Sample(lightDifSampler, vertex.uv);
     float4 specVal = lightSpec.Sample(lightSpecSampler, vertex.uv);
-    result.rgb = doDeferredLight(result.rgb, lightVal.rgb, specVal.rgb);
+    result.rgb = doDeferredLight(result.rgb, lightVal.rgb, specVal.rgb, Constants.ambient);
 
     // Do not apply edge detection or lighting to lasers
     float4 laserVal = laserTex.Sample(laserSampler, vertex.uv);

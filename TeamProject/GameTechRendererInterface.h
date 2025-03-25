@@ -124,10 +124,26 @@ namespace NCL::CSC8503 {
 			lasers.erase(laser);
 		}
 
+        /*
+		int GetCurrentFrame() const {
+			return currentFrame;
+		}
+
+		void SetCurrentFrame(int value) {
+			currentFrame = value;
+		}
+
+		float GetFrameTime() const {
+			return frameTime;
+		}
+
+		void SetFrameTime(float value) {
+			frameTime = value;
+		}*/
+	
 		void ClearUIElemets() {
 			uiElements.clear();
 		}
-
 
 	protected:
 		// Post-processing settings
@@ -148,6 +164,10 @@ namespace NCL::CSC8503 {
 
 		std::set<LaserObject*, LaserComparator> lasers;
 		DecalSystem decalSystem;
+
+		//Mesh Animation additions:
+		//int currentFrame = 0;
+		//float frameTime = 0.0f;
 	};
 }
 

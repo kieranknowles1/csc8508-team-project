@@ -12,6 +12,8 @@
 #include "OGLMesh.h"
 
 #include "GameTechRendererInterface.h"
+#include "MeshAnimation.h"
+#include "MeshMaterial.h"
 
 namespace NCL {
 	namespace CSC8503 {
@@ -160,6 +162,11 @@ namespace NCL {
 			std::unique_ptr<OGLShader> edgeNormals;
 			GLuint edgeNormalsTex;
 			std::unique_ptr<OGLShader> edgedetectShader;
+
+			//Mesh Animation Additions:
+			void RenderAnimations();
+			OGLShader* animationShader;
+
 
 		};
 	}

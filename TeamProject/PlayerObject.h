@@ -8,8 +8,11 @@
 #include "PhysicsObject.h"
 #include "CollisionInfo.h"
 #include "Respawn.h"
+#include "MeshAnimation.h"
+
 #include "Colors.h"
 #include "RenderObject.h"
+
 #include "GameTechRendererInterface.h"
 
 #include <btBulletDynamicsCommon.h>
@@ -21,6 +24,40 @@ namespace NCL::CSC8503 {
 	class AttackAttrib;
 
 	const float PLAYER_HEALTH = 200.0f;
+	
+	enum AnimationState { // In order of importance - e.g. sliding overrides falling if player is doing both at once
+        JUMPING_SPRINT,
+        JUMPING_STANDING,
+        SLIDING,
+        FALLING,
+        SPRINTING_FORWARD,
+        SPRINTING_BACK,
+        SPRINTING_LEFT,
+        SPRINTING_RIGHT,
+        WALKING_FORWARD,
+        WALKING_BACK,
+        WALKING_LEFT,
+        WALKING_RIGHT,
+        IDLE
+    };
+
+    constexpr std::string_view AnimationNames[] = // For printing - e.g. std::cout << "ANIMATED STATE: " << AnimationNames[animationState] << std::endl;
+    {
+        "JUMPING_SPRINT",
+        "JUMPING_STANDING",
+        "SLIDING",
+        "FALLING",
+        "SPRINTING_FORWARD",
+        "SPRINTING_BACK",
+        "SPRINTING_LEFT",
+        "SPRINTING_RIGHT",
+        "WALKING_FORWARD",
+        "WALKING_BACK",
+        "WALKING_LEFT",
+        "WALKING_RIGHT",
+        "IDLE"
+    };
+
 
 	// Player class derived from GameObject
 	class PlayerObject : public GameObject {
@@ -77,10 +114,12 @@ namespace NCL::CSC8503 {
 			camRotOffset = targetcamRotOffset;
 		}
 
+        void SetAnimation(AnimationState animationIn) { animationState = animationIn; }
+        AnimationState GetAnimation() { return animationState; }
+
 		btVector3 getRightDirection() {
 			return rightDirection;
 		}
-
 
 		btVector3 getForwardDirection() {
 			return forwardDirection;
@@ -143,26 +182,29 @@ namespace NCL::CSC8503 {
 		AttackAttrib* GetAttackAttrib() { return attack.get(); }
 
 	private:
-		//Player Variables
-		float gravityScale = 400.0f;
-		float rotateTime = 0.5f;
-		int collided = 0;
-		btVector3 collisionNormal = btVector3(0, 1, 0);
-		btVector3 collisionPoint = btVector3(0, 0, 0);
-		float jumpPadHeight = 0.0f;
-		std::list<GameObject*> collidedObjects;
-		Type collisionType;
+        //Player Variables
+        float gravityScale = 400.0f;
+        float rotateTime = 0.5f;
+        int collided = 0;
+        btVector3 collisionNormal = btVector3(0, 1, 0);
+        btVector3 collisionPoint = btVector3(0, 0, 0);
+        float jumpPadHeight = 0.0f;
+        std::list<GameObject*> collidedObjects;
+        Type collisionType;
+        ObjectState state;
 
-		btQuaternion camRotOffset;
-		btQuaternion oldcamRotOffset = btQuaternion::getIdentity();
-		btQuaternion targetcamRotOffset = btQuaternion::getIdentity();
-		btVector3 targetWorldRotation = btVector3(0, 1, 0);
-		btVector3 oldWorldRotation = btVector3(0, 1, 0);
-		btVector3 upDirection;
-		btVector3 rightDirection;
-		btVector3 forwardDirection;
-		float rotateTimer = 0.0f;
-		bool rotationChanging = false;
+        btQuaternion camRotOffset;
+        btQuaternion oldcamRotOffset = btQuaternion::getIdentity();
+        btQuaternion targetcamRotOffset = btQuaternion::getIdentity();
+        btVector3 targetWorldRotation = btVector3(0, 1, 0);
+        btVector3 oldWorldRotation = btVector3(0, 1, 0);
+        btVector3 upDirection;
+        btVector3 rightDirection;
+        btVector3 forwardDirection;
+        float rotateTimer = 0.0f;
+        bool rotationChanging = false;
+        AnimationState animationState = AnimationState::IDLE;
+
 		btVector3 gunCameraOffset = btVector3(8.5f, -4.5f, 5.5f); // x axis is forward (front +ve/ back -ve), y is up, z is right (left -ve/ right +ve)
 		GameObject* gun;
 		LaserObject* laser = nullptr;
@@ -174,7 +216,6 @@ namespace NCL::CSC8503 {
 		btVector3 CalculateRightFromYaw(float yaw);
 
 		float lastHit = 0;
-
 
 		GameTechRendererInterface* renderer;
 

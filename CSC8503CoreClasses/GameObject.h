@@ -107,7 +107,9 @@ namespace NCL::CSC8503 {
         virtual void UpdateFromWorldState(float dt) override;
         virtual std::vector<std::shared_ptr<Packet::Packet>> CreatePackets(int sequenceNum) override;
 
-        virtual void Update(float dt) {}
+        virtual void Update(float dt) {//could do the updating for animations in here maybe
+        }
+
 
         void SetWorldID(int newID) {
             worldID = newID;
@@ -187,23 +189,26 @@ namespace NCL::CSC8503 {
 
         void SetState(ObjectState newState) { state = newState; }
         ObjectState GetState() const { return state; }
+		bool GetIsAnimated() { return animated; }
+		void SetIsAnimated(bool a) { animated = a; }
 
-    protected:
-        PhysicsObject*		physicsObject;
-        RenderObject*		renderObject;
-        NetworkObject*		networkObject;
+	protected:
+		PhysicsObject*		physicsObject;
+		RenderObject*		renderObject;
+		NetworkObject*		networkObject;
 
-        bool deleted = false;
-
-        bool		isActive;
-        bool paintball = false;
-        int			worldID;
-        std::string	name;
-        Type type;
 
         Vector3 renderScale = Vector3(1, 1, 1); // Only affects rendering, not physics
         btVector3 initialPosition;
         btQuaternion initialRotation = btQuaternion(0, 0, 0);
+		bool		isActive;
+		bool paintball = false;
+		bool animated = false;
+        bool deleted = false;
+
+		int			worldID;
+		std::string	name;
+		Type type;
 
         inline static std::unordered_map<int, GameObject*> objects;
 

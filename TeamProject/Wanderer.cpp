@@ -179,6 +179,7 @@ void Wanderer::PlayerNear(float dt) {
 		btVector3 curPos = trans.getOrigin();
 		btVector3 pPos = player->GetTransform().getOrigin();
 		btVector3 dir = (pPos - curPos) == 0 ? btVector3(0, 0, 0) : (pPos - curPos).normalized();
+
 		std::optional<ShotInfo> info = Shoot::GetInstance()->ShootBulletAI(curPos, dir, trans.getRotation(), dt);
 		laser->SetEndPos(info.value().hitPos);
 		laser->SetStartPos(curPos);
