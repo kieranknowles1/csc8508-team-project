@@ -48,7 +48,7 @@ be included for licensing reasons.
 
 ## Debug Controls
 
-On controllers, **L1** must be held for debug inputs to register.
+On controllers, **R3** must be held for debug inputs to register.
 
 On Keyboard/Controller:
 - **F1/Dpad Right**: Reload world
