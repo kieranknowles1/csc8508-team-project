@@ -377,6 +377,8 @@ void GameTechRenderer::RenderCamera() {
 	int texRepeatingLocation = glGetUniformLocation(deferredsceneShader->GetProgramID(), "texRepeating");
 	int texScaleLocation = glGetUniformLocation(deferredsceneShader->GetProgramID(), "texScale");
 	int invertYLocation = glGetUniformLocation(deferredsceneShader->GetProgramID(), "invertY");
+    int hasGlossLocation = glGetUniformLocation(deferredsceneShader->GetProgramID(), "hasGloss");
+    int hasSpecularLocation = glGetUniformLocation(deferredsceneShader->GetProgramID(), "hasSpecular");
 
 	/*
 	int lightPosLocation	= glGetUniformLocation(sceneShader->GetProgramID(), "lightPos"); Lighting to be deferred
@@ -418,6 +420,9 @@ void GameTechRenderer::RenderCamera() {
 
 			bool hasTex = layer && layer->diffuse;
 			bool hasNormal = layer && layer->normal;
+            bool hasGloss = layer && layer->gloss;
+            bool hasSpecular = layer && layer->specular;
+
             //Bind textures per submesh
             if (hasTex) {
                 BindTextureToShader(*layer->diffuse, "diffuseTex", 0);
@@ -426,6 +431,15 @@ void GameTechRenderer::RenderCamera() {
             if (hasNormal) {
                 BindTextureToShader(*layer->normal, "normalTex", 1);
             }
+
+            if (hasGloss) {
+                BindTextureToShader(*layer->gloss, "glossTex", 2);
+            }
+
+            if (hasSpecular) {
+                BindTextureToShader(*layer->specular, "specularTex", 3);
+            }
+
             Vector3 texScale;
             // TODO: Proper flag to control this, named something like scaleTextureWithSize (but shorter)
             if (i->GetTexRepeating()) {
@@ -456,8 +470,8 @@ void GameTechRenderer::RenderCamera() {
             glUniform1i(hasVColLocation, !(*i).GetMesh()->GetColourData().empty());
 
             glUniform1i(hasTexLocation, hasTex);
-            // TODO: Add metallic maps
-            //glUniform1i(hasMetallicLocation, i->GetMetallicMaps().size() > subMeshIndex && i->GetMetallicMaps()[subMeshIndex] != nullptr);
+            glUniform1i(hasGlossLocation, hasGloss);
+            glUniform1d(hasSpecularLocation, hasSpecular);
             glUniform1i(hasFlatLocation, i->GetIsFlat());
             glUniform1i(hasNormalLocation, hasNormal);
 

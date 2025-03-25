@@ -22,6 +22,8 @@ namespace NCL {
 		struct Layer {
 			std::shared_ptr<Rendering::Texture> diffuse;
 			std::shared_ptr<Rendering::Texture> normal;
+            std::shared_ptr<Rendering::Texture> gloss;
+            std::shared_ptr<Rendering::Texture> specular;
 			bool invertY = false;
 		};
 
