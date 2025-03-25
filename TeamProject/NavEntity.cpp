@@ -38,7 +38,7 @@ bool NavEntity::FollowPath(float dt) {
 	}
 	curPathPoint = newPathPoint;
 	yAdjustedPoint = curPathPoint;
-	yAdjustedPoint.setY(GroundAdjust(yAdjustedPoint));
+	//yAdjustedPoint.setY(GroundAdjust(yAdjustedPoint));
 	return true;
 }
 

@@ -9,7 +9,7 @@
 using namespace NCL;
 using namespace CSC8503;
 
-Wanderer::Wanderer(GameObject* p, NavMesh* mesh, Side side, int lID, GameTechRendererInterface* r, int l) :
+Wanderer::Wanderer(PlayerObject* p, NavMesh* mesh, Side side, int lID, GameTechRendererInterface* r, int l) :
 	player(p), navMesh(mesh), shootTimer(maxShootTimer), updateplayerPathTimer(maxUpdatePlayerPathTimer), laserID(lID), renderer(r), level(l) {
 
 	dps = 10.0f * level;
@@ -130,7 +130,7 @@ void Wanderer::UpdatePlayerDistance() {
 	btVector3 pl = pTrans.getOrigin();
 
 	std::optional<ShotInfo> shot = Shoot::GetInstance()->RayClosest(wl, pl, true);
-	if (shot.has_value()) playerVisible = (shot.value().hitObj->getType() == GameObject::Type::Player);
+	if (shot.has_value()) playerVisible = (shot.value().hitObj->getType() == GameObject::Type::Player || shot.value().hitObj == player->getGun());
 
 	//wl.setY(0);
 	//pl.setY(0);
@@ -180,7 +180,7 @@ void Wanderer::PlayerNear(float dt) {
 		btVector3 curPos = trans.getOrigin();
 		btVector3 pPos = player->GetTransform().getOrigin();
 		btVector3 dir = (pPos - curPos) == 0 ? btVector3(0, 0, 0) : (pPos - curPos).normalized();
-		std::optional<ShotInfo> info = Shoot::GetInstance()->ShootBulletAI(curPos, dir, trans.getRotation(), dt);
+		std::optional<ShotInfo> info = Shoot::GetInstance()->ShootBulletAI(curPos, dir, trans.getRotation(), dps, dt);
 		renderer->updateLaser(laserID, curPos, info.value().hitPos);
 
 		shootTimer -= dt;

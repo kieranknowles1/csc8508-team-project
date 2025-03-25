@@ -1,11 +1,12 @@
 #include "SPGameController.h"
 #include "TutorialGame.h"
+#include "PlayerObject.h"
 #include <algorithm>
 
 using namespace NCL;
 using namespace CSC8503;
 
-SPGameController::SPGameController(GameObject* p, TutorialGame* g, GameTechRendererInterface* r)
+SPGameController::SPGameController(PlayerObject* p, TutorialGame* g, GameTechRendererInterface* r)
 	: player(p), game(g), renderer(r) {
 
     btDiscreteDynamicsWorld* bulletWorld = game->getBulletWorld();
@@ -110,8 +111,8 @@ Wanderer* SPGameController::AddWandererToWorld(NavMesh* navMesh, Side side) {
     }
     Wanderer* wanderer = new Wanderer(player, navMesh, side, GetIDFromPool(), renderer, level);
 
-    float height = 4.0f;
-    float radius = 2.0f;
+    float height = 16.0f;
+    float radius = 8.0f;
 
     wanderer->setInitialPosition(navMesh->GetRandomPointInNavMesh());
     wanderer->setRenderScale(btVector3(radius * 2, height, radius * 2));

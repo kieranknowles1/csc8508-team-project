@@ -2,13 +2,14 @@
 #include "NavEntity.h"
 #include "NavMesh.h"
 #include "SPGameController.h"
+#include "PlayerObject.h"
 
 namespace NCL {
 	namespace CSC8503 {
 		class StateMachine;
 		class Wanderer : public NavEntity {
 		public:
-			Wanderer(GameObject* p, NavMesh* nav, Side side, int lID, GameTechRendererInterface* r, int l);
+			Wanderer(PlayerObject* p, NavMesh* nav, Side side, int lID, GameTechRendererInterface* r, int l);
 			~Wanderer();
 
 			void Update(float dt);
@@ -36,7 +37,7 @@ namespace NCL {
 			bool playerVisible = false;
 			btVector3 offset;
 
-			GameObject* player;
+			PlayerObject* player;
 
 			float maxShootTimer = 5.0f;
 			float shootTimer;
