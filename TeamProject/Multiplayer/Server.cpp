@@ -187,13 +187,6 @@ namespace Multiplayer {
             object->GetWorldStates()->UpdateBuffer();
             });
 
-
-        //// Speeding up to match others pace.
-        //if (smallestIncoming > m_tickCount && smallestIncoming != INT32_MAX) {
-        //    m_processTick += smallestIncoming - m_tickCount;
-        //    m_tickCount = smallestIncoming;
-        //}
-
         m_tickCount++;
         m_processTick++;
     }
@@ -206,7 +199,6 @@ namespace Multiplayer {
             LobbyAction::CREATE
         );
         m_network->Send(newUser, client);
-        m_lobby->AddUser(clientUser);
 
         // Send current lobby information.
         for (const User& player : m_lobby->GetConnectedUsers()) {
@@ -216,8 +208,14 @@ namespace Multiplayer {
             );
             m_network->Send(playerInfo, client);
         }
-        // NOTE: There is no need to send world info here because currently the
-        // Lobby is just a menu screen.
+        m_lobby->AddUser(clientUser);
+
+        // Broadcast new member to the rest of the lobby.
+        std::shared_ptr<Packet::UserInfoPacket> broadcast = std::make_shared<Packet::UserInfoPacket>(
+            clientUser,
+            LobbyAction::JOIN
+        );
+        m_network->Broadcast(broadcast);
     }
 }
 
