@@ -52,6 +52,8 @@ public:
 		Unpause,
 		MenuUp,
 		MenuDown,
+		MenuLeft,
+		MenuRight,
 		MenuConfirm
 	};
 
