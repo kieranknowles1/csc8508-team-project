@@ -90,8 +90,6 @@ void Wanderer::Update(float dt) {
 }
 
 void Wanderer::DestroyWanderer() {
-	//renderer->updateLaser(laserID, btVector3(0, 0, 0), btVector3(0, 0, 0));
-	//TutorialGame::getInstance()->GetSPMode()->AddIDToPool(laserID);
 	TutorialGame::getInstance()->delayedRemoveObject(this);
 }
 
