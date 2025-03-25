@@ -89,6 +89,9 @@ void CAudioEngine::LoadSound(const std::string& strSoundName, bool b3d, bool bLo
     if (pSound) {
         sgpImplementation->mSounds[strSoundName] = pSound;
     }
+    if (b3d && pSound) {
+        pSound->set3DMinMaxDistance(10.0f, 50.0f);
+    }
 }
 
 //Unloads and releases a sound from memory

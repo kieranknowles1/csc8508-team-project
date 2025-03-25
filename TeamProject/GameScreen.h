@@ -15,7 +15,7 @@ public:
         game->UpdateGame(dt);
 
         if (controller->GetDigital(Controller::DigitalControl::Pause)) {
-            *newState = new PauseScreen(controller, game, playerController);
+            *newState = new SingleplayerPauseScreen(controller, game, playerController);
             std::cout << "Game entered pause state \n";
             return PushdownResult::Push;
         }

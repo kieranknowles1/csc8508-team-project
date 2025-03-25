@@ -94,7 +94,7 @@ void PlayerController::HandleShooting(float dt) {
                 audioEngine.SetChannelPlaybackPosition(beamSoundChannel, startTimeMs);
             }
             else {
-                beamSoundChannel = audioEngine.PlaySounds("Beam.mp3", camera->GetPosition(), 0.0f);
+                beamSoundChannel = audioEngine.PlaySounds("Beam.mp3", camera->GetPosition(), -12.0f);
                 if (beamSoundChannel != -1) {
                     audioEngine.SetChannel3dPosition(beamSoundChannel, camera->GetPosition());
                     audioEngine.SetChannelPlaybackPosition(beamSoundChannel, startTimeMs);
@@ -249,6 +249,8 @@ void PlayerController::SpecialTypeCalculations() {
         player->setCollided(0);
         inAirTime = 0.2f;
         rb->applyCentralImpulse(movement);
+        int channelId = audioEngine.PlaySounds("JumpPad.wav", player->getCollisionPoint(), 0.0f);
+        jumppadChannels.push_back(channelId);
         break;
     } case GameObject::Type::Slime: {
         if (inAirTime <= 0) {
@@ -354,7 +356,7 @@ void PlayerController::MovementCalculations(float dt) {
 
 void PlayerController::HandleJumping() {
     if (controller->GetDigital(Controller::DigitalControl::Jump) && player->getCollided() && inAirTime <= 0) {
-        audioEngine.PlaySounds("jump.wav", camera->GetPosition(), 0.0f);
+        audioEngine.PlaySounds("jump.wav", camera->GetPosition(), -16.0f);
         btVector3 normal = FindFloorNormal();
         float dotProduct = normal.dot(upDirection.absolute());
         if (fabs(dotProduct <= 1)) {

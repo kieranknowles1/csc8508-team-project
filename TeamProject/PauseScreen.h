@@ -5,11 +5,13 @@
 using namespace NCL;
 using namespace NCL::CSC8503;
 
-class PauseScreen : public PushdownState {
+class SingleplayerPauseScreen : public PushdownState {
     int selection = 0;
 
 public:
-    PauseScreen(Controller* controller, TutorialGame* game, PlayerController* playerController) : controller(controller), game(game), playerController(playerController) {}
+    SingleplayerPauseScreen(Controller* controller, TutorialGame* game, PlayerController* playerController)
+        : controller(controller), game(game), playerController(playerController) {}
+
     Controller* controller;
     TutorialGame* game;
     PlayerController* playerController;
@@ -23,14 +25,12 @@ public:
         const std::string exitGame = "Exit";
 
         bool inMenu = true;
-
         std::string menuItems[2] = { resumeGame, exitGame };
 
         if (inMenu) {
             if (controller->GetDigital(Controller::DigitalControl::MenuDown)) {
-                if (selection < 1) {  // Only increase if not at the last option
+                if (selection < 1) {
                     selection++;
-                    //audioEngine.PlaySounds("MenuScroll.wav", game->getMainCam()->GetPosition(), -6.0f);
                     int channelId = audioEngine.PlaySounds("MenuScroll.wav", game->getMainCam()->GetPosition(), -12.0f);
                     audioEngine.SetChannelPitchMultiplier(channelId, 0.9f);
                 }
@@ -45,47 +45,74 @@ public:
                 const std::string pauseSelection = menuItems[selection];
 
                 if (pauseSelection == "Resume") {
+                    // Resume all paused channels (they were only paused in OnAwake)
+                    if (playerController->getBeamSoundChannel() != -1) {
+                        audioEngine.SetChannelPaused(playerController->getBeamSoundChannel(), false);
+                    }
+                    if (playerController->getHeartbeatChannel() != -1) {
+                        audioEngine.SetChannelPaused(playerController->getHeartbeatChannel(), false);
+                    }
+                    for (int channel : playerController->getJumppadChannels()) {
+                        if (channel != -1) {
+                            audioEngine.SetChannelPaused(channel, false);
+                        }
+                    }
+
                     return PushdownResult::Pop;
                 }
                 else {
+                    // Quit to main menu: Stop and invalidate sound channels
                     if (playerController->getBeamSoundChannel() != -1) {
                         audioEngine.StopChannel(playerController->getBeamSoundChannel());
                         playerController->setBeamSoundChannel(-1);
                     }
+                    if (playerController->getHeartbeatChannel() != -1) {
+                        audioEngine.StopChannel(playerController->getHeartbeatChannel());
+                        playerController->setHeartbeatChannel(-1);
+                    }
+                    for (int channel : playerController->getJumppadChannels()) {
+                        if (channel != -1) {
+                            audioEngine.StopChannel(channel);
+                        }
+                    }
+                    playerController->getJumppadChannels().clear();
+
                     game->ClearWorld();
                     return PushdownResult::Clear;
                 }
+
                 inMenu = false;
             }
 
             for (int i = 0; i < 2; i++) {
                 std::string currentItem = menuItems[i];
                 if (i == selection) currentItem = currentItem + " <";
-                Debug::Print(currentItem, Vector2(0, 0.50 + (0.10 * i)));
+                Debug::Print(currentItem, Vector2(0, 0.50 + (0.10f * i)));
             }
         }
 
         return PushdownResult::NoChange;
     }
+
     void OnAwake() override {
+        // Pause audio when game is paused
         if (playerController->getBeamSoundChannel() != -1) {
             audioEngine.SetChannelPaused(playerController->getBeamSoundChannel(), true);
-            playerController->setBeamSoundPaused(true);
         }
+        if (playerController->getHeartbeatChannel() != -1) {
+            audioEngine.SetChannelPaused(playerController->getHeartbeatChannel(), true);
+        }
+        for (int channel : playerController->getJumppadChannels()) {
+            if (channel != -1) {
+                audioEngine.SetChannelPaused(channel, true);
+            }
+        }
+
+        // Menu entry sound
         audioEngine.PlaySounds("MenuSelect.wav", game->getMainCam()->GetPosition(), -18.0f);
     }
 
     void OnSleep() override {
-        if (playerController->getBeamSoundChannel() != -1) {
-            if (playerController->getController()->GetDigital(Controller::DigitalControl::Fire)) {
-                audioEngine.SetChannelPaused(playerController->getBeamSoundChannel(), false);
-                playerController->setBeamSoundPaused(false);
-            }
-            else {
-                //audioEngine.SetChannelVolume(playerController->getBeamSoundChannel(), -100.0f);
-                //audioEngine.StopChannel(playerController->getBeamSoundChannel());
-                playerController->setBeamSoundChannel(-1);
-            }
-        }
+    
     }
 };

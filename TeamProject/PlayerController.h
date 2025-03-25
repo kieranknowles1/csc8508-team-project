@@ -66,13 +66,23 @@ namespace NCL {
 			int getBeamSoundChannel() {
 				return beamSoundChannel;
 			}
+			int getHeartbeatChannel() {
+				return heartbeatChannel;
+			}
+
+			std::vector<int> getJumppadChannels() {
+				return jumppadChannels;
+			}
 
 			bool getBeamSoundPaused() {
 				return beamSoundPaused;
 			}
 
 			void setBeamSoundChannel(int channelId) {
-				beamSoundPaused = channelId;
+				beamSoundChannel = channelId;
+			}
+			void setHeartbeatChannel(int channelId) {
+				heartbeatChannel = channelId;
 			}
 
 			void setBeamSoundPaused(bool setPaused) {
@@ -85,6 +95,8 @@ namespace NCL {
 
 		private:
 
+			std::vector<int> jumppadChannels;
+			//int jumppadChannel = -1;
 			int heartbeatChannel = -1;
 			int beamSoundChannel = -1;
 			bool beamSoundPaused = false;
