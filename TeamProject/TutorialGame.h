@@ -149,7 +149,7 @@ namespace NCL {
             GameObject* AddFloorToWorld(const Vector3& position, const Vector3& size, const Vector3& rotation);
             GameObject* AddSphereToWorld(const Vector3& position, float radius, float inverseMass = 10.0f);
             GameObject* AddCubeToWorld(const Vector3& position, Vector3 dimensions, float inverseMass = 10.0f,bool hasCollision = true);
-            PlayerObject* AddPlayerCapsuleToWorld(const Vector3& position, float halfHeight, float radius, float inverseMass = 10.0f);
+            PlayerObject* AddPlayerCapsuleToWorld(const Vector3& position, float halfHeight, float radius, float inverseMass = 10.0f, bool mainPlayer = false);
             GameObject* AddCapsuleToWorld(const Vector3& position, float halfHeight, float radius, float inverseMass = 10.0f);
 
             GameObject* AddInfinitePlaneToWorld(const Vector3& position, const Vector3& normal, float planeConstant);
@@ -194,7 +194,7 @@ namespace NCL {
             void InitBullet(); // Initialises the Bullet physics world
 
             //Player things
-            PlayerObject* InitPlayer(btVector3 position, btVector3 upDir);
+            PlayerObject* InitPlayer(btVector3 position, btVector3 upDir, bool mainPlayer = false);
             PerspectiveCamera* mainCamera;
             std::unique_ptr<PlayerController> playerController;
             bool freeCam = false;

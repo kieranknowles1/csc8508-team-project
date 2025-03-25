@@ -351,8 +351,8 @@ void TutorialGame::InitWorld() {
 
 }
 
-PlayerObject* TutorialGame::InitPlayer(btVector3 position, btVector3 upDir) {
-    PlayerObject* newPlayer = AddPlayerCapsuleToWorld(position, 20.0f, 8.5f, 10.0f);
+PlayerObject* TutorialGame::InitPlayer(btVector3 position, btVector3 upDir, bool mainPlayer) {
+    PlayerObject* newPlayer = AddPlayerCapsuleToWorld(position, 20.0f, 8.5f, 10.0f, mainPlayer);
     // Keep us from clipping when falling too fast
     newPlayer->GetPhysicsObject()->GetRigidBody()->setCcdMotionThreshold(1.0f);
     newPlayer->GetPhysicsObject()->GetRigidBody()->setCcdSweptSphereRadius(0.4f);
@@ -431,12 +431,12 @@ GameObject* TutorialGame::AddCubeToWorld(const Vector3& position, Vector3 dimens
     return cube;
 }
 
-PlayerObject* TutorialGame::AddPlayerCapsuleToWorld(const Vector3& position, float height, float radius, float inverseMass) {
+PlayerObject* TutorialGame::AddPlayerCapsuleToWorld(const Vector3& position, float height, float radius, float inverseMass,bool mainPlayer) {
     PlayerObject* player = new PlayerObject();
 
     // Setting the transform properties for the capsule
     player->setInitialPosition(position);
-    player->setRenderScale(Vector3(radius * 2, height, radius * 2));
+    player->setRenderScale(mainPlayer ? Vector3(0,0,0) : Vector3(radius * 2, height, radius * 2));
 
     // Creating a Bullet collision shape for the capsule
     btCollisionShape* playerShape = new btCapsuleShape(radius, height);
@@ -592,7 +592,8 @@ void TutorialGame::Start() {
         //    User user = place.GetUser().value();
         for (User user:lobby->GetConnectedUsers()) {
             RespawnPoint* respawn = Respawn::GetInstance()->GetRespawn(user.GetUserID() - 1);
-            PlayerObject* player = instance->InitPlayer(respawn->position, respawn->orientation);
+            bool mainPlayer = user == *(instance->server->GetUser());
+            PlayerObject* player = instance->InitPlayer(respawn->position, respawn->orientation, mainPlayer);
             player->SetWorldID(user.GetUserID());
             player->SetOwner(user);
             
@@ -602,7 +603,7 @@ void TutorialGame::Start() {
             btVector4 playerColor = Color::GetPlayerColor(user.GetUserID() - 1);
             player->SetColor(playerColor);
 
-            if (user == *(instance->server->GetUser())) {
+            if (mainPlayer) {
                 instance->player = player;
                 instance->playerController = std::make_unique<PlayerController>(instance->player, instance->controller, instance->mainCamera, instance->bulletWorld, instance->renderer);
                 instance->playerController->setYaw(respawn->yaw);
@@ -613,7 +614,7 @@ void TutorialGame::Start() {
     // Setup for a single player game.
     else {
         RespawnPoint* playerRespawn = Respawn::GetInstance()->GetRespawn(1);
-        instance->player = instance->InitPlayer(playerRespawn->position, playerRespawn->orientation);
+        instance->player = instance->InitPlayer(playerRespawn->position, playerRespawn->orientation,true);
         instance->player->SetWorldID(0);
 
         LaserObject* laser = instance->player->GetLaser();
