@@ -62,7 +62,6 @@ public:
 			}
 		}
 		if (chosenPoints.size() > 0) {
-			std::cout << chosenPoints.size() << std::endl;
 			return chosenPoints.at(rand() % chosenPoints.size()); // choose random from those far enough away
 		}
 		else {
