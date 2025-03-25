@@ -38,7 +38,7 @@ bool NavEntity::FollowPath(float dt) {
 	}
 	curPathPoint = newPathPoint;
 	yAdjustedPoint = curPathPoint;
-	//yAdjustedPoint.setY(GroundAdjust(yAdjustedPoint));
+	yAdjustedPoint.setY(GroundAdjust(yAdjustedPoint));
 	return true;
 }
 
@@ -54,13 +54,14 @@ float NavEntity::GroundAdjust(btVector3 pos) {
 		debugDrawer->drawLine(upPos, downPos, Vector3(0, 0, 1));
 		direction = (downPos - upPos).normalized();
 
-		rayResult = Shoot::GetInstance()->RayClosest(upPos, direction, this);
+		rayResult = Shoot::GetInstance()->RayClosest(upPos, direction, false, static_cast<GameObject*>(this));
 
 		if (!rayResult.has_value()) {
 			return 0.0f;  // No hit detected
 		}
 
 		//return (pos.getY() - rayResult->hitPos.getY());
+		std::cout << rayResult->hitPos.getY() << std::endl;
 		return rayResult->hitPos.getY();
 	default:
 		return pos.getY();
