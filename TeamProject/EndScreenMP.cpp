@@ -3,17 +3,12 @@
 EndScreenUI::EndScreenUI()
 {
 	InitMenu();
-
-	AddPlayer({ "Player1", 100, TeamColor::RED, 1 });
-	AddPlayer({ "Player2", 200, TeamColor::BLUE, 2 });
-	AddPlayer({ "Player3", 300, TeamColor::GREEN, 3 });
-
 	PopulateLeaderboard();
 }
 
 void EndScreenUI::render(std::vector<UiSprite>& sprites)
 {
-	Vector4 backgroundColor = Vector4(0.1, 0.1, 0.1, 1);
+	Vector4 backgroundColor = Vector4(0, 0, 0, 1);
 	Vector4 buttonColor = Vector4(0.4f, 0.4f, 0.4f, 1);
 	Vector4 borderColor = Vector4(0, 0, 0, 1);
 	Vector4 boxColor = Vector4(0.4f, 0.4f, 0.4f, 1);

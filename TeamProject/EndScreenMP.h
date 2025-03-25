@@ -56,9 +56,9 @@ private:
     UIBox background;
     std::vector<Button> buttons;
     std::vector<Text> buttonTexts;
-    Vector4 activeButton = Vector4(1, 1, 1, 1);
+    Vector4 activeButton = Vector4(0.3, 0.3, 0.3, 0.5);
     Vector4 inactiveButton = Vector4(0, 0, 0, 1);
-    Vector4 activeText = Vector4(0, 0, 0, 1);
+    Vector4 activeText = Vector4(1, 1, 1, 1);
     Vector4 inactiveText = Vector4(1, 1, 1, 1);
 
     Vector2 leaderboardCenter = Vector2(0.5f, 0.6f);

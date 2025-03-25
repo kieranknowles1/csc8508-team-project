@@ -116,8 +116,8 @@ int main(int argc, char** argv) {
     auto game = std::make_unique<TutorialGame>(renderer.get(), controller, config);
 
     //PushdownMachine machine(new GameScreen(controller, game.get(), "Singleplayer"));
-    //PushdownMachine machine(new MainMenuScreen(controller, game.get()));
-    PushdownMachine machine(new EndScreenMP(controller, game.get()));
+    PushdownMachine machine(new MainMenuScreen(controller, game.get()));
+    //PushdownMachine machine(new EndScreenMP(controller, game.get()));
 
     // Clear delta time to exclude start up time
     window->GetTimer().GetTimeDeltaSeconds();
