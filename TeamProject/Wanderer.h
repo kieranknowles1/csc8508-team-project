@@ -46,9 +46,9 @@ namespace NCL {
 
 			GameTechRendererInterface* renderer;
 
-			float health = 50;
-
 			int level;
+			float dps;
+			float health;
 		};
 	}
 }

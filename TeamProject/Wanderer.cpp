@@ -11,6 +11,10 @@ using namespace CSC8503;
 
 Wanderer::Wanderer(GameObject* p, NavMesh* mesh, Side side, int lID, GameTechRendererInterface* r, int l) :
 	player(p), navMesh(mesh), shootTimer(maxShootTimer), updateplayerPathTimer(maxUpdatePlayerPathTimer), laserID(lID), renderer(r), level(l) {
+
+	dps = 10.0f * level;
+	health = 25.0f * level;
+
 	type = GameObject::Type::AI;
 	this->side = side;
 	stateMachine = new StateMachine();
