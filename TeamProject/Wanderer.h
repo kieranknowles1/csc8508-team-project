@@ -2,6 +2,7 @@
 #include "NavEntity.h"
 #include "NavMesh.h"
 #include "SPGameController.h"
+#include "PlayerObject.h"
 
 namespace NCL {
 	namespace CSC8503 {
@@ -12,7 +13,7 @@ namespace NCL {
 
 		class Wanderer : public NavEntity {
 		public:
-			Wanderer(GameObject* p, NavMesh* nav, Side side, GameTechRendererInterface* r);
+			Wanderer(PlayerObject* p, NavMesh* nav, Side side, GameTechRendererInterface* r, int difficulty);
 			~Wanderer();
 
 			void Update(float dt);
@@ -43,7 +44,7 @@ namespace NCL {
 			float playerDist = 100.0f;
 			btVector3 offset;
 
-			GameObject* player;
+			PlayerObject* player;
 			LaserObject* laser;
 
 			float maxShootTimer = 5.0f;
@@ -54,6 +55,8 @@ namespace NCL {
 			float updateplayerPathTimer;
 
 			GameTechRendererInterface* renderer;
+
+			int difficulty = 1;
 		};
 	}
 }

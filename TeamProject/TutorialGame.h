@@ -133,6 +133,8 @@ namespace NCL {
 
             SPGameController* GetSPMode() { return spGameController; }
 
+            void SetFreeCam(bool b) { freeCam = b; }
+
         protected:
             void InitialiseAssets();
 

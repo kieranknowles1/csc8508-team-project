@@ -10,8 +10,9 @@
 using namespace NCL;
 using namespace CSC8503;
 
-Wanderer::Wanderer(GameObject* p, NavMesh* mesh, Side side, GameTechRendererInterface* r) :
-	player(p), navMesh(mesh), shootTimer(maxShootTimer), updateplayerPathTimer(maxUpdatePlayerPathTimer), renderer(r) {
+Wanderer::Wanderer(PlayerObject* p, NavMesh* mesh, Side side, GameTechRendererInterface* r, int difficulty) :
+	player(p), navMesh(mesh), shootTimer(maxShootTimer), updateplayerPathTimer(maxUpdatePlayerPathTimer), renderer(r), difficulty(difficulty) {
+
 	type = GameObject::Type::AI;
 	this->side = side;
 	stateMachine = new StateMachine();
@@ -29,6 +30,17 @@ Wanderer::Wanderer(GameObject* p, NavMesh* mesh, Side side, GameTechRendererInte
 
 	stateMachine->AddTransition(new StateTransition(playerFar, playerNear, [&]()->bool {
 		if (playerDist <= senseDistance) {
+			btTransform trans = GetTransform();
+			btTransform pTrans = player->GetTransform();
+
+			btVector3 wl = trans.getOrigin();
+			btVector3 pl = pTrans.getOrigin();
+
+			btVector3 dir = (pl - wl) == 0 ? btVector3(0, 0, 0) : (pl - wl).normalized();
+			std::optional<ShotInfo> shot = Shoot::GetInstance()->RayClosest(wl, dir, true, static_cast<GameObject*>(this));
+			if (shot.has_value()) {
+				if (!(shot.value().hitObj == player || shot.value().hitObj == player->getGun())) return false;
+			}
 			GetRenderObject()->SetColour(Vector4(1, 0, 0, 1));
 			/*btVector3 pPos = player->GetTransform().getOrigin();
 			pPos.setY(navMesh->GetYFromPoint(pPos.getX(), pPos.getZ()));
@@ -54,17 +66,38 @@ Wanderer::Wanderer(GameObject* p, NavMesh* mesh, Side side, GameTechRendererInte
 			return true;
 		}
 		else {
+			btTransform trans = GetTransform();
+			btTransform pTrans = player->GetTransform();
+
+			btVector3 wl = trans.getOrigin();
+			btVector3 pl = pTrans.getOrigin();
+
+			btVector3 dir = (pl - wl) == 0 ? btVector3(0, 0, 0) : (pl - wl).normalized();
+			std::optional<ShotInfo> shot = Shoot::GetInstance()->RayClosest(wl, dir, true, static_cast<GameObject*>(this));
+			if (shot.has_value()) {
+				if (!(shot.value().hitObj == player || shot.value().hitObj == player->getGun())) {
+					GetRenderObject()->SetColour(Vector4(0, 1, 0, 1));
+					curPath = navMesh->FindPath(curPathPoint, navMesh->GetRandomPointInNavMesh());
+					if (curPath.size() > 0) NewPath(curPath);
+                    laser->SetStartPos({ 0, 0, 0 });
+                    laser->SetEndPos({ 0, 0, 0 });
+
+                    isShooting = false;
+                    attack->Hit(nullptr);
+					return true;
+				}
+			}
 			return false;
 		}
 		}));
 
 
 	health = std::make_unique<HealthAttrib>(this);
-	health->SetMaxHealth(50.0f);
-	health->SetCurrentHealth(50.0f);
+	health->SetMaxHealth(25.0f * difficulty);
+	health->SetCurrentHealth(health->GetMaxHealth());
 
 	attack = std::make_unique<AttackAttrib>();
-	attack->SetDamageAmount(50.0f);
+	attack->SetDamageAmount(10.0f * difficulty);
 	attack->SetDamageType(DamageType::CONTINUOUS);
 	attack->SetHealthAttrib(health.get());
 }
@@ -99,35 +132,33 @@ void Wanderer::InitPosAndOffset() {
 	btCapsuleShape* capsule = static_cast<btCapsuleShape*>(shape);
 	float halfHeight = capsule->getHalfHeight();
 	btTransform trans = GetTransform();
-	btQuaternion rotation;
+	btQuaternion rotation = btQuaternion::getIdentity();
+	offset = btVector3(0, halfHeight * 2, 0);
 	switch(side) {
 	case(Side::BOTTOM):
-		offset = btVector3(0, halfHeight * 2, 0);
 		break;
 	case(Side::TOP):
 		offset = btVector3(0, -halfHeight * 2, 0);
+		rotation = btQuaternion(btVector3(1, 0, 0), SIMD_PI);
 		break;
 	case(Side::FRONT):
 		offset = btVector3(0, 0, 0);
 		rotation = btQuaternion(btVector3(1, 0, 0), SIMD_PI / 2);
-		trans.setRotation(rotation);
 		break;
 	case(Side::BACK):
 		offset = btVector3(0, halfHeight * 4, 0);
 		rotation = btQuaternion(btVector3(1, 0, 0), -SIMD_PI / 2);
-		trans.setRotation(rotation);
 		break;
 	case(Side::LEFT):
 		offset = btVector3(halfHeight * 2, 0, 0);
 		rotation = btQuaternion(btVector3(0, 0, 1), -SIMD_PI / 2);
-		trans.setRotation(rotation);
 		break;
 	case(Side::RIGHT):
 		offset = btVector3(-halfHeight * 2, 0, 0);
 		rotation = btQuaternion(btVector3(0, 0, 1), -SIMD_PI / 2);
-		trans.setRotation(rotation);
 		break;
 	}
+	trans.setRotation(rotation);
 	curPathPoint = trans.getOrigin();
 	btVector3 newPos = trans.getOrigin() + offset;
 	trans.setOrigin(newPos);
