@@ -25,6 +25,9 @@ namespace NCL {
             std::shared_ptr<Rendering::Texture> gloss;
             std::shared_ptr<Rendering::Texture> specular;
 			bool invertY = false;
+            bool invertY = false;
+            // Does renderObject.color affect this material?
+            bool useColor = true;
 		};
 
 		// Load from a MeshMaterial file

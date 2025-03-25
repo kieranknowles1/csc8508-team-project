@@ -46,11 +46,11 @@ namespace NCL {
 				player = playerIn; gun = gunIn;
 			};
 
-			std::optional<ShotInfo> RayClosest(btVector3 startPos, btVector3 dir, bool hitPlayer = false);
+			std::optional<ShotInfo> RayClosest(btVector3 startPos, btVector3 dir, bool hitPlayer = false, GameObject* mask = nullptr);
 			std::optional<ShotInfo> ShootBulletPlayer(btVector3 startPos, btVector3 dir,btQuaternion rotation, float dt, int shotID);
-			std::optional<ShotInfo> ShootBulletAI(btVector3 startPos, btVector3 dir, btQuaternion rotation,float dt);
-			void SpawnDecal(btVector3 hitPos, btVector3 hitNormal, int shotID);
 
+			std::optional<ShotInfo> ShootBulletAI(btVector3 startPos, btVector3 dir, btQuaternion rotation,float dt);
+			void SpawnDecal(btVector3 hitPos, btVector3 hitNormal, btVector4 color);
 
 		private:
 			//Shot Variables
