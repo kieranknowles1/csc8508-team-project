@@ -1,15 +1,51 @@
 #include "PlayerObject.h"
 #include "TutorialGame.h"
 #include "Multiplayer/GamePackets.hpp"
+#include "Multiplayer/Server.hpp"
+#include "Health.h"
 #include "Respawn.h"
 
 #include <memory>
 
+using namespace WorldState;
 using namespace NCL;
 using namespace CSC8503;
 
+
+PlayerObject::PlayerObject() {
+    health = std::make_unique<HealthAttrib>(this);
+    health->SetMaxHealth(PLAYER_HEALTH);
+    health->SetCurrentHealth(PLAYER_HEALTH);
+    health->SetRegenerationDelay(2.0f);
+    health->SetRegenerationRate(50.0f);
+    health->SetInvulnerableWindow(1.0f);
+
+    attack = std::make_unique<AttackAttrib>();
+    attack->SetDamageType(DamageType::CONTINUOUS);
+    attack->SetDamageAmount(150.0f);
+
+    attack->SetHealthAttrib(health.get());
+}
+
+
+PlayerObject::~PlayerObject() {
+    if (laser && TutorialGame::getInstance()) TutorialGame::getInstance()->GetWorld()->RemoveGameObject(laser);
+    laser = nullptr;
+    delete animationObject;
+}
+
+void PlayerObject::SetColor(btVector4 color) {
+    GameObject::GetRenderObject()->SetColour(color);
+    gun->GetRenderObject()->SetColour(color);
+    laser->SetColor(color);
+}
+
 void PlayerObject::Update(float dt) {
+    attack->Update(dt);
+    health->Update(dt);
+
     upDirection = CalculateUpDirection(dt);
+
     rightDirection = CalculateRightDirection(upDirection);
     forwardDirection = CalculateForwardDirection(upDirection, rightDirection);
     updateGravity(dt);
@@ -21,58 +57,81 @@ void PlayerObject::Update(float dt) {
     }
 
     elapsedTime += dt;
+}
 
-    // 2 seconds before healing.
-    if (elapsedTime - lastHit > 4.0f) {
-        health += 25 * dt;
-        if (health > maxHealth) health = maxHealth;
-    }
+void PlayerObject::UpdateWorldState() {
+    attack->UpdateWorldState();
+    GameObject::UpdateWorldState();
 
-    if (TutorialGame::GetServerInstance().has_value() && (owner == TutorialGame::GetUser())) {
-        std::shared_ptr<Packet::DeltaPacket> deltaPacket = std::make_shared<Packet::DeltaPacket>(
-            worldID,
-            GetPhysicsObject()->GetRigidBody()->getLinearVelocity(),
-            GetPhysicsObject()->GetRigidBody()->getAngularVelocity(),
-            GetLastPacketSequence((uint8_t)Packet::PacketType::DELTA) + 1
+    auto [writeState, lock] = GetWorldStates()->GetWriteState();
+    std::unique_lock stateLock(writeState->Lock());
+
+    writeState->UpdateState(StateType::UpVector, upDirection);
+}
+
+void PlayerObject::UpdateFromWorldState(float dt) {
+    attack->UpdateFromWorldState(dt);
+    GameObject::UpdateFromWorldState(dt);
+
+    elapsedTickTime += dt;
+
+    std::function lerp = [](float x, float y, float w) { return x + ((y - x) * w); };
+    float weight = fmod(elapsedTickTime, TICK_UPDATE_RATE) / TICK_UPDATE_RATE;
+
+    auto [current, currentLock] = GetWorldStates()->GetCurrentState();
+    auto [read, readLock] = GetWorldStates()->GetReadState();
+
+    StateValue currentUpVectorValue;
+    StateValue targetUpVectorValue;
+
+    std::shared_lock currentStateLock = current->Lock_Shared();
+    std::shared_lock readStateLock = read->Lock_Shared();
+
+    bool hasCurrentUpVector = current->ReadState(StateType::UpVector, &currentUpVectorValue);
+    bool hasTargetUpVector = read->ReadState(StateType::UpVector, &targetUpVectorValue);
+
+    currentStateLock.unlock();
+    readStateLock.unlock();
+
+    currentLock.unlock();
+    readLock.unlock();
+
+    // Interpolate up vector.
+    if (hasCurrentUpVector && hasTargetUpVector) {
+        btVector3 currentUpVector = std::get<btVector3>(currentUpVectorValue);
+        btVector3 targetUpVector = std::get<btVector3>(targetUpVectorValue);
+        btVector3 interpolated = btVector3(
+            lerp(currentUpVector.x(), targetUpVector.x(), weight),
+            lerp(currentUpVector.y(), targetUpVector.y(), weight),
+            lerp(currentUpVector.z(), targetUpVector.z(), weight)
         );
-        UpdatePacketSequence((uint8_t)Packet::PacketType::DELTA, deltaPacket->GetSequenceNumber());
-        TutorialGame::GetServerInstance()->Broadcast(deltaPacket);
 
-        btTransform transform = GetPhysicsObject()->GetRigidBody()->getWorldTransform();
-        std::shared_ptr<Packet::PositionPacket> positionPacket = std::make_shared<Packet::PositionPacket>(
-            worldID,
-            transform.getOrigin(),
-            transform.getRotation(),
-            GetLastPacketSequence((uint8_t)Packet::PacketType::POSITION) + 1
-        );
-        UpdatePacketSequence((uint8_t)Packet::PacketType::POSITION, positionPacket->GetSequenceNumber());
-        TutorialGame::GetServerInstance()->Broadcast(positionPacket);
-
-        std::shared_ptr<Packet::ObjectChangeGravityPacket> gravityPacket = std::make_shared<Packet::ObjectChangeGravityPacket>(
-            worldID,
-            upDirection,
-            GetLastPacketSequence((uint8_t)Packet::PacketType::OBJECT_CHANGE_GRAVITY) + 1
-        );
-        UpdatePacketSequence((uint8_t)Packet::PacketType::OBJECT_CHANGE_GRAVITY, gravityPacket->GetSequenceNumber());
-        TutorialGame::GetServerInstance()->Broadcast(gravityPacket);
+        setUpDirection(interpolated);
     }
 }
 
-void PlayerObject::Damage(float amount) {
-    lastHit = elapsedTime;
+std::vector<std::shared_ptr<Packet::Packet>> PlayerObject::CreatePackets(int sequenceNum) {
+    std::vector<std::shared_ptr<Packet::Packet>> packets = GameObject::CreatePackets(sequenceNum);
+    std::vector<std::shared_ptr<Packet::Packet>> damagePackets = attack->CreatePackets(sequenceNum);
+    packets.insert(packets.end(), damagePackets.begin(), damagePackets.end());
 
-    health -= amount;
-    if (health <= 0) {
-        //state = PlayerState::DEAD;
-        health = 100;
-        RespawnPoint* point = Respawn::GetInstance()->GetRespawn(worldID - 1);
-        GetPhysicsObject()->GetRigidBody()->getWorldTransform().setOrigin(point->position);
-        setUpDirection(point->orientation);
-        yawOverride = point->yaw;
-        resetCollisionType();
-        setCollided(0);
-        // TODO: Create Change State packet.
+    auto [read, readLock] = GetWorldStates()->GetReadState();
+
+    StateValue upVector;
+    std::shared_lock readStateLock = read->Lock_Shared();
+    bool hasUpVector = read->ReadState(StateType::UpVector, &upVector);
+
+    readStateLock.unlock();
+    readLock.unlock();
+    
+    if (hasUpVector) {
+        packets.push_back(std::move(std::make_shared<Packet::ObjectChangeGravityPacket>(
+            GetWorldID(),
+            std::get<btVector3>(upVector),
+            sequenceNum
+        )));
     }
+    return std::move(packets);
 }
 
 void PlayerObject::OnCollisionEnter(const CollisionInfo& collisionInfo){
@@ -277,11 +336,9 @@ void PlayerObject::SetGunTransform(float pitch, float yaw, btVector3 camPos) {
     }
 
 
-    btTransform transformGun = gun->GetPhysicsObject()->GetRigidBody()->getWorldTransform();
+    btTransform& transformGun = gun->GetPhysicsObject()->GetRigidBody()->getWorldTransform();
     transformGun.setOrigin(camPos + adjustedOffset);
     transformGun.setRotation(gunRotation);
-
-    gun->GetPhysicsObject()->GetRigidBody()->setWorldTransform(transformGun);
 }
 
 

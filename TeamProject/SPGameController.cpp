@@ -38,7 +38,7 @@ SPGameController::SPGameController(PlayerObject* p, TutorialGame* g, GameTechRen
     right->LoadFromFile("right.navmesh");
     navMeshes.push_back(right);
 
-    for (int i = 101; i <= 150; i++) { laserIDs.push_back(i); }
+    //for (int i = 101; i <= 150; i++) { laserIDs.push_back(i); }
 
     score = 0;
     level = 1;
@@ -50,7 +50,7 @@ SPGameController::SPGameController(PlayerObject* p, TutorialGame* g, GameTechRen
 void SPGameController::InitLevel(int curLevel) {
     ClearAIs();
 
-    for (int i = 0; (i < std::max(5 + curLevel, 100)); i++) {
+    for (int i = 0; (i < std::min(5 + curLevel, 100)); i++) {
         AddWandererToWorld(bottom, Side::BOTTOM);
         AddWandererToWorld(top, Side::TOP);
         AddWandererToWorld(front, Side::FRONT);
@@ -68,7 +68,6 @@ void SPGameController::Update(float dt) {
                 if (wanderer->isDeleted()) {
                     defeated++;
                     score += (4 + level) * mult;
-                    std::cout << "Score: " << score << std::endl;
                     mult++;
                     multTimer = maxMultTimer;
                     return true;
@@ -84,7 +83,10 @@ void SPGameController::Update(float dt) {
         multTimer = 0;
     }
 
-    if (defeated > level * 3) {
+    int totalWanderers = std::min(5 + level, 100) * 6;
+
+    // 0.33 ~ 2 walls worth
+    if (defeated > std::floor(totalWanderers * 0.33f)) {
         level++;
         defeated = 0;
         InitLevel(level);
@@ -97,27 +99,25 @@ void SPGameController::Update(float dt) {
 
     std::string out = "Score: " + std::to_string(score);
     Debug::Print(out, Vector2(0.05f, 0.05f));
+
     out = "Mult: " + std::to_string(mult);
     Debug::Print(out, Vector2(0.05f, 0.1f));
+
+    out = "Level: " + std::to_string(level);
+    Debug::Print(out, Vector2(0.05f, 0.15f));
 
     if (navMeshDebug) VisualiseNavMesh();
 }
 
 void SPGameController::ClearAIs() {
-    while (wanderers.size() > 0) {
-        Wanderer* wanderer = wanderers.back();
-        AddIDToPool(wanderer->laserID);
-        wanderer->DestroyWanderer();
-        wanderers.pop_back();
+    for (Wanderer* wanderer : wanderers) {
+        if (wanderer) wanderer->DestroyWanderer();
     }
+    wanderers.clear();
 }
 
 Wanderer* SPGameController::AddWandererToWorld(NavMesh* navMesh, Side side) {
-    if (laserIDs.size() == 0) {
-        //std::cout << "No AI Laser IDs" << std::endl;
-        return nullptr;
-    }
-    Wanderer* wanderer = new Wanderer(player, navMesh, side, GetIDFromPool(), renderer, level);
+    Wanderer* wanderer = new Wanderer(player, navMesh, side, renderer, level);
 
     float height = 16.0f;
     float radius = 8.0f;
@@ -137,7 +137,15 @@ Wanderer* SPGameController::AddWandererToWorld(NavMesh* navMesh, Side side) {
 
     wanderer->InitPosAndOffset();
 
-    game->getWorld()->AddGameObject(wanderer);
+    LaserObject* laser = new LaserObject(wanderer);
+    laser->SetColor(Color::GetPlayerColor(0));
+    laser->SetThickness(0.1f);
+
+    renderer->TrackLaser(laser);
+    wanderer->SetLaser(laser);
+
+    game->GetWorld()->AddGameObject(wanderer);
+    game->GetWorld()->AddGameObject(laser);
 
     wanderers.push_back(wanderer);
     return wanderer;
@@ -163,7 +171,7 @@ Turret* SPGameController::AddTurretToWorld() {
 
     turret->GetRenderObject()->SetColour(Vector4(1, 0, 0, 1));
 
-    game->getWorld()->AddGameObject(turret);
+    game->GetWorld()->AddGameObject(turret);
 
     testTurret = turret;
 

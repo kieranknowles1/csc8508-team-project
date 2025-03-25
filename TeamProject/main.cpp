@@ -37,21 +37,6 @@ using namespace NCL;
 using namespace NCL::CSC8503;
 
 
-void TestPacketHandlers() {
-
-    Packet::RequestUserIDPacketHandler infoHandler;
-    Packet::PacketRegister::Register(&infoHandler);
-
-    std::shared_ptr<Packet::RequestUserIDPacket> testInfoPacket = std::make_shared<Packet::RequestUserIDPacket>(nullptr);
-
-    ENetPacket* userInfoENetPacket = infoHandler.ToENetPacket(testInfoPacket);
-    ENetEvent event;
-    event.packet = userInfoENetPacket;
-
-    std::shared_ptr<Packet::Packet> infoPacketReturned = infoHandler.Translate(&event);
-    std::shared_ptr<Packet::RequestUserIDPacket> infoPacketConverted = std::static_pointer_cast<Packet::RequestUserIDPacket>(infoPacketReturned);
-}
-
 std::unique_ptr<Window> createWindow(const Config& config) {
 #ifndef __PROSPERO__
     WindowInitialisation options = {
@@ -133,9 +118,50 @@ int main(int argc, char** argv) {
         controller->Update(dt);
         window->SetTitle("Gametech frame time:" + std::to_string(1000.0f * dt));
 
+        //game->UpdateGame(dt);
+
+        //if (inMenu) {
+
+        //    //Try showing the FMod logo here
+
+        //    if (controller->GetDigital(Controller::DigitalControl::MenuDown)) {
+        //        selection = std::min(2, selection + 1);
+        //    }
+        //    if (controller->GetDigital(Controller::DigitalControl::MenuUp)) {
+        //        selection = std::max(0, selection - 1);
+        //    }
+        //    if (controller->GetDigital(Controller::DigitalControl::MenuConfirm) || quickStart) {
+        //        GameMode mode = static_cast<GameMode>(selection);
+
+        //        if (mode == GameMode::SINGLEPLAYER) {
+        //            game->Start();
+        //        }
+        //        else {
+        //            game->StartMultiplayerGame(mode == GameMode::HOST_GAME);
+        //        }
+        //        inMenu = false;
+        //    }
+
+        //    for (int i = 0; i < 3; i++) {
+        //        std::string currentItem = menuItems[i];
+        //        if (i == selection) currentItem = "> " + currentItem + " <";
+        //        else currentItem = "  " + currentItem;
+        //        Debug::Print(currentItem, Vector2(0.4f, 0.35f + (0.1f * i)));
+
+        //    }
+        //}
+
+        //else {
+        //    if (!machine.Update(dt)) {
+        //        inMenu = true;
+        //    }
+        //    //Add a GetState function to PushdownMachine/PushdownState to return the screen it's on, and if it's on PauseScreen
+        //    //Pause the game->UpdateGame
+        //}
+
         quit |= !machine.Update(dt);
         game->GetResourceManager()->update(dt);
-        renderer->collectFrameObjects(game->getWorld());
+        renderer->collectFrameObjects(game->GetWorld());
         renderer->drawFrame(dt);
         Debug::UpdateRenderables(dt);
     }

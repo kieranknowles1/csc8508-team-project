@@ -6,24 +6,32 @@
 
 namespace NCL {
 	namespace CSC8503 {
+		class LaserObject;
 		class StateMachine;
+		class HealthAttrib;
+		class AttackAttrib;
+
 		class Wanderer : public NavEntity {
 		public:
-			Wanderer(PlayerObject* p, NavMesh* nav, Side side, int lID, GameTechRendererInterface* r, int l);
+			Wanderer(PlayerObject* p, NavMesh* nav, Side side, GameTechRendererInterface* r, int difficulty);
 			~Wanderer();
 
 			void Update(float dt);
 			void InitPosAndOffset();
 
-			void DamageAI(float d) { health -= d; }
-			float GetHealth() { return health; }
-
 			void DestroyWanderer();
 			bool isDeleted() const { return deleted; }
 
-			int laserID;
+			void SetLaser(LaserObject* laser) { this->laser = laser; }
+			LaserObject* GetLaser() const { return laser; }
+
+			HealthAttrib* GetHealthAttrib() { return health.get(); }
+			AttackAttrib* GetAttackAttrib() { return attack.get(); }
 
 		private:
+			std::unique_ptr<HealthAttrib> health = nullptr;
+			std::unique_ptr<AttackAttrib> attack = nullptr;
+
 			void PlayerNear(float dt);
 			void PlayerFar(float dt);
 
@@ -37,6 +45,7 @@ namespace NCL {
 			btVector3 offset;
 
 			PlayerObject* player;
+			LaserObject* laser;
 
 			float maxShootTimer = 5.0f;
 			float shootTimer;
@@ -47,9 +56,7 @@ namespace NCL {
 
 			GameTechRendererInterface* renderer;
 
-			int level;
-			float dps;
-			float health;
+			int difficulty = 1;
 		};
 	}
 }

@@ -2,8 +2,8 @@
 #include "AudioEngine.h"
 #include "TutorialGame.h"
 #include "Multiplayer/GamePackets.hpp"
+#include "Health.h"
 #include "AnimationObject.h"
-
 
 using namespace NCL;
 using namespace CSC8503;
@@ -32,7 +32,6 @@ void PlayerController::Initialise() {
     renderer->AddUiElement(overheat.get());
     crosshair->SetActive(true);
     overheat->SetActive(true);
-    laserID = player->GetWorldID();
     renderer->SetVignetteOn(true);
 }
 
@@ -91,25 +90,14 @@ void PlayerController::HandleShooting(float dt) {
     }
     else {
         if (firing) {
-            renderer->updateLaser(laserID,btVector3(0,0,0),btVector3(0,0,0));
+            player->updateLaser(btVector3(0,0,0), btVector3(0,0,0));
             crosshair->stopFiring();
             overheat->stopFiring();
-            if (TutorialGame::GetServerInstance().has_value()) {
-                std::shared_ptr<Packet::LaserPacket> laserPacket = std::make_shared<Packet::LaserPacket>(
-                    player->GetWorldID(),
-                    btVector3(0, 0, 0),
-                    btVector3(0, 0, 0),
-                    btVector3(0, 0, 0),
-                    player->GetLastPacketSequence((uint8_t)Packet::PacketType::LASER) + 1
-                );
-                player->UpdatePacketSequence((uint8_t)Packet::PacketType::LASER, laserPacket->GetSequenceNumber());
-                TutorialGame::GetServerInstance()->Broadcast(laserPacket);
-            }
             firing = false;
+            player->GetAttackAttrib()->Hit(nullptr);
         }
     }
 }
-
 
 void PlayerController::FireShot(float dt) {
     // Convert camera pitch & yaw to radians
@@ -122,21 +110,24 @@ void PlayerController::FireShot(float dt) {
     btVector3 forwardDir = rotationMatrix * btVector3(0, 0, -1);
     btVector3 adjustedOffset = rotationMatrix * gunCameraOffset; // Apply rotation to the offset
 
-   std::optional<ShotInfo> info = Shoot::GetInstance()->ShootBulletPlayer(player->getGun()->GetPhysicsObject()->GetRigidBody()->getWorldTransform().getOrigin() + adjustedOffset, forwardDir, bulletRotation, dt,laserID);
-   if (info != std::nullopt) {
-       renderer->updateLaser(laserID, player->getGun()->GetPhysicsObject()->GetRigidBody()->getWorldTransform().getOrigin() + adjustedOffset, info.value().hitPos);
-       if (TutorialGame::GetServerInstance().has_value()) {
-           std::shared_ptr<Packet::LaserPacket> laserPacket = std::make_shared<Packet::LaserPacket>(
-               player->GetWorldID(),
-               player->getGun()->GetPhysicsObject()->GetRigidBody()->getWorldTransform().getOrigin() + adjustedOffset,
-               info.value().hitPos,
-               info.value().hitNormal,
-               player->GetLastPacketSequence((uint8_t)Packet::PacketType::LASER) + 1
-           );
-           player->UpdatePacketSequence((uint8_t)Packet::PacketType::LASER, laserPacket->GetSequenceNumber());
-           TutorialGame::GetServerInstance()->Broadcast(laserPacket);
-       }
-   }
+    std::optional<ShotInfo> info = Shoot::GetInstance()->ShootBulletPlayer(player->getGun()->GetPhysicsObject()->GetRigidBody()->getWorldTransform().getOrigin() + adjustedOffset, forwardDir, bulletRotation, dt, player->GetWorldID());
+    if (info != std::nullopt) {
+        player->GetLaser()->SetCollisionNormal(info.value().hitNormal);
+        player->updateLaser(player->getGun()->GetPhysicsObject()->GetRigidBody()->getWorldTransform().getOrigin() + adjustedOffset, info.value().hitPos);
+
+        // Shooting at a player.
+        if (info->hitObj->getType() == GameObject::Type::Player) {
+            player->GetAttackAttrib()->Hit(((PlayerObject*)info->hitObj)->GetHealthAttrib());
+        }
+
+        // Shooting at an AI.
+        else if (info->hitObj->getType() == GameObject::Type::AI) {
+            player->GetAttackAttrib()->Hit(((Wanderer*)info->hitObj)->GetHealthAttrib());
+        }
+
+        else player->GetAttackAttrib()->Hit(nullptr);
+    }
+    else player->GetAttackAttrib()->Hit(nullptr);
 }
 
 
@@ -371,7 +362,8 @@ void PlayerController::HandleJumping() {
 };
 
 void PlayerController::HandleHurtEffects() {
-    float healthLossPercent = (player->GetMaxHealth() - player->health) / player->GetMaxHealth();
+    HealthAttrib* health = player->GetHealthAttrib();
+    float healthLossPercent = (health->GetMaxHealth() - health->GetCurrentHealth()) / health->GetMaxHealth();
     renderer->SetVignetteIntesnity((healthLossPercent));
 }
 
