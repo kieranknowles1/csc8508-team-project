@@ -75,6 +75,7 @@ void PlayerController::UpdateMovement(float dt) {
     rb->setLinearVelocity(movement);
     rb->activate();
     HandleShooting(dt);
+	ToggleScoreboard();
 }
 
 
@@ -384,4 +385,11 @@ Vector2 PlayerController::getDirectionalInput() const
     Vector2 raw(controller->GetAnalogue(Controller::AnalogueControl::MoveSidestep), controller->GetAnalogue(Controller::AnalogueControl::MoveForward));
     float magnitude = Vector::Length(raw);
     return magnitude <= 1.0f ? raw : raw / magnitude;
+}
+
+void PlayerController::ToggleScoreboard() {
+	if (controller->GetDigital(Controller::DigitalControl::Scoreboard)) {
+		scoreboardActive = !scoreboardActive;
+        scoreboard->SetActive(scoreboardActive);
+	}
 }

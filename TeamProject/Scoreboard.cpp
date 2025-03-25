@@ -1,6 +1,9 @@
 #include "Scoreboard.h"
 
 Scoreboard::Scoreboard() {
+
+	AddPlayer({ "Player1", 10, TeamColor::RED, 1 });
+	AddPlayer({ "Player2", 20, TeamColor::BLUE, 2 });
     InitScoreboard();
 }
 
@@ -47,7 +50,7 @@ void Scoreboard::InitScoreboard() {
                                  screenCenter.y - scoreboardSize.y / 2.0f + boxSize.y / 2.0f + i * boxSize.y };
             boxes[i * columns + j] = { position, boxSize };
 
-            Vector2 textPosition = { position.x - (boxSize.x / 2.0f) + 0.01f, position.y };
+            Vector2 textPosition = { position.x - (boxSize.x / 2.0f) + 0.01f, position.y + 0.02f};
             Uitexts[i * columns + j] = { textPosition, "" };
         }
         if (i == 0) {

@@ -52,7 +52,8 @@ public:
 		Unpause,
 		MenuUp,
 		MenuDown,
-		MenuConfirm
+		MenuConfirm,
+		Scoreboard
 	};
 
 	Controller() {
