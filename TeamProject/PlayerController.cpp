@@ -2,6 +2,7 @@
 #include "AudioEngine.h"
 #include "TutorialGame.h"
 #include "Multiplayer/GamePackets.hpp"
+#include "Health.h"
 
 
 using namespace NCL;
@@ -90,12 +91,10 @@ void PlayerController::HandleShooting(float dt) {
             crosshair->stopFiring();
             overheat->stopFiring();
             firing = false;
+            player->GetAttackAttrib()->Hit(nullptr);
         }
     }
 }
-
-
-
 
 void PlayerController::FireShot(float dt) {
     // Convert camera pitch & yaw to radians
@@ -110,8 +109,16 @@ void PlayerController::FireShot(float dt) {
 
 
     std::optional<ShotInfo> info = Shoot::GetInstance()->ShootBulletPlayer(player->getGun()->GetPhysicsObject()->GetRigidBody()->getWorldTransform().getOrigin() + adjustedOffset, forwardDir, bulletRotation, dt, player->GetWorldID());
-    player->GetLaser()->SetCollisionNormal(info.value().hitNormal);
-    player->updateLaser(player->getGun()->GetPhysicsObject()->GetRigidBody()->getWorldTransform().getOrigin() + adjustedOffset, info.value().hitPos);
+    if (info.has_value()) {
+        player->GetLaser()->SetCollisionNormal(info.value().hitNormal);
+        player->updateLaser(player->getGun()->GetPhysicsObject()->GetRigidBody()->getWorldTransform().getOrigin() + adjustedOffset, info.value().hitPos);
+
+        if (info->hitObj->getType() == GameObject::Type::Player) {
+            player->GetAttackAttrib()->Hit(((PlayerObject*)info->hitObj)->GetHealthAttrib());
+        }
+        else player->GetAttackAttrib()->Hit(nullptr);
+    }
+    else player->GetAttackAttrib()->Hit(nullptr);
 }
 
 
@@ -312,8 +319,9 @@ void PlayerController::HandleJumping() {
 };
 
 void PlayerController::HandleHurtEffects() {
-    //float healthLossPercent = (player->GetMaxHealth() - player->health) / player->GetMaxHealth();
-    //renderer->SetVignetteIntesnity((healthLossPercent));
+    HealthAttrib* health = player->GetHealthAttrib();
+    float healthLossPercent = (health->GetMaxHealth() - health->GetCurrentHealth()) / health->GetMaxHealth();
+    renderer->SetVignetteIntesnity((healthLossPercent));
 }
 
 void PlayerController::GetAllDirections() {

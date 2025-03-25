@@ -38,6 +38,9 @@ void PlayerObject::SetColor(btVector4 color) {
 }
 
 void PlayerObject::Update(float dt) {
+    attack->Update(dt);
+    health->Update(dt);
+
     upDirection = CalculateUpDirection(dt);
 
     rightDirection = CalculateRightDirection(upDirection);
@@ -45,11 +48,11 @@ void PlayerObject::Update(float dt) {
     updateGravity(dt);
     
     elapsedTime += dt;
+
 }
 
 void PlayerObject::UpdateWorldState() {
     attack->UpdateWorldState();
-    health->UpdateWorldState();
     GameObject::UpdateWorldState();
 
     auto [writeState, lock] = GetWorldStates()->GetWriteState();
@@ -60,7 +63,6 @@ void PlayerObject::UpdateWorldState() {
 
 void PlayerObject::UpdateFromWorldState(float dt) {
     attack->UpdateFromWorldState(dt);
-    health->UpdateFromWorldState(dt);
     GameObject::UpdateFromWorldState(dt);
 
     elapsedTickTime += dt;
@@ -102,13 +104,13 @@ void PlayerObject::UpdateFromWorldState(float dt) {
 
 std::vector<std::shared_ptr<Packet::Packet>> PlayerObject::CreatePackets(int sequenceNum) {
     std::vector<std::shared_ptr<Packet::Packet>> packets = GameObject::CreatePackets(sequenceNum);
+    std::vector<std::shared_ptr<Packet::Packet>> damagePackets = attack->CreatePackets(sequenceNum);
+    packets.insert(packets.end(), damagePackets.begin(), damagePackets.end());
 
     auto [read, readLock] = GetWorldStates()->GetReadState();
 
     StateValue upVector;
-
     std::shared_lock readStateLock = read->Lock_Shared();
-    
     bool hasUpVector = read->ReadState(StateType::UpVector, &upVector);
 
     readStateLock.unlock();

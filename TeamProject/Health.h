@@ -1,6 +1,8 @@
 #pragma once
 
 #include <memory>
+#include <mutex>
+#include <shared_mutex>
 
 #include "StateUpdater.h"
 
@@ -59,6 +61,7 @@ namespace NCL::CSC8503 {
 
     protected:
         GameObject* parent;
+        std::mutex damageMutex;
 
         float maxHealth = 0;
         float currentHealth = 0;
@@ -94,18 +97,25 @@ namespace NCL::CSC8503 {
          * Use nullptr to hit no one. Is reset to nullptr after Update if
          * damage type is DISCRETE.
          */
-        void Hit(HealthAttrib* target) { target = target; }
+        void Hit(HealthAttrib* t) { target = t; }
 
         void SetHealthAttrib(HealthAttrib* health) { this->health = health; }
         HealthAttrib* GetHealthAttrib() { return health; }
 
+        std::pair<std::vector<std::pair<GameObject*, float>>&, std::unique_lock<std::shared_mutex>> GetWriteableHits() {
+            std::unique_lock lock(hitsMutex);
+            return std::pair<std::vector<std::pair<GameObject*, float>>&, std::unique_lock<std::shared_mutex>>(hits, std::move(lock));
+        }
+
     protected:
         float damage = 0;
-        float damageDealt = 0;
 
         DamageType damageType = DamageType::DISCRETE;
-        HealthAttrib* target = nullptr;
-        GameObject* lastHit = nullptr;
-        HealthAttrib* health = nullptr;
+        
+        HealthAttrib* target = nullptr; // Reference to health of enemy.
+        HealthAttrib* health = nullptr; // Reference to own health.
+
+        std::vector<std::pair<GameObject*, float>> hits;
+        std::shared_mutex hitsMutex; // Object State class doesn't support lists.
     };
 }

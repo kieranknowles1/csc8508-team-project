@@ -5,6 +5,7 @@
 #include "WorldState.h"
 #include "Shoot.h"
 #include "Network/Network.hpp"
+#include "Health.h"
 
 using namespace Lobbies;
 
@@ -514,13 +515,9 @@ namespace Packet {
         PlayerObject* targetObject = (PlayerObject*) GameObject::GetGameObjectByID(damagePacket->GetTargetID());
 
         if (targetObject == nullptr) return;
-        // Dealer handles damage on their side so ignore packet.
-        //if (TutorialGame::GetUser()->GetUserID() != damagePacket->GetDamageDealer()) {
-        //    targetObject->Damage(damagePacket->GetDamage());
-        //}
 
-        //// Pass the parcel.
-        //if (TutorialGame::IsHost()) TutorialGame::GetServerInstance()->Broadcast(packet);
+        HealthAttrib* health = targetObject->GetHealthAttrib();
+        health->Damage(damagePacket->GetDamage());
     }
 
     std::shared_ptr<Packet> DamagePacketHandler::Translate(const ENetEvent* event) const {

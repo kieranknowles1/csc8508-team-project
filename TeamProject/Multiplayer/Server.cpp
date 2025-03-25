@@ -129,8 +129,8 @@ namespace Multiplayer {
         int smallestIncoming = INT32_MAX;
 
         while (currentPacket.get() != nullptr) {
-            // Process packets that have a sequence of zero (usually high priority).
-            if (currentPacket->GetChannel() == (uint8_t) Channel::RELIABLE ) {
+            // High Priority packets.
+            if (currentPacket->GetChannel() != (uint8_t) Channel::FREQUENT ) {
                 Packet::PacketRegister::GetHandler(currentPacket->GetType())->Handle(currentPacket);
             }
 

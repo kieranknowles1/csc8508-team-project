@@ -12,6 +12,7 @@
 #include <CSC8503CoreClasses/Debug.h>
 #include "Colors.h"
 #include "Shoot.h"
+#include "Health.h"
 
 #include "Window.h"
 #include "Config.h"

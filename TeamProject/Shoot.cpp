@@ -47,6 +47,7 @@ std::optional<ShotInfo> Shoot::ShootBulletPlayer(btVector3 startPos, btVector3 d
     if (rayInfo.has_value()) {
         if (rayInfo.value().hitObj->getType() == GameObject::Type::Player) {
             PlayerObject* hit = (PlayerObject*) rayInfo.value().hitObj;
+
             //hit->Damage(100.0f * dt); // TODO: Don't hard code this.
 
             if (TutorialGame::getInstance()->GetServerInstance() != nullptr) {

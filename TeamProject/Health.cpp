@@ -2,6 +2,7 @@
 #include "Multiplayer/GamePackets.hpp"
 #include "WorldState.h"
 #include "PlayerObject.h"
+#include "Multiplayer/GamePackets.hpp"
 
 using namespace WorldState;
 
@@ -11,8 +12,8 @@ namespace NCL {
             elapsed += dt;
 
             // Regenerating HealthAttrib.
-            if (GetHealthState() == HealthState::ALIVE) {
-                SetCurrentHealth(currentHealth+ (regenRate * dt));
+            if (GetHealthState() == HealthState::ALIVE && elapsed - lastHit >= regenDelay) {
+                SetCurrentHealth(currentHealth + (regenRate * dt));
             }
         }
 
@@ -59,63 +60,85 @@ namespace NCL {
         }
 
         void HealthAttrib::Damage(float amount) {
-            float newHealthAttrib = currentHealth- amount;
+            std::scoped_lock lock(damageMutex);
+            float newHealthAttrib = currentHealth - amount;
             SetCurrentHealth(newHealthAttrib);
             lastHit = elapsed;
         }
 
+        /**
+         * @brief Updates attributes in this object based on the damage and
+         * damage type.
+         *
+         * DISCRETE damage is applied once and then target is reset to nullptr.
+         * CONTINUOUS damage is multiplied by dt and the target is not reset.
+         *
+         * Damage is tracked by pairs noting who was hit and for how much
+         * damage. The network creates a damage packet for each pair and resets
+         * the array.
+         */
         void AttackAttrib::Update(float dt) {
             if (target) {
+                float damageTotal;
+
                 switch (damageType) {
                 case DamageType::DISCRETE:
-
-                    target->Damage(damage);
-                    damageDealt += damage;
+                    damageTotal = damage;
                     break;
 
                 case DamageType::CONTINUOUS:
-                    target->Damage(damage * dt);
-                    damageDealt += (damage * dt);
+                    damageTotal = damage * dt;
                     break;
 
                 default:
-                    damageDealt = 0;
+                    damageTotal = 0;
                     break;
                 }
+                target->Damage(damageTotal);
+
+                std::unique_lock lock(hitsMutex);
+                hits.push_back(std::pair(target->GetParent(), damageTotal));
+                lock.unlock();
+
+                // If hit is single hit, reset target to prevent more hits.
+                if (damageType == DamageType::DISCRETE) target = nullptr;
             }
         }
 
         void AttackAttrib::UpdateWorldState() {
-            auto [writeState, lock] = GetWorldStates()->GetWriteState();
-
-            std::unique_lock stateLock(writeState->Lock());
-
-            //writeState->UpdateState(StateType::DamageDealt, damageDealt);
-            //writeState->UpdateState(StateType::ObjectID, lastHit->GetWorldID());
+            // Nothing to do. State is already updates by Update() function
+            // When hitting things.
         }
+
 
         // Receives incoming damage states from other players.
         void AttackAttrib::UpdateFromWorldState(float dt) {
-            elapsedTickTime += dt;
-            float percent = dt / TICK_UPDATE_RATE;
-
-            auto [read, readLock] = health->GetWorldStates()->GetReadState();
-            StateValue targetDamageDealt;
-
-            std::shared_lock readStateLock = read->Lock_Shared();
-            bool hasTargetDamageDealt = read->ReadState(StateType::DamageDealt, &targetDamageDealt);
-            readStateLock.unlock();
-
-            // Damaging over time.
-            if (hasTargetDamageDealt) {
-                health->Damage(std::get<float>(targetDamageDealt) * percent);
-            }
+            // Nothing to do. State is already updates from packets and object
+            // is locked when writing to hits array.
         }
 
+        /**
+         * @brief Creates a damage packet for each hit registered in the
+         * internal buffer.
+         * 
+         * Temporarily locks the hitsMutex using a shared_lock.
+         * Clears the hits vector.
+         */
         std::vector<std::shared_ptr<Packet::Packet>> AttackAttrib::CreatePackets(int sequenceNum) {
-            
-            
-            return {};
+            std::vector<std::shared_ptr<Packet::Packet>> packets;
+            std::shared_lock lock(hitsMutex);
+    
+            for (auto [target, damage] : hits) {
+                std::shared_ptr<Packet::DamagePacket> damagePacket = std::make_shared<Packet::DamagePacket>(
+                    target->GetWorldID(),
+                    damage,
+                    health->GetParent()->GetWorldID()
+                );
+                packets.push_back(damagePacket);
+            }
+            hits.clear();
+            return std::move(packets);
         }
     }
 }
+
