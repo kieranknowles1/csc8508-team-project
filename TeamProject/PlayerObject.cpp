@@ -13,7 +13,7 @@ void PlayerObject::Update(float dt) {
     forwardDirection = CalculateForwardDirection(upDirection, rightDirection);
     updateGravity(dt);
     //Animation: 
-    CorrectAnimation();
+    //CorrectAnimation();
 
     if (animated == true) {
         renderObject->GetAnimation()->UpdateAnimation(dt);
