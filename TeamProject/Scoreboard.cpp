@@ -10,9 +10,10 @@ Scoreboard::Scoreboard() {
 void Scoreboard::UpdateScoreboardText() {
     SortPlayers();
     for (size_t i = 0; i < players.size(); ++i) {
-        Uitexts[i * columns + 3].text = players[i].name;
-        Uitexts[i * columns + 4].text = std::to_string(players[i].score);
-        Uitexts[i * columns + 5].text = TeamColorToString(players[i].color);
+        Uitexts[i * columns + 4].text = players[i].name;
+        Uitexts[i * columns + 5].text = std::to_string(players[i].score);
+        Uitexts[i * columns + 6].text = TeamColorToString(players[i].color);
+		Uitexts[i * columns + 7].text = std::to_string(players[i].ping);
     }
 }
 
@@ -57,7 +58,13 @@ void Scoreboard::InitScoreboard() {
             Uitexts[i * columns].text = "Player:";
             Uitexts[i * columns + 1].text = "Score:";
             Uitexts[i * columns + 2].text = "Color:";
+			Uitexts[i * columns + 3].text = "Ping:";
         }
     }
+    //UpdatePing();
     UpdateScoreboardText();
+}
+
+void Scoreboard::UpdatePing() {
+	
 }
