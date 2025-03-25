@@ -784,8 +784,6 @@ void GameTechRenderer::RenderLasers() {
 	glBindTexture(GL_TEXTURE_2D, laserTexOld);
 	glUniform1i(glGetUniformLocation(laserPreProcess->GetProgramID(), "oldLaserTex"), 1);
 	glUniform1f(glGetUniformLocation(laserPreProcess->GetProgramID(), "dt"), delta);
-	glUniformMatrix4fv(glGetUniformLocation(laserPreProcess->GetProgramID(), "currViewProjMatrix"), 1, false, (float*)&viewProjMatrix);
-	glUniformMatrix4fv(glGetUniformLocation(laserPreProcess->GetProgramID(), "prevViewProjMatrix"), 1, false, (float*)&laserPreviousViewProjMatrix);
 	DrawBoundMesh();
 
 	// calculate texelSize needed for blur
@@ -805,7 +803,7 @@ void GameTechRenderer::RenderLasers() {
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, laserPreTex);
 	glUniform1i(glGetUniformLocation(laserPostProcess->GetProgramID(), "laserTex"), 0);
-	glUniform1f(glGetUniformLocation(laserPostProcess->GetProgramID(), "blurScale"),1.25f);
+	glUniform1f(glGetUniformLocation(laserPostProcess->GetProgramID(), "blurScale"),1.75f);
 	glUniform2fv(glGetUniformLocation(laserPostProcess->GetProgramID(), "texelSize"), 1, (float*)&texelSize);
 	DrawBoundMesh();
 
@@ -819,10 +817,9 @@ void GameTechRenderer::RenderLasers() {
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, laserPostTex);
 	glUniform1i(glGetUniformLocation(laserPostProcess->GetProgramID(), "laserTex"), 0);
-	glUniform1f(glGetUniformLocation(laserPostProcess->GetProgramID(), "blurScale"), 1.25f);
+	glUniform1f(glGetUniformLocation(laserPostProcess->GetProgramID(), "blurScale"), 1.75f);
 	glUniform2fv(glGetUniformLocation(laserPostProcess->GetProgramID(), "texelSize"), 1, (float*)&texelSize);
 	DrawBoundMesh();
-	laserPreviousViewProjMatrix = viewProjMatrix;
 	laserTexOld = laserPreTex;
 }
 
