@@ -165,7 +165,6 @@ void LevelImporter::HandleTypes(GameObject* obj) {
     btVector4 colourLight = LightColour();
     switch (obj->getType())
     {
-
     case GameObject::Type::JumpPad:
         obj->GetRenderObject()->SetColour(Vector4(0.3f, 0.3f, 0.3f, 1));
         obj->GetRenderObject()->SetTexScaleMultiplier(0.0025f);
@@ -188,10 +187,7 @@ void LevelImporter::HandleTypes(GameObject* obj) {
         obj->GetRenderObject()->SetTexScaleMultiplier(0.0025f);
         obj->GetRenderObject()->SetColour(btVector4((250.0f/255.0f), (232.0f / 255.0f), (40.0f / 255.0f), 1));
         break;
-
-
     case GameObject::Type::PointLight:
-
         obj->GetRenderObject()->setMaterial(nullptr);
         world->AddPointLight(new PointLight(obj->GetPhysicsObject()->GetRigidBody()->getWorldTransform().getOrigin(), 950,1, colourLight));
         colourLight *= 10;
@@ -201,9 +197,35 @@ void LevelImporter::HandleTypes(GameObject* obj) {
         break;
     case GameObject::Type::RespawnPoint:
     {
-        btMatrix3x3 rotationMatrixCam(obj->GetTransform().getRotation());
-        btVector3 upwards = rotationMatrixCam * btVector3(0, 1, 0); // Apply rotation to the offset
-        RespawnPoint* respawnPoint = new RespawnPoint(obj->GetTransform().getOrigin(), upwards);
+        btQuaternion rot = obj->GetTransform().getRotation();
+        btMatrix3x3 rotationMatrixCam(rot);
+        btVector3 upwards = rotationMatrixCam * btVector3(0, 1, 0);
+        btVector3 desiredFacing = rotationMatrixCam * btVector3(0, 0, -1);
+        btVector3 worldForward(1, 0, 0); 
+        btVector3 projectedForward = (desiredFacing - upwards * desiredFacing.dot(upwards)).normalized();
+        btVector3 projectedWorldForward;
+        // worldForward == upwards, meaning we can't normalise it
+        bool isIceSide = (worldForward - upwards).fuzzyZero();
+        bool isSlimeSide = (worldForward+ upwards).fuzzyZero();
+        if (isIceSide) {
+            projectedWorldForward = btVector3(0, 1, 0);
+        }
+        else if (isSlimeSide) {
+            projectedWorldForward = btVector3(0, -1, 0);
+        }
+        else {
+            projectedWorldForward = (worldForward - upwards * worldForward.dot(upwards)).normalized();
+        }
+      
+        float yaw = atan2(projectedForward.dot(projectedWorldForward.cross(upwards)), projectedForward.dot(projectedWorldForward)) * (180.0f / SIMD_PI);
+        if (!isIceSide && !isSlimeSide) {
+            yaw = (360.0f + 90.0f) - yaw;
+        }
+        else {
+            yaw = (360.0f - 90.0f) - yaw;
+        }
+        yaw = fmod(yaw, 360.0f);
+        RespawnPoint* respawnPoint = new RespawnPoint(obj->GetTransform().getOrigin(), upwards, yaw);
         Respawn::GetInstance()->InsertRespawn(respawnPoint);
         break;
     }

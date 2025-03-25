@@ -43,6 +43,7 @@ bool KeyboardMouseController::GetDigital(DigitalControl button)  const {
 	case DigitalControl::DebugFreeCam: return keyboard.KeyPressed(KeyCodes::H);
 	case DigitalControl::DebugReloadWorld: return keyboard.KeyPressed(KeyCodes::F1);
 	case DigitalControl::DebugShowProfiling: return keyboard.KeyPressed(KeyCodes::F4);
+	case DigitalControl::DebugRespawnRandom: return keyboard.KeyPressed(KeyCodes::F5);
 
 	case DigitalControl::MenuDown: return keyboard.KeyPressed(KeyCodes::DOWN) || keyboard.KeyPressed(KeyCodes::S);
 	case DigitalControl::MenuUp: return keyboard.KeyPressed(KeyCodes::UP) || keyboard.KeyPressed(KeyCodes::W);
