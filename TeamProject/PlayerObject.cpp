@@ -72,8 +72,8 @@ void PlayerObject::UpdateFromWorldState(float dt) {
     std::shared_lock currentStateLock = current->Lock_Shared();
     std::shared_lock readStateLock = read->Lock_Shared();
 
-    bool hasCurrentUpVector = current->ReadState(StateType::LinearVelocity, &currentUpVectorValue);
-    bool hasTargetUpVector = read->ReadState(StateType::LinearVelocity, &targetUpVectorValue);
+    bool hasCurrentUpVector = current->ReadState(StateType::UpVector, &currentUpVectorValue);
+    bool hasTargetUpVector = read->ReadState(StateType::UpVector, &targetUpVectorValue);
 
     currentStateLock.unlock();
     readStateLock.unlock();
