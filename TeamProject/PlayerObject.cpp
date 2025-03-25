@@ -51,6 +51,11 @@ void PlayerObject::UpdateWorldState() {
     attack->UpdateWorldState();
     health->UpdateWorldState();
     GameObject::UpdateWorldState();
+
+    auto [writeState, lock] = GetWorldStates()->GetWriteState();
+    std::unique_lock stateLock(writeState->Lock());
+
+    writeState->UpdateState(StateType::UpVector, upDirection);
 }
 
 void PlayerObject::UpdateFromWorldState(float dt) {
