@@ -126,10 +126,10 @@ namespace NCL::CSC8503 {
 
 		void initLasers(bool sp) {
 			if (sp) {
-				//Player in SP is ID 1 and AI id is 101-150 for now
+				//Player in SP is ID 1 and AI id is 100-200 for now
 				std::shared_ptr<Laser> newLaser = std::make_shared<Laser>(btVector3(0, 0, 0), btVector3(0, 0, 0), 1);
 				lasers.push_back(newLaser);
-				for (int i = 101; i < 151; i++) {
+				for (int i = 100; i <= 200; i++) {
 					std::shared_ptr<Laser> newLaser = std::make_shared<Laser>(btVector3(0, 0, 0), btVector3(0, 0, 0), i);
 					lasers.push_back(newLaser);
 				}
