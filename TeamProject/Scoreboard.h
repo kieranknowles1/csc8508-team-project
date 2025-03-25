@@ -61,10 +61,10 @@ public:
 private:
     Vector2 screenCenter = Vector2(0.5f, 0.5f);
     Vector2 scoreboardSize = Vector2(0.7f, 0.7f);
-    std::array<ScoreboardBoxes, 27> boxes;
-    std::array<ScoreboardText, 27> Uitexts;
+    std::array<ScoreboardBoxes, 36> boxes;
+    std::array<ScoreboardText, 36> Uitexts;
     std::vector<Player> players;
-    int columns = 3;
+    int columns = 4;
     int rows = 9;
 
     std::string TeamColorToString(TeamColor color) {
@@ -95,15 +95,5 @@ private:
             return a.score > b.score;
             });
     }
-
-
-private:
-    Vector2 screenCenter = Vector2(0.5f, 0.5f);
-    Vector2 scoreboardSize = Vector2(0.8f, 0.7f);
-    std::array<ScoreboardBoxes, 36> boxes;
-    std::array<ScoreboardText, 36> Uitexts;
-    std::vector<Player> players;
-    int columns = 4;
-    int rows = 9;
 
 };
