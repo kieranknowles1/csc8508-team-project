@@ -564,17 +564,17 @@ GameObject* TutorialGame::AddSphereToWorld(const Vector3& position, float radius
     return sphere;
 }
 
-
-void TutorialGame::StartMultiplayerGame(bool isHost) {
+bool TutorialGame::StartMultiplayerGame(bool isHost) {
     server = new Multiplayer::Server(this, isHost);
     server->InitPacketHandlers();
     server->Start();
 
     if (!isHost) {
-        //server->JoinGame("127.0.0.1", 30.0f);
-        std::string host = config.get<std::string>("defaultHost");
-        server->JoinGame(host.c_str(), 30.0f);
+        server->JoinGame("127.0.0.1", 1.0f);
+        //std::string host = config.get<std::string>("defaultHost");
+        //server->JoinGame(host.c_str(), 5.0f);
     }
+    return server->IsConnected();
 }
 
 
@@ -624,31 +624,6 @@ void TutorialGame::Start() {
         instance->playerController = std::make_unique<PlayerController>(instance->player, instance->controller, instance->mainCamera, instance->bulletWorld, instance->renderer);
         instance->spGameController = new SPGameController(instance->player, instance, instance->renderer);
     }
-
-
-    
-    //// Spawn in player.
-    //std::array<PlayerObject*, 4> players;
-
-    //for (int i = 0; i < players.size(); i++) {
-    //    User user(i);
-    //    RespawnPoint* playerRespawn = Respawn::GetInstance()->GetRespawn(user.GetUserID());
-    //    PlayerObject* player = instance->InitPlayer(playerRespawn->position, playerRespawn->orientation);
-    //    player->SetWorldID(user.GetUserID());
-    //    player->SetOwner(user);
-    //    players[i] = player;
-    //}
-
-    //User owner(0);
-
-    //if (instance->server != nullptr) {
-    //    owner = *(instance->server->GetUser());
-    //}
-
-    //instance->player = players[owner.GetUserID()];
-    //instance->playerController = std::make_unique<PlayerController>(instance->player, instance->controller, instance->mainCamera, instance->bulletWorld,instance->renderer);
-    ////instance->player->GetRenderObject()->SetColour(Vector4(Color::GetPlayerColor(user->GetUserID())));
-
     Shoot::GetInstance()->Initialise(instance->bulletWorld,instance->resourceManager.get(), instance->world.get(), instance->renderer->GetDecalSystem());
     Shoot::GetInstance()->InitShotMasks(instance->player, instance->player->getGun());
 }

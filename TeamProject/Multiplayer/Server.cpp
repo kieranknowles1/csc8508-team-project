@@ -74,14 +74,15 @@ namespace Multiplayer {
         enet_address_set_host(&destination, ip.c_str());
 
         m_network->ConnectTo(&destination);
-        auto start = std::chrono::high_resolution_clock::now();
-        std::chrono::steady_clock::time_point end;
-        std::chrono::duration<float> elapsed;
+
+        int resendDelay = 10; // ms
+        int maxAttempts = (waitSeconds * 1000 / resendDelay) + 1;
+        int attempts = 0;
 
         do {
-            end = std::chrono::high_resolution_clock::now();
-            elapsed = end - start;
-        } while (m_network->GetConnectionCount() < 1 && elapsed.count() < waitSeconds);
+            std::this_thread::sleep_for(std::chrono::milliseconds(resendDelay));
+            attempts++;
+        } while (m_network->GetConnectionCount() < 1 && attempts < maxAttempts);
 
         m_connected = m_network->GetConnectionCount() > 0;
     }

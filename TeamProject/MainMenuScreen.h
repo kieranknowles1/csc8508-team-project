@@ -3,6 +3,7 @@
 //#include "PushdownMachine.h"
 #include "PushdownState.h"
 #include <TutorialGame.h>
+#include <future>
 //#include "Window.h"
 #include <CSC8503CoreClasses/Debug.h>
 #include <iostream>
@@ -16,13 +17,20 @@ class MainMenuScreen : public PushdownState {
     size_t selection = 0;
     TutorialGame* game;
     Controller* controller;
+    float connectionFailedTime = 0;
 
 public:
     MainMenuScreen(Controller* controller, TutorialGame* game) : controller(controller), game(game), selection(0) {}
 
     PushdownResult OnUpdate(float dt, PushdownState** newState) override {
         const std::array<std::string, 5> menuItems = { "Singleplayer", "Host Game", "Join Game", "Credits", "Quit"};
-        
+        bool ok = true;
+
+        if (connectionFailedTime > 0) {
+            connectionFailedTime -= dt;
+            Debug::Print("Connection failed", Vector2(0.05f, 0.9f));
+        }
+
         if (controller->GetDigital(Controller::DigitalControl::MenuDown)) {
             selection = (size_t)std::min((int)menuItems.size() - 1, (int)selection + 1);
         }
@@ -32,10 +40,10 @@ public:
         if (controller->GetDigital(Controller::DigitalControl::MenuConfirm)) {
             GameMode mode = static_cast<GameMode>(selection);
 
+            game->SetGameMode(mode);
             switch (mode)
             {
             case GameMode::SINGLEPLAYER:
-                game->SetGameMode(GameMode::SINGLEPLAYER);
                 game->Start();
                 *newState = new GameScreen(controller, game);
                 return PushdownResult::Push;
@@ -46,9 +54,14 @@ public:
                 return PushdownResult::Push;
 
             case GameMode::JOIN_GAME:
-                game->StartMultiplayerGame(false); 
-                *newState = new ClientLobbyScreen(controller, game);
-                return PushdownResult::Push;
+                ok = game->StartMultiplayerGame(false);
+
+                if (ok) {
+                    *newState = new ClientLobbyScreen(controller, game);
+                    return PushdownResult::Push;
+                }
+                connectionFailedTime = 3.0f;
+                return PushdownResult::NoChange;
 
             case GameMode::CREDITS:
                 game->SetGameMode(GameMode::CREDITS);
@@ -56,10 +69,12 @@ public:
                 return PushdownResult::Push;
                 break;
             case GameMode::QUIT:
-                game->SetGameMode(GameMode::QUIT);
                 return PushdownResult::Pop;
             default: assert(false);
             }
+
+            *newState = new GameScreen(controller, game);
+            return PushdownResult::Push;
         }
 
         //Render menu

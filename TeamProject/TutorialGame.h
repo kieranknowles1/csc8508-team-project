@@ -30,6 +30,8 @@ namespace NCL {
         class Config;
 
         const int MAX_PLAYERS = 8;
+        // Max duration to wait for a connection when joining, in milliseconds
+        const static constexpr unsigned int ConnectionTimeout = 1000;
 
         enum class GameMode {
             SINGLEPLAYER,
@@ -103,7 +105,7 @@ namespace NCL {
             virtual void UpdateGame(float dt);
             void LoadWorldFromFile(int levelNum);
 
-            void StartMultiplayerGame(bool isHost);
+            bool StartMultiplayerGame(bool isHost);
             void ClearWorld();
 
             GameWorld* GetWorld() const { return world.get(); }
@@ -135,6 +137,7 @@ namespace NCL {
             void ThirdPersonControls();
 
             void InitWorld();
+            //void ResetWorld();
             void UpdatePlayer(float dt);
 
             GameObject* AddFloorToWorld(const Vector3& position, const Vector3& size, const Vector3& rotation);
