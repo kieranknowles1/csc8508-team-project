@@ -6,7 +6,6 @@
 #include "GameObject.h"
 #include "PhysicsObject.h"
 #include "CollisionInfo.h"
-#include "Respawn.h"
 #include "MeshAnimation.h"
 #include "AnimationObject.h"
 
@@ -122,21 +121,7 @@ public:
 	inline PlayerState GetState() { return state; }
 	inline void SetState(PlayerState state) { this->state = state; }
 
-	void Damage(float amount) {
-		lastHit = elapsedTime;
-
-		health -= amount;
-		if (health <= 0) {
-			//state = PlayerState::DEAD;
-			health = 100;
-			RespawnPoint* point = Respawn::GetInstance()->GetRespawn(worldID - 1);
-			GetPhysicsObject()->GetRigidBody()->getWorldTransform().setOrigin(point->position);
-			setUpDirection(point->orientation);
-			resetCollisionType();
-			setCollided(0);
-			// TODO: Create Change State packet.
-		}
-	}
+	void Damage(float amount);
 	
 	float GetMaxHealth() {
 		return maxHealth;
@@ -172,6 +157,7 @@ private:
 	std::list<GameObject*> collidedObjects;
 	Type collisionType;
 	PlayerState state;
+	float yawOverride = -1000.0f;
 
     btQuaternion camRotOffset;
 	btQuaternion oldcamRotOffset = btQuaternion::getIdentity();

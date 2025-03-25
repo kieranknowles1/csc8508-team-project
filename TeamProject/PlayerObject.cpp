@@ -1,6 +1,7 @@
 #include "PlayerObject.h"
 #include "TutorialGame.h"
 #include "Multiplayer/GamePackets.hpp"
+#include "Respawn.h"
 
 #include <memory>
 
@@ -54,6 +55,23 @@ void PlayerObject::Update(float dt) {
         );
         UpdatePacketSequence((uint8_t)Packet::PacketType::OBJECT_CHANGE_GRAVITY, gravityPacket->GetSequenceNumber());
         TutorialGame::GetServerInstance()->Broadcast(gravityPacket);
+    }
+}
+
+void PlayerObject::Damage(float amount) {
+    lastHit = elapsedTime;
+
+    health -= amount;
+    if (health <= 0) {
+        //state = PlayerState::DEAD;
+        health = 100;
+        RespawnPoint* point = Respawn::GetInstance()->GetRespawn(worldID - 1);
+        GetPhysicsObject()->GetRigidBody()->getWorldTransform().setOrigin(point->position);
+        setUpDirection(point->orientation);
+        yawOverride = point->yaw;
+        resetCollisionType();
+        setCollided(0);
+        // TODO: Create Change State packet.
     }
 }
 

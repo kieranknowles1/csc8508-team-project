@@ -43,6 +43,10 @@ namespace NCL {
 				thirdPerson = thirdPersonIn;
 			};
 
+			void setYaw(float yawIn) {
+				yaw = yawIn;
+			}
+
 			float getYaw() {
 				return yaw;
 			}
@@ -62,6 +66,7 @@ namespace NCL {
 			void pitchDown() {
 				player->Rotate(false, false,yaw);
 			}
+
 
 		private:
 
@@ -105,7 +110,7 @@ namespace NCL {
 			PlayerObject* player;
 			const Controller* controller = nullptr;
 			Camera* camera = nullptr;
-			float yaw = 0;
+			float yaw = 0.0f;
 			bool isSliding = false;
 			bool slideTransition = false;
 			float currentAngle;

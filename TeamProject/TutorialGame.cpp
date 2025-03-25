@@ -181,6 +181,15 @@ void TutorialGame::UpdateKeys() {
     if (controller->GetDigital(DebugFreeCam)) {
         freeCam = !freeCam;
     }
+    if (controller->GetDigital(DebugRespawnRandom)) {
+        RespawnPoint* respawnPoint = Respawn::GetInstance()->GetRandomRespawn(player->GetWorldID());
+        playerController->setYaw(respawnPoint->yaw);
+        player->GetPhysicsObject()->GetRigidBody()->getWorldTransform().setOrigin(respawnPoint->position);
+        player->setUpDirection(respawnPoint->orientation);
+        player->resetCollisionType();
+        player->setCollided(0);
+    }
+
 
     if (playerController) {
         if (controller->GetDigital(ThirdPerson)) {
@@ -348,6 +357,7 @@ PlayerObject* TutorialGame::InitPlayer(btVector3 position, btVector3 upDir) {
 
     newPlayer->SetIsAnimated(true); //maybe better to manage this wherever animations are being applied rather than here but for testing this is probably fine
     newPlayer->setRenderer(renderer); 
+    Respawn::GetInstance()->InsertPlayerObj(newPlayer);
 
     return newPlayer;
 }
@@ -650,7 +660,7 @@ void TutorialGame::Start() {
     instance->player->setType(GameObject::Type::Player);
     instance->player->setRenderer(instance->renderer);
     instance->playerController = std::make_unique<PlayerController>(instance->player, instance->controller, instance->mainCamera, instance->bulletWorld,instance->renderer);
-
+    instance->playerController->setYaw(respawnPoint->yaw);
 
     btQuaternion emptyRot;
 
