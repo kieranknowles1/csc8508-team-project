@@ -9,8 +9,12 @@
 using namespace NCL;
 using namespace CSC8503;
 
-Wanderer::Wanderer(GameObject* p, NavMesh* mesh, Side side, int lID, GameTechRendererInterface* r) :
-	player(p), navMesh(mesh), shootTimer(maxShootTimer), updateplayerPathTimer(maxUpdatePlayerPathTimer), laserID(lID), renderer(r) {
+Wanderer::Wanderer(PlayerObject* p, NavMesh* mesh, Side side, int lID, GameTechRendererInterface* r, int l) :
+	player(p), navMesh(mesh), shootTimer(maxShootTimer), updateplayerPathTimer(maxUpdatePlayerPathTimer), laserID(lID), renderer(r), level(l) {
+
+	dps = 10.0f * level;
+	health = 25.0f * level;
+
 	type = GameObject::Type::AI;
 	this->side = side;
 	stateMachine = new StateMachine();
@@ -28,6 +32,17 @@ Wanderer::Wanderer(GameObject* p, NavMesh* mesh, Side side, int lID, GameTechRen
 
 	stateMachine->AddTransition(new StateTransition(playerFar, playerNear, [&]()->bool {
 		if (playerDist <= senseDistance) {
+			btTransform trans = GetTransform();
+			btTransform pTrans = player->GetTransform();
+
+			btVector3 wl = trans.getOrigin();
+			btVector3 pl = pTrans.getOrigin();
+
+			btVector3 dir = (pl - wl) == 0 ? btVector3(0, 0, 0) : (pl - wl).normalized();
+			std::optional<ShotInfo> shot = Shoot::GetInstance()->RayClosest(wl, dir, true, static_cast<GameObject*>(this));
+			if (shot.has_value()) {
+				if (!(shot.value().hitObj == player || shot.value().hitObj == player->getGun())) return false;
+			}
 			GetRenderObject()->SetColour(Vector4(1, 0, 0, 1));
 			/*btVector3 pPos = player->GetTransform().getOrigin();
 			pPos.setY(navMesh->GetYFromPoint(pPos.getX(), pPos.getZ()));
@@ -50,6 +65,23 @@ Wanderer::Wanderer(GameObject* p, NavMesh* mesh, Side side, int lID, GameTechRen
 			return true;
 		}
 		else {
+			btTransform trans = GetTransform();
+			btTransform pTrans = player->GetTransform();
+
+			btVector3 wl = trans.getOrigin();
+			btVector3 pl = pTrans.getOrigin();
+
+			btVector3 dir = (pl - wl) == 0 ? btVector3(0, 0, 0) : (pl - wl).normalized();
+			std::optional<ShotInfo> shot = Shoot::GetInstance()->RayClosest(wl, dir, true, static_cast<GameObject*>(this));
+			if (shot.has_value()) {
+				if (!(shot.value().hitObj == player || shot.value().hitObj == player->getGun())) {
+					GetRenderObject()->SetColour(Vector4(0, 1, 0, 1));
+					curPath = navMesh->FindPath(curPathPoint, navMesh->GetRandomPointInNavMesh());
+					if (curPath.size() > 0) NewPath(curPath);
+					renderer->updateLaser(laserID, btVector3(0, 0, 0), btVector3(0, 0, 0));
+					return true;
+				}
+			}
 			return false;
 		}
 		}));
@@ -82,35 +114,33 @@ void Wanderer::InitPosAndOffset() {
 	btCapsuleShape* capsule = static_cast<btCapsuleShape*>(shape);
 	float halfHeight = capsule->getHalfHeight();
 	btTransform trans = GetTransform();
-	btQuaternion rotation;
+	btQuaternion rotation = btQuaternion::getIdentity();
+	offset = btVector3(0, halfHeight * 2, 0);
 	switch(side) {
 	case(Side::BOTTOM):
-		offset = btVector3(0, halfHeight * 2, 0);
 		break;
 	case(Side::TOP):
 		offset = btVector3(0, -halfHeight * 2, 0);
+		rotation = btQuaternion(btVector3(1, 0, 0), SIMD_PI);
 		break;
 	case(Side::FRONT):
 		offset = btVector3(0, 0, 0);
 		rotation = btQuaternion(btVector3(1, 0, 0), SIMD_PI / 2);
-		trans.setRotation(rotation);
 		break;
 	case(Side::BACK):
 		offset = btVector3(0, halfHeight * 4, 0);
 		rotation = btQuaternion(btVector3(1, 0, 0), -SIMD_PI / 2);
-		trans.setRotation(rotation);
 		break;
 	case(Side::LEFT):
 		offset = btVector3(halfHeight * 2, 0, 0);
 		rotation = btQuaternion(btVector3(0, 0, 1), -SIMD_PI / 2);
-		trans.setRotation(rotation);
 		break;
 	case(Side::RIGHT):
 		offset = btVector3(-halfHeight * 2, 0, 0);
 		rotation = btQuaternion(btVector3(0, 0, 1), -SIMD_PI / 2);
-		trans.setRotation(rotation);
 		break;
 	}
+	trans.setRotation(rotation);
 	curPathPoint = trans.getOrigin();
 	btVector3 newPos = trans.getOrigin() + offset;
 	trans.setOrigin(newPos);
@@ -175,7 +205,7 @@ void Wanderer::PlayerNear(float dt) {
 		btVector3 curPos = trans.getOrigin();
 		btVector3 pPos = player->GetTransform().getOrigin();
 		btVector3 dir = (pPos - curPos) == 0 ? btVector3(0, 0, 0) : (pPos - curPos).normalized();
-		std::optional<ShotInfo> info = Shoot::GetInstance()->ShootBulletAI(curPos, dir, trans.getRotation(), dt);
+		std::optional<ShotInfo> info = Shoot::GetInstance()->ShootBulletAI(curPos, dir, trans.getRotation(), dps, dt);
 		renderer->updateLaser(laserID, curPos, info.value().hitPos);
 
 		shootTimer -= dt;

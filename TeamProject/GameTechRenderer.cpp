@@ -781,7 +781,7 @@ void GameTechRenderer::RenderLasers() {
 			color = Color::GetPlayerColor(laser->id);
 		}*/
 		//AI IDs starting at 101, using pink player color as default for now
-		btVector4 color = laser->id > 100 ? Color::GetPlayerColor(5) : color = Color::GetPlayerColor(laser->id);
+		btVector4 color = laser->id >= 100 ? Color::GetPlayerColor(5) : color = Color::GetPlayerColor(laser->id);
 		glUniform4fv(glGetUniformLocation(laserShader->GetProgramID(), "inColour"), 1, (float*)&color);
 		DrawBoundMesh();
 	}

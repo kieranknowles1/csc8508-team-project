@@ -10,7 +10,7 @@ using namespace NCL;
 using namespace CSC8503;
 
 
-std::optional<ShotInfo> Shoot::RayClosest(btVector3 startPos, btVector3 dir, bool hitPlayer) {
+std::optional<ShotInfo> Shoot::RayClosest(btVector3 startPos, btVector3 dir, bool hitPlayer, GameObject* mask) {
 	dir.normalize();
     btVector3 shotPos = (startPos + (dir * 10000));
     btCollisionWorld::AllHitsRayResultCallback callback(startPos, shotPos);
@@ -25,6 +25,9 @@ std::optional<ShotInfo> Shoot::RayClosest(btVector3 startPos, btVector3 dir, boo
         for (int i = 0; i < callback.m_collisionObjects.size(); i++) { // loop all hits
             GameObject* hit = static_cast<GameObject*>(callback.m_collisionObjects[i]->getUserPointer());
             if (hit != gun && (hitPlayer || hit != player)) {
+                if (mask) {
+                    if (hit == mask) continue;
+                }
                 // ignore paintballs
                 btVector3 posHit = callback.m_hitPointWorld[i];
                 float distance = startPos.distance(posHit);
@@ -68,13 +71,13 @@ std::optional<ShotInfo> Shoot::ShootBulletPlayer(btVector3 startPos, btVector3 d
     return rayInfo;
 }
 
-std::optional<ShotInfo> Shoot::ShootBulletAI(btVector3 startPos, btVector3 dir, btQuaternion rotation,float dt) {
+std::optional<ShotInfo> Shoot::ShootBulletAI(btVector3 startPos, btVector3 dir, btQuaternion rotation, float dps, float dt) {
     auto rayInfo = RayClosest(startPos, dir, true);
     // Don't have Rust style and_then until C++23 :(
     if (rayInfo.has_value()) {
         if (rayInfo.value().hitObj->getType() == GameObject::Type::Player) {
             PlayerObject* hit = (PlayerObject*)rayInfo.value().hitObj;
-            hit->Damage(5.0f * dt); // TODO: Don't hard code this.
+            hit->Damage(dps * dt); // TODO: Don't hard code this.
         }
         SpawnDecal(rayInfo.value().hitPos, rayInfo.value().hitNormal, 1);
     }
