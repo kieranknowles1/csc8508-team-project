@@ -1288,6 +1288,7 @@ void GameTechRenderer::RenderAnimations() {
 			Matrix4 modelMatrix; 
 			i->getParent()->GetTransform().getOpenGLMatrix((btScalar*)&modelMatrix);
 			modelMatrix = modelMatrix * Matrix::Scale(i->getParent()->getRenderScale());
+			modelMatrix = modelMatrix * Matrix::Translation(Vector3(0, -0.9f, 0.1f));
 			glUniformMatrix4fv(modelLocation, 1, false, (float*)&modelMatrix);
 
 			Vector4 Colour = i->GetColour();
