@@ -42,57 +42,21 @@ std::optional<ShotInfo> Shoot::RayClosest(btVector3 startPos, btVector3 dir, boo
 }
 
 std::optional<ShotInfo> Shoot::ShootBulletPlayer(btVector3 startPos, btVector3 dir, btQuaternion rotation, float dt, int shotID) {
-    auto rayInfo = RayClosest(startPos, dir);
-    // Don't have Rust style and_then until C++23 :(
-    if (rayInfo.has_value()) {
-        if (rayInfo.value().hitObj->getType() == GameObject::Type::Player) {
-            PlayerObject* hit = (PlayerObject*) rayInfo.value().hitObj;
-
-            //hit->Damage(100.0f * dt); // TODO: Don't hard code this.
-
-            if (TutorialGame::getInstance()->GetServerInstance() != nullptr) {
-                std::shared_ptr<Packet::DamagePacket> damagePacket = std::make_shared<Packet::DamagePacket>(
-                    hit->GetWorldID(),
-                    200.0f * dt, // TODO: Don't hard code this.
-                    0
-                    //TutorialGame::GetUser()->GetUserID()
-                );
-                //TutorialGame::GetServerInstance()->Broadcast(damagePacket);
-            }
-        }
-        else if (rayInfo.value().hitObj->getType() == GameObject::Type::AI) {
-            Wanderer* hit = (Wanderer*)rayInfo.value().hitObj;
-            hit->DamageAI(100.0f * dt);
-        }
-       // SpawnBulletMesh(startPos, dir, rotation, &rayInfo.value());
-        //SpawnDecal(rayInfo.value().hitPos, rayInfo.value().hitNormal, shotID);
-    }
-    return rayInfo;
+    return RayClosest(startPos, dir);
 }
 
 std::optional<ShotInfo> Shoot::ShootBulletAI(btVector3 startPos, btVector3 dir, btQuaternion rotation,float dt) {
-    auto rayInfo = RayClosest(startPos, dir, true);
-    // Don't have Rust style and_then until C++23 :(
-    if (rayInfo.has_value()) {
-        if (rayInfo.value().hitObj->getType() == GameObject::Type::Player) {
-            PlayerObject* hit = (PlayerObject*)rayInfo.value().hitObj;
-            //hit->Damage(5.0f * dt); // TODO: Don't hard code this.
-        }
-        //SpawnDecal(rayInfo.value().hitPos, rayInfo.value().hitNormal, 1);
-    }
-    return rayInfo;
+    return RayClosest(startPos, dir, true);
 }
 
 
 void Shoot::SpawnDecal(btVector3 hitPos,btVector3 hitNormal, btVector4 color) {
+    // Choose a random decal texture
+    std::shared_ptr<NCL::Rendering::Texture> pngTexture = decalSystem->PickRandomDecal(decalTextures);
 
-		// Choose a random decal texture
-        std::shared_ptr<NCL::Rendering::Texture> pngTexture = decalSystem->PickRandomDecal(decalTextures);
+    // Generate a random rotation angle for the decal
+    float decalRotation = decalSystem->GetRandomRotation();
 
-		// Generate a random rotation angle for the decal
-        float decalRotation = decalSystem->GetRandomRotation();
-
-        DecalSystem::Decal decal = { hitPos, decalRotation, hitNormal, decalRadius, pngTexture, alphaFade, color };
-        decalSystem->ApplyDecal(decal); // Apply the decal using the hit position and normal
-    
+    DecalSystem::Decal decal = { hitPos, decalRotation, hitNormal, decalRadius, pngTexture, alphaFade, color };
+    decalSystem->ApplyDecal(decal); // Apply the decal using the hit position and normal
 }

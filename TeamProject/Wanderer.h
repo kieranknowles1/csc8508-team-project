@@ -7,6 +7,8 @@ namespace NCL {
 	namespace CSC8503 {
 		class LaserObject;
 		class StateMachine;
+		class HealthAttrib;
+		class AttackAttrib;
 
 		class Wanderer : public NavEntity {
 		public:
@@ -16,16 +18,19 @@ namespace NCL {
 			void Update(float dt);
 			void InitPosAndOffset();
 
-			void DamageAI(float d) { health -= d; }
-			float GetHealth() { return health; }
-
 			void DestroyWanderer();
 			bool isDeleted() const { return deleted; }
 
 			void SetLaser(LaserObject* laser) { this->laser = laser; }
 			LaserObject* GetLaser() const { return laser; }
 
+			HealthAttrib* GetHealthAttrib() { return health.get(); }
+			AttackAttrib* GetAttackAttrib() { return attack.get(); }
+
 		private:
+			std::unique_ptr<HealthAttrib> health = nullptr;
+			std::unique_ptr<AttackAttrib> attack = nullptr;
+
 			void PlayerNear(float dt);
 			void PlayerFar(float dt);
 
@@ -49,8 +54,6 @@ namespace NCL {
 			float updateplayerPathTimer;
 
 			GameTechRendererInterface* renderer;
-
-			float health = 50;
 		};
 	}
 }

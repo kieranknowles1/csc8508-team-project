@@ -115,9 +115,16 @@ void PlayerController::FireShot(float dt) {
         player->GetLaser()->SetCollisionNormal(info.value().hitNormal);
         player->updateLaser(player->getGun()->GetPhysicsObject()->GetRigidBody()->getWorldTransform().getOrigin() + adjustedOffset, info.value().hitPos);
 
+        // Shooting at a player.
         if (info->hitObj->getType() == GameObject::Type::Player) {
             player->GetAttackAttrib()->Hit(((PlayerObject*)info->hitObj)->GetHealthAttrib());
         }
+
+        // Shooting at an AI.
+        else if (info->hitObj->getType() == GameObject::Type::AI) {
+            player->GetAttackAttrib()->Hit(((Wanderer*)info->hitObj)->GetHealthAttrib());
+        }
+
         else player->GetAttackAttrib()->Hit(nullptr);
     }
     else player->GetAttackAttrib()->Hit(nullptr);
