@@ -50,6 +50,7 @@ Wanderer::Wanderer(GameObject* p, NavMesh* mesh, Side side, GameTechRendererInte
 			laser->SetStartPos({ 0, 0, 0 });
 			laser->SetEndPos({ 0, 0, 0 });
 			isShooting = false;
+			attack->Hit(nullptr);
 			return true;
 		}
 		else {

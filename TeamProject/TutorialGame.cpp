@@ -153,6 +153,7 @@ void TutorialGame::UpdatePlayer(float dt) {
         btTransform& transform = player->GetPhysicsObject()->GetRigidBody()->getWorldTransform();
 
         transform.setOrigin(respawn->position);
+        player->setUpDirection(respawn->orientation);
         playerController->setYaw(respawn->yaw);
 
         player->setCollided(0);
