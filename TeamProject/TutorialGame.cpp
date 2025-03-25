@@ -40,6 +40,8 @@ TutorialGame::TutorialGame(GameTechRendererInterface* renderer, Controller* cont
     new Shoot(); //Shoot and Respawn have new before them but are not being deleted to my knowledge
     new Respawn();
 
+    freeCam = true; //AI debug if you see this in the PR yell at Billy to remove it
+
     InitialiseAssets();
     InitCamera();
     InitWorld();

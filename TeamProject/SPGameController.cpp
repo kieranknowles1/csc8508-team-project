@@ -2,6 +2,7 @@
 #include "TutorialGame.h"
 #include "PlayerObject.h"
 #include <algorithm>
+#include <CSC8503CoreClasses/Debug.h>
 
 using namespace NCL;
 using namespace CSC8503;
@@ -46,16 +47,15 @@ SPGameController::SPGameController(PlayerObject* p, TutorialGame* g, GameTechRen
 
 void SPGameController::InitLevel(int curLevel) {
     ClearAIs();
-    AddWandererToWorld(bottom, Side::BOTTOM);
 
-    /*for (int i = 0; (i < std::max(5 + curLevel, 100)); i++) {
+    for (int i = 0; (i < std::max(5 + curLevel, 100)); i++) {
         AddWandererToWorld(bottom, Side::BOTTOM);
         AddWandererToWorld(top, Side::TOP);
         AddWandererToWorld(front, Side::FRONT);
         AddWandererToWorld(back, Side::BACK);
         AddWandererToWorld(left, Side::LEFT);
         AddWandererToWorld(right, Side::RIGHT);
-    }*/
+    }
 }
 
 void SPGameController::Update(float dt) {
@@ -92,6 +92,8 @@ void SPGameController::Update(float dt) {
     for (Wanderer* wanderer : wanderers) {
         wanderer->Update(dt);
     }
+
+    Debug::Print("Score: " + score, Vector2(0.05f, 0.05f));
 
     if (navMeshDebug) VisualiseNavMesh();
 }
