@@ -34,7 +34,7 @@ namespace NCL {
             NavMesh* left;
             NavMesh* right;
             std::vector<NavMesh*> navMeshes;
-            bool navMeshDebug = false;
+            bool navMeshDebug = true;
             bool enableAI = true;
             void VisualiseNavMesh();
 

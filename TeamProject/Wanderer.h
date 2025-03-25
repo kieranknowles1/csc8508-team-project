@@ -8,7 +8,7 @@ namespace NCL {
 		class StateMachine;
 		class Wanderer : public NavEntity {
 		public:
-			Wanderer(GameObject* p, NavMesh* nav, Side side, int lID, GameTechRendererInterface* r);
+			Wanderer(GameObject* p, NavMesh* nav, Side side, int lID, GameTechRendererInterface* r, int l);
 			~Wanderer();
 
 			void Update(float dt);
@@ -47,6 +47,8 @@ namespace NCL {
 			GameTechRendererInterface* renderer;
 
 			float health = 50;
+
+			int level;
 		};
 	}
 }

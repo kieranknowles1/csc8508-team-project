@@ -108,7 +108,7 @@ Wanderer* SPGameController::AddWandererToWorld(NavMesh* navMesh, Side side) {
         //std::cout << "No AI Laser IDs" << std::endl;
         return nullptr;
     }
-    Wanderer* wanderer = new Wanderer(player, navMesh, side, GetIDFromPool(), renderer);
+    Wanderer* wanderer = new Wanderer(player, navMesh, side, GetIDFromPool(), renderer, level);
 
     float height = 4.0f;
     float radius = 2.0f;
