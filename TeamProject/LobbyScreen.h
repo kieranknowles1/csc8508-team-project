@@ -1,8 +1,5 @@
 #pragma once
 
-//#include "TeamProject/Multiplayer/Lobby.hpp"
-//#include "TeamProject/Multiplayer/User.hpp"
-
 #include "PushdownState.h"
 #include "TutorialGame.h"
 #include <CSC8503CoreClasses/Debug.h>
@@ -11,6 +8,7 @@
 #include <vector>
 #include <unordered_map>
 #include "AudioEngine.h"
+#include "Multiplayer/Server.hpp"
 
 namespace NCL::CSC8503 {
 
@@ -93,9 +91,10 @@ namespace NCL::CSC8503 {
 				else if (selection == 9) {  // Start Button (only host can press)
 					//TODO: Let me know if this sound cuts off abruptly
 					audioEngine.PlaySounds("MenuSelect.wav", Vector3(0, 0, 0), -18.0f);
-					//game->Start();
-					//*newState = new GameScreen(controller, game);
-					//return PushdownResult::Push;
+                    game->Start();
+                    game->GetServerInstance()->ResetTick();
+                    *newState = new GameScreen(controller, game, game->GetPlayerController());
+                    return PushdownResult::Push;
 				}
 			}
 
@@ -205,6 +204,14 @@ namespace NCL::CSC8503 {
 		PushdownResult OnUpdate(float dt, PushdownState** newState) override {
 			UpdateSelection();
 
+            if (game->GetState() == GameState::STARTING) {
+                game->Start();
+                game->GetServerInstance()->ResetTick();
+                game->SetState(GameState::ACTIVE);
+                *newState = new GameScreen(controller, game, game->GetPlayerController());
+                return PushdownResult::Push;
+            }
+
 			if (controller->GetDigital(Controller::DigitalControl::MenuConfirm)) {
 				if (selection < 8) {  // If a colour is selected
 					if (!colourTaken[selection]) {
@@ -274,18 +281,6 @@ namespace NCL::CSC8503 {
 
 
 	};
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 	class LobbyScreen : public PushdownState {

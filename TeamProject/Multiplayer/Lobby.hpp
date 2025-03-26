@@ -4,8 +4,16 @@
 #include <unordered_map>
 #include <optional>
 
+#ifdef BUILD_PRE
+
+#include "../TeamProject/Multiplayer/User.hpp"
+#include "../TeamProject/Colors.h"
+
+#else
+
 #include "Multiplayer/User.hpp"
 #include "Colors.h"
+#endif
 
 namespace Lobbies {
     enum class LobbyAction : uint8_t {
@@ -14,7 +22,6 @@ namespace Lobbies {
         LEAVE,
         SET_HOST
     };
-
 
 
     /**

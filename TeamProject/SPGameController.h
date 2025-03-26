@@ -8,13 +8,24 @@ namespace NCL {
         class Wanderer;
         class Turret;
         class GameTechRendererInterface;
+        class PlayerObject;
+
+        enum class Side {
+            BOTTOM,
+            TOP,
+            FRONT,
+            BACK,
+            LEFT,
+            RIGHT
+        };
 
 		class SPGameController {
 		public:
-			SPGameController(GameObject* p, TutorialGame* g, GameTechRendererInterface* r);
+			SPGameController(PlayerObject* p, TutorialGame* g, GameTechRendererInterface* r);
             void Update(float dt);
+            //void AddIDToPool(int i) { laserIDs.push_back(i); }
 		private:
-			GameObject* player;
+			PlayerObject* player;
 			TutorialGame* game;
 
             NavMesh* bottom;
@@ -29,12 +40,30 @@ namespace NCL {
             void VisualiseNavMesh();
 
             std::vector<Wanderer*> wanderers;
-            Wanderer* AddWandererToWorld(NavMesh* navMesh, char side, int laserID);
+            Wanderer* AddWandererToWorld(NavMesh* navMesh, Side side);
 
             Turret* AddTurretToWorld();
             Turret* testTurret = nullptr;
 
             GameTechRendererInterface* renderer;
+
+            //std::vector<int> laserIDs;
+            //int GetIDFromPool() {
+            //    int id = laserIDs.back();
+            //    laserIDs.pop_back();
+            //    return id;
+            //}
+
+            int score;
+            int level;
+            void ClearAIs();
+            int defeated;
+            int mult = 1;
+            float multTimer = 5.0f;
+            float maxMultTimer = 5.0f;
+
+            void InitLevel(int curLevel);
+            
 		};
 	}
 }

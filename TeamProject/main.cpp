@@ -12,6 +12,7 @@
 #include "MainMenuScreen.h"
 #include "GameScreen.h"
 #include "PauseScreen.h"
+#include "EndScreenMP.h"
 
 #include "Multiplayer/GamePacketHandlers.hpp"
 
@@ -34,6 +35,7 @@ size_t sceLibcHeapSize = 256 * 1024 * 1024;
 
 using namespace NCL;
 using namespace NCL::CSC8503;
+
 
 std::unique_ptr<Window> createWindow(const Config& config) {
 #ifndef __PROSPERO__
@@ -116,6 +118,47 @@ int main(int argc, char** argv) {
         float dt = window->GetTimer().GetTimeDeltaSeconds();
         controller->Update(dt);
         window->SetTitle("Gametech frame time:" + std::to_string(1000.0f * dt));
+
+        //game->UpdateGame(dt);
+
+        //if (inMenu) {
+
+        //    //Try showing the FMod logo here
+
+        //    if (controller->GetDigital(Controller::DigitalControl::MenuDown)) {
+        //        selection = std::min(2, selection + 1);
+        //    }
+        //    if (controller->GetDigital(Controller::DigitalControl::MenuUp)) {
+        //        selection = std::max(0, selection - 1);
+        //    }
+        //    if (controller->GetDigital(Controller::DigitalControl::MenuConfirm) || quickStart) {
+        //        GameMode mode = static_cast<GameMode>(selection);
+
+        //        if (mode == GameMode::SINGLEPLAYER) {
+        //            game->Start();
+        //        }
+        //        else {
+        //            game->StartMultiplayerGame(mode == GameMode::HOST_GAME);
+        //        }
+        //        inMenu = false;
+        //    }
+
+        //    for (int i = 0; i < 3; i++) {
+        //        std::string currentItem = menuItems[i];
+        //        if (i == selection) currentItem = "> " + currentItem + " <";
+        //        else currentItem = "  " + currentItem;
+        //        Debug::Print(currentItem, Vector2(0.4f, 0.35f + (0.1f * i)));
+
+        //    }
+        //}
+
+        //else {
+        //    if (!machine.Update(dt)) {
+        //        inMenu = true;
+        //    }
+        //    //Add a GetState function to PushdownMachine/PushdownState to return the screen it's on, and if it's on PauseScreen
+        //    //Pause the game->UpdateGame
+        //}
 
         quit |= !machine.Update(dt);
         game->GetResourceManager()->update(dt);

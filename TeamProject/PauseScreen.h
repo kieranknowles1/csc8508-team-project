@@ -98,6 +98,7 @@ public:
         // Pause audio when game is paused
         if (playerController->getBeamSoundChannel() != -1) {
             audioEngine.SetChannelPaused(playerController->getBeamSoundChannel(), true);
+            playerController->setBeamSoundPaused(true);
         }
         if (playerController->getHeartbeatChannel() != -1) {
             audioEngine.SetChannelPaused(playerController->getHeartbeatChannel(), true);
@@ -113,6 +114,6 @@ public:
     }
 
     void OnSleep() override {
-    
+        playerController->setBeamSoundPaused(false);
     }
 };

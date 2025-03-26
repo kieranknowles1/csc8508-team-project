@@ -2,8 +2,12 @@
 #include "GameObject.h"
 #include "Multiplayer/GamePacketHandlers.hpp"
 #include "Multiplayer/Server.hpp"
-#include "Multiplayer/WorldState.hpp"
+#include "WorldState.h"
 #include "Shoot.h"
+#include "Network/Network.hpp"
+#include "Health.h"
+
+using namespace Lobbies;
 
 namespace Packet {
     using namespace WorldState;
@@ -16,16 +20,11 @@ namespace Packet {
         if (object == nullptr) return;
 
         if (TutorialGame::getInstance()->GetServerInstance()->IsOwnerOf(object)) return;
+        auto [writeState, lock] = object->GetWorldStates()->GetWriteState();
 
-        StateReader writeReader = object->GetObjectStates()->GetWriteState();
-        ObjectState* writeState = writeReader.GetState();
-
-        writeState->Lock();
-
+        std::unique_lock stateLock = writeState->Lock();
         writeState->UpdateState(StateType::LinearVelocity, deltaPacket->GetLinearVelocity());
         writeState->UpdateState(StateType::AngularVelocity, deltaPacket->GetAngularVelocity());
-
-        writeState->Unlock();
     }
 
     
@@ -101,25 +100,22 @@ namespace Packet {
     }
 #pragma endregion DeltaPacketHandler
 
+
 #pragma region LaserPacketHandler
     void LaserPacketHandler::Handle(const std::shared_ptr<Packet> packet) {
         const LaserPacket* laserPacket = std::static_pointer_cast<LaserPacket>(packet).get();
-        PlayerObject* targetObject = (PlayerObject*)GameObject::GetGameObjectByID(laserPacket->GetTargetID());
-        // Skip updates for objects the user owns.
-        //// Check if last update was newer.
-        //targetObject->updateLaser(laserPacket->GetStartPos(), laserPacket->GetEndPos());
+        LaserObject* object = (LaserObject*)GameObject::GetGameObjectByID(laserPacket->GetTargetID());
 
-        //// Passing on packet to other users if user is host.
-        //if (laserPacket->GetSequenceNumber() > targetObject->GetLastPacketSequence(laserPacket->GetType())) {
-        //    targetObject->updateLaser(laserPacket->GetStartPos(), laserPacket->GetEndPos());
-        //    if (laserPacket->GetHitNormal() != btVector3(0, 0, 0)) {
-        //        Shoot::GetInstance()->SpawnDecal(laserPacket->GetEndPos(), laserPacket->GetHitNormal(), laserPacket->GetTargetID());
-        //    }
-        //    targetObject->UpdatePacketSequence(laserPacket->GetType(), laserPacket->GetSequenceNumber());
-        //    // Passing on packet to other users if user is host.
-        //    if (TutorialGame::IsHost()) TutorialGame::GetServerInstance()->Broadcast(packet);
-        //}
-        //// Dropping old packets.
+        if (object == nullptr) return;
+
+        if (TutorialGame::getInstance()->GetServerInstance()->IsOwnerOf(object)) return;
+
+        auto [writeState, lock] = object->GetWorldStates()->GetWriteState();
+
+        std::unique_lock stateLock = writeState->Lock();
+        writeState->UpdateState(StateType::StartPos, laserPacket->GetStartPos());
+        writeState->UpdateState(StateType::EndPos, laserPacket->GetEndPos());
+        writeState->UpdateState(StateType::Normal, laserPacket->GetHitNormal());
     }
 
     std::shared_ptr<Packet> LaserPacketHandler::Translate(const ENetEvent* event) const {
@@ -189,7 +185,6 @@ namespace Packet {
         memcpy(buffer + offset, &endPos, sizeof(btVector3));
         offset = offset + sizeof(btVector3);
 
-
         btVector3 hitNormal = laserPacket.GetHitNormal();
         memcpy(buffer + offset, &hitNormal, sizeof(btVector3));
         offset = offset + sizeof(btVector3);
@@ -205,25 +200,20 @@ namespace Packet {
 #pragma endregion LaserPacketHandler
 
 
-
 #pragma region PositonPacketHandler
     void PositionPacketHandler::Handle(const std::shared_ptr<Packet> packet) {
         const PositionPacket* positionPacket = std::static_pointer_cast<PositionPacket>(packet).get();
-
         GameObject* object = GameObject::GetGameObjectByID(positionPacket->GetTargetID());
+
         if (object == nullptr) return;
 
         if (TutorialGame::getInstance()->GetServerInstance()->IsOwnerOf(object)) return;
 
-        StateReader writeReader = object->GetObjectStates()->GetWriteState();
-        ObjectState* writeState = writeReader.GetState();
-
-        writeState->Lock();
-
+        auto [writeState, lock] = object->GetWorldStates()->GetWriteState();
+        
+        std::unique_lock stateLock = writeState->Lock();
         writeState->UpdateState(StateType::Position, positionPacket->GetPosition());
         writeState->UpdateState(StateType::Rotation, positionPacket->GetOrientation());
-
-        writeState->Unlock();
     }
 
     std::shared_ptr<Packet> PositionPacketHandler::Translate(const ENetEvent* event) const {
@@ -299,35 +289,33 @@ namespace Packet {
 #pragma endregion PositonPacketHandler
 
 
-#pragma region PlayerStateChangePacketHandler
-    void PlayerStateChangePacketHandler::Handle(const std::shared_ptr<Packet> packet) {
-
-    }
-
-    std::shared_ptr<Packet> PlayerStateChangePacketHandler::Translate(const ENetEvent* event) const {
-        return std::make_shared<Packet>();
-    }
-
-    ENetPacket* PlayerStateChangePacketHandler::ToENetPacket(const std::shared_ptr<Packet> packet) const {
-        return nullptr;
-    }
-#pragma endregion PlayerStateChangePacketHandler
+//#pragma region PlayerStateChangePacketHandler
+//    void PlayerStateChangePacketHandler::Handle(const std::shared_ptr<Packet> packet) {
+//
+//    }
+//
+//    std::shared_ptr<Packet> PlayerStateChangePacketHandler::Translate(const ENetEvent* event) const {
+//        return std::make_shared<Packet>();
+//    }
+//
+//    ENetPacket* PlayerStateChangePacketHandler::ToENetPacket(const std::shared_ptr<Packet> packet) const {
+//        return nullptr;
+//    }
+//#pragma endregion PlayerStateChangePacketHandler
 
 
 #pragma region ObjectChangeGravityPacketHandler
     void ObjectChangeGravityPacketHandler::Handle(const std::shared_ptr<Packet> packet) {
         const ObjectChangeGravityPacket* gravityPacket = std::static_pointer_cast<ObjectChangeGravityPacket>(packet).get();
-        PlayerObject* object = (PlayerObject*)GameObject::GetGameObjectByID(gravityPacket->GetTargetID());
+        PlayerObject* object = (PlayerObject*) GameObject::GetGameObjectByID(gravityPacket->GetTargetID());
 
         if (object == nullptr) return;
         if (TutorialGame::getInstance()->GetServerInstance()->IsOwnerOf(object)) return;
 
-        StateReader writeReader = object->GetObjectStates()->GetWriteState();
-        ObjectState* writeState = writeReader.GetState();
-
-        writeState->Lock();
+        auto [writeState, lock] = object->GetWorldStates()->GetWriteState();
+        
+        std::unique_lock stateLock = writeState->Lock();
         writeState->UpdateState(StateType::UpVector, gravityPacket->GetUpDirection());
-        writeState->Unlock();
     }
 
     std::shared_ptr<Packet> ObjectChangeGravityPacketHandler::Translate(const ENetEvent* event) const {
@@ -440,7 +428,6 @@ namespace Packet {
 
 #pragma region UserInfoPacketHandler
     void UserInfoPacketHandler::Handle(const std::shared_ptr<Packet> packet) {
-
         const UserInfoPacket* userInfo = std::static_pointer_cast<UserInfoPacket>(packet).get();
         Multiplayer::Server* server = TutorialGame::getInstance()->GetServerInstance();
 
@@ -526,14 +513,11 @@ namespace Packet {
     void DamagePacketHandler::Handle(const std::shared_ptr<Packet> packet) {
         const DamagePacket* damagePacket = std::static_pointer_cast<DamagePacket>(packet).get();
         PlayerObject* targetObject = (PlayerObject*) GameObject::GetGameObjectByID(damagePacket->GetTargetID());
-        if (targetObject == nullptr) return;
-        // Dealer handles damage on their side so ignore packet.
-        //if (TutorialGame::GetUser()->GetUserID() != damagePacket->GetDamageDealer()) {
-        //    targetObject->Damage(damagePacket->GetDamage());
-        //}
 
-        // Pass the parcel.
-        //if (TutorialGame::IsHost()) TutorialGame::GetServerInstance()->Broadcast(packet);
+        if (targetObject == nullptr) return;
+
+        HealthAttrib* health = targetObject->GetHealthAttrib();
+        health->Damage(damagePacket->GetDamage());
     }
 
     std::shared_ptr<Packet> DamagePacketHandler::Translate(const ENetEvent* event) const {
@@ -628,8 +612,8 @@ namespace Packet {
     ENetPacket* PingPacketHandler::ToENetPacket(const std::shared_ptr<Packet> packet) const {
         char* buffer = new char[
             sizeof(Type)
-                + sizeof(uint8_t)
-                + sizeof(uint32_t)
+            + sizeof(uint8_t)
+            + sizeof(uint32_t)
         ];
 
         PingPacket pingPacket = (*static_cast<PingPacket*>(packet.get()));
@@ -679,8 +663,8 @@ namespace Packet {
     ENetPacket* PongPacketHandler::ToENetPacket(const std::shared_ptr<Packet> packet) const {
         char* buffer = new char[
             sizeof(Type)
-                + sizeof(uint8_t)
-                + sizeof(uint32_t)
+            + sizeof(uint8_t)
+            + sizeof(uint32_t)
         ];
 
         PongPacket pongPacket = (*static_cast<PongPacket*>(packet.get()));
@@ -707,6 +691,5 @@ namespace Packet {
         return enetPacket;
     }
 #pragma endregion Pong
-
 
 }

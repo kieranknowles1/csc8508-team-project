@@ -12,12 +12,15 @@
 #include <CSC8503CoreClasses/Debug.h>
 #include "Colors.h"
 #include "Shoot.h"
+#include "Health.h"
+#include "MeshAnimation.h" //temporarily added for testing
 
 #include "Window.h"
 #include "Config.h"
 
 using namespace NCL;
 using namespace CSC8503;
+using namespace Lobbies;
 
 TutorialGame* TutorialGame::instance = nullptr;
 
@@ -65,11 +68,9 @@ void TutorialGame::InitialiseAssets() {
 }
 
 TutorialGame::~TutorialGame()	{
-    //instance = nullptr;
     DestroyBullet();
     audioEngine.Shutdown();
 
-    //if (server.has_value()) server->Close();
     delete server;
     delete stateMutex;
     instance = nullptr;
@@ -82,19 +83,28 @@ static bool BulletRaycast(btDynamicsWorld* world, const btVector3& start, const 
 
 void TutorialGame::UpdateGame(float dt) {
     profiler.beginFrame();
-
-    //profiler.startSection("Network Updates.");
-    //ExecuteIncomingPackets();
-
     profiler.startSection("Physics");
+
     // Old
     //int substeps = std::floor(dt / PHYSICS_PERIOD);
     //int steps = bulletWorld->stepSimulation(dt , substeps, PHYSICS_PERIOD);
 
     ////New
     int substeps = 0;
-    float maxDt = btMin(PHYSICS_PERIOD, dt);
-    int steps = bulletWorld->stepSimulation(maxDt, substeps, PHYSICS_PERIOD);
+    //float maxDt = btMin(PHYSICS_PERIOD, dt);
+    int steps = bulletWorld->stepSimulation(dt, substeps, PHYSICS_PERIOD);
+
+    profiler.startSection("Network Updates");
+    if (server != nullptr) {
+        std::unique_lock ticklock = server->LockTick();
+
+        float tickProgress = server->GetTickProgress();
+        world->OperateOnContents([&](GameObject* obj) {
+            if (obj->GetOwner() == nullptr) return;
+            if (server->IsOwnerOf(obj)) obj->UpdateWorldState();
+            else obj->UpdateFromWorldState(dt);
+            });
+    }
 
     profiler.startSection("Update World");
 
@@ -110,14 +120,6 @@ void TutorialGame::UpdateGame(float dt) {
 
     profiler.startSection("Update Audio");
     audioEngine.Update(&world->GetMainCamera());
-
-    profiler.startSection("Network Updates");
-    if (server != nullptr) {
-        world->OperateOnContents([&](GameObject* obj) {
-            if (server->IsOwnerOf(obj)) obj->UpdateObjectState();
-            else obj->UpdateFromState(dt);
-            });
-    }
 
     clearGraveyard();
     profiler.startSection("Prepare Render");
@@ -135,15 +137,33 @@ void TutorialGame::UpdateGame(float dt) {
     //post processing time variable effect:
     pulse += dt;
     renderer->SetVignettePulse(pulse);
+
     renderer->SetDelta(dt);
+
 }
 
 void TutorialGame::UpdatePlayer(float dt, bool camOnly) {
+    if (player->GetHealthAttrib()->GetHealthState() == AliveState::DEAD) {
+        Respawn* instance = Respawn::GetInstance();
+        RespawnPoint* respawn;
+
+        if (player->GetOwner()) respawn = instance->GetRandomRespawn(player->GetOwner()->GetUserID() - 1);
+        else respawn = instance->GetRandomRespawn(1);
+
+        btTransform& transform = player->GetPhysicsObject()->GetRigidBody()->getWorldTransform();
+
+        transform.setOrigin(respawn->position);
+        player->setUpDirection(respawn->orientation);
+        playerController->setYaw(respawn->yaw);
+
+        player->setCollided(0);
+        player->GetHealthAttrib()->Respawn();
+    }
 
     // Press F for freeCam, press G for thirdPerson
     if (freeCam) {
         //freeCam Movement
-        world->GetMainCamera().UpdateCamera(dt, true);
+        world->GetMainCamera().UpdateCamera(dt * 20, true);
     }
     else {
  
@@ -177,6 +197,15 @@ void TutorialGame::UpdateKeys() {
     if (controller->GetDigital(DebugFreeCam)) {
         freeCam = !freeCam;
     }
+    if (controller->GetDigital(DebugRespawnRandom)) {
+        RespawnPoint* respawnPoint = Respawn::GetInstance()->GetRandomRespawn(player->GetWorldID());
+        playerController->setYaw(respawnPoint->yaw);
+        player->GetPhysicsObject()->GetRigidBody()->getWorldTransform().setOrigin(respawnPoint->position);
+        player->setUpDirection(respawnPoint->orientation);
+        player->resetCollisionType();
+        player->setCollided(0);
+    }
+
 
     if (playerController) {
         if (controller->GetDigital(ThirdPerson)) {
@@ -204,8 +233,8 @@ void TutorialGame::ThirdPersonControls() {
     btMatrix3x3 rotationMatrix(player->getCamOffset() * playerRotation1);
     btVector3 forward = rotationMatrix * btVector3(0,0,-1);
     btVector3 upwards = rotationMatrix * btVector3(0, 1, 0);
-    float camHeight = 15.0f;
-    float camDist = -50.0f;
+    float camHeight = 35.0f;
+    float camDist = -100.0f;
     btVector3 cameraOffset = (forward.normalize() * camDist) + (upwards.normalize() * camHeight);
     btVector3 cameraPosition = transformPlayer.getOrigin() + cameraOffset;
     mainCamera->SetPosition(cameraPosition);
@@ -255,10 +284,15 @@ void TutorialGame::CheckCollisions()
 void TutorialGame::clearGraveyard() {
     for (auto obj : earlyGraveyard) {
         // Prevents physics, OnCollisionExit will trigger next frame
-        bulletWorld->removeRigidBody(obj->GetPhysicsObject()->GetRigidBody());
+        if (obj->GetPhysicsObject()) {
+            bulletWorld->removeRigidBody(obj->GetPhysicsObject()->GetRigidBody());
+        }
         // Prevents OnUpdate and render
         world->RemoveGameObject(obj);
     }
+    // Deleting a GameObject may trigger other GameObjects to be deleted,
+    // make sure these go through the full process
+    auto addLateQueue = std::move(earlyGraveyard);
     for (auto obj : lateGraveyard) {
         // References should have been cleaned up by now
         // May not be strictly necessary to delay this, but it's
@@ -266,14 +300,13 @@ void TutorialGame::clearGraveyard() {
         delete obj;
     }
     // Move earlyGraveyard to lateGraveyard, clear lateGraveyard
-    lateGraveyard.clear();
-    std::swap(earlyGraveyard, lateGraveyard);
+    lateGraveyard = std::move(addLateQueue);
 }
 
 
 void TutorialGame::InitCamera() {
     mainCamera->SetFieldOfVision(90);
-    world->GetMainCamera().SetNearPlane(0.1f);
+    world->GetMainCamera().SetNearPlane(1.75f);
     world->GetMainCamera().SetFarPlane(5000.0f);
     world->GetMainCamera().SetPitch(-15.0f);
     world->GetMainCamera().SetYaw(315.0f);
@@ -321,16 +354,8 @@ void TutorialGame::ClearWorld() {
     world->ClearAndErase();
     renderer->GetDecalSystem().ClearDecalsFromWorld();
     renderer->ClearUIElemets();
-
-    //audioEngine.StopAllChannels();
-
-    // audioEngine.StopAllNonUISounds();
-
-    //These two lines fix the problem of the audio not playing in the
-    //main menu after quitting from the pause menu, but it cuts off
-    //MenuSelect.wav very quickly
-    //audioEngine.Shutdown();
-    //audioEngine.Init();
+    earlyGraveyard.clear();
+    lateGraveyard.clear();
 }
 
 void TutorialGame::InitWorld() {
@@ -340,24 +365,25 @@ void TutorialGame::InitWorld() {
 
 }
 
-PlayerObject* TutorialGame::InitPlayer(btVector3 position, btVector3 upDir) {
-    PlayerObject* newPlayer = AddPlayerCapsuleToWorld(position, 20.0f, 8.5f, 10.0f);
+PlayerObject* TutorialGame::InitPlayer(btVector3 position, btVector3 upDir, bool mainPlayer) {
+    PlayerObject* newPlayer = AddPlayerCapsuleToWorld(position, 20.0f, 8.5f, 10.0f, mainPlayer);
     // Keep us from clipping when falling too fast
     newPlayer->GetPhysicsObject()->GetRigidBody()->setCcdMotionThreshold(1.0f);
     newPlayer->GetPhysicsObject()->GetRigidBody()->setCcdSweptSphereRadius(0.4f);
     newPlayer->GetPhysicsObject()->GetRigidBody()->setAngularFactor(0);
     newPlayer->GetPhysicsObject()->GetRigidBody()->setFriction(0.0f);
     newPlayer->GetPhysicsObject()->GetRigidBody()->setDamping(0.0, 0);
+    newPlayer->GetPhysicsObject()->GetRigidBody()->setGravity({0, 0, 0});
 
     newPlayer->GetRenderObject()->SetColour(Vector4(playerColour));
     newPlayer->setUpDirection(upDir);
     newPlayer->setRenderer(renderer);
+    newPlayer->setType(GameObject::Type::Player);
+
+    newPlayer->setRenderer(renderer);
+    Respawn::GetInstance()->InsertPlayerObj(newPlayer);
     return newPlayer;
 }
-
-
-
-
 
 GameObject* TutorialGame::AddGunToWorld(const Vector3& position, Vector3 dimensions, float inverseMass, bool hasCollision)
 {
@@ -377,6 +403,7 @@ GameObject* TutorialGame::AddGunToWorld(const Vector3& position, Vector3 dimensi
 
     // Setting render object
     gun->SetRenderObject(new RenderObject(gun, resourceManager->getMeshes().get("VD_Raygun_Cartoony_Rigged1.msh"), resourceManager->getMaterials().get("VD_Raygun_Cartoony_Rigged1.mat")));
+    gun->setType(GameObject::Type::Gun);
 
     gun->setType(GameObject::Type::Gun);
 
@@ -419,28 +446,36 @@ GameObject* TutorialGame::AddCubeToWorld(const Vector3& position, Vector3 dimens
     return cube;
 }
 
-PlayerObject* TutorialGame::AddPlayerCapsuleToWorld(const Vector3& position, float height, float radius, float inverseMass) {
+PlayerObject* TutorialGame::AddPlayerCapsuleToWorld(const Vector3& position, float height, float radius, float inverseMass,bool mainPlayer) {
     PlayerObject* player = new PlayerObject();
 
     // Setting the transform properties for the capsule
     player->setInitialPosition(position);
-    player->setRenderScale(Vector3(radius * 2, height, radius * 2));
+    player->setRenderScale(mainPlayer ? Vector3(0,0,0) : Vector3(radius * 2, height, radius * 2));
 
     // Creating a Bullet collision shape for the capsule
     btCollisionShape* playerShape = new btCapsuleShape(radius, height);
 
     // Setting the render object for the capsule
-    player->SetRenderObject(new RenderObject(player, resourceManager->getMeshes().get("Capsule.msh"), defaultTexture));
+    player->SetRenderObject(new RenderObject(player, resourceManager->getMeshes().get("RacerGuy/RacerGuy2.msh"), resourceManager->getMaterials().get("RacerGuy.mat"))); //defaultTexture
+    player->CreateAnimationObject();
+    player->CorrectAnimation();
+
     // Setting the physics object for the capsule
     player->SetPhysicsObject(new PhysicsObject(player));
 
     // Initializing the physics object for the capsule
     player->GetPhysicsObject()->InitBulletPhysics(bulletWorld, playerShape, inverseMass);
-    //GameObject* newGun = AddCubeToWorld(Vector3(-300, 20, 40), Vector3(0.5, 0.5, 0.3), 0, false);
-    GameObject* newGun = AddGunToWorld(Vector3(-900, 20, 40), Vector3(2, 2, 2), 0, false);
+    GameObject* newGun = AddGunToWorld(Vector3(-900, 20, 40), Vector3(3, 3, 3), 0, false);
     player->setGun(newGun);
     world->AddGameObject(player);
 
+    // Insert a laser object the player will use.
+    LaserObject* laser = new LaserObject(player);
+    laser->SetThickness(0.25f);
+    world->AddGameObject(laser);
+
+    player->SetLaser(laser);
     return player;
 }
 
@@ -545,63 +580,63 @@ GameObject* TutorialGame::AddSphereToWorld(const Vector3& position, float radius
     return sphere;
 }
 
-void TutorialGame::StartMultiplayerGame(bool isHost) {
+bool TutorialGame::StartMultiplayerGame(bool isHost) {
     server = new Multiplayer::Server(this, isHost);
     server->InitPacketHandlers();
     server->Start();
 
-    if (!isHost){
-        server->JoinGame("127.0.0.1", 30.0f);
+    if (!isHost) {
+        //server->JoinGame("127.0.0.1", 1.0f);
+        std::string host = config.get<std::string>("defaultHost");
+        server->JoinGame(host.c_str(), 1.0f);
     }
+    return server->IsConnected();
 }
 
 
 void TutorialGame::Start() {
     instance->SetState(GameState::STARTING);
-
-    instance->renderer->initLasers(instance->gameMode == GameMode::SINGLEPLAYER ? true : false);
     instance->LoadWorldFromFile(10);
 
-    //Spawn in player.
-    std::array<PlayerObject*, 2> players;
+    // Setup for a multiplayer game.
+    if (instance->server) {
+        Lobby* lobby = instance->server->GetLobby();
 
-    for (int i = 0; i < players.size(); i++) {
-        User user(i);
-        RespawnPoint* playerRespawn = Respawn::GetInstance()->GetRespawn(user.GetUserID());
-        PlayerObject* player = instance->InitPlayer(playerRespawn->position, playerRespawn->orientation);
-        player->SetOwner(user);
-        player->SetWorldID(user.GetUserID());
-        player->setType(GameObject::Type::Player);
-        players[i] = player;
+        //for (auto place : lobby->GetUserColors()) {
+        //    if (!place.GetUser().has_value()) continue;
+        //    User user = place.GetUser().value();
+        for (User user:lobby->GetConnectedUsers()) {
+            RespawnPoint* respawn = Respawn::GetInstance()->GetRespawn(user.GetUserID() - 1);
+            bool mainPlayer = user == *(instance->server->GetUser());
+            PlayerObject* player = instance->InitPlayer(respawn->position, respawn->orientation, mainPlayer);
+            player->SetWorldID(user.GetUserID());
+            player->SetOwner(user);
+
+            btVector4 playerColor = Color::GetPlayerColor(user.GetUserID() - 1);
+            player->SetColor(playerColor);
+
+            if (mainPlayer) {
+                instance->player = player;
+                instance->playerController = std::make_unique<PlayerController>(instance->player, instance->controller, instance->mainCamera, instance->bulletWorld, instance->renderer);
+                instance->playerController->setYaw(respawn->yaw);
+            }
+        }
     }
 
-    User owner(0);
-    if (instance->server != nullptr) {
-        owner = *(instance->server->GetUser());
+    // Setup for a single player game.
+    else {
+        RespawnPoint* playerRespawn = Respawn::GetInstance()->GetRespawn(1);
+        instance->player = instance->InitPlayer(playerRespawn->position, playerRespawn->orientation,true);
+        instance->player->SetWorldID(0);
+
+        LaserObject* laser = instance->player->GetLaser();
+        laser->SetColor(Color::GetPlayerColor(0));
+
+        instance->player->getGun()->GetRenderObject()->SetColour(Color::GetPlayerColor(0));
+
+        instance->playerController = std::make_unique<PlayerController>(instance->player, instance->controller, instance->mainCamera, instance->bulletWorld, instance->renderer);
+        instance->spGameController = new SPGameController(instance->player, instance, instance->renderer);
     }
-    instance->player = players[owner.GetUserID()];
-    instance->playerController = std::make_unique<PlayerController>(instance->player, instance->controller, instance->mainCamera, instance->bulletWorld, instance->renderer);
-    //instance->player->GetRenderObject()->SetColour(Vector4(Color::GetPlayerColor(user->GetUserID())));
-    //instance->spGameController = new SPGameController(instance->player, instance);
-
-    //btQuaternion emptyRot;
-
-    //// Send initial position to everyone if multiplayer.
-    //if (server.has_value()) {
-    //    // Spawn in player objects for other players.
-    //    for (const User& newUser: lobby->GetConnectedUsers()) {
-    //        if (newUser.GetUserID() == user->GetUserID()) continue;
-
-    //        RespawnPoint* respawnPoint = Respawn::GetInstance()->GetRespawn(newUser.GetUserID() - 1);
-    //        PlayerObject* newPlayer = instance->InitPlayer(respawnPoint->position,respawnPoint->orientation);
-    //        newPlayer->setType(GameObject::Type::Player);
-    //        newPlayer->SetOwner(newUser.GetUserID());
-    //        newPlayer->SetWorldID(newUser.GetUserID());
-    //        newPlayer->GetRenderObject()->SetColour(Vector4(Color::GetPlayerColor(newUser.GetUserID())));
-    //    }
-    //}
-
-
     Shoot::GetInstance()->Initialise(instance->bulletWorld,instance->resourceManager.get(), instance->world.get(), instance->renderer->GetDecalSystem());
     Shoot::GetInstance()->InitShotMasks(instance->player, instance->player->getGun());
 }

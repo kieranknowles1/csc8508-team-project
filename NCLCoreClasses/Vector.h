@@ -70,7 +70,7 @@ namespace NCL::Maths {
         VectorTemplate<T, 2>() : x(0),y(0) {
         }
 
-        VectorTemplate<T, 2>(T inX, T inY) : x(inX), y(inY) {
+        constexpr VectorTemplate<T, 2>(T inX, T inY) : x(inX), y(inY) {
         }
 
         //VectorTemplate<T, 2>(VectorTemplate<T, 3> v) : x(v[0]), y(v[1]) {

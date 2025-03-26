@@ -1,24 +1,40 @@
 set(SOURCES
+    AnimationObject.cpp
+    AnimationObject.h
     AudioEngine.cpp
     AudioEngine.h
+
     BulletDebug.cpp
     BulletDebug.h
     BWHelperFunctions.cpp
     BWHelperFunctions.h
+
     Colors.h
     Config.cpp
     Config.h
     CreditsScreen.h
     Crosshair.cpp
     Crosshair.h
+
     DecalSystem.cpp
     DecalSystem.h
+    
+    EndScreenMP.cpp
+    EndScreenMP.h
+
     GameScreen.h
     GameTechRendererInterface.cpp
     GameTechRendererInterface.h
+
+    Health.cpp
+    Health.h
+
+    LaserObject.cpp
+    LaserObject.h
     LevelImporter.cpp
     LevelImporter.h
     LobbyScreen.h
+
     MainMenuScreen.h
     Material.cpp
     Material.h
@@ -27,19 +43,22 @@ set(SOURCES
     Multiplayer/GamePackets.hpp
     Multiplayer/Lobby.cpp
     Multiplayer/Lobby.hpp
-    Multiplayer/WorldState.hpp
     Multiplayer/Server.cpp
     Multiplayer/Server.hpp
     Multiplayer/User.hpp
+
     NavEntity.cpp
     NavEntity.h
     NavMesh.cpp
     NavMesh.h
+
     Overheat.h
     Overheat.cpp
+
     ResourceManager.cpp
     ResourceManager.h
     Respawn.h
+
     PauseScreen.h
     PlayerController.cpp
     PlayerController.h
@@ -49,27 +68,34 @@ set(SOURCES
     PointLight.h
     Profiler.cpp
     Profiler.h
+
     Scoreboard.cpp
     Scoreboard.h
     Shoot.cpp
     Shoot.h
-    SPGameController.cpp
+	SPGameController.cpp
     SPGameController.h
+
     Turret.cpp
     Turret.h
     TutorialGame.cpp
     TutorialGame.h
+
     Wanderer.cpp
     Wanderer.h	
+
     main.cpp
 )
 
 set(ASSET_ROOT "${CMAKE_SOURCE_DIR}/Assets")
 file(GLOB_RECURSE AUDIO "${ASSET_ROOT}/Audio/*.wav")
 file(GLOB_RECURSE DATA "${ASSET_ROOT}/Data/*")
-file(GLOB_RECURSE FONTS "${ASSET_ROOT}/Fonts/*.fnt")
+file(GLOB_RECURSE FONTS "${ASSET_ROOT}/Fonts/*")
 file(GLOB_RECURSE LEVELS "${ASSET_ROOT}/Levels/*.json")
-file(GLOB_RECURSE MESHES "${ASSET_ROOT}/Meshes/*.msh")
+file(GLOB_RECURSE MESHES
+    "${ASSET_ROOT}/Meshes/*.msh"
+    "${ASSET_ROOT}/Meshes/*.anm"
+)
 file(GLOB_RECURSE MATERIALS "${ASSET_ROOT}/Materials/*.mat")
 if (PS5_BUILD)
     file(GLOB_RECURSE SHADERS "${ASSET_ROOT}/Shaders/PSSL/*.pssl")

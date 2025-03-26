@@ -12,6 +12,8 @@
 #include "OGLMesh.h"
 
 #include "GameTechRendererInterface.h"
+#include "MeshAnimation.h"
+#include "MeshMaterial.h"
 
 namespace NCL {
 	namespace CSC8503 {
@@ -57,6 +59,7 @@ namespace NCL {
 			std::unique_ptr<OGLShader> uiShader;
 			std::unique_ptr<OGLShader> sceneShader;
 			std::unique_ptr<OGLShader> debugShader;
+            std::unique_ptr<OGLShader> freetypeFontShader;
 
 			// 1.0f size quad, for HDR
 			std::unique_ptr<OGLMesh> unitQuad;
@@ -159,6 +162,11 @@ namespace NCL {
 			std::unique_ptr<OGLShader> edgeNormals;
 			GLuint edgeNormalsTex;
 			std::unique_ptr<OGLShader> edgedetectShader;
+
+			//Mesh Animation Additions:
+			void RenderAnimations();
+			OGLShader* animationShader;
+
 
 		};
 	}

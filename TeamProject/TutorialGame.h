@@ -13,9 +13,6 @@
 #include "Profiler.h"
 #include "Wanderer.h"
 #include "Respawn.h"
-#include "Network/Network.hpp"
-//#include "Multiplayer/Lobby.hpp"
-//#include "Multiplayer/Server.hpp"
 
 #include <shared_mutex>
 #include <btBulletDynamicsCommon.h>
@@ -31,6 +28,8 @@ namespace NCL {
         class Config;
 
         const int MAX_PLAYERS = 8;
+        // Max duration to wait for a connection when joining, in milliseconds
+        const static constexpr unsigned int ConnectionTimeout = 1000;
 
         enum class GameMode {
             SINGLEPLAYER,
@@ -56,7 +55,7 @@ namespace NCL {
             const static constexpr float PHYSICS_PERIOD = 1.0f / 60.0f;
 
             static TutorialGame* getInstance() {
-                assert(instance && "TutorialGame is not initialised");
+                //assert(instance && "TutorialGame is not initialised");
                 return instance;
             }
 
@@ -69,11 +68,10 @@ namespace NCL {
 
             /**
              * @brief Get the Network Instance of the Server.
-             * @return
              */
             Multiplayer::Server* GetServerInstance() { return server; }
 
-            GameState GetState() const {
+            GameState GetState() const { 
                 std::shared_lock lock(*stateMutex);
                 return state;
             }
@@ -82,7 +80,6 @@ namespace NCL {
                 std::unique_lock lock(*stateMutex);
                 state = newState;
             }
-
 
             // Remove an object at the end of this frame. Use during update to avoid removing
             // from containers while iterating
@@ -107,10 +104,15 @@ namespace NCL {
 
             virtual void UpdateGame(float dt);
             void LoadWorldFromFile(int levelNum);
-            void StartMultiplayerGame(bool isHost);
+
+            bool StartMultiplayerGame(bool isHost);
             void ClearWorld();
 
             GameWorld* GetWorld() const { return world.get(); }
+
+            GameTechRendererInterface* GetUIRenderer() {
+                return renderer;
+            }
 
             btDiscreteDynamicsWorld* getBulletWorld() {
                 return bulletWorld;
@@ -148,6 +150,9 @@ namespace NCL {
             bool isPlayerUpdatePaused = false;
             bool IsPlayerUpdatePaused() const { return isPlayerUpdatePaused; }
             void SetPlayerUpdatePaused(bool paused) { isPlayerUpdatePaused = paused; }
+            SPGameController* GetSPMode() { return spGameController; }
+
+            void SetFreeCam(bool b) { freeCam = b; }
 
         protected:
             void InitialiseAssets();
@@ -157,13 +162,11 @@ namespace NCL {
             void ThirdPersonControls();
 
             void InitWorld();
-
-            
-
+ 
             GameObject* AddFloorToWorld(const Vector3& position, const Vector3& size, const Vector3& rotation);
             GameObject* AddSphereToWorld(const Vector3& position, float radius, float inverseMass = 10.0f);
             GameObject* AddCubeToWorld(const Vector3& position, Vector3 dimensions, float inverseMass = 10.0f,bool hasCollision = true);
-            PlayerObject* AddPlayerCapsuleToWorld(const Vector3& position, float halfHeight, float radius, float inverseMass = 10.0f);
+            PlayerObject* AddPlayerCapsuleToWorld(const Vector3& position, float halfHeight, float radius, float inverseMass = 10.0f, bool mainPlayer = false);
             GameObject* AddCapsuleToWorld(const Vector3& position, float halfHeight, float radius, float inverseMass = 10.0f);
 
             GameObject* AddInfinitePlaneToWorld(const Vector3& position, const Vector3& normal, float planeConstant);
@@ -208,7 +211,7 @@ namespace NCL {
             void InitBullet(); // Initialises the Bullet physics world
 
             //Player things
-            PlayerObject* InitPlayer(btVector3 position, btVector3 upDir);
+            PlayerObject* InitPlayer(btVector3 position, btVector3 upDir, bool mainPlayer = false);
             PerspectiveCamera* mainCamera;
             std::unique_ptr<PlayerController> playerController;
             bool freeCam = false;
@@ -229,10 +232,13 @@ namespace NCL {
             //post processing time variable effects
             float pulse = 0;
 
+            //to allow mesh animation to access time:
+            int aniCurrentFrame;
+            float aniFrameTime;
+
         private:
             Multiplayer::Server* server = nullptr;
             std::shared_mutex* stateMutex = nullptr;
-
             GameState state = GameState::IDLE;
 
             GameMode gameMode;

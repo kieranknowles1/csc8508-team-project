@@ -3,6 +3,9 @@
 - [CSC8508 Team Project](#csc8508-team-project)
   - [FMod](#fmod)
   - [Building](#building)
+    - [Windows](#windows)
+    - [Linux](#linux)
+    - [PS5](#ps5)
   - [Debug Controls](#debug-controls)
 
 For further information, see [docs/readme.md](docs/readme.md)
@@ -22,19 +25,30 @@ server. This may be an issue with just my system, but is untested.
 
 ## Building
 
-To prepare for building on Windows, run
-`git submodule update --init` then [`configure.bat`](./configure.bat).
+This project uses submodules for dependencies. These are not cloned by default
+and must be manually added using `git submodule update --init`
 
-This will install dependencies and run cmake.
+### Windows
 
-When adding a new file to the project:
-1. Add the file to the `set(SOURCES` of the relevant `CMakeLists.txt`.
-2. Build `CMakePredefinedTargets/ZERO_CHECK`.
-3. Reload the solution when prompted.
+Run `configure.bat`
+
+### Linux
+
+Run `cmake` in a build directory. The following declarations must be added
+manually through the CLI:
+- `USE_SDL2=YES`
+- `FMOD_SDK_PATH=/path/to/fmod/install/api`
+- `CMAKE_C_COMPILER=clang` - only Clang is supported, GCC is known not to work
+- `CMAKE_CXX_COMPILER=clang++`
+
+### PS5
+
+Run `configure-ps5.bat`. This requires the PS5 SDK to be installed which cannot
+be included for licensing reasons.
 
 ## Debug Controls
 
-On controllers, **L1** must be held for debug inputs to register.
+On controllers, **R3** must be held for debug inputs to register.
 
 On Keyboard/Controller:
 - **F1/Dpad Right**: Reload world

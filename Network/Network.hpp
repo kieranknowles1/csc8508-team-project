@@ -4,6 +4,7 @@
 #include <array>
 #include <thread>
 #include <mutex>
+#include <shared_mutex>
 #include <functional>
 
 #include <./enet/enet.h>
@@ -25,6 +26,7 @@ const int DEFAULT_PORT = 49835;
  * @brief Character codes for console colors.
  */
 namespace ConsoleTextColor {
+    inline const char* RED = "\x1b[31m";
     inline const char* GREEN = "\x1b[32m";
     inline const char* YELLOW = "\x1b[33m";
     inline const char* DEFAULT = "\x1b[0m";
@@ -49,12 +51,14 @@ enum class Channel {
 /**
  * @brief Different states the network can be in.
  */
-enum class NetworkState {
-    CLOSED,
-    OFF,
-    ERRORED,
-    ON
-};
+namespace NetworkStates {
+    enum class NetworkState {
+        CLOSED,
+        OFF,
+        ERRORED,
+        ON
+    };
+}
 
 
 class Network {
@@ -132,7 +136,7 @@ public:
      * Is Threadsafe.
      * @return 
      */
-    NetworkState GetState() {
+    NetworkStates::NetworkState GetState() {
         std::lock_guard<std::mutex> lock(m_stateMut);
         return m_state;
     }
@@ -157,6 +161,19 @@ public:
     inline void AddTickListener(std::function<void(bool)> func) {
         std::lock_guard<std::mutex> lock(m_listenerMut);
         m_tickListeners.push_back(func);
+    }
+
+    /**
+     * @brief Return the amount of time that has elapsed since the last tick
+     * represented as a value betweeen 0 and 1.
+     */
+    inline float GetTickProgress() {
+        std::shared_lock lock(m_tickProgressMut);
+        return std::fmod(m_lastTime, NETWORK_RATE) / NETWORK_RATE;
+    }
+
+    std::unique_lock<std::mutex> LockTick() {
+        return std::move(std::unique_lock(m_tickLock));
     }
 
 
@@ -192,16 +209,19 @@ private:
     std::thread m_networkThread;
     std::mutex m_stateMut;
     std::mutex m_sendMut;
-	std::mutex m_connectCallbackMut;
+    std::mutex m_connectCallbackMut;
     std::mutex m_listenerMut;
+    std::mutex m_tickLock;
+    std::shared_mutex m_tickProgressMut;
 
-    NetworkState m_state = NetworkState::CLOSED;
+    NetworkStates::NetworkState m_state = NetworkStates::NetworkState::CLOSED;
 
     Packet::PacketBuffer m_receiveBuffer = Packet::PacketBuffer(BUFFER_SIZE);
     std::vector<std::pair<std::shared_ptr<Packet::Packet>, ENetPeer*>> m_sendBuffer = std::vector<std::pair<std::shared_ptr<Packet::Packet>, ENetPeer*>>(BUFFER_SIZE);
     int m_numPackets = 0;
     
     float m_elapsedTime = 0;
+    float m_lastTime = 0;
     float m_lastTick = 0;
     int m_lastMaxSequence = 0; // Each tick will drop optional packets that didn't make the first tick.
 
@@ -210,5 +230,5 @@ private:
 
     ENetHost* m_host = nullptr;
     std::function<void(ENetPeer*)> m_connectCallback;
-	std::vector<std::function<void(bool)>> m_tickListeners;
+    std::vector<std::function<void(bool)>> m_tickListeners;
 };

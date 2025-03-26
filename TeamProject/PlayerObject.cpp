@@ -2,33 +2,138 @@
 #include "TutorialGame.h"
 #include "Multiplayer/GamePackets.hpp"
 #include "Multiplayer/Server.hpp"
+#include "Health.h"
+#include "Respawn.h"
 
 #include <memory>
 
+using namespace WorldState;
 using namespace NCL;
 using namespace CSC8503;
 
+
+PlayerObject::PlayerObject() {
+    health = std::make_unique<HealthAttrib>(this);
+    health->SetMaxHealth(PLAYER_HEALTH);
+    health->SetCurrentHealth(PLAYER_HEALTH);
+    health->SetRegenerationDelay(4.0f);
+    health->SetRegenerationRate(25.0f);
+    health->SetInvulnerableWindow(1.0f);
+
+    attack = std::make_unique<AttackAttrib>();
+    attack->SetDamageType(DamageType::CONTINUOUS);
+    attack->SetDamageAmount(200.0f);
+
+    attack->SetHealthAttrib(health.get());
+}
+
+
+PlayerObject::~PlayerObject() {
+    if (laser && TutorialGame::getInstance()) {
+        TutorialGame::getInstance()->delayedRemoveObject(laser);
+    }
+    laser = nullptr;
+    delete animationObject;
+}
+
+void PlayerObject::SetColor(btVector4 color) {
+    GameObject::GetRenderObject()->SetColour(color);
+    gun->GetRenderObject()->SetColour(color);
+    laser->SetColor(color);
+}
+
 void PlayerObject::Update(float dt) {
+    attack->Update(dt);
+    health->Update(dt);
+
     upDirection = CalculateUpDirection(dt);
+
     rightDirection = CalculateRightDirection(upDirection);
     forwardDirection = CalculateForwardDirection(upDirection, rightDirection);
     updateGravity(dt);
+    //Animation: 
+    CorrectAnimation();
+
+    if (renderObject->GetAnimation()) {
+        renderObject->GetAnimation()->UpdateAnimation(dt);
+    }
 
     elapsedTime += dt;
+}
 
-    // 2 seconds before healing.
-    if (elapsedTime - lastHit > 4.0f) {
-        health += 25 * dt;
-        if (health > maxHealth) health = maxHealth;
+void PlayerObject::UpdateWorldState() {
+    attack->UpdateWorldState();
+    GameObject::UpdateWorldState();
+
+    auto [writeState, lock] = GetWorldStates()->GetWriteState();
+    std::unique_lock stateLock(writeState->Lock());
+
+    writeState->UpdateState(StateType::UpVector, upDirection);
+}
+
+void PlayerObject::UpdateFromWorldState(float dt) {
+    attack->UpdateFromWorldState(dt);
+    GameObject::UpdateFromWorldState(dt);
+
+    elapsedTickTime += dt;
+
+    std::function lerp = [](float x, float y, float w) { return x + ((y - x) * w); };
+    float weight = fmod(elapsedTickTime, TICK_UPDATE_RATE) / TICK_UPDATE_RATE;
+
+    auto [current, currentLock] = GetWorldStates()->GetCurrentState();
+    auto [read, readLock] = GetWorldStates()->GetReadState();
+
+    StateValue currentUpVectorValue;
+    StateValue targetUpVectorValue;
+
+    std::shared_lock currentStateLock = current->Lock_Shared();
+    std::shared_lock readStateLock = read->Lock_Shared();
+
+    bool hasCurrentUpVector = current->ReadState(StateType::UpVector, &currentUpVectorValue);
+    bool hasTargetUpVector = read->ReadState(StateType::UpVector, &targetUpVectorValue);
+
+    currentStateLock.unlock();
+    readStateLock.unlock();
+
+    currentLock.unlock();
+    readLock.unlock();
+
+    // Interpolate up vector.
+    if (hasCurrentUpVector && hasTargetUpVector) {
+        btVector3 currentUpVector = std::get<btVector3>(currentUpVectorValue);
+        btVector3 targetUpVector = std::get<btVector3>(targetUpVectorValue);
+        btVector3 interpolated = btVector3(
+            lerp(currentUpVector.x(), targetUpVector.x(), weight),
+            lerp(currentUpVector.y(), targetUpVector.y(), weight),
+            lerp(currentUpVector.z(), targetUpVector.z(), weight)
+        );
+
+        setUpDirection(interpolated);
     }
 }
 
-void PlayerObject::UpdateObjectState() {
-    GameObject::UpdateObjectState();
-}
+std::vector<std::shared_ptr<Packet::Packet>> PlayerObject::CreatePackets(int sequenceNum) {
+    std::vector<std::shared_ptr<Packet::Packet>> packets = GameObject::CreatePackets(sequenceNum);
+    std::vector<std::shared_ptr<Packet::Packet>> damagePackets = attack->CreatePackets(sequenceNum);
+    packets.insert(packets.end(), damagePackets.begin(), damagePackets.end());
 
-void PlayerObject::UpdateFromState(float dt) {
-    GameObject::UpdateFromState(dt);
+    auto [read, readLock] = GetWorldStates()->GetReadState();
+
+    StateValue upVector;
+    std::shared_lock readStateLock = read->Lock_Shared();
+    bool hasUpVector = read->ReadState(StateType::UpVector, &upVector);
+
+    readStateLock.unlock();
+    readLock.unlock();
+    
+    if (hasUpVector) {
+        packets.push_back(std::move(std::make_shared<Packet::ObjectChangeGravityPacket>(
+            GetWorldID(),
+            std::get<btVector3>(upVector),
+            sequenceNum
+        )));
+    }
+    return std::move(packets);
 }
 
 void PlayerObject::OnCollisionEnter(const CollisionInfo& collisionInfo){
@@ -37,10 +142,6 @@ void PlayerObject::OnCollisionEnter(const CollisionInfo& collisionInfo){
 	btVector3 direction = (objPos - playerPos).normalized();
 	float dot = direction.dot(-upDirection);
 	float angle = acos(dot) * (180.0f / SIMD_PI);
-	if (angle <= 25.0f) {
-		collided++;
-		collidedObjects.push_back(collisionInfo.otherObject);
-	}
 
     // set special type collision
     if (angle <= 25.0f) {
@@ -55,6 +156,7 @@ void PlayerObject::OnCollisionEnter(const CollisionInfo& collisionInfo){
         jumpPadHeight = collisionInfo.otherObject->getJumpPadStrength();
     }
 }
+
 
 void PlayerObject::OnCollisionExit(const CollisionInfo& collisionInfo){
 	auto it = std::find(collidedObjects.begin(), collidedObjects.end(), collisionInfo.otherObject);
@@ -82,26 +184,18 @@ void PlayerObject::OnCollisionStay(const CollisionInfo& collision){
 			}
 		}
 	}
-	else { // not counted as floor yet
-		if (angle <= 25.0f) {
-         
-			collided++;
-			collidedObjects.push_back(collision.otherObject);
-		}
+	else if (angle <= 25.0f) {
+        // not counted as floor yet
+		collided++;
+		collidedObjects.push_back(collision.otherObject);
 	}
 
 	// set special type collision
     if (angle <= 25.0f) {
-        if (collision.otherObject->getType() == Type::Ice && collisionType!= Type::JumpPad) {
+        if (collisionType == Type::Default && collision.otherObject->getType() == Type::Ice) {
             collisionType = Type::Ice;
         }
     }
-    if (collision.otherObject->getType() == Type::JumpPad || collision.otherObject->getType() == Type::Slime) {
-		collisionNormal = collision.contactNormal;
-		collisionPoint = collision.contactPointA;
-        collisionType = collision.otherObject->getType();
-        jumpPadHeight = collision.otherObject->getJumpPadStrength();
-	}
 }
 
 
@@ -244,9 +338,15 @@ void PlayerObject::SetGunTransform(float pitch, float yaw, btVector3 camPos) {
     }
 
 
-    btTransform transformGun = gun->GetPhysicsObject()->GetRigidBody()->getWorldTransform();
+    btTransform& transformGun = gun->GetPhysicsObject()->GetRigidBody()->getWorldTransform();
     transformGun.setOrigin(camPos + adjustedOffset);
     transformGun.setRotation(gunRotation);
+}
 
-    gun->GetPhysicsObject()->GetRigidBody()->setWorldTransform(transformGun);
+
+void PlayerObject::CorrectAnimation() {
+    //to be called in update. Checks if the animation matches the state, if not sets it to the right animation. Hopefully means it is only set when state changes.#
+    if (renderObject->GetAnimation() != animationObject->getAnimation(animationState)) {
+        renderObject->SetAnimation(animationObject->getAnimation(animationState));
+    }
 }

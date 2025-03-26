@@ -7,7 +7,7 @@
 namespace Multiplayer {
 
     constexpr ENetAddress hostAddress = { ENET_HOST_ANY, DEFAULT_PORT };
-    const int TICK_BUFFER_SIZE = 12;
+    const int TICK_BUFFER_SIZE = 8;
 
     /**
      * @brief Server used to communicate with other players.
@@ -43,6 +43,8 @@ namespace Multiplayer {
 
         Lobbies::User* GetUser() const { return m_user; }
 
+        Lobbies::Lobby* GetLobby() const { return m_lobby; }
+
         void Start() { m_network->Start(); }
 
         /**
@@ -68,6 +70,9 @@ namespace Multiplayer {
             m_tickCount = 0;
             m_processTick = -TICK_BUFFER_SIZE + 1;
         }
+
+        std::unique_lock<std::mutex> LockTick() { return std::move(m_network->LockTick()); }
+        float GetTickProgress() { return m_network->GetTickProgress(); }
 
     private:
         /**
@@ -105,7 +110,7 @@ namespace Multiplayer {
         int m_processTick = -TICK_BUFFER_SIZE + 1;
         bool m_isHost = false;
         bool m_connected = false;
-        unsigned int m_uniqueUserID = 0;
+        unsigned int m_uniqueUserID = 1;
 
         std::array<std::vector<std::shared_ptr<Packet::Packet>>, TICK_BUFFER_SIZE> m_buffer;
     };

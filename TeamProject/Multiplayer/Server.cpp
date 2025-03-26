@@ -8,8 +8,9 @@
 #include "Multiplayer/GamePacketHandlers.hpp"
 #include "Multiplayer/Lobby.hpp"
 #include "Multiplayer/User.hpp"
-#include "Multiplayer/WorldState.hpp"
+#include "WorldState.h"
 
+using namespace Lobbies;
 
 namespace Multiplayer {
     using namespace WorldState;
@@ -55,6 +56,9 @@ namespace Multiplayer {
         m_handlers.push_back(std::make_unique<Packet::DeltaPacketHandler>());
         Packet::PacketRegister::Register(m_handlers.back().get());
 
+        m_handlers.push_back(std::make_unique<Packet::LaserPacketHandler>());
+        Packet::PacketRegister::Register(m_handlers.back().get());
+
         m_handlers.push_back(std::make_unique<Packet::StartGamePacketHandler>());
         Packet::PacketRegister::Register(m_handlers.back().get());
 
@@ -70,14 +74,15 @@ namespace Multiplayer {
         enet_address_set_host(&destination, ip.c_str());
 
         m_network->ConnectTo(&destination);
-        auto start = std::chrono::high_resolution_clock::now();
-        std::chrono::steady_clock::time_point end;
-        std::chrono::duration<float> elapsed;
+
+        int resendDelay = 10; // ms
+        int maxAttempts = (waitSeconds * 1000 / resendDelay) + 1;
+        int attempts = 0;
 
         do {
-            end = std::chrono::high_resolution_clock::now();
-            elapsed = end - start;
-        } while (m_network->GetConnectionCount() < 1 && elapsed.count() < waitSeconds);
+            std::this_thread::sleep_for(std::chrono::milliseconds(resendDelay));
+            attempts++;
+        } while (m_network->GetConnectionCount() < 1 && attempts < maxAttempts);
 
         m_connected = m_network->GetConnectionCount() > 0;
     }
@@ -90,12 +95,12 @@ namespace Multiplayer {
     }
 
     bool Server::IsOwnerOf(GameObject* obj) {
-        return obj->GetOwner() == *m_user;
+        return *(obj->GetOwner()) == *m_user;
     }
 
     void Server::SendState(bool endOfTick) {
         if (endOfTick) return;
-
+        
         if (m_isHost && m_game->GetState() == GameState::STARTING) {
             std::shared_ptr<Packet::StartGamePacket> startGame = std::make_shared<Packet::StartGamePacket>();
             m_network->Broadcast(startGame);
@@ -105,68 +110,14 @@ namespace Multiplayer {
         if (m_game->GetState() != GameState::ACTIVE) return;
 
         m_game->GetWorld()->OperateOnContents([&](GameObject* object) {
-            if (object->isStatic()) return;
+            if (object->GetOwner() == nullptr) return;
+            if (*(object->GetOwner()) != *m_user) return;
+            object->GetWorldStates()->UpdateBuffer();
 
-            object->GetObjectStates()->UpdateBuffer();
-
-            if (object->GetOwner() != *m_user) return;
-
-            StateReader readReader = object->GetObjectStates()->GetReadState();
-            ObjectState* read = readReader.GetState();
-
-            if (read->Size() <= 0) return;
-
-            StateValue linearVelocity;
-            StateValue angularVelocity;
-            StateValue position;
-            StateValue rotation;
-
-            read->Lock_Shared();
-
-            bool hasLinear = read->ReadState(StateType::LinearVelocity, &linearVelocity);
-            bool hasAngular = read->ReadState(StateType::AngularVelocity, &angularVelocity);
-
-            bool hasPosition = read->ReadState(StateType::Position, &position);
-            bool hasRotation = read->ReadState(StateType::Rotation, &rotation);
-
-            read->Unlock_Shared();
-
-            if (hasLinear && hasAngular) {
-                std::shared_ptr<Packet::DeltaPacket> deltaPacket = std::make_shared<Packet::DeltaPacket>(
-                    object->GetWorldID(),
-                    std::get<btVector3>(linearVelocity),
-                    std::get<btVector3>(angularVelocity),
-                    m_tickCount
-                );
-                m_network->Broadcast(deltaPacket);
+            std::vector<std::shared_ptr<Packet::Packet>> packets = object->CreatePackets(m_tickCount);
+            for (auto packet = packets.begin(); packet != packets.end(); packet++) {
+                m_network->Broadcast(*packet);
             }
-
-            if (hasPosition && hasRotation) {
-                std::shared_ptr<Packet::PositionPacket> positionPacket = std::make_shared<Packet::PositionPacket>(
-                    object->GetWorldID(),
-                    std::get<btVector3>(position),
-                    std::get<btQuaternion>(rotation),
-                    m_tickCount
-                );
-                m_network->Broadcast(positionPacket);
-            }
-
-            // Create change gravity packet for players.
-            if (object->getType() == GameObject::Type::Player) {
-                StateValue upVectorValue;
-
-                read->Lock_Shared();
-                bool hasUpVector = read->ReadState(StateType::UpVector, &upVectorValue);
-                read->Unlock_Shared();
-
-                std::shared_ptr<Packet::ObjectChangeGravityPacket> gravity = std::make_shared<Packet::ObjectChangeGravityPacket>(
-                    object->GetWorldID(),
-                    std::get<btVector3>(upVectorValue),
-                    m_tickCount
-                );
-                m_network->Broadcast(gravity);
-            }
-            readReader.Unlock();
         });
     }
 
@@ -179,9 +130,14 @@ namespace Multiplayer {
         int smallestIncoming = INT32_MAX;
 
         while (currentPacket.get() != nullptr) {
-            // Process packets that have a sequence of zero (usually high priority).
-            if (currentPacket->GetChannel() == (uint8_t) Channel::RELIABLE ) {
+            // High Priority packets.
+            if (currentPacket->GetSequenceNumber() == 0) {
                 Packet::PacketRegister::GetHandler(currentPacket->GetType())->Handle(currentPacket);
+
+                // Pass packets on to clients.
+                if (m_isHost) {
+                    m_network->Broadcast(currentPacket);
+                }
             }
 
             // Add packet to the buffer.
@@ -193,15 +149,31 @@ namespace Multiplayer {
                     if (currentPacket->GetSequenceNumber() < smallestIncoming) {
                         smallestIncoming = currentPacket->GetSequenceNumber();
                     }
+
+                    // Pass packets on to clients.
+                    if (m_isHost) {
+                        currentPacket->SetSequenceNumber(currentPacket->GetSequenceNumber());
+                        m_network->Broadcast(currentPacket);
+                    }
                 }
 
-                // Pass packets on to clients.
-                if (m_isHost) {
-                    currentPacket->SetSequenceNumber(currentPacket->GetSequenceNumber() + 1);
-                    m_network->Broadcast(currentPacket);
+                // Moving too fast.
+                if (currentPacket->GetSequenceNumber() > m_tickCount) {
+                    int diff = currentPacket->GetSequenceNumber() - m_tickCount;
+
+#ifndef NDEBUG
+                    std::cout << ConsoleTextColor::YELLOW;
+                    std::cout << "Someone's network is ticking faster!\n";
+                    std::cout << "Skipping " << diff << " ticks.\n";
+                    std::cout << ConsoleTextColor::DEFAULT;
+#endif
+                    for (diff; diff > 0; diff--) {
+                        if (m_processTick >= 0) m_buffer[m_processTick % TICK_BUFFER_SIZE].clear();
+                        m_processTick++;
+                    }
+                    m_tickCount = currentPacket->GetSequenceNumber();
                 }
             }
-
             currentPacket = m_network->Fetch();
         }
 
@@ -213,11 +185,12 @@ namespace Multiplayer {
             m_buffer[m_processTick % TICK_BUFFER_SIZE].clear();
         }
 
-        // Speeding up to match others pace.
-        if (smallestIncoming > m_tickCount && smallestIncoming != INT32_MAX) {
-            m_processTick += smallestIncoming - m_tickCount;
-            m_tickCount = smallestIncoming;
-        }
+        // Swapping buffers after writing new states.
+        m_game->GetWorld()->OperateOnContents([&](GameObject* object) {
+            if (object->GetOwner() == nullptr) return;
+            if (*(object->GetOwner()) == *m_user) return;
+            object->GetWorldStates()->UpdateBuffer();
+            });
 
         m_tickCount++;
         m_processTick++;
@@ -231,7 +204,6 @@ namespace Multiplayer {
             LobbyAction::CREATE
         );
         m_network->Send(newUser, client);
-        m_lobby->AddUser(clientUser);
 
         // Send current lobby information.
         for (const User& player : m_lobby->GetConnectedUsers()) {
@@ -241,7 +213,14 @@ namespace Multiplayer {
             );
             m_network->Send(playerInfo, client);
         }
-        // NOTE: There is no need to send world info here because currently the
-        // Lobby is just a menu screen.
+        m_lobby->AddUser(clientUser);
+
+        // Broadcast new member to the rest of the lobby.
+        std::shared_ptr<Packet::UserInfoPacket> broadcast = std::make_shared<Packet::UserInfoPacket>(
+            clientUser,
+            LobbyAction::JOIN
+        );
+        m_network->Broadcast(broadcast);
     }
 }
+

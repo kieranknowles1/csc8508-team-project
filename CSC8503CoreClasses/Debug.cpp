@@ -92,8 +92,9 @@ SimpleFont* Debug::GetDebugFont() {
 	return debugFont;
 }
 
-void Debug::CreateDebugFont(const std::string& dataFile, Texture& tex) {
-	debugFont = new SimpleFont(dataFile, tex);
+void Debug::CreateDebugFont(const std::string& dataFile, std::shared_ptr<Texture> tex) {
+	// Comicy has quite small advances, add a small multiple to make gaps between characters clearer
+	debugFont = new SimpleFont(dataFile, tex, 1.05f);
 }
 
 const std::vector<Debug::DebugStringEntry>& Debug::GetDebugStrings() {

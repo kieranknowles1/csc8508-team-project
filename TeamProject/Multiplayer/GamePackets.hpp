@@ -2,13 +2,21 @@
 
 #include <LinearMath/btVector3.h>
 #include <LinearMath/btQuaternion.h>
+#include "GameObject.h"
 
+#ifdef BUILD_PRE
+
+#include "../Network/Packet.hpp"
+#include "../Network/Network.hpp"
+#include "../TeamProject/Multiplayer/User.hpp"
+#include "../TeamProject/Multiplayer/Lobby.hpp"
+
+#else
+#include "Network/Packet.hpp"
 #include "Network/Network.hpp"
-#include "PlayerObject.h"
-#include "User.hpp"
-#include "Lobby.hpp"
-
-using namespace Lobbies;
+#include "Multiplayer/User.hpp"
+#include "Multiplayer/Lobby.hpp"
+#endif
 
 namespace Packet {
     /**
@@ -137,26 +145,26 @@ namespace Packet {
     };
 
 
-    /**
-     * @brief Player Change State Packet class.
-     * 
-     * Used to notify of a player's state change (usually spawning in or
-     * dying).
-     */
-    class PlayerChangeStatePacket : public Packet {
-    public:
-        PlayerChangeStatePacket(int playerID, const PlayerState& state) :
-            Packet(static_cast<Type>(PacketType::PLAYER_STATE_CHANGE), static_cast<int>(Channel::UNSEQUENCED), 0),
-            m_playerID(playerID), m_newState(state)
-        {}
+    ///**
+    // * @brief Player Change State Packet class.
+    // * 
+    // * Used to notify of a player's state change (usually spawning in or
+    // * dying).
+    // */
+    //class PlayerChangeStatePacket : public Packet {
+    //public:
+    //    PlayerChangeStatePacket(int playerID, const ObjectState& state) :
+    //        Packet(static_cast<Type>(PacketType::PLAYER_STATE_CHANGE), static_cast<int>(Channel::UNSEQUENCED), 0),
+    //        m_playerID(playerID), m_newState(state)
+    //    {}
 
-        int GetPlayerID() const { return m_playerID; }
-        PlayerState GetState() const { return m_newState; }
+    //    int GetPlayerID() const { return m_playerID; }
+    //    ObjectState GetState() const { return m_newState; }
 
-    private:
-        int m_playerID;
-        PlayerState m_newState;
-    };
+    //private:
+    //    int m_playerID;
+    //    ObjectState m_newState;
+    //};
 
 
     /**
@@ -188,6 +196,7 @@ namespace Packet {
         {}
     };
 
+
     /**
      * @brief A packet for sending user data over the network.
      * 
@@ -198,18 +207,19 @@ namespace Packet {
      */
     class UserInfoPacket : public Packet {
     public:
-        UserInfoPacket(User user, LobbyAction action) :
+        UserInfoPacket(Lobbies::User user, Lobbies::LobbyAction action) :
             Packet(static_cast<Type>(PacketType::USER_INFO), static_cast<uint8_t>(Channel::RELIABLE), 0),
             m_user(user), m_action(action)
         {}
 
-        User GetUser() const { return m_user; }
-        LobbyAction GetAction() const { return m_action; }
+        Lobbies::User GetUser() const { return m_user; }
+        Lobbies::LobbyAction GetAction() const { return m_action; }
 
     private:
-        const User m_user;
-        const LobbyAction m_action;
+        const Lobbies::User m_user;
+        const Lobbies::LobbyAction m_action;
     };
+
 
     /**
      * @brief Simple packet for sending damage across the network.
@@ -223,7 +233,7 @@ namespace Packet {
          * @param dealer - the id of the user who dealt the damage.
          */
         DamagePacket(int targetID, float damage, int dealer) :
-            Packet(static_cast<Type>(PacketType::DAMAGE), static_cast<uint8_t>(Channel::RELIABLE), 0),
+            Packet(static_cast<Type>(PacketType::DAMAGE), static_cast<uint8_t>(Channel::UNSEQUENCED), 0),
             m_targetID(targetID), m_damage(damage), m_dealer(dealer)
         {}
 
@@ -236,6 +246,7 @@ namespace Packet {
         float m_damage;
         int m_dealer;
     };
+
 
     /**
      * @brief Ping the server or client.
@@ -257,7 +268,5 @@ namespace Packet {
             Packet(static_cast<Type>(PacketType::PONG), static_cast<uint8_t>(Channel::RELIABLE), 0)
         {}
     };
-
-
 }
 

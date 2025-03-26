@@ -65,3 +65,11 @@ const Matrix4* MeshAnimation::GetJointData(size_t frame) const {
 
 	return dataStart + matStart;
 }
+
+void MeshAnimation::UpdateAnimation(float dt) {
+	frameTime -= dt;
+	while (frameTime < 0.0f) {
+		currentFrame = (currentFrame + 1) % this->GetFrameCount();
+		frameTime += 1.0 / this->GetFrameRate();
+	}
+}

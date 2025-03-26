@@ -28,7 +28,7 @@ public:
 		}
 
 		int lineCount = std::count(text.begin(), text.end(), '\n');
-		totalHeight = (lineCount * 0.05f * TextScale);
+		totalHeight = (lineCount * 0.1f * TextScale);
 	}
 
 	PushdownResult OnUpdate(float dt, PushdownState** newState) override {
@@ -49,7 +49,7 @@ public:
 		}
 
 		// ~80 chars at 720p
-		Debug::Print("Oh hi there. I see you found a feature (TM)", Vector2(0, yPos - 0.50f));
+		Debug::Print("Oh hi there. I see you found a feature (TM). Because it's a feature,\nI don't need to care about bugs", Vector2(0, yPos - 0.50f), Vector4(1, 1, 1, 1), 0.9f);
 		Debug::Print(text, Vector2(0, yPos), Vector4(1, 1, 1, 1), TextScale);
 		yPos -= (Speed + speedup) * dt;
 
