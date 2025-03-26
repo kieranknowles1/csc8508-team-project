@@ -109,6 +109,16 @@ void AGCMesh::BindVertexBuffers(sce::Agc::Core::StageBinder& binder) {
 
 	const int TEST_OFFSET = 10;
 
+	// Stupid problems call for stupid solutions
+	// wavepsslc hoists the loads from these buffers to be outside the check for their existence
+	// even if -no*hoisting is passed
+	// This causes an error when the shader tries to read from the buffers (which wouldn't happen
+	// if Sony's compiler didn't do that). But if we fill the buffers with garbage data... then
+	// the reads will work
+	// There might be an option that fixes this, buried somewhere in the 300+ options of wavepsslc
+	binder.setBuffers(VertexAttribute::JointWeights + TEST_OFFSET, 1, &usedVertexBuffers[0]);
+	binder.setBuffers(VertexAttribute::JointIndices + TEST_OFFSET, 1, &usedVertexBuffers[0]);
+
 	for (int i = 0; i < usedVertexBuffers.size(); ++i) {
 		binder.setBuffers((int)usedAttributeTypes[i] + TEST_OFFSET, 1, &usedVertexBuffers[i]);
 	}

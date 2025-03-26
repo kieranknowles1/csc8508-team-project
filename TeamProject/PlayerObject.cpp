@@ -54,7 +54,7 @@ void PlayerObject::Update(float dt) {
     //Animation: 
     CorrectAnimation();
 
-    if (animated == true) {
+    if (renderObject->GetAnimation()) {
         renderObject->GetAnimation()->UpdateAnimation(dt);
     }
 

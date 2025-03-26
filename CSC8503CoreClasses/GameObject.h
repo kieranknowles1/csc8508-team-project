@@ -184,8 +184,6 @@ namespace NCL::CSC8503 {
 
         void SetState(AliveState newState) { state = newState; }
         AliveState GetState() const { return state; }
-		bool GetIsAnimated() { return animated; }
-		void SetIsAnimated(bool a) { animated = a; }
 
 	protected:
 		PhysicsObject*		physicsObject;
@@ -198,7 +196,6 @@ namespace NCL::CSC8503 {
         btQuaternion initialRotation = btQuaternion(0, 0, 0);
 		bool		isActive;
 		bool paintball = false;
-		bool animated = false;
         bool deleted = false;
 
 		int			worldID;

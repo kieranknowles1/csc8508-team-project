@@ -28,8 +28,8 @@ namespace NCL::CSC8503 {
 
     private:
         btVector3 collisionNormal;
-        btVector3 startPos;
-        btVector3 endPos;
+        btVector3 startPos = btVector3(0, 0, 0);
+        btVector3 endPos = btVector3(0, 0, 0);
         btVector4 color;
         float thickness;
         GameObject* parent;

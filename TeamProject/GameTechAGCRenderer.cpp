@@ -84,7 +84,6 @@ GameTechAGCRenderer::GameTechAGCRenderer(Window* window) : AGCRenderer(window), 
 	sphere = std::unique_ptr<AGCMesh>((AGCMesh*)LoadMesh("Sphere.msh"));
 	highResSphere = std::unique_ptr<PS5::AGCMesh>((AGCMesh*)LoadMesh("Sphere_HighRes.msh"));
 
-	skinningCompute = std::make_unique<AGCShader>("Skinning_c.ags", allocator);
 	gammaCompute	= std::make_unique<AGCShader>("Gamma_c.ags", allocator);
 
 	defaultVertexShader = std::make_unique<AGCShader>("Tech_vv.ags", allocator);
@@ -255,29 +254,31 @@ void GameTechAGCRenderer::DrawObjects() {
 	AGCMesh* prevMesh = (AGCMesh*)frameObjects[0]->GetMesh();
 	int instanceCount = 0;
 
-	auto drawInstances = [&](AGCMesh* mesh) {
-		mesh->BindVertexBuffers(frameContext->m_bdr.getStage(sce::Agc::ShaderType::kGs));
+	// Draw all instances of the current mesh that have not yet been rendered
+	auto drawPendingInstances = [&]() {
+		prevMesh->BindVertexBuffers(frameContext->m_bdr.getStage(sce::Agc::ShaderType::kGs));
 		uint32_t* objID = static_cast<uint32_t*>(frameContext->m_dcb.allocateTopDown(sizeof(uint32_t), sce::Agc::Alignment::kBuffer));
 		*objID = startingIndex;
 		frameContext->m_bdr.getStage(sce::Agc::ShaderType::kGs).setUserSrtBuffer(objID, 1);
 
 		DrawBoundMeshInstanced(*frameContext, *prevMesh, instanceCount);
+
+		startingIndex += instanceCount;
+		instanceCount = 0;
 	};
 
 	for (auto obj : frameObjects) {
 		AGCMesh* objectMesh = (AGCMesh*)obj->GetMesh();
 
-		//The new mesh is different than previous meshes, flush out the old list
-		if( prevMesh != objectMesh) {
-			drawInstances(prevMesh);
-			startingIndex += instanceCount;
-			instanceCount = 0;
+		// If the new mesh is different than previous meshes, flush out the old list
+		if (prevMesh != objectMesh) {
+			drawPendingInstances();
 		}
 		prevMesh = objectMesh;
 		instanceCount += objectMesh->GetSubMeshCount();
 	}
 
-	drawInstances(prevMesh);
+	drawPendingInstances();
 	// Check that we used all the buffers we expected
 	assert(instanceCount + startingIndex == currentFrame->objects.count);
 }
@@ -627,37 +628,41 @@ void GameTechAGCRenderer::UpdateObjectList() {
 
 		state.texRepeats = g->GetTexRepeating();
 		state.texScale = g->getParent()->getRenderScale() * g->GetTexScaleMultiplier();
-		state.skinningIndex = NULLTEX;
+		state.animJointsIndex = NULLTEX;
 
 		AGCMesh* m = (AGCMesh*)g->GetMesh();
-		if (m && m->GetJointCount() > 0) {//It's a skeleton mesh, need to update transformed vertices buffer
+		if (g->GetAnimation()) { //It's a skeleton mesh, need to update transformed vertices buffer
+			// FIXME: Don't hardcode offset for the player
+			state.modelMatrix = state.modelMatrix * Matrix::Translation(Vector3(0, -0.9f, 0.1f)); //Translation added to centre the player mesh better
 
 			Buffer* b = g->GetGPUBuffer();
 			if (!b) {
-				//We've not yet made a buffer to hold the verts of this mesh!
-				//We need a new mesh to store the positions, normals, and tangents of this mesh
-				size_t vertexSize = sizeof(Vector3) + sizeof(Vector3) + sizeof(Vector4);
-				size_t vertexCount = m->GetVertexCount();
-				size_t bufferSize = vertexCount * vertexSize;
-
-				char* vertexData = (char*)allocator.Allocate((uint64_t)(bufferSize), sce::Agc::Alignment::kBuffer);
+				//We've not yet made a buffer to hold the matrices of this skeleton
+				size_t matCount = m->GetBindPose().size();
+				void* data = allocator.Allocate(matCount * sizeof(Matrix4), sce::Agc::Alignment::kBuffer);
 
 				sce::Agc::Core::BufferSpec bufSpec;
-				bufSpec.initAsRegularBuffer(vertexData, vertexSize, vertexCount);
+				bufSpec.initAsRegularBuffer(data, sizeof(Matrix4), matCount);
 
 				sce::Agc::Core::Buffer vBuffer;
 				checkError(sce::Agc::Core::initialize(&vBuffer, &bufSpec));
 
 				uint32_t bufferID = bufferCount++;
-				b = new AGCBuffer(vBuffer, vertexData);
+				b = new AGCBuffer(vBuffer, data);
 				b->SetAssetID(bufferID);
 				g->SetGPUBuffer(b);
 
 				bindlessBuffers[bufferID] = vBuffer;
 			}
-			state.skinningIndex = b->GetAssetID();
+			auto frameData = g->GetAnimation()->GetJointData(g->GetAnimation()->GetCurrentFrame());
+			Matrix4* bufPtr = (Matrix4*)((AGCBuffer*)b)->GetAllocatedMemory();
+			for (unsigned int q = 0; q < m->GetJointCount(); ++q) {
+				const Matrix4 invBindPose = g->GetMesh()->GetInverseBindPose()[q]; //need to get the inverse bind pose per joint to "undo" the bind pose for each joint
+				*bufPtr = frameData[q] * invBindPose;
+				bufPtr++;
+			}
 
-			frameJobs.push_back({ g, b->GetAssetID() });
+			state.animJointsIndex = b->GetAssetID();
 		}
 
 		assert(g->GetMesh()->GetSubMeshCount() > 0);
@@ -696,6 +701,10 @@ void GameTechAGCRenderer::UpdateObjectList() {
 		currentFrame->data.WriteData(state);
 	}
 	currentFrame->ui.end(currentFrame);
+
+	for (const auto& uiElement : frameTexts) {
+		Debug::Print(uiElement.text, uiElement.position, uiElement.color);
+	}
 
 	currentFrame->lights.begin(currentFrame);
 	for (auto& light : lights) {
