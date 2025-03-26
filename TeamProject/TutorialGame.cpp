@@ -451,7 +451,7 @@ PlayerObject* TutorialGame::AddPlayerCapsuleToWorld(const Vector3& position, flo
 
     // Setting the transform properties for the capsule
     player->setInitialPosition(position);
-    player->setRenderScale(mainPlayer ? Vector3(0,0,0) : Vector3(radius * 2, height, radius * 2));
+    player->setRenderScale(mainPlayer ? Vector3(0,0,0) : Vector3(radius * 3.0f, height*1.1f, radius * 3.0f));
 
     // Creating a Bullet collision shape for the capsule
     btCollisionShape* playerShape = new btCapsuleShape(radius, height);
@@ -459,7 +459,6 @@ PlayerObject* TutorialGame::AddPlayerCapsuleToWorld(const Vector3& position, flo
     // Setting the render object for the capsule
     player->SetRenderObject(new RenderObject(player, resourceManager->getMeshes().get("RacerGuy/RacerGuy2.msh"), resourceManager->getMaterials().get("RacerGuy.mat"))); //defaultTexture
     player->CreateAnimationObject();
-    player->CorrectAnimation();
 
     // Setting the physics object for the capsule
     player->SetPhysicsObject(new PhysicsObject(player));
