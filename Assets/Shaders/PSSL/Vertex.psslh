@@ -1,22 +1,3 @@
-void TransformVertexToWorld(ObjectState s, uint vertID, out float4 position, out float3 normal, out float4 tangent, out float3 bitangent) {
-	float3 vPos;
-	if(s.skinningIndex > 0) {
-		RegularBuffer<SkinnedVertex> skinBuffer = bindlessBuffers[s.skinningIndex];
-		SkinnedVertex v = skinBuffer[vertID];
-
-		vPos		= v.position;
-		normal		= v.normal;
-		tangent	= v.tangent;
-	}
-	else {
-		vPos		= Positions[vertID];
-		normal		= Normals[vertID];
-		tangent	= Tangents[vertID];
-	}
-
-	position = mul(s.modelMatrix,float4(vPos.xyz, 1));
-}
-
 float4 TransformWorldToClip(in float4 world) {
 	return mul(Constants.projMatrix,mul(Constants.viewMatrix,world));
 }

@@ -29,7 +29,9 @@ PlayerObject::PlayerObject() {
 
 
 PlayerObject::~PlayerObject() {
-    if (laser && TutorialGame::getInstance()) TutorialGame::getInstance()->GetWorld()->RemoveGameObject(laser);
+    if (laser && TutorialGame::getInstance()) {
+        TutorialGame::getInstance()->delayedRemoveObject(laser);
+    }
     laser = nullptr;
     delete animationObject;
 }
@@ -52,7 +54,7 @@ void PlayerObject::Update(float dt) {
     //Animation: 
     CorrectAnimation();
 
-    if (animated == true) {
+    if (renderObject->GetAnimation()) {
         renderObject->GetAnimation()->UpdateAnimation(dt);
     }
 
@@ -344,9 +346,7 @@ void PlayerObject::SetGunTransform(float pitch, float yaw, btVector3 camPos) {
 
 void PlayerObject::CorrectAnimation() {
     //to be called in update. Checks if the animation matches the state, if not sets it to the right animation. Hopefully means it is only set when state changes.#
-
     if (renderObject->GetAnimation() != animationObject->getAnimation(animationState)) {
         renderObject->SetAnimation(animationObject->getAnimation(animationState));
     }
-
 }

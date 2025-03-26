@@ -12,7 +12,7 @@ namespace NCL {
             elapsed += dt;
 
             // Regenerating HealthAttrib.
-            if (GetHealthState() == HealthState::ALIVE && elapsed - lastHit >= regenDelay) {
+            if (GetHealthState() == AliveState::ALIVE && elapsed - lastHit >= regenDelay) {
                 SetCurrentHealth(currentHealth + (regenRate * dt));
             }
         }

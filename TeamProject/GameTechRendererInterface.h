@@ -134,15 +134,7 @@ namespace NCL::CSC8503 {
 			delta = dt;
 		}
 
-		void TrackLaser(LaserObject* laser) {
-			lasers.insert(laser);
-		}
-
-		void UntrackLaser(LaserObject* laser) {
-			lasers.erase(laser);
-		}
-
-        /*
+		/*
 		int GetCurrentFrame() const {
 			return currentFrame;
 		}
@@ -180,7 +172,7 @@ namespace NCL::CSC8503 {
 		std::vector<UiText> frameTexts;
 		std::vector<PointLight*> lights;
 
-		std::set<LaserObject*, LaserComparator> lasers;
+		std::vector<LaserObject*> lasers;
 		DecalSystem decalSystem;
 
 		//Mesh Animation additions:

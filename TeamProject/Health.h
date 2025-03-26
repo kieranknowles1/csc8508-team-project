@@ -5,18 +5,14 @@
 #include <shared_mutex>
 
 #include "StateUpdater.h"
+#include "AliveState.h"
 
 namespace NCL::CSC8503 {
     class GameObject;
 
-    enum class HealthState {
-        ALIVE,
-        DEAD
-    };
-
     /**
      * @brief An entity that can be damaged.
-     * 
+     *
      * This entity is to be used as an abstract class to inherit from. It does
      * NOT update GameObject states. If you want state updates for GameObject,
      * you must explicitly call base class update functions.
@@ -44,7 +40,7 @@ namespace NCL::CSC8503 {
         float GetCurrentHealth() const { return currentHealth; }
 
         /**
-         * @brief Set how much HP to regenerate per second. 
+         * @brief Set how much HP to regenerate per second.
          */
         void SetRegenerationRate(float rate) { regenRate = rate; }
         float GetRegenerationRate() const { return regenRate; }
@@ -58,12 +54,12 @@ namespace NCL::CSC8503 {
         void SetInvulnerableWindow(float time) { invulnerableWindow = time; }
         float GetInvulernableWindow() { return invulnerableWindow; }
 
-        void Respawn() { 
+        void Respawn() {
             SetCurrentHealth(GetMaxHealth());
             lastSpawn = elapsed;
         }
 
-        HealthState GetHealthState() { return currentHealth == 0 ? HealthState::DEAD : HealthState::ALIVE; }
+        AliveState GetHealthState() { return currentHealth == 0 ? AliveState::DEAD : AliveState::ALIVE; }
         GameObject* GetParent() { return parent; }
 
     protected:
@@ -120,7 +116,7 @@ namespace NCL::CSC8503 {
         float damage = 0;
 
         DamageType damageType = DamageType::DISCRETE;
-        
+
         HealthAttrib* target = nullptr; // Reference to health of enemy.
         HealthAttrib* health = nullptr; // Reference to own health.
 

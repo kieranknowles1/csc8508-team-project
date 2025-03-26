@@ -95,7 +95,6 @@ namespace NCL::CSC8503 {
 			return camRotOffset;
 		}
 
-
 		void SetOwner(Lobbies::User user) override {
 			gun->SetOwner(user);
 			laser->SetOwner(user);
@@ -166,7 +165,7 @@ namespace NCL::CSC8503 {
 		float jumpPadHeight = 0.0f;
 		std::list<GameObject*> collidedObjects;
 		Type collisionType;
-		ObjectState state;
+		AliveState state;
 		float yawOverride = -1000.0f;
 
 		btQuaternion camRotOffset;

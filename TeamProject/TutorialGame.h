@@ -13,8 +13,6 @@
 #include "Profiler.h"
 #include "Wanderer.h"
 #include "Respawn.h"
-#include "Network/Network.hpp"
-//#include "Multiplayer/Server.hpp"
 
 #include <shared_mutex>
 #include <btBulletDynamicsCommon.h>
@@ -102,6 +100,8 @@ namespace NCL {
             TutorialGame(GameTechRendererInterface* renderer, Controller* controller, Config& config);
             ~TutorialGame();
 
+            void UpdatePlayer(float dt, bool camOnly = false);
+
             virtual void UpdateGame(float dt);
             void LoadWorldFromFile(int levelNum);
 
@@ -129,8 +129,27 @@ namespace NCL {
             // FIX ME make this protected/private.
             PlayerObject* player;
 
+            PlayerObject* getPlayerObject() {
+                return player;
+            }
+
+            PerspectiveCamera* getMainCam() {
+                return mainCamera;
+            }
+
+            GameTechRendererInterface* getRenderer() {
+                return renderer;
+            }
+
+            PlayerController* GetPlayerController() {
+                return playerController.get();
+            }
+
             void SetGameMode(GameMode gm) { gameMode = gm; }
 
+            bool isPlayerUpdatePaused = false;
+            bool IsPlayerUpdatePaused() const { return isPlayerUpdatePaused; }
+            void SetPlayerUpdatePaused(bool paused) { isPlayerUpdatePaused = paused; }
             SPGameController* GetSPMode() { return spGameController; }
 
             void SetFreeCam(bool b) { freeCam = b; }
@@ -143,9 +162,7 @@ namespace NCL {
             void ThirdPersonControls();
 
             void InitWorld();
-            //void ResetWorld();
-            void UpdatePlayer(float dt);
-
+ 
             GameObject* AddFloorToWorld(const Vector3& position, const Vector3& size, const Vector3& rotation);
             GameObject* AddSphereToWorld(const Vector3& position, float radius, float inverseMass = 10.0f);
             GameObject* AddCubeToWorld(const Vector3& position, Vector3 dimensions, float inverseMass = 10.0f,bool hasCollision = true);

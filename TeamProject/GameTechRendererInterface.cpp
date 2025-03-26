@@ -19,9 +19,15 @@ namespace NCL::CSC8503 {
 		auto frustum = Frustum::FromViewProjMatrix(viewProjMatrix);
 
 		frameObjects.clear();
+		lasers.clear();
 		lights = world->GetLights();
 		world->OperateOnContents([&](GameObject* obj) {
 			if (!obj->IsActive()) return;
+
+			if (obj->getType() == GameObject::Type::Laser) {
+				lasers.emplace_back((LaserObject*)obj);
+			}
+
 			auto render = obj->GetRenderObject();
 			if (!render) return;
 

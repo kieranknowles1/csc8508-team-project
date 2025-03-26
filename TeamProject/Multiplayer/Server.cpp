@@ -136,7 +136,6 @@ namespace Multiplayer {
 
                 // Pass packets on to clients.
                 if (m_isHost) {
-                    currentPacket->SetSequenceNumber(m_tickCount);
                     m_network->Broadcast(currentPacket);
                 }
             }
@@ -153,7 +152,7 @@ namespace Multiplayer {
 
                     // Pass packets on to clients.
                     if (m_isHost) {
-                        currentPacket->SetSequenceNumber(currentPacket->GetSequenceNumber() + TICK_BUFFER_SIZE);
+                        currentPacket->SetSequenceNumber(currentPacket->GetSequenceNumber());
                         m_network->Broadcast(currentPacket);
                     }
                 }
@@ -174,9 +173,7 @@ namespace Multiplayer {
                     }
                     m_tickCount = currentPacket->GetSequenceNumber();
                 }
-
             }
-
             currentPacket = m_network->Fetch();
         }
 
@@ -226,5 +223,4 @@ namespace Multiplayer {
         m_network->Broadcast(broadcast);
     }
 }
-
 
