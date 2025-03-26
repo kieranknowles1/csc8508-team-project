@@ -133,6 +133,12 @@ namespace Multiplayer {
             // High Priority packets.
             if (currentPacket->GetSequenceNumber() == 0) {
                 Packet::PacketRegister::GetHandler(currentPacket->GetType())->Handle(currentPacket);
+
+                // Pass packets on to clients.
+                if (m_isHost) {
+                    currentPacket->SetSequenceNumber(m_tickCount);
+                    m_network->Broadcast(currentPacket);
+                }
             }
 
             // Add packet to the buffer.
@@ -143,6 +149,12 @@ namespace Multiplayer {
 
                     if (currentPacket->GetSequenceNumber() < smallestIncoming) {
                         smallestIncoming = currentPacket->GetSequenceNumber();
+                    }
+
+                    // Pass packets on to clients.
+                    if (m_isHost) {
+                        currentPacket->SetSequenceNumber(m_tickCount);
+                        m_network->Broadcast(currentPacket);
                     }
                 }
 
@@ -162,11 +174,7 @@ namespace Multiplayer {
                     }
                     m_tickCount = currentPacket->GetSequenceNumber();
                 }
-            }
-            // Pass packets on to clients.
-            if (m_isHost) {
-                currentPacket->SetSequenceNumber(m_tickCount);
-                m_network->Broadcast(currentPacket);
+
             }
 
             currentPacket = m_network->Fetch();
