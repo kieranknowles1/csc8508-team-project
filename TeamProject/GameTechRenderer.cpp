@@ -770,13 +770,6 @@ void GameTechRenderer::RenderLasers() {
 
 	BindMesh(*highResSphere);
 	for (LaserObject* laser : lasers) {
-		// Manually remove lasers that no longer exist.
-		// Is there a better way?
-		if (laser->isDeleted()) {
-			UntrackLaser(laser);
-			continue;
-		}
-
 		// Draw laser.
 		if (!(laser->GetStartPos() == laser->GetEndPos())) {
 
