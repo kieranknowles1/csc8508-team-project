@@ -36,6 +36,7 @@ namespace Packet {
         LASER = CUSTOM_TYPE + 8,
         PING = CUSTOM_TYPE + 9,
         PONG = CUSTOM_TYPE + 10,
+        SCORE = CUSTOM_TYPE + 11
     };
 
 
@@ -267,6 +268,25 @@ namespace Packet {
         PongPacket() :
             Packet(static_cast<Type>(PacketType::PONG), static_cast<uint8_t>(Channel::RELIABLE), 0)
         {}
+    };
+    
+    
+    /**
+     * @brief Score packet for updating scores for players.
+     */
+    class ScorePacket : public Packet {
+    public:
+        ScorePacket(int objectID, float score, int sequenceNum) :
+            Packet(static_cast<Type>(PacketType::SCORE), static_cast<uint8_t>(Channel::UNSEQUENCED), sequenceNum),
+            m_objectID(objectID), m_score(score)
+        {}
+
+        int GetTargetID() { return m_objectID; }
+        float GetScore() { return m_score; }
+
+    private:
+        int m_objectID;
+        float m_score;
     };
 }
 

@@ -348,5 +348,4 @@ void PlayerObject::CorrectAnimation() {
     if (renderObject->GetAnimation() != animationObject->getAnimation(animationState)) {
         renderObject->SetAnimation(animationObject->getAnimation(animationState));
     }
-
 }

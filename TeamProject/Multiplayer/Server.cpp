@@ -131,7 +131,7 @@ namespace Multiplayer {
 
         while (currentPacket.get() != nullptr) {
             // High Priority packets.
-            if (currentPacket->GetChannel() != (uint8_t) Channel::FREQUENT ) {
+            if (currentPacket->GetSequenceNumber() == 0) {
                 Packet::PacketRegister::GetHandler(currentPacket->GetType())->Handle(currentPacket);
             }
 
