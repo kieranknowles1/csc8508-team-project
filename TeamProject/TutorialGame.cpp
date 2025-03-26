@@ -106,7 +106,7 @@ void TutorialGame::UpdateGame(float dt) {
     // Check for collisions
     CheckCollisions();
 
-    if (playerController) UpdatePlayer(dt);
+    if (playerController && !isPlayerUpdatePaused) UpdatePlayer(dt);
 
     profiler.startSection("Update Audio");
     audioEngine.Update(&world->GetMainCamera());
@@ -138,7 +138,7 @@ void TutorialGame::UpdateGame(float dt) {
     renderer->SetDelta(dt);
 }
 
-void TutorialGame::UpdatePlayer(float dt) {
+void TutorialGame::UpdatePlayer(float dt, bool camOnly) {
 
     // Press F for freeCam, press G for thirdPerson
     if (freeCam) {
@@ -146,9 +146,17 @@ void TutorialGame::UpdatePlayer(float dt) {
         world->GetMainCamera().UpdateCamera(dt, true);
     }
     else {
+ 
+      
         //player Movement
-        world->GetMainCamera().UpdateCamera(dt, false);
-        playerController->UpdateMovement(dt);
+        if (camOnly) {
+            playerController->UpdateCamOnly();
+        }
+        else {
+            world->GetMainCamera().UpdateCamera(dt, false);
+            playerController->UpdateMovement(dt);
+        }
+ 
         if (thirdPerson) {
             ThirdPersonControls();
         }

@@ -39,6 +39,7 @@ namespace NCL {
 			}
 			~PlayerController() {};
 			void UpdateMovement(float dt);
+			void UpdateCamOnly();
 			void SetThirdPerson(bool thirdPersonIn) {
 				thirdPerson = thirdPersonIn;
 			};

@@ -103,6 +103,8 @@ namespace NCL {
             TutorialGame(GameTechRendererInterface* renderer, Controller* controller, Config& config);
             ~TutorialGame();
 
+            void UpdatePlayer(float dt, bool camOnly = false);
+
             virtual void UpdateGame(float dt);
             void LoadWorldFromFile(int levelNum);
             void StartMultiplayerGame(bool isHost);
@@ -143,6 +145,10 @@ namespace NCL {
 
             void SetGameMode(GameMode gm) { gameMode = gm; }
 
+            bool isPlayerUpdatePaused = false;
+            bool IsPlayerUpdatePaused() const { return isPlayerUpdatePaused; }
+            void SetPlayerUpdatePaused(bool paused) { isPlayerUpdatePaused = paused; }
+
         protected:
             void InitialiseAssets();
 
@@ -152,7 +158,7 @@ namespace NCL {
 
             void InitWorld();
 
-            void UpdatePlayer(float dt);
+            
 
             GameObject* AddFloorToWorld(const Vector3& position, const Vector3& size, const Vector3& rotation);
             GameObject* AddSphereToWorld(const Vector3& position, float radius, float inverseMass = 10.0f);

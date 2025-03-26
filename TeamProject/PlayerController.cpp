@@ -73,6 +73,13 @@ void PlayerController::UpdateMovement(float dt) {
     HandleShooting(dt);
 }
 
+void PlayerController::UpdateCamOnly() {
+    camera->SetYaw(yaw);
+    btVector3 rot = GetEulerAngles(camRotOffset);
+    camera->setRotation(rot);
+    CameraMovement();
+}
+
 
 void PlayerController::HandleShooting(float dt) {
     if (controller->GetDigital(Controller::DigitalControl::Fire) && overheat->CanFire()) {
@@ -94,7 +101,7 @@ void PlayerController::HandleShooting(float dt) {
                 audioEngine.SetChannelPlaybackPosition(beamSoundChannel, startTimeMs);
             }
             else {
-                beamSoundChannel = audioEngine.PlaySounds("Beam.mp3", camera->GetPosition(), -12.0f);
+                beamSoundChannel = audioEngine.PlaySounds("Beam.mp3", camera->GetPosition(), 0.0f);
                 if (beamSoundChannel != -1) {
                     audioEngine.SetChannel3dPosition(beamSoundChannel, camera->GetPosition());
                     audioEngine.SetChannelPlaybackPosition(beamSoundChannel, startTimeMs);
