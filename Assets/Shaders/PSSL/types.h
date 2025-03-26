@@ -20,7 +20,7 @@ struct ObjectState {
 		float4 colour;
 		int texIndex = NULLTEX;
 		int normalIndex = NULLTEX;
-		int skinningIndex = NULLTEX;
+		int animJointsIndex = NULLTEX;
 		bool texRepeats;
 		float3 texScale;
 		int startIndex;

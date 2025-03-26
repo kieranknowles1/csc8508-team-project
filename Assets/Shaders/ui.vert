@@ -1,7 +1,7 @@
 #version 330 core
 
 layout (location = 0) in vec2 aPos;      // 2D position in normalized device coordinates (NDC)
-layout (location = 1) in vec2 aTexCoord; // Texture coordinates
+layout (location = 2) in vec2 aTexCoord; // Texture coordinates
 
 out vec2 texCoord; // Pass texture coordinates to fragment shader
 out vec4 Color;    // Pass color to fragment shader

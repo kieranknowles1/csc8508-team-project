@@ -24,7 +24,7 @@ namespace NCL::CSC8503 {
 	class AttackAttrib;
 	class ScoreAttrib;
 
-	const float PLAYER_HEALTH = 200.0f;
+	const float PLAYER_HEALTH = 100.0f;
 
 	// Player class derived from GameObject
 	class PlayerObject : public GameObject {
@@ -95,7 +95,6 @@ namespace NCL::CSC8503 {
 		btQuaternion getCamOffset() {
 			return camRotOffset;
 		}
-
 
 		void SetOwner(Lobbies::User user) override {
 			gun->SetOwner(user);
@@ -168,7 +167,7 @@ namespace NCL::CSC8503 {
 		float jumpPadHeight = 0.0f;
 		std::list<GameObject*> collidedObjects;
 		Type collisionType;
-		ObjectState state;
+		AliveState state;
 		float yawOverride = -1000.0f;
 
 		btQuaternion camRotOffset;

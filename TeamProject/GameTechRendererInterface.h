@@ -36,6 +36,24 @@ namespace NCL::CSC8503 {
 		Maths::Vector2 position;
 		std::string text;
 		Maths::Vector4 color;
+		float scale = 1.0f;
+	};
+
+	struct UIBox {
+		Maths::Vector2 position;
+		Maths::Vector2 size;
+	};
+
+	struct Button {
+		Maths::Vector2 position;
+		Maths::Vector2 size;
+		Maths::Vector4 color;
+	};
+
+	struct Text {
+		Maths::Vector2 position;
+		std::string text;
+		Maths::Vector4 color = Maths::Vector4(1, 1, 1, 1);
 	};
 
     class UiElement {
@@ -116,15 +134,7 @@ namespace NCL::CSC8503 {
 			delta = dt;
 		}
 
-		void TrackLaser(LaserObject* laser) {
-			lasers.insert(laser);
-		}
-
-		void UntrackLaser(LaserObject* laser) {
-			lasers.erase(laser);
-		}
-
-        /*
+		/*
 		int GetCurrentFrame() const {
 			return currentFrame;
 		}
@@ -162,7 +172,7 @@ namespace NCL::CSC8503 {
 		std::vector<UiText> frameTexts;
 		std::vector<PointLight*> lights;
 
-		std::set<LaserObject*, LaserComparator> lasers;
+		std::vector<LaserObject*> lasers;
 		DecalSystem decalSystem;
 
 		//Mesh Animation additions:

@@ -21,6 +21,8 @@ set(SOURCES
     
     EndScreenMP.cpp
     EndScreenMP.h
+    EndScreenSP.cpp
+    EndScreenSP.h
 
     GameScreen.h
     GameTechRendererInterface.cpp

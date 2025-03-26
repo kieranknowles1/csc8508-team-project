@@ -77,15 +77,45 @@ void PlayerController::UpdateMovement(float dt) {
 	ToggleScoreboard();
 }
 
+void PlayerController::UpdateCamOnly() {
+    camera->SetYaw(yaw);
+    btVector3 rot = GetEulerAngles(camRotOffset);
+    camera->setRotation(rot);
+    CameraMovement();
+}
+
 
 void PlayerController::HandleShooting(float dt) {
-
     if (controller->GetDigital(Controller::DigitalControl::Fire) && overheat->CanFire()) {
         FireShot(dt);
         if (!firing) {
             crosshair->fire();
             overheat->fire();
             firing = true;
+
+            //Get the playback position of the sound to be played
+            float overheatPercentage = overheat->GetOverheatPercentage();
+            float beamSoundLength = 7.1f; //7 seconds
+            unsigned int startTimeMs = static_cast<unsigned int>(overheatPercentage * beamSoundLength * 1000); //Convert to milliseconds
+            //beamSoundChannel = audioEngine.PlaySounds("Beam.mp3", camera->GetPosition(), 0.0f);
+
+            //If the sound was paused, resume it instead of restarting
+            if (beamSoundPaused && beamSoundChannel != -1) {
+                audioEngine.SetChannel3dPosition(beamSoundChannel, camera->GetPosition());
+                audioEngine.SetChannelPlaybackPosition(beamSoundChannel, startTimeMs);
+            }
+            else {
+                beamSoundChannel = audioEngine.PlaySounds("Beam.mp3", camera->GetPosition(), 0.0f);
+                if (beamSoundChannel != -1) {
+                    audioEngine.SetChannel3dPosition(beamSoundChannel, camera->GetPosition());
+                    audioEngine.SetChannelPlaybackPosition(beamSoundChannel, startTimeMs);
+                }
+            }
+        }
+        else {
+            if (beamSoundChannel != -1) {
+                audioEngine.SetChannel3dPosition(beamSoundChannel, camera->GetPosition());
+            }
         }
     }
     else {
@@ -93,6 +123,12 @@ void PlayerController::HandleShooting(float dt) {
             player->updateLaser(btVector3(0,0,0), btVector3(0,0,0));
             crosshair->stopFiring();
             overheat->stopFiring();
+            
+            if (beamSoundChannel != -1) {
+                audioEngine.SetChannelVolume(beamSoundChannel, -100.0f);
+                beamSoundChannel = -1;
+            }
+
             firing = false;
             player->GetAttackAttrib()->Hit(nullptr);
         }
@@ -109,8 +145,18 @@ void PlayerController::FireShot(float dt) {
     btMatrix3x3 rotationMatrix(bulletRotation);
     btVector3 forwardDir = rotationMatrix * btVector3(0, 0, -1);
     btVector3 adjustedOffset = rotationMatrix * gunCameraOffset; // Apply rotation to the offset
+    
+    // Calculate forward direction based on where crosshair lands.
+    std::optional<ShotInfo> crosshairRay = Shoot::GetInstance()->RayClosest(
+        camera->GetPosition(), forwardDir
+    );
+    if (crosshairRay == std::nullopt) return;
 
-    std::optional<ShotInfo> info = Shoot::GetInstance()->ShootBulletPlayer(player->getGun()->GetPhysicsObject()->GetRigidBody()->getWorldTransform().getOrigin() + adjustedOffset, forwardDir, bulletRotation, dt, player->GetWorldID());
+    btVector3 crosshairLookPoint = crosshairRay->hitPos;
+    btVector3 startPos = player->getGun()->GetPhysicsObject()->GetRigidBody()->getWorldTransform().getOrigin() + adjustedOffset;
+    btVector3 gunForwardDir = (crosshairLookPoint - startPos).normalized();
+
+    std::optional<ShotInfo> info = Shoot::GetInstance()->ShootBulletPlayer(startPos, gunForwardDir, bulletRotation, dt, player->GetWorldID());
     if (info != std::nullopt) {
         player->GetLaser()->SetCollisionNormal(info.value().hitNormal);
         player->updateLaser(player->getGun()->GetPhysicsObject()->GetRigidBody()->getWorldTransform().getOrigin() + adjustedOffset, info.value().hitPos);
@@ -215,6 +261,8 @@ void PlayerController::SpecialTypeCalculations() {
         rb->setLinearVelocity(btVector3(0, 0, 0));
         inAirTime = 0.2f;
         rb->applyCentralImpulse(movement);
+        int channelId = audioEngine.PlaySounds("JumpPad.wav", player->getCollisionPoint(), 0.0f);
+        jumppadChannels.push_back(channelId);
         break;
     } case GameObject::Type::Slime: {
         onIce = false;
@@ -339,7 +387,7 @@ void PlayerController::MovementCalculations(float dt) {
 
 void PlayerController::HandleJumping() {
     if (controller->GetDigital(Controller::DigitalControl::Jump) && player->getCollided() && inAirTime <= 0) {
-        audioEngine.PlaySounds("jump.wav", camera->GetPosition(), 0.0f);
+        audioEngine.PlaySounds("jump.wav", camera->GetPosition(), -16.0f);
         btVector3 normal = FindFloorNormal();
         float dotProduct = normal.dot(upDirection.absolute());
         if (fabs(dotProduct <= 1)) {
@@ -365,6 +413,23 @@ void PlayerController::HandleHurtEffects() {
     HealthAttrib* health = player->GetHealthAttrib();
     float healthLossPercent = (health->GetMaxHealth() - health->GetCurrentHealth()) / health->GetMaxHealth();
     renderer->SetVignetteIntesnity((healthLossPercent));
+
+    if (health->GetCurrentHealth() <= health->GetMaxHealth() * 0.5f){
+        if (heartbeatChannel == -1 || !audioEngine.IsPlaying(heartbeatChannel)) {
+            heartbeatChannel = audioEngine.PlaySounds("HeartbeatLoop.wav", camera->GetPosition(), 12.0f);
+        }
+
+        float lowHealthRatio = 1.0f - (health->GetCurrentHealth() / (health->GetMaxHealth() * 0.5f));
+        float pitch = 1.0f + (lowHealthRatio * 1.0f); 
+
+        audioEngine.SetChannelPitch(heartbeatChannel, pitch); 
+    }
+    else {
+        if (heartbeatChannel != -1) {
+            audioEngine.StopChannel(heartbeatChannel);
+            heartbeatChannel = -1;
+        }
+    }
 }
 
 void PlayerController::GetAllDirections() {

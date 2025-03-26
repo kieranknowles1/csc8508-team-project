@@ -21,13 +21,13 @@ namespace Packet {
         if (object == nullptr) return;
         if (object->GetOwner() == nullptr) return;
         if (TutorialGame::getInstance()->GetServerInstance()->IsOwnerOf(object)) return;
-
         auto [writeState, lock] = object->GetWorldStates()->GetWriteState();
 
         std::unique_lock stateLock = writeState->Lock();
         writeState->UpdateState(StateType::LinearVelocity, deltaPacket->GetLinearVelocity());
         writeState->UpdateState(StateType::AngularVelocity, deltaPacket->GetAngularVelocity());
     }
+
     
     std::shared_ptr<Packet> DeltaPacketHandler::Translate(const ENetEvent* event) const {
         ENetPacket* packet = event->packet;
@@ -347,7 +347,6 @@ namespace Packet {
             + sizeof(uint32_t)
             + sizeof(int)
             + sizeof(btVector3)
-            + sizeof(btQuaternion)
         ];
 
         ObjectChangeGravityPacket gravityPacket = (*static_cast<ObjectChangeGravityPacket*>(packet.get()));
@@ -382,6 +381,83 @@ namespace Packet {
         return enetPacket;
     }
 #pragma endregion ObjectChangeGravityPacketHandler
+
+#pragma region PlayerAnimationPacketHandler
+    void PlayerAnimationPacketHandler::Handle(const std::shared_ptr<Packet> packet) {
+        const PlayerAnimationPacket* animationPacket = std::static_pointer_cast<PlayerAnimationPacket>(packet).get();
+        PlayerObject* object = (PlayerObject*)GameObject::GetGameObjectByID(animationPacket->GetTargetID());
+
+        if (object == nullptr) return;
+        if (TutorialGame::getInstance()->GetServerInstance()->IsOwnerOf(object)) return;
+
+        auto [writeState, lock] = object->GetWorldStates()->GetWriteState();
+
+        std::unique_lock stateLock = writeState->Lock();
+        writeState->UpdateState(StateType::Animation, animationPacket->GetAnimation());
+    }
+
+    std::shared_ptr<Packet> PlayerAnimationPacketHandler::Translate(const ENetEvent* event) const {
+        ENetPacket* packet = event->packet;
+        Type type;
+        uint8_t channel;
+        uint32_t sequenceNumber;
+
+        int objectID;
+        int animation;
+        size_t offset = sizeof(Type) + sizeof(uint8_t) + sizeof(uint32_t);
+
+        GetBaseData(packet, &type, &channel, &sequenceNumber);
+
+        memcpy(&objectID, packet->data + offset, sizeof(int));
+        offset += sizeof(int);
+
+        memcpy(&animation, packet->data + offset, sizeof(int));
+        offset += sizeof(int);
+
+        return std::make_shared<PlayerAnimationPacket>(objectID, animation, sequenceNumber);
+    }
+
+    ENetPacket* PlayerAnimationPacketHandler::ToENetPacket(const std::shared_ptr<Packet> packet) const {
+        char* buffer = new char[
+            sizeof(Type)
+                + sizeof(uint8_t)
+                + sizeof(uint32_t)
+                + sizeof(int)
+                + sizeof(int)
+        ];
+
+        PlayerAnimationPacket animationPacket = (*static_cast<PlayerAnimationPacket*>(packet.get()));
+        size_t offset = 0;
+
+        Type type = animationPacket.GetType();
+        memcpy(buffer, &type, sizeof(Type));
+        offset = offset + sizeof(Type);
+
+        uint8_t channel = animationPacket.GetChannel();
+        memcpy(buffer + offset, &channel, sizeof(uint8_t));
+        offset = offset + sizeof(uint8_t);
+
+        uint32_t sequenceNumber = animationPacket.GetSequenceNumber();
+        memcpy(buffer + offset, &sequenceNumber, sizeof(uint32_t));
+        offset = offset + sizeof(uint32_t);
+
+        int objectID = animationPacket.GetTargetID();
+        memcpy(buffer + offset, &objectID, sizeof(int));
+        offset = offset + sizeof(int);
+
+        int animation = animationPacket.GetAnimation();
+        memcpy(buffer + offset, &animation, sizeof(int));
+        offset = offset + sizeof(int);
+
+        int packetFlags = 0;
+        if (channel == static_cast<int>(Channel::RELIABLE)) packetFlags = ENET_PACKET_FLAG_RELIABLE;
+        else if (channel == static_cast<int>(Channel::UNSEQUENCED)) packetFlags = ENET_PACKET_FLAG_UNSEQUENCED;
+
+        ENetPacket* enetPacket = enet_packet_create(buffer, offset, packetFlags);
+        delete[] buffer;
+        return enetPacket;
+    }
+#pragma endregion PlayerAnimationPacketHandler
 
 
 #pragma region StartGamePacketHandler
@@ -603,7 +679,7 @@ namespace Packet {
         Type type;
         uint8_t channel;
         uint32_t sequenceNumber;
-        
+
         size_t offset = sizeof(Type) + sizeof(uint8_t) + sizeof(uint32_t);
         GetBaseData(packet, &type, &channel, &sequenceNumber);
 
@@ -654,7 +730,7 @@ namespace Packet {
         Type type;
         uint8_t channel;
         uint32_t sequenceNumber;
-        
+
         size_t offset = sizeof(Type) + sizeof(uint8_t) + sizeof(uint32_t);
         GetBaseData(packet, &type, &channel, &sequenceNumber);
 

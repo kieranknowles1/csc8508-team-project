@@ -66,6 +66,7 @@ source_group("Physics" FILES ${Physics})
 
 set(Header_Files
 	"Debug.h"
+    "AliveState.h"
 	"GameObject.h"
 	"GameWorld.h"
     "MeshMaterial.h"

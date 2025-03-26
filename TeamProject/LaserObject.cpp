@@ -1,7 +1,6 @@
 #include "LaserObject.h"
 #include "WorldState.h"
 #include "Multiplayer/GamePackets.hpp"
-#include "GameTechRenderer.h"
 #include "Shoot.h"
 
 
@@ -19,7 +18,7 @@ void LaserObject::Update(float dt) {
 
 void LaserObject::UpdateWorldState() {
     auto [writeState, lock] = GetWorldStates()->GetWriteState();
-    
+
     std::unique_lock stateLock = writeState->Lock();
     writeState->UpdateState(StateType::StartPos, startPos);
     writeState->UpdateState(StateType::EndPos, endPos);
@@ -37,10 +36,10 @@ void LaserObject::UpdateFromWorldState(float tickProgress) {
 
     StateValue currentEndPosValue;
     StateValue targetEndPosValue;
-    
+
     StateValue currentCollisionNormalValue;
     StateValue targetCollisionNormalValue;
-    
+
     // Reading.
     std::shared_lock currentStateLock = current->Lock_Shared();
     std::shared_lock readStateLock = read->Lock_Shared();
@@ -69,7 +68,7 @@ void LaserObject::UpdateFromWorldState(float tickProgress) {
             lerp(currentStartPos.z(), targetStartPos.z(), tickProgress)
         );
         startPos = interpolated;
-    } 
+    }
 
     // End Position.
     if (hasCurrentEndPos && hasCurrentEndPos) {
@@ -82,7 +81,7 @@ void LaserObject::UpdateFromWorldState(float tickProgress) {
         );
         endPos = interpolated;
 
-    } 
+    }
 
     // Collision Normal (does not want interpolation.
     if (hasTargetCollisionNormal) {
@@ -100,14 +99,14 @@ std::vector<std::shared_ptr<Packet::Packet>> LaserObject::CreatePackets(int sequ
     StateValue collisionNormalValue;
 
     std::shared_lock readStateLock = read->Lock_Shared();
-    
+
     bool hasStartPos = read->ReadState(StateType::StartPos, &startPosValue);
     bool hasEndPos = read->ReadState(StateType::EndPos, &endPosValue);
     bool hasCollisionNormal = read->ReadState(StateType::Normal, &collisionNormalValue);
 
     readStateLock.unlock();
     readLock.unlock();
-    
+
     if (hasStartPos && hasEndPos && hasCollisionNormal) {
         packets.push_back(std::move(std::make_shared<Packet::LaserPacket>(
             GetWorldID(),
