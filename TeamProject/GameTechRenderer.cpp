@@ -480,7 +480,7 @@ void GameTechRenderer::RenderCamera() {
 
             glUniform1i(hasTexLocation, hasTex);
             glUniform1i(hasGlossLocation, hasGloss);
-            glUniform1d(hasSpecularLocation, hasSpecular);
+            glUniform1i(hasSpecularLocation, hasSpecular);
             //glUniform1i(hasFlatLocation, i->GetIsFlat());
             glUniform1i(hasNormalLocation, hasNormal);
 
