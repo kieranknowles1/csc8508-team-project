@@ -83,6 +83,7 @@ set(Source_Files
 	"GameWorld.cpp"
 	"RenderObject.cpp"
     "MeshMaterial.cpp"
+    "ServerObject.cpp"
     "StateUpdater.cpp"
 )
 source_group("Source Files" FILES ${Source_Files})
