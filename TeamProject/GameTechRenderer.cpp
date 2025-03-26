@@ -1066,7 +1066,7 @@ void GameTechRenderer::RenderPostProcessing() { //gonna try putting edge detecti
 	    glUniform1i(glGetUniformLocation(vignetteShader->GetProgramID(), "vignetteOn"), GetVignetteOn());
 		glUniform1f(glGetUniformLocation(vignetteShader->GetProgramID(), "vignetteIntensity"), vignetteIntensity);
 		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, lightSpecularTex); //was laserAddedTex for testing use lightSpecularTex
+		glBindTexture(GL_TEXTURE_2D, bufferNormalTex); //was laserAddedTex for testing use lightSpecularTex //bufferNormalTex 
 		glUniform1i(glGetUniformLocation(vignetteShader->GetProgramID(), "diffuseTex"), 0);
 		glUniform2f(glGetUniformLocation(vignetteShader->GetProgramID(), "windowSize"), windowSize.x, windowSize.y);
 		glUniform3fv(glGetUniformLocation(vignetteShader->GetProgramID(), "effectColour"), 1, (float*)&vignetteColour);
@@ -1355,40 +1355,41 @@ void GameTechRenderer::RenderAnimations() {
 }
 
 void GameTechRenderer::ApplyBlur() { //will need a single FBO with multiple (floating point) colour attachments. May not be able to use buffer FBO since other post processes need its textures
-	glBindFramebuffer(GL_FRAMEBUFFER, bufferFBO); //For Now trying with pointLightFBO
-	//glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, lightSpecularTex, 0); //Although the FBO has two attachments, only going to use one here. Attaching lightDiffuseTex to colour slot 0
+	glBindFramebuffer(GL_FRAMEBUFFER, hdrFBO); //For Now trying with pointLightFBO, was bufferFBO //below used lightSpecularTex previously
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, bufferNormalTex, 0); //Although the FBO has two attachments, only going to use one here. Attaching lightDiffuseTex to colour slot 0
 	glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT); //Actually not sure if we should be doing the above line since the textures are already attached
 	//glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, lightSpecularTex, 0);
-	GLenum buffers[2] = {
+	/*GLenum buffers[2] = { 
     GL_COLOR_ATTACHMENT0,
     GL_COLOR_ATTACHMENT1
 	};
-	glDrawBuffers(1, buffers); //set bufferFBO back to only drawing to colour attachment 0 
+	glDrawBuffers(1, buffers); //set bufferFBO back to only drawing to colour attachment 0 */ //PROBABLY DON'T DO THIS BIT. Actually don't need multiple attachments so...
+	//even if FBO has multiple colour targets, if only one target is written to in shader this should be attachment 0 by default
 	//The above line probably clears lightSpecularTex which is not what we want
-	UseShader(*blurShader);
+	UseShader(*blurShader); //blurShader 
 	//don't think we need to do much with the matrices here as fullscreen quad is already in NDC 
 
 	glDisable(GL_DEPTH_TEST);
 	glActiveTexture(GL_TEXTURE0);
-	glUniform1i(glGetUniformLocation(blurShader->GetProgramID(), "diffuseTex"), 0);
+	glUniform1i(glGetUniformLocation(blurShader->GetProgramID(), "diffuseTex"), 0); 
 
-	for (int i = 0; i < 10; ++i) { //just hardcoding the number here instead of POST_PASSES. Higher number = stronger blur
-		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, bufferNormalTex, 0); //was lightSpecularTex
-		glUniform1i(glGetUniformLocation(blurShader->GetProgramID(), "isVertical"), 0);
+	//for (int i = 0; i < 10; ++i) { //just hardcoding the number here instead of POST_PASSES. Higher number = stronger blur
+	      glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, bufferNormalTex, 0); //was lightSpecularTex In theory shouldn't matter which texures we attach
+		//glUniform1i(glGetUniformLocation(blurShader->GetProgramID(), "isVertical"), 0);
 
-		glBindTexture(GL_TEXTURE_2D, lightSpecularTex); //was bufferNormalTex Tick
-		BindMesh(*fullscreenQuad);
-		DrawBoundMesh();
-
+	      glBindTexture(GL_TEXTURE_2D, lightSpecularTex); //was bufferNormalTex Tick was lightSpecularTex
+	      BindMesh(*fullscreenQuad);
+	      DrawBoundMesh();
+		/*
 		//Then swap the colour buffers and process again:
 		glUniform1i(glGetUniformLocation(blurShader->GetProgramID(), "isVertical"), 1);
 		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, lightSpecularTex, 0); //was bufferNormalTex
 		glBindTexture(GL_TEXTURE_2D, bufferNormalTex); //was lightSpecularTex
 		BindMesh(*fullscreenQuad);
-		DrawBoundMesh();
-	}
+		DrawBoundMesh();*/
+	//}
 	glBindFramebuffer(GL_FRAMEBUFFER, 0); //perhaps this might need to be another specific FBO
-	glEnable(GL_DEPTH_TEST);
+	//glEnable(GL_DEPTH_TEST); //Probably don't need to enable this at this stage
 } //could probably use pointLightFBO with lightDiffuseTex and lightSpecularTex. Slight possibility may need to swap the textures as assigned above around
   //may not work with pointLightFBO however as it has glDrawArray 2 so expects to draw to 2 targets. Might be able to redeclare to 1 here though since we are now done with its MRT capabilities
   //Since we are doing bloom after lasers, can probably use bufferFBO
@@ -1397,3 +1398,11 @@ void GameTechRenderer::ApplyBlur() { //will need a single FBO with multiple (flo
 //Will try using the empty bufferFBO but attaching the specularLightTex to bufferFBOs colour attachment 0. Assuming that this overrides the previous attachment.
 // Eh, probably not that important which tex we use after blurring. Should only be one blur pass different
 //currently seems there is a problem with the blurring. Getting a bit messy with the framebuffers and textures but for now problem is likely in apply blur
+//currently seems for whatever reason lightSpecularTex when output is just completely black
+
+//when trying to output just specularLightTex i.e. the input where only bright areas are rendered, something like it appears when trying to just output it defaulting to colour attachment
+//0 of bufferFBO but not exactly the same for some reason
+
+//problem with apply blur. Problem seems most likely to be with the way things are being sent to the shader, not the shader itself as it is not really outputting the right texture
+//straight out unprocessed. lightSpecularTex should hold the bright parts only texture before calling applyblur however just trying to output the texture does not show this
+//Try remaking the whole function taking care to send the right information to blurShader properly
