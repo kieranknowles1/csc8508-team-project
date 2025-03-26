@@ -188,37 +188,6 @@ void Wanderer::PlayerNear(float dt) {
 
 	if (isShooting) {
 
-		/*NEW SHOOTING
-		* Handle lasers for adding AI in GameTechRenderer
-		* Handle color in GameTechRenderer RenderLasers()
-		void PlayerController::HandleShooting(float dt) {
-
-	if (controller->GetDigital(Controller::DigitalControl::Fire) && overheat->CanFire()) {
-		   std::optional<ShotInfo> info = Shoot::GetInstance()->ShootBulletPlayer(camera->GetPosition(), forwardDir, bulletRotation,dt);
-	renderer->updateLaser(laserID, camera->GetPosition() + adjustedOffset, info.value().hitPos);
-		if (!firing) {
-			firing = true;
-		}
-	}
-	else {
-		if (firing) {
-			renderer->updateLaser(laserID,btVector3(0,0,0),btVector3(0,0,0));
-			}
-			firing = false;
-		}
-	}
-}
-
-
-		btVector3 curPos = GetTransform().getOrigin();
-		btVector3 pPos = player->GetTransform().getOrigin();
-		btVector3 dir = (pPos - curPos) == 0 ? btVector3(0, 0, 0) : (pPos - curPos).normalized();
-
-		Shoot::GetInstance()->ShootBulletAI(curPos, dir, GetTransform().getRotation(),dt);
-
-		shootTimer -= dt;
-		if (shootTimer <= 0) isShooting = false;*/
-
 		btTransform trans = GetTransform();
 		btVector3 curPos = trans.getOrigin();
 		btVector3 pPos = player->GetTransform().getOrigin();
@@ -247,12 +216,14 @@ void Wanderer::PlayerNear(float dt) {
         btVector3 curPos = trans.getOrigin();
         btVector3 pPos = player->GetTransform().getOrigin();
 
-        btVector3 dir = (pPos - curPos) == 0 ? btVector3(0, 0, 0) : (pPos - curPos).normalized(); // Get the direction towards the player
+		if (curPos.distance(pPos) > 50) {
+			btVector3 dir = (pPos - curPos) == 0 ? btVector3(0, 0, 0) : (pPos - curPos).normalized(); // Get the direction towards the player
 
-        btVector3 newPos = curPos + (dir * (speed * dt)); // Move towards player
+			btVector3 newPos = curPos + (dir * (speed * dt)); // Move towards player
 
-        trans.setOrigin(newPos);
-        physicsObject->GetRigidBody()->setWorldTransform(trans);
+			trans.setOrigin(newPos);
+			physicsObject->GetRigidBody()->setWorldTransform(trans);
+		}
 
         laser->SetEndPos({ 0, 0, 0 });
         laser->SetStartPos({ 0, 0, 0 });
@@ -261,36 +232,6 @@ void Wanderer::PlayerNear(float dt) {
         shootTimer += dt;
         if (shootTimer >= maxShootTimer) isShooting = true;
 
-        /*btTransform trans = GetTransform();
-        btVector3 curPos = trans.getOrigin();
-        btVector3 pPos = player->GetTransform().getOrigin();
-        if (curPos.distance(pPos) < 30) return;
-        pPos.setY(navMesh->GetYFromPoint(pPos.getX(), pPos.getZ()));
-        btVector3 dir = (pPos - curPos) == 0 ? btVector3(0, 0, 0) : (pPos - curPos).normalized();
-        btVector3 newPos = curPos + dir * (speed * dt);
-        newPos.setY(newPos.getY() - GroundAdjust(newPos));
-        newPos = newPos + offset;
-        trans.setOrigin(newPos);
-        btRigidBody* body = physicsObject->GetRigidBody();
-        body->setWorldTransform(trans);
-
-        if (updateplayerPathTimer > 0) {
-            if (FollowPath(dt)) {
-                btVector3 newPos = yAdjustedPoint + offset;
-                btTransform trans = GetTransform();
-                trans.setOrigin(newPos);
-                btRigidBody* body = physicsObject->GetRigidBody();
-                body->setWorldTransform(trans);
-                navMesh->DebugDrawPath(curPath);
-            }
-        }
-        else {
-            btVector3 pPos = player->GetTransform().getOrigin();
-            pPos.setY(navMesh->GetYFromPoint(pPos.getX(), pPos.getZ()));
-            curPath = navMesh->FindPath(curPathPoint, pPos);
-            NewPath(curPath);
-            updateplayerPathTimer = maxUpdatePlayerPathTimer;
-        }*/
     }
 }
 
