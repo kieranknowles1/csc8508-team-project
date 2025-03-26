@@ -210,7 +210,6 @@ namespace NCL::CSC8503 {
         PointLight* light = nullptr;
         Lobbies::User* owner = nullptr;
 
-        std::unique_ptr<WorldState::StateBuffer> states;
         std::shared_mutex tickMutex;
         int currentTick = 0;
         int lastTick = 0;

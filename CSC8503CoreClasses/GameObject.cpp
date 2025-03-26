@@ -17,8 +17,6 @@ GameObject::GameObject(const std::string& objectName)	{
 	physicsObject	= nullptr;
 	renderObject	= nullptr;
 	networkObject	= nullptr;
-
-    states = std::make_unique<StateBuffer>();
 }
 
 GameObject::~GameObject()	{
