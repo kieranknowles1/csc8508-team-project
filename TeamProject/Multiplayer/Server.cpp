@@ -153,7 +153,7 @@ namespace Multiplayer {
 
                     // Pass packets on to clients.
                     if (m_isHost) {
-                        currentPacket->SetSequenceNumber(currentPacket->GetSequenceNumber() + TICK_BUFFER_SIZE);
+                        currentPacket->SetSequenceNumber(currentPacket->GetSequenceNumber());
                         m_network->Broadcast(currentPacket);
                     }
                 }
