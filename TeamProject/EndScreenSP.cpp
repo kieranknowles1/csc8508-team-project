@@ -18,7 +18,8 @@ void EndScreenSPUI::render(std::vector<UiSprite>& sprites)
 void EndScreenSPUI::render(std::vector<UiText>& texts)
 {
 
-	texts.push_back({ Vector2(0.165f, 0.1f), "Game Over", Vector4(1, 0, 0, 1), 2.0f });
+	texts.push_back({ Vector2(0.118f, 0.15f), "Game Over", Vector4(1, 0, 0, 1), 2.5f });
+	texts.push_back({ Vector2(0.43f, 0.5f), "Score: " + std::to_string(200), Vector4(1,1,1,1)});
 
 	for (auto& text : buttonTexts)
 	{
