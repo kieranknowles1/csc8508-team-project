@@ -160,7 +160,7 @@ namespace Multiplayer {
                     std::cout << ConsoleTextColor::DEFAULT;
 #endif
                     for (diff; diff > 0; diff--) {
-                        m_buffer[m_processTick % TICK_BUFFER_SIZE].clear();
+                        if (m_processTick >= 0) m_buffer[m_processTick % TICK_BUFFER_SIZE].clear();
                         m_processTick++;
                     }
                     m_tickCount = currentPacket->GetSequenceNumber();
