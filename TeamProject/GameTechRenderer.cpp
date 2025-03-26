@@ -742,8 +742,9 @@ void GameTechRenderer::RenderUI() {
 		Vector2 pos = uiElement.position;
 		std::string text = uiElement.text;
 		Vector4 color = uiElement.color;
+		float scale = uiElement.scale;
 
-		Debug::Print(text, pos, color);
+		Debug::Print(text, pos, color, scale);
 	}
 
 	glDisable(GL_BLEND);
