@@ -12,18 +12,13 @@
 #include "../TeamProject/Multiplayer/User.hpp"
 #include "WorldState.h"
 #include "StateUpdater.h"
+#include "AliveState.h"
 
 namespace Packet {
     class Packet;
 }
 
 namespace NCL::CSC8503 {
-
-    enum class ObjectState {
-        DEAD,
-        ALIVE
-    };
-
     class NetworkObject;
     class RenderObject;
     class PhysicsObject;
@@ -187,8 +182,8 @@ namespace NCL::CSC8503 {
         void setDeleted() { deleted = true; }
         bool isDeleted() const { return deleted; }
 
-        void SetState(ObjectState newState) { state = newState; }
-        ObjectState GetState() const { return state; }
+        void SetState(AliveState newState) { state = newState; }
+        AliveState GetState() const { return state; }
 		bool GetIsAnimated() { return animated; }
 		void SetIsAnimated(bool a) { animated = a; }
 
@@ -219,11 +214,11 @@ namespace NCL::CSC8503 {
         std::shared_mutex tickMutex;
         int currentTick = 0;
         int lastTick = 0;
-	    
+
         float elapsedTime = 0;
 
 		float jumpPadStrength = 0.0f;
 
-        ObjectState state;
+        AliveState state;
 	};
 }

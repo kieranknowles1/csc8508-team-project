@@ -113,7 +113,7 @@ void Wanderer::Update(float dt) {
 	health->Update(dt);
 	attack->Update(dt);
 
-	if (health->GetHealthState() == HealthState::DEAD) {
+	if (health->GetHealthState() == AliveState::DEAD) {
 		DestroyWanderer();
 		return;
 	}
