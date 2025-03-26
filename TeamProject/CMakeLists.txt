@@ -35,6 +35,7 @@ set(SOURCES
     LevelImporter.h
     LobbyScreen.h
 
+    MainMenuScreen.cpp
     MainMenuScreen.h
     Material.cpp
     Material.h

@@ -17,6 +17,30 @@
 
 namespace NCL::CSC8503 {
 
+    class MainMenuUI : public UiElement {
+        
+    public:
+        MainMenuUI();
+
+        void render(std::vector<UiSprite>& sprites) override;
+
+        void render(std::vector<UiText>& texts) override;
+
+        void Animate(float dt) override {};
+
+        void InitMenu();
+
+        void UpdateMenu(unsigned int);
+
+    private:
+
+        UIBox background;
+        std::vector<Button> buttons;
+        std::vector<Text> buttonTexts;
+        Vector4 activeButton = Vector4(0.3, 0.3, 0.3, 0.5);
+        Vector4 inactiveButton = Vector4(0, 0, 0, 1);
+    };
+    
     class MainMenuScreen : public PushdownState {
         size_t selection = 0;
         TutorialGame* game;
