@@ -618,7 +618,7 @@ void GameTechAGCRenderer::RenderDebugText() {
 void GameTechAGCRenderer::UpdateObjectList() {
 	currentFrame->objects.begin(currentFrame);
 	for (auto g : frameObjects) {
-		ObjectState state;
+		::ObjectState state;
 		Matrix4 transMatrix;
 		g->getParent()->GetTransform().getOpenGLMatrix((float*)&transMatrix);
 		state.modelMatrix = transMatrix * Matrix::Scale(g->getParent()->getRenderScale());
@@ -626,7 +626,6 @@ void GameTechAGCRenderer::UpdateObjectList() {
 		Matrix3 transMat3 = Matrix::FromMat4(state.modelMatrix);
 		state.normalMatrix = Matrix::FromMat3(Matrix::InverseTranspose(transMat3));
 
-		state.colour = g->GetColour();
 		state.texRepeats = g->GetTexRepeating();
 		state.texScale = g->getParent()->getRenderScale() * g->GetTexScaleMultiplier();
 		state.animJointsIndex = NULLTEX;
@@ -668,6 +667,7 @@ void GameTechAGCRenderer::UpdateObjectList() {
 		for (int i = 0; i < g->GetMesh()->GetSubMeshCount(); i++) {
 			auto subMesh = g->GetMesh()->GetSubMesh(i);
 			auto layer = g->getMaterial() ? g->getMaterial()->GetLayer(i) : nullptr;
+			state.colour = (layer && layer->useColor) ? g->GetColour() : Vector4(1, 1, 1, 1);
 
 			auto t = layer ? layer->diffuse : nullptr;
 			state.texIndex = t ? t->GetAssetID() : NULLTEX;
@@ -683,7 +683,7 @@ void GameTechAGCRenderer::UpdateObjectList() {
 			state.numElements = subMesh->count;
 			// This behaviour is inverted from OpenGL for compatibility with HLSL UVs
 			state.invertY = !(layer && layer->invertY);
-			currentFrame->data.WriteData<ObjectState>(state);
+			currentFrame->data.WriteData(state);
 		}
 
 	}
@@ -714,10 +714,10 @@ void GameTechAGCRenderer::UpdateObjectList() {
 	currentFrame->lasers.begin(currentFrame);
 	for (auto& laser : lasers) {
 		LaserState state;
-		state.start = laser->startPos;
-		state.end = laser->endPos;
+		state.start = laser->GetStartPos();
+		state.end = laser->GetEndPos();
 		state.thickness = 0.25f;
-		state.colour = Color::GetPlayerColor(laser->id);
+		state.colour = laser->GetColor();
 		currentFrame->data.WriteData(state);
 	}
 	currentFrame->lasers.end(currentFrame);

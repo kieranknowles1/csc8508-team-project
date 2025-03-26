@@ -66,10 +66,13 @@ source_group("Physics" FILES ${Physics})
 
 set(Header_Files
 	"Debug.h"
+    "AliveState.h"
 	"GameObject.h"
 	"GameWorld.h"
-	"RenderObject.h"
     "MeshMaterial.h"
+	"RenderObject.h"
+    "StateUpdater.h"
+    "WorldState.h"
 )
 source_group("Header Files" FILES ${Header_Files})
 
@@ -79,6 +82,7 @@ set(Source_Files
 	"GameWorld.cpp"
 	"RenderObject.cpp"
     "MeshMaterial.cpp"
+    "StateUpdater.cpp"
 )
 source_group("Source Files" FILES ${Source_Files})
 
@@ -127,6 +131,7 @@ add_library(${PROJECT_NAME} STATIC ${ALL_FILES})
 target_link_libraries(${PROJECT_NAME} PUBLIC ${BULLET_LIBRARIES})
 target_include_directories(${PROJECT_NAME} PUBLIC ${BULLET_INCLUDE_DIRS})
 target_link_libraries(${PROJECT_NAME} PUBLIC nlohmann_json::nlohmann_json)
+target_compile_definitions(${PROJECT_NAME} PRIVATE BUILD_PRE)
 
 #set(CMAKE_CXX_SOURCE_FILE_EXTENSIONS c;C;M;c++;cc;cpp;cxx;m;mm;mpp;CPP;ixx;cppm)
 

@@ -52,8 +52,8 @@ namespace NCL {
 
         case DigitalControl::WorldRollLeft: return buttonPressed({ Button::PadLeft, Button::L1 }, false, true);
         case DigitalControl::WorldRollRight: return buttonPressed({ Button::PadRight, Button::R1 }, false, true);
-        case DigitalControl::WorldPitchUp: return buttonPressed({ Button::PadUp, Button::PsTriangle }, false, true);
-        case DigitalControl::WorldPitchDown: return buttonPressed({ Button::PadDown, Button::PsSquare }, false, true);
+        case DigitalControl::WorldPitchUp: return buttonPressed({ Button::PadUp }, false, true);
+        case DigitalControl::WorldPitchDown: return buttonPressed({ Button::PadDown }, false, true);
 
         case DigitalControl::DebugBulletOverlay: return buttonPressed(Button::PadUp, true, true);
         case DigitalControl::DebugFreeCam: return buttonPressed(Button::PadRight, true, true);
@@ -65,6 +65,8 @@ namespace NCL {
         case DigitalControl::MenuConfirm: return buttonPressed(Button::A, false, true);
         case DigitalControl::Pause: case DigitalControl::Unpause:
             return buttonPressed(Button::Start, false, true);
+        case DigitalControl::Scoreboard: // We can't use select on PS5 :(, check for it still since it works on other controllers
+            return buttonPressed(Button::PsTriangle, false, true) >= fireThreshold || buttonPressed(Button::Select);
         case DigitalControl::PauseQuit: return buttonPressed(Button::Start, true, true);
         case DigitalControl::ThirdPerson:
         case DigitalControl::DebugReloadWorld:

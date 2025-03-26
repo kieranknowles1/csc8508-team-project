@@ -18,12 +18,12 @@ Network::Network(const ENetAddress* address, int maxConnections) : m_maxConnecti
     }
 
     std::lock_guard<std::mutex> lock(m_stateMut);
-    m_state = NetworkState::OFF;
+    m_state = NetworkStates::NetworkState::OFF;
 }
 
 
 Network::~Network() {
-    if (GetState() != NetworkState::CLOSED) {
+    if (GetState() != NetworkStates::NetworkState::CLOSED) {
         Close();
     }
 }
@@ -31,20 +31,20 @@ Network::~Network() {
 
 void Network::Start() {
     std::lock_guard<std::mutex> lock(m_stateMut);
-    if (m_state != NetworkState::OFF) return;
+    if (m_state != NetworkStates::NetworkState::OFF) return;
 
-    m_state = NetworkState::ON;
+    m_state = NetworkStates::NetworkState::ON;
     m_networkThread = std::thread(&Network::Run, this);
 }
 
 
 void Network::Stop() {
     m_stateMut.lock();
-    if (!(m_state == NetworkState::ON)) {
+    if (!(m_state == NetworkStates::NetworkState::ON)) {
         m_stateMut.unlock();
         return;
     }
-    m_state = NetworkState::OFF;
+    m_state = NetworkStates::NetworkState::OFF;
     m_stateMut.unlock();
     m_networkThread.join();
 }
@@ -58,7 +58,7 @@ void Network::Close() {
     m_connections = 1;
 
     std::lock_guard<std::mutex> lock(m_stateMut);
-    m_state = NetworkState::CLOSED;
+    m_state = NetworkStates::NetworkState::CLOSED;
 }
 
 
@@ -98,7 +98,7 @@ void Network::Run() {
     bool running = true;
 
     while (running) {
-        if (GetState() != NetworkState::ON) {
+        if (GetState() != NetworkStates::NetworkState::ON) {
             running = false;
             return;
         }
@@ -113,25 +113,44 @@ void Network::Run() {
 
 
 void Network::Tick(float dt) {
+    std::unique_lock ticklock(m_tickProgressMut);
+    m_lastTime = m_elapsedTime;
+    ticklock.unlock();
+
     m_elapsedTime += dt;
 
-    while (m_elapsedTime - m_lastTick >= NETWORK_RATE && m_state == NetworkState::ON) {
+    int ticksProcessed = 0;
+
+    LockTick();
+    while (m_elapsedTime - m_lastTick >= NETWORK_RATE && m_state == NetworkStates::NetworkState::ON) {
+        std::lock_guard<std::mutex> lock(m_listenerMut);
+        for (auto func : m_tickListeners) func(false);
 
         SendAll();
         enet_host_flush(m_host);
 
-        // Fast Forward, skipping updates.
-        do m_lastTick += NETWORK_RATE; while (m_lastTick < m_elapsedTime);
+        m_lastTick += NETWORK_RATE;
+        ticksProcessed++;
+        for (auto func : m_tickListeners) func(true);
     }
-    ENetEvent event;
 
-    while (enet_host_service(m_host, &event, 10) > 0) {
+#ifndef NDEBUG
+    if (ticksProcessed > 1) {
+        std::cout << ConsoleTextColor::RED;
+        std::cout << "[Network] Was behind by " << ticksProcessed - 1 << " ticks.\n";
+        std::cout << ConsoleTextColor::DEFAULT;
+    }
+#endif
+
+    ENetEvent event;
+    while (enet_host_service(m_host, &event, 1) > 0) {
         switch (event.type) {
         case ENET_EVENT_TYPE_CONNECT:
             if (!ConnectPeer()) {
                 enet_peer_disconnect(event.peer, 0);
             }
             else if (m_connectCallback != nullptr) {
+                std::lock_guard<std::mutex> lock(m_connectCallbackMut);
                 m_connectCallback(event.peer);
             }
             break;
@@ -168,7 +187,7 @@ void Network::SendAll() {
 
 void Network::SetErrored() {
     std::lock_guard<std::mutex> lock(m_stateMut);
-    m_state = NetworkState::ERRORED;
+    m_state = NetworkStates::NetworkState::ERRORED;
 }
 
 

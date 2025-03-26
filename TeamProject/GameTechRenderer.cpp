@@ -405,13 +405,19 @@ void GameTechRenderer::RenderCamera() {
 	//glBindTexture(GL_TEXTURE_2D, shadowTex);
 
 	for (const auto&i : frameObjects) {
+		size_t subMeshCount = i->GetMesh()->GetSubMeshCount();
+
+        Matrix4 modelMatrix;
+        i->getParent()->GetTransform().getOpenGLMatrix((btScalar*)&modelMatrix);
+
+        modelMatrix = modelMatrix * Matrix::Scale(i->getParent()->getRenderScale());
+        glUniformMatrix4fv(modelLocation, 1, false, (float*)&modelMatrix);
 
 		if (i->GetAnimation()) {//if object is a player, don't want it to be drawn here
 			continue; //go to next renderObject in loop
 		}
 
 		//if ((*i).getParent()->getType() == Player); //could instead check based on type
-        size_t subMeshCount = i->GetMesh()->GetSubMeshCount();
 
         for (size_t subMeshIndex = 0; subMeshIndex < subMeshCount; ++subMeshIndex) {
 			const Material::Layer* layer = i->getMaterial() ? i->getMaterial()->GetLayer(subMeshIndex) : nullptr;
@@ -442,15 +448,11 @@ void GameTechRenderer::RenderCamera() {
                 BindTextureToShader(*(i->GetMetallicMaps()[subMeshIndex]), "metallicTex", 2);
             }*/
 
-            Matrix4 modelMatrix;
-            i->getParent()->GetTransform().getOpenGLMatrix((btScalar*)&modelMatrix);
-            modelMatrix = modelMatrix * Matrix::Scale(i->getParent()->getRenderScale());
-            glUniformMatrix4fv(modelLocation, 1, false, (float*)&modelMatrix);
 
             //Matrix4 fullShadowMat = shadowMatrix * modelMatrix; //TEMPORARILY REMOVING SHADOWS
             //glUniformMatrix4fv(shadowLocation, 1, false, (float*)&fullShadowMat);
 
-            Vector4 colour = i->GetColour();
+            Vector4 colour = (layer && layer->useColor) ? i->GetColour() : Vector4(1, 1, 1, 1);
             glUniform4fv(colourLocation, 1, &colour.x);
 
             glUniform1i(hasVColLocation, !(*i).GetMesh()->GetColourData().empty());
@@ -767,23 +769,24 @@ void GameTechRenderer::RenderLasers() {
 	glUniform2f(glGetUniformLocation(laserShader->GetProgramID(), "windowSize"), windowSize.x, windowSize.y);
 
 	BindMesh(*highResSphere);
-	for (std::shared_ptr<Laser> laser : lasers) {
-		if (laser->startPos == btVector3(0, 0, 0) && laser->endPos == btVector3(0, 0, 0)) continue;
-		glUniform3fv(glGetUniformLocation(laserShader->GetProgramID(), "startPosition"), 1, (float*)&laser->startPos);
-		glUniform3fv(glGetUniformLocation(laserShader->GetProgramID(), "endPosition"), 1, (float*)&laser->endPos);
-		glUniform1f(glGetUniformLocation(laserShader->GetProgramID(), "thickness"), 0.25f);
-		glUniform1f(glGetUniformLocation(laserShader->GetProgramID(), "time"), vignettePulse);
-		/*btVector4 color;
-		if (laser->id > 100) { //AI IDs starting at 101
-			color = Color::GetPlayerColor(5); //Using pink player color as default for now
+	for (LaserObject* laser : lasers) {
+		// Manually remove lasers that no longer exist.
+		// Is there a better way?
+		if (laser->isDeleted()) {
+			UntrackLaser(laser);
+			continue;
 		}
-		else {
-			color = Color::GetPlayerColor(laser->id);
-		}*/
-		//AI IDs starting at 101, using pink player color as default for now
-		btVector4 color = laser->id > 100 ? Color::GetPlayerColor(5) : color = Color::GetPlayerColor(laser->id);
-		glUniform4fv(glGetUniformLocation(laserShader->GetProgramID(), "inColour"), 1, (float*)&color);
-		DrawBoundMesh();
+
+		// Draw laser.
+		if (!(laser->GetStartPos() == laser->GetEndPos())) {
+
+			glUniform3fv(glGetUniformLocation(laserShader->GetProgramID(), "startPosition"), 1, (float*)&laser->GetStartPos());
+			glUniform3fv(glGetUniformLocation(laserShader->GetProgramID(), "endPosition"), 1, (float*)&laser->GetEndPos());
+			glUniform1f(glGetUniformLocation(laserShader->GetProgramID(), "thickness"), laser->GetThickness());
+			glUniform1f(glGetUniformLocation(laserShader->GetProgramID(), "time"), vignettePulse);
+			glUniform4fv(glGetUniformLocation(laserShader->GetProgramID(), "inColour"), 1, (float*)&laser->GetColor());
+			DrawBoundMesh();
+		}
 	}
 
 	// motion blur
@@ -1292,7 +1295,7 @@ void GameTechRenderer::RenderAnimations() {
 			Matrix4 modelMatrix; 
 			i->getParent()->GetTransform().getOpenGLMatrix((btScalar*)&modelMatrix);
 			modelMatrix = modelMatrix * Matrix::Scale(i->getParent()->getRenderScale());
-			modelMatrix = modelMatrix * Matrix::Translation(Vector3(0, -0.9f, 0.1f));
+			modelMatrix = modelMatrix * Matrix::Translation(Vector3(0, -0.9f, 0.1f)); //Translation added to centre the player mesh better
 			glUniformMatrix4fv(modelLocation, 1, false, (float*)&modelMatrix);
 
 			Vector4 Colour = i->GetColour();
