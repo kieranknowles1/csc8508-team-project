@@ -24,8 +24,9 @@ PlayerObject::PlayerObject() {
     attack = std::make_unique<AttackAttrib>();
     attack->SetDamageType(DamageType::CONTINUOUS);
     attack->SetDamageAmount(150.0f);
-
     attack->SetHealthAttrib(health.get());
+
+    score = std::make_unique<ScoreAttrib>(this);
 }
 
 

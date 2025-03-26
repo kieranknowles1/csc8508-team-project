@@ -11,9 +11,9 @@ namespace NCL::CSC8503 {
     public:
         ScoreAttrib(GameObject* parent) : parent(parent) {}
 
-        virtual void UpdateWorldState() = 0;
-        virtual void UpdateFromWorldState(float dt) = 0;
-        virtual std::vector<std::shared_ptr<Packet::Packet>> CreatePackets(int sequenceNum) = 0;
+        virtual void UpdateWorldState();
+        virtual void UpdateFromWorldState(float dt);
+        virtual std::vector<std::shared_ptr<Packet::Packet>> CreatePackets(int sequenceNum);
         
         void AddToScore(float amount) { score += (amount * multiplier); }
         void SetScore(float s) { score = s; }

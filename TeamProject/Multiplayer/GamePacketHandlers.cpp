@@ -19,7 +19,7 @@ namespace Packet {
         GameObject* object = GameObject::GetGameObjectByID(deltaPacket->GetTargetID());
 
         if (object == nullptr) return;
-
+        if (object->GetOwner() == nullptr) return;
         if (TutorialGame::getInstance()->GetServerInstance()->IsOwnerOf(object)) return;
 
         auto [writeState, lock] = object->GetWorldStates()->GetWriteState();
@@ -700,6 +700,7 @@ namespace Packet {
         GameObject* object = GameObject::GetGameObjectByID(scorePacket->GetObjectID());
 
         if (object == nullptr) return;
+        if (object->GetOwner() == nullptr) return;
 
         if (TutorialGame::getInstance()->GetServerInstance()->IsOwnerOf(object)) return;
 
