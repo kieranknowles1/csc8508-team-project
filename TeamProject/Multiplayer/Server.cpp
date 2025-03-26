@@ -67,6 +67,9 @@ namespace Multiplayer {
 
         m_handlers.push_back(std::make_unique<Packet::DamagePacketHandler>());
         Packet::PacketRegister::Register(m_handlers.back().get());
+
+        m_handlers.push_back(std::make_unique<Packet::ScorePacketHandler>());
+        Packet::PacketRegister::Register(m_handlers.back().get());
     }
 
     void Server::JoinGame(const std::string& ip, float waitSeconds) {

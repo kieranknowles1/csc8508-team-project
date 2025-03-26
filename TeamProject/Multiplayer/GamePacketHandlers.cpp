@@ -692,4 +692,91 @@ namespace Packet {
     }
 #pragma endregion Pong
 
+
+#pragma region ScorePacketHandler
+    void ScorePacketHandler::Handle(const std::shared_ptr<Packet> packet) {
+        const DeltaPacket* deltaPacket = std::static_pointer_cast<DeltaPacket>(packet).get();
+        GameObject* object = GameObject::GetGameObjectByID(deltaPacket->GetTargetID());
+
+        if (object == nullptr) return;
+
+        if (TutorialGame::getInstance()->GetServerInstance()->IsOwnerOf(object)) return;
+    }
+    
+    std::shared_ptr<Packet> ScorePacketHandler::Translate(const ENetEvent* event) const {
+        //ENetPacket* packet = event->packet;
+        //Type type;
+        //uint8_t channel;
+        //uint32_t sequenceNumber;
+        //
+        //int objectID;
+        //btVector3 linearVelocity;
+        //btVector3 angularVelocity;
+        //size_t offset = sizeof(Type) + sizeof(uint8_t) + sizeof(uint32_t);
+
+        //GetBaseData(packet, &type, &channel, &sequenceNumber);
+
+        //memcpy(&objectID, packet->data + offset, sizeof(int));
+        //offset += sizeof(int);
+
+        //memcpy(&linearVelocity, packet->data + offset, sizeof(btVector3));
+        //offset += sizeof(btVector3);
+
+        //memcpy(&angularVelocity, packet->data + offset, sizeof(btVector3));
+        //offset += sizeof(btVector3);
+
+        //return std::make_shared<DeltaPacket>(objectID, linearVelocity, angularVelocity, sequenceNumber);
+        return nullptr;
+    }
+    
+    ENetPacket* ScorePacketHandler::ToENetPacket(const std::shared_ptr<Packet> packet) const {
+        //char* buffer = new char[
+        //    sizeof(Type)
+        //    + sizeof(uint8_t)
+        //    + sizeof(uint32_t)
+        //    + sizeof(int)
+        //    + sizeof(btVector3)
+        //    + sizeof(btVector3)
+        //];
+
+        //DeltaPacket deltaPacket = (*static_cast<DeltaPacket*>(packet.get()));
+        //size_t offset = 0;
+
+        //Type type = deltaPacket.GetType();
+        //memcpy(buffer, &type, sizeof(Type));
+        //offset = offset + sizeof(Type);
+
+        //uint8_t channel = deltaPacket.GetChannel();
+        //memcpy(buffer + offset, &channel, sizeof(uint8_t));
+        //offset = offset + sizeof(uint8_t);
+
+        //uint32_t sequenceNumber = deltaPacket.GetSequenceNumber();
+        //memcpy(buffer + offset, &sequenceNumber, sizeof(uint32_t));
+        //offset = offset + sizeof(uint32_t);
+
+        //int objectID = deltaPacket.GetTargetID();
+        //memcpy(buffer + offset, &objectID, sizeof(int));
+        //offset = offset + sizeof(int);
+
+        //btVector3 linearVelocity = deltaPacket.GetLinearVelocity();
+        //memcpy(buffer + offset, &linearVelocity, sizeof(btVector3));
+        //offset = offset + sizeof(btVector3);
+
+        //btVector3 angularVelocity = deltaPacket.GetAngularVelocity();
+        //memcpy(buffer + offset, &angularVelocity, sizeof(btVector3));
+        //offset = offset + sizeof(btVector3);
+
+        //int packetFlags = 0;
+        //if (channel == static_cast<int>(Channel::RELIABLE)) packetFlags = ENET_PACKET_FLAG_RELIABLE;
+        //else if (channel == static_cast<int>(Channel::UNSEQUENCED)) packetFlags = ENET_PACKET_FLAG_UNSEQUENCED;
+
+        //ENetPacket* enetPacket = enet_packet_create(buffer, offset, packetFlags);
+        //delete[] buffer;
+        //return enetPacket;
+        return nullptr;
+    }
+
+
+#pragma endregion ScorePacketHandler
+
 }

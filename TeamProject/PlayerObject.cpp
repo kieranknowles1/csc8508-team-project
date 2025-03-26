@@ -4,6 +4,7 @@
 #include "Multiplayer/Server.hpp"
 #include "Health.h"
 #include "Respawn.h"
+#include "Score.h"
 
 #include <memory>
 

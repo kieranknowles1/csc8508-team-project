@@ -22,7 +22,8 @@ namespace WorldState {
         Normal,
         DamageDealt,
         Health,
-        ObjectID
+        ObjectID,
+        Score
     };
 
 
