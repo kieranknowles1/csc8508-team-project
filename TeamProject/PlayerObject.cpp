@@ -69,6 +69,8 @@ void PlayerObject::UpdateWorldState() {
     std::unique_lock stateLock(writeState->Lock());
 
     writeState->UpdateState(StateType::UpVector, upDirection);
+    int animationInt = static_cast<int>(animationState);
+    writeState->UpdateState(StateType::Animation, animationInt);
 }
 
 void PlayerObject::UpdateFromWorldState(float dt) {
@@ -85,12 +87,14 @@ void PlayerObject::UpdateFromWorldState(float dt) {
 
     StateValue currentUpVectorValue;
     StateValue targetUpVectorValue;
+    StateValue animationValue;
 
     std::shared_lock currentStateLock = current->Lock_Shared();
     std::shared_lock readStateLock = read->Lock_Shared();
 
     bool hasCurrentUpVector = current->ReadState(StateType::UpVector, &currentUpVectorValue);
     bool hasTargetUpVector = read->ReadState(StateType::UpVector, &targetUpVectorValue);
+    bool hasAnimation = current->ReadState(StateType::Animation, &animationValue);
 
     currentStateLock.unlock();
     readStateLock.unlock();
@@ -110,6 +114,10 @@ void PlayerObject::UpdateFromWorldState(float dt) {
 
         setUpDirection(interpolated);
     }
+    if (hasAnimation) {
+        int animNumber = std::get<int>(animationValue);
+        animationState = static_cast<AnimationState>(animNumber);
+    }
 }
 
 std::vector<std::shared_ptr<Packet::Packet>> PlayerObject::CreatePackets(int sequenceNum) {
@@ -120,16 +128,24 @@ std::vector<std::shared_ptr<Packet::Packet>> PlayerObject::CreatePackets(int seq
     auto [read, readLock] = GetWorldStates()->GetReadState();
 
     StateValue upVector;
+    StateValue animation;
     std::shared_lock readStateLock = read->Lock_Shared();
     bool hasUpVector = read->ReadState(StateType::UpVector, &upVector);
-
+    bool hasAnimation = read->ReadState(StateType::Animation, &animation);
     readStateLock.unlock();
     readLock.unlock();
-    
+
     if (hasUpVector) {
         packets.push_back(std::move(std::make_shared<Packet::ObjectChangeGravityPacket>(
             GetWorldID(),
             std::get<btVector3>(upVector),
+            sequenceNum
+        )));
+    }
+    if (hasAnimation) {
+        packets.push_back(std::move(std::make_shared<Packet::PlayerAnimationPacket>(
+            GetWorldID(),
+            std::get<int>(animation),
             sequenceNum
         )));
     }
