@@ -632,6 +632,8 @@ void GameTechAGCRenderer::UpdateObjectList() {
 
 		AGCMesh* m = (AGCMesh*)g->GetMesh();
 		if (g->GetAnimation()) { //It's a skeleton mesh, need to update transformed vertices buffer
+			// FIXME: Don't hardcode offset for the player
+			state.modelMatrix = state.modelMatrix * Matrix::Translation(Vector3(0, -0.9f, 0.1f)); //Translation added to centre the player mesh better
 
 			Buffer* b = g->GetGPUBuffer();
 			if (!b) {
