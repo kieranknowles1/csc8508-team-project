@@ -109,6 +109,9 @@ GameTechAGCRenderer::GameTechAGCRenderer(Window* window) : AGCRenderer(window), 
 	laserPixelShader = std::make_unique<AGCShader>("laser_p.ags", allocator);
 	laserPreShader = std::make_unique<AGCShader>("laser_pre_p.ags", allocator);
 
+	decalVertexShader = std::make_unique<AGCShader>("decal_vv.ags", allocator);
+	decalPixelShader = std::make_unique<AGCShader>("decal_p.ags", allocator);
+
 	allFrames = new FrameData[FRAMES_IN_FLIGHT];
 	for (int i = 0; i < FRAMES_IN_FLIGHT; ++i) {
 
@@ -216,6 +219,8 @@ void GameTechAGCRenderer::WriteRenderPassConstants() {
 
 	frameData.viewMatrix = camera->BuildViewMatrix();
 	frameData.projMatrix = camera->BuildProjectionMatrix(hostWindow->GetScreenAspect());
+	frameData.nearPlane = camera->GetNearPlane();
+	frameData.farPlane = camera->GetFarPlane();
 
 	frameData.viewProjMatrix = frameData.projMatrix * frameData.viewMatrix;
 
@@ -232,6 +237,8 @@ void GameTechAGCRenderer::WriteRenderPassConstants() {
 	frameData.vingetteSettings.color = vignetteColour;
 	frameData.vingetteSettings.intensity = vignetteIntensity;
 	frameData.vingetteSettings.pulse = vignettePulse;
+
+	frameData.ambient = 0.1f;
 
 
 	currentFrame->data.WriteData<ShaderConstants>(frameData); //Let's start filling up our frame data!
@@ -273,6 +280,36 @@ void GameTechAGCRenderer::DrawObjects() {
 	drawInstances(prevMesh);
 	// Check that we used all the buffers we expected
 	assert(instanceCount + startingIndex == currentFrame->objects.count);
+}
+
+void GameTechAGCRenderer::DrawDecals() {
+	if (currentFrame->decals.count <= 0) {
+		return;
+	}
+
+	frameContext->setShaders(nullptr, decalVertexShader->GetAGCPointer(), decalPixelShader->GetAGCPointer(), sce::Agc::UcPrimitiveType::Type::kTriList);
+	// Don't write to the depth buffer, we'll be discarding fragments manually
+	frameContext->m_sb.setState(sce::Agc::CxDepthStencilControl().init()
+		.setDepth(sce::Agc::CxDepthStencilControl::Depth::kDisable).setDepthWrite(sce::Agc::CxDepthStencilControl::DepthWrite::kDisable)
+	);
+	frameContext->m_sb.setState(sce::Agc::CxBlendControl().init()
+		.setBlend(sce::Agc::CxBlendControl::Blend::kEnable)
+		.setColorSourceMultiplier(sce::Agc::CxBlendControl::ColorSourceMultiplier::kSrcAlpha)
+		.setColorDestMultiplier(sce::Agc::CxBlendControl::ColorDestMultiplier::kOneMinusSrcAlpha)
+	);
+
+	frameContext->m_bdr.getStage(sce::Agc::ShaderType::kGs)
+		.setConstantBuffers(0, 1, &currentFrame->constantBuffer)
+		.setBuffers(0, 1, &currentFrame->decals.buffer);
+
+	frameContext->m_bdr.getStage(sce::Agc::ShaderType::kPs)
+		.setConstantBuffers(0, 1, &currentFrame->constantBuffer)
+		.setBuffers(0, 1, &textureBuffer)
+		.setSamplers(0, 1, &defaultSampler)
+		.setSamplers(1, 1, &depthSampler).setTextures(1, 1, depthTexture->GetAGCPointer());
+
+	unitQuad->BindVertexBuffers(frameContext->m_bdr.getStage(sce::Agc::ShaderType::kGs));
+	DrawBoundMeshInstanced(*frameContext, *unitQuad, currentFrame->decals.count);
 }
 
 void GameTechAGCRenderer::MainRenderPass() {
@@ -324,6 +361,7 @@ void GameTechAGCRenderer::MainRenderPass() {
 		.setBuffers(0, 1, &textureBuffer)
 		.setSamplers(0, 1, &defaultSampler);
 	DrawObjects();
+	DrawDecals();
 }
 
 void GameTechAGCRenderer::UiPass() {
@@ -587,7 +625,6 @@ void GameTechAGCRenderer::UpdateObjectList() {
 		Matrix3 transMat3 = Matrix::FromMat4(state.modelMatrix);
 		state.normalMatrix = Matrix::FromMat3(Matrix::InverseTranspose(transMat3));
 
-		state.colour = g->GetColour();
 		state.texRepeats = g->GetTexRepeating();
 		state.texScale = g->getParent()->getRenderScale() * g->GetTexScaleMultiplier();
 		state.skinningIndex = NULLTEX;
@@ -627,6 +664,7 @@ void GameTechAGCRenderer::UpdateObjectList() {
 		for (int i = 0; i < g->GetMesh()->GetSubMeshCount(); i++) {
 			auto subMesh = g->GetMesh()->GetSubMesh(i);
 			auto layer = g->getMaterial() ? g->getMaterial()->GetLayer(i) : nullptr;
+			state.colour = (l && l->useColor) ? g->GetColour() : Vector4(1, 1, 1, 1);
 
 			auto t = layer ? layer->diffuse : nullptr;
 			state.texIndex = t ? t->GetAssetID() : NULLTEX;
@@ -680,6 +718,19 @@ void GameTechAGCRenderer::UpdateObjectList() {
 		currentFrame->data.WriteData(state);
 	}
 	currentFrame->lasers.end(currentFrame);
+
+	currentFrame->decals.begin(currentFrame);
+	for (auto& decal : decalSystem.GetDecals()) {
+		DecalState state;
+		state.modelMatrix = Matrix::Translation(Vector3(decal.position))
+			* Matrix::RotationAroundNormal(decal.normal, decal.rotation)
+			* Matrix::Scale(Vector3(decal.radius, decal.radius, decal.radius));
+		state.color = decal.color;
+		state.fade = decal.alphaFade;
+		state.textureId = decal.texture != nullptr ? decal.texture->GetAssetID() : NULLTEX;
+		currentFrame->data.WriteData(state);
+	}
+	currentFrame->decals.end(currentFrame);
 }
 
 template<typename T>

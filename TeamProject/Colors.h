@@ -31,7 +31,7 @@ constexpr TeamColor colors[8] = {
 class Color {
 public:
 	static btVector4 GetPlayerColor(int index) {
-		uint32_t col = (uint32_t)colors[index-1];
+		uint32_t col = (uint32_t)colors[index];
 
 		float alpha = float(col & 0xFF) / 255.0;
 		float blue = float((col >> 8) & 0xFF) / 255.0;

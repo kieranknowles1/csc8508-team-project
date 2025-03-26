@@ -1,5 +1,7 @@
 #pragma once
 
+#include <vector>
+#include <mutex>
 #include <unordered_map>
 #include <nlohmann/json.hpp>
 
@@ -8,13 +10,27 @@
 #include "CollisionInfo.h"
 #include "../TeamProject/PointLight.h"
 #include "../TeamProject/Multiplayer/User.hpp"
+#include "WorldState.h"
+#include "StateUpdater.h"
+
+namespace Packet {
+    class Packet;
+}
 
 namespace NCL::CSC8503 {
-	class NetworkObject;
-	class RenderObject;
-	class PhysicsObject;
 
-	class GameObject	{
+    enum class ObjectState {
+        DEAD,
+        ALIVE
+    };
+
+    class NetworkObject;
+    class RenderObject;
+    class PhysicsObject;
+
+    const float TICK_UPDATE_RATE = 1.0f / 60.0f;
+
+	class GameObject : public StateUpdater {
 	public:
 		enum class Type { // Contact Alex if you are adding to this - need to update level importer to line up correctly
 			Default,
@@ -31,114 +47,123 @@ namespace NCL::CSC8503 {
 			AI,
 			JumpRoom,
 			JumpRoomFloor,
-			ZigZag
+			ZigZag,
+            Gun
 		};
 
-		GameObject(const std::string& name = "");
-		virtual ~GameObject();
+        GameObject(const std::string& name = "");
+        virtual ~GameObject();
 
-		bool IsActive() const {
-			return isActive;
-		}
+        bool IsActive() const {
+            return isActive;
+        }
 
-		RenderObject* GetRenderObject() const {
-			return renderObject;
-		}
+        RenderObject* GetRenderObject() const {
+            return renderObject;
+        }
 
-		PhysicsObject* GetPhysicsObject() const {
-			return physicsObject;
-		}
+        PhysicsObject* GetPhysicsObject() const {
+            return physicsObject;
+        }
 
-		NetworkObject* GetNetworkObject() const {
-			return networkObject;
-		}
+        NetworkObject* GetNetworkObject() const {
+            return networkObject;
+        }
 
-		void SetRenderObject(RenderObject* newObject) {
-			renderObject = newObject;
-		}
+        void SetRenderObject(RenderObject* newObject) {
+            renderObject = newObject;
+        }
 
-		void SetPhysicsObject(PhysicsObject* newObject) {
-			physicsObject = newObject;
-		}
+        void SetPhysicsObject(PhysicsObject* newObject) {
+            physicsObject = newObject;
+        }
 
-		const std::string& GetName() const {
-			return name;
-		}
+        const std::string& GetName() const {
+            return name;
+        }
 
-		void SetName( const std::string& nameIn)  {
-			name = nameIn;
-		}
+        void SetName( const std::string& nameIn)  {
+            name = nameIn;
+        }
 
-		virtual void OnCollisionEnter(const CollisionInfo& collision) {
-			//std::cout << "OnCollisionEnter event occured!\n";
-		}
+        virtual void OnCollisionEnter(const CollisionInfo& collision) {
+            //std::cout << "OnCollisionEnter event occured!\n";
+        }
 
-		virtual void OnCollisionExit(const CollisionInfo& collision) {
-			//std::cout << "OnCollisionEnd event occured!\n";
-		}
+        virtual void OnCollisionExit(const CollisionInfo& collision) {
+            //std::cout << "OnCollisionEnd event occured!\n";
+        }
 
-		virtual void OnCollisionStay(const CollisionInfo& collision) {
-			//std::cout << "OnCollisionStay event occured!\n";
-		}
+        virtual void OnCollisionStay(const CollisionInfo& collision) {
+            //std::cout << "OnCollisionStay event occured!\n";
+        }
 
-		// TODO:: Remove this OnCollisionStay method, since the CollisionInfo returns the otherObject now in the above function
-		virtual void OnCollisionStay(GameObject* otherObject) {
-			//std::cout << "OnCollisionStay: " << this->GetWorldID() << " is still colliding with " << otherObject->GetWorldID() << std::endl;
-		}
+        // TODO:: Remove this OnCollisionStay method, since the CollisionInfo returns the otherObject now in the above function
+        virtual void OnCollisionStay(GameObject* otherObject) {
+            //std::cout << "OnCollisionStay: " << this->GetWorldID() << " is still colliding with " << otherObject->GetWorldID() << std::endl;
+        }
 
-		virtual void Update(float dt) {
+        virtual void UpdateWorldState() override;
+        virtual void UpdateFromWorldState(float dt) override;
+        virtual std::vector<std::shared_ptr<Packet::Packet>> CreatePackets(int sequenceNum) override;
 
-		}
+        virtual void Update(float dt) {//could do the updating for animations in here maybe
+        }
 
-		void SetWorldID(int newID) {
-			worldID = newID;
-			objects[worldID] = this;
-		}
 
-		int		GetWorldID() const {
-			return worldID;
-		}
+        void SetWorldID(int newID) {
+            worldID = newID;
+            objects[worldID] = this;
+        }
 
-		btTransform GetTransform() const {
-			return physicsObject->GetRigidBody()->getWorldTransform();
-		}
+        int		GetWorldID() const {
+            return worldID;
+        }
 
-		void setInitialPosition(const Vector3& position) {
-			initialPosition = position;
-		}
+        btTransform& GetTransform() const {
+            return physicsObject->GetRigidBody()->getWorldTransform();
+        }
 
-		void setInitialRotation(const btQuaternion& rotation) {
-			initialRotation = rotation;
-		}
+        void setInitialPosition(const Vector3& position) {
+            initialPosition = position;
+        }
 
-		btVector3 getInitialPosition() const {
-			return initialPosition;
-		}
-		btQuaternion getInitialRotation() const {
-			return initialRotation;
-		}
+        void setInitialRotation(const btQuaternion& rotation) {
+            initialRotation = rotation;
+        }
 
-		Vector3 getRenderScale() const {
-			return renderScale;
-		}
+        btVector3 getInitialPosition() {
+            return initialPosition;
+        }
+        btQuaternion getInitialRotation() {
+            return initialRotation;
+        }
 
-		void SetOwner(Lobbies::User user) {
-			owner.emplace(user);
-		}
+        Vector3 getRenderScale() const {
+            return renderScale;
+        }
 
-		std::optional<Lobbies::User> GetOwner() {
-			return owner;
-		}
+        virtual void SetOwner(Lobbies::User user) {
+            owner = new Lobbies::User(user);
+        }
 
-		void setRenderScale(const Vector3& scale) {
-			renderScale = scale;
-		}
-		void setType(Type typeIn) {
-			type = typeIn;
-		}
-		Type getType() {
-			return type;
-		}
+        Lobbies::User* GetOwner() {
+            return owner;
+        }
+
+        void setRenderScale(const Vector3& scale) {
+            renderScale = scale;
+        }
+
+        void setType(Type typeIn) {
+            type = typeIn;
+        }
+        Type getType() {
+            return type;
+        }
+        bool isStatic() const {
+            return GetPhysicsObject()->GetRigidBody()->getInvMass() == 0.0f;
+        }
 
 		float getJumpPadStrength() {
 			return jumpPadStrength;
@@ -146,54 +171,59 @@ namespace NCL::CSC8503 {
 		void setJumpPadStrength(float jumpIn) {
 			jumpPadStrength = jumpIn;
 		}
-		
 
-		static GameObject* GetGameObjectByID(int id) {
-			if (objects.contains(id)) return objects[id];
-			return nullptr;
-		}
+        static GameObject* GetGameObjectByID(int id) {
+            if (objects.contains(id)) return objects[id];
+            return nullptr;
+        }
 
-		void attachLight(PointLight* lightIn) {
-			light = lightIn;
-		}
-		PointLight* getLight() {
-			return light;
-		}
+        void attachLight(PointLight* lightIn) {
+            light = lightIn;
+        }
+        PointLight* getLight() {
+            return light;
+        }
 
-		int GetLastPacketSequence(uint8_t type) {
-			if (lastPacketUpdates.contains(type)) return lastPacketUpdates[type];
-			else return 0;
-		}
+        void setDeleted() { deleted = true; }
+        bool isDeleted() const { return deleted; }
 
-		void UpdatePacketSequence(uint8_t type, int value) {
-			lastPacketUpdates[type] = value;
-		}
+        void SetState(ObjectState newState) { state = newState; }
+        ObjectState GetState() const { return state; }
+		bool GetIsAnimated() { return animated; }
+		void SetIsAnimated(bool a) { animated = a; }
 
-
-		void setDeleted() { deleted = true; }
-		bool isDeleted() { return deleted; }
 	protected:
 		PhysicsObject*		physicsObject;
 		RenderObject*		renderObject;
 		NetworkObject*		networkObject;
 
-		bool deleted = false;
 
+        Vector3 renderScale = Vector3(1, 1, 1); // Only affects rendering, not physics
+        btVector3 initialPosition;
+        btQuaternion initialRotation = btQuaternion(0, 0, 0);
 		bool		isActive;
+		bool paintball = false;
+		bool animated = false;
+        bool deleted = false;
+
 		int			worldID;
 		std::string	name;
 		Type type;
 
-		Vector3 renderScale = Vector3(1, 1, 1); // Only affects rendering, not physics
-		btVector3 initialPosition;
-		btQuaternion initialRotation = btQuaternion(0, 0, 0);
+        inline static std::unordered_map<int, GameObject*> objects;
 
-		inline static std::unordered_map<int, GameObject*> objects;
+        PointLight* light = nullptr;
+        Lobbies::User* owner = nullptr;
 
-		PointLight* light = nullptr;
+        std::unique_ptr<WorldState::StateBuffer> states;
+        std::shared_mutex tickMutex;
+        int currentTick = 0;
+        int lastTick = 0;
+	    
+        float elapsedTime = 0;
 
-		std::optional<Lobbies::User> owner;
-		std::unordered_map<uint8_t, int> lastPacketUpdates; // uint8_t is the same type used in Packet::Type and PacketType
 		float jumpPadStrength = 0.0f;
+
+        ObjectState state;
 	};
 }

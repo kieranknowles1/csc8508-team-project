@@ -3,71 +3,84 @@
 //#include "PushdownMachine.h"
 #include "PushdownState.h"
 #include <TutorialGame.h>
+#include <future>
 //#include "Window.h"
 #include <CSC8503CoreClasses/Debug.h>
 #include <iostream>
 #include "GameScreen.h"
+#include "LobbyScreen.h"
 #include "CreditsScreen.h"
 
 namespace NCL::CSC8503 {
 
 class MainMenuScreen : public PushdownState {
     size_t selection = 0;
-    bool inMenu;
     TutorialGame* game;
     Controller* controller;
+    float connectionFailedTime = 0;
 
 public:
-    MainMenuScreen(Controller* controller, TutorialGame* game) : controller(controller), game(game), selection(0), inMenu(true) {}
+    MainMenuScreen(Controller* controller, TutorialGame* game) : controller(controller), game(game), selection(0) {}
 
     PushdownResult OnUpdate(float dt, PushdownState** newState) override {
-
-
         const std::array<std::string, 5> menuItems = { "Singleplayer", "Host Game", "Join Game", "Credits", "Quit"};
+        bool ok = true;
+
+        if (connectionFailedTime > 0) {
+            connectionFailedTime -= dt;
+            Debug::Print("Connection failed", Vector2(0.05f, 0.9f));
+        }
 
         if (controller->GetDigital(Controller::DigitalControl::MenuDown)) {
-            selection = std::min(menuItems.size() - 1, selection + 1);
+            selection = (size_t)std::min((int)menuItems.size() - 1, (int)selection + 1);
         }
         if (controller->GetDigital(Controller::DigitalControl::MenuUp)) {
-            selection = std::max(size_t(0), selection - 1);
+            selection = (size_t)std::max(0, (int)selection - 1);
         }
         if (controller->GetDigital(Controller::DigitalControl::MenuConfirm)) {
             GameMode mode = static_cast<GameMode>(selection);
 
+            game->SetGameMode(mode);
             switch (mode)
             {
             case GameMode::SINGLEPLAYER:
-                game->SetGameMode(GameMode::SINGLEPLAYER);
                 game->Start();
-                break;
+                *newState = new GameScreen(controller, game);
+                return PushdownResult::Push;
+
             case GameMode::HOST_GAME:
-                game->SetGameMode(GameMode::HOST_GAME);
-                game->JoinGame(true); //This is host game
-                break;
+                game->StartMultiplayerGame(true); 
+                *newState = new HostLobbyScreen(controller, game);
+                return PushdownResult::Push;
+
             case GameMode::JOIN_GAME:
-                game->SetGameMode(GameMode::JOIN_GAME);
-                game->JoinGame(false); //This is join game
-                break;
+                ok = game->StartMultiplayerGame(false);
+
+                if (ok) {
+                    *newState = new ClientLobbyScreen(controller, game);
+                    return PushdownResult::Push;
+                }
+                connectionFailedTime = 3.0f;
+                return PushdownResult::NoChange;
+
             case GameMode::CREDITS:
                 game->SetGameMode(GameMode::CREDITS);
                 *newState = new CreditsScreen(controller, Assets::CREDITS);
                 return PushdownResult::Push;
                 break;
             case GameMode::QUIT:
-                game->SetGameMode(GameMode::QUIT);
                 return PushdownResult::Pop;
             default: assert(false);
             }
 
             *newState = new GameScreen(controller, game);
-            inMenu = false;
             return PushdownResult::Push;
         }
 
         //Render menu
         for (int i = 0; i < menuItems.size(); i++) {
             std::string currentItem = menuItems[i];
-            if (i == selection) {
+            if (i == (int) selection) {
                 currentItem = "> " + currentItem + " <";
             }
             else {

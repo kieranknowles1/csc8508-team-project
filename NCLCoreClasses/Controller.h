@@ -44,6 +44,7 @@ public:
 		DebugBulletOverlay,
 		DebugShowProfiling,
 		DebugFreeCam,
+		DebugRespawnRandom,
 
 		Pause,
 		// TODO: Do we need this one?
@@ -51,7 +52,10 @@ public:
 		Unpause,
 		MenuUp,
 		MenuDown,
-		MenuConfirm
+    MenuLeft,
+		MenuRight,
+		MenuConfirm,
+		Scoreboard
 	};
 
 	Controller() {

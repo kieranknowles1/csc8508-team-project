@@ -63,6 +63,7 @@ namespace NCL {
 
 			void WriteRenderPassConstants();
 			void DrawObjects();
+			void DrawDecals();
 			void UpdateDebugData();
 
 			void RenderDebugLines();
@@ -134,6 +135,7 @@ namespace NCL {
 				UniformArray<LineState> debugLines;
 				UniformArray<TextState> debugText;
 				UniformArray<LaserState> lasers;
+				UniformArray<DecalState> decals;
 
 				sce::Agc::Core::Buffer constantBuffer;
 
@@ -188,6 +190,9 @@ namespace NCL {
 			std::unique_ptr<PS5::AGCShader> laserVertexShader;
 			std::unique_ptr<PS5::AGCShader> laserPixelShader;
 			std::unique_ptr<PS5::AGCShader> laserPreShader;
+
+			std::unique_ptr<PS5::AGCShader> decalVertexShader;
+			std::unique_ptr<PS5::AGCShader> decalPixelShader;
 
 			struct FrameBuffer {
 				enum class Slot {

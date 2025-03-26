@@ -2,6 +2,8 @@
 #include "Texture.h"
 #include "Mesh.h"
 #include "Buffer.h"
+#include "MeshAnimation.h"
+#include "MeshMaterial.h"
 
 namespace NCL {
 	using namespace NCL::Rendering;
@@ -68,6 +70,15 @@ namespace NCL {
 			Buffer* GetGPUBuffer() {
 				return buffer;
 			}
+
+			MeshAnimation* GetAnimation() const {
+				return test;
+			}
+
+			void SetAnimation(MeshAnimation* name) {
+				test = name; 
+			}
+
 		protected:
 			GameObject* parent;
 			Buffer* buffer;
@@ -76,6 +87,11 @@ namespace NCL {
 			bool isFlat = false;
 			bool texRepeating = false; // added to allow repeating textures per object
 			float texScaleMultiplier = 0.005f; //unless set to something else, all scaled textures will be scaled with this and their renderScale
+
+			//Animation stuff:
+			MeshAnimation* test;
+		
+
 
 			std::shared_ptr<Material> material;
 		};

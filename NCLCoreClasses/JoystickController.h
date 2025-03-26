@@ -61,7 +61,7 @@ namespace NCL {
 
     protected:
 		// If this button is pressed, listen to debug inputs and ignore others
-		Button DebugMask = Button::L1;
+		Button DebugMask = Button::R3;
 		float fireThreshold = 0.5f;
 		float lookSensitivity = 2.0f;
 
@@ -82,6 +82,15 @@ namespace NCL {
             return current && !previous;
         }
 
+        bool buttonPressed(std::initializer_list<Button> buttons, bool isDebug = false, bool thisFrame = false) const {
+            for (auto button : buttons) {
+                if (buttonPressed(button, isDebug, thisFrame)) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
         float analogueState(Analogue axis) const {
             return analogueStates[(int)axis];
         }
@@ -89,5 +98,7 @@ namespace NCL {
         std::array<bool, (int)Button::Max> buttonStates;
         std::array<bool, (int)Button::Max> previousButtonStates;
         std::array<float, (int)Analogue::Max> analogueStates;
+
+        bool sprinting = false;
     };
 }

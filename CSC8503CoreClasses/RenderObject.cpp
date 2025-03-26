@@ -14,6 +14,7 @@ RenderObject::RenderObject(GameObject* parent, std::shared_ptr<Mesh> mesh, std::
     this->material = std::make_shared<Material>(
         tex, normal
     );
+    
 }
 
 NCL::CSC8503::RenderObject::RenderObject(GameObject* parent, std::shared_ptr<Mesh> mesh, std::shared_ptr<Material> mat)
@@ -22,8 +23,9 @@ NCL::CSC8503::RenderObject::RenderObject(GameObject* parent, std::shared_ptr<Mes
     this->mesh = mesh;
     this->colour = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
     this->material = mat;
+
 }
 
-RenderObject::~RenderObject() {
-
+RenderObject::~RenderObject() { 
+  
 }

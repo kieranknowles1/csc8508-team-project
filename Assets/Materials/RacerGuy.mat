@@ -1,0 +1,11 @@
+MeshMat
+1
+1
+1
+RacerGuy_mat
+2
+Diffuse:/RacerTex/Ch20_1001_Diffuse.png
+InvertY:true
+Bump:/RacerTex/Ch20_1001_Normal.png
+InvertY:true
+0

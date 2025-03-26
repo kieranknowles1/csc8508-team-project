@@ -1,4 +1,5 @@
 #include "NavEntity.h"
+#include "TutorialGame.h"
 #include <stdio.h>
 
 using namespace NCL;
@@ -44,13 +45,16 @@ bool NavEntity::FollowPath(float dt) {
 float NavEntity::GroundAdjust(btVector3 pos) {
 	btVector3 upPos, downPos, direction;
 	std::optional<ShotInfo> rayResult;
+	btIDebugDraw* debugDrawer = TutorialGame::getInstance()->getBulletWorld()->getDebugDrawer();
 	switch (side) {
 	case(Side::BOTTOM):
-		upPos = pos + btVector3(0, 10.0f, 0);
+		upPos = pos + btVector3(0, 100.0f, 0);
 		downPos = pos + btVector3(0, -1000.0f, 0);
+		
+		//debugDrawer->drawLine(upPos, downPos, Vector3(0, 0, 1));
 		direction = (downPos - upPos).normalized();
 
-		rayResult = Shoot::GetInstance()->RayClosest(upPos, direction, this);
+		rayResult = Shoot::GetInstance()->RayClosest(upPos, direction, false, static_cast<GameObject*>(this));
 
 		if (!rayResult.has_value()) {
 			return 0.0f;  // No hit detected

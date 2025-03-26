@@ -255,6 +255,8 @@ GameTechRenderer::GameTechRenderer(Window* window) : OGLRenderer(window), GameTe
 
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
+	animationShader = new OGLShader("skinningvert.glsl", "deferredscenefrag.glsl"); 
+
 }
 
 GameTechRenderer::~GameTechRenderer() {
@@ -284,6 +286,10 @@ GameTechRenderer::~GameTechRenderer() {
 	glDeleteTextures(1, &laserTexOld);
 	glDeleteFramebuffers(1, &edgeNormalsFBO);
 	glDeleteTextures(1, &edgeNormalsTex);
+
+	//delete MaleGuard;
+   delete animationShader;
+	
 
 }
 
@@ -399,7 +405,19 @@ void GameTechRenderer::RenderCamera() {
 	//glBindTexture(GL_TEXTURE_2D, shadowTex);
 
 	for (const auto&i : frameObjects) {
-        size_t subMeshCount = i->GetMesh()->GetSubMeshCount();
+		size_t subMeshCount = i->GetMesh()->GetSubMeshCount();
+
+        Matrix4 modelMatrix;
+        i->getParent()->GetTransform().getOpenGLMatrix((btScalar*)&modelMatrix);
+
+        modelMatrix = modelMatrix * Matrix::Scale(i->getParent()->getRenderScale());
+        glUniformMatrix4fv(modelLocation, 1, false, (float*)&modelMatrix);
+
+		if ((*i).getParent()->GetIsAnimated() == true) {//if object is a player, don't want it to be drawn here
+			continue; //go to next renderObject in loop
+		}
+
+		//if ((*i).getParent()->getType() == Player); //could instead check based on type
 
         for (size_t subMeshIndex = 0; subMeshIndex < subMeshCount; ++subMeshIndex) {
 			const Material::Layer* layer = i->getMaterial() ? i->getMaterial()->GetLayer(subMeshIndex) : nullptr;
@@ -430,15 +448,11 @@ void GameTechRenderer::RenderCamera() {
                 BindTextureToShader(*(i->GetMetallicMaps()[subMeshIndex]), "metallicTex", 2);
             }*/
 
-            Matrix4 modelMatrix;
-            i->getParent()->GetTransform().getOpenGLMatrix((btScalar*)&modelMatrix);
-            modelMatrix = modelMatrix * Matrix::Scale(i->getParent()->getRenderScale());
-            glUniformMatrix4fv(modelLocation, 1, false, (float*)&modelMatrix);
 
             //Matrix4 fullShadowMat = shadowMatrix * modelMatrix; //TEMPORARILY REMOVING SHADOWS
             //glUniformMatrix4fv(shadowLocation, 1, false, (float*)&fullShadowMat);
 
-            Vector4 colour = i->GetColour();
+            Vector4 colour = (layer && layer->useColor) ? i->GetColour() : Vector4(1, 1, 1, 1);
             glUniform4fv(colourLocation, 1, &colour.x);
 
             glUniform1i(hasVColLocation, !(*i).GetMesh()->GetColourData().empty());
@@ -498,6 +512,7 @@ void GameTechRenderer::NewRenderLines() {
 
 
 void GameTechRenderer::NewRenderText() {
+    // Retrieve the debug strings
 	const std::vector<Debug::DebugStringEntry>& strings = Debug::GetDebugStrings();
 	if (strings.empty()) {
 		return;
@@ -505,8 +520,11 @@ void GameTechRenderer::NewRenderText() {
 
 	UseShader(*debugShader);
 
+    // Retrieve the font texture
 	OGLTexture* t = (OGLTexture*)Debug::GetDebugFont()->getTexture().get();
+    
 
+    // If font texture exists, bind it to the shader
 	if (t) {
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, t->GetObjectID());
@@ -516,28 +534,38 @@ void GameTechRenderer::NewRenderText() {
 		BindTextureToShader(*t, "mainTex", 0);
 	}
 
+    // Set up the orthographic projection matrix
 	Matrix4 proj = Matrix::Orthographic(0.0f, 1.0f, 1.0f, 0.0f, -1.0f, 1.0f, true);
 
+    // Set up the view projection matrix uniform
 	int matSlot = glGetUniformLocation(debugShader->GetProgramID(), "viewProjMatrix");
 	glUniformMatrix4fv(matSlot, 1, false, (float*)proj.array);
 
+    // Send font texture to the shader
 	GLuint texSlot = glGetUniformLocation(debugShader->GetProgramID(), "useTexture");
 	glUniform1i(texSlot, 1);
 
+    // Clear previous frames text vertex data
 	debugTextPos.clear();
 	debugTextColours.clear();
 	debugTextUVs.clear();
 
+    // Calculates buffer sizes for new text
+    // Calculates how many vertices are needed (each character = 6 vertices)
 	int frameVertCount = 0;
 	for (const auto& s : strings) {
 		frameVertCount += s.data.size() * 6;
 	}
 	SetDebugStringBufferSizes(frameVertCount);
 
+    // For each string in the debug strings
+    // Build the vertices for the string
+    // Add the vertices to the text vertex data
 	for (const auto& s : strings) {
 		Debug::GetDebugFont()->BuildVerticesForString(s.data, s.position, s.colour, s.scale, debugTextPos, debugTextUVs, debugTextColours);
 	}
 
+    // Update the text vertex buffer with the new data
 	glBindBuffer(GL_ARRAY_BUFFER, textVertVBO);
 	glBufferSubData(GL_ARRAY_BUFFER, 0, frameVertCount * sizeof(Vector3), debugTextPos.data());
 	glBindBuffer(GL_ARRAY_BUFFER, textColourVBO);
@@ -741,23 +769,24 @@ void GameTechRenderer::RenderLasers() {
 	glUniform2f(glGetUniformLocation(laserShader->GetProgramID(), "windowSize"), windowSize.x, windowSize.y);
 
 	BindMesh(*highResSphere);
-	for (std::shared_ptr<Laser> laser : lasers) {
-		if (laser->startPos == btVector3(0, 0, 0) && laser->endPos == btVector3(0, 0, 0)) continue;
-		glUniform3fv(glGetUniformLocation(laserShader->GetProgramID(), "startPosition"), 1, (float*)&laser->startPos);
-		glUniform3fv(glGetUniformLocation(laserShader->GetProgramID(), "endPosition"), 1, (float*)&laser->endPos);
-		glUniform1f(glGetUniformLocation(laserShader->GetProgramID(), "thickness"), 0.25f);
-		glUniform1f(glGetUniformLocation(laserShader->GetProgramID(), "time"), vignettePulse);
-		/*btVector4 color;
-		if (laser->id > 100) { //AI IDs starting at 101
-			color = Color::GetPlayerColor(5); //Using pink player color as default for now
+	for (LaserObject* laser : lasers) {
+		// Manually remove lasers that no longer exist.
+		// Is there a better way?
+		if (laser->isDeleted()) {
+			UntrackLaser(laser);
+			continue;
 		}
-		else {
-			color = Color::GetPlayerColor(laser->id);
-		}*/
-		//AI IDs starting at 101, using pink player color as default for now
-		btVector4 color = laser->id > 100 ? Color::GetPlayerColor(5) : color = Color::GetPlayerColor(laser->id);
-		glUniform4fv(glGetUniformLocation(laserShader->GetProgramID(), "inColour"), 1, (float*)&color);
-		DrawBoundMesh();
+
+		// Draw laser.
+		if (!(laser->GetStartPos() == laser->GetEndPos())) {
+
+			glUniform3fv(glGetUniformLocation(laserShader->GetProgramID(), "startPosition"), 1, (float*)&laser->GetStartPos());
+			glUniform3fv(glGetUniformLocation(laserShader->GetProgramID(), "endPosition"), 1, (float*)&laser->GetEndPos());
+			glUniform1f(glGetUniformLocation(laserShader->GetProgramID(), "thickness"), laser->GetThickness());
+			glUniform1f(glGetUniformLocation(laserShader->GetProgramID(), "time"), vignettePulse);
+			glUniform4fv(glGetUniformLocation(laserShader->GetProgramID(), "inColour"), 1, (float*)&laser->GetColor());
+			DrawBoundMesh();
+		}
 	}
 
 	// motion blur
@@ -772,8 +801,6 @@ void GameTechRenderer::RenderLasers() {
 	glBindTexture(GL_TEXTURE_2D, laserTexOld);
 	glUniform1i(glGetUniformLocation(laserPreProcess->GetProgramID(), "oldLaserTex"), 1);
 	glUniform1f(glGetUniformLocation(laserPreProcess->GetProgramID(), "dt"), delta);
-	glUniformMatrix4fv(glGetUniformLocation(laserPreProcess->GetProgramID(), "currViewProjMatrix"), 1, false, (float*)&viewProjMatrix);
-	glUniformMatrix4fv(glGetUniformLocation(laserPreProcess->GetProgramID(), "prevViewProjMatrix"), 1, false, (float*)&laserPreviousViewProjMatrix);
 	DrawBoundMesh();
 
 	// calculate texelSize needed for blur
@@ -793,7 +820,7 @@ void GameTechRenderer::RenderLasers() {
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, laserPreTex);
 	glUniform1i(glGetUniformLocation(laserPostProcess->GetProgramID(), "laserTex"), 0);
-	glUniform1f(glGetUniformLocation(laserPostProcess->GetProgramID(), "blurScale"),1.25f);
+	glUniform1f(glGetUniformLocation(laserPostProcess->GetProgramID(), "blurScale"),1.75f);
 	glUniform2fv(glGetUniformLocation(laserPostProcess->GetProgramID(), "texelSize"), 1, (float*)&texelSize);
 	DrawBoundMesh();
 
@@ -807,10 +834,9 @@ void GameTechRenderer::RenderLasers() {
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, laserPostTex);
 	glUniform1i(glGetUniformLocation(laserPostProcess->GetProgramID(), "laserTex"), 0);
-	glUniform1f(glGetUniformLocation(laserPostProcess->GetProgramID(), "blurScale"), 1.25f);
+	glUniform1f(glGetUniformLocation(laserPostProcess->GetProgramID(), "blurScale"), 1.75f);
 	glUniform2fv(glGetUniformLocation(laserPostProcess->GetProgramID(), "texelSize"), 1, (float*)&texelSize);
 	DrawBoundMesh();
-	laserPreviousViewProjMatrix = viewProjMatrix;
 	laserTexOld = laserPreTex;
 }
 
@@ -1057,6 +1083,7 @@ void GameTechRenderer::DrawScene() { //the basic rendering for the scene, curren
 	glClearColor(1, 1, 1, 0); //doesn't seem to change anything regardless of alpha
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     RenderCamera();
+	RenderAnimations(); /////////////////////////////////////////////////////////////////////////////////////TESTING FOR NOW
 	// Render Decals to it's own buffer
 	RenderDecals();
 
@@ -1203,4 +1230,90 @@ void GameTechRenderer::CombineBuffers() {//basically final post processing outpu
 	DrawBoundMesh();
 	glBindFramebuffer(GL_FRAMEBUFFER, 0); //hdrTex should now hold full deferred lighting rendered scene
 
+}
+
+void GameTechRenderer::RenderAnimations() {
+	// if gameobject (i.e. renderObject's parent) animation == true then it can be rendered here. Calculate the necessary matrices by accessing the renderObject's animation
+	//and send the necessary info to shader. This should render players anyway even if animations not currently playing
+	std::vector<RenderObject*> animatedObjects;
+	for (const auto& i : frameObjects) { //iterate over all render objects
+		if (i->getParent()->GetIsAnimated() == true) { 
+			animatedObjects.emplace_back(i); //should add all animated objects to animatedObjects
+		}
+	}
+	//From here pretty much like Render Camera but for animated meshes using the animation Shader instead
+	//this should render only animated objects i.e. players which should all have submeshes and materials
+
+	Matrix4 viewMatrix = camera->BuildViewMatrix();
+	Matrix4 projMatrix = camera->BuildProjectionMatrix(hostWindow->GetScreenAspect());
+
+	UseShader(*animationShader);
+
+	//define the locations here since they don't change per mesh:
+	int colourLocation = glGetUniformLocation(animationShader->GetProgramID(), "objectColour");
+	int hasVColLocation = glGetUniformLocation(animationShader->GetProgramID(), "hasVertexColours"); 
+	int hasTexLocation = glGetUniformLocation(animationShader->GetProgramID(), "hasTexture");
+	int hasNormalLocation = glGetUniformLocation(animationShader->GetProgramID(), "hasNormalMap");
+	int isFlatLocation = glGetUniformLocation(animationShader->GetProgramID(), "isFLat");
+
+	int projLocation = glGetUniformLocation(animationShader->GetProgramID(), "projMatrix");
+	int viewLocation = glGetUniformLocation(animationShader->GetProgramID(), "viewMatrix");
+	int modelLocation = glGetUniformLocation(animationShader->GetProgramID(), "modelMatrix");
+
+	int cameraLocation = glGetUniformLocation(animationShader->GetProgramID(), "cameraPos");
+	Vector3 camPos = camera->GetPosition();
+	glUniform3fv(cameraLocation, 1, &camPos.x);
+
+	glUniformMatrix4fv(projLocation, 1, false, (float*)&projMatrix); //projection and view matrix don't vary between meshes so can send uniforms here
+	glUniformMatrix4fv(viewLocation, 1, false, (float*)&viewMatrix);
+
+	for (const auto& i : animatedObjects) {
+		//glUniform1i(glGetUniformLocation(animationShader->GetProgramID(), "diffuseTex"), 0); // PROBABLY SHOULDN'T BE HERE
+
+	
+		std::vector<Matrix4> frameMatrices;
+
+		//These two changed to fit the datatypes as defined in this codebase:
+		const Matrix4* frameData = (*i).GetAnimation()->GetJointData((*i).GetAnimation()->GetCurrentFrame());// SHOULD THESE BE CALCULATED PER JOINT?
+
+		for (unsigned int q = 0; q < (*i).GetMesh()->GetJointCount(); ++q) {
+			const Matrix4 invBindPose = (*i).GetMesh()->GetInverseBindPose()[q]; //need to get the inverse bind pose per joint to "undo" the bind pose for each joint
+			frameMatrices.emplace_back(frameData[q] * invBindPose); 
+		}
+
+		int j = glGetUniformLocation(animationShader->GetProgramID(), "joints"); 
+		glUniformMatrix4fv(j, frameMatrices.size(), false, (float*)frameMatrices.data()); 
+
+		//for consistency with renderCamera:
+		size_t subMeshCount = i->GetMesh()->GetSubMeshCount();
+
+		for (size_t subMeshIndex = 0; subMeshIndex < subMeshCount; ++subMeshIndex) { 
+			const Material::Layer* layer = i->getMaterial() ? i->getMaterial()->GetLayer(subMeshIndex) : nullptr; //shouldn't return nullptr since all animated objects have materials
+		    //Bind textures per submesh:
+			bool hasTex = layer && layer->diffuse;
+			bool hasNormal = layer && layer->normal;
+			if (hasTex) {
+				BindTextureToShader(*layer->diffuse, "diffuseTex", 0);
+			}
+			if (hasNormal) {
+				BindTextureToShader(*layer->diffuse, "normalTex", 1);
+			}
+
+			Matrix4 modelMatrix; 
+			i->getParent()->GetTransform().getOpenGLMatrix((btScalar*)&modelMatrix);
+			modelMatrix = modelMatrix * Matrix::Scale(i->getParent()->getRenderScale());
+			modelMatrix = modelMatrix * Matrix::Translation(Vector3(0, -0.9f, 0.1f)); //Translation added to centre the player mesh better
+			glUniformMatrix4fv(modelLocation, 1, false, (float*)&modelMatrix);
+
+			Vector4 Colour = i->GetColour();
+			glUniform4fv(colourLocation, 1, &Colour.x);
+
+			glUniform1i(hasVColLocation, !(*i).GetMesh()->GetColourData().empty()); 
+			
+
+
+			BindMesh((OGLMesh&)*(*i).GetMesh());
+			DrawBoundMesh((uint32_t)subMeshIndex);
+		}
+	}
 }

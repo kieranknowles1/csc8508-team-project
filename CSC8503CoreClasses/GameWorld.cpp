@@ -2,7 +2,6 @@
 #include "GameObject.h"
 #include "Camera.h"
 
-
 using namespace NCL;
 using namespace NCL::CSC8503;
 
@@ -40,6 +39,7 @@ void GameWorld::AddGameObject(GameObject* o) {
 
 void GameWorld::RemoveGameObject(GameObject* o) {
 	gameObjects.erase(std::remove(gameObjects.begin(), gameObjects.end(), o), gameObjects.end());
+	o->setDeleted();
 	worldStateCounter++;
 }
 
