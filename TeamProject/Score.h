@@ -16,6 +16,7 @@ namespace NCL::CSC8503 {
         virtual std::vector<std::shared_ptr<Packet::Packet>> CreatePackets(int sequenceNum) = 0;
         
         void AddToScore(float amount) { score += (amount * multiplier); }
+        void SetScore(float s) { score = s; }
         float GetScore() { return score; }
 
         void SetMultiplier(float mult) { multiplier = mult; }

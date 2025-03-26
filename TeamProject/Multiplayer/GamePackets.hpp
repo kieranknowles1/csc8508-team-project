@@ -281,8 +281,8 @@ namespace Packet {
             m_objectID(objectID), m_score(score)
         {}
 
-        int GetTargetID() { return m_objectID; }
-        float GetScore() { return m_score; }
+        int GetObjectID() const { return m_objectID; }
+        float GetScore() const { return m_score; }
 
     private:
         int m_objectID;
