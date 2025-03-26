@@ -49,6 +49,8 @@ namespace Packet {
          */
         uint32_t GetSequenceNumber() const { return m_sequenceNum; }
 
+        void SetSequenceNumber(int value) { m_sequenceNum = value; }
+
         /**
          * @brief Override of the < operator for heap ordering.
          * @param other The packet the compare to.

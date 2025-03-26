@@ -2,13 +2,21 @@
 
 #include <LinearMath/btVector3.h>
 #include <LinearMath/btQuaternion.h>
+#include "GameObject.h"
 
+#ifdef BUILD_PRE
+
+#include "../Network/Packet.hpp"
+#include "../Network/Network.hpp"
+#include "../TeamProject/Multiplayer/User.hpp"
+#include "../TeamProject/Multiplayer/Lobby.hpp"
+
+#else
+#include "Network/Packet.hpp"
 #include "Network/Network.hpp"
-#include "PlayerObject.h"
-#include "User.hpp"
-#include "Lobby.hpp"
-
-using namespace Lobbies;
+#include "Multiplayer/User.hpp"
+#include "Multiplayer/Lobby.hpp"
+#endif
 
 namespace Packet {
     /**
@@ -23,10 +31,11 @@ namespace Packet {
         OBJECT_CHANGE_GRAVITY = CUSTOM_TYPE + 3,
         START_GAME = CUSTOM_TYPE + 4,
         USER_INFO = CUSTOM_TYPE + 5,
-        ASSIGN_HOST = CUSTOM_TYPE + 6,
-        REQUEST_USERID = CUSTOM_TYPE + 7,
-        DAMAGE = CUSTOM_TYPE + 8,
-        LASER = CUSTOM_TYPE + 9
+        REQUEST_USERID = CUSTOM_TYPE + 6,
+        DAMAGE = CUSTOM_TYPE + 7,
+        LASER = CUSTOM_TYPE + 8,
+        PING = CUSTOM_TYPE + 9,
+        PONG = CUSTOM_TYPE + 10,
     };
 
 
@@ -136,26 +145,26 @@ namespace Packet {
     };
 
 
-    /**
-     * @brief Player Change State Packet class.
-     * 
-     * Used to notify of a player's state change (usually spawning in or
-     * dying).
-     */
-    class PlayerChangeStatePacket : public Packet {
-    public:
-        PlayerChangeStatePacket(int playerID, const PlayerState& state) :
-            Packet(static_cast<Type>(PacketType::PLAYER_STATE_CHANGE), static_cast<int>(Channel::UNSEQUENCED), 0),
-            m_playerID(playerID), m_newState(state)
-        {}
+    ///**
+    // * @brief Player Change State Packet class.
+    // * 
+    // * Used to notify of a player's state change (usually spawning in or
+    // * dying).
+    // */
+    //class PlayerChangeStatePacket : public Packet {
+    //public:
+    //    PlayerChangeStatePacket(int playerID, const ObjectState& state) :
+    //        Packet(static_cast<Type>(PacketType::PLAYER_STATE_CHANGE), static_cast<int>(Channel::UNSEQUENCED), 0),
+    //        m_playerID(playerID), m_newState(state)
+    //    {}
 
-        int GetPlayerID() const { return m_playerID; }
-        PlayerState GetState() const { return m_newState; }
+    //    int GetPlayerID() const { return m_playerID; }
+    //    ObjectState GetState() const { return m_newState; }
 
-    private:
-        int m_playerID;
-        PlayerState m_newState;
-    };
+    //private:
+    //    int m_playerID;
+    //    ObjectState m_newState;
+    //};
 
 
     /**
@@ -189,30 +198,6 @@ namespace Packet {
 
 
     /**
-     * @brief A packet for assigning the host of a lobby.
-     */
-    class AssignHostPacket : public Packet {
-    public:
-        /**
-         * @brief Constructor for AssignHostPacket.
-         * @param hostID The ID of the host user.
-         * @param destination - If nullptr, will broadcast.
-         */
-        AssignHostPacket(int hostID, ENetPeer* destination = nullptr) :
-            Packet(static_cast<Type>(PacketType::ASSIGN_HOST), static_cast<uint8_t>(Channel::UNSEQUENCED), 0),
-            m_hostID(hostID), m_peer(destination)
-        {}
-
-        int GetHostID() const { return m_hostID; }
-        ENetPeer* GetPeer() const { return m_peer; }
-
-    private:
-        const int m_hostID;
-        ENetPeer* m_peer; // Only used when sending direct. Is not translated.
-    };
-
-
-    /**
      * @brief A packet for sending user data over the network.
      * 
      * How the packet is handled depends upon the LobbyAction provided.
@@ -222,39 +207,17 @@ namespace Packet {
      */
     class UserInfoPacket : public Packet {
     public:
-        UserInfoPacket(User user, LobbyAction action) :
+        UserInfoPacket(Lobbies::User user, Lobbies::LobbyAction action) :
             Packet(static_cast<Type>(PacketType::USER_INFO), static_cast<uint8_t>(Channel::RELIABLE), 0),
             m_user(user), m_action(action)
         {}
 
-        User GetUser() const { return m_user; }
-        LobbyAction GetAction() const { return m_action; }
+        Lobbies::User GetUser() const { return m_user; }
+        Lobbies::LobbyAction GetAction() const { return m_action; }
 
     private:
-        const User m_user;
-        const LobbyAction m_action;
-    };
-
-
-    /**
-     * @brief A simple packet for requesting a unique user id from the server.
-     */
-    class RequestUserIDPacket : public Packet {
-    public:
-        /**
-         * @brief Constructor for RequestUserIDPacket.
-         * @param destination - nullptr for broadcasting, otherwise, direct.
-         * Used for responding.
-         */
-        RequestUserIDPacket(ENetPeer* destination) :
-            Packet(static_cast<Type>(PacketType::REQUEST_USERID), static_cast<uint8_t>(Channel::UNSEQUENCED), 0),
-            m_peer(destination)
-        {}
-
-        ENetPeer* GetPeer() const { return m_peer; }
-
-    private:
-        ENetPeer* m_peer;
+        const Lobbies::User m_user;
+        const Lobbies::LobbyAction m_action;
     };
 
 
@@ -270,7 +233,7 @@ namespace Packet {
          * @param dealer - the id of the user who dealt the damage.
          */
         DamagePacket(int targetID, float damage, int dealer) :
-            Packet(static_cast<Type>(PacketType::DAMAGE), static_cast<uint8_t>(Channel::RELIABLE), 0),
+            Packet(static_cast<Type>(PacketType::DAMAGE), static_cast<uint8_t>(Channel::UNSEQUENCED), 0),
             m_targetID(targetID), m_damage(damage), m_dealer(dealer)
         {}
 
@@ -282,6 +245,28 @@ namespace Packet {
         int m_targetID;
         float m_damage;
         int m_dealer;
+    };
+
+
+    /**
+     * @brief Ping the server or client.
+     */
+    class PingPacket : public Packet {
+    public:
+        PingPacket() :
+            Packet(static_cast<Type>(PacketType::PING), static_cast<uint8_t>(Channel::RELIABLE), 0)
+        {}
+    };
+
+
+    /**
+     * @brief Pong a ping.
+     */
+    class PongPacket : public Packet {
+    public:
+        PongPacket() :
+            Packet(static_cast<Type>(PacketType::PONG), static_cast<uint8_t>(Channel::RELIABLE), 0)
+        {}
     };
 }
 

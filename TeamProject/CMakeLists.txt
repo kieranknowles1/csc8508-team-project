@@ -1,69 +1,90 @@
 set(SOURCES
-    main.cpp
+    AnimationObject.cpp
+    AnimationObject.h
+    AudioEngine.cpp
+    AudioEngine.h
+
     BulletDebug.cpp
     BulletDebug.h
+    BWHelperFunctions.cpp
+    BWHelperFunctions.h
+
+    Colors.h
+    Config.cpp
+    Config.h
+    CreditsScreen.h
+    Crosshair.cpp
+    Crosshair.h
+
+    DecalSystem.cpp
+    DecalSystem.h
+    
+    EndScreenMP.cpp
+    EndScreenMP.h
+
+    GameScreen.h
     GameTechRendererInterface.cpp
     GameTechRendererInterface.h
-    Scoreboard.cpp
-    Scoreboard.h
-    TutorialGame.cpp
-    TutorialGame.h
-    PlayerController.cpp
-    PlayerController.h
-    PlayerObject.h
-    PlayerObject.cpp
-    Turret.h
-    Turret.cpp
-	BWHelperFunctions.h
-	BWHelperFunctions.cpp
+
+    Health.cpp
+    Health.h
+
+    LaserObject.cpp
+    LaserObject.h
     LevelImporter.cpp
     LevelImporter.h
-	NavMesh.h
-	NavMesh.cpp
-    ResourceManager.h
-    ResourceManager.cpp
-    Profiler.h
-    Profiler.cpp
-	NavEntity.h
-	NavEntity.cpp
-	AudioEngine.h
-	AudioEngine.cpp
-    Config.h
-    Config.cpp
-    DecalSystem.h
-    DecalSystem.cpp
-    MainMenuScreen.h
-    CreditsScreen.h
-    GameScreen.h
-    PauseScreen.h
     LobbyScreen.h
-    Colors.h
-    Multiplayer/GamePackets.hpp
-    Multiplayer/GamePacketHandlers.hpp
+
+    MainMenuScreen.h
+    Material.cpp
+    Material.h
     Multiplayer/GamePacketHandlers.cpp
-    Multiplayer/Lobby.hpp
+    Multiplayer/GamePacketHandlers.hpp
+    Multiplayer/GamePackets.hpp
     Multiplayer/Lobby.cpp
+    Multiplayer/Lobby.hpp
+    Multiplayer/Server.cpp
+    Multiplayer/Server.hpp
     Multiplayer/User.hpp
-	Wanderer.h
-	Wanderer.cpp
-    Shoot.cpp
-    Shoot.h
-    PointLight.h
-    Crosshair.h
-    Crosshair.cpp
-    Respawn.h
-    AnimatedRenderObject.h
-    AnimatedRenderObject.cpp
+
+    NavEntity.cpp
+    NavEntity.h
+    NavMesh.cpp
+    NavMesh.h
+
     Overheat.h
     Overheat.cpp
-	SPGameController.h
+
+    ResourceManager.cpp
+    ResourceManager.h
+    Respawn.h
+
+    PauseScreen.h
+    PlayerController.cpp
+    PlayerController.h
+    PlayerObject.cpp
+    PlayerObject.h
+    PlayingState.h
+    PointLight.h
+    Profiler.cpp
+    Profiler.h
+
+    Scoreboard.cpp
+    Scoreboard.h
+    Shoot.cpp
+    Shoot.h
 	SPGameController.cpp
-    Material.h
-    Material.cpp
-    EndScreenMP.h
-    EndScreenMP.cpp
-    EndScreenSP.h
-    EndScreenSP.cpp
+    SPGameController.h
+
+    Turret.cpp
+    Turret.h
+    TutorialGame.cpp
+    TutorialGame.h
+
+    Wanderer.cpp
+    Wanderer.h	
+
+    main.cpp
 )
 
 set(ASSET_ROOT "${CMAKE_SOURCE_DIR}/Assets")

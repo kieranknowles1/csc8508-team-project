@@ -61,6 +61,7 @@ void Turret::Update(float dt) {
 	if (angleDegrees <= 10.0f) {
 		std::cout << "Player can be shot by turret " << angleDegrees << std::endl;
 	}
+	GameObject::Update(dt);
 
 }
 

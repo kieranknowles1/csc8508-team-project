@@ -5,6 +5,7 @@
 #include <vector>
 #include <memory>
 #include "PointLight.h"
+#include "LaserObject.h"
 
 #include "Vector.h"
 
@@ -23,31 +24,6 @@ namespace NCL {
 namespace NCL::CSC8503 {
 	class GameWorld;
 	class RenderObject;
-
-
-	struct Laser {
-		btVector3 startPos;
-		btVector3 endPos;
-		int id;
-	};
-
-	struct UIBox {
-		Vector2 position;
-		Vector2 size;
-	};
-
-	struct Button {
-		Vector2 position;
-		Vector2 size;
-		Vector4 color = Vector4(0.4f, 0.4f, 0.4f, 1);
-	};
-
-	struct Text {
-		Vector2 position;
-		std::string text;
-		Vector4 color = Vector4(1, 1, 1, 1);
-	};
-
 
 	struct UiSprite {
 		Maths::Vector2 position;
@@ -140,34 +116,12 @@ namespace NCL::CSC8503 {
 			delta = dt;
 		}
 
-
-		void initLasers(bool sp) {
-			if (sp) {
-				//Player in SP is ID 1 and AI id is 101-150 for now
-				std::shared_ptr<Laser> newLaser = std::make_shared<Laser>(btVector3(0, 0, 0), btVector3(0, 0, 0), 1);
-				lasers.push_back(newLaser);
-				for (int i = 101; i < 151; i++) {
-					std::shared_ptr<Laser> newLaser = std::make_shared<Laser>(btVector3(0, 0, 0), btVector3(0, 0, 0), i);
-					lasers.push_back(newLaser);
-				}
-			}
-			else {
-				for (int i = 0; i < 8; i++) {
-					std::shared_ptr<Laser> newLaser = std::make_shared<Laser>(btVector3(0, 0, 0), btVector3(0, 0, 0), i + 1);
-					lasers.push_back(newLaser);
-				}
-			}
+		void TrackLaser(LaserObject* laser) {
+			lasers.insert(laser);
 		}
 
-		void updateLaser(int laserId, btVector3 startPos, btVector3 endPos) {
-			// Find the laser with the given ID and update its positions
-			for (std::shared_ptr<Laser> laser : lasers) {
-				if (laser->id == laserId) {
-					laser->startPos = startPos;  
-					laser->endPos = endPos;   
-					return; 
-				}
-			}
+		void UntrackLaser(LaserObject* laser) {
+			lasers.erase(laser);
 		}
 
         /*
@@ -207,7 +161,8 @@ namespace NCL::CSC8503 {
         std::vector<UiSprite> frameSprites;
 		std::vector<UiText> frameTexts;
 		std::vector<PointLight*> lights;
-		std::vector<std::shared_ptr<Laser>> lasers;
+
+		std::set<LaserObject*, LaserComparator> lasers;
 		DecalSystem decalSystem;
 
 		//Mesh Animation additions:

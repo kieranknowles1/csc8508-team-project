@@ -2,7 +2,8 @@
 #include "AudioEngine.h"
 #include "TutorialGame.h"
 #include "Multiplayer/GamePackets.hpp"
-
+#include "Health.h"
+#include "AnimationObject.h"
 
 using namespace NCL;
 using namespace CSC8503;
@@ -31,7 +32,6 @@ void PlayerController::Initialise() {
     renderer->AddUiElement(overheat.get());
     crosshair->SetActive(true);
     overheat->SetActive(true);
-    laserID = player->GetWorldID();
     renderer->SetVignetteOn(true);
 }
 
@@ -56,11 +56,10 @@ void PlayerController::UpdateMovement(float dt) {
     HandleSliding(dt);
 
     if (inAirTime > 0) {
-        player->setCollided(0);
         inAirTime -= dt;
     }
     if (isSliding || slideTransition) {
-        player->SetAnimation(AnimationState::SLIDING);
+        player->SetAnimationState(AnimationState::SLIDING);
         return;
     }
     RotationCalculations();
@@ -75,6 +74,7 @@ void PlayerController::UpdateMovement(float dt) {
     rb->setLinearVelocity(movement);
     rb->activate();
     HandleShooting(dt);
+	ToggleScoreboard();
 }
 
 
@@ -90,25 +90,14 @@ void PlayerController::HandleShooting(float dt) {
     }
     else {
         if (firing) {
-            renderer->updateLaser(laserID,btVector3(0,0,0),btVector3(0,0,0));
+            player->updateLaser(btVector3(0,0,0), btVector3(0,0,0));
             crosshair->stopFiring();
             overheat->stopFiring();
-            if (TutorialGame::GetServerInstance().has_value()) {
-                std::shared_ptr<Packet::LaserPacket> laserPacket = std::make_shared<Packet::LaserPacket>(
-                    player->GetWorldID(),
-                    btVector3(0, 0, 0),
-                    btVector3(0, 0, 0),
-                    btVector3(0, 0, 0),
-                    player->GetLastPacketSequence((uint8_t)Packet::PacketType::LASER) + 1
-                );
-                player->UpdatePacketSequence((uint8_t)Packet::PacketType::LASER, laserPacket->GetSequenceNumber());
-                TutorialGame::GetServerInstance()->Broadcast(laserPacket);
-            }
             firing = false;
+            player->GetAttackAttrib()->Hit(nullptr);
         }
     }
 }
-
 
 void PlayerController::FireShot(float dt) {
     // Convert camera pitch & yaw to radians
@@ -120,22 +109,35 @@ void PlayerController::FireShot(float dt) {
     btMatrix3x3 rotationMatrix(bulletRotation);
     btVector3 forwardDir = rotationMatrix * btVector3(0, 0, -1);
     btVector3 adjustedOffset = rotationMatrix * gunCameraOffset; // Apply rotation to the offset
+    
+    // Calculate forward direction based on where crosshair lands.
+    std::optional<ShotInfo> crosshairRay = Shoot::GetInstance()->RayClosest(
+        camera->GetPosition(), forwardDir
+    );
+    if (crosshairRay == std::nullopt) return;
 
-   std::optional<ShotInfo> info = Shoot::GetInstance()->ShootBulletPlayer(player->getGun()->GetPhysicsObject()->GetRigidBody()->getWorldTransform().getOrigin() + adjustedOffset, forwardDir, bulletRotation, dt,laserID);
-   if (info != std::nullopt) {
-       renderer->updateLaser(laserID, player->getGun()->GetPhysicsObject()->GetRigidBody()->getWorldTransform().getOrigin() + adjustedOffset, info.value().hitPos);
-       if (TutorialGame::GetServerInstance().has_value()) {
-           std::shared_ptr<Packet::LaserPacket> laserPacket = std::make_shared<Packet::LaserPacket>(
-               player->GetWorldID(),
-               player->getGun()->GetPhysicsObject()->GetRigidBody()->getWorldTransform().getOrigin() + adjustedOffset,
-               info.value().hitPos,
-               info.value().hitNormal,
-               player->GetLastPacketSequence((uint8_t)Packet::PacketType::LASER) + 1
-           );
-           player->UpdatePacketSequence((uint8_t)Packet::PacketType::LASER, laserPacket->GetSequenceNumber());
-           TutorialGame::GetServerInstance()->Broadcast(laserPacket);
-       }
-   }
+    btVector3 crosshairLookPoint = crosshairRay->hitPos;
+    btVector3 startPos = player->getGun()->GetPhysicsObject()->GetRigidBody()->getWorldTransform().getOrigin() + adjustedOffset;
+    btVector3 gunForwardDir = (crosshairLookPoint - startPos).normalized();
+
+    std::optional<ShotInfo> info = Shoot::GetInstance()->ShootBulletPlayer(startPos, gunForwardDir, bulletRotation, dt, player->GetWorldID());
+    if (info != std::nullopt) {
+        player->GetLaser()->SetCollisionNormal(info.value().hitNormal);
+        player->updateLaser(player->getGun()->GetPhysicsObject()->GetRigidBody()->getWorldTransform().getOrigin() + adjustedOffset, info.value().hitPos);
+
+        // Shooting at a player.
+        if (info->hitObj->getType() == GameObject::Type::Player) {
+            player->GetAttackAttrib()->Hit(((PlayerObject*)info->hitObj)->GetHealthAttrib());
+        }
+
+        // Shooting at an AI.
+        else if (info->hitObj->getType() == GameObject::Type::AI) {
+            player->GetAttackAttrib()->Hit(((Wanderer*)info->hitObj)->GetHealthAttrib());
+        }
+
+        else player->GetAttackAttrib()->Hit(nullptr);
+    }
+    else player->GetAttackAttrib()->Hit(nullptr);
 }
 
 
@@ -193,12 +195,11 @@ void PlayerController::HandleSliding(float dt) {
         btVector3 playerPos = transformPlayerMotion.getOrigin();
 
         playerPos -= forward * std::lerp(isSliding ? 0 : slidingCameraBackwards, isSliding ? slidingCameraBackwards : 0, slideFactor);
-        playerPos += upDirection * std::lerp(isSliding ? cameraHeight : slidingCameraHeight, isSliding ? slidingCameraHeight : cameraHeight, slideFactor);
+        playerPos += upDirection * std::lerp(isSliding ? camOffset.y() : slidingCameraHeight, isSliding ? slidingCameraHeight : camOffset.y(), slideFactor);
         if (!thirdPerson) {
             camera->SetPosition(playerPos);
             player->SetGunTransform(camera->GetPitch(), camera->GetYaw(), playerPos);
         }
-        //CheckFloor(dt);
         btVector3 pastMovement = rb->getLinearVelocity();
         pastMovement += upDirection * -(gravityScale * dt);
         previousVelocity = rb->getLinearVelocity();
@@ -261,7 +262,6 @@ void PlayerController::RotationCalculations() {
     btQuaternion playerYaw = btQuaternion(btVector3(0, 1, 0), Maths::DegreesToRadians(yaw));
     btQuaternion finalRotation = camRotOffset * playerYaw;
     transformPlayer.setRotation(finalRotation);
-
     rb->setWorldTransform(transformPlayer);
     //finds player forward and right vectors
     btMatrix3x3 rotationMatrix(finalRotation);
@@ -276,7 +276,9 @@ void PlayerController::CameraMovement() {
     btTransform transformPlayerMotion;
     player->GetPhysicsObject()->GetMotionState()->getWorldTransform(transformPlayerMotion);
     btVector3 playerCamPos = transformPlayerMotion.getOrigin();
-    playerCamPos += upDirection * cameraHeight;
+    playerCamPos += camOffset.x() * right;
+    playerCamPos += camOffset.y() * up;
+    playerCamPos += camOffset.z() * forward;
     if (!slideTransition && !thirdPerson) {
         camera->SetPosition(playerCamPos);
         player->SetGunTransform(camera->GetPitch(), camera->GetYaw(), playerCamPos);
@@ -285,7 +287,7 @@ void PlayerController::CameraMovement() {
 
 //if on ground, movement based on floor angle
 void PlayerController::GroundNormalCalculations() {
-    if (player->getCollided() > 0) {
+    if (player->getCollided() > 0 && inAirTime <=0.0f) {
         btVector3 groundNormal = FindFloorNormal();
         if (groundNormal != btVector3(0, 0, 0)) {
             float cosAngleThreshold = cos(btRadians(50.0f));
@@ -309,32 +311,38 @@ void PlayerController::MovementCalculations(float dt) {
     Vector2 directionalInput = getDirectionalInput();
     bool sprinting = controller->GetDigital(Controller::DigitalControl::Sprint);
     float forwardMovement = directionalInput.y;
-    float moveMulti = playerSpeed * (sprinting ? sprintMulti : 1) * (player->getCollided() <= 0 ? airMulti : 1);
+    float moveMulti = playerSpeed * (sprinting ? sprintMulti : 1) * ((player->getCollided() <= 0|| inAirTime > 0.0f) ? airMulti : 1);
     forwardMovement *= (forwardMovement <= 0) ? backwardsMulti : 1;
     movement = (right * directionalInput.x * strafeMulti * moveMulti) + (forward * forwardMovement * moveMulti);
-    if (player->getCollided() <= 0 || onIce) {
+    if (player->getCollided() <= 0 || inAirTime > 0.0f || onIce) {
         movement *= (airMulti * dt);
         movement += rb->getLinearVelocity();
+    }
+    if (player->getCollided() > 0) {
+        airTimeCounter = 0;
     }
 
     //animations
     if (player->getCollided() <= 0) {
-        player->SetAnimation(AnimationState::FALLING);
+        airTimeCounter += dt;
+        if (airTimeCounter > 0.20f) { //0.05
+            player->SetAnimationState(AnimationState::FALLING);
+        }
     }
-    if (directionalInput.y >= 0.01f) {
-        player->SetAnimation(sprinting ? AnimationState::SPRINTING_FORWARD : AnimationState::WALKING_FORWARD);
+    else if (directionalInput.y >= 0.01f) {
+        player->SetAnimationState(sprinting ? AnimationState::SPRINTING_FORWARD : AnimationState::WALKING_FORWARD);
     }
     else if (directionalInput.y <= -0.01f) {
-        player->SetAnimation(sprinting ? AnimationState::SPRINTING_BACK : AnimationState::WALKING_BACK);
+        player->SetAnimationState(sprinting ? AnimationState::SPRINTING_BACK : AnimationState::WALKING_BACK);
     }
     else if (directionalInput.x >= 0.01f) {
-        player->SetAnimation(sprinting ? AnimationState::SPRINTING_RIGHT : AnimationState::WALKING_RIGHT);
+        player->SetAnimationState(sprinting ? AnimationState::SPRINTING_RIGHT : AnimationState::WALKING_RIGHT);
     }
     else if (directionalInput.x <= -0.01f) {
-        player->SetAnimation(sprinting ? AnimationState::SPRINTING_LEFT : AnimationState::WALKING_LEFT);
+        player->SetAnimationState(sprinting ? AnimationState::SPRINTING_LEFT : AnimationState::WALKING_LEFT);
     }
     else {
-        player->SetAnimation(AnimationState::IDLE);
+        player->SetAnimationState(AnimationState::IDLE);
     }
 };
 
@@ -350,22 +358,22 @@ void PlayerController::HandleJumping() {
         else {
             movement += (jumpHeight * upDirection);
         }
-        player->setCollided(0);
         inAirTime = 0.2f;
     }
     if (inAirTime > 0) {
         if (controller->GetDigital(Controller::DigitalControl::Sprint)) {
-            player->SetAnimation(AnimationState::JUMPING_SPRINT);
+            player->SetAnimationState(AnimationState::JUMPING_SPRINT);
         }
         else {
-            player->SetAnimation(AnimationState::JUMPING_STANDING);
+            player->SetAnimationState(AnimationState::JUMPING_STANDING);
         }
         
     }
 };
 
 void PlayerController::HandleHurtEffects() {
-    float healthLossPercent = (player->GetMaxHealth() - player->health) / player->GetMaxHealth();
+    HealthAttrib* health = player->GetHealthAttrib();
+    float healthLossPercent = (health->GetMaxHealth() - health->GetCurrentHealth()) / health->GetMaxHealth();
     renderer->SetVignetteIntesnity((healthLossPercent));
 }
 
@@ -384,4 +392,11 @@ Vector2 PlayerController::getDirectionalInput() const
     Vector2 raw(controller->GetAnalogue(Controller::AnalogueControl::MoveSidestep), controller->GetAnalogue(Controller::AnalogueControl::MoveForward));
     float magnitude = Vector::Length(raw);
     return magnitude <= 1.0f ? raw : raw / magnitude;
+}
+
+void PlayerController::ToggleScoreboard() {
+	if (controller->GetDigital(Controller::DigitalControl::Scoreboard)) {
+		scoreboardActive = !scoreboardActive;
+        scoreboard->SetActive(scoreboardActive);
+	}
 }
