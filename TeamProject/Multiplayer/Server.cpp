@@ -131,7 +131,7 @@ namespace Multiplayer {
 
         while (currentPacket.get() != nullptr) {
             // High Priority packets.
-            if (currentPacket->GetChannel() != (uint8_t) Channel::FREQUENT ) {
+            if (currentPacket->GetSequenceNumber() == 0) {
                 Packet::PacketRegister::GetHandler(currentPacket->GetType())->Handle(currentPacket);
             }
 
@@ -162,12 +162,11 @@ namespace Multiplayer {
                     }
                     m_tickCount = currentPacket->GetSequenceNumber();
                 }
-
-                // Pass packets on to clients.
-                if (m_isHost) {
-                    currentPacket->SetSequenceNumber(m_tickCount);
-                    m_network->Broadcast(currentPacket);
-                }
+            }
+            // Pass packets on to clients.
+            if (m_isHost) {
+                currentPacket->SetSequenceNumber(m_tickCount);
+                m_network->Broadcast(currentPacket);
             }
 
             currentPacket = m_network->Fetch();
