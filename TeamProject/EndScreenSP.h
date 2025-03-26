@@ -28,6 +28,10 @@ public:
 
     void UpdateMenu(unsigned int);
 
+	void SetScore(int score) {
+		score = score;
+	}
+
 private:
 
     UIBox background;
@@ -41,7 +45,7 @@ private:
     Vector4 buttonColor = Vector4(0.4f, 0.4f, 0.4f, 1);
     Vector4 textColor = Vector4(0, 0, 0, 1);
 
-
+	int score = 0;
 };
 
 
@@ -53,6 +57,7 @@ public:
         ui = std::make_unique<EndScreenSPUI>();
         renderer = game->GetUIRenderer();
         renderer->AddUiElement(ui.get());
+        ui->SetScore(SetScore());
         ui->SetActive(true);
         ui->UpdateMenu(selection);
     }
@@ -91,10 +96,15 @@ public:
         ui->UpdateMenu(selection);
     }
 
+	void SetScore(int score) {
+		score = score;
+	}
+
     void OnAwake() override {
     }
 
 private:
     std::unique_ptr<EndScreenSPUI> ui;
     GameTechRendererInterface* renderer;
+	int score = 0;
 };
