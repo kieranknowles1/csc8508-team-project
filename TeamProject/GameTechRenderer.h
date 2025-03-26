@@ -155,6 +155,10 @@ namespace NCL {
 			std::unique_ptr<OGLShader> vignetteShader;
 			GLuint BDepthTex;
 			void RenderPostProcessing();
+			void ApplyBlur();
+			OGLShader* extractLightShader;
+			OGLShader* blurShader;
+			OGLShader* bloomShader;
 
 			Matrix4 laserPreviousViewProjMatrix;
 

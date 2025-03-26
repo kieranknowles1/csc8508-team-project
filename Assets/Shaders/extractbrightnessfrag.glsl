@@ -19,9 +19,10 @@ void main(void) {
     fragColour[0] = vec4(texColour, 1.0);
 
     //render parts of scene above a threshold brightness into another seperate texture:
-    if (brightness > 1.0f) { //can be higher than one because we are using HDR tonemapping and floating point textures
+    if (brightness > 0.1f) { //can be higher than one because we are using HDR tonemapping and floating point textures SHOULD BE 1.0 however don't see much unless set to 0.1 or less
          fragColour[1] = vec4(texColour.rgb, 1.0);
          }
     else {
          fragColour[1] = vec4(0.0, 0.0, 0.0, 1.0); //if not above threshold brightness, output black
          }
+}

@@ -256,6 +256,9 @@ GameTechRenderer::GameTechRenderer(Window* window) : OGLRenderer(window), GameTe
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
 	animationShader = new OGLShader("skinningvert.glsl", "deferredscenefrag.glsl"); 
+	extractLightShader = new OGLShader("texturevert.glsl", "extractbrightnessfrag.glsl");
+	blurShader = new OGLShader("texturevert.glsl", "gaussianblurfrag.glsl");
+	bloomShader = new OGLShader("texturevert.glsl", "bloomcombinefrag.glsl");
 
 }
 
@@ -288,8 +291,10 @@ GameTechRenderer::~GameTechRenderer() {
 	glDeleteTextures(1, &edgeNormalsTex);
 
 	//delete MaleGuard;
-   delete animationShader;
-	
+    delete animationShader;
+	delete extractLightShader;
+    delete blurShader;
+    delete bloomShader;
 
 }
 
@@ -963,7 +968,7 @@ void GameTechRenderer::RenderDecals() {
 	glDepthFunc(GL_LEQUAL);
 }
 
-void GameTechRenderer::RenderPostProcessing() { //gonna try putting edge detection first:
+void GameTechRenderer::RenderPostProcessing() { //gonna try putting edge detection first: 
 
 		//Edge detection:
 		glBindFramebuffer(GL_FRAMEBUFFER, edgeNormalsFBO);//was BFBO
@@ -1020,6 +1025,37 @@ void GameTechRenderer::RenderPostProcessing() { //gonna try putting edge detecti
 		BindMesh(*fullscreenQuad);
 		DrawBoundMesh();
 
+		//Bloom: scene currently held by laserAddedTex Want the bloom to effect lasers so gonna try putting bloom here
+	    //First create two textures, one holding the scene as is and another holding only the bright parts of the scene:
+		glBindFramebuffer(GL_FRAMEBUFFER, pointLightFBO); //need an FBO with multiple attachments and we no longer need the textures this one is holding
+		glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+		glDisable(GL_CULL_FACE);
+		glDisable(GL_BLEND);
+		glDisable(GL_DEPTH_TEST);
+		UseShader(*extractLightShader);
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, laserAddedTex); //was BTex
+		glUniform1i(glGetUniformLocation(extractLightShader->GetProgramID(), "diffuseTex"), 0);
+		BindMesh(*fullscreenQuad);
+		DrawBoundMesh(); //now we have extracted the bright parts of the image, need to blur that texture holding only the bright parts
+		//at this point laserAddedTex still does hold scene as is but so does diffuseLightTex
+		ApplyBlur();
+		//now combine:
+		/*glBindFramebuffer(GL_FRAMEBUFFER, hdrFBO);
+		glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+		glDisable(GL_CULL_FACE);
+		glDisable(GL_BLEND);
+		glDisable(GL_DEPTH_TEST);
+		UseShader(*bloomShader);
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, lightDiffuseTex); //could also try laserAddedTex which should still hold the scene
+		glUniform1i(glGetUniformLocation(bloomShader->GetProgramID(), "sceneTex"), 0);
+		glActiveTexture(GL_TEXTURE1);
+		glBindTexture(GL_TEXTURE_2D, bufferColourTex);
+		glUniform1i(glGetUniformLocation(bloomShader->GetProgramID(), "blurredLights"), 1);
+		BindMesh(*fullscreenQuad);
+		DrawBoundMesh();*/
+
 	    //Vignette post processing:
 	    glBindFramebuffer(GL_FRAMEBUFFER, BFBO); //unbind hdrFBO and set BFBO    //was BFBO before adding edge detection //was hdrFBO
 	    glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
@@ -1030,7 +1066,7 @@ void GameTechRenderer::RenderPostProcessing() { //gonna try putting edge detecti
 	    glUniform1i(glGetUniformLocation(vignetteShader->GetProgramID(), "vignetteOn"), GetVignetteOn());
 		glUniform1f(glGetUniformLocation(vignetteShader->GetProgramID(), "vignetteIntensity"), vignetteIntensity);
 		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, laserAddedTex); //hdrTex currently holds raw scene  //was bufferColourTex before adding edge detection //was BTex
+		glBindTexture(GL_TEXTURE_2D, lightSpecularTex); //was laserAddedTex for testing use lightSpecularTex
 		glUniform1i(glGetUniformLocation(vignetteShader->GetProgramID(), "diffuseTex"), 0);
 		glUniform2f(glGetUniformLocation(vignetteShader->GetProgramID(), "windowSize"), windowSize.x, windowSize.y);
 		glUniform3fv(glGetUniformLocation(vignetteShader->GetProgramID(), "effectColour"), 1, (float*)&vignetteColour);
@@ -1317,3 +1353,47 @@ void GameTechRenderer::RenderAnimations() {
 		}
 	}
 }
+
+void GameTechRenderer::ApplyBlur() { //will need a single FBO with multiple (floating point) colour attachments. May not be able to use buffer FBO since other post processes need its textures
+	glBindFramebuffer(GL_FRAMEBUFFER, bufferFBO); //For Now trying with pointLightFBO
+	//glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, lightSpecularTex, 0); //Although the FBO has two attachments, only going to use one here. Attaching lightDiffuseTex to colour slot 0
+	glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT); //Actually not sure if we should be doing the above line since the textures are already attached
+	//glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, lightSpecularTex, 0);
+	GLenum buffers[2] = {
+    GL_COLOR_ATTACHMENT0,
+    GL_COLOR_ATTACHMENT1
+	};
+	glDrawBuffers(1, buffers); //set bufferFBO back to only drawing to colour attachment 0 
+	//The above line probably clears lightSpecularTex which is not what we want
+	UseShader(*blurShader);
+	//don't think we need to do much with the matrices here as fullscreen quad is already in NDC 
+
+	glDisable(GL_DEPTH_TEST);
+	glActiveTexture(GL_TEXTURE0);
+	glUniform1i(glGetUniformLocation(blurShader->GetProgramID(), "diffuseTex"), 0);
+
+	for (int i = 0; i < 10; ++i) { //just hardcoding the number here instead of POST_PASSES. Higher number = stronger blur
+		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, bufferNormalTex, 0); //was lightSpecularTex
+		glUniform1i(glGetUniformLocation(blurShader->GetProgramID(), "isVertical"), 0);
+
+		glBindTexture(GL_TEXTURE_2D, lightSpecularTex); //was bufferNormalTex Tick
+		BindMesh(*fullscreenQuad);
+		DrawBoundMesh();
+
+		//Then swap the colour buffers and process again:
+		glUniform1i(glGetUniformLocation(blurShader->GetProgramID(), "isVertical"), 1);
+		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, lightSpecularTex, 0); //was bufferNormalTex
+		glBindTexture(GL_TEXTURE_2D, bufferNormalTex); //was lightSpecularTex
+		BindMesh(*fullscreenQuad);
+		DrawBoundMesh();
+	}
+	glBindFramebuffer(GL_FRAMEBUFFER, 0); //perhaps this might need to be another specific FBO
+	glEnable(GL_DEPTH_TEST);
+} //could probably use pointLightFBO with lightDiffuseTex and lightSpecularTex. Slight possibility may need to swap the textures as assigned above around
+  //may not work with pointLightFBO however as it has glDrawArray 2 so expects to draw to 2 targets. Might be able to redeclare to 1 here though since we are now done with its MRT capabilities
+  //Since we are doing bloom after lasers, can probably use bufferFBO
+
+//need an FBO with two colour attachments, keep reassigning which attachment we are writing to.
+//Will try using the empty bufferFBO but attaching the specularLightTex to bufferFBOs colour attachment 0. Assuming that this overrides the previous attachment.
+// Eh, probably not that important which tex we use after blurring. Should only be one blur pass different
+//currently seems there is a problem with the blurring. Getting a bit messy with the framebuffers and textures but for now problem is likely in apply blur
