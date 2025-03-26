@@ -7,9 +7,6 @@ EndScreenSPUI::EndScreenSPUI()
 
 void EndScreenSPUI::render(std::vector<UiSprite>& sprites)
 {
-	Vector4 backgroundColor = Vector4(0, 0, 0, 1);
-	Vector4 buttonColor = Vector4(0.4f, 0.4f, 0.4f, 1);
-
 	sprites.push_back({ background.position, background.size, backgroundColor });
 
 	for (auto& button : buttons)
@@ -20,7 +17,8 @@ void EndScreenSPUI::render(std::vector<UiSprite>& sprites)
 
 void EndScreenSPUI::render(std::vector<UiText>& texts)
 {
-	Vector4 textColor = Vector4(0, 0, 0, 1);
+
+	texts.push_back({ Vector2(0.165f, 0.1f), "Game Over", Vector4(1, 0, 0, 1), 2.0f });
 
 	for (auto& text : buttonTexts)
 	{
@@ -30,7 +28,6 @@ void EndScreenSPUI::render(std::vector<UiText>& texts)
 
 void EndScreenSPUI::InitMenu()
 {
-	Vector2 buttonSize = Vector2(0.3f, 0.075f);
 	background = { Vector2(0.5f, 0.5f), Vector2(1, 1) };
 	//created buttons
 	buttons.push_back({ Vector2(0.3f, 0.1f), buttonSize });

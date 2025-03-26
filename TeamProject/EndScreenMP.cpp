@@ -11,12 +11,6 @@ EndScreenMPUI::EndScreenMPUI()
 
 void EndScreenMPUI::render(std::vector<UiSprite>& sprites)
 {
-	Vector4 backgroundColor = Vector4(0, 0, 0, 1);
-	Vector4 buttonColor = Vector4(0.4f, 0.4f, 0.4f, 1);
-	Vector4 borderColor = Vector4(0, 0, 0, 1);
-	Vector4 boxColor = Vector4(0.4f, 0.4f, 0.4f, 1);
-	float borderThickness = 0.005f;
-
 	sprites.push_back({ background.position, background.size, backgroundColor });
 
 	for (const auto& box : boxes) {
@@ -32,8 +26,6 @@ void EndScreenMPUI::render(std::vector<UiSprite>& sprites)
 
 void EndScreenMPUI::render(std::vector<UiText>& texts)
 {
-	Vector4 textColor = Vector4(0, 0, 0, 1);
-
 	for (auto& text : buttonTexts)
 	{
 		texts.push_back({ text.position, text.text, text.color });
@@ -72,8 +64,8 @@ void EndScreenMPUI::InitMenu()
 		
 		if (i == 0) {
 			leaderboardTexts[i * columns].text = "Player:";
-			leaderboardTexts[i * columns + 1].text = "Score:";
-			leaderboardTexts[i * columns + 2].text = "Color:";
+			leaderboardTexts[i * columns + 1].text = "Color:";
+			leaderboardTexts[i * columns + 2].text = "Score:";
 		}
 	}
 }
@@ -85,12 +77,10 @@ void EndScreenMPUI::UpdateMenu(unsigned int selection)
 		if (i == selection)
 		{
 			buttons[i].color = activeButton;
-			buttonTexts[i].color = activeText;
 		}
 		else
 		{
 			buttons[i].color = inactiveButton;
-			buttonTexts[i].color = inactiveText;
 		}
 	}
 }
@@ -100,7 +90,7 @@ void EndScreenMPUI::PopulateLeaderboard()
 	SortPlayers();
 	for (size_t i = 0; i < players.size(); ++i) {
 		leaderboardTexts[i * columns + 3].text = players[i].name;
-		leaderboardTexts[i * columns + 4].text = std::to_string(players[i].score);
-		leaderboardTexts[i * columns + 5].text = TeamColorToString(players[i].color);
+		leaderboardTexts[i * columns + 4].text = TeamColorToString(players[i].color);
+		leaderboardTexts[i * columns + 5].text = std::to_string(players[i].score);
 	}
 }
