@@ -69,12 +69,12 @@ float NavEntity::GroundAdjust(btVector3 pos) {
 	btTransform transform = GetTransform();
 	btVector3 upVector = transform.getBasis() * btVector3(0, 1, 0); // local "up" in world space
 
-	btIDebugDraw* debugDrawer = TutorialGame::getInstance()->getBulletWorld()->getDebugDrawer();
+	//btIDebugDraw* debugDrawer = TutorialGame::getInstance()->getBulletWorld()->getDebugDrawer();
 
 	upPos = pos + (upVector * 50.0f);
 	downPos = pos - (upVector * 1000.0f);
 
-	debugDrawer->drawLine(upPos, downPos, Vector3(0, 0, 1));
+	//debugDrawer->drawLine(upPos, downPos, Vector3(0, 0, 1));
 	direction = (downPos - upPos).normalized();
 
 	rayResult = Shoot::GetInstance()->RayClosest(upPos, direction, false, static_cast<GameObject*>(this));
