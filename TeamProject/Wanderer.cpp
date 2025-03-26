@@ -155,7 +155,7 @@ void Wanderer::InitPosAndOffset() {
 		break;
 	case(Side::RIGHT):
 		offset = btVector3(-halfHeight * 2, 0, 0);
-		rotation = btQuaternion(btVector3(0, 0, 1), -SIMD_PI / 2);
+		rotation = btQuaternion(btVector3(0, 0, 1), SIMD_PI / 2);
 		break;
 	}
 	trans.setRotation(rotation);

@@ -51,6 +51,12 @@ bool NavEntity::FollowPath(float dt) {
 	case(Side::BACK):
 		adjustedPoint.setZ(GroundAdjust(adjustedPoint));
 		break;
+	case(Side::LEFT):
+		adjustedPoint.setX(GroundAdjust(adjustedPoint));
+		break;
+	case(Side::RIGHT):
+		adjustedPoint.setX(GroundAdjust(adjustedPoint));
+		break;
 	}
 	
 	return true;
@@ -86,6 +92,10 @@ float NavEntity::GroundAdjust(btVector3 pos) {
 		return rayResult->hitPos.getZ();
 	case(Side::BACK):
 		return rayResult->hitPos.getZ();
+	case(Side::LEFT):
+		return rayResult->hitPos.getX();
+	case(Side::RIGHT):
+		return rayResult->hitPos.getX();
 	default:
 		return 0.0f;
 	}
