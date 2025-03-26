@@ -4,6 +4,7 @@
 #include "Multiplayer/Server.hpp"
 #include "Health.h"
 #include "Respawn.h"
+#include "WorldState.h"
 
 #include <memory>
 
@@ -63,7 +64,7 @@ void PlayerObject::Update(float dt) {
 
 void PlayerObject::UpdateWorldState() {
     attack->UpdateWorldState();
-    GameObject::UpdateWorldState();
+    ServerObject::UpdateWorldState();
 
     auto [writeState, lock] = GetWorldStates()->GetWriteState();
     std::unique_lock stateLock(writeState->Lock());
@@ -73,7 +74,7 @@ void PlayerObject::UpdateWorldState() {
 
 void PlayerObject::UpdateFromWorldState(float dt) {
     attack->UpdateFromWorldState(dt);
-    GameObject::UpdateFromWorldState(dt);
+    ServerObject::UpdateFromWorldState(dt);
 
     elapsedTickTime += dt;
 
@@ -113,7 +114,7 @@ void PlayerObject::UpdateFromWorldState(float dt) {
 }
 
 std::vector<std::shared_ptr<Packet::Packet>> PlayerObject::CreatePackets(int sequenceNum) {
-    std::vector<std::shared_ptr<Packet::Packet>> packets = GameObject::CreatePackets(sequenceNum);
+    std::vector<std::shared_ptr<Packet::Packet>> packets = ServerObject::CreatePackets(sequenceNum);
     std::vector<std::shared_ptr<Packet::Packet>> damagePackets = attack->CreatePackets(sequenceNum);
     packets.insert(packets.end(), damagePackets.begin(), damagePackets.end());
 

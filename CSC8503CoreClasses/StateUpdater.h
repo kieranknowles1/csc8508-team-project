@@ -2,10 +2,7 @@
 
 #include <memory>
 #include <vector>
-
-namespace WorldState {
-	class StateBuffer;
-}
+#include "WorldState.h"
 
 namespace Packet {
 	class Packet;

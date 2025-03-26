@@ -15,7 +15,7 @@ namespace Packet {
 #pragma region DeltaPacketHandler
     void DeltaPacketHandler::Handle(const std::shared_ptr<Packet> packet) {
         const DeltaPacket* deltaPacket = std::static_pointer_cast<DeltaPacket>(packet).get();
-        GameObject* object = GameObject::GetGameObjectByID(deltaPacket->GetTargetID());
+        ServerObject* object = (ServerObject*) ServerObject::GetGameObjectByID(deltaPacket->GetTargetID());
 
         if (object == nullptr) return;
 
@@ -104,7 +104,7 @@ namespace Packet {
 #pragma region LaserPacketHandler
     void LaserPacketHandler::Handle(const std::shared_ptr<Packet> packet) {
         const LaserPacket* laserPacket = std::static_pointer_cast<LaserPacket>(packet).get();
-        LaserObject* object = (LaserObject*)GameObject::GetGameObjectByID(laserPacket->GetTargetID());
+        LaserObject* object = (LaserObject*) ServerObject::GetGameObjectByID(laserPacket->GetTargetID());
 
         if (object == nullptr) return;
 
@@ -203,7 +203,7 @@ namespace Packet {
 #pragma region PositonPacketHandler
     void PositionPacketHandler::Handle(const std::shared_ptr<Packet> packet) {
         const PositionPacket* positionPacket = std::static_pointer_cast<PositionPacket>(packet).get();
-        GameObject* object = GameObject::GetGameObjectByID(positionPacket->GetTargetID());
+        ServerObject* object = (ServerObject*) ServerObject::GetGameObjectByID(positionPacket->GetTargetID());
 
         if (object == nullptr) return;
 
