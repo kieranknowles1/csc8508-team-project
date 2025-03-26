@@ -16,13 +16,13 @@ PlayerObject::PlayerObject() {
     health = std::make_unique<HealthAttrib>(this);
     health->SetMaxHealth(PLAYER_HEALTH);
     health->SetCurrentHealth(PLAYER_HEALTH);
-    health->SetRegenerationDelay(2.0f);
-    health->SetRegenerationRate(50.0f);
+    health->SetRegenerationDelay(4.0f);
+    health->SetRegenerationRate(25.0f);
     health->SetInvulnerableWindow(1.0f);
 
     attack = std::make_unique<AttackAttrib>();
     attack->SetDamageType(DamageType::CONTINUOUS);
-    attack->SetDamageAmount(150.0f);
+    attack->SetDamageAmount(200.0f);
 
     attack->SetHealthAttrib(health.get());
 }
