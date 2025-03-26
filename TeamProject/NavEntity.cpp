@@ -37,8 +37,22 @@ bool NavEntity::FollowPath(float dt) {
 		}
 	}
 	curPathPoint = newPathPoint;
-	yAdjustedPoint = curPathPoint;
-	yAdjustedPoint.setY(GroundAdjust(yAdjustedPoint));
+	adjustedPoint = curPathPoint;
+	switch (side) {
+	case(Side::BOTTOM):
+		adjustedPoint.setY(GroundAdjust(adjustedPoint));
+		break;
+	case(Side::TOP):
+		adjustedPoint.setY(GroundAdjust(adjustedPoint));
+		break;
+	case(Side::FRONT):
+		adjustedPoint.setZ(GroundAdjust(adjustedPoint));
+		break;
+	case(Side::BACK):
+		adjustedPoint.setZ(GroundAdjust(adjustedPoint));
+		break;
+	}
+	
 	return true;
 }
 
@@ -51,10 +65,10 @@ float NavEntity::GroundAdjust(btVector3 pos) {
 
 	btIDebugDraw* debugDrawer = TutorialGame::getInstance()->getBulletWorld()->getDebugDrawer();
 
-	upPos = pos + (upVector * 100.0f);
+	upPos = pos + (upVector * 50.0f);
 	downPos = pos - (upVector * 1000.0f);
 
-	// debugDrawer->drawLine(upPos, downPos, Vector3(0, 0, 1));
+	debugDrawer->drawLine(upPos, downPos, Vector3(0, 0, 1));
 	direction = (downPos - upPos).normalized();
 
 	rayResult = Shoot::GetInstance()->RayClosest(upPos, direction, false, static_cast<GameObject*>(this));
@@ -63,6 +77,20 @@ float NavEntity::GroundAdjust(btVector3 pos) {
 		return 0.0f;  // No hit detected
 	}
 
-	return rayResult->hitPos.getY();
+	switch (side) {
+	case(Side::BOTTOM):
+		return rayResult->hitPos.getY();
+	case(Side::TOP):
+		return rayResult->hitPos.getY();
+	case(Side::FRONT):
+		return rayResult->hitPos.getZ();
+	case(Side::BACK):
+		return rayResult->hitPos.getZ();
+	default:
+		return 0.0f;
+	}
+
+	
+
 }
 
