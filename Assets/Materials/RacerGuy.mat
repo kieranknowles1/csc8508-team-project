@@ -3,11 +3,10 @@ MeshMat
 1
 1
 RacerGuy_mat
-4
+5
 Diffuse:/RacerTex/Ch20_1001_Diffuse.png
 InvertY:true
 Bump:/RacerTex/Ch20_1001_Normal.png
-InvertY:true
 Specular:/RacerTex/Ch20_1001_Specular.png
-Glossiness:/RacerTex/Ch20_1001_Glossiness.png
+Gloss:/RacerTex/Ch20_1001_Glossiness.png
 0
