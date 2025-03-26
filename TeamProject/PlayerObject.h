@@ -23,7 +23,7 @@ namespace NCL::CSC8503 {
 	class HealthAttrib;
 	class AttackAttrib;
 
-	const float PLAYER_HEALTH = 200.0f;
+	const float PLAYER_HEALTH = 100.0f;
 
 	// Player class derived from GameObject
 	class PlayerObject : public GameObject {
