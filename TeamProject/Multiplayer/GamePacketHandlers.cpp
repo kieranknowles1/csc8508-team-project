@@ -20,13 +20,13 @@ namespace Packet {
         if (object == nullptr) return;
 
         if (TutorialGame::getInstance()->GetServerInstance()->IsOwnerOf(object)) return;
-
         auto [writeState, lock] = object->GetWorldStates()->GetWriteState();
 
         std::unique_lock stateLock = writeState->Lock();
         writeState->UpdateState(StateType::LinearVelocity, deltaPacket->GetLinearVelocity());
         writeState->UpdateState(StateType::AngularVelocity, deltaPacket->GetAngularVelocity());
     }
+
     
     std::shared_ptr<Packet> DeltaPacketHandler::Translate(const ENetEvent* event) const {
         ENetPacket* packet = event->packet;
@@ -602,7 +602,7 @@ namespace Packet {
         Type type;
         uint8_t channel;
         uint32_t sequenceNumber;
-        
+
         size_t offset = sizeof(Type) + sizeof(uint8_t) + sizeof(uint32_t);
         GetBaseData(packet, &type, &channel, &sequenceNumber);
 
@@ -653,7 +653,7 @@ namespace Packet {
         Type type;
         uint8_t channel;
         uint32_t sequenceNumber;
-        
+
         size_t offset = sizeof(Type) + sizeof(uint8_t) + sizeof(uint32_t);
         GetBaseData(packet, &type, &channel, &sequenceNumber);
 

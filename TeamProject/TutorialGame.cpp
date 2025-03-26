@@ -45,7 +45,10 @@ TutorialGame::TutorialGame(GameTechRendererInterface* renderer, Controller* cont
     resourceManager = std::make_unique<ResourceManager>(renderer, config.get<float>("resourceThreadMult"));
     new Shoot(); //Shoot and Respawn have new before them but are not being deleted to my knowledge
     new Respawn();
-
+    //audioEngine.Init();
+    audioEngine.Init();
+    audioEngine.LoadSound("HeartbeatLoop.wav", false, true, false);
+    audioEngine.LoadSound("JumpPad.wav", true, false, false);
     InitialiseAssets();
     InitCamera();
     InitWorld();
@@ -80,8 +83,6 @@ static bool BulletRaycast(btDynamicsWorld* world, const btVector3& start, const 
 
 void TutorialGame::UpdateGame(float dt) {
     profiler.beginFrame();
-
-
     profiler.startSection("Physics");
 
     // Old
@@ -115,7 +116,7 @@ void TutorialGame::UpdateGame(float dt) {
     // Check for collisions
     CheckCollisions();
 
-    if (playerController) UpdatePlayer(dt);
+    if (playerController && !isPlayerUpdatePaused) UpdatePlayer(dt);
 
     profiler.startSection("Update Audio");
     audioEngine.Update(&world->GetMainCamera());
@@ -141,8 +142,7 @@ void TutorialGame::UpdateGame(float dt) {
 
 }
 
-
-void TutorialGame::UpdatePlayer(float dt) {
+void TutorialGame::UpdatePlayer(float dt, bool camOnly) {
     if (player->GetHealthAttrib()->GetHealthState() == AliveState::DEAD) {
         Respawn* instance = Respawn::GetInstance();
         RespawnPoint* respawn;
@@ -166,9 +166,17 @@ void TutorialGame::UpdatePlayer(float dt) {
         world->GetMainCamera().UpdateCamera(dt * 20, true);
     }
     else {
+ 
+      
         //player Movement
-        world->GetMainCamera().UpdateCamera(dt, false);
-        playerController->UpdateMovement(dt);
+        if (camOnly) {
+            playerController->UpdateCamOnly();
+        }
+        else {
+            world->GetMainCamera().UpdateCamera(dt, false);
+            playerController->UpdateMovement(dt);
+        }
+ 
         if (thirdPerson) {
             ThirdPersonControls();
         }
@@ -353,7 +361,7 @@ void TutorialGame::ClearWorld() {
 void TutorialGame::InitWorld() {
 
 	InitBullet();
-	audioEngine.Init();
+    //audioEngine.Init();
 
 }
 
@@ -395,6 +403,8 @@ GameObject* TutorialGame::AddGunToWorld(const Vector3& position, Vector3 dimensi
 
     // Setting render object
     gun->SetRenderObject(new RenderObject(gun, resourceManager->getMeshes().get("VD_Raygun_Cartoony_Rigged1.msh"), resourceManager->getMaterials().get("VD_Raygun_Cartoony_Rigged1.mat")));
+    gun->setType(GameObject::Type::Gun);
+
     gun->setType(GameObject::Type::Gun);
 
     world->AddGameObject(gun);

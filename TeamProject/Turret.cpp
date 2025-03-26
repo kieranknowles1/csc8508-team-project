@@ -62,7 +62,6 @@ void Turret::Update(float dt) {
 		std::cout << "Player can be shot by turret " << angleDegrees << std::endl;
 	}
 	GameObject::Update(dt);
-
 }
 
 // TODO: This could be one function

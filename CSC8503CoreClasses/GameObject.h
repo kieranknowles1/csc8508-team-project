@@ -8,11 +8,11 @@
 #include "PhysicsObject.h"
 #include "btBulletDynamicsCommon.h"
 #include "CollisionInfo.h"
-#include "../TeamProject/PointLight.h"
-#include "../TeamProject/Multiplayer/User.hpp"
 #include "WorldState.h"
 #include "StateUpdater.h"
 #include "AliveState.h"
+#include "../TeamProject/Multiplayer/User.hpp"
+#include "../TeamProject/PointLight.h"
 
 namespace Packet {
     class Packet;
@@ -78,7 +78,7 @@ namespace NCL::CSC8503 {
             return name;
         }
 
-        void SetName( const std::string& nameIn)  {
+        void SetName(const std::string& nameIn)  {
             name = nameIn;
         }
 
@@ -105,7 +105,6 @@ namespace NCL::CSC8503 {
 
         virtual void Update(float dt) {//could do the updating for animations in here maybe
         }
-
 
         void SetWorldID(int newID) {
             worldID = newID;

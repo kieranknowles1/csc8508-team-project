@@ -95,7 +95,6 @@ namespace NCL::CSC8503 {
 			return camRotOffset;
 		}
 
-
 		void SetOwner(Lobbies::User user) override {
 			gun->SetOwner(user);
 			laser->SetOwner(user);

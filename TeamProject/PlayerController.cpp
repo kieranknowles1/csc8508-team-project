@@ -77,15 +77,45 @@ void PlayerController::UpdateMovement(float dt) {
 	ToggleScoreboard();
 }
 
+void PlayerController::UpdateCamOnly() {
+    camera->SetYaw(yaw);
+    btVector3 rot = GetEulerAngles(camRotOffset);
+    camera->setRotation(rot);
+    CameraMovement();
+}
+
 
 void PlayerController::HandleShooting(float dt) {
-
     if (controller->GetDigital(Controller::DigitalControl::Fire) && overheat->CanFire()) {
         FireShot(dt);
         if (!firing) {
             crosshair->fire();
             overheat->fire();
             firing = true;
+
+            //Get the playback position of the sound to be played
+            float overheatPercentage = overheat->GetOverheatPercentage();
+            float beamSoundLength = 7.1f; //7 seconds
+            unsigned int startTimeMs = static_cast<unsigned int>(overheatPercentage * beamSoundLength * 1000); //Convert to milliseconds
+            //beamSoundChannel = audioEngine.PlaySounds("Beam.mp3", camera->GetPosition(), 0.0f);
+
+            //If the sound was paused, resume it instead of restarting
+            if (beamSoundPaused && beamSoundChannel != -1) {
+                audioEngine.SetChannel3dPosition(beamSoundChannel, camera->GetPosition());
+                audioEngine.SetChannelPlaybackPosition(beamSoundChannel, startTimeMs);
+            }
+            else {
+                beamSoundChannel = audioEngine.PlaySounds("Beam.mp3", camera->GetPosition(), 0.0f);
+                if (beamSoundChannel != -1) {
+                    audioEngine.SetChannel3dPosition(beamSoundChannel, camera->GetPosition());
+                    audioEngine.SetChannelPlaybackPosition(beamSoundChannel, startTimeMs);
+                }
+            }
+        }
+        else {
+            if (beamSoundChannel != -1) {
+                audioEngine.SetChannel3dPosition(beamSoundChannel, camera->GetPosition());
+            }
         }
     }
     else {
@@ -93,6 +123,12 @@ void PlayerController::HandleShooting(float dt) {
             player->updateLaser(btVector3(0,0,0), btVector3(0,0,0));
             crosshair->stopFiring();
             overheat->stopFiring();
+            
+            if (beamSoundChannel != -1) {
+                audioEngine.SetChannelVolume(beamSoundChannel, -100.0f);
+                beamSoundChannel = -1;
+            }
+
             firing = false;
             player->GetAttackAttrib()->Hit(nullptr);
         }
@@ -225,6 +261,8 @@ void PlayerController::SpecialTypeCalculations() {
         rb->setLinearVelocity(btVector3(0, 0, 0));
         inAirTime = 0.2f;
         rb->applyCentralImpulse(movement);
+        int channelId = audioEngine.PlaySounds("JumpPad.wav", player->getCollisionPoint(), 0.0f);
+        jumppadChannels.push_back(channelId);
         break;
     } case GameObject::Type::Slime: {
         onIce = false;
@@ -349,7 +387,7 @@ void PlayerController::MovementCalculations(float dt) {
 
 void PlayerController::HandleJumping() {
     if (controller->GetDigital(Controller::DigitalControl::Jump) && player->getCollided() && inAirTime <= 0) {
-        audioEngine.PlaySounds("jump.wav", camera->GetPosition(), 0.0f);
+        audioEngine.PlaySounds("jump.wav", camera->GetPosition(), -16.0f);
         btVector3 normal = FindFloorNormal();
         float dotProduct = normal.dot(upDirection.absolute());
         if (fabs(dotProduct <= 1)) {
@@ -375,6 +413,23 @@ void PlayerController::HandleHurtEffects() {
     HealthAttrib* health = player->GetHealthAttrib();
     float healthLossPercent = (health->GetMaxHealth() - health->GetCurrentHealth()) / health->GetMaxHealth();
     renderer->SetVignetteIntesnity((healthLossPercent));
+
+    if (health->GetCurrentHealth() <= health->GetMaxHealth() * 0.5f){
+        if (heartbeatChannel == -1 || !audioEngine.IsPlaying(heartbeatChannel)) {
+            heartbeatChannel = audioEngine.PlaySounds("HeartbeatLoop.wav", camera->GetPosition(), 12.0f);
+        }
+
+        float lowHealthRatio = 1.0f - (health->GetCurrentHealth() / (health->GetMaxHealth() * 0.5f));
+        float pitch = 1.0f + (lowHealthRatio * 1.0f); 
+
+        audioEngine.SetChannelPitch(heartbeatChannel, pitch); 
+    }
+    else {
+        if (heartbeatChannel != -1) {
+            audioEngine.StopChannel(heartbeatChannel);
+            heartbeatChannel = -1;
+        }
+    }
 }
 
 void PlayerController::GetAllDirections() {

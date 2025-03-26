@@ -346,9 +346,7 @@ void PlayerObject::SetGunTransform(float pitch, float yaw, btVector3 camPos) {
 
 void PlayerObject::CorrectAnimation() {
     //to be called in update. Checks if the animation matches the state, if not sets it to the right animation. Hopefully means it is only set when state changes.#
-
     if (renderObject->GetAnimation() != animationObject->getAnimation(animationState)) {
         renderObject->SetAnimation(animationObject->getAnimation(animationState));
     }
-
 }

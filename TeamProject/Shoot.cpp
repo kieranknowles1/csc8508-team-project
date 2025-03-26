@@ -52,7 +52,6 @@ std::optional<ShotInfo> Shoot::ShootBulletAI(btVector3 startPos, btVector3 dir, 
     return RayClosest(startPos, dir, true);
 }
 
-
 void Shoot::SpawnDecal(btVector3 hitPos,btVector3 hitNormal, btVector4 color) {
     // Choose a random decal texture
     std::shared_ptr<NCL::Rendering::Texture> pngTexture = decalSystem->PickRandomDecal(decalTextures);

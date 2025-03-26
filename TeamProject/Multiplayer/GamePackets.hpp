@@ -35,7 +35,7 @@ namespace Packet {
         DAMAGE = CUSTOM_TYPE + 7,
         LASER = CUSTOM_TYPE + 8,
         PING = CUSTOM_TYPE + 9,
-        PONG = CUSTOM_TYPE + 10,
+        PONG = CUSTOM_TYPE + 10
     };
 
 
