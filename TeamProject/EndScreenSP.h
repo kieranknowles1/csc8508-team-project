@@ -57,7 +57,7 @@ public:
         ui = std::make_unique<EndScreenSPUI>();
         renderer = game->GetUIRenderer();
         renderer->AddUiElement(ui.get());
-        ui->SetScore(SetScore());
+        ui->SetScore(score);
         ui->SetActive(true);
         ui->UpdateMenu(selection);
     }
