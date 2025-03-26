@@ -45,24 +45,24 @@ bool NavEntity::FollowPath(float dt) {
 float NavEntity::GroundAdjust(btVector3 pos) {
 	btVector3 upPos, downPos, direction;
 	std::optional<ShotInfo> rayResult;
+
+	btTransform transform = GetTransform();
+	btVector3 upVector = transform.getBasis() * btVector3(0, 1, 0); // local "up" in world space
+
 	btIDebugDraw* debugDrawer = TutorialGame::getInstance()->getBulletWorld()->getDebugDrawer();
-	switch (side) {
-	case(Side::BOTTOM):
-		upPos = pos + btVector3(0, 100.0f, 0);
-		downPos = pos + btVector3(0, -1000.0f, 0);
-		
-		//debugDrawer->drawLine(upPos, downPos, Vector3(0, 0, 1));
-		direction = (downPos - upPos).normalized();
 
-		rayResult = Shoot::GetInstance()->RayClosest(upPos, direction, false, static_cast<GameObject*>(this));
+	upPos = pos + (upVector * 100.0f);
+	downPos = pos - (upVector * 1000.0f);
 
-		if (!rayResult.has_value()) {
-			return 0.0f;  // No hit detected
-		}
+	// debugDrawer->drawLine(upPos, downPos, Vector3(0, 0, 1));
+	direction = (downPos - upPos).normalized();
 
-		//return (pos.getY() - rayResult->hitPos.getY());
-		return rayResult->hitPos.getY();
-	default:
-		return pos.getY();
+	rayResult = Shoot::GetInstance()->RayClosest(upPos, direction, false, static_cast<GameObject*>(this));
+
+	if (!rayResult.has_value()) {
+		return 0.0f;  // No hit detected
 	}
+
+	return rayResult->hitPos.getY();
 }
+
