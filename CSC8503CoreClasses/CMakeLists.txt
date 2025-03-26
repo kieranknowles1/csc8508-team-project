@@ -71,6 +71,7 @@ set(Header_Files
 	"GameWorld.h"
     "MeshMaterial.h"
 	"RenderObject.h"
+    "ServerObject.h"
     "StateUpdater.h"
     "WorldState.h"
 )
