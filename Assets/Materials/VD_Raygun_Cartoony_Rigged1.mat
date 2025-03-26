@@ -41,7 +41,7 @@ Specular:/textures/Raygun_main_back_Metallic.png
 InvertY:true
 UseColor:true
 Raygun_blue
-3
+4
 Bump:newgun/textures/Raygun_blue_Normal.png
 Specular:/textures/Raygun_blue_Metallic.png
 InvertY:true
