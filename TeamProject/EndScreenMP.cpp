@@ -1,12 +1,15 @@
 #include "EndScreenMP.h"
 
-EndScreenUI::EndScreenUI()
+EndScreenMPUI::EndScreenMPUI()
 {
+
+	AddPlayer({ "Player1", 100, TeamColor::RED });
+	AddPlayer({ "Player2", 200, TeamColor::BLUE });
 	InitMenu();
 	PopulateLeaderboard();
 }
 
-void EndScreenUI::render(std::vector<UiSprite>& sprites)
+void EndScreenMPUI::render(std::vector<UiSprite>& sprites)
 {
 	Vector4 backgroundColor = Vector4(0, 0, 0, 1);
 	Vector4 buttonColor = Vector4(0.4f, 0.4f, 0.4f, 1);
@@ -27,7 +30,7 @@ void EndScreenUI::render(std::vector<UiSprite>& sprites)
 	}
 }
 
-void EndScreenUI::render(std::vector<UiText>& texts)
+void EndScreenMPUI::render(std::vector<UiText>& texts)
 {
 	Vector4 textColor = Vector4(0, 0, 0, 1);
 
@@ -41,7 +44,7 @@ void EndScreenUI::render(std::vector<UiText>& texts)
 	}
 }
 
-void EndScreenUI::InitMenu()
+void EndScreenMPUI::InitMenu()
 {
 	Vector2 buttonSize = Vector2(0.3f, 0.075f);
 	background = { Vector2(0.5f, 0.5f), Vector2(1, 1) };
@@ -49,8 +52,8 @@ void EndScreenUI::InitMenu()
 	buttons.push_back({ Vector2(0.3f, 0.1f), buttonSize });
 	buttons.push_back({ Vector2(0.7f, 0.1f), buttonSize });
 
-	buttonTexts.push_back({ Vector2(0.3f - buttonSize.x / 3.5, 0.9f - buttonSize.y / 4), "Main Menu" });
-	buttonTexts.push_back({ Vector2(0.7f - buttonSize.x / 6, 0.9f - buttonSize.y / 4), "Quit" });
+	buttonTexts.push_back({ Vector2(0.3f - buttonSize.x / 3.5, 0.9f + buttonSize.y / 4), "Main Menu" });
+	buttonTexts.push_back({ Vector2(0.7f - buttonSize.x / 6, 0.9f + buttonSize.y / 4), "Quit" });
 
 	//created leaderboard
 	Vector2 boxSize = { leaderboardSize.x / columns, leaderboardSize.y / rows };
@@ -63,7 +66,7 @@ void EndScreenUI::InitMenu()
 			
 			boxes[i * columns + j] = { position, boxSize };
 
-			Vector2 textPosition = { position.x - (boxSize.x / 2.0f) + 0.01f, position.y - 0.22f };
+			Vector2 textPosition = { position.x - (boxSize.x / 2.0f) + 0.01f, position.y - boxSize.y * 2.2f };
 			leaderboardTexts[i * columns + j] = { textPosition, "" };
 		}
 		
@@ -75,7 +78,7 @@ void EndScreenUI::InitMenu()
 	}
 }
 
-void EndScreenUI::UpdateMenu(unsigned int selection)
+void EndScreenMPUI::UpdateMenu(unsigned int selection)
 {
 	for (int i = 0; i < buttons.size(); i++)
 	{
@@ -92,7 +95,7 @@ void EndScreenUI::UpdateMenu(unsigned int selection)
 	}
 }
 
-void EndScreenUI::PopulateLeaderboard()
+void EndScreenMPUI::PopulateLeaderboard()
 {
 	SortPlayers();
 	for (size_t i = 0; i < players.size(); ++i) {

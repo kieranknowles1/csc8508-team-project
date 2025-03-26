@@ -31,6 +31,23 @@ namespace NCL::CSC8503 {
 		int id;
 	};
 
+	struct UIBox {
+		Vector2 position;
+		Vector2 size;
+	};
+
+	struct Button {
+		Vector2 position;
+		Vector2 size;
+		Vector4 color = Vector4(0.4f, 0.4f, 0.4f, 1);
+	};
+
+	struct Text {
+		Vector2 position;
+		std::string text;
+		Vector4 color = Vector4(1, 1, 1, 1);
+	};
+
 
 	struct UiSprite {
 		Maths::Vector2 position;
