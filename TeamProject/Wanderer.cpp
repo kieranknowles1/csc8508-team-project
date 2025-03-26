@@ -103,7 +103,9 @@ Wanderer::Wanderer(PlayerObject* p, NavMesh* mesh, Side side, GameTechRendererIn
 }
 
 Wanderer::~Wanderer() {
-	if (laser && TutorialGame::getInstance()) TutorialGame::getInstance()->GetWorld()->RemoveGameObject(laser);
+	if (laser && TutorialGame::getInstance()) {
+		TutorialGame::getInstance()->delayedRemoveObject(laser);
+	}
 
 	laser = nullptr;
 	delete stateMachine;

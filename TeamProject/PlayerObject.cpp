@@ -29,7 +29,9 @@ PlayerObject::PlayerObject() {
 
 
 PlayerObject::~PlayerObject() {
-    if (laser && TutorialGame::getInstance()) TutorialGame::getInstance()->GetWorld()->RemoveGameObject(laser);
+    if (laser && TutorialGame::getInstance()) {
+        TutorialGame::getInstance()->delayedRemoveObject(laser);
+    }
     laser = nullptr;
     delete animationObject;
 }
