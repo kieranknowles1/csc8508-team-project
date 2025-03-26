@@ -43,7 +43,8 @@ namespace NCL::CSC8503 {
 			JumpRoom,
 			JumpRoomFloor,
 			ZigZag,
-            Gun
+            Gun,
+            Laser
 		};
 
         GameObject(const std::string& name = "");

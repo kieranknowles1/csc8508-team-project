@@ -141,7 +141,6 @@ Wanderer* SPGameController::AddWandererToWorld(NavMesh* navMesh, Side side) {
     laser->SetColor(Color::GetPlayerColor(0));
     laser->SetThickness(0.1f);
 
-    renderer->TrackLaser(laser);
     wanderer->SetLaser(laser);
 
     game->GetWorld()->AddGameObject(wanderer);

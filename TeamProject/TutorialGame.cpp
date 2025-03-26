@@ -276,10 +276,15 @@ void TutorialGame::CheckCollisions()
 void TutorialGame::clearGraveyard() {
     for (auto obj : earlyGraveyard) {
         // Prevents physics, OnCollisionExit will trigger next frame
-        bulletWorld->removeRigidBody(obj->GetPhysicsObject()->GetRigidBody());
+        if (obj->GetPhysicsObject()) {
+            bulletWorld->removeRigidBody(obj->GetPhysicsObject()->GetRigidBody());
+        }
         // Prevents OnUpdate and render
         world->RemoveGameObject(obj);
     }
+    // Deleting a GameObject may trigger other GameObjects to be deleted,
+    // make sure these go through the full process
+    auto addLateQueue = std::move(earlyGraveyard);
     for (auto obj : lateGraveyard) {
         // References should have been cleaned up by now
         // May not be strictly necessary to delay this, but it's
@@ -287,8 +292,7 @@ void TutorialGame::clearGraveyard() {
         delete obj;
     }
     // Move earlyGraveyard to lateGraveyard, clear lateGraveyard
-    lateGraveyard.clear();
-    std::swap(earlyGraveyard, lateGraveyard);
+    lateGraveyard = std::move(addLateQueue);
 }
 
 
@@ -342,6 +346,8 @@ void TutorialGame::ClearWorld() {
     world->ClearAndErase();
     renderer->GetDecalSystem().ClearDecalsFromWorld();
     renderer->ClearUIElemets();
+    earlyGraveyard.clear();
+    lateGraveyard.clear();
 }
 
 void TutorialGame::InitWorld() {
@@ -596,9 +602,6 @@ void TutorialGame::Start() {
             player->SetWorldID(user.GetUserID());
             player->SetOwner(user);
 
-            LaserObject* laser = player->GetLaser();
-            instance->renderer->TrackLaser(laser);
-
             btVector4 playerColor = Color::GetPlayerColor(user.GetUserID() - 1);
             player->SetColor(playerColor);
 
@@ -618,7 +621,6 @@ void TutorialGame::Start() {
 
         LaserObject* laser = instance->player->GetLaser();
         laser->SetColor(Color::GetPlayerColor(0));
-        instance->renderer->TrackLaser(laser);
 
         instance->player->getGun()->GetRenderObject()->SetColour(Color::GetPlayerColor(0));
 

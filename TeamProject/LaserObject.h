@@ -6,7 +6,9 @@ namespace NCL::CSC8503 {
 
     class LaserObject : public GameObject {
     public:
-        LaserObject(GameObject* parent) : parent(parent) {}
+        LaserObject(GameObject* parent) : parent(parent) {
+            type = Type::Laser;
+        }
 
         void Update(float dt) override;
 
