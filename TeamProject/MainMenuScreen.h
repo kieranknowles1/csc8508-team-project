@@ -49,21 +49,27 @@ namespace NCL::CSC8503 {
         GameTechRendererInterface* renderer;
         ResourceManager* resourceManager;
         std::unique_ptr<TextureUiElement> textureUiElement;
+		std::unique_ptr<MainMenuUI> ui;
         float connectionFailedTime = 0;
 
     public:
         MainMenuScreen(Controller* controller, TutorialGame* game, GameTechRendererInterface* renderer) : controller(controller), game(game), selection(0), renderer(renderer) {
 
+
             resourceManager = game->GetResourceManager();
             fmodLogoTex = resourceManager->getTextures().get("FMOD Logo White - Black Background1.png");
             UiSprite fmodLogo = { Vector2(0.95f, 0.05f), Vector2(0.1f, 0.1f), Vector4(1,1,1,1), fmodLogoTex };
+			ui = std::make_unique<MainMenuUI>();
             textureUiElement = std::make_unique<TextureUiElement>(fmodLogo);
+			renderer->AddUiElement(ui.get());
             renderer->AddUiElement(textureUiElement.get());
+			ui->SetActive(true);
             textureUiElement->SetActive(true);
+			ui->UpdateMenu((int)selection);
         }
 
         PushdownResult OnUpdate(float dt, PushdownState** newState) override {
-            const std::array<std::string, 5> menuItems = { "Singleplayer", "Host Game", "Join Game", "Credits", "Quit" };
+            //const std::array<std::string, 5> menuItems = { "Singleplayer", "Host Game", "Join Game", "Credits", "Quit" };
             bool ok = true;
 
             if (connectionFailedTime > 0) {
@@ -72,8 +78,9 @@ namespace NCL::CSC8503 {
             }
 
             if (controller->GetDigital(Controller::DigitalControl::MenuDown)) {
-                if (selection < menuItems.size() - 1) {  // Only increase if not at the last option
+                if (selection < 4) {  // Only increase if not at the last option
                     selection++;
+					UpdateSelection((int)selection);
                     int channelId = audioEngine.PlaySounds("MenuScroll.wav", Vector3(0, 0, 0), -12.0f);
                     audioEngine.SetChannelPitchMultiplier(channelId, 0.9f);
                 }
@@ -81,6 +88,7 @@ namespace NCL::CSC8503 {
             if (controller->GetDigital(Controller::DigitalControl::MenuUp)) {
                 if (selection > 0) {
                     selection--;
+					UpdateSelection((int)selection);
                     audioEngine.PlaySounds("MenuScroll.wav", Vector3(0, 0, 0), -12.0f);
                 }
             }
@@ -138,19 +146,6 @@ namespace NCL::CSC8503 {
 
                 return PushdownResult::Push;
             }
-
-            //Render menu
-            for (int i = 0; i < menuItems.size(); i++) {
-                std::string currentItem = menuItems[i];
-                if (i == (int)selection) {
-                    currentItem = "> " + currentItem + " <";
-                }
-                else {
-                    currentItem = "  " + currentItem;
-                }
-
-                Debug::Print(currentItem, Vector2(0.35f, 0.32f + (0.1f * i)));
-            }
             return PushdownResult::NoChange;
 
             //Add FMOD Logo here as well as the line "Audio Engine: FMOD Studio by Firelight Technologies Pty Ltd."
@@ -177,8 +172,10 @@ namespace NCL::CSC8503 {
                 UiSprite fmodLogo = { Vector2(0.95f, 0.05f), Vector2(0.1f, 0.1f), Vector4(1,1,1,1), fmodLogoTex };
                 textureUiElement = std::make_unique<TextureUiElement>(fmodLogo);
             }
+            renderer->AddUiElement(ui.get());
             renderer->AddUiElement(textureUiElement.get());
             textureUiElement->SetActive(true);
+			ui->SetActive(true);
 
             //audioEngine.Update(game->getMainCam());
 
@@ -186,5 +183,9 @@ namespace NCL::CSC8503 {
             //audioEngine.Shutdown();
             //audioEngine.Init();
         }
+
+		void UpdateSelection(unsigned int selection) {
+			ui->UpdateMenu(selection);
+		}
     };
 }
