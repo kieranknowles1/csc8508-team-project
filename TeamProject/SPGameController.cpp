@@ -53,8 +53,8 @@ void SPGameController::InitLevel(int curLevel) {
     for (int i = 0; (i < std::min(5 + curLevel, 100)); i++) {
         AddWandererToWorld(bottom, Side::BOTTOM);
         AddWandererToWorld(top, Side::TOP);
-        AddWandererToWorld(front, Side::FRONT);
-        AddWandererToWorld(back, Side::BACK);
+        //AddWandererToWorld(front, Side::FRONT);
+        //AddWandererToWorld(back, Side::BACK);
         AddWandererToWorld(left, Side::LEFT);
         AddWandererToWorld(right, Side::RIGHT);
     }
