@@ -702,6 +702,10 @@ void GameTechAGCRenderer::UpdateObjectList() {
 	}
 	currentFrame->ui.end(currentFrame);
 
+	for (const auto& uiElement : frameTexts) {
+		Debug::Print(uiElement.text, uiElement.position, uiElement.color);
+	}
+
 	currentFrame->lights.begin(currentFrame);
 	for (auto& light : lights) {
 		LightState state;
