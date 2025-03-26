@@ -23,7 +23,8 @@ namespace WorldState {
         Normal,
         DamageDealt,
         Health,
-        ObjectID
+        ObjectID,
+        Animation
     };
 
 
@@ -141,12 +142,6 @@ namespace WorldState {
      */
     class StateBuffer {
     public:
-        using StateArray = std::array<ObjectState, 3>;
-
-        ~StateBuffer() {
-            delete[] m_stateMutexes;
-        }
-
         /**
          * @brief Get the current ObjectState.
          *
@@ -154,9 +149,8 @@ namespace WorldState {
          * unlocking will most likely result in a deadlock.
          */
         std::pair<ObjectState*, std::shared_lock<std::shared_mutex>> GetCurrentState() {
-            getStates();
             std::shared_lock lock(m_stateMutexes[current]);
-            return std::make_pair(&getStates()[current], std::move(lock));
+            return std::make_pair(&m_states[current], std::move(lock));
         }
 
         /**
@@ -166,9 +160,8 @@ namespace WorldState {
          * unlocking will most likely result in a deadlock.
          */
         std::pair<ObjectState*, std::shared_lock<std::shared_mutex>> GetReadState() {
-            getStates();
             std::shared_lock lock(m_stateMutexes[read]);
-            return std::make_pair(&getStates()[read], std::move(lock));
+            return std::make_pair(&m_states[read], std::move(lock));
         }
 
         /**
@@ -178,17 +171,8 @@ namespace WorldState {
          * unlocking will most likely result in a deadlock.
          */
         std::pair<ObjectState*, std::shared_lock<std::shared_mutex>> GetWriteState() {
-            getStates();
             std::shared_lock lock(m_stateMutexes[write]);
-            return std::make_pair(&getStates()[write], std::move(lock));
-        }
-
-        StateArray& getStates() {
-            if (!m_states.has_value()) {
-                m_states.emplace();
-            }
-            m_stateMutexes = new std::shared_mutex[3];
-            return m_states.value();
+            return std::make_pair(&m_states[write], std::move(lock));
         }
 
         /**
@@ -199,23 +183,19 @@ namespace WorldState {
          * Write is cleared.
          */
         void UpdateBuffer() {
-            if (m_states == std::nullopt) {
-                return;
-            }
-
             std::unique_lock currentLock(m_stateMutexes[current]);
             std::unique_lock readLock(m_stateMutexes[read]);
             std::unique_lock writeLock(m_stateMutexes[write]);
 
             current = read;
             read = write;
-            write = (write + 1) % m_states->size();
-            getStates()[write].Clear();
+            write = (write + 1) % m_states.size();
+            m_states[write].Clear();
         }
 
     private:
-        std::shared_mutex* m_stateMutexes = nullptr;
-        std::optional<std::array<ObjectState, 3>> m_states;
+        std::array<std::shared_mutex, 3> m_stateMutexes;
+        std::array<ObjectState, 3> m_states;
 
         int current = 0;
         int read = 1;

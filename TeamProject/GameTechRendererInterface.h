@@ -36,6 +36,24 @@ namespace NCL::CSC8503 {
 		Maths::Vector2 position;
 		std::string text;
 		Maths::Vector4 color;
+		float scale = 1.0f;
+	};
+
+	struct UIBox {
+		Maths::Vector2 position;
+		Maths::Vector2 size;
+	};
+
+	struct Button {
+		Maths::Vector2 position;
+		Maths::Vector2 size;
+		Maths::Vector4 color;
+	};
+
+	struct Text {
+		Maths::Vector2 position;
+		std::string text;
+		Maths::Vector4 color = Maths::Vector4(1, 1, 1, 1);
 	};
 
 	struct UIBox {

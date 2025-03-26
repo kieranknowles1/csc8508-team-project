@@ -144,12 +144,12 @@ void Wanderer::InitPosAndOffset() {
 		rotation = btQuaternion(btVector3(1, 0, 0), SIMD_PI);
 		break;
 	case(Side::FRONT):
-		offset = btVector3(0, 0, 0);
-		rotation = btQuaternion(btVector3(1, 0, 0), SIMD_PI / 2);
+		offset = btVector3(0, 0, -halfHeight * 2);
+		rotation = btQuaternion(btVector3(1, 0, 0), -SIMD_PI / 2);
 		break;
 	case(Side::BACK):
-		offset = btVector3(0, halfHeight * 4, 0);
-		rotation = btQuaternion(btVector3(1, 0, 0), -SIMD_PI / 2);
+		offset = btVector3(0, 0, halfHeight * 2);
+		rotation = btQuaternion(btVector3(1, 0, 0), SIMD_PI / 2);
 		break;
 	case(Side::LEFT):
 		offset = btVector3(halfHeight * 2, 0, 0);
@@ -157,7 +157,7 @@ void Wanderer::InitPosAndOffset() {
 		break;
 	case(Side::RIGHT):
 		offset = btVector3(-halfHeight * 2, 0, 0);
-		rotation = btQuaternion(btVector3(0, 0, 1), -SIMD_PI / 2);
+		rotation = btQuaternion(btVector3(0, 0, 1), SIMD_PI / 2);
 		break;
 	}
 	trans.setRotation(rotation);
@@ -241,7 +241,7 @@ void Wanderer::PlayerFar(float dt) {
 
 	btTransform trans = GetTransform();
 	if (FollowPath(dt)) {
-		btVector3 newPos = yAdjustedPoint + offset;
+		btVector3 newPos = adjustedPoint + offset;
 		trans.setOrigin(newPos);
 		btRigidBody* body = physicsObject->GetRigidBody();
 		body->setWorldTransform(trans);

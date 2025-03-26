@@ -16,7 +16,7 @@ namespace NCL {
 			bool FollowPath(float dt);
 			btVector3 newPathPoint;
 			btVector3 curPathPoint;
-			btVector3 yAdjustedPoint;
+			btVector3 adjustedPoint;
 			float GroundAdjust(btVector3 pos);
 			Side side;
 			float speed = 20;

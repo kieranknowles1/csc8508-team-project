@@ -451,7 +451,7 @@ PlayerObject* TutorialGame::AddPlayerCapsuleToWorld(const Vector3& position, flo
 
     // Setting the transform properties for the capsule
     player->setInitialPosition(position);
-    player->setRenderScale(mainPlayer ? Vector3(0,0,0) : Vector3(radius * 2, height, radius * 2));
+    player->setRenderScale(mainPlayer ? Vector3(0,0,0) : Vector3(radius * 3.0f, height*1.1f, radius * 3.0f));
 
     // Creating a Bullet collision shape for the capsule
     btCollisionShape* playerShape = new btCapsuleShape(radius, height);
@@ -589,6 +589,7 @@ bool TutorialGame::StartMultiplayerGame(bool isHost) {
         //server->JoinGame("127.0.0.1", 1.0f);
         std::string host = config.get<std::string>("defaultHost");
         server->JoinGame(host.c_str(), 1.0f);
+       
     }
     return server->IsConnected();
 }
