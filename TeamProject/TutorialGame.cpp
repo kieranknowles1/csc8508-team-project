@@ -13,7 +13,7 @@
 #include "Colors.h"
 #include "Shoot.h"
 #include "Health.h"
-#include "MeshAnimation.h" //temporarily added for testing 
+#include "MeshAnimation.h" //temporarily added for testing
 
 #include "Window.h"
 #include "Config.h"
@@ -119,7 +119,7 @@ void TutorialGame::UpdateGame(float dt) {
 
     profiler.startSection("Update Audio");
     audioEngine.Update(&world->GetMainCamera());
-    
+
     clearGraveyard();
     profiler.startSection("Prepare Render");
     bulletWorld->debugDrawWorld();
@@ -143,7 +143,7 @@ void TutorialGame::UpdateGame(float dt) {
 
 
 void TutorialGame::UpdatePlayer(float dt) {
-    if (player->GetHealthAttrib()->GetHealthState() == HealthState::DEAD) {
+    if (player->GetHealthAttrib()->GetHealthState() == AliveState::DEAD) {
         Respawn* instance = Respawn::GetInstance();
         RespawnPoint* respawn;
 
@@ -367,7 +367,7 @@ PlayerObject* TutorialGame::InitPlayer(btVector3 position, btVector3 upDir, bool
     newPlayer->setType(GameObject::Type::Player);
 
     newPlayer->SetIsAnimated(true); //maybe better to manage this wherever animations are being applied rather than here but for testing this is probably fine
-    newPlayer->setRenderer(renderer); 
+    newPlayer->setRenderer(renderer);
     Respawn::GetInstance()->InsertPlayerObj(newPlayer);
     return newPlayer;
 }
@@ -391,7 +391,7 @@ GameObject* TutorialGame::AddGunToWorld(const Vector3& position, Vector3 dimensi
     // Setting render object
     gun->SetRenderObject(new RenderObject(gun, resourceManager->getMeshes().get("VD_Raygun_Cartoony_Rigged1.msh"), resourceManager->getMaterials().get("VD_Raygun_Cartoony_Rigged1.mat")));
     gun->setType(GameObject::Type::Gun);
-    
+
     world->AddGameObject(gun);
 
     return gun;
@@ -441,7 +441,7 @@ PlayerObject* TutorialGame::AddPlayerCapsuleToWorld(const Vector3& position, flo
     // Creating a Bullet collision shape for the capsule
     btCollisionShape* playerShape = new btCapsuleShape(radius, height);
 
-    // Setting the render object for the capsule 
+    // Setting the render object for the capsule
     player->SetRenderObject(new RenderObject(player, resourceManager->getMeshes().get("RacerGuy/RacerGuy2.msh"), resourceManager->getMaterials().get("RacerGuy.mat"))); //defaultTexture
     player->CreateAnimationObject();
     player->CorrectAnimation();
@@ -596,7 +596,7 @@ void TutorialGame::Start() {
             PlayerObject* player = instance->InitPlayer(respawn->position, respawn->orientation, mainPlayer);
             player->SetWorldID(user.GetUserID());
             player->SetOwner(user);
-            
+
             LaserObject* laser = player->GetLaser();
             instance->renderer->TrackLaser(laser);
 
