@@ -1,7 +1,6 @@
 #include "LaserObject.h"
 #include "WorldState.h"
 #include "Multiplayer/GamePackets.hpp"
-#include "GameTechRenderer.h"
 #include "Shoot.h"
 
 
