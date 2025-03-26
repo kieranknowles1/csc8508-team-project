@@ -163,6 +163,10 @@ namespace NCL {
 			GLuint edgeNormalsTex;
 			std::unique_ptr<OGLShader> edgedetectShader;
 
+            // Gloss and Specular Buffers
+            GLuint glossBufferTex;
+            GLuint specularBufferTex;
+
 			//Mesh Animation Additions:
 			void RenderAnimations();
 			OGLShader* animationShader;

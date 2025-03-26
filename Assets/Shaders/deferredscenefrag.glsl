@@ -21,15 +21,9 @@ in Vertex {
 	vec3 binormal;
 } IN;
 
-out vec4 fragColour[2];
+out vec4 fragColour[4];
 
-void main(void)   { 
-
-	if(isFlat){
-		fragColour[0] = IN.colour;
-		fragColour[1] = vec4(IN.normal.xyz * 0.5 + 0.5, 1.0);
-		return;
-	}
+void main(void)   {
 
 	vec4 albedo = IN.colour;
 	if(hasTexture) {
@@ -46,25 +40,18 @@ void main(void)   {
 	    vecnormal = mapnormal; //the * 2.0 - 1.0 part converts from the texture space of 0.0 to 1.0 over to vector coordinates ranging from -1.0 to 1.0 so this part is still required
 	}
 
-	if(hasGloss) {
-		albedo.a *= texture(glossTex, IN.texCoord).r;
-	}
+	float gloss = hasGloss ? texture(glossTex, IN.texCoord).r : 1.0;
+    float specular = hasSpecular ? texture(specularTex, IN.texCoord).r : 1.0f;
 
-	if(hasSpecular) {
-		albedo.a *= texture(specularTex, IN.texCoord).r;
-	}
+	// // Code I am messing with to get specular and gloss map to work
+    fragColour[0] = albedo; // Albedo (diffuse color)
+	fragColour[1] = vec4(vecnormal.xyz * 0.5 + 0.5, 1.0); // Normal in RGB, alpha reserved
+	fragColour[2] = vec4(vec3(specular), 1.0); // Specular (grayscale in RGB)
+	fragColour[3] = vec4(vec3(gloss), 1.0); // Gloss (grayscale in RGB)
 
-	// TODO: Remove this after debugging that gloss and specular are working
-	// if (hasSpecular) {
-    // 	fragColour[1] = vec4(texture(glossTex, IN.texCoord).rrr, 1.0); // Output gloss as grayscale
-	// } else {
-	// 	fragColour[1] = vec4(0.0, 0.0, 0.0, 1.0); // Default to black if no gloss map
-	// }
-
-
-	albedo.a = 1;
-	fragColour[0] = albedo; //all the (non-lighting) colour information goes into here
-	fragColour[1] = vec4(vecnormal.xyz * 0.5 + 0.5, 1.0); //(THE *0.5 + 0.5) may be unneccessary for floating point textures
+// 	fragColour[0].rgb = albedo.rgb; //all the (non-lighting) colour information goes into here
+// 	fragColour[0].a = specular;
+// 	fragColour[1] = vec4(vecnormal.xyz * 0.5 + 0.5, 1.0); //(THE *0.5 + 0.5) may be unneccessary for floating point textures
 }
 
 	

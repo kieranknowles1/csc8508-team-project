@@ -99,9 +99,11 @@ GameTechRenderer::GameTechRenderer(Window* window) : OGLRenderer(window), GameTe
 	glGenFramebuffers(1, &laserAddFBO);
 	glGenFramebuffers(1, &edgeNormalsFBO);
 
-	GLenum buffers[2] = {
+	GLenum buffers[4] = {
 	GL_COLOR_ATTACHMENT0,
-	GL_COLOR_ATTACHMENT1
+	GL_COLOR_ATTACHMENT1,
+    GL_COLOR_ATTACHMENT2,
+    GL_COLOR_ATTACHMENT3
 	};
 
 	GenerateScreenTexture(bufferDepthTex, true);
@@ -118,13 +120,18 @@ GameTechRenderer::GameTechRenderer(Window* window) : OGLRenderer(window), GameTe
 	GenerateScreenTexture(laserPostTex2);
 	GenerateScreenTexture(laserAddedTex);
 	GenerateScreenTexture(edgeNormalsTex);
+
+    GenerateScreenTexture(glossBufferTex);
+    GenerateScreenTexture(specularBufferTex);
 	//attach textures to FBOS:
 	//first pass:
 	glBindFramebuffer(GL_FRAMEBUFFER, bufferFBO);
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, bufferColourTex, 0);
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, bufferNormalTex, 0);
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, bufferDepthTex, 0);
-	glDrawBuffers(2, buffers);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT2, GL_TEXTURE_2D, glossBufferTex, 0);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT3, GL_TEXTURE_2D, specularBufferTex, 0);
+	glDrawBuffers(4, buffers);
 
 	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE || !bufferColourTex || !bufferNormalTex || !bufferDepthTex ) {//check attachment success
 		return;
@@ -474,7 +481,7 @@ void GameTechRenderer::RenderCamera() {
             glUniform1i(hasTexLocation, hasTex);
             glUniform1i(hasGlossLocation, hasGloss);
             glUniform1d(hasSpecularLocation, hasSpecular);
-            glUniform1i(hasFlatLocation, i->GetIsFlat());
+            //glUniform1i(hasFlatLocation, i->GetIsFlat());
             glUniform1i(hasNormalLocation, hasNormal);
 
             BindMesh((OGLMesh&)*(*i).GetMesh());
