@@ -70,6 +70,7 @@ set(SOURCES
     Profiler.h
 
     Score.h
+    Score.cpp
     Scoreboard.cpp
     Scoreboard.h
     Shoot.cpp
