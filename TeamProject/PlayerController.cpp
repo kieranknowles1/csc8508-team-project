@@ -515,8 +515,8 @@ void PlayerController::HandleHurtEffects() {
 
 void PlayerController::GetAllDirections() {
     upDirection = player->getUpDirection();
-    rightDirection = player->getForwardDirection();
-    forwardDirection = player->getRightDirection();
+    rightDirection = player->getRightDirection();
+    forwardDirection = player->getForwardDirection();
     camRotOffset = player->getCamOffset();
 
     //Update FMod listener each frame so audio is correctly positioned

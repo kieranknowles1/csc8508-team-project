@@ -872,6 +872,7 @@ namespace Packet {
             audioEngine.SetChannel3dPosition(channel, pos);
             audioEngine.SetChannelPlaybackPosition(channel, static_cast<unsigned int>(playbackTime * 1000));
             obj->SetSoundChannelID(channel);
+            audioEngine.Set3dListenerAndOrientation(TutorialGame::getInstance()->getMainCam()->GetPosition(), TutorialGame::getInstance()->getPlayerObject()->getForwardDirection(), TutorialGame::getInstance()->getPlayerObject()->getUpDirection());
             audioEngine.SetChannel3dMinMaxDistance(channel, 100.0f, 700.0f);
         }
 
