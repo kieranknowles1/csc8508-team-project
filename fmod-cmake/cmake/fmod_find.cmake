@@ -147,8 +147,8 @@ macro(fmod_find_libs _PLATFORM_NAME _VERSION _FMOD_LIBS _FMOD_STUDIO_LIBS _FMOD_
             ${FMOD_SDK_PATH}/studio/lib/x64/fmodstudio${FMOD_LIB_TYPE}.dll
         )
     elseif(CMAKE_SYSTEM_NAME MATCHES "Linux")
-        set(${_FMOD_LIBS}        ${FMOD_SDK_PATH}/core/lib/x86_64/libfmod${FMOD_LIB_TYPE}.so)
-        set(${_FMOD_STUDIO_LIBS} ${FMOD_SDK_PATH}/studio/lib/x86_64/libfmodstudio${FMOD_LIB_TYPE}.so)
+        set(${_FMOD_LIBS}        ${FMOD_SDK_PATH}/core/lib/x86_64/libfmod${FMOD_LIB_TYPE}.so.${FMOD_SONAME})
+        set(${_FMOD_STUDIO_LIBS} ${FMOD_SDK_PATH}/studio/lib/x86_64/libfmodstudio${FMOD_LIB_TYPE}.so.${FMOD_SONAME})
         set(${_FMOD_DLLS} ${${_FMOD_LIBS}} ${${_FMOD_STUDIO_LIBS}})
     elseif(ANDROID)
         set(${_FMOD_LIBS}        ${FMOD_LIB_ROOT}/fmod${FMOD_LIB_TYPE}.so)

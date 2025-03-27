@@ -170,6 +170,15 @@ set_target_properties(${PROJECT_NAME} PROPERTIES
     INTERPROCEDURAL_OPTIMIZATION_RELEASE "TRUE"
 	VS_DEBUGGER_WORKING_DIRECTORY "$(SolutionDir)"
 )
+
+if(CMAKE_SYSTEM_NAME MATCHES "Linux")
+    set_target_properties(${PROJECT_NAME} PROPERTIES
+        BUILD_WITH_INSTALL_RPATH TRUE
+        BUILD_RPATH "$ORIGIN"
+        INSTALL_RPATH "$ORIGIN"
+    )
+endif()
+
 ################################################################################
 # Dependencies
 ################################################################################
