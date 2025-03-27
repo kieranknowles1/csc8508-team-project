@@ -45,10 +45,12 @@ btVector3 GetEulerAngles(btQuaternion quat) {
 
 void PlayerController::UpdateMovement(float dt) {
     // Updating the scoreboard here.
-    for (PlayerObject* player : Respawn::GetAllPlayers()) {
-        scoreboard->SetScore(player->GetScoreAttrib()->GetScore(), player->GetOwner()->GetUserID());
+    if (TutorialGame::getInstance()->GetServerInstance() != nullptr) {
+        for (PlayerObject* player : Respawn::GetAllPlayers()) {
+            scoreboard->SetScore(player->GetScoreAttrib()->GetScore(), player->GetOwner()->GetUserID());
+        }
+        scoreboard->UpdateScoreboardText();
     }
-    scoreboard->UpdateScoreboardText();
 
     transformPlayer = rb->getWorldTransform();
     btPlayerPos = transformPlayer.getOrigin();
