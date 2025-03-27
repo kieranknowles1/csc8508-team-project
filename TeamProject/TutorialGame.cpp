@@ -161,9 +161,11 @@ void TutorialGame::UpdatePlayer(float dt, bool camOnly) {
         player->GetHealthAttrib()->Respawn();
     }
 
-    // Display Score.
-    std::string scoreString = "Score: " + std::to_string(static_cast<int>(player->GetScoreAttrib()->GetScore()));
-    Debug::Print(scoreString, { 0.05, 0.1 });
+    // Display Score if networked.
+    if (server != nullptr) {
+        std::string scoreString = "Score: " + std::to_string(static_cast<int>(player->GetScoreAttrib()->GetScore()));
+        Debug::Print(scoreString, { 0.05, 0.1 });
+    }
 
     // Press F for freeCam, press G for thirdPerson
     if (freeCam) {
