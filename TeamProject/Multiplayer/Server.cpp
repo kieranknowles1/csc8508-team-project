@@ -76,6 +76,12 @@ namespace Multiplayer {
 
         m_handlers.push_back(std::make_unique<Packet::PlayerAnimationPacketHandler>());
         Packet::PacketRegister::Register(m_handlers.back().get());
+
+        m_handlers.push_back(std::make_unique<Packet::RequestColourPacketHandler>());
+        Packet::PacketRegister::Register(m_handlers.back().get());
+
+        m_handlers.push_back(std::make_unique<Packet::SetColourPacketHandler>());
+        Packet::PacketRegister::Register(m_handlers.back().get());
     }
 
     void Server::JoinGame(const std::string& ip, float waitSeconds) {

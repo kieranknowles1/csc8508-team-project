@@ -509,17 +509,37 @@ namespace Packet {
         Multiplayer::Server* server = TutorialGame::getInstance()->GetServerInstance();
 
         switch (userInfo->GetAction()) {
-        case LobbyAction::CREATE:
+        case LobbyAction::CREATE: {
             server->SetUser(userInfo->GetUser());
             break;
-        case LobbyAction::JOIN:
+        }
+        case LobbyAction::JOIN: {
             server->AddUserToLobby(userInfo->GetUser());
             break;
-        case LobbyAction::LEAVE:
+        }
+        case LobbyAction::LEAVE: {
             server->RemoveUserFromLobby(userInfo->GetUser());
+
+            auto lobby = server->GetLobby();
+            auto userColours = lobby->GetUserColors();
+
+            for (uint8_t i = 0; i < userColours.size(); ++i) {
+                auto assigned = userColours[i].GetUser();
+                if (assigned.has_value() && assigned->GetUserID() == userInfo->GetUser().GetUserID()) {
+                    lobby->GetMutableUserColors()[i].Clear();
+
+                    // Notify clients that color is freed
+                    auto setPacket = std::make_shared<SetColourPacket>(userInfo->GetUser().GetUserID(), -1); // -1 indicates color cleared
+                    server->GetNetwork()->Broadcast(setPacket);
+                }
+            }
+
             break;
-        case LobbyAction::SET_HOST:
+        }
+        case LobbyAction::SET_HOST: {
             server->AssignLobbyHost(userInfo->GetUser());
+            break;
+        }
         }
     }
 
@@ -854,4 +874,185 @@ namespace Packet {
 
 #pragma endregion DeathPacketHandler
 
+#pragma region RequestColourPacketHandler
+
+    void RequestColourPacketHandler::Handle(const std::shared_ptr<Packet> packet) {
+        auto req = static_cast<RequestColourPacket*>(packet.get());
+        int requestedColour = req->GetColourIndex();
+        int user = req->GetUserID();
+
+        Multiplayer::Server* server = TutorialGame::getInstance()->GetServerInstance();
+        if (!server) return;
+
+        if (!server->IsHost()) return;
+
+        Lobbies::Lobby* lobby = server->GetLobby();
+        Lobbies::User requestingUser = Lobbies::User(user);
+
+        if (!lobby->SetUserColor(requestingUser, static_cast<TeamColor>(requestedColour))) {
+            return;
+        }
+
+        std::shared_ptr<SetColourPacket> setPacket = std::make_shared<SetColourPacket>(user, requestedColour);
+        server->GetNetwork()->Broadcast(setPacket);
+    }
+
+
+    std::shared_ptr<Packet> RequestColourPacketHandler::Translate(const ENetEvent* event) const {
+        ENetPacket* packet = event->packet;
+
+        Type type;
+        uint8_t channel;
+        uint32_t sequenceNumber;
+
+        GetBaseData(packet, &type, &channel, &sequenceNumber);
+        size_t offset = sizeof(Type) + sizeof(uint8_t) + sizeof(uint32_t);
+
+        int userID;
+        int colourIndex;
+
+        memcpy(&userID, packet->data + offset, sizeof(int));
+        offset += sizeof(int);
+
+        memcpy(&colourIndex, packet->data + offset, sizeof(int));
+
+        return std::make_shared<RequestColourPacket>(userID, colourIndex);
+    }
+
+    ENetPacket* RequestColourPacketHandler::ToENetPacket(const std::shared_ptr<Packet> packet) const {
+        auto req = *static_cast<RequestColourPacket*>(packet.get());
+
+        char* buffer = new char[
+            sizeof(Type)
+                + sizeof(uint8_t)
+                + sizeof(uint32_t)
+                + sizeof(int)
+                + sizeof(int)
+        ];
+
+        size_t offset = 0;
+        Type type = req.GetType();
+        uint8_t channel = req.GetChannel();
+        uint32_t seq = req.GetSequenceNumber();
+
+        memcpy(buffer + offset, &type, sizeof(Type)); offset += sizeof(Type);
+        memcpy(buffer + offset, &channel, sizeof(uint8_t)); offset += sizeof(uint8_t);
+        memcpy(buffer + offset, &seq, sizeof(uint32_t)); offset += sizeof(uint32_t);
+        int userId = req.GetUserID();
+        memcpy(buffer + offset, &userId, sizeof(int)); offset += sizeof(int);
+        int colorIndex = req.GetColourIndex();
+        memcpy(buffer + offset, &colorIndex, sizeof(int)); offset += sizeof(int);
+
+        int flags = channel == static_cast<int>(Channel::RELIABLE) ? ENET_PACKET_FLAG_RELIABLE : 0;
+        ENetPacket* enetPacket = enet_packet_create(buffer, offset, flags);
+        delete[] buffer;
+        return enetPacket;
+    }
+
+#pragma endregion RequestColourPacketHandler
+
+#pragma region SetColourPacketHandler
+
+    /*void SetColourPacketHandler::Handle(const std::shared_ptr<Packet> packet) {
+        auto setPacket = static_cast<SetColourPacket*>(packet.get());
+        Multiplayer::Server* server = TutorialGame::getInstance()->GetServerInstance();
+
+        if (!server) return;
+
+        int userID = setPacket->GetUserID();
+        int colourIndex = setPacket->GetColorIndex();
+
+        Lobbies::Lobby* lobby = server->GetLobby();
+        const auto& users = lobby->GetConnectedUsers();
+
+        for (const auto& user : users) {
+            if (user.GetUserID() == userID) {
+                lobby->SetUserColor(user, static_cast<TeamColor>(colourIndex));
+                break;
+            }
+        }
+    }*/
+
+    void SetColourPacketHandler::Handle(const std::shared_ptr<Packet> packet) {
+        const SetColourPacket* p = std::static_pointer_cast<SetColourPacket>(packet).get();
+
+        int userID = p->GetUserID();
+        int colourIndex = p->GetColorIndex();
+
+        auto& colorAssignments = LobbyColorState::GetInstance().GetAssignments();
+
+        if (colourIndex == -1) {
+            // Release color
+            for (int i = 0; i < colorAssignments.size(); ++i) {
+                if (colorAssignments[i].has_value() && colorAssignments[i].value() == userID) {
+                    colorAssignments[i] = std::nullopt;
+                }
+            }
+        }
+        else {
+            colorAssignments[colourIndex] = userID;
+        }
+    }
+
+    std::shared_ptr<Packet> SetColourPacketHandler::Translate(const ENetEvent* event) const {
+        ENetPacket* packet = event->packet;
+        Type type;
+        uint8_t channel;
+        uint32_t sequenceNumber;
+
+        size_t offset = sizeof(Type) + sizeof(uint8_t) + sizeof(uint32_t);
+        GetBaseData(packet, &type, &channel, &sequenceNumber);
+
+        int userID;
+        int colourIndex;
+
+        memcpy(&userID, packet->data + offset, sizeof(int));
+        offset += sizeof(int);
+
+        memcpy(&colourIndex, packet->data + offset, sizeof(int));
+
+        return std::make_shared<SetColourPacket>(userID, colourIndex);
+    }
+
+    ENetPacket* SetColourPacketHandler::ToENetPacket(const std::shared_ptr<Packet> packet) const {
+        auto setPacket = *static_cast<SetColourPacket*>(packet.get());
+
+        char* buffer = new char[
+            sizeof(Type) +
+                sizeof(uint8_t) +
+                sizeof(uint32_t) +
+                sizeof(int) +
+                sizeof(int)   
+        ];
+
+        size_t offset = 0;
+        Type type = setPacket.GetType();
+        memcpy(buffer + offset, &type, sizeof(Type));
+        offset += sizeof(Type);
+
+        uint8_t channel = setPacket.GetChannel();
+        memcpy(buffer + offset, &channel, sizeof(uint8_t));
+        offset += sizeof(uint8_t);
+
+        uint32_t sequenceNumber = setPacket.GetSequenceNumber();
+        memcpy(buffer + offset, &sequenceNumber, sizeof(uint32_t));
+        offset += sizeof(uint32_t);
+
+        int userID = setPacket.GetUserID();
+        memcpy(buffer + offset, &userID, sizeof(int));
+        offset += sizeof(int);
+
+        int colourIndex = setPacket.GetColorIndex();
+        memcpy(buffer + offset, &colourIndex, sizeof(int));
+        offset += sizeof(int);
+
+        int packetFlags = 0;
+        if (channel == static_cast<int>(Channel::RELIABLE)) packetFlags = ENET_PACKET_FLAG_RELIABLE;
+
+        ENetPacket* enetPacket = enet_packet_create(buffer, offset, packetFlags);
+        delete[] buffer;
+        return enetPacket;
+    }
+
+#pragma endregion SetColourPacketHandler
 }

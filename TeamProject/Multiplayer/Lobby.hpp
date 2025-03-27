@@ -123,6 +123,10 @@ namespace Lobbies {
          */
         inline std::array<UserColor, 8> GetUserColors() const { return m_userColors; }
 
+        std::array<UserColor, 8>& GetMutableUserColors() {
+            return m_userColors;
+        }
+
         /**
          * @brief Determine if all the players currently in the lobby are assigned
          * a color.

@@ -45,6 +45,20 @@ namespace NCL {
             ACTIVE
         };
 
+        class LobbyColorState {
+        public:
+            static LobbyColorState& GetInstance() {
+                static LobbyColorState instance;
+                return instance;
+            }
+
+            std::array<std::optional<int>, 8>& GetAssignments() {
+                return colorAssignments;
+            }
+        private:
+            std::array<std::optional<int>, 8> colorAssignments;
+        };
+
 
         class TutorialGame {
         private:

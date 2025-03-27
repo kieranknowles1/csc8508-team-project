@@ -311,10 +311,23 @@ namespace Packet {
     class RequestColourPacket : public Packet {
     public:
         RequestColourPacket(int userID, int colourIndex) : Packet(static_cast<Type>(PacketType::REQUEST_COLOUR), static_cast<int>(Channel::RELIABLE), 0),
-            userID(userID), colorIndex(colorIndex) {}
+            userID(userID), colourIndex(colourIndex) {}
 
         int GetUserID() const { return userID; }
         int GetColourIndex() const { return colourIndex; }
+
+    private:
+        int userID;
+        int colourIndex;
+    };
+
+    class SetColourPacket : public Packet {
+    public:
+        SetColourPacket(int userID, int colourIndex) : Packet(static_cast<Type>(PacketType::SET_COLOUR), static_cast<int>(Channel::RELIABLE), 0),
+            userID(userID), colourIndex(colourIndex) {}
+
+        int GetUserID() const { return userID; }
+        int GetColorIndex() const { return colourIndex; }
 
     private:
         int userID;

@@ -121,4 +121,21 @@ namespace Packet {
         std::shared_ptr<Packet> Translate(const ENetEvent* event) const override;
         ENetPacket* ToENetPacket(const std::shared_ptr<Packet> packet) const override;
     };
+
+    class RequestColourPacketHandler : public PacketHandler {
+    public:
+        RequestColourPacketHandler() : PacketHandler(static_cast<Type>(PacketType::REQUEST_COLOUR)) {}
+
+        void Handle(const std::shared_ptr<Packet> packet) override;
+        std::shared_ptr<Packet> Translate(const ENetEvent* event) const override;
+        ENetPacket* ToENetPacket(const std::shared_ptr<Packet> packet) const override;
+    };
+
+    class SetColourPacketHandler : public PacketHandler {
+    public:
+        SetColourPacketHandler() : PacketHandler(static_cast<Type>(PacketType::SET_COLOUR)) {}
+        void Handle(const std::shared_ptr<Packet> packet) override;
+        std::shared_ptr<Packet> Translate(const ENetEvent* event) const override;
+        ENetPacket* ToENetPacket(const std::shared_ptr<Packet> packet) const override;
+    };
 }
