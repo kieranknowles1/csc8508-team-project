@@ -157,7 +157,7 @@ namespace Multiplayer {
             // Add packet to the buffer.
             else {
                 // Drop old packets.
-                if (currentPacket->GetSequenceNumber() >= m_processTick) {
+                if (currentPacket->GetSequenceNumber() >= m_processTick && currentPacket->GetSequenceNumber() <= m_tickCount) {
                     m_buffer[currentPacket->GetSequenceNumber() % TICK_BUFFER_SIZE].push_back(currentPacket);
 
                     if (currentPacket->GetSequenceNumber() < smallestIncoming) {
@@ -172,21 +172,21 @@ namespace Multiplayer {
                     }
                 }
 
-                // Moving too fast.
-                if (currentPacket->GetSequenceNumber() > m_tickCount) {
-                    int diff = currentPacket->GetSequenceNumber() - m_tickCount;
-#ifndef NDEBUG
-                    std::cout << ConsoleTextColor::YELLOW;
-                    std::cout << "Someone's network is ticking faster!\n";
-                    std::cout << "Skipping " << diff << " ticks.\n";
-                    std::cout << ConsoleTextColor::DEFAULT;
-#endif
-                    for (diff; diff > 0; diff--) {
-                        if (m_processTick >= 0) m_buffer[m_processTick % TICK_BUFFER_SIZE].clear();
-                        m_processTick++;
-                    }
-                    m_tickCount = currentPacket->GetSequenceNumber();
-                }
+//                // Moving too fast.
+//                if (currentPacket->GetSequenceNumber() > m_tickCount) {
+//                    int diff = currentPacket->GetSequenceNumber() - m_tickCount;
+//#ifndef NDEBUG
+//                    std::cout << ConsoleTextColor::YELLOW;
+//                    std::cout << "Someone's network is ticking faster!\n";
+//                    std::cout << "Skipping " << diff << " ticks.\n";
+//                    std::cout << ConsoleTextColor::DEFAULT;
+//#endif
+//                    for (diff; diff > 0; diff--) {
+//                        if (m_processTick >= 0) m_buffer[m_processTick % TICK_BUFFER_SIZE].clear();
+//                        m_processTick++;
+//                    }
+//                    m_tickCount = currentPacket->GetSequenceNumber();
+//                }
             }
             currentPacket = m_network->Fetch();
         }
