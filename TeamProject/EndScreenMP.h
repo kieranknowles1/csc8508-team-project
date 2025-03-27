@@ -45,7 +45,7 @@ private:
     Vector4 borderColor = Vector4(0, 0, 0, 1);
     Vector4 boxColor = Vector4(0.4f, 0.4f, 0.4f, 1);
     float borderThickness = 0.005f;
-    Vector2 buttonSize = Vector2(0.4f, 1);
+    Vector2 buttonSize = Vector2(0.4f, 0.1f);
 
     Vector2 leaderboardCenter = Vector2(0.5f, 0.6f);
     Vector2 leaderboardSize = Vector2(0.7f, 0.7f);
