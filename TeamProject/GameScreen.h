@@ -3,6 +3,7 @@
 #include <PauseScreen.h>
 #include "PushdownState.h"
 #include "EndScreenMP.h"
+#include "EndScreenSP.h"
 
 
 namespace NCL::CSC8503 {
