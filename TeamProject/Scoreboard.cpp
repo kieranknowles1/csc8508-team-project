@@ -41,7 +41,7 @@ void Scoreboard::render(std::vector<UiText>& texts) {
 
 void Scoreboard::PopulateScoreboard() {
 	players.clear();
-	for (unsigned int i = 0; i < 8; ++i) {
+	for (unsigned int i = 1; i < 9; ++i) {
 		Player player;
 		player.name = "Player " + std::to_string(i + 1);
 		player.score = 0;
