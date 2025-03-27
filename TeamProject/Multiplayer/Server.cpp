@@ -157,7 +157,7 @@ namespace Multiplayer {
             // Add packet to the buffer.
             else {
                 // Drop old packets.
-                if (currentPacket->GetSequenceNumber() >= m_processTick) {
+                if (currentPacket->GetSequenceNumber() >= m_processTick && currentPacket->GetSequenceNumber() <= m_tickCount) {
                     m_buffer[currentPacket->GetSequenceNumber() % TICK_BUFFER_SIZE].push_back(currentPacket);
 
                     if (currentPacket->GetSequenceNumber() < smallestIncoming) {
@@ -167,7 +167,7 @@ namespace Multiplayer {
                     // Pass packets on to clients.
                     if (m_isHost) {
                         // Add 1 to sequence number as this function is called at the end of a tick.
-                        currentPacket->SetSequenceNumber(currentPacket->GetSequenceNumber() + 1);
+                        currentPacket->SetSequenceNumber(currentPacket->GetSequenceNumber());
                         m_network->Broadcast(currentPacket);
                     }
                 }
