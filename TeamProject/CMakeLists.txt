@@ -105,6 +105,8 @@ else()
     file(GLOB_RECURSE SHADERS
         "${ASSET_ROOT}/Shaders/*.frag"
         "${ASSET_ROOT}/Shaders/*.vert"
+        "${ASSET_ROOT}/Shaders/*.glsl"
+        "${ASSET_ROOT}/Shaders/*.h"
     )
 endif()
 file(GLOB_RECURSE TEXTURES
