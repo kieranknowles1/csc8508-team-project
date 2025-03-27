@@ -7,7 +7,6 @@
 #include "TutorialGame.h"
 #include "Debug.h"
 #include <iostream>
-#include "GameScreen.h"
 #include "CreditsScreen.h"
 
 using namespace NCL;

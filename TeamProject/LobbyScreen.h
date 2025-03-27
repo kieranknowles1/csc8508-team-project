@@ -62,6 +62,16 @@ namespace NCL::CSC8503 {
 					// CLOSE LOBBY
 					return PushdownResult::Pop;
 				}
+
+				else if (selection == 9) {  // Start Button (only host can press)
+					//TODO: Let me know if this sound cuts off abruptly
+					audioEngine.PlaySounds("MenuSelect.wav", Vector3(0, 0, 0), -18.0f);
+                    game->Start();
+                    game->GetServerInstance()->ResetTick();
+                    *newState = new MultiplayerGameScreen(controller, game, game->GetPlayerController());
+                    return PushdownResult::Push;
+				}
+
 			}
 
 			RenderUI();
