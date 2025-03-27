@@ -1,12 +1,11 @@
 TODO: Credit ourselves, add in what each of us did
 
 - Alex Barnett
-  Head of Gameplay Programming, Level Creation, and Game Design
-  Assisted in Graphics Engineering
+  Head of Gameplay Programming, Level Creation, and Creative Director
+  Assisted in Graphics Engineering and UI
 
 - Ameya Ghuman
-  Head of Audio Programming
-  Head of UI Programming
+  Head of Audio and UI Programming
 
 - Billy Connors
   Head of AI and Single Player Game Mode
