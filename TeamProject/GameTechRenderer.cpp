@@ -1247,6 +1247,14 @@ void GameTechRenderer::CombineBuffers() {//basically final post processing outpu
 	glActiveTexture(GL_TEXTURE2);
 	glBindTexture(GL_TEXTURE_2D, lightSpecularTex);
 
+    glUniform1i(glGetUniformLocation(combineShader->GetProgramID(), "glossBufferTex"), 3);
+    glActiveTexture(GL_TEXTURE3);
+    glBindTexture(GL_TEXTURE_2D, glossBufferTex);
+    
+    glUniform1i(glGetUniformLocation(combineShader->GetProgramID(), "specularBufferTex"), 4);
+    glActiveTexture(GL_TEXTURE4);
+    glBindTexture(GL_TEXTURE_2D, specularBufferTex);
+
 	BindMesh(*fullscreenQuad);
 	DrawBoundMesh();
 	glBindFramebuffer(GL_FRAMEBUFFER, 0); //hdrTex should now hold full deferred lighting rendered scene

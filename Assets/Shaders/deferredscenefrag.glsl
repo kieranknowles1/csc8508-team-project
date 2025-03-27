@@ -41,17 +41,20 @@ void main(void)   {
 	}
 
 	float gloss = hasGloss ? texture(glossTex, IN.texCoord).r : 1.0;
-    float specular = hasSpecular ? texture(specularTex, IN.texCoord).r : 1.0f;
+    float specular = hasSpecular ? texture(specularTex, IN.texCoord).r : 1.0;
 
-	// // Code I am messing with to get specular and gloss map to work
+    // Clamp values to prevent artifacts
+    gloss = clamp(gloss, 0.05, 1.0);        // Avoid zero gloss
+    specular = clamp(specular, 0.05, 1.0);  // Avoid zero specular
+
+	// Code I am messing with to get specular and gloss map to work
     fragColour[0] = albedo; // Albedo (diffuse color)
 	fragColour[1] = vec4(vecnormal.xyz * 0.5 + 0.5, 1.0); // Normal in RGB, alpha reserved
-	fragColour[2] = vec4(vec3(specular), 1.0); // Specular (grayscale in RGB)
-	fragColour[3] = vec4(vec3(gloss), 1.0); // Gloss (grayscale in RGB)
+	fragColour[2] = vec4(vec3(specular), 1.0);
+	fragColour[3] = vec4(vec3(gloss), 1.0);
+	
 
 // 	fragColour[0].rgb = albedo.rgb; //all the (non-lighting) colour information goes into here
 // 	fragColour[0].a = specular;
 // 	fragColour[1] = vec4(vecnormal.xyz * 0.5 + 0.5, 1.0); //(THE *0.5 + 0.5) may be unneccessary for floating point textures
 }
-
-	
