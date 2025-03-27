@@ -11,8 +11,7 @@
 #include "LobbyScreen.h"
 #include "CreditsScreen.h"
 #include "GameTechRendererInterface.h"
-#include "LobbyScreen.h"
-#include "TextureUiElement.h"
+//#include "TextureUiElement.h"
 #include "AudioEngine.h"
 
 namespace NCL::CSC8503 {
@@ -20,7 +19,7 @@ namespace NCL::CSC8503 {
     class MainMenuUI : public UiElement {
         
     public:
-        MainMenuUI();
+        MainMenuUI(std::shared_ptr<NCL::Rendering::Texture> logo);
 
         void render(std::vector<UiSprite>& sprites) override;
 
@@ -35,10 +34,13 @@ namespace NCL::CSC8503 {
     private:
 
         UIBox background;
+		UIBox fmodLogo;
+        Text title;
         std::vector<Button> buttons;
         std::vector<Text> buttonTexts;
         Vector4 activeButton = Vector4(0.3, 0.3, 0.3, 0.5);
         Vector4 inactiveButton = Vector4(0, 0, 0, 1);
+        std::shared_ptr<NCL::Rendering::Texture> fmodLogoTex;
     };
     
     class MainMenuScreen : public PushdownState {
@@ -48,23 +50,18 @@ namespace NCL::CSC8503 {
         std::shared_ptr<NCL::Rendering::Texture> fmodLogoTex;
         GameTechRendererInterface* renderer;
         ResourceManager* resourceManager;
-        std::unique_ptr<TextureUiElement> textureUiElement;
 		std::unique_ptr<MainMenuUI> ui;
         float connectionFailedTime = 0;
 
     public:
         MainMenuScreen(Controller* controller, TutorialGame* game, GameTechRendererInterface* renderer) : controller(controller), game(game), selection(0), renderer(renderer) {
 
-
             resourceManager = game->GetResourceManager();
             fmodLogoTex = resourceManager->getTextures().get("FMOD Logo White - Black Background1.png");
-            UiSprite fmodLogo = { Vector2(0.95f, 0.05f), Vector2(0.1f, 0.1f), Vector4(1,1,1,1), fmodLogoTex };
-			ui = std::make_unique<MainMenuUI>();
-            textureUiElement = std::make_unique<TextureUiElement>(fmodLogo);
+			
+            ui = std::make_unique<MainMenuUI>(fmodLogoTex);
 			renderer->AddUiElement(ui.get());
-            renderer->AddUiElement(textureUiElement.get());
 			ui->SetActive(true);
-            textureUiElement->SetActive(true);
 			ui->UpdateMenu((int)selection);
         }
 
@@ -98,14 +95,12 @@ namespace NCL::CSC8503 {
                 switch (mode)
                 {
                 case GameMode::SINGLEPLAYER:
-                    textureUiElement->SetActive(false);
                     game->SetGameMode(GameMode::SINGLEPLAYER);
                     audioEngine.PlaySounds("MenuSelect.wav", Vector3(0, 0, 0), -18.0f);
                     game->Start();
                     *newState = new GameScreen(controller, game, game->GetPlayerController());
                     break;
                 case GameMode::HOST_GAME:
-                    textureUiElement->SetActive(false);
 					ui->SetActive(false);
                     audioEngine.PlaySounds("MenuSelect.wav", Vector3(0, 0, 0), -18.0f);
                     game->StartMultiplayerGame(true);
@@ -122,7 +117,6 @@ namespace NCL::CSC8503 {
                     audioEngine.PlaySounds("MenuSelect.wav", Vector3(0, 0, 0), -18.0f);
 
                     if (ok) {
-                        textureUiElement->SetActive(false);
 						ui->SetActive(false);
                         *newState = new ClientLobbyScreen(controller, game);
                         return PushdownResult::Push;
@@ -131,7 +125,6 @@ namespace NCL::CSC8503 {
                     return PushdownResult::NoChange;
                     break;
                 case GameMode::CREDITS:
-                    textureUiElement->SetActive(false);
 					ui->SetActive(false);
                     game->SetGameMode(GameMode::CREDITS);
                     audioEngine.PlaySounds("MenuSelect.wav", Vector3(0, 0, 0), -18.0f);
@@ -168,15 +161,7 @@ namespace NCL::CSC8503 {
             //audioEngine.Init();
             game->getMainCam()->SetPosition({ 0, 0, 0 });
             audioEngine.Update(game->getMainCam());
-
-            if (!textureUiElement) {  // Check if the element exists
-                fmodLogoTex = resourceManager->getTextures().get("FMOD Logo Black - White Background1.png");
-                UiSprite fmodLogo = { Vector2(0.95f, 0.05f), Vector2(0.1f, 0.1f), Vector4(1,1,1,1), fmodLogoTex };
-                textureUiElement = std::make_unique<TextureUiElement>(fmodLogo);
-            }
             renderer->AddUiElement(ui.get());
-            renderer->AddUiElement(textureUiElement.get());
-            textureUiElement->SetActive(true);
 			ui->SetActive(true);
 
             //audioEngine.Update(game->getMainCam());
