@@ -80,8 +80,6 @@ GameTechRenderer::GameTechRenderer(Window* window) : OGLRenderer(window), GameTe
 	SetDebugStringBufferSizes(10000);
 	SetDebugLineBufferSizes(1000);
 
-	/////////InitCrosshair(); //This line Ameya added for crosshair THINK THIS CAN BE REMOVED, NOT SURE YET IF INITUI REPLACES IT ANYWHERE
-
 	//Deferred rendering additions:
 	deferredsceneShader = std::make_unique<OGLShader>("scene.vert", "deferredscenefrag.glsl");
 	pointlightShader = std::make_unique<OGLShader>("pointlightvertex.glsl", "pointlightfrag.glsl");
@@ -226,7 +224,7 @@ GameTechRenderer::GameTechRenderer(Window* window) : OGLRenderer(window), GameTe
 	}
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-	//set up framebuffer for vignette. May rename the framebuffers and textures to be more generic if more effects are added later
+	//set up framebuffer for vignette
 	glGenTextures(1, &BTex);
 	glBindTexture(GL_TEXTURE_2D, BTex);
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
@@ -246,7 +244,7 @@ GameTechRenderer::GameTechRenderer(Window* window) : OGLRenderer(window), GameTe
 
 	glGenFramebuffers(1, &BFBO);
 	glBindFramebuffer(GL_FRAMEBUFFER, BFBO);
-	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, BTex, 0); //attach BFBO as the colour attachment
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, BTex, 0); 
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, BDepthTex, 0);
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_STENCIL_ATTACHMENT, GL_TEXTURE_2D, BDepthTex, 0);
 	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE || !BTex || !BDepthTex) {
@@ -287,9 +285,7 @@ GameTechRenderer::~GameTechRenderer() {
 	glDeleteFramebuffers(1, &edgeNormalsFBO);
 	glDeleteTextures(1, &edgeNormalsTex);
 
-	//delete MaleGuard;
-   delete animationShader;
-	
+    delete animationShader;
 
 }
 
@@ -378,24 +374,13 @@ void GameTechRenderer::RenderCamera() {
 	int texScaleLocation = glGetUniformLocation(deferredsceneShader->GetProgramID(), "texScale");
 	int invertYLocation = glGetUniformLocation(deferredsceneShader->GetProgramID(), "invertY");
 
-	/*
-	int lightPosLocation	= glGetUniformLocation(sceneShader->GetProgramID(), "lightPos"); Lighting to be deferred
-	int lightColourLocation = glGetUniformLocation(sceneShader->GetProgramID(), "lightColour");
-	int lightRadiusLocation = glGetUniformLocation(sceneShader->GetProgramID(), "lightRadius");
-	*/
-
-	int cameraLocation = glGetUniformLocation(deferredsceneShader->GetProgramID(), "cameraPos"); //changing this to deferredsceneShader
+	int cameraLocation = glGetUniformLocation(deferredsceneShader->GetProgramID(), "cameraPos"); 
 
 	Vector3 camPos = camera->GetPosition();
 	glUniform3fv(cameraLocation, 1, &camPos.x);
 
 	glUniformMatrix4fv(projLocation, 1, false, (float*)&projMatrix);
 	glUniformMatrix4fv(viewLocation, 1, false, (float*)&viewMatrix);
-
-	/*
-	glUniform3fv(lightPosLocation, 1, (float*)&lightPosition);
-	glUniform4fv(lightColourLocation, 1, (float*)&lightColour);
-	glUniform1f(lightRadiusLocation, lightRadius);*/
 
 	//int shadowTexLocation = glGetUniformLocation(sceneShader->GetProgramID(), "shadowTex"); Also temporarily removing shadows
 	//glUniform1i(shadowTexLocation, 1);
@@ -416,8 +401,6 @@ void GameTechRenderer::RenderCamera() {
 		if (i->GetAnimation()) {//if object is a player, don't want it to be drawn here
 			continue; //go to next renderObject in loop
 		}
-
-		//if ((*i).getParent()->getType() == Player); //could instead check based on type
 
         for (size_t subMeshIndex = 0; subMeshIndex < subMeshCount; ++subMeshIndex) {
 			const Material::Layer* layer = i->getMaterial() ? i->getMaterial()->GetLayer(subMeshIndex) : nullptr;
@@ -1110,7 +1093,7 @@ void GameTechRenderer::DrawScene() { //the basic rendering for the scene, curren
 
 	//// Bind the scene texture
 	glActiveTexture(GL_TEXTURE1);
-	glBindTexture(GL_TEXTURE_2D, bufferColourTex); //was hdrTex. Can probably use bufferColourTex as long as lighting not required
+	glBindTexture(GL_TEXTURE_2D, bufferColourTex); 
 	glUniform1i(glGetUniformLocation(decalBlendShader->GetProgramID(), "sceneTexture"), 1);
 
 	////// Bind depth texture
@@ -1118,7 +1101,6 @@ void GameTechRenderer::DrawScene() { //the basic rendering for the scene, curren
 	glBindTexture(GL_TEXTURE_2D, bufferDepthTex); //was hdrDepthTex.
 	glUniform1i(glGetUniformLocation(decalBlendShader->GetProgramID(), "depthTexture"), 2);*/
 
-	////glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT); //Commenting this out at least lets the skybox appear
 	glDisable(GL_CULL_FACE);
 	glDisable(GL_BLEND);
 	glDisable(GL_DEPTH_TEST);
@@ -1180,7 +1162,7 @@ void GameTechRenderer::DrawPointLights() {
 	//using the same proj and view matrices from RenderCamera():
 	Matrix4 viewMatrix = camera->BuildViewMatrix();
 	Matrix4 projMatrix = camera->BuildProjectionMatrix(hostWindow->GetScreenAspect());
-	Matrix4 invViewProj = Matrix::Inverse(projMatrix * viewMatrix); // trying to take inverse of projview matrix
+	Matrix4 invViewProj = Matrix::Inverse(projMatrix * viewMatrix); 
 
 	glUniformMatrix4fv(glGetUniformLocation(pointlightShader->GetProgramID(), "inverseProjView"), 1, false, (float*)&invViewProj);
 	//update shader matrices here (don't need to set model matrices though as this will be taken care of in vertex shader):
@@ -1204,7 +1186,7 @@ void GameTechRenderer::DrawPointLights() {
 }
 
 void GameTechRenderer::CombineBuffers() {//basically final post processing output. Don't need to update matrices as fullscreen quad is not transformed at all
-	glBindFramebuffer(GL_FRAMEBUFFER, BFBO); //swapped hdrFBO with bufferFBO to allow decals to work //was bufferFBO
+	glBindFramebuffer(GL_FRAMEBUFFER, BFBO); //swapped hdrFBO with bufferFBO to allow decals to work 
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT); //without this line, output is just black
 	UseShader(*combineShader);
 	glUniform1i(glGetUniformLocation(combineShader->GetProgramID(), "diffuseTex"), 0);
@@ -1221,7 +1203,7 @@ void GameTechRenderer::CombineBuffers() {//basically final post processing outpu
 
 	BindMesh(*fullscreenQuad);
 	DrawBoundMesh();
-	glBindFramebuffer(GL_FRAMEBUFFER, 0); //hdrTex should now hold full deferred lighting rendered scene
+	glBindFramebuffer(GL_FRAMEBUFFER, 0); 
 
 }
 
@@ -1254,13 +1236,11 @@ void GameTechRenderer::RenderAnimations() {
 
 	for (const auto& i : frameObjects) {
 		if (!i->GetAnimation()) continue;
-		//glUniform1i(glGetUniformLocation(animationShader->GetProgramID(), "diffuseTex"), 0); // PROBABLY SHOULDN'T BE HERE
-
 	
 		std::vector<Matrix4> frameMatrices;
 
 		//These two changed to fit the datatypes as defined in this codebase:
-		const Matrix4* frameData = (*i).GetAnimation()->GetJointData((*i).GetAnimation()->GetCurrentFrame());// SHOULD THESE BE CALCULATED PER JOINT?
+		const Matrix4* frameData = (*i).GetAnimation()->GetJointData((*i).GetAnimation()->GetCurrentFrame());
 
 		for (unsigned int q = 0; q < (*i).GetMesh()->GetJointCount(); ++q) {
 			const Matrix4 invBindPose = (*i).GetMesh()->GetInverseBindPose()[q]; //need to get the inverse bind pose per joint to "undo" the bind pose for each joint
