@@ -53,8 +53,8 @@ void SPGameController::InitLevel(int curLevel) {
     for (int i = 0; (i < std::min(5 + curLevel, 100)); i++) {
         AddWandererToWorld(bottom, Side::BOTTOM);
         AddWandererToWorld(top, Side::TOP);
-        AddWandererToWorld(front, Side::FRONT);
-        AddWandererToWorld(back, Side::BACK);
+        //AddWandererToWorld(front, Side::FRONT);
+        //AddWandererToWorld(back, Side::BACK);
         AddWandererToWorld(left, Side::LEFT);
         AddWandererToWorld(right, Side::RIGHT);
     }
@@ -141,7 +141,6 @@ Wanderer* SPGameController::AddWandererToWorld(NavMesh* navMesh, Side side) {
     laser->SetColor(Color::GetPlayerColor(0));
     laser->SetThickness(0.1f);
 
-    renderer->TrackLaser(laser);
     wanderer->SetLaser(laser);
 
     game->GetWorld()->AddGameObject(wanderer);
@@ -182,17 +181,4 @@ void SPGameController::VisualiseNavMesh() {
     for (NavMesh* mesh : navMeshes) {
         mesh->VisualiseNavMesh();
     }
-
-    /*btVector3 startPoint(94, 0.5833334, 26);
-    btVector3 endPoint(68, 0.5833334, 34);
-
-    btIDebugDraw* debugDrawer = bulletWorld->getDebugDrawer();
-
-    // Draw vertical lines at start and end points
-    debugDrawer->drawLine(startPoint, startPoint + btVector3(0, 10, 0), btVector3(0, 1, 0));
-    debugDrawer->drawLine(endPoint, endPoint + btVector3(0, 10, 0), btVector3(0, 0, 1));
-
-    // Find path and draw it
-    std::vector<btVector3> path = navMesh->FindPath(startPoint, endPoint);
-    //navMesh->DebugDrawPath(path);*/
 }

@@ -53,6 +53,15 @@ namespace Packet {
         ENetPacket* ToENetPacket(const std::shared_ptr<Packet> packet) const override;
     };
 
+    class PlayerAnimationPacketHandler : public PacketHandler {
+    public:
+        PlayerAnimationPacketHandler() : PacketHandler(static_cast<Type>(PacketType::PLAYER_ANIMATION)) {}
+
+        void Handle(const std::shared_ptr<Packet> packet) override;
+        std::shared_ptr<Packet> Translate(const ENetEvent* event) const override;
+        ENetPacket* ToENetPacket(const std::shared_ptr<Packet> packet) const override;
+    };
+
 
     class StartGamePacketHandler : public PacketHandler {
     public:

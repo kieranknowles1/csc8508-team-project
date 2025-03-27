@@ -1,5 +1,6 @@
 set(TEXTURE_EXTENSIONS ".jpg" ".png" ".dds")
 set(MIP_LEVELS 8)
+set(PSSLC_ARGS)
 
 # Extra files that need to be copied, but do not live in assets
 set(EXTRA_FILES
@@ -35,7 +36,7 @@ macro(process_file)
         list(APPEND PROCESSED_ASSETS ${${outvar}})
         add_custom_command(
             OUTPUT ${${outvar}}
-            COMMAND "${PS5_SDK_TOOLS}/prospero-wave-psslc" ${file} -o ${${outvar}}
+            COMMAND "${PS5_SDK_TOOLS}/prospero-wave-psslc" ${PSSLC_ARGS} ${file} -o ${${outvar}}
             DEPENDS ${file}
         )
     else()

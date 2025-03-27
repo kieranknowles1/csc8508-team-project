@@ -165,8 +165,6 @@ namespace NCL {
 
 			sce::Agc::Core::Buffer arrayBuffer;
 
-			std::unique_ptr<PS5::AGCShader> skinningCompute;
-
 			std::unique_ptr<PS5::AGCShader> defaultVertexShader;
 			std::unique_ptr<PS5::AGCShader> defaultPixelShader;
 

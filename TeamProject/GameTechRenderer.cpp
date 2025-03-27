@@ -419,7 +419,7 @@ void GameTechRenderer::RenderCamera() {
         modelMatrix = modelMatrix * Matrix::Scale(i->getParent()->getRenderScale());
         glUniformMatrix4fv(modelLocation, 1, false, (float*)&modelMatrix);
 
-		if ((*i).getParent()->GetIsAnimated() == true) {//if object is a player, don't want it to be drawn here
+		if (i->GetAnimation()) {//if object is a player, don't want it to be drawn here
 			continue; //go to next renderObject in loop
 		}
 
@@ -748,8 +748,9 @@ void GameTechRenderer::RenderUI() {
 		Vector2 pos = uiElement.position;
 		std::string text = uiElement.text;
 		Vector4 color = uiElement.color;
+		float scale = uiElement.scale;
 
-		Debug::Print(text, pos, color);
+		Debug::Print(text, pos, color, scale);
 	}
 
 	glDisable(GL_BLEND);
@@ -776,13 +777,6 @@ void GameTechRenderer::RenderLasers() {
 
 	BindMesh(*highResSphere);
 	for (LaserObject* laser : lasers) {
-		// Manually remove lasers that no longer exist.
-		// Is there a better way?
-		if (laser->isDeleted()) {
-			UntrackLaser(laser);
-			continue;
-		}
-
 		// Draw laser.
 		if (!(laser->GetStartPos() == laser->GetEndPos())) {
 
@@ -1270,14 +1264,6 @@ void GameTechRenderer::CombineBuffers() {//basically final post processing outpu
 }
 
 void GameTechRenderer::RenderAnimations() {
-	// if gameobject (i.e. renderObject's parent) animation == true then it can be rendered here. Calculate the necessary matrices by accessing the renderObject's animation
-	//and send the necessary info to shader. This should render players anyway even if animations not currently playing
-	std::vector<RenderObject*> animatedObjects;
-	for (const auto& i : frameObjects) { //iterate over all render objects
-		if (i->getParent()->GetIsAnimated() == true) { 
-			animatedObjects.emplace_back(i); //should add all animated objects to animatedObjects
-		}
-	}
 	//From here pretty much like Render Camera but for animated meshes using the animation Shader instead
 	//this should render only animated objects i.e. players which should all have submeshes and materials
 
@@ -1304,7 +1290,8 @@ void GameTechRenderer::RenderAnimations() {
 	glUniformMatrix4fv(projLocation, 1, false, (float*)&projMatrix); //projection and view matrix don't vary between meshes so can send uniforms here
 	glUniformMatrix4fv(viewLocation, 1, false, (float*)&viewMatrix);
 
-	for (const auto& i : animatedObjects) {
+	for (const auto& i : frameObjects) {
+		if (!i->GetAnimation()) continue;
 		//glUniform1i(glGetUniformLocation(animationShader->GetProgramID(), "diffuseTex"), 0); // PROBABLY SHOULDN'T BE HERE
 
 	
@@ -1339,7 +1326,7 @@ void GameTechRenderer::RenderAnimations() {
 			Matrix4 modelMatrix; 
 			i->getParent()->GetTransform().getOpenGLMatrix((btScalar*)&modelMatrix);
 			modelMatrix = modelMatrix * Matrix::Scale(i->getParent()->getRenderScale());
-			modelMatrix = modelMatrix * Matrix::Translation(Vector3(0, -0.9f, 0.1f)); //Translation added to centre the player mesh better
+			modelMatrix = modelMatrix * Matrix::Translation(Vector3(0, -0.8f, 0.1f)); //Translation added to centre the player mesh better
 			glUniformMatrix4fv(modelLocation, 1, false, (float*)&modelMatrix);
 
 			Vector4 Colour = i->GetColour();

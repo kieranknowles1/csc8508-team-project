@@ -67,6 +67,9 @@ namespace Multiplayer {
 
         m_handlers.push_back(std::make_unique<Packet::DamagePacketHandler>());
         Packet::PacketRegister::Register(m_handlers.back().get());
+
+        m_handlers.push_back(std::make_unique<Packet::PlayerAnimationPacketHandler>());
+        Packet::PacketRegister::Register(m_handlers.back().get());
     }
 
     void Server::JoinGame(const std::string& ip, float waitSeconds) {
@@ -131,8 +134,13 @@ namespace Multiplayer {
 
         while (currentPacket.get() != nullptr) {
             // High Priority packets.
-            if (currentPacket->GetChannel() != (uint8_t) Channel::FREQUENT ) {
+            if (currentPacket->GetSequenceNumber() == 0) {
                 Packet::PacketRegister::GetHandler(currentPacket->GetType())->Handle(currentPacket);
+
+                // Pass packets on to clients.
+                if (m_isHost) {
+                    m_network->Broadcast(currentPacket);
+                }
             }
 
             // Add packet to the buffer.
@@ -143,6 +151,12 @@ namespace Multiplayer {
 
                     if (currentPacket->GetSequenceNumber() < smallestIncoming) {
                         smallestIncoming = currentPacket->GetSequenceNumber();
+                    }
+
+                    // Pass packets on to clients.
+                    if (m_isHost) {
+                        currentPacket->SetSequenceNumber(currentPacket->GetSequenceNumber());
+                        m_network->Broadcast(currentPacket);
                     }
                 }
 
@@ -162,14 +176,7 @@ namespace Multiplayer {
                     }
                     m_tickCount = currentPacket->GetSequenceNumber();
                 }
-
-                // Pass packets on to clients.
-                if (m_isHost) {
-                    currentPacket->SetSequenceNumber(m_tickCount);
-                    m_network->Broadcast(currentPacket);
-                }
             }
-
             currentPacket = m_network->Fetch();
         }
 
@@ -219,5 +226,4 @@ namespace Multiplayer {
         m_network->Broadcast(broadcast);
     }
 }
-
 
