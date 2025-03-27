@@ -125,6 +125,8 @@ int CAudioEngine::PlaySounds(const std::string& strSoundName, const NCL::Maths::
         if (currMode & FMOD_3D) {
             FMOD_VECTOR position = VectorToFmod(vPosition);
             CAudioEngine::ErrorCheck(pChannel->set3DAttributes(&position, nullptr));
+
+            CAudioEngine::ErrorCheck(pChannel->setMode(FMOD_3D | FMOD_3D_LINEARROLLOFF));
         }
         CAudioEngine::ErrorCheck(pChannel->setVolume(dbToVolume(fVolumedB)));
         CAudioEngine::ErrorCheck(pChannel->setPaused(false));
@@ -203,6 +205,13 @@ void CAudioEngine::SetChannel3dPosition(int nChannelId, const NCL::Maths::Vector
 
     FMOD_VECTOR position = VectorToFmod(vPosition);
     CAudioEngine::ErrorCheck(tFoundIt->second->set3DAttributes(&position, NULL));
+}
+
+void CAudioEngine::SetChannel3dMinMaxDistance(int channelId, float minDist, float maxDist) {
+    auto it = sgpImplementation->mChannels.find(channelId);
+    if (it == sgpImplementation->mChannels.end()) return;
+
+    CAudioEngine::ErrorCheck(it->second->set3DMinMaxDistance(minDist, maxDist));
 }
 
 void CAudioEngine::SetChannelPlaybackPosition(int channelId, unsigned int positionMs) {

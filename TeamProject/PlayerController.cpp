@@ -170,9 +170,9 @@ void PlayerController::HandleShooting(float dt) {
                 }
 
                 if (TutorialGame::getInstance()->GetServerInstance() != nullptr) {
-                    auto pos = player->GetTransform().getOrigin();
+                    auto pos = camera->GetPosition();
                     auto soundPacket = std::make_shared<Packet::SoundPacket>(
-                        "Beam.mp3", btVector3(pos.getX(), pos.getY(), pos.getZ()), 0.0f, 1.0f, playbackTime, player->GetWorldID());
+                        "Beam.mp3", btVector3(pos.x, pos.y, pos.z), 0.0f, 1.0f, playbackTime, player->GetWorldID());
                     TutorialGame::getInstance()->GetServerInstance()->GetNetwork()->Broadcast(soundPacket);
 
                     auto updatePacket = std::make_shared<Packet::SoundUpdatePacket>(player->GetWorldID(), camera->GetPosition());

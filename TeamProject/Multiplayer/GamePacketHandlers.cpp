@@ -871,7 +871,8 @@ namespace Packet {
         if (channel != -1) {
             audioEngine.SetChannel3dPosition(channel, pos);
             audioEngine.SetChannelPlaybackPosition(channel, static_cast<unsigned int>(playbackTime * 1000));
-            obj->SetSoundChannelID(channel); // Store per-object sound channel
+            obj->SetSoundChannelID(channel);
+            audioEngine.SetChannel3dMinMaxDistance(channel, 200.0f, 800.0f);
         }
 
         
