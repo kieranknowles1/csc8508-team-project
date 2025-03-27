@@ -872,7 +872,7 @@ namespace Packet {
             audioEngine.SetChannel3dPosition(channel, pos);
             audioEngine.SetChannelPlaybackPosition(channel, static_cast<unsigned int>(playbackTime * 1000));
             obj->SetSoundChannelID(channel);
-            audioEngine.SetChannel3dMinMaxDistance(channel, 200.0f, 800.0f);
+            audioEngine.SetChannel3dMinMaxDistance(channel, 100.0f, 700.0f);
         }
 
         
