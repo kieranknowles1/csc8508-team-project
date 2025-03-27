@@ -34,7 +34,6 @@ TutorialGame::TutorialGame(GameTechRendererInterface* renderer, Controller* cont
     instance = this;
 
     stateMutex = new std::shared_mutex();
-
     world = std::make_unique<GameWorld>();
     renderer->setCamera(&world->GetMainCamera());
 
@@ -149,9 +148,9 @@ void TutorialGame::UpdatePlayer(float dt, bool camOnly) {
     if (player->GetHealthAttrib()->GetHealthState() == AliveState::DEAD) {
         player->GetHealthAttrib()->AddDeath();
 
-        int numDeaths = player->GetHealthAttrib()->DeathCount();
+        numDeaths = player->GetHealthAttrib()->DeathCount();
 
-        if (gameMode == GameMode::SINGLEPLAYER && numDeaths > 0) {
+        if (gameMode == GameMode::SINGLEPLAYER) {
             spEnd = true;
         }
 
@@ -161,6 +160,7 @@ void TutorialGame::UpdatePlayer(float dt, bool camOnly) {
         if (player->GetOwner()) respawn = instance->GetRandomRespawn(player->GetOwner()->GetUserID() - 1);
         else respawn = instance->GetRandomRespawn(1);
 
+        std::cout << "Here" << std::endl;
         btTransform& transform = player->GetPhysicsObject()->GetRigidBody()->getWorldTransform();
 
         transform.setOrigin(respawn->position);

@@ -78,13 +78,12 @@ public:
             switch (selection)
             {
             case 0:
-                //Main Menu
+                game->ClearWorld();
+                return PushdownResult::Clear;
                 break;
             case 1:
-                //Quit
                 break;
-            default:
-                break;
+            default: assert(false);
             }
         }
 

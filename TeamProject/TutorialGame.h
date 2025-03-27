@@ -149,6 +149,10 @@ namespace NCL {
                 return spEnd;
             }
 
+			void setSPEnd(bool b) {
+				spEnd = b;
+			}
+
             void SetGameMode(GameMode gm) { gameMode = gm; }
 
             bool isPlayerUpdatePaused = false;
@@ -248,6 +252,7 @@ namespace NCL {
             GameMode gameMode;
 
             bool spEnd = false;
+			int numDeaths;
         };
     }
 }
