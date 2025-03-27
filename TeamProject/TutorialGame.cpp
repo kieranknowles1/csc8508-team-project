@@ -372,6 +372,7 @@ void TutorialGame::ClearWorld() {
     world->ClearAndErase();
     renderer->GetDecalSystem().ClearDecalsFromWorld();
     renderer->ClearUIElemets();
+    Respawn::GetInstance()->ClearPlayers();
     earlyGraveyard.clear();
     lateGraveyard.clear();
 }
