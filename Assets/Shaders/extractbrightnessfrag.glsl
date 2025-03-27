@@ -1,5 +1,8 @@
 #version 330 core
 
+//Bloom method from LearnOpenGL:
+// https://learnopengl.com/Advanced-Lighting/Bloom
+
 uniform sampler2D diffuseTex; //will take in the scene, and output the scene but also another texture that only includes the bright parts of the scene
 
 in Vertex {
@@ -8,7 +11,7 @@ in Vertex {
 
 out vec4 fragColour[2];
 
-void main(void) {
+void main(void) { 
 
     vec3 texColour = texture(diffuseTex, IN.texCoord).rgb;
 
