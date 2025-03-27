@@ -148,6 +148,13 @@ void TutorialGame::UpdateGame(float dt) {
 void TutorialGame::UpdatePlayer(float dt, bool camOnly) {
     if (player->GetHealthAttrib()->GetHealthState() == AliveState::DEAD) {
         player->GetHealthAttrib()->AddDeath();
+
+        int numDeaths = player->GetHealthAttrib()->DeathCount();
+
+        if (gameMode == GameMode::SINGLEPLAYER && numDeaths > 0) {
+            spEnd = true;
+        }
+
         Respawn* instance = Respawn::GetInstance();
         RespawnPoint* respawn;
 
@@ -162,6 +169,7 @@ void TutorialGame::UpdatePlayer(float dt, bool camOnly) {
 
         player->setCollided(0);
         player->GetHealthAttrib()->Respawn();
+
     }
 
     // Display Score if networked.

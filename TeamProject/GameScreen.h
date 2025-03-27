@@ -2,6 +2,7 @@
 
 #include <PauseScreen.h>
 #include "PushdownState.h"
+#include "EndScreenSP.h"
 
 namespace NCL::CSC8503 {
 
@@ -15,6 +16,11 @@ namespace NCL::CSC8503 {
         PushdownResult OnUpdate(float dt, PushdownState** newState) override {
             game->UpdateGame(dt);
 
+            if (game->getSPEnd()) {
+                *newState = new EndScreenSP(controller, game, game->GetSPMode()->getScore());
+                std::cout << "Singeplayer game ended" << std::endl;
+                return PushdownResult::Push;
+            }
             if (controller->GetDigital(Controller::DigitalControl::Pause)) {
                 *newState = new SingleplayerPauseScreen(controller, game, playerController);
                 std::cout << "Game entered pause state \n";
