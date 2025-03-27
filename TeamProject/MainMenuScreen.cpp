@@ -37,7 +37,7 @@ void MainMenuUI::InitMenu() {
 	Vector2 buttonSize = Vector2(0.5f, 0.1f);
 	background = { Vector2(0.5f, 0.5f), Vector2(1, 1) };
 	fmodLogo = { Vector2(0.95f, 0.05f), Vector2(0.1f, 0.1f)};
-	title = { Vector2(0.095f, 0.07f), "BlitzBox", Vector4(0.5, 0.5, 0.5, 1) };
+	title = { Vector2(0.095f, 0.07f), "BlitzBox", Vector4(1, 0.4, 0.4, 1) };
 
 	buttons.push_back({ Vector2(0.5f, 0.6f), buttonSize, inactiveButton });
 	buttons.push_back({ Vector2(0.5f, 0.5f), buttonSize, inactiveButton });
@@ -58,10 +58,12 @@ void MainMenuUI::UpdateMenu(unsigned int selection) {
 		if (i == selection)
 		{
 			buttons[i].color = activeButton;
+			buttonTexts[i].color = btVector4(0.4, 1, 1, 1);
 		}
 		else
 		{
 			buttons[i].color = inactiveButton;
+			buttonTexts[i].color = btVector4(1, 1, 1, 1);
 		}
 	}
 }
