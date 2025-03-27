@@ -167,26 +167,26 @@ namespace Multiplayer {
                     // Pass packets on to clients.
                     if (m_isHost) {
                         // Add 1 to sequence number as this function is called at the end of a tick.
-                        currentPacket->SetSequenceNumber(currentPacket->GetSequenceNumber() + 1);
+                        currentPacket->SetSequenceNumber(currentPacket->GetSequenceNumber());
                         m_network->Broadcast(currentPacket);
                     }
                 }
 
-//                // Moving too fast.
-//                if (currentPacket->GetSequenceNumber() > m_tickCount) {
-//                    int diff = currentPacket->GetSequenceNumber() - m_tickCount;
-//#ifndef NDEBUG
-//                    std::cout << ConsoleTextColor::YELLOW;
-//                    std::cout << "Someone's network is ticking faster!\n";
-//                    std::cout << "Skipping " << diff << " ticks.\n";
-//                    std::cout << ConsoleTextColor::DEFAULT;
-//#endif
-//                    for (diff; diff > 0; diff--) {
-//                        if (m_processTick >= 0) m_buffer[m_processTick % TICK_BUFFER_SIZE].clear();
-//                        m_processTick++;
-//                    }
-//                    m_tickCount = currentPacket->GetSequenceNumber();
-//                }
+                // Moving too fast.
+                if (currentPacket->GetSequenceNumber() > m_tickCount) {
+                    int diff = currentPacket->GetSequenceNumber() - m_tickCount;
+#ifndef NDEBUG
+                    std::cout << ConsoleTextColor::YELLOW;
+                    std::cout << "Someone's network is ticking faster!\n";
+                    std::cout << "Skipping " << diff << " ticks.\n";
+                    std::cout << ConsoleTextColor::DEFAULT;
+#endif
+                    for (diff; diff > 0; diff--) {
+                        if (m_processTick >= 0) m_buffer[m_processTick % TICK_BUFFER_SIZE].clear();
+                        m_processTick++;
+                    }
+                    m_tickCount = currentPacket->GetSequenceNumber();
+                }
             }
             currentPacket = m_network->Fetch();
         }
