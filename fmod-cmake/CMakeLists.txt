@@ -14,4 +14,8 @@ if (NOT FMOD_VERSION)
     set(FMOD_VERSION 2.02.21)
 endif()
 
+if (NOT FMOD_SONAME)
+    set(FMOD_SONAME 14)
+endif()
+
 add_subdirectory(fmod)
