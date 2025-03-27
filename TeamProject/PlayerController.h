@@ -193,6 +193,7 @@ namespace NCL {
 			void HandleYaw();
 			void RotationCalculations();
 			void CameraMovement();
+			void CheckForGround();
 			void GroundNormalCalculations();
 			void MovementCalculations(float dt);
 			void HandleJumping();

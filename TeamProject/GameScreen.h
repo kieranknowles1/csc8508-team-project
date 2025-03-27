@@ -17,7 +17,7 @@ namespace NCL::CSC8503 {
 
         PushdownResult OnUpdate(float dt, PushdownState** newState) override {
             game->UpdateGame(dt);
-
+            game->UpdatePlayer(dt);
             if (game->getSPEnd()) {
                 *newState = new EndScreenSP(controller, game, game->GetSPMode()->getScore());
                 std::cout << "Singeplayer game ended" << std::endl;

@@ -45,10 +45,10 @@ void PlayerObject::SetColor(btVector4 color) {
     laser->SetColor(color);
 }
 
+
 void PlayerObject::Update(float dt) {
     attack->Update(dt);
     health->Update(dt);
-
     upDirection = CalculateUpDirection(dt);
 
     rightDirection = CalculateRightDirection(upDirection);

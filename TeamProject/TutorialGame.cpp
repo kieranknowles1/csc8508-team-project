@@ -120,8 +120,6 @@ void TutorialGame::UpdateGame(float dt) {
     // Check for collisions
     CheckCollisions();
 
-    if (playerController && !isPlayerUpdatePaused) UpdatePlayer(dt);
-
     profiler.startSection("Update Audio");
     audioEngine.Update(&world->GetMainCamera());
 
@@ -185,7 +183,6 @@ void TutorialGame::UpdatePlayer(float dt, bool camOnly) {
     }
     else {
  
-      
         //player Movement
         if (camOnly) {
             playerController->UpdateCamOnly();
