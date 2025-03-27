@@ -37,7 +37,9 @@ namespace Packet {
         PING = CUSTOM_TYPE + 9,
         PONG = CUSTOM_TYPE + 10,
         DEATH = CUSTOM_TYPE + 11,
-        PLAYER_ANIMATION = CUSTOM_TYPE + 12
+        PLAYER_ANIMATION = CUSTOM_TYPE + 12,
+        REQUEST_COLOUR = CUSTOM_TYPE + 13,
+        SET_COLOUR = CUSTOM_TYPE + 14
     };
 
 
@@ -305,5 +307,18 @@ namespace Packet {
         int m_objectID;
         float m_scoreIncrease;
     };     
+
+    class RequestColourPacket : public Packet {
+    public:
+        RequestColourPacket(int userID, int colourIndex) : Packet(static_cast<Type>(PacketType::REQUEST_COLOUR), static_cast<int>(Channel::RELIABLE), 0),
+            userID(userID), colorIndex(colorIndex) {}
+
+        int GetUserID() const { return userID; }
+        int GetColourIndex() const { return colourIndex; }
+
+    private:
+        int userID;
+        int colourIndex;
+    };
 }
 
