@@ -8,8 +8,6 @@
 #include "PhysicsObject.h"
 #include "btBulletDynamicsCommon.h"
 #include "CollisionInfo.h"
-#include "WorldState.h"
-#include "StateUpdater.h"
 #include "AliveState.h"
 #include "../TeamProject/Multiplayer/User.hpp"
 #include "../TeamProject/PointLight.h"
@@ -25,7 +23,7 @@ namespace NCL::CSC8503 {
 
     const float TICK_UPDATE_RATE = 1.0f / 60.0f;
 
-	class GameObject : public StateUpdater {
+	class GameObject {
 	public:
 		enum class Type { // Contact Alex if you are adding to this - need to update level importer to line up correctly
 			Default,
@@ -98,10 +96,6 @@ namespace NCL::CSC8503 {
         virtual void OnCollisionStay(GameObject* otherObject) {
             //std::cout << "OnCollisionStay: " << this->GetWorldID() << " is still colliding with " << otherObject->GetWorldID() << std::endl;
         }
-
-        virtual void UpdateWorldState() override;
-        virtual void UpdateFromWorldState(float dt) override;
-        virtual std::vector<std::shared_ptr<Packet::Packet>> CreatePackets(int sequenceNum) override;
 
         virtual void Update(float dt) {//could do the updating for animations in here maybe
         }
@@ -185,6 +179,8 @@ namespace NCL::CSC8503 {
         void SetState(AliveState newState) { state = newState; }
         AliveState GetState() const { return state; }
 
+        bool IsNetworked() { return isNetworked; }
+
 	protected:
 		PhysicsObject*		physicsObject;
 		RenderObject*		renderObject;
@@ -206,8 +202,8 @@ namespace NCL::CSC8503 {
 
         PointLight* light = nullptr;
         Lobbies::User* owner = nullptr;
+        bool isNetworked = false;
 
-        std::shared_mutex tickMutex;
         int currentTick = 0;
         int lastTick = 0;
 

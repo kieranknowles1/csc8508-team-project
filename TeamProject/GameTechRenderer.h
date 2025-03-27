@@ -35,7 +35,7 @@ namespace NCL {
 				return this;
 			}
 
-			OGLMesh* LoadMesh(const std::string& name) override; /////WAS Mesh* instead of OGLMesh*
+			OGLMesh* LoadMesh(const std::string& name) override; 
 			Texture* LoadTexture(const std::string& name) override;
 
 		protected:
@@ -155,6 +155,11 @@ namespace NCL {
 			std::unique_ptr<OGLShader> vignetteShader;
 			GLuint BDepthTex;
 			void RenderPostProcessing();
+			void ApplyBlur();
+			OGLShader* extractLightShader;
+			OGLShader* blurShader;
+			OGLShader* bloomShader;
+			GLuint bloomFBO; //just holds a colour texture attachment
 
 			Matrix4 laserPreviousViewProjMatrix;
 

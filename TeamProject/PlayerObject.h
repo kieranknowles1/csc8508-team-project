@@ -3,12 +3,12 @@
 #include "Matrix.h"
 #include "Camera.h"
 #include "Controller.h"
-#include "GameObject.h"
 #include "LaserObject.h"
 #include "PhysicsObject.h"
 #include "CollisionInfo.h"
 #include "MeshAnimation.h"
 #include "AnimationObject.h"
+#include "ServerObject.h"
 
 #include "Colors.h"
 #include "RenderObject.h"
@@ -27,7 +27,7 @@ namespace NCL::CSC8503 {
 	const float PLAYER_HEALTH = 100.0f;
 
 	// Player class derived from GameObject
-	class PlayerObject : public GameObject {
+	class PlayerObject : public ServerObject {
 	public:
 		PlayerObject();
 		~PlayerObject();
