@@ -9,6 +9,7 @@ License: MIT (see LICENSE file at the top of the source tree)
 #include "pad.h"
 
 #include "JoystickController.h"
+#include "Vector.h"
 
 namespace NCL::PS5 {
 	class PS5Controller : public JoystickController {
@@ -21,7 +22,10 @@ namespace NCL::PS5 {
 		uint32_t padHandle;
 		ScePadControllerInformation padInfo;
 		ScePadData data;
+		ScePadData prevData;
 
+		// Get the delta trackpad position relative to the previous frame
+		Maths::Vector2 trackMovement() const;
 		bool internalButtonPressed(Button button) override;
 		float internalAnalogueValue(Analogue analogue) override;
 	};
