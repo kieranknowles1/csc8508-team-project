@@ -39,7 +39,9 @@ namespace Packet {
         PONG = CUSTOM_TYPE + 10,
         DEATH = CUSTOM_TYPE + 11,
         PLAYER_ANIMATION = CUSTOM_TYPE + 12,
-        SOUND = CUSTOM_TYPE + 13
+        SOUND = CUSTOM_TYPE + 13,
+        SOUND_UPDATE = CUSTOM_TYPE + 14,
+        STOP_SOUND = CUSTOM_TYPE + 15
     };
 
 
@@ -308,22 +310,80 @@ namespace Packet {
         float m_scoreIncrease;
     };
 
-    class SoundPacket : public Packet {
+    /*class SoundPacket : public Packet {
     public:
-        SoundPacket(const std::string& soundName, const btVector3& position, float volume, float pitch = 1.0f) :
+        SoundPacket(const std::string& soundName, const btVector3& position, float volume, float pitch, float playBackTime, int objectID) :
             Packet(static_cast<Type>(PacketType::SOUND), static_cast<int>(Channel::RELIABLE), 0),
-            m_soundName(soundName), m_position(position), m_volume(volume), m_pitch(pitch) {}
+            m_soundName(soundName), m_position(position), m_volume(volume), m_pitch(pitch), m_playbackTime(playBackTime), m_objectID(objectID) {}
 
         std::string GetSoundName() const { return m_soundName; }
         btVector3 GetPosition() const { return m_position; }
         float GetVolume() const { return m_volume; }
         float GetPitch() const { return m_pitch; }
+        int GetObjectID() const { return m_objectID; }
+        float GetPlaybackTime() const { return m_playbackTime; }
 
     private:
         std::string m_soundName;
         btVector3 m_position;
         float m_volume;
         float m_pitch;
+        int m_objectID;
+        float m_playbackTime;
+    };*/
+
+    class SoundPacket : public Packet {
+    public:
+        SoundPacket(const std::string& soundName,
+            const btVector3& position,
+            float volume,
+            float pitch,
+            float playbackTime,
+            int objectID)
+            : Packet(static_cast<Type>(PacketType::SOUND), static_cast<int>(Channel::RELIABLE), 0),
+            m_soundName(soundName), m_position(position), m_volume(volume),
+            m_pitch(pitch), m_playbackTime(playbackTime), m_objectID(objectID) {}
+
+        const std::string& GetSoundName() const { return m_soundName; }
+        btVector3 GetPosition() const { return m_position; }
+        float GetVolume() const { return m_volume; }
+        float GetPitch() const { return m_pitch; }
+        float GetPlaybackTime() const { return m_playbackTime; }
+        int GetObjectID() const { return m_objectID; }
+
+    private:
+        std::string m_soundName;
+        btVector3 m_position;
+        float m_volume;
+        float m_pitch;
+        float m_playbackTime;
+        int m_objectID;
+    };
+
+    class SoundUpdatePacket : public Packet {
+    public:
+        SoundUpdatePacket(int sourceID, const btVector3& pos) :
+            Packet(static_cast<Type>(PacketType::SOUND_UPDATE), static_cast<int>(Channel::FREQUENT), 0),
+            m_sourceID(sourceID), m_position(pos) {}
+
+        int GetSourceID() const { return m_sourceID; }
+        btVector3 GetPosition() const { return m_position; }
+
+    private:
+        int m_sourceID;
+        btVector3 m_position;
+    };
+
+    class StopSoundPacket : public Packet {
+    public:
+        StopSoundPacket(int objectID) :
+            Packet(static_cast<Type>(PacketType::STOP_SOUND), static_cast<uint8_t>(Channel::RELIABLE), 0),
+            m_objectID(objectID) {}
+
+        int GetObjectID() const { return m_objectID; }
+
+    private:
+        int m_objectID;
     };
 }
 

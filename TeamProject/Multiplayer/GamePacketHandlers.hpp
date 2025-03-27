@@ -130,4 +130,22 @@ namespace Packet {
         std::shared_ptr<Packet> Translate(const ENetEvent* event) const override;
         ENetPacket* ToENetPacket(const std::shared_ptr<Packet> packet) const override;
     };
+
+    class SoundUpdatePacketHandler : public PacketHandler {
+    public: 
+        SoundUpdatePacketHandler() : PacketHandler(static_cast<Type>(PacketType::SOUND_UPDATE)) {}
+
+        void Handle(const std::shared_ptr<Packet> packet) override;
+        std::shared_ptr<Packet> Translate(const ENetEvent* event) const override;
+        ENetPacket* ToENetPacket(const std::shared_ptr<Packet> packet) const override;
+    };
+
+    class StopSoundPacketHandler : public PacketHandler {
+    public:
+        StopSoundPacketHandler() : PacketHandler(static_cast<Type>(PacketType::STOP_SOUND)) {}
+
+        void Handle(const std::shared_ptr<Packet> packet) override;
+        std::shared_ptr<Packet> Translate(const ENetEvent* event) const override;
+        ENetPacket* ToENetPacket(const std::shared_ptr<Packet> packet) const override;
+    };
 }

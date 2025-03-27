@@ -156,6 +156,7 @@ void PlayerController::HandleShooting(float dt) {
             float overheatPercentage = overheat->GetOverheatPercentage();
             float beamSoundLength = 7.1f;
             unsigned int startTimeMs = static_cast<unsigned int>(overheatPercentage * beamSoundLength * 1000);
+            float playbackTime = startTimeMs / 1000.0f;
 
             if (beamSoundPaused && beamSoundChannel != -1) {
                 audioEngine.SetChannel3dPosition(beamSoundChannel, camera->GetPosition());
@@ -171,14 +172,25 @@ void PlayerController::HandleShooting(float dt) {
                 if (TutorialGame::getInstance()->GetServerInstance() != nullptr) {
                     auto pos = player->GetTransform().getOrigin();
                     auto soundPacket = std::make_shared<Packet::SoundPacket>(
-                        "Beam.mp3", btVector3(pos.getX(), pos.getY(), pos.getZ()), 0.0f);
+                        "Beam.mp3", btVector3(pos.getX(), pos.getY(), pos.getZ()), 0.0f, 1.0f, playbackTime, player->GetWorldID());
                     TutorialGame::getInstance()->GetServerInstance()->GetNetwork()->Broadcast(soundPacket);
+
+                    auto updatePacket = std::make_shared<Packet::SoundUpdatePacket>(player->GetWorldID(), camera->GetPosition());
+                    TutorialGame::getInstance()->GetServerInstance()->GetNetwork()->Broadcast(updatePacket);
                 }
             }
         }
         else {
             if (beamSoundChannel != -1) {
                 audioEngine.SetChannel3dPosition(beamSoundChannel, camera->GetPosition());
+
+                if (TutorialGame::getInstance()->GetServerInstance() != nullptr) {
+                    auto updatePacket = std::make_shared<Packet::SoundUpdatePacket>(
+                        player->GetWorldID(),
+                        camera->GetPosition()
+                    );
+                    TutorialGame::getInstance()->GetServerInstance()->GetNetwork()->Broadcast(updatePacket);
+                }
             }
         }
     }
@@ -195,6 +207,11 @@ void PlayerController::HandleShooting(float dt) {
 
             firing = false;
             player->GetAttackAttrib()->Hit(nullptr);
+
+            if (TutorialGame::getInstance()->GetServerInstance() != nullptr) {
+                auto stopPacket = std::make_shared<Packet::StopSoundPacket>(player->GetWorldID());
+                TutorialGame::getInstance()->GetServerInstance()->GetNetwork()->Broadcast(stopPacket);
+            }
         }
     }
 }
