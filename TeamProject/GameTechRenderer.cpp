@@ -289,11 +289,11 @@ GameTechRenderer::~GameTechRenderer() {
 	glDeleteFramebuffers(1, &edgeNormalsFBO);
 	glDeleteTextures(1, &edgeNormalsTex);
 
-	//delete MaleGuard;
     delete animationShader;
 	delete extractLightShader;
     delete blurShader;
     delete bloomShader;
+	glDeleteFramebuffers(1, &bloomFBO);
 
 }
 
