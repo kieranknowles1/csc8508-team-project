@@ -14,5 +14,7 @@ void main() {
     if (depth > texDepth) {
         discard;
     }
-    fragColor = inColour;
+    vec4 strongerColour = inColour * 5.0f;
+    strongerColour.a = 1.0f;
+    fragColor = strongerColour;
 }
