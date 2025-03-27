@@ -74,6 +74,8 @@ void PlayerController::UpdateMovement(float dt) {
     RotationCalculations();
  
     CameraMovement();
+    CheckForGround();
+
     GroundNormalCalculations();
     MovementCalculations(dt);
     HandleJumping();
@@ -331,6 +333,17 @@ void PlayerController::CameraMovement() {
         player->SetGunTransform(camera->GetPitch(), camera->GetYaw(), playerCamPos);
     }
 };
+
+void PlayerController::CheckForGround() {
+    if (inAirTime > 0 || player->getCollided() == 0) return;
+    btVector3 btBelowPlayerPos = btPlayerPos;
+    btBelowPlayerPos -= (upDirection * 50);
+    btCollisionWorld::ClosestRayResultCallback callback(btPlayerPos, btBelowPlayerPos);
+    bulletWorld->rayTest(btPlayerPos, btBelowPlayerPos, callback);
+    if (!callback.hasHit()) {
+        player->setCollided(0);
+    }
+}
 
 //if on ground, movement based on floor angle
 void PlayerController::GroundNormalCalculations() {
