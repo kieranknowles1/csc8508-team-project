@@ -7,7 +7,6 @@
 #include "TutorialGame.h"
 #include "Debug.h"
 #include <iostream>
-#include "GameScreen.h"
 #include "CreditsScreen.h"
 
 using namespace NCL;
@@ -29,7 +28,7 @@ public:
     void UpdateMenu(unsigned int);
 
 	void SetScore(int score) {
-		score = score;
+		this->score = score;
 	}
 
 private:
@@ -45,7 +44,7 @@ private:
     Vector4 buttonColor = Vector4(0.4f, 0.4f, 0.4f, 1);
     Vector4 textColor = Vector4(0, 0, 0, 1);
 
-	int score = 0;
+	int score;
 };
 
 
@@ -53,7 +52,7 @@ class EndScreenSP : public PushdownState {
     unsigned int selection = 0;
 
 public:
-    EndScreenSP(Controller* controller, TutorialGame* game) : controller(controller), game(game), selection(0) {
+    EndScreenSP(Controller* controller, TutorialGame* game, int s) : controller(controller), game(game), selection(0), score(s) {
         ui = std::make_unique<EndScreenSPUI>();
         renderer = game->GetUIRenderer();
         renderer->AddUiElement(ui.get());

@@ -1,6 +1,6 @@
 #version 330 core 
 
-uniform sampler2D diffuseTex; //Basically the shader from post processing tutorial
+uniform sampler2D diffuseTex; 
 
 uniform int isVertical;
 
@@ -26,12 +26,10 @@ void main(void) {
      }
      for(int i = 0; i < 7; i++) {
         vec2 offset = delta * (i-3);
-        vec4 tmp = texture(diffuseTex, IN.texCoord.xy + offset); //using texture instead of texture2D
+        vec4 tmp = texture(diffuseTex, IN.texCoord.xy + offset); 
         fragColor += tmp * scaleFactors[i];
-        //fragColor = vec4(1, 0, 0, 1); // For Testing SHADER SEEMS TO WORK, JUST NOT DOING MUCH? 
+        
      }
-    // vec3 texColour = texture(diffuseTex, IN.texCoord).rgb;
-     //fragColor = vec4(texColour, 1.0);
-     //fragColor = vec4(1, 0, 0, 1);
+  
 }
 
