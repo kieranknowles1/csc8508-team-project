@@ -41,8 +41,6 @@ Paintball Gun: "Atom Ray Gun Waterpistol" (https://skfb.ly/oorJF) by akselmot
 is licensed under Creative Commons Attribution
 (http://creativecommons.org/licenses/by/4.0/).
 
-Evil Genius Assets used with permission from Rebellion.
-
 Textures by TextureCan, under Creative Commons CC0
 https://www.texturecan.com/
 
