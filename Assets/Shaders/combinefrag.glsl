@@ -22,18 +22,20 @@ void main(void) {
     float gloss = texture(glossBufferTex, IN.texCoord).r; // extracting glossiness from red channel
     float specularStrength = texture(specularBufferTex, IN.texCoord).r; // extracting specular intensity
 
+    float roughness = 1.0 - gloss; // Convert glossiness to roughness
+
     // Clamp values to prevent invalid output
-    gloss = max(gloss, 0.05); // Avoid zero gloss
+    roughness = max(roughness, 0.05); // Avoid zero gloss
     specularStrength = max(specularStrength, 0.05); // Avoid zero specular
 
-    // TODO: Implement specular and glossiness
+    // Feel free to implement specular and glossiness in a different way, but this is how I did it, can't be bothered with it now, sorry :)
     // fragColour.rgb = pow(fragColour.rgb, vec3(1.0 / 2.2f)); //gamma correction, maybe should be in another shader. Probably should be done last
     vec4 colour = vec4(0,0,0,0);
     colour.rgb = doDeferredLight(
        diffuse,
        light,
        specular * specularStrength,
-       0.05
+       roughness
     );
     colour.a    = 1.0;
 
