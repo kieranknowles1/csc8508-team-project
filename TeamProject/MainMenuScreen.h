@@ -1,17 +1,14 @@
 #pragma once
 
-//#include "PushdownMachine.h"
 #include "PushdownState.h"
 #include <TutorialGame.h>
 #include <future>
-//#include "Window.h"
 #include <CSC8503CoreClasses/Debug.h>
 #include <iostream>
 #include "GameScreen.h"
 #include "LobbyScreen.h"
 #include "CreditsScreen.h"
 #include "GameTechRendererInterface.h"
-//#include "TextureUiElement.h"
 #include "AudioEngine.h"
 
 namespace NCL::CSC8503 {
@@ -74,7 +71,7 @@ namespace NCL::CSC8503 {
             }
 
             if (controller->GetDigital(Controller::DigitalControl::MenuDown)) {
-                if (selection < 4) {  // Only increase if not at the last option
+                if (selection < 4) {
                     selection++;
 					UpdateSelection((int)selection);
                     int channelId = audioEngine.PlaySounds("MenuScroll.wav", Vector3(0, 0, 0), -12.0f);
@@ -106,11 +103,6 @@ namespace NCL::CSC8503 {
                     game->StartMultiplayerGame(true);
                     *newState = new HostLobbyScreen(controller, game);
                     return PushdownResult::Push;
-                    //game->StartMultiplayerGame(true);
-                    //*newState = new HostLobbyScreen(controller, game);
-                    //return PushdownResult::Push
-                    //game->SetGameMode(GameMode::HOST_GAME);
-                    //game->JoinGame(true); //This is host game
                     break;
                 case GameMode::JOIN_GAME:
                     ok = game->StartMultiplayerGame(false);
@@ -132,7 +124,6 @@ namespace NCL::CSC8503 {
                     return PushdownResult::Push;
                     break;
                 case GameMode::QUIT:
-                    // audioEngine.Shutdown();
                     renderer->ClearUIElemets();
                     game->SetGameMode(GameMode::QUIT);
                     return PushdownResult::Pop;
@@ -143,32 +134,14 @@ namespace NCL::CSC8503 {
             }
             return PushdownResult::NoChange;
 
-            //Add FMOD Logo here as well as the line "Audio Engine: FMOD Studio by Firelight Technologies Pty Ltd."
         }
 
         void OnAwake() override {
 
-            //The below while function would fix the sound abruptly cutting off when ex
-            //exiting from the lobby to the main menu by adding a delay, not ideal. 
-
-            // Wait until no sounds are playing before restarting the audio engine
-            //while (audioEngine.IsAnySoundPlaying()) {
-            //    std::this_thread::sleep_for(std::chrono::milliseconds(100)); // Small delay to check again
-            //}
-
-            // Now restart the audio engine
-            //audioEngine.Shutdown();
-            //audioEngine.Init();
             game->getMainCam()->SetPosition({ 0, 0, 0 });
             audioEngine.Update(game->getMainCam());
             renderer->AddUiElement(ui.get());
 			ui->SetActive(true);
-
-            //audioEngine.Update(game->getMainCam());
-
-
-            //audioEngine.Shutdown();
-            //audioEngine.Init();
         }
 
 		void UpdateSelection(unsigned int selection) {
