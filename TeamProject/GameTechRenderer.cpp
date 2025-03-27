@@ -296,7 +296,6 @@ void GameTechRenderer::RenderFrame() {
 	//Set up to render into framebuffer
 	//THE ABOVE FEW LINES HAVE BEEN LEFT TO SHOW HOW SHADOWS WERE ORIGINALLY HANDLED
 
-	//////deferred rendering version:
 	glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
 	//RenderShadowMap();
 	FillBuffers();
@@ -305,7 +304,6 @@ void GameTechRenderer::RenderFrame() {
 	CombineBuffers();
 	RenderPostProcessing();
 	RenderUI();
-
 
 	glDisable(GL_CULL_FACE); //Todo - text indices are going the wrong way...
 	glDisable(GL_BLEND);
@@ -1071,17 +1069,6 @@ void GameTechRenderer::DrawScene() { //the basic rendering for the scene, curren
 
 	UseShader(*decalBlendShader);
 
-	//// Send near and far plane uniforms to decalBlend shader
-	//// To conver non-linear depth to linear depth for accurate depth testing
-	/*glUniform1f(glGetUniformLocation(decalBlendShader->GetProgramID(), "nearPlane"), camera->GetNearPlane()); 
-	glUniform1f(glGetUniformLocation(decalBlendShader->GetProgramID(), "farPlane"), camera->GetFarPlane());*/
-
-	//GLuint decalTextureLocation = glGetUniformLocation(decalBlendShader->GetProgramID(), "decalTexture");
-	//glUniform1i(decalTextureLocation, 0);
-
-	////// Bind the decal texture
-	//glActiveTexture(GL_TEXTURE0);
-	//glBindTexture(GL_TEXTURE_2D, decalSystem.GetDecalTexture());
 
 	GLuint decalTextureLocation = glGetUniformLocation(decalBlendShader->GetProgramID(), "decalTexture");
 	glUniform1i(decalTextureLocation, 0);
@@ -1090,16 +1077,10 @@ void GameTechRenderer::DrawScene() { //the basic rendering for the scene, curren
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, decalSystem.GetDecalTexture());
 
-
 	//// Bind the scene texture
 	glActiveTexture(GL_TEXTURE1);
 	glBindTexture(GL_TEXTURE_2D, bufferColourTex); 
 	glUniform1i(glGetUniformLocation(decalBlendShader->GetProgramID(), "sceneTexture"), 1);
-
-	////// Bind depth texture
-	/*glActiveTexture(GL_TEXTURE2); //DO THESE 3 LINES STILL DO ANYTHING?
-	glBindTexture(GL_TEXTURE_2D, bufferDepthTex); //was hdrDepthTex.
-	glUniform1i(glGetUniformLocation(decalBlendShader->GetProgramID(), "depthTexture"), 2);*/
 
 	glDisable(GL_CULL_FACE);
 	glDisable(GL_BLEND);
@@ -1107,17 +1088,6 @@ void GameTechRenderer::DrawScene() { //the basic rendering for the scene, curren
 	BindMesh(*unitQuad);
 	DrawBoundMesh();
 
-    /*glDisable(GL_CULL_FACE); //Todo - text indices are going the wrong way...  //before merge conflicts, this line would have come immediately after renderCamera()
-    glDisable(GL_BLEND);
-    glDisable(GL_DEPTH_TEST);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    NewRenderLines();
-    NewRenderTextures();
-    NewRenderText();
-    glDisable(GL_BLEND);
-    glEnable(GL_DEPTH_TEST);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    RenderUI();*/
 }
 
 void GameTechRenderer::FillBuffers() { //draws unlit scene
