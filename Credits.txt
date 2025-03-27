@@ -11,11 +11,11 @@ TODO: Credit ourselves, add in what each of us did
   Head of AI and Single Player Game Mode
 
 - Harsh Naidu
-  ...
-  ...
+  Head of Physics
+  Assisted in Graphics Engineering
 
 - Joshua Kadhim
-  Head of UI Design and Integration
+  Head of UI Design and UI Integration
 
 - Kieran Knowles
   Head of PS5 Support and Linux Support
@@ -24,7 +24,6 @@ TODO: Credit ourselves, add in what each of us did
 - Max Davidson
   Head of Graphics Engineering
   
-
 - Thomas Johnson
   Head of Networking.
   Assisted in Gameplay.
