@@ -150,7 +150,7 @@ void TutorialGame::UpdatePlayer(float dt, bool camOnly) {
 
         numDeaths = player->GetHealthAttrib()->DeathCount();
 
-        if (gameMode == GameMode::SINGLEPLAYER) {
+        if (gameMode == GameMode::SINGLEPLAYER && numDeaths > 2) {
             spEnd = true;
         }
 
