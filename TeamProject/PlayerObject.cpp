@@ -80,8 +80,8 @@ void PlayerObject::UpdateWorldState() {
 
 void PlayerObject::UpdateFromWorldState(float dt) {
     attack->UpdateFromWorldState(dt);
-    score->UpdateFromWorldState(tickProgress);
-    health->UpdateFromWorldState(tickProgress);
+    score->UpdateFromWorldState(dt);
+    health->UpdateFromWorldState(dt);
     ServerObject::UpdateFromWorldState(dt);
 
     elapsedTickTime += dt;
@@ -113,9 +113,9 @@ void PlayerObject::UpdateFromWorldState(float dt) {
         btVector3 currentUpVector = std::get<btVector3>(currentUpVectorValue);
         btVector3 targetUpVector = std::get<btVector3>(targetUpVectorValue);
         btVector3 interpolated = btVector3(
-            lerp(currentUpVector.x(), targetUpVector.x(), tickProgress),
-            lerp(currentUpVector.y(), targetUpVector.y(), tickProgress),
-            lerp(currentUpVector.z(), targetUpVector.z(), tickProgress)
+            lerp(currentUpVector.x(), targetUpVector.x(), dt),
+            lerp(currentUpVector.y(), targetUpVector.y(), dt),
+            lerp(currentUpVector.z(), targetUpVector.z(), dt)
         );
 
         setUpDirection(interpolated);

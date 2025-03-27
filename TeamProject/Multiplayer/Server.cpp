@@ -132,9 +132,6 @@ namespace Multiplayer {
             }
 
             ServerObject* netObj = (ServerObject*)object;
-
-            if (netObj->GetOwner() == nullptr) return;
-            if (*(netObj->GetOwner()) != *m_user) return;
             netObj->GetWorldStates()->UpdateBuffer();
 
             std::vector<std::shared_ptr<Packet::Packet>> packets = netObj->CreatePackets(m_tickCount);
@@ -215,8 +212,6 @@ namespace Multiplayer {
             if (netObj->GetOwner() == nullptr) return;
             if (*(netObj->GetOwner()) == *m_user) return;
             netObj->GetWorldStates()->UpdateBuffer();
-            if (object->GetOwner() == nullptr) return;
-            if (*(object->GetOwner()) == *m_user) return;
 
             if (object->getType() == GameObject::Type::Player) {
                 PlayerObject* player = (PlayerObject*)object;
