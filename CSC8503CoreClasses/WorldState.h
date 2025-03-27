@@ -8,6 +8,7 @@
 #include <variant>
 #include <vector>
 #include <optional>
+#include <mutex>
 
 namespace WorldState {
     using StateValue = std::variant<btVector3, btQuaternion, float, int>;
