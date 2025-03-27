@@ -36,7 +36,7 @@ private:
     std::vector<Text> buttonTexts;
     Vector4 activeButton = Vector4(0.3, 0.3, 0.3, 0.5);
     Vector4 inactiveButton = Vector4(0, 0, 0, 1);
-    Vector2 buttonSize = Vector2(0.4f, 0.075f);
+    Vector2 buttonSize = Vector2(0.4f, 1);
 
     Vector4 backgroundColor = Vector4(0, 0, 0, 1);
     Vector4 buttonColor = Vector4(0.4f, 0.4f, 0.4f, 1);
