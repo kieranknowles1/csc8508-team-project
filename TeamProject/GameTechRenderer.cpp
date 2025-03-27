@@ -887,7 +887,7 @@ void GameTechRenderer::RenderQuad() {
 
 void GameTechRenderer::RenderDecals() {
 	// Bind the decal FBO to keep decal rendering separate from the main scene
-	glBindFramebuffer(GL_FRAMEBUFFER, decalSystem.GetDecalFBO());
+	glBindFramebuffer(GL_FRAMEBUFFER, decalSystem.GetDecalFBO()); 
 
 	// Copy the scene depth buffer to the decal FBO
 	glBindFramebuffer(GL_READ_FRAMEBUFFER, bufferFBO); //was hdrFBO. Depth can now come from bufferFBO
