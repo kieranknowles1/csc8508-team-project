@@ -1,10 +1,10 @@
 #pragma once
 
-#include "GameObject.h"
+#include "ServerObject.h"
 
 namespace NCL::CSC8503 {
 
-    class LaserObject : public GameObject {
+    class LaserObject : public ServerObject {
     public:
         LaserObject(GameObject* parent) : parent(parent) {
             type = Type::Laser;

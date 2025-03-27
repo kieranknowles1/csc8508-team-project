@@ -71,6 +71,7 @@ set(Header_Files
 	"GameWorld.h"
     "MeshMaterial.h"
 	"RenderObject.h"
+    "ServerObject.h"
     "StateUpdater.h"
     "WorldState.h"
 )
@@ -82,6 +83,7 @@ set(Source_Files
 	"GameWorld.cpp"
 	"RenderObject.cpp"
     "MeshMaterial.cpp"
+    "ServerObject.cpp"
     "StateUpdater.cpp"
 )
 source_group("Source Files" FILES ${Source_Files})
