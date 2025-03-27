@@ -52,7 +52,7 @@ public:
 		Unpause,
 		MenuUp,
 		MenuDown,
-    MenuLeft,
+		MenuLeft,
 		MenuRight,
 		MenuConfirm,
 		Scoreboard

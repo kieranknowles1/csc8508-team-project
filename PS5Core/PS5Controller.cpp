@@ -51,6 +51,7 @@ ScePadButtonDataOffset toSce(JoystickController::Button button) {
 	case L3: return SCE_PAD_BUTTON_L3;
 	case R1: return SCE_PAD_BUTTON_R1;
 	case R3: return SCE_PAD_BUTTON_R3;
+	case TrackpadClick: return SCE_PAD_BUTTON_TOUCH_PAD;
 	case Select:
 	case DeckL4:
 	case DeckL5:
@@ -96,10 +97,12 @@ float PS5Controller::internalAnalogueValue(Analogue analogue)
 	{
 	case LeftStickX: return ConvertAxis(data.leftStick.x, padInfo.stickInfo.deadZoneLeft);
 	case LeftStickY: return ConvertAxis(data.leftStick.y, padInfo.stickInfo.deadZoneLeft);
-	case RightStickX: return ConvertAxis(data.rightStick.x, padInfo.stickInfo.deadZoneRight) + trackMovement().x;
-	case RightStickY: return  ConvertAxis(data.rightStick.y, padInfo.stickInfo.deadZoneRight) + trackMovement().y;
+	case RightStickX: return ConvertAxis(data.rightStick.x, padInfo.stickInfo.deadZoneRight);
+	case RightStickY: return  ConvertAxis(data.rightStick.y, padInfo.stickInfo.deadZoneRight);
 	case L2: return triggerValue(data.analogButtons.l2);
 	case R2: return triggerValue(data.analogButtons.r2);
+	case TrackpadX: return trackMovement().x;
+	case TrackpadY: return trackMovement().y;
 	default: assert(false);
 	}
 }
