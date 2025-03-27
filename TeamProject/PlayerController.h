@@ -98,6 +98,8 @@ namespace NCL {
 				return controller;
 			}
 
+			Scoreboard* GetScoreboard() { return scoreboard.get(); }
+
 		private:
 
 			std::vector<int> jumppadChannels;

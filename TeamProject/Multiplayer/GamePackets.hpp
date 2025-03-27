@@ -36,7 +36,8 @@ namespace Packet {
         LASER = CUSTOM_TYPE + 8,
         PING = CUSTOM_TYPE + 9,
         PONG = CUSTOM_TYPE + 10,
-        PLAYER_ANIMATION = CUSTOM_TYPE + 11
+        DEATH = CUSTOM_TYPE + 11,
+        PLAYER_ANIMATION = CUSTOM_TYPE + 12
     };
 
 
@@ -285,5 +286,24 @@ namespace Packet {
             Packet(static_cast<Type>(PacketType::PONG), static_cast<uint8_t>(Channel::RELIABLE), 0)
         {}
     };
+    
+    
+    /**
+     * @brief Score packet for updating scores for players.
+     */
+    class DeathPacket : public Packet {
+    public:
+        DeathPacket(int objectID, float scoreIncrease, int sequenceNum) :
+            Packet(static_cast<Type>(PacketType::DEATH), static_cast<uint8_t>(Channel::UNSEQUENCED), sequenceNum),
+            m_objectID(objectID), m_scoreIncrease(scoreIncrease)
+        {}
+
+        int GetObjectID() const { return m_objectID; }
+        float GetScoreIncrease() const { return m_scoreIncrease; }
+
+    private:
+        int m_objectID;
+        float m_scoreIncrease;
+    };     
 }
 
