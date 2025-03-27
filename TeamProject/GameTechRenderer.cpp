@@ -957,10 +957,10 @@ void GameTechRenderer::RenderDecals() {
 	glDepthFunc(GL_LEQUAL);
 }
 
-void GameTechRenderer::RenderPostProcessing() { //gonna try putting edge detection first:
+void GameTechRenderer::RenderPostProcessing() { 
 
 		//Edge detection:
-		glBindFramebuffer(GL_FRAMEBUFFER, edgeNormalsFBO);//was BFBO
+		glBindFramebuffer(GL_FRAMEBUFFER, edgeNormalsFBO);
 		glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 		glDisable(GL_CULL_FACE);
 		glDisable(GL_BLEND);
@@ -982,7 +982,7 @@ void GameTechRenderer::RenderPostProcessing() { //gonna try putting edge detecti
 
 
         //Edge detection:
-	    glBindFramebuffer(GL_FRAMEBUFFER, hdrFBO);//was BFBO
+	    glBindFramebuffer(GL_FRAMEBUFFER, hdrFBO);
 		glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 		glDisable(GL_CULL_FACE);
 		glDisable(GL_BLEND);
@@ -990,7 +990,7 @@ void GameTechRenderer::RenderPostProcessing() { //gonna try putting edge detecti
 		UseShader(*edgedetectShader);
 		glUniform2f(glGetUniformLocation(edgedetectShader->GetProgramID(), "windowSize"), windowSize.x, windowSize.y);
 		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, BTex); //currently holds the scene, gonna have to change up the vignette part to accomodate this //was bufferColourTex
+		glBindTexture(GL_TEXTURE_2D, BTex); 
 		glUniform1i(glGetUniformLocation(edgedetectShader->GetProgramID(), "sceneTex"), 0);
 		glActiveTexture(GL_TEXTURE1);
 		glBindTexture(GL_TEXTURE_2D, edgeNormalsTex);
@@ -999,14 +999,14 @@ void GameTechRenderer::RenderPostProcessing() { //gonna try putting edge detecti
 		DrawBoundMesh();
 
 		//Add Laser
-		glBindFramebuffer(GL_FRAMEBUFFER, laserAddFBO);//was BFBO
+		glBindFramebuffer(GL_FRAMEBUFFER, laserAddFBO);
 		glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 		glDisable(GL_CULL_FACE);
 		glDisable(GL_BLEND);
 		glDisable(GL_DEPTH_TEST);
 		UseShader(*addLaserShader);
 		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, hdrTex); //currently holds the scene, gonna have to change up the vignette part to accomodate this //was bufferColourTex
+		glBindTexture(GL_TEXTURE_2D, hdrTex); 
 		glUniform1i(glGetUniformLocation(addLaserShader->GetProgramID(), "sceneTex"), 0);
 		glActiveTexture(GL_TEXTURE1);
 		glBindTexture(GL_TEXTURE_2D, laserPostTex2);
@@ -1015,7 +1015,7 @@ void GameTechRenderer::RenderPostProcessing() { //gonna try putting edge detecti
 		DrawBoundMesh();
 
 	    //Vignette post processing:
-	    glBindFramebuffer(GL_FRAMEBUFFER, BFBO); //unbind hdrFBO and set BFBO    //was BFBO before adding edge detection //was hdrFBO
+	    glBindFramebuffer(GL_FRAMEBUFFER, BFBO); 
 	    glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 	    glDisable(GL_CULL_FACE);
 	    glDisable(GL_BLEND);
@@ -1024,7 +1024,7 @@ void GameTechRenderer::RenderPostProcessing() { //gonna try putting edge detecti
 	    glUniform1i(glGetUniformLocation(vignetteShader->GetProgramID(), "vignetteOn"), GetVignetteOn());
 		glUniform1f(glGetUniformLocation(vignetteShader->GetProgramID(), "vignetteIntensity"), vignetteIntensity);
 		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, laserAddedTex); //hdrTex currently holds raw scene  //was bufferColourTex before adding edge detection //was BTex
+		glBindTexture(GL_TEXTURE_2D, laserAddedTex); 
 		glUniform1i(glGetUniformLocation(vignetteShader->GetProgramID(), "diffuseTex"), 0);
 		glUniform2f(glGetUniformLocation(vignetteShader->GetProgramID(), "windowSize"), windowSize.x, windowSize.y);
 		glUniform3fv(glGetUniformLocation(vignetteShader->GetProgramID(), "effectColour"), 1, (float*)&vignetteColour);
@@ -1033,20 +1033,20 @@ void GameTechRenderer::RenderPostProcessing() { //gonna try putting edge detecti
 		glUniform1f(glGetUniformLocation(vignetteShader->GetProgramID(), "time"), vignettePulse);
 
 
-		BindMesh(*fullscreenQuad); //simply a quad
-		DrawBoundMesh(); //finished rendering into BTex now, ready to unbind to draw quad straight to screen next:
+		BindMesh(*fullscreenQuad); 
+		DrawBoundMesh(); 
 		//HDR post processing:
-		glBindFramebuffer(GL_FRAMEBUFFER, 0); //was 0, now trying rendering back into hdrFBO
+		glBindFramebuffer(GL_FRAMEBUFFER, 0); 
 		glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 		glDisable(GL_CULL_FACE);
 		glDisable(GL_BLEND);
 		glDisable(GL_DEPTH_TEST);
 		UseShader(*hdrShader);
-		glUniform1i(glGetUniformLocation(hdrShader->GetProgramID(), "hdrOn"), GetHDROn()); //send bool to shader so it knows whether to output scene with or without post processing
-		glActiveTexture(GL_TEXTURE0); //was hdrTex
-		glBindTexture(GL_TEXTURE_2D, BTex);//BTex holds vignetted processed scene (whether applied or not). (tonemapping should be done pretty much last) //was BTex before edge detection
+		glUniform1i(glGetUniformLocation(hdrShader->GetProgramID(), "hdrOn"), GetHDROn());
+		glActiveTexture(GL_TEXTURE0); 
+		glBindTexture(GL_TEXTURE_2D, BTex);//BTex holds vignetted processed scene (whether applied or not). (tonemapping should be done pretty much last) 
 		glUniform1i(glGetUniformLocation(hdrShader->GetProgramID(), "hdrTex"), 0);
-		BindMesh(*fullscreenQuad); //using unitQuad instead of fullscreen quad
+		BindMesh(*fullscreenQuad); 
 		DrawBoundMesh();
 
 
@@ -1074,24 +1074,23 @@ void GameTechRenderer::DrawScene() { //the basic rendering for the scene, curren
 	glBindFramebuffer(GL_FRAMEBUFFER, bufferFBO);
 
 	glEnable(GL_CULL_FACE);
-	glClearColor(1, 1, 1, 0); //doesn't seem to change anything regardless of alpha
+	glClearColor(1, 1, 1, 0); 
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     RenderCamera();
-	RenderAnimations(); /////////////////////////////////////////////////////////////////////////////////////TESTING FOR NOW
-	// Render Decals to it's own buffer
+	RenderAnimations(); 
+	//Render Decals to it's own buffer
 	RenderDecals();
 
 	glBindFramebuffer(GL_FRAMEBUFFER, hdrFBO);
-	// Blend decals onto the scene using a fullscreen quad
+	//Blend decals onto the scene using a fullscreen quad
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-	////glBindFramebuffer(GL_FRAMEBUFFER, 0); //////// Why unbind to 0? COMMENTING THIS OUT AT LEAST ALLOWS THE UI TO RENDER PROPERLY
 
 	UseShader(*decalBlendShader);
 
 	//// Send near and far plane uniforms to decalBlend shader
 	//// To conver non-linear depth to linear depth for accurate depth testing
-	/*glUniform1f(glGetUniformLocation(decalBlendShader->GetProgramID(), "nearPlane"), camera->GetNearPlane()); //DO THESE TWO LINES STILL DO ANYTHING?
+	/*glUniform1f(glGetUniformLocation(decalBlendShader->GetProgramID(), "nearPlane"), camera->GetNearPlane()); 
 	glUniform1f(glGetUniformLocation(decalBlendShader->GetProgramID(), "farPlane"), camera->GetFarPlane());*/
 
 	//GLuint decalTextureLocation = glGetUniformLocation(decalBlendShader->GetProgramID(), "decalTexture");
@@ -1141,11 +1140,11 @@ void GameTechRenderer::DrawScene() { //the basic rendering for the scene, curren
 
 void GameTechRenderer::FillBuffers() { //draws unlit scene
     //bind the framebuffer to store unlit scene
-	glBindFramebuffer(GL_FRAMEBUFFER, bufferFBO); //We will draw the whole scene into bufferFBO for now including the skybox
+	glBindFramebuffer(GL_FRAMEBUFFER, bufferFBO); //draw the whole scene into bufferFBO 
 	glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
 
 	//draw scene:
-	DrawScene(); //perhaps don't need to draw whole scene but just what will be affected by lighting i.e. skybox will not
+	DrawScene(); 
 
 	//Unbind the framebuffer:
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
