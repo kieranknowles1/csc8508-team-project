@@ -18,7 +18,7 @@ set(SOURCES
 
     DecalSystem.cpp
     DecalSystem.h
-    
+
     EndScreenMP.cpp
     EndScreenMP.h
     EndScreenSP.cpp
@@ -84,7 +84,7 @@ set(SOURCES
     TutorialGame.h
 
     Wanderer.cpp
-    Wanderer.h	
+    Wanderer.h
 
     main.cpp
 )
@@ -249,7 +249,7 @@ if(PS5_BUILD)
     endforeach()
 endif()
 
-include_directories(${COMPILE_ASSET_ROOT})
+include_directories(${ASSET_ROOT})
 
 if(WIN32)
     set_target_properties(${PROJECT_NAME} PROPERTIES
