@@ -67,7 +67,7 @@ namespace NCL::CSC8503 {
 
             if (connectionFailedTime > 0) {
                 connectionFailedTime -= dt;
-                Debug::Print("Connection failed", Vector2(0.05f, 0.9f));
+                Debug::Print("- Connection failed", Vector2(0.05f, 0.95f));
             }
 
             if (controller->GetDigital(Controller::DigitalControl::MenuDown)) {
