@@ -7,6 +7,7 @@
 #include "Network/Network.hpp"
 #include "Health.h"
 #include "Score.h"
+#include <AudioEngine.h>
 
 using namespace Lobbies;
 
@@ -854,4 +855,81 @@ namespace Packet {
 
 #pragma endregion DeathPacketHandler
 
+
+#pragma region SoundPacketHandler
+
+    void SoundPacketHandler::Handle(const std::shared_ptr<Packet> packet) {
+        auto sound = std::static_pointer_cast<SoundPacket>(packet);
+
+        // Play the sound locally on receiving client
+        audioEngine.PlaySounds(
+            sound->GetSoundName(),
+            Vector3(sound->GetPosition().x(), sound->GetPosition().y(), sound->GetPosition().z()),
+            sound->GetVolume()
+        );
+    }
+
+    std::shared_ptr<Packet> SoundPacketHandler::Translate(const ENetEvent* event) const {
+        ENetPacket* pkt = event->packet;
+        Type type;
+        uint8_t channel;
+        uint32_t sequence;
+
+        GetBaseData(pkt, &type, &channel, &sequence);
+
+        size_t offset = sizeof(Type) + sizeof(uint8_t) + sizeof(uint32_t);
+
+        btVector3 position;
+        memcpy(&position, pkt->data + offset, sizeof(btVector3));
+        offset += sizeof(btVector3);
+
+        float volume, pitch;
+        memcpy(&volume, pkt->data + offset, sizeof(float));
+        offset += sizeof(float);
+        memcpy(&pitch, pkt->data + offset, sizeof(float));
+        offset += sizeof(float);
+
+        int nameLen;
+        memcpy(&nameLen, pkt->data + offset, sizeof(int));
+        offset += sizeof(int);
+
+        std::string soundName(reinterpret_cast<char*>(pkt->data + offset), nameLen);
+
+        return std::make_shared<SoundPacket>(soundName, position, volume, pitch);
+    }
+
+    ENetPacket* SoundPacketHandler::ToENetPacket(const std::shared_ptr<Packet> packet) const {
+        auto sound = *static_cast<SoundPacket*>(packet.get());
+
+        int nameLen = (int)sound.GetSoundName().size();
+        size_t totalSize =
+            sizeof(Type) + sizeof(uint8_t) + sizeof(uint32_t) +
+            sizeof(btVector3) + sizeof(float) + sizeof(float) +
+            sizeof(int) + nameLen;
+
+        char* buffer = new char[totalSize];
+        size_t offset = 0;
+
+        Type type = sound.GetType();
+        memcpy(buffer + offset, &type, sizeof(Type)); offset += sizeof(Type);
+        uint8_t channel = sound.GetChannel();
+        memcpy(buffer + offset, &channel, sizeof(uint8_t)); offset += sizeof(uint8_t);
+        uint32_t seq = sound.GetSequenceNumber();
+        memcpy(buffer + offset, &seq, sizeof(uint32_t)); offset += sizeof(uint32_t);
+
+        btVector3 pos = sound.GetPosition();
+        memcpy(buffer + offset, &pos, sizeof(btVector3)); offset += sizeof(btVector3);
+        float vol = sound.GetVolume();
+        memcpy(buffer + offset, &vol, sizeof(float)); offset += sizeof(float);
+        float pitch = sound.GetPitch();
+        memcpy(buffer + offset, &pitch, sizeof(float)); offset += sizeof(float);
+
+        int len = (int)sound.GetSoundName().size();
+        memcpy(buffer + offset, &len, sizeof(int)); offset += sizeof(int);
+        memcpy(buffer + offset, sound.GetSoundName().c_str(), len); offset += len;
+
+        ENetPacket* pkt = enet_packet_create(buffer, offset, ENET_PACKET_FLAG_RELIABLE);
+        delete[] buffer;
+        return pkt;
+    }
 }

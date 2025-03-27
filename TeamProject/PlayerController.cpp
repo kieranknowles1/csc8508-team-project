@@ -5,6 +5,7 @@
 #include "Health.h"
 #include "AnimationObject.h"
 #include "Score.h"
+#include "Multiplayer/Server.hpp"
 
 using namespace NCL;
 using namespace CSC8503;
@@ -94,7 +95,7 @@ void PlayerController::UpdateCamOnly() {
 }
 
 
-void PlayerController::HandleShooting(float dt) {
+/*void PlayerController::HandleShooting(float dt) {
     if (controller->GetDigital(Controller::DigitalControl::Fire) && overheat->CanFire()) {
         FireShot(dt);
         if (!firing) {
@@ -133,6 +134,60 @@ void PlayerController::HandleShooting(float dt) {
             crosshair->stopFiring();
             overheat->stopFiring();
             
+            if (beamSoundChannel != -1) {
+                audioEngine.SetChannelVolume(beamSoundChannel, -100.0f);
+                beamSoundChannel = -1;
+            }
+
+            firing = false;
+            player->GetAttackAttrib()->Hit(nullptr);
+        }
+    }
+}*/
+
+void PlayerController::HandleShooting(float dt) {
+    if (controller->GetDigital(Controller::DigitalControl::Fire) && overheat->CanFire()) {
+        FireShot(dt);
+        if (!firing) {
+            crosshair->fire();
+            overheat->fire();
+            firing = true;
+
+            float overheatPercentage = overheat->GetOverheatPercentage();
+            float beamSoundLength = 7.1f;
+            unsigned int startTimeMs = static_cast<unsigned int>(overheatPercentage * beamSoundLength * 1000);
+
+            if (beamSoundPaused && beamSoundChannel != -1) {
+                audioEngine.SetChannel3dPosition(beamSoundChannel, camera->GetPosition());
+                audioEngine.SetChannelPlaybackPosition(beamSoundChannel, startTimeMs);
+            }
+            else {
+                beamSoundChannel = audioEngine.PlaySounds("Beam.mp3", camera->GetPosition(), 0.0f);
+                if (beamSoundChannel != -1) {
+                    audioEngine.SetChannel3dPosition(beamSoundChannel, camera->GetPosition());
+                    audioEngine.SetChannelPlaybackPosition(beamSoundChannel, startTimeMs);
+                }
+
+                if (TutorialGame::getInstance()->GetServerInstance() != nullptr) {
+                    auto pos = player->GetTransform().getOrigin();
+                    auto soundPacket = std::make_shared<Packet::SoundPacket>(
+                        "Beam.mp3", btVector3(pos.getX(), pos.getY(), pos.getZ()), 0.0f);
+                    TutorialGame::getInstance()->GetServerInstance()->GetNetwork()->Broadcast(soundPacket);
+                }
+            }
+        }
+        else {
+            if (beamSoundChannel != -1) {
+                audioEngine.SetChannel3dPosition(beamSoundChannel, camera->GetPosition());
+            }
+        }
+    }
+    else {
+        if (firing) {
+            player->updateLaser(btVector3(0, 0, 0), btVector3(0, 0, 0));
+            crosshair->stopFiring();
+            overheat->stopFiring();
+
             if (beamSoundChannel != -1) {
                 audioEngine.SetChannelVolume(beamSoundChannel, -100.0f);
                 beamSoundChannel = -1;

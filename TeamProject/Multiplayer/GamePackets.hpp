@@ -38,7 +38,8 @@ namespace Packet {
         PING = CUSTOM_TYPE + 9,
         PONG = CUSTOM_TYPE + 10,
         DEATH = CUSTOM_TYPE + 11,
-        PLAYER_ANIMATION = CUSTOM_TYPE + 12
+        PLAYER_ANIMATION = CUSTOM_TYPE + 12,
+        SOUND = CUSTOM_TYPE + 13
     };
 
 
@@ -305,6 +306,24 @@ namespace Packet {
     private:
         int m_objectID;
         float m_scoreIncrease;
-    };     
+    };
+
+    class SoundPacket : public Packet {
+    public:
+        SoundPacket(const std::string& soundName, const btVector3& position, float volume, float pitch = 1.0f) :
+            Packet(static_cast<Type>(PacketType::SOUND), static_cast<int>(Channel::RELIABLE), 0),
+            m_soundName(soundName), m_position(position), m_volume(volume), m_pitch(pitch) {}
+
+        std::string GetSoundName() const { return m_soundName; }
+        btVector3 GetPosition() const { return m_position; }
+        float GetVolume() const { return m_volume; }
+        float GetPitch() const { return m_pitch; }
+
+    private:
+        std::string m_soundName;
+        btVector3 m_position;
+        float m_volume;
+        float m_pitch;
+    };
 }
 
