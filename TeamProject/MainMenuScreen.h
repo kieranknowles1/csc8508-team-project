@@ -133,6 +133,7 @@ namespace NCL::CSC8503 {
                     break;
                 case GameMode::CREDITS:
                     textureUiElement->SetActive(false);
+					ui->SetActive(false);
                     game->SetGameMode(GameMode::CREDITS);
                     audioEngine.PlaySounds("MenuSelect.wav", Vector3(0, 0, 0), -18.0f);
                     *newState = new CreditsScreen(controller, Assets::CREDITS);
