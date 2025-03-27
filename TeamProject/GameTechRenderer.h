@@ -159,6 +159,7 @@ namespace NCL {
 			OGLShader* extractLightShader;
 			OGLShader* blurShader;
 			OGLShader* bloomShader;
+			GLuint bloomFBO; //just holds a colour texture attachment
 
 			Matrix4 laserPreviousViewProjMatrix;
 

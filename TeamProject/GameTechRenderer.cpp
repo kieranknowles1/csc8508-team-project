@@ -260,6 +260,7 @@ GameTechRenderer::GameTechRenderer(Window* window) : OGLRenderer(window), GameTe
 	blurShader = new OGLShader("texturevert.glsl", "gaussianblurfrag.glsl");
 	bloomShader = new OGLShader("texturevert.glsl", "bloomcombinefrag.glsl");
 
+	glGenFramebuffers(1, &bloomFBO);
 }
 
 GameTechRenderer::~GameTechRenderer() {
@@ -1041,7 +1042,7 @@ void GameTechRenderer::RenderPostProcessing() { //gonna try putting edge detecti
 		//at this point laserAddedTex still does hold scene as is but so does diffuseLightTex
 		ApplyBlur();
 		//now combine:
-		/*glBindFramebuffer(GL_FRAMEBUFFER, hdrFBO);
+		glBindFramebuffer(GL_FRAMEBUFFER, hdrFBO);
 		glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 		glDisable(GL_CULL_FACE);
 		glDisable(GL_BLEND);
@@ -1051,10 +1052,10 @@ void GameTechRenderer::RenderPostProcessing() { //gonna try putting edge detecti
 		glBindTexture(GL_TEXTURE_2D, lightDiffuseTex); //could also try laserAddedTex which should still hold the scene
 		glUniform1i(glGetUniformLocation(bloomShader->GetProgramID(), "sceneTex"), 0);
 		glActiveTexture(GL_TEXTURE1);
-		glBindTexture(GL_TEXTURE_2D, bufferColourTex);
+		glBindTexture(GL_TEXTURE_2D, bufferNormalTex);
 		glUniform1i(glGetUniformLocation(bloomShader->GetProgramID(), "blurredLights"), 1);
 		BindMesh(*fullscreenQuad);
-		DrawBoundMesh();*/
+		DrawBoundMesh();
 
 	    //Vignette post processing:
 	    glBindFramebuffer(GL_FRAMEBUFFER, BFBO); //unbind hdrFBO and set BFBO    //was BFBO before adding edge detection //was hdrFBO
@@ -1066,7 +1067,7 @@ void GameTechRenderer::RenderPostProcessing() { //gonna try putting edge detecti
 	    glUniform1i(glGetUniformLocation(vignetteShader->GetProgramID(), "vignetteOn"), GetVignetteOn());
 		glUniform1f(glGetUniformLocation(vignetteShader->GetProgramID(), "vignetteIntensity"), vignetteIntensity);
 		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, bufferNormalTex); //was laserAddedTex for testing use lightSpecularTex //bufferNormalTex 
+		glBindTexture(GL_TEXTURE_2D, hdrTex); //was laserAddedTex for testing use lightSpecularTex //bufferNormalTex 
 		glUniform1i(glGetUniformLocation(vignetteShader->GetProgramID(), "diffuseTex"), 0);
 		glUniform2f(glGetUniformLocation(vignetteShader->GetProgramID(), "windowSize"), windowSize.x, windowSize.y);
 		glUniform3fv(glGetUniformLocation(vignetteShader->GetProgramID(), "effectColour"), 1, (float*)&vignetteColour);
@@ -1355,7 +1356,7 @@ void GameTechRenderer::RenderAnimations() {
 }
 
 void GameTechRenderer::ApplyBlur() { //will need a single FBO with multiple (floating point) colour attachments. May not be able to use buffer FBO since other post processes need its textures
-	glBindFramebuffer(GL_FRAMEBUFFER, hdrFBO); //For Now trying with pointLightFBO, was bufferFBO //below used lightSpecularTex previously
+	glBindFramebuffer(GL_FRAMEBUFFER, bloomFBO); //For Now trying with pointLightFBO, was bufferFBO //below used lightSpecularTex previously
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, bufferNormalTex, 0); //Although the FBO has two attachments, only going to use one here. Attaching lightDiffuseTex to colour slot 0
 	glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT); //Actually not sure if we should be doing the above line since the textures are already attached
 	//glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, lightSpecularTex, 0);
@@ -1373,21 +1374,21 @@ void GameTechRenderer::ApplyBlur() { //will need a single FBO with multiple (flo
 	glActiveTexture(GL_TEXTURE0);
 	glUniform1i(glGetUniformLocation(blurShader->GetProgramID(), "diffuseTex"), 0); 
 
-	//for (int i = 0; i < 10; ++i) { //just hardcoding the number here instead of POST_PASSES. Higher number = stronger blur
+	for (int i = 0; i < 10; ++i) { //just hardcoding the number here instead of POST_PASSES. Higher number = stronger blur
 	      glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, bufferNormalTex, 0); //was lightSpecularTex In theory shouldn't matter which texures we attach
-		//glUniform1i(glGetUniformLocation(blurShader->GetProgramID(), "isVertical"), 0);
+		glUniform1i(glGetUniformLocation(blurShader->GetProgramID(), "isVertical"), 0);
 
 	      glBindTexture(GL_TEXTURE_2D, lightSpecularTex); //was bufferNormalTex Tick was lightSpecularTex
 	      BindMesh(*fullscreenQuad);
 	      DrawBoundMesh();
-		/*
+		
 		//Then swap the colour buffers and process again:
 		glUniform1i(glGetUniformLocation(blurShader->GetProgramID(), "isVertical"), 1);
 		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, lightSpecularTex, 0); //was bufferNormalTex
 		glBindTexture(GL_TEXTURE_2D, bufferNormalTex); //was lightSpecularTex
 		BindMesh(*fullscreenQuad);
-		DrawBoundMesh();*/
-	//}
+		DrawBoundMesh();
+	}
 	glBindFramebuffer(GL_FRAMEBUFFER, 0); //perhaps this might need to be another specific FBO
 	//glEnable(GL_DEPTH_TEST); //Probably don't need to enable this at this stage
 } //could probably use pointLightFBO with lightDiffuseTex and lightSpecularTex. Slight possibility may need to swap the textures as assigned above around
