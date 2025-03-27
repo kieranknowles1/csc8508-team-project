@@ -631,6 +631,9 @@ void TutorialGame::Start() {
         }
     }
 
+
+
+
     // Setup for a single player game.
     else {
         RespawnPoint* playerRespawn = Respawn::GetInstance()->GetRespawn(1);

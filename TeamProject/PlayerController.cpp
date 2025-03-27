@@ -4,6 +4,7 @@
 #include "Multiplayer/GamePackets.hpp"
 #include "Health.h"
 #include "AnimationObject.h"
+#include "Score.h"
 
 using namespace NCL;
 using namespace CSC8503;
@@ -43,6 +44,12 @@ btVector3 GetEulerAngles(btQuaternion quat) {
 
 
 void PlayerController::UpdateMovement(float dt) {
+    // Updating the scoreboard here.
+    for (PlayerObject* player : Respawn::GetAllPlayers()) {
+        scoreboard->SetScore(player->GetScoreAttrib()->GetScore(), player->GetOwner()->GetUserID());
+    }
+    scoreboard->UpdateScoreboardText();
+
     transformPlayer = rb->getWorldTransform();
     btPlayerPos = transformPlayer.getOrigin();
     GetAllDirections();
