@@ -73,6 +73,10 @@ public:
 		players.push_back(playerObj);
 	}
 
+	static std::vector<PlayerObject*> GetAllPlayers() {
+		return instance->players;
+	}
+
 private:
 	inline static Respawn* instance = nullptr;
 	std::vector<RespawnPoint*> respawnPoints;

@@ -25,11 +25,8 @@ void LaserObject::UpdateWorldState() {
     writeState->UpdateState(StateType::Normal, collisionNormal);
 }
 
-void LaserObject::UpdateFromWorldState(float dt) {
-    elapsedTickTime += dt;
-
+void LaserObject::UpdateFromWorldState(float tickProgress) {
     std::function lerp = [](float x, float y, float w) { return x + ((y - x) * w); };
-    float weight = TICK_UPDATE_RATE / fmod(elapsedTickTime, TICK_UPDATE_RATE);
 
     auto [current, currentLock] = GetWorldStates()->GetCurrentState();
     auto [read, readLock] = GetWorldStates()->GetReadState();
@@ -66,9 +63,9 @@ void LaserObject::UpdateFromWorldState(float dt) {
         btVector3 currentStartPos = std::get<btVector3>(currentStartPosValue);
         btVector3 targetStartPos = std::get<btVector3>(currentStartPosValue);
         btVector3 interpolated = btVector3(
-            lerp(currentStartPos.x(), targetStartPos.x(), weight),
-            lerp(currentStartPos.y(), targetStartPos.y(), weight),
-            lerp(currentStartPos.z(), targetStartPos.z(), weight)
+            lerp(currentStartPos.x(), targetStartPos.x(), tickProgress),
+            lerp(currentStartPos.y(), targetStartPos.y(), tickProgress),
+            lerp(currentStartPos.z(), targetStartPos.z(), tickProgress)
         );
         startPos = interpolated;
     }
@@ -78,9 +75,9 @@ void LaserObject::UpdateFromWorldState(float dt) {
         btVector3 currentEndPos = std::get<btVector3>(currentEndPosValue);
         btVector3 targetEndPos = std::get<btVector3>(currentEndPosValue);
         btVector3 interpolated = btVector3(
-            lerp(currentEndPos.x(), targetEndPos.x(), weight),
-            lerp(currentEndPos.y(), targetEndPos.y(), weight),
-            lerp(currentEndPos.z(), targetEndPos.z(), weight)
+            lerp(currentEndPos.x(), targetEndPos.x(), tickProgress),
+            lerp(currentEndPos.y(), targetEndPos.y(), tickProgress),
+            lerp(currentEndPos.z(), targetEndPos.z(), tickProgress)
         );
         endPos = interpolated;
 

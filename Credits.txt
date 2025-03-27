@@ -23,8 +23,8 @@ TODO: Credit ourselves, add in what each of us did
   Assisted in Engine Development
 
 - Max Davidson
-  ...
-  ...
+  Head of Graphics Engineering
+  
 
 - Thomas Johnson
   ...

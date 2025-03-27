@@ -24,6 +24,8 @@ namespace WorldState {
         DamageDealt,
         Health,
         ObjectID,
+        Score,
+        ScoreIncrease,
         Animation
     };
 
@@ -61,6 +63,13 @@ namespace WorldState {
                 return true;
             }
             return false;
+        }
+
+        /**
+         * If they key exists, it will remove the value from the object state.
+         */
+        void RemoveState(StateType type) {
+            m_states.erase(type);
         }
 
         /**

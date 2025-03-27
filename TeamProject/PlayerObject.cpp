@@ -4,6 +4,7 @@
 #include "Multiplayer/Server.hpp"
 #include "Health.h"
 #include "Respawn.h"
+#include "Score.h"
 
 #include <memory>
 
@@ -23,8 +24,9 @@ PlayerObject::PlayerObject() {
     attack = std::make_unique<AttackAttrib>();
     attack->SetDamageType(DamageType::CONTINUOUS);
     attack->SetDamageAmount(200.0f);
-
     attack->SetHealthAttrib(health.get());
+
+    score = std::make_unique<ScoreAttrib>(this);
 }
 
 
@@ -62,6 +64,8 @@ void PlayerObject::Update(float dt) {
 }
 
 void PlayerObject::UpdateWorldState() {
+    score->UpdateWorldState();
+    health->UpdateWorldState();
     attack->UpdateWorldState();
     GameObject::UpdateWorldState();
 
@@ -73,14 +77,13 @@ void PlayerObject::UpdateWorldState() {
     writeState->UpdateState(StateType::Animation, animationInt);
 }
 
-void PlayerObject::UpdateFromWorldState(float dt) {
-    attack->UpdateFromWorldState(dt);
-    GameObject::UpdateFromWorldState(dt);
-
-    elapsedTickTime += dt;
+void PlayerObject::UpdateFromWorldState(float tickProgress) {
+    score->UpdateFromWorldState(tickProgress);
+    attack->UpdateFromWorldState(tickProgress);
+    health->UpdateFromWorldState(tickProgress);
+    GameObject::UpdateFromWorldState(tickProgress);
 
     std::function lerp = [](float x, float y, float w) { return x + ((y - x) * w); };
-    float weight = fmod(elapsedTickTime, TICK_UPDATE_RATE) / TICK_UPDATE_RATE;
 
     auto [current, currentLock] = GetWorldStates()->GetCurrentState();
     auto [read, readLock] = GetWorldStates()->GetReadState();
@@ -107,9 +110,9 @@ void PlayerObject::UpdateFromWorldState(float dt) {
         btVector3 currentUpVector = std::get<btVector3>(currentUpVectorValue);
         btVector3 targetUpVector = std::get<btVector3>(targetUpVectorValue);
         btVector3 interpolated = btVector3(
-            lerp(currentUpVector.x(), targetUpVector.x(), weight),
-            lerp(currentUpVector.y(), targetUpVector.y(), weight),
-            lerp(currentUpVector.z(), targetUpVector.z(), weight)
+            lerp(currentUpVector.x(), targetUpVector.x(), tickProgress),
+            lerp(currentUpVector.y(), targetUpVector.y(), tickProgress),
+            lerp(currentUpVector.z(), targetUpVector.z(), tickProgress)
         );
 
         setUpDirection(interpolated);
@@ -123,15 +126,23 @@ void PlayerObject::UpdateFromWorldState(float dt) {
 std::vector<std::shared_ptr<Packet::Packet>> PlayerObject::CreatePackets(int sequenceNum) {
     std::vector<std::shared_ptr<Packet::Packet>> packets = GameObject::CreatePackets(sequenceNum);
     std::vector<std::shared_ptr<Packet::Packet>> damagePackets = attack->CreatePackets(sequenceNum);
+    std::vector<std::shared_ptr<Packet::Packet>> healthPackets = health->CreatePackets(sequenceNum);
+    std::vector<std::shared_ptr<Packet::Packet>> scorePackets = score->CreatePackets(sequenceNum);
+
     packets.insert(packets.end(), damagePackets.begin(), damagePackets.end());
+    packets.insert(packets.end(), healthPackets.begin(), healthPackets.end());
+    packets.insert(packets.end(), scorePackets.begin(), scorePackets.end());
 
     auto [read, readLock] = GetWorldStates()->GetReadState();
 
     StateValue upVector;
     StateValue animation;
+
     std::shared_lock readStateLock = read->Lock_Shared();
+
     bool hasUpVector = read->ReadState(StateType::UpVector, &upVector);
     bool hasAnimation = read->ReadState(StateType::Animation, &animation);
+
     readStateLock.unlock();
     readLock.unlock();
 
