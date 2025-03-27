@@ -101,9 +101,12 @@ void TutorialGame::UpdateGame(float dt) {
 
         float tickProgress = server->GetTickProgress();
         world->OperateOnContents([&](GameObject* obj) {
-            if (obj->GetOwner() == nullptr) return;
-            if (server->IsOwnerOf(obj)) obj->UpdateWorldState();
-            else obj->UpdateFromWorldState(dt);
+            if (!obj->IsNetworked()) return;
+
+            ServerObject* netObj = (ServerObject*)obj;
+
+            if (server->IsOwnerOf(netObj)) netObj->UpdateWorldState();
+            else netObj->UpdateFromWorldState(dt);
             });
     }
 

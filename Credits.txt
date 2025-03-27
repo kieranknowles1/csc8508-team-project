@@ -7,6 +7,7 @@ TODO: Credit ourselves, add in what each of us did
 - Ameya Ghuman
   Head of Audio Programming
   Head of UI Programming
+
 - Billy Connors
   Head of AI and Single Player Game Mode
 
@@ -15,16 +16,15 @@ TODO: Credit ourselves, add in what each of us did
   ...
 
 - Joshua Kadhim
-  ...
-  ...
+  Head of UI Design and Integration
 
 - Kieran Knowles
   Head of PS5 Support and Linux Support
   Assisted in Engine Development
 
 - Max Davidson
-  ...
-  ...
+  Head of Graphics Engineering
+  
 
 - Thomas Johnson
   Head of Networking.

@@ -3,6 +3,7 @@
 #include <LinearMath/btVector3.h>
 #include <LinearMath/btQuaternion.h>
 #include "GameObject.h"
+#include "WorldState.h"
 
 #ifdef BUILD_PRE
 
