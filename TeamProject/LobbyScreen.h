@@ -29,14 +29,39 @@ namespace NCL::CSC8503 {
 		}
 
 		void UpdateSelection() {
-			
+			if (controller->GetDigital(Controller::DigitalControl::MenuDown)) {
+				if (selection < 1) {
+					selection++;
+					int channelId = audioEngine.PlaySounds("MenuScroll.wav", Vector3(0, 0, 0), -12.0f);
+					audioEngine.SetChannelPitchMultiplier(channelId, 0.9f);
+				}
+			}
+
+			if (controller->GetDigital(Controller::DigitalControl::MenuUp)) {
+				if (selection > 0) {
+					selection--;
+					audioEngine.PlaySounds("MenuScroll.wav", Vector3(0, 0, 0), -12.0f);
+				}
+			}
 		}
 
 		PushdownResult OnUpdate(float dt, PushdownState** newState) override {
 			UpdateSelection();
 
 			if (controller->GetDigital(Controller::DigitalControl::MenuConfirm)) {
-				
+				audioEngine.PlaySounds("MenuSelect.wav", Vector3(0, 0, 0), -18.0f);
+
+				if (selection == 0) {
+					// START GAME
+					game->Start();
+					game->GetServerInstance()->ResetTick();
+					*newState = new MultiplayerGameScreen(controller, game, game->GetPlayerController());
+					return PushdownResult::Push;
+				}
+				else if (selection == 1) {
+					// CLOSE LOBBY
+					return PushdownResult::Pop;
+				}
 			}
 
 			RenderUI();
@@ -44,8 +69,39 @@ namespace NCL::CSC8503 {
 		}
 
 		void RenderUI() {
-		}
+			Debug::Print("LOBBY", Vector2(0.42f, 0.1f));
 
+			Vector2 leftStartPos = Vector2(0.3f, 0.3f);
+			Vector2 rightStartPos = Vector2(0.5f, 0.3f);
+			float verticalSpacing = 0.09f;
+
+			for (int i = 0; i < 4; ++i) {
+				std::string colorName = menuItems[i];
+				btVector4 btColor = Color::GetPlayerColor(i);
+				Vector4 textColor(btColor.x(), btColor.y(), btColor.z(), btColor.w());
+
+				Vector2 pos = leftStartPos + Vector2(0, i * verticalSpacing);
+				Debug::Print(std::to_string(i + 1) + ". " + colorName, pos, textColor);
+			}
+
+			for (int i = 4; i < 8; ++i) {
+				std::string colorName = menuItems[i];
+				btVector4 btColor = Color::GetPlayerColor(i);
+				Vector4 textColor(btColor.x(), btColor.y(), btColor.z(), btColor.w());
+
+				Vector2 pos = rightStartPos + Vector2(0, (i - 4) * verticalSpacing);
+				Debug::Print(std::to_string(i + 1) + ". " + colorName, pos, textColor);
+			}
+
+			Vector2 buttonStart = Vector2(0.35f, 0.85f);
+			Vector2 spacing = Vector2(0, 0.09f);
+
+			std::string startLabel = (selection == 0) ? "> START GAME <" : "  START GAME";
+			std::string closeLabel = (selection == 1) ? "> CLOSE LOBBY <" : "  CLOSE LOBBY";
+
+			Debug::Print(startLabel, buttonStart);
+			Debug::Print(closeLabel, buttonStart + spacing);
+		}
 	protected:
 		TutorialGame* game;
 		Controller* controller;
@@ -68,23 +124,19 @@ namespace NCL::CSC8503 {
 			colourTaken.fill(false);
 		}
 
-		void UpdateSelection() {
-			
-		}
-
 		PushdownResult OnUpdate(float dt, PushdownState** newState) override {
-			UpdateSelection();
 
             if (game->GetState() == GameState::STARTING) {
                 game->Start();
                 game->GetServerInstance()->ResetTick();
                 game->SetState(GameState::ACTIVE);
-                *newState = new GameScreen(controller, game, game->GetPlayerController());
+                *newState = new MultiplayerGameScreen(controller, game, game->GetPlayerController());
                 return PushdownResult::Push;
             }
 
 			if (controller->GetDigital(Controller::DigitalControl::MenuConfirm)) {
-
+				audioEngine.PlaySounds("MenuSelect.wav", Vector3(0, 0, 0), -18.0f);
+				return PushdownResult::Pop;
 			}
 
 			RenderUI();
@@ -92,7 +144,37 @@ namespace NCL::CSC8503 {
 		}
 
 		void RenderUI() {
-			
+			Debug::Print("LOBBY", Vector2(0.42f, 0.1f));
+
+			Vector2 leftStartPos = Vector2(0.3f, 0.3f);
+			Vector2 rightStartPos = Vector2(0.5f, 0.3f);
+			float verticalSpacing = 0.09f;
+
+			// Draw first 4 colors on the left
+			for (int i = 0; i < 4; ++i) {
+				std::string colorName = menuItems[i];
+				btVector4 btColor = Color::GetPlayerColor(i);
+				Vector4 textColor(btColor.x(), btColor.y(), btColor.z(), btColor.w());
+
+				Vector2 pos = leftStartPos + Vector2(0, i * verticalSpacing);
+				Debug::Print(std::to_string(i + 1) + ". " + colorName, pos, textColor);
+			}
+
+			// Draw next 4 colors on the right
+			for (int i = 4; i < 8; ++i) {
+				std::string colorName = menuItems[i];
+				btVector4 btColor = Color::GetPlayerColor(i);
+				Vector4 textColor(btColor.x(), btColor.y(), btColor.z(), btColor.w());
+
+				Vector2 pos = rightStartPos + Vector2(0, (i - 4) * verticalSpacing);
+				Debug::Print(std::to_string(i + 1) + ". " + colorName, pos, textColor);
+			}
+
+			Vector2 buttonStart = Vector2(0.35f, 0.85f);
+
+			std::string leaveLabel = "> LEAVE LOBBY <";
+
+			Debug::Print(leaveLabel, buttonStart);
 		}
 
 	protected:
