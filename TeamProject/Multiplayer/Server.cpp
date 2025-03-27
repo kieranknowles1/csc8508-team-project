@@ -1,6 +1,9 @@
 #include <chrono>
 #include <memory>
 
+#include "Health.h"
+#include "Score.h"
+
 #include "Server.hpp"
 #include "TutorialGame.h"
 
@@ -68,6 +71,12 @@ namespace Multiplayer {
 
         m_handlers.push_back(std::make_unique<Packet::DamagePacketHandler>());
         Packet::PacketRegister::Register(m_handlers.back().get());
+
+        m_handlers.push_back(std::make_unique<Packet::DeathPacketHandler>());
+        Packet::PacketRegister::Register(m_handlers.back().get());
+
+        m_handlers.push_back(std::make_unique<Packet::PlayerAnimationPacketHandler>());
+        Packet::PacketRegister::Register(m_handlers.back().get());
     }
 
     void Server::JoinGame(const std::string& ip, float waitSeconds) {
@@ -101,7 +110,7 @@ namespace Multiplayer {
 
     void Server::SendState(bool endOfTick) {
         if (endOfTick) return;
-        
+
         if (m_isHost && m_game->GetState() == GameState::STARTING) {
             std::shared_ptr<Packet::StartGamePacket> startGame = std::make_shared<Packet::StartGamePacket>();
             m_network->Broadcast(startGame);
@@ -112,6 +121,15 @@ namespace Multiplayer {
 
         m_game->GetWorld()->OperateOnContents([&](GameObject* object) {
             if (!object->IsNetworked()) return;
+            if (object->GetOwner() == nullptr) return;
+            if (*(object->GetOwner()) != *m_user) return;
+
+            if (object->getType() == GameObject::Type::Player) {
+                PlayerObject* player = (PlayerObject*)object;
+                player->GetAttackAttrib()->GetWorldStates()->UpdateBuffer();
+                player->GetHealthAttrib()->GetWorldStates()->UpdateBuffer();
+                player->GetScoreAttrib()->GetWorldStates()->UpdateBuffer();
+            }
 
             ServerObject* netObj = (ServerObject*)object;
 
@@ -129,8 +147,6 @@ namespace Multiplayer {
     void Server::ProcessPackets(bool endOfTick) {
         if (!endOfTick) return;
 
-        // TODO: place packets into a buffer to add a little delay before processing so that
-        // enough time has passed for all the packets to arrive.
         std::shared_ptr<Packet::Packet> currentPacket = m_network->Fetch();
         int smallestIncoming = INT32_MAX;
 
@@ -149,7 +165,7 @@ namespace Multiplayer {
             else {
                 // Drop old packets.
                 if (currentPacket->GetSequenceNumber() >= m_processTick) {
-                    m_buffer[m_tickCount % TICK_BUFFER_SIZE].push_back(currentPacket);
+                    m_buffer[currentPacket->GetSequenceNumber() % TICK_BUFFER_SIZE].push_back(currentPacket);
 
                     if (currentPacket->GetSequenceNumber() < smallestIncoming) {
                         smallestIncoming = currentPacket->GetSequenceNumber();
@@ -157,7 +173,8 @@ namespace Multiplayer {
 
                     // Pass packets on to clients.
                     if (m_isHost) {
-                        currentPacket->SetSequenceNumber(currentPacket->GetSequenceNumber());
+                        // Add 1 to sequence number as this function is called at the end of a tick.
+                        currentPacket->SetSequenceNumber(currentPacket->GetSequenceNumber() + 1);
                         m_network->Broadcast(currentPacket);
                     }
                 }
@@ -165,7 +182,6 @@ namespace Multiplayer {
                 // Moving too fast.
                 if (currentPacket->GetSequenceNumber() > m_tickCount) {
                     int diff = currentPacket->GetSequenceNumber() - m_tickCount;
-
 #ifndef NDEBUG
                     std::cout << ConsoleTextColor::YELLOW;
                     std::cout << "Someone's network is ticking faster!\n";
@@ -199,6 +215,15 @@ namespace Multiplayer {
             if (netObj->GetOwner() == nullptr) return;
             if (*(netObj->GetOwner()) == *m_user) return;
             netObj->GetWorldStates()->UpdateBuffer();
+            if (object->GetOwner() == nullptr) return;
+            if (*(object->GetOwner()) == *m_user) return;
+
+            if (object->getType() == GameObject::Type::Player) {
+                PlayerObject* player = (PlayerObject*)object;
+                player->GetAttackAttrib()->GetWorldStates()->UpdateBuffer();
+                player->GetHealthAttrib()->GetWorldStates()->UpdateBuffer();
+                player->GetScoreAttrib()->GetWorldStates()->UpdateBuffer();
+            }
             });
 
         m_tickCount++;

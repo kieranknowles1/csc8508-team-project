@@ -36,7 +36,9 @@ namespace Packet {
         DAMAGE = CUSTOM_TYPE + 7,
         LASER = CUSTOM_TYPE + 8,
         PING = CUSTOM_TYPE + 9,
-        PONG = CUSTOM_TYPE + 10
+        PONG = CUSTOM_TYPE + 10,
+        DEATH = CUSTOM_TYPE + 11,
+        PLAYER_ANIMATION = CUSTOM_TYPE + 12
     };
 
 
@@ -186,6 +188,22 @@ namespace Packet {
         btVector3 m_upDirection;
     };
 
+    class PlayerAnimationPacket : public Packet {
+    public:
+        PlayerAnimationPacket(int objectID, const int& animation, uint32_t sequenceNum) :
+            Packet(static_cast<Type>(PacketType::PLAYER_ANIMATION), static_cast<int>(Channel::FREQUENT), sequenceNum),
+            m_objectID(objectID), m_animation(animation)
+        {
+        }
+
+        int GetTargetID() const { return m_objectID; }
+        int GetAnimation() const { return m_animation; }
+
+    private:
+        int m_objectID;
+        int m_animation;
+    };
+
     /**
      * @brief A simple packet to be broadcast to all players simultaneously to
      * start the game.
@@ -269,5 +287,24 @@ namespace Packet {
             Packet(static_cast<Type>(PacketType::PONG), static_cast<uint8_t>(Channel::RELIABLE), 0)
         {}
     };
+    
+    
+    /**
+     * @brief Score packet for updating scores for players.
+     */
+    class DeathPacket : public Packet {
+    public:
+        DeathPacket(int objectID, float scoreIncrease, int sequenceNum) :
+            Packet(static_cast<Type>(PacketType::DEATH), static_cast<uint8_t>(Channel::UNSEQUENCED), sequenceNum),
+            m_objectID(objectID), m_scoreIncrease(scoreIncrease)
+        {}
+
+        int GetObjectID() const { return m_objectID; }
+        float GetScoreIncrease() const { return m_scoreIncrease; }
+
+    private:
+        int m_objectID;
+        float m_scoreIncrease;
+    };     
 }
 

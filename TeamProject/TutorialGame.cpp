@@ -14,6 +14,7 @@
 #include "Shoot.h"
 #include "Health.h"
 #include "MeshAnimation.h" //temporarily added for testing
+#include "Score.h"
 
 #include "Window.h"
 #include "Config.h"
@@ -142,11 +143,11 @@ void TutorialGame::UpdateGame(float dt) {
     renderer->SetVignettePulse(pulse);
 
     renderer->SetDelta(dt);
-
 }
 
 void TutorialGame::UpdatePlayer(float dt, bool camOnly) {
     if (player->GetHealthAttrib()->GetHealthState() == AliveState::DEAD) {
+        player->GetHealthAttrib()->AddDeath();
         Respawn* instance = Respawn::GetInstance();
         RespawnPoint* respawn;
 
@@ -161,6 +162,12 @@ void TutorialGame::UpdatePlayer(float dt, bool camOnly) {
 
         player->setCollided(0);
         player->GetHealthAttrib()->Respawn();
+    }
+
+    // Display Score if networked.
+    if (server != nullptr) {
+        std::string scoreString = "Score: " + std::to_string(static_cast<int>(player->GetScoreAttrib()->GetScore()));
+        Debug::Print(scoreString, { 0.05, 0.1 });
     }
 
     // Press F for freeCam, press G for thirdPerson
@@ -454,7 +461,7 @@ PlayerObject* TutorialGame::AddPlayerCapsuleToWorld(const Vector3& position, flo
 
     // Setting the transform properties for the capsule
     player->setInitialPosition(position);
-    player->setRenderScale(mainPlayer ? Vector3(0,0,0) : Vector3(radius * 2, height, radius * 2));
+    player->setRenderScale(mainPlayer ? Vector3(0,0,0) : Vector3(radius * 3.0f, height*1.1f, radius * 3.0f));
 
     // Creating a Bullet collision shape for the capsule
     btCollisionShape* playerShape = new btCapsuleShape(radius, height);
@@ -589,9 +596,10 @@ bool TutorialGame::StartMultiplayerGame(bool isHost) {
     server->Start();
 
     if (!isHost) {
-        server->JoinGame("127.0.0.1", 1.0f);
-        //std::string host = config.get<std::string>("defaultHost");
-        //server->JoinGame(host.c_str(), 1.0f);
+        //server->JoinGame("127.0.0.1", 1.0f);
+        std::string host = config.get<std::string>("defaultHost");
+        server->JoinGame(host.c_str(), 1.0f);
+       
     }
     return server->IsConnected();
 }

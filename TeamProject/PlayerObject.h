@@ -22,6 +22,7 @@
 namespace NCL::CSC8503 {
 	class HealthAttrib;
 	class AttackAttrib;
+	class ScoreAttrib;
 
 	const float PLAYER_HEALTH = 100.0f;
 
@@ -154,6 +155,7 @@ namespace NCL::CSC8503 {
 
 		HealthAttrib* GetHealthAttrib() { return health.get(); }
 		AttackAttrib* GetAttackAttrib() { return attack.get(); }
+		ScoreAttrib* GetScoreAttrib() { return score.get(); }
 
 	private:
 		//Player Variables
@@ -197,6 +199,6 @@ namespace NCL::CSC8503 {
 
 		std::unique_ptr<HealthAttrib> health;
 		std::unique_ptr<AttackAttrib> attack;
-
+		std::unique_ptr<ScoreAttrib> score;
 	};
 }

@@ -21,6 +21,8 @@ set(SOURCES
     
     EndScreenMP.cpp
     EndScreenMP.h
+    EndScreenSP.cpp
+    EndScreenSP.h
 
     GameScreen.h
     GameTechRendererInterface.cpp
@@ -69,6 +71,8 @@ set(SOURCES
     Profiler.cpp
     Profiler.h
 
+    Score.h
+    Score.cpp
     Scoreboard.cpp
     Scoreboard.h
     Shoot.cpp

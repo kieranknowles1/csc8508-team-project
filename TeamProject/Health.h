@@ -59,6 +59,11 @@ namespace NCL::CSC8503 {
             lastSpawn = elapsed;
         }
 
+        inline void AddDeath() { deaths++; lastKilledBy = lastHitBy; }
+        inline void SetLastHitBy(GameObject* hitBy) { lastHitBy = hitBy; }
+
+        inline int DeathCount() { return deaths; }
+
         AliveState GetHealthState() { return currentHealth == 0 ? AliveState::DEAD : AliveState::ALIVE; }
         GameObject* GetParent() { return parent; }
 
@@ -71,6 +76,11 @@ namespace NCL::CSC8503 {
         float regenRate = 0;
         float regenDelay = 0;
         float invulnerableWindow = 0;
+
+        int deaths = 0;
+        int lastRecordedDeaths = 0;
+        GameObject* lastKilledBy = nullptr;
+        GameObject* lastHitBy = nullptr;
 
         float elapsed = 0;
         float lastHit = 0;
