@@ -133,23 +133,6 @@ namespace NCL::CSC8503 {
 		void SetDelta(float dt) {
 			delta = dt;
 		}
-
-		/*
-		int GetCurrentFrame() const {
-			return currentFrame;
-		}
-
-		void SetCurrentFrame(int value) {
-			currentFrame = value;
-		}
-
-		float GetFrameTime() const {
-			return frameTime;
-		}
-
-		void SetFrameTime(float value) {
-			frameTime = value;
-		}*/
 	
 		void ClearUIElemets() {
 			uiElements.clear();
@@ -175,9 +158,6 @@ namespace NCL::CSC8503 {
 		std::vector<LaserObject*> lasers;
 		DecalSystem decalSystem;
 
-		//Mesh Animation additions:
-		//int currentFrame = 0;
-		//float frameTime = 0.0f;
 	};
 }
 
