@@ -1,119 +1,324 @@
 #pragma once
 
-#include "GameScreen.h"
 #include "PushdownState.h"
+#include "TutorialGame.h"
+#include <CSC8503CoreClasses/Debug.h>
+#include <NCLCoreClasses/Window.h>
+#include "Colors.h"
+#include <vector>
+#include <unordered_map>
+#include "AudioEngine.h"
 #include "Multiplayer/Server.hpp"
 
-namespace NCL {
-    namespace CSC8503 {
-        enum class HostLobbyItems : uint8_t {
-            StartGame,
-            CloseLobby
-        };
+namespace NCL::CSC8503 {
 
-        enum class ClientLobbyItems : uint8_t {
-            LeaveLobby
-        };
+	enum class HostLobbyItems : uint8_t {
+		StartGame,
+		CloseLobby
+	};
+
+	enum class ClientLobbyItems : uint8_t {
+		LeaveLobby
+	};
 
 
-        class HostLobbyScreen : public PushdownState {
-        public:
-            HostLobbyScreen(Controller* controller, TutorialGame* game) : controller(controller), game(game) {}
+	class HostLobbyScreen : public PushdownState {
+	public: 
+		HostLobbyScreen(Controller* controller, TutorialGame* game) : controller(controller), game(game), selection(0), playerList(8, "Empty") {
+			colourTaken.fill(false);
+		}
 
-            void UpdateSelection() {
-                if (controller->GetDigital(Controller::DigitalControl::MenuDown)) {
-                    selection = std::min((uint8_t)menuItems.size() - 1, selection + 1);
-                }
-                if (controller->GetDigital(Controller::DigitalControl::MenuUp)) {
-                    selection = std::max(0, selection - 1);
-                }
-            }
+		void UpdateSelection() {
+			if (controller->GetDigital(Controller::DigitalControl::MenuDown)) {
+				if (selection < 1) {
+					selection++;
+					int channelId = audioEngine.PlaySounds("MenuScroll.wav", Vector3(0, 0, 0), -12.0f);
+					audioEngine.SetChannelPitchMultiplier(channelId, 0.9f);
+				}
+			}
 
-            PushdownResult OnUpdate(float dt, PushdownState** newState) override {
-                UpdateSelection();
+			if (controller->GetDigital(Controller::DigitalControl::MenuUp)) {
+				if (selection > 0) {
+					selection--;
+					audioEngine.PlaySounds("MenuScroll.wav", Vector3(0, 0, 0), -12.0f);
+				}
+			}
+		}
 
-                if (controller->GetDigital(Controller::DigitalControl::MenuConfirm)) {
-                    switch (selection) {
-                    case (uint8_t) HostLobbyItems::StartGame:
-                        game->Start();
-                        game->GetServerInstance()->ResetTick();
-                        *newState = new GameScreen(controller, game);
-                        return PushdownResult::Push;
-                    case (uint8_t) HostLobbyItems::CloseLobby:
-                        // TODO: Close Server Packet.
-                        return PushdownResult::Pop;
-                    }
-                }
-                Render();
-                return PushdownResult::NoChange;
-            }
+		PushdownResult OnUpdate(float dt, PushdownState** newState) override {
+			UpdateSelection();
 
-            void Render() {
-                for (int i = 0; i < menuItems.size(); i++) {
-                    const std::string& item = menuItems[i];
-                    std::string render = i == selection ? "> " + item + " <" : "  " + item;
+			if (controller->GetDigital(Controller::DigitalControl::MenuConfirm)) {
+				audioEngine.PlaySounds("MenuSelect.wav", Vector3(0, 0, 0), -18.0f);
 
-                    Debug::Print(render, Vector2(0.35f, 0.32f + (0.1f * i)));
-                }
-            }
+				if (selection == 0) {
+					// START GAME
+					game->Start();
+					game->GetServerInstance()->ResetTick();
+					*newState = new MultiplayerGameScreen(controller, game, game->GetPlayerController());
+					return PushdownResult::Push;
+				}
+				else if (selection == 1) {
+					// CLOSE LOBBY
+					return PushdownResult::Pop;
+				}
 
-        private:
-            std::array<std::string, 2> menuItems = { "Start Game", "Close Lobby" };
-            uint8_t selection = 0;
-            TutorialGame* game;
-            Controller* controller;
-        };
-        
-        
-        class ClientLobbyScreen : public PushdownState {
-        public:
-            ClientLobbyScreen(Controller* controller, TutorialGame* game) : controller(controller), game(game) {}
-
-            void UpdateSelection() {
-                if (controller->GetDigital(Controller::DigitalControl::MenuDown)) {
-                    selection = std::min((uint8_t)menuItems.size() - 1, selection + 1);
-                }
-                if (controller->GetDigital(Controller::DigitalControl::MenuUp)) {
-                    selection = std::max(0, selection - 1);
-                }
-            }
-
-            PushdownResult OnUpdate(float dt, PushdownState** newState) override {
-                UpdateSelection();
-
-                if (game->GetState() == GameState::STARTING) {
+				else if (selection == 9) {  // Start Button (only host can press)
+					//TODO: Let me know if this sound cuts off abruptly
+					audioEngine.PlaySounds("MenuSelect.wav", Vector3(0, 0, 0), -18.0f);
                     game->Start();
                     game->GetServerInstance()->ResetTick();
-                    game->SetState(GameState::ACTIVE);
-                    *newState = new GameScreen(controller, game);
+                    *newState = new MultiplayerGameScreen(controller, game, game->GetPlayerController());
                     return PushdownResult::Push;
-                }
+				}
 
-                if (controller->GetDigital(Controller::DigitalControl::MenuConfirm)) {
-                    switch (selection) {
-                    case (uint8_t) ClientLobbyItems::LeaveLobby:
-                        // TODO: Close Server Packet.
-                        return PushdownResult::Pop;
-                    }
-                }
-                Render();
-                return PushdownResult::NoChange;
+			}
+
+			RenderUI();
+			return PushdownResult::NoChange;
+		}
+
+		void RenderUI() {
+			Debug::Print("LOBBY", Vector2(0.42f, 0.1f));
+
+			Vector2 leftStartPos = Vector2(0.3f, 0.3f);
+			Vector2 rightStartPos = Vector2(0.5f, 0.3f);
+			float verticalSpacing = 0.09f;
+
+			for (int i = 0; i < 4; ++i) {
+				std::string colorName = menuItems[i];
+				btVector4 btColor = Color::GetPlayerColor(i);
+				Vector4 textColor(btColor.x(), btColor.y(), btColor.z(), btColor.w());
+
+				Vector2 pos = leftStartPos + Vector2(0, i * verticalSpacing);
+				Debug::Print(std::to_string(i + 1) + ". " + colorName, pos, textColor);
+			}
+
+			for (int i = 4; i < 8; ++i) {
+				std::string colorName = menuItems[i];
+				btVector4 btColor = Color::GetPlayerColor(i);
+				Vector4 textColor(btColor.x(), btColor.y(), btColor.z(), btColor.w());
+
+				Vector2 pos = rightStartPos + Vector2(0, (i - 4) * verticalSpacing);
+				Debug::Print(std::to_string(i + 1) + ". " + colorName, pos, textColor);
+			}
+
+			Vector2 buttonStart = Vector2(0.35f, 0.85f);
+			Vector2 spacing = Vector2(0, 0.09f);
+
+			std::string startLabel = (selection == 0) ? "> START GAME <" : "  START GAME";
+			std::string closeLabel = (selection == 1) ? "> CLOSE LOBBY <" : "  CLOSE LOBBY";
+
+			Debug::Print(startLabel, buttonStart);
+			Debug::Print(closeLabel, buttonStart + spacing);
+		}
+	protected:
+		TutorialGame* game;
+		Controller* controller;
+		size_t selection;
+		GameTechRendererInterface* renderer;
+		const std::array<std::string, 10> menuItems = { "Red", "Orange", "Blue", "Green", "Purple", "Pink", "Yellow", "Cyan", "Leave", "Start" };
+
+		std::unordered_map<int, bool> assignedColors;
+		std::vector<std::string> playerList;
+		std::array<bool, 8> colourTaken;
+
+		void AssignColour(int colourIndex);
+		void StartGame(PushdownState** newState);
+	};
+
+
+	class ClientLobbyScreen : public PushdownState {
+	public:
+		ClientLobbyScreen(Controller* controller, TutorialGame* game) : controller(controller), game(game), selection(0), playerList(8, "Empty") {
+			colourTaken.fill(false);
+		}
+
+		PushdownResult OnUpdate(float dt, PushdownState** newState) override {
+
+            if (game->GetState() == GameState::STARTING) {
+                game->Start();
+                game->GetServerInstance()->ResetTick();
+                game->SetState(GameState::ACTIVE);
+                *newState = new MultiplayerGameScreen(controller, game, game->GetPlayerController());
+                return PushdownResult::Push;
             }
 
-            void Render() {
-                for (int i = 0; i < menuItems.size(); i++) {
-                    const std::string& item = menuItems[i];
-                    std::string render = i == selection ? "> " + item + " <" : "  " + item;
+			if (controller->GetDigital(Controller::DigitalControl::MenuConfirm)) {
+				audioEngine.PlaySounds("MenuSelect.wav", Vector3(0, 0, 0), -18.0f);
+				return PushdownResult::Pop;
+			}
 
-                    Debug::Print(render, Vector2(0.35f, 0.32f + (0.1f * i)));
-                }
-            }
+			RenderUI();
+			return PushdownResult::NoChange;
+		}
 
-        private:
-            std::array<std::string, 1> menuItems = { "Leave Lobby" };
-            uint8_t selection = 0;
-            TutorialGame* game;
-            Controller* controller;
-        };
-    }
+		void RenderUI() {
+			Debug::Print("LOBBY", Vector2(0.42f, 0.1f));
+
+			Vector2 leftStartPos = Vector2(0.3f, 0.3f);
+			Vector2 rightStartPos = Vector2(0.5f, 0.3f);
+			float verticalSpacing = 0.09f;
+
+			// Draw first 4 colors on the left
+			for (int i = 0; i < 4; ++i) {
+				std::string colorName = menuItems[i];
+				btVector4 btColor = Color::GetPlayerColor(i);
+				Vector4 textColor(btColor.x(), btColor.y(), btColor.z(), btColor.w());
+
+				Vector2 pos = leftStartPos + Vector2(0, i * verticalSpacing);
+				Debug::Print(std::to_string(i + 1) + ". " + colorName, pos, textColor);
+			}
+
+			// Draw next 4 colors on the right
+			for (int i = 4; i < 8; ++i) {
+				std::string colorName = menuItems[i];
+				btVector4 btColor = Color::GetPlayerColor(i);
+				Vector4 textColor(btColor.x(), btColor.y(), btColor.z(), btColor.w());
+
+				Vector2 pos = rightStartPos + Vector2(0, (i - 4) * verticalSpacing);
+				Debug::Print(std::to_string(i + 1) + ". " + colorName, pos, textColor);
+			}
+
+			Vector2 buttonStart = Vector2(0.35f, 0.85f);
+
+			std::string leaveLabel = "> LEAVE LOBBY <";
+
+			Debug::Print(leaveLabel, buttonStart);
+		}
+
+	protected:
+		TutorialGame* game;
+		Controller* controller;
+		size_t selection;
+		GameTechRendererInterface* renderer;
+		const std::array<std::string, 9> menuItems = { "Red", "Orange", "Blue", "Green", "Purple", "Pink", "Yellow", "Cyan", "Leave"};
+
+		std::unordered_map<int, bool> assignedColors;
+		std::vector<std::string> playerList;
+		std::array<bool, 8> colourTaken;
+
+		void AssignColour(int colourIndex);
+		void StartGame(PushdownState** newState);
+
+
+	};
+
+
+	class LobbyScreen : public PushdownState {
+	public:
+		LobbyScreen(Controller* controller, TutorialGame* game, bool isHost) : controller(controller), game(game), isHost(isHost), selection(0), playerList(8, "Empty") {
+
+			//Initialize colour slots as available
+			//for (int i = 0; i < 8; i++) {
+			//	assignedColors[i] = false;
+			//}
+			colourTaken.fill(false);
+
+		}
+
+		PushdownResult OnUpdate(float dt, PushdownState** newState) override {
+			//const std::array<std::string, 10> menuItems = { "Red", "Orange", "Green", "Purple", "Yellow", "Blue", "Pink", "Cyan", "Leave", "Start" };
+
+			if (controller->GetDigital(Controller::DigitalControl::MenuDown)) {
+				size_t startSelection = selection;
+				do {
+					selection = std::min(menuItems.size() - 1, selection + 1);
+				} while (selection < 8 && colourTaken[selection] && selection != startSelection); // Skip taken colours
+			}
+
+			if (controller->GetDigital(Controller::DigitalControl::MenuUp)) {
+				size_t startSelection = selection;
+				do {
+					selection = selection > 0 ? selection - 1 : selection;
+				} while (selection < 8 && colourTaken[selection] && selection != startSelection); // Skip taken colours
+			}
+
+			//Old colour menu scrolling
+			/*if (controller->GetDigital(Controller::DigitalControl::MenuDown)) {
+				selection = std::min(menuItems.size() - 1, selection + 1);
+			}
+			if (controller->GetDigital(Controller::DigitalControl::MenuUp)) {
+				selection = std::max(size_t(0), selection - 1);
+			}*/
+
+			if (controller->GetDigital(Controller::DigitalControl::MenuConfirm)) {
+				if (selection < 8) {  // If a colour is selected
+					if (!colourTaken[selection]) {
+						colourTaken[selection] = true;
+						for (auto& player : playerList) {
+							if (player == "Empty") {
+								player = menuItems[selection]; // Assign colour to first empty slot
+								break;
+							}
+						}
+					}
+				}
+				else if (selection == 8) {  // Leave Button
+					return PushdownResult::Pop;
+				}
+				else if (selection == 9 && isHost) {  // Start Button (only host can press)
+					game->Start();
+					*newState = new GameScreen(controller, game, game->GetPlayerController());
+					return PushdownResult::Push;
+				}
+			}
+
+			RenderUI();
+			return PushdownResult::NoChange;
+		}
+
+		void RenderUI() {
+			Vector2 basePos = Vector2(0.01f, 0.2f);
+			Vector2 listPos = Vector2(0.8f, 0.2f);
+
+			Debug::Print("Select your colour!", Vector2(0.3f, 0.1f));
+
+			// Render Colour Options
+			for (size_t i = 0; i < 10; i++) {
+				std::string currentItem = (i == selection) ? "> " + std::to_string(i + 1) + ". " + (i < 8 && colourTaken[i] ? "Taken" : menuItems[i]) + " <"
+					: "  " + std::to_string(i + 1) + ". " + (i < 8 && colourTaken[i] ? "" : menuItems[i]);
+
+				//Leave button
+				if (i == 8) {
+					currentItem = (i == selection) ? "> LEAVE <" : "  LEAVE";
+					Debug::Print(currentItem, basePos + Vector2(0, 0.07f * i));
+					continue;
+				}
+
+				//Start button
+				if (i == 9) {
+					currentItem = (i == selection) ? "> START GAME <" : "  START GAME";
+					Debug::Print(currentItem, basePos + Vector2(0.35f, 0.08f * i));
+					continue;
+				}
+
+				btVector4 btColour = Color::GetPlayerColor(i + 1);
+				Vector4 textColour(btColour.x(), btColour.y(), btColour.z(), btColour.w());
+				Debug::Print(currentItem, basePos + Vector2(0, 0.06f * i), textColour);
+			}
+
+			// Render Player List
+			Debug::Print("PLAYERS", listPos);
+			for (size_t i = 0; i < playerList.size(); i++) {
+				Debug::Print(std::to_string(i + 1) + ". " + playerList[i], listPos + Vector2(0, 0.05f * (i + 1)));
+			}
+		}
+
+	protected:
+		TutorialGame* game;
+		Controller* controller;
+		bool isHost;
+		size_t selection;
+		GameTechRendererInterface* renderer;
+		const std::array<std::string, 10> menuItems = { "Red", "Orange", "Blue", "Green", "Purple", "Pink", "Yellow", "Cyan", "Leave", "Start" };
+
+		std::unordered_map<int, bool> assignedColors;
+		std::vector<std::string> playerList;
+		std::array<bool, 8> colourTaken;
+
+		void AssignColour(int colourIndex);
+		void StartGame(PushdownState** newState);
+		//void RenderUI();
+	};
 }

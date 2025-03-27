@@ -36,6 +36,24 @@ namespace NCL::CSC8503 {
 		Maths::Vector2 position;
 		std::string text;
 		Maths::Vector4 color;
+		float scale = 1.0f;
+	};
+
+	struct UIBox {
+		Maths::Vector2 position;
+		Maths::Vector2 size;
+	};
+
+	struct Button {
+		Maths::Vector2 position;
+		Maths::Vector2 size;
+		Maths::Vector4 color;
+	};
+
+	struct Text {
+		Maths::Vector2 position;
+		std::string text;
+		Maths::Vector4 color = Maths::Vector4(1, 1, 1, 1);
 	};
 
     class UiElement {
@@ -115,34 +133,17 @@ namespace NCL::CSC8503 {
 		void SetDelta(float dt) {
 			delta = dt;
 		}
-
-		void TrackLaser(LaserObject* laser) {
-			lasers.insert(laser);
-		}
-
-		void UntrackLaser(LaserObject* laser) {
-			lasers.erase(laser);
-		}
-
-        /*
-		int GetCurrentFrame() const {
-			return currentFrame;
-		}
-
-		void SetCurrentFrame(int value) {
-			currentFrame = value;
-		}
-
-		float GetFrameTime() const {
-			return frameTime;
-		}
-
-		void SetFrameTime(float value) {
-			frameTime = value;
-		}*/
 	
 		void ClearUIElemets() {
 			uiElements.clear();
+		}
+
+		bool GetBloomOn() const {
+			return bloomOn;
+		}
+
+		void SetBloomOn(bool toggle) {
+			bloomOn = toggle;
 		}
 
 	protected:
@@ -156,18 +157,16 @@ namespace NCL::CSC8503 {
 		float delta = 0;
 		Window* window;
 		Camera* camera = nullptr;
+		bool bloomOn = true;
 
 		std::vector<RenderObject*> frameObjects;
         std::vector<UiSprite> frameSprites;
 		std::vector<UiText> frameTexts;
 		std::vector<PointLight*> lights;
 
-		std::set<LaserObject*, LaserComparator> lasers;
+		std::vector<LaserObject*> lasers;
 		DecalSystem decalSystem;
 
-		//Mesh Animation additions:
-		//int currentFrame = 0;
-		//float frameTime = 0.0f;
 	};
 }
 

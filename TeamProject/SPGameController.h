@@ -23,6 +23,7 @@ namespace NCL {
 		public:
 			SPGameController(PlayerObject* p, TutorialGame* g, GameTechRendererInterface* r);
             void Update(float dt);
+            int getScore() { return score; }
             //void AddIDToPool(int i) { laserIDs.push_back(i); }
 		private:
 			PlayerObject* player;

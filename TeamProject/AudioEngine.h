@@ -1,6 +1,7 @@
 #pragma once
 
 //Link of tutorial followed https://codyclaborn.me/tutorials/making-a-basic-fmod-audio-engine-in-c/#implementation-source
+//With some custom functions written by Ameya
 
 #ifndef _AUDIO_ENGINE_H_
 #define _AUDIO_ENGINE_H_
@@ -80,16 +81,29 @@ public:
 	int PlaySounds(const std::string& strSoundName, const NCL::Maths::Vector3& vPos = NCL::Maths::Vector3{ 0, 0, 0 }, float fVolumedB = 0.0f);
 	void PlayEvent(const std::string& strEventName);
 	void StopChannel(int nChannelId);
+	std::string GetSoundNameByChannel(int nChannelId);
 	void StopEvent(const std::string& strEventName, bool bImmediate = false);
 	void GetEventParameter(const std::string& strEventName, const std::string& strEventParameter, float* parameter);
 	void SetEventParameter(const std::string& strEventName, const std::string& strParameterName, float fValue);
 	void StopAllChannels();
+	void StopAllNonUISounds();
 	void SetChannel3dPosition(int nChannelId, const NCL::Maths::Vector3& vPosition);
+	void SetChannelPlaybackPosition(int channelId, unsigned int positionMs);
 	void SetChannelVolume(int nChannelId, float fVolumedB);
+	void SetChannelFrequencyHz(int channelId, float frequency);
+	void SetChannelPitchMultiplier(int channelId, float multiplier);
+	void SetChannelPitchRandom(int channelId, float minPitchScale, float maxPitchScale);
+	void SetChannelPitch(int channelId, float pitch);
+	void DuckVolume(float duckDb, float durationSec);
 	bool IsPlaying(int nChannelId) const;
+	bool isPlayingByString(const std::string& soundName);
+	bool IsAnySoundPlaying() const;
 	bool IsEventPlaying(const std::string& strEventName) const;
 	float dbToVolume(float dB);
 	float VolumeTodB(float volume);
+	void SetChannelPaused(int channelId, bool paused);
+	void SetChannelVolumeRamp(int channelId, bool enable);
+	void SetChannelMute(int channelId, bool mute);
 	static FMOD_VECTOR VectorToFmod(const NCL::Maths::Vector3& vPosition);
 };
 

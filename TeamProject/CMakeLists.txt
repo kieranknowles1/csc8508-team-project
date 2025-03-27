@@ -18,9 +18,11 @@ set(SOURCES
 
     DecalSystem.cpp
     DecalSystem.h
-    
+
     EndScreenMP.cpp
     EndScreenMP.h
+    EndScreenSP.cpp
+    EndScreenSP.h
 
     GameScreen.h
     GameTechRendererInterface.cpp
@@ -35,6 +37,7 @@ set(SOURCES
     LevelImporter.h
     LobbyScreen.h
 
+    MainMenuScreen.cpp
     MainMenuScreen.h
     Material.cpp
     Material.h
@@ -69,6 +72,8 @@ set(SOURCES
     Profiler.cpp
     Profiler.h
 
+    Score.h
+    Score.cpp
     Scoreboard.cpp
     Scoreboard.h
     Shoot.cpp
@@ -82,7 +87,7 @@ set(SOURCES
     TutorialGame.h
 
     Wanderer.cpp
-    Wanderer.h	
+    Wanderer.h
 
     main.cpp
 )
@@ -103,6 +108,8 @@ else()
     file(GLOB_RECURSE SHADERS
         "${ASSET_ROOT}/Shaders/*.frag"
         "${ASSET_ROOT}/Shaders/*.vert"
+        "${ASSET_ROOT}/Shaders/*.glsl"
+        "${ASSET_ROOT}/Shaders/*.h"
     )
 endif()
 file(GLOB_RECURSE TEXTURES
@@ -166,8 +173,16 @@ target_precompile_headers(${PROJECT_NAME} PRIVATE
 
 set_target_properties(${PROJECT_NAME} PROPERTIES
     INTERPROCEDURAL_OPTIMIZATION_RELEASE "TRUE"
-	VS_DEBUGGER_WORKING_DIRECTORY "$(SolutionDir)"
 )
+
+if(CMAKE_SYSTEM_NAME MATCHES "Linux")
+    set_target_properties(${PROJECT_NAME} PROPERTIES
+        BUILD_WITH_INSTALL_RPATH TRUE
+        BUILD_RPATH "$ORIGIN"
+        INSTALL_RPATH "$ORIGIN"
+    )
+endif()
+
 ################################################################################
 # Dependencies
 ################################################################################
@@ -247,7 +262,7 @@ if(PS5_BUILD)
     endforeach()
 endif()
 
-include_directories(${COMPILE_ASSET_ROOT})
+include_directories(${ASSET_ROOT})
 
 if(WIN32)
     set_target_properties(${PROJECT_NAME} PROPERTIES

@@ -46,12 +46,9 @@ include(copy_assets)
 ################################################################################
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
-set(COMPILE_ASSET_ROOT "${CMAKE_SOURCE_DIR}/Assets/" CACHE STRING "")
+set(ASSET_ROOT "Assets/" CACHE STRING "")
 
-set(DEBUG_ASSET_ROOT "${CMAKE_SOURCE_DIR}/Assets/" CACHE STRING "")
-set(RELEASE_ASSET_ROOT "${CMAKE_SOURCE_DIR}/Assets/" CACHE STRING "")
-
-add_compile_definitions(ASSETROOTLOCATION="${DEBUG_ASSET_ROOT}")
+add_compile_definitions(ASSETROOTLOCATION="${ASSET_ROOT}")
 
 if(MSVC)
     add_compile_definitions("NOMINMAX")

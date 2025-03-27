@@ -8,29 +8,22 @@
 #include "PhysicsObject.h"
 #include "btBulletDynamicsCommon.h"
 #include "CollisionInfo.h"
-#include "../TeamProject/PointLight.h"
+#include "AliveState.h"
 #include "../TeamProject/Multiplayer/User.hpp"
-#include "WorldState.h"
-#include "StateUpdater.h"
+#include "../TeamProject/PointLight.h"
 
 namespace Packet {
     class Packet;
 }
 
 namespace NCL::CSC8503 {
-
-    enum class ObjectState {
-        DEAD,
-        ALIVE
-    };
-
     class NetworkObject;
     class RenderObject;
     class PhysicsObject;
 
     const float TICK_UPDATE_RATE = 1.0f / 60.0f;
 
-	class GameObject : public StateUpdater {
+	class GameObject {
 	public:
 		enum class Type { // Contact Alex if you are adding to this - need to update level importer to line up correctly
 			Default,
@@ -48,7 +41,8 @@ namespace NCL::CSC8503 {
 			JumpRoom,
 			JumpRoomFloor,
 			ZigZag,
-            Gun
+            Gun,
+            Laser
 		};
 
         GameObject(const std::string& name = "");
@@ -82,7 +76,7 @@ namespace NCL::CSC8503 {
             return name;
         }
 
-        void SetName( const std::string& nameIn)  {
+        void SetName(const std::string& nameIn)  {
             name = nameIn;
         }
 
@@ -103,13 +97,8 @@ namespace NCL::CSC8503 {
             //std::cout << "OnCollisionStay: " << this->GetWorldID() << " is still colliding with " << otherObject->GetWorldID() << std::endl;
         }
 
-        virtual void UpdateWorldState() override;
-        virtual void UpdateFromWorldState(float dt) override;
-        virtual std::vector<std::shared_ptr<Packet::Packet>> CreatePackets(int sequenceNum) override;
-
         virtual void Update(float dt) {//could do the updating for animations in here maybe
         }
-
 
         void SetWorldID(int newID) {
             worldID = newID;
@@ -187,10 +176,10 @@ namespace NCL::CSC8503 {
         void setDeleted() { deleted = true; }
         bool isDeleted() const { return deleted; }
 
-        void SetState(ObjectState newState) { state = newState; }
-        ObjectState GetState() const { return state; }
-		bool GetIsAnimated() { return animated; }
-		void SetIsAnimated(bool a) { animated = a; }
+        void SetState(AliveState newState) { state = newState; }
+        AliveState GetState() const { return state; }
+
+        bool IsNetworked() { return isNetworked; }
 
 	protected:
 		PhysicsObject*		physicsObject;
@@ -203,7 +192,6 @@ namespace NCL::CSC8503 {
         btQuaternion initialRotation = btQuaternion(0, 0, 0);
 		bool		isActive;
 		bool paintball = false;
-		bool animated = false;
         bool deleted = false;
 
 		int			worldID;
@@ -214,16 +202,15 @@ namespace NCL::CSC8503 {
 
         PointLight* light = nullptr;
         Lobbies::User* owner = nullptr;
+        bool isNetworked = false;
 
-        std::unique_ptr<WorldState::StateBuffer> states;
-        std::shared_mutex tickMutex;
         int currentTick = 0;
         int lastTick = 0;
-	    
+
         float elapsedTime = 0;
 
 		float jumpPadStrength = 0.0f;
 
-        ObjectState state;
+        AliveState state;
 	};
 }

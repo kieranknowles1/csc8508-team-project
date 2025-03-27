@@ -4,6 +4,8 @@
 #include "Multiplayer/Server.hpp"
 #include "Health.h"
 #include "Respawn.h"
+#include "WorldState.h"
+#include "Score.h"
 
 #include <memory>
 
@@ -16,20 +18,23 @@ PlayerObject::PlayerObject() {
     health = std::make_unique<HealthAttrib>(this);
     health->SetMaxHealth(PLAYER_HEALTH);
     health->SetCurrentHealth(PLAYER_HEALTH);
-    health->SetRegenerationDelay(2.0f);
-    health->SetRegenerationRate(50.0f);
+    health->SetRegenerationDelay(4.0f);
+    health->SetRegenerationRate(25.0f);
     health->SetInvulnerableWindow(1.0f);
 
     attack = std::make_unique<AttackAttrib>();
     attack->SetDamageType(DamageType::CONTINUOUS);
-    attack->SetDamageAmount(150.0f);
-
+    attack->SetDamageAmount(200.0f);
     attack->SetHealthAttrib(health.get());
+
+    score = std::make_unique<ScoreAttrib>(this);
 }
 
 
 PlayerObject::~PlayerObject() {
-    if (laser && TutorialGame::getInstance()) TutorialGame::getInstance()->GetWorld()->RemoveGameObject(laser);
+    if (laser && TutorialGame::getInstance()) {
+        TutorialGame::getInstance()->delayedRemoveObject(laser);
+    }
     laser = nullptr;
     delete animationObject;
 }
@@ -40,19 +45,19 @@ void PlayerObject::SetColor(btVector4 color) {
     laser->SetColor(color);
 }
 
+
 void PlayerObject::Update(float dt) {
     attack->Update(dt);
     health->Update(dt);
-
     upDirection = CalculateUpDirection(dt);
 
     rightDirection = CalculateRightDirection(upDirection);
     forwardDirection = CalculateForwardDirection(upDirection, rightDirection);
     updateGravity(dt);
-    //Animation: 
+    //Animation:
     CorrectAnimation();
 
-    if (animated == true) {
+    if (renderObject->GetAnimation()) {
         renderObject->GetAnimation()->UpdateAnimation(dt);
     }
 
@@ -60,35 +65,42 @@ void PlayerObject::Update(float dt) {
 }
 
 void PlayerObject::UpdateWorldState() {
+    score->UpdateWorldState();
+    health->UpdateWorldState();
     attack->UpdateWorldState();
-    GameObject::UpdateWorldState();
+    ServerObject::UpdateWorldState();
 
     auto [writeState, lock] = GetWorldStates()->GetWriteState();
     std::unique_lock stateLock(writeState->Lock());
 
     writeState->UpdateState(StateType::UpVector, upDirection);
+    int animationInt = static_cast<int>(animationState);
+    writeState->UpdateState(StateType::Animation, animationInt);
 }
 
 void PlayerObject::UpdateFromWorldState(float dt) {
     attack->UpdateFromWorldState(dt);
-    GameObject::UpdateFromWorldState(dt);
+    score->UpdateFromWorldState(dt);
+    health->UpdateFromWorldState(dt);
+    ServerObject::UpdateFromWorldState(dt);
 
     elapsedTickTime += dt;
 
     std::function lerp = [](float x, float y, float w) { return x + ((y - x) * w); };
-    float weight = fmod(elapsedTickTime, TICK_UPDATE_RATE) / TICK_UPDATE_RATE;
 
     auto [current, currentLock] = GetWorldStates()->GetCurrentState();
     auto [read, readLock] = GetWorldStates()->GetReadState();
 
     StateValue currentUpVectorValue;
     StateValue targetUpVectorValue;
+    StateValue animationValue;
 
     std::shared_lock currentStateLock = current->Lock_Shared();
     std::shared_lock readStateLock = read->Lock_Shared();
 
     bool hasCurrentUpVector = current->ReadState(StateType::UpVector, &currentUpVectorValue);
     bool hasTargetUpVector = read->ReadState(StateType::UpVector, &targetUpVectorValue);
+    bool hasAnimation = current->ReadState(StateType::Animation, &animationValue);
 
     currentStateLock.unlock();
     readStateLock.unlock();
@@ -101,33 +113,53 @@ void PlayerObject::UpdateFromWorldState(float dt) {
         btVector3 currentUpVector = std::get<btVector3>(currentUpVectorValue);
         btVector3 targetUpVector = std::get<btVector3>(targetUpVectorValue);
         btVector3 interpolated = btVector3(
-            lerp(currentUpVector.x(), targetUpVector.x(), weight),
-            lerp(currentUpVector.y(), targetUpVector.y(), weight),
-            lerp(currentUpVector.z(), targetUpVector.z(), weight)
+            lerp(currentUpVector.x(), targetUpVector.x(), dt),
+            lerp(currentUpVector.y(), targetUpVector.y(), dt),
+            lerp(currentUpVector.z(), targetUpVector.z(), dt)
         );
 
         setUpDirection(interpolated);
     }
+    if (hasAnimation) {
+        int animNumber = std::get<int>(animationValue);
+        animationState = static_cast<AnimationState>(animNumber);
+    }
 }
 
 std::vector<std::shared_ptr<Packet::Packet>> PlayerObject::CreatePackets(int sequenceNum) {
-    std::vector<std::shared_ptr<Packet::Packet>> packets = GameObject::CreatePackets(sequenceNum);
+    std::vector<std::shared_ptr<Packet::Packet>> packets = ServerObject::CreatePackets(sequenceNum);
     std::vector<std::shared_ptr<Packet::Packet>> damagePackets = attack->CreatePackets(sequenceNum);
+    std::vector<std::shared_ptr<Packet::Packet>> healthPackets = health->CreatePackets(sequenceNum);
+    std::vector<std::shared_ptr<Packet::Packet>> scorePackets = score->CreatePackets(sequenceNum);
+
     packets.insert(packets.end(), damagePackets.begin(), damagePackets.end());
+    packets.insert(packets.end(), healthPackets.begin(), healthPackets.end());
+    packets.insert(packets.end(), scorePackets.begin(), scorePackets.end());
 
     auto [read, readLock] = GetWorldStates()->GetReadState();
 
     StateValue upVector;
+    StateValue animation;
+
     std::shared_lock readStateLock = read->Lock_Shared();
+
     bool hasUpVector = read->ReadState(StateType::UpVector, &upVector);
+    bool hasAnimation = read->ReadState(StateType::Animation, &animation);
 
     readStateLock.unlock();
     readLock.unlock();
-    
+
     if (hasUpVector) {
         packets.push_back(std::move(std::make_shared<Packet::ObjectChangeGravityPacket>(
             GetWorldID(),
             std::get<btVector3>(upVector),
+            sequenceNum
+        )));
+    }
+    if (hasAnimation) {
+        packets.push_back(std::move(std::make_shared<Packet::PlayerAnimationPacket>(
+            GetWorldID(),
+            std::get<int>(animation),
             sequenceNum
         )));
     }
@@ -344,9 +376,7 @@ void PlayerObject::SetGunTransform(float pitch, float yaw, btVector3 camPos) {
 
 void PlayerObject::CorrectAnimation() {
     //to be called in update. Checks if the animation matches the state, if not sets it to the right animation. Hopefully means it is only set when state changes.#
-
     if (renderObject->GetAnimation() != animationObject->getAnimation(animationState)) {
         renderObject->SetAnimation(animationObject->getAnimation(animationState));
     }
-
 }

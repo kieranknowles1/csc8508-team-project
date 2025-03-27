@@ -13,7 +13,8 @@
 #include "Colors.h"
 #include "Shoot.h"
 #include "Health.h"
-#include "MeshAnimation.h" //temporarily added for testing 
+#include "MeshAnimation.h" //temporarily added for testing
+#include "Score.h"
 
 #include "Window.h"
 #include "Config.h"
@@ -45,7 +46,10 @@ TutorialGame::TutorialGame(GameTechRendererInterface* renderer, Controller* cont
     resourceManager = std::make_unique<ResourceManager>(renderer, config.get<float>("resourceThreadMult"));
     new Shoot(); //Shoot and Respawn have new before them but are not being deleted to my knowledge
     new Respawn();
-
+    //audioEngine.Init();
+    audioEngine.Init();
+    audioEngine.LoadSound("HeartbeatLoop.wav", false, true, false);
+    audioEngine.LoadSound("JumpPad.wav", true, false, false);
     InitialiseAssets();
     InitCamera();
     InitWorld();
@@ -80,8 +84,6 @@ static bool BulletRaycast(btDynamicsWorld* world, const btVector3& start, const 
 
 void TutorialGame::UpdateGame(float dt) {
     profiler.beginFrame();
-
-
     profiler.startSection("Physics");
 
     // Old
@@ -99,9 +101,12 @@ void TutorialGame::UpdateGame(float dt) {
 
         float tickProgress = server->GetTickProgress();
         world->OperateOnContents([&](GameObject* obj) {
-            if (obj->GetOwner() == nullptr) return;
-            if (server->IsOwnerOf(obj)) obj->UpdateWorldState();
-            else obj->UpdateFromWorldState(dt);
+            if (!obj->IsNetworked()) return;
+
+            ServerObject* netObj = (ServerObject*)obj;
+
+            if (server->IsOwnerOf(netObj)) netObj->UpdateWorldState();
+            else netObj->UpdateFromWorldState(dt);
             });
     }
 
@@ -115,11 +120,9 @@ void TutorialGame::UpdateGame(float dt) {
     // Check for collisions
     CheckCollisions();
 
-    if (playerController) UpdatePlayer(dt);
-
     profiler.startSection("Update Audio");
     audioEngine.Update(&world->GetMainCamera());
-    
+
     clearGraveyard();
     profiler.startSection("Prepare Render");
     bulletWorld->debugDrawWorld();
@@ -138,12 +141,18 @@ void TutorialGame::UpdateGame(float dt) {
     renderer->SetVignettePulse(pulse);
 
     renderer->SetDelta(dt);
-
 }
 
+void TutorialGame::UpdatePlayer(float dt, bool camOnly) {
+    if (player->GetHealthAttrib()->GetHealthState() == AliveState::DEAD) {
+        player->GetHealthAttrib()->AddDeath();
 
-void TutorialGame::UpdatePlayer(float dt) {
-    if (player->GetHealthAttrib()->GetHealthState() == HealthState::DEAD) {
+        int numDeaths = player->GetHealthAttrib()->DeathCount();
+
+        if (gameMode == GameMode::SINGLEPLAYER && numDeaths > 0) {
+            spEnd = true;
+        }
+
         Respawn* instance = Respawn::GetInstance();
         RespawnPoint* respawn;
 
@@ -158,6 +167,13 @@ void TutorialGame::UpdatePlayer(float dt) {
 
         player->setCollided(0);
         player->GetHealthAttrib()->Respawn();
+
+    }
+
+    // Display Score if networked.
+    if (server != nullptr) {
+        std::string scoreString = "Score: " + std::to_string(static_cast<int>(player->GetScoreAttrib()->GetScore()));
+        Debug::Print(scoreString, { 0.05, 0.1 });
     }
 
     // Press F for freeCam, press G for thirdPerson
@@ -166,9 +182,16 @@ void TutorialGame::UpdatePlayer(float dt) {
         world->GetMainCamera().UpdateCamera(dt * 20, true);
     }
     else {
+ 
         //player Movement
-        world->GetMainCamera().UpdateCamera(dt, false);
-        playerController->UpdateMovement(dt);
+        if (camOnly) {
+            playerController->UpdateCamOnly();
+        }
+        else {
+            world->GetMainCamera().UpdateCamera(dt, false);
+            playerController->UpdateMovement(dt);
+        }
+ 
         if (thirdPerson) {
             ThirdPersonControls();
         }
@@ -276,10 +299,15 @@ void TutorialGame::CheckCollisions()
 void TutorialGame::clearGraveyard() {
     for (auto obj : earlyGraveyard) {
         // Prevents physics, OnCollisionExit will trigger next frame
-        bulletWorld->removeRigidBody(obj->GetPhysicsObject()->GetRigidBody());
+        if (obj->GetPhysicsObject()) {
+            bulletWorld->removeRigidBody(obj->GetPhysicsObject()->GetRigidBody());
+        }
         // Prevents OnUpdate and render
         world->RemoveGameObject(obj);
     }
+    // Deleting a GameObject may trigger other GameObjects to be deleted,
+    // make sure these go through the full process
+    auto addLateQueue = std::move(earlyGraveyard);
     for (auto obj : lateGraveyard) {
         // References should have been cleaned up by now
         // May not be strictly necessary to delay this, but it's
@@ -287,8 +315,7 @@ void TutorialGame::clearGraveyard() {
         delete obj;
     }
     // Move earlyGraveyard to lateGraveyard, clear lateGraveyard
-    lateGraveyard.clear();
-    std::swap(earlyGraveyard, lateGraveyard);
+    lateGraveyard = std::move(addLateQueue);
 }
 
 
@@ -342,12 +369,15 @@ void TutorialGame::ClearWorld() {
     world->ClearAndErase();
     renderer->GetDecalSystem().ClearDecalsFromWorld();
     renderer->ClearUIElemets();
+    Respawn::GetInstance()->ClearPlayers();
+    earlyGraveyard.clear();
+    lateGraveyard.clear();
 }
 
 void TutorialGame::InitWorld() {
 
 	InitBullet();
-	audioEngine.Init();
+    //audioEngine.Init();
 
 }
 
@@ -366,8 +396,7 @@ PlayerObject* TutorialGame::InitPlayer(btVector3 position, btVector3 upDir, bool
     newPlayer->setRenderer(renderer);
     newPlayer->setType(GameObject::Type::Player);
 
-    newPlayer->SetIsAnimated(true); //maybe better to manage this wherever animations are being applied rather than here but for testing this is probably fine
-    newPlayer->setRenderer(renderer); 
+    newPlayer->setRenderer(renderer);
     Respawn::GetInstance()->InsertPlayerObj(newPlayer);
     return newPlayer;
 }
@@ -391,7 +420,9 @@ GameObject* TutorialGame::AddGunToWorld(const Vector3& position, Vector3 dimensi
     // Setting render object
     gun->SetRenderObject(new RenderObject(gun, resourceManager->getMeshes().get("VD_Raygun_Cartoony_Rigged1.msh"), resourceManager->getMaterials().get("VD_Raygun_Cartoony_Rigged1.mat")));
     gun->setType(GameObject::Type::Gun);
-    
+
+    gun->setType(GameObject::Type::Gun);
+
     world->AddGameObject(gun);
 
     return gun;
@@ -436,12 +467,12 @@ PlayerObject* TutorialGame::AddPlayerCapsuleToWorld(const Vector3& position, flo
 
     // Setting the transform properties for the capsule
     player->setInitialPosition(position);
-    player->setRenderScale(mainPlayer ? Vector3(0,0,0) : Vector3(radius * 2, height, radius * 2));
+    player->setRenderScale(mainPlayer ? Vector3(0,0,0) : Vector3(radius * 3.0f, height*1.1f, radius * 3.0f));
 
     // Creating a Bullet collision shape for the capsule
     btCollisionShape* playerShape = new btCapsuleShape(radius, height);
 
-    // Setting the render object for the capsule 
+    // Setting the render object for the capsule
     player->SetRenderObject(new RenderObject(player, resourceManager->getMeshes().get("RacerGuy/RacerGuy2.msh"), resourceManager->getMaterials().get("RacerGuy.mat"))); //defaultTexture
     player->CreateAnimationObject();
     player->CorrectAnimation();
@@ -571,9 +602,10 @@ bool TutorialGame::StartMultiplayerGame(bool isHost) {
     server->Start();
 
     if (!isHost) {
-        server->JoinGame("127.0.0.1", 1.0f);
-        //std::string host = config.get<std::string>("defaultHost");
-        //server->JoinGame(host.c_str(), 5.0f);
+        //server->JoinGame("127.0.0.1", 1.0f);
+        std::string host = config.get<std::string>("defaultHost");
+        server->JoinGame(host.c_str(), 1.0f);
+       
     }
     return server->IsConnected();
 }
@@ -596,9 +628,6 @@ void TutorialGame::Start() {
             PlayerObject* player = instance->InitPlayer(respawn->position, respawn->orientation, mainPlayer);
             player->SetWorldID(user.GetUserID());
             player->SetOwner(user);
-            
-            LaserObject* laser = player->GetLaser();
-            instance->renderer->TrackLaser(laser);
 
             btVector4 playerColor = Color::GetPlayerColor(user.GetUserID() - 1);
             player->SetColor(playerColor);
@@ -619,7 +648,6 @@ void TutorialGame::Start() {
 
         LaserObject* laser = instance->player->GetLaser();
         laser->SetColor(Color::GetPlayerColor(0));
-        instance->renderer->TrackLaser(laser);
 
         instance->player->getGun()->GetRenderObject()->SetColour(Color::GetPlayerColor(0));
 

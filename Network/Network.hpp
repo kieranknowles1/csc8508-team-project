@@ -6,6 +6,7 @@
 #include <mutex>
 #include <shared_mutex>
 #include <functional>
+#include <cmath>
 
 #include <./enet/enet.h>
 
@@ -35,10 +36,10 @@ namespace ConsoleTextColor {
 
 /**
  * @brief Channel enum class.
- * 
+ *
  * Defines the different channels that the network can use.
  * @warning Do not assign values to the channels.
- * 
+ *
  */
 enum class Channel {
     RELIABLE = 0,	// MUST BE FIRST CHANNEL AS FIRST CHANNEL IS ALWAYS RELIABLE.
@@ -68,21 +69,21 @@ public:
 
     /**
      * @brief Start the thread for receiving and sending packets.
-     * 
+     *
      * Starts a new thread. The thread handles sending and receiving of packets.
      */
     void Start();
 
     /**
      * @brief Stop and join the execution thread.
-     * 
+     *
      * Sets network state to OFF
      */
     void Stop();
 
     /**
      * @brief Closes the host.
-     * 
+     *
      * Cleans up enet objects. Calls Stop() first.
      */
     void Close();
@@ -112,21 +113,21 @@ public:
 
     /**
      * @brief Assign which function to call upon receiving a connect packet.
-     * 
+     *
      * Passes ENetPeer* incase the callback function requires it.
-     * 
+     *
      * @param callback The function to call.
      */
-    inline void SetConnectCallback(std::function<void(ENetPeer*)> callback) { 
+    inline void SetConnectCallback(std::function<void(ENetPeer*)> callback) {
         std::lock_guard<std::mutex> lock(m_connectCallbackMut);
         m_connectCallback = callback;
     }
 
     /**
      * @brief Fetch a packet from the buffer.
-     * 
+     *
      * Fetch from the buffer. The buffer is updated every tick. Is threadsafe.
-     * 
+     *
      * @return The next packet in the buffer. Empty packet if no packet exists.
      */
     std::shared_ptr<Packet::Packet> Fetch();
@@ -134,7 +135,7 @@ public:
     /**
      * @brief Get the current state of the network.
      * Is Threadsafe.
-     * @return 
+     * @return
      */
     NetworkStates::NetworkState GetState() {
         std::lock_guard<std::mutex> lock(m_stateMut);
@@ -150,12 +151,12 @@ public:
     /**
      * @brief Add a function to be called when the server Ticks.
      * The function is called before SendAll() is called.
-     * 
+     *
      * PLEASE ENSURE THE FUNCTION CALL IS THREADSAFE. IT IS CALLED FROM WITHIN
      * THE NETWORK THREAD.
-     * 
+     *
      * If the value passed to the function is true, it is the end of the tick.
-     * 
+     *
      * @param func - the function to call.
      */
     inline void AddTickListener(std::function<void(bool)> func) {
@@ -185,7 +186,7 @@ protected:
 
     /**
      * @brief Step forward by dt.
-     * 
+     *
      * If enough time has elapsed the server will fetch and send packets based
      * on the NETWORK_RATE.
      */
@@ -219,7 +220,7 @@ private:
     Packet::PacketBuffer m_receiveBuffer = Packet::PacketBuffer(BUFFER_SIZE);
     std::vector<std::pair<std::shared_ptr<Packet::Packet>, ENetPeer*>> m_sendBuffer = std::vector<std::pair<std::shared_ptr<Packet::Packet>, ENetPeer*>>(BUFFER_SIZE);
     int m_numPackets = 0;
-    
+
     float m_elapsedTime = 0;
     float m_lastTime = 0;
     float m_lastTick = 0;

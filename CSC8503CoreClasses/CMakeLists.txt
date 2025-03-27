@@ -66,10 +66,12 @@ source_group("Physics" FILES ${Physics})
 
 set(Header_Files
 	"Debug.h"
+    "AliveState.h"
 	"GameObject.h"
 	"GameWorld.h"
     "MeshMaterial.h"
 	"RenderObject.h"
+    "ServerObject.h"
     "StateUpdater.h"
     "WorldState.h"
 )
@@ -81,6 +83,7 @@ set(Source_Files
 	"GameWorld.cpp"
 	"RenderObject.cpp"
     "MeshMaterial.cpp"
+    "ServerObject.cpp"
     "StateUpdater.cpp"
 )
 source_group("Source Files" FILES ${Source_Files})

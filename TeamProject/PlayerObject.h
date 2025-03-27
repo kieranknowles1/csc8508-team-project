@@ -3,12 +3,12 @@
 #include "Matrix.h"
 #include "Camera.h"
 #include "Controller.h"
-#include "GameObject.h"
 #include "LaserObject.h"
 #include "PhysicsObject.h"
 #include "CollisionInfo.h"
 #include "MeshAnimation.h"
 #include "AnimationObject.h"
+#include "ServerObject.h"
 
 #include "Colors.h"
 #include "RenderObject.h"
@@ -22,11 +22,12 @@
 namespace NCL::CSC8503 {
 	class HealthAttrib;
 	class AttackAttrib;
+	class ScoreAttrib;
 
-	const float PLAYER_HEALTH = 200.0f;
+	const float PLAYER_HEALTH = 100.0f;
 
 	// Player class derived from GameObject
-	class PlayerObject : public GameObject {
+	class PlayerObject : public ServerObject {
 	public:
 		PlayerObject();
 		~PlayerObject();
@@ -95,7 +96,6 @@ namespace NCL::CSC8503 {
 			return camRotOffset;
 		}
 
-
 		void SetOwner(Lobbies::User user) override {
 			gun->SetOwner(user);
 			laser->SetOwner(user);
@@ -155,6 +155,7 @@ namespace NCL::CSC8503 {
 
 		HealthAttrib* GetHealthAttrib() { return health.get(); }
 		AttackAttrib* GetAttackAttrib() { return attack.get(); }
+		ScoreAttrib* GetScoreAttrib() { return score.get(); }
 
 	private:
 		//Player Variables
@@ -166,7 +167,7 @@ namespace NCL::CSC8503 {
 		float jumpPadHeight = 0.0f;
 		std::list<GameObject*> collidedObjects;
 		Type collisionType;
-		ObjectState state;
+		AliveState state;
 		float yawOverride = -1000.0f;
 
 		btQuaternion camRotOffset;
@@ -198,6 +199,6 @@ namespace NCL::CSC8503 {
 
 		std::unique_ptr<HealthAttrib> health;
 		std::unique_ptr<AttackAttrib> attack;
-
+		std::unique_ptr<ScoreAttrib> score;
 	};
 }

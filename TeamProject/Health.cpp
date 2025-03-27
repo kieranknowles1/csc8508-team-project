@@ -12,7 +12,7 @@ namespace NCL {
             elapsed += dt;
 
             // Regenerating HealthAttrib.
-            if (GetHealthState() == HealthState::ALIVE && elapsed - lastHit >= regenDelay) {
+            if (GetHealthState() == AliveState::ALIVE && elapsed - lastHit >= regenDelay) {
                 SetCurrentHealth(currentHealth + (regenRate * dt));
             }
         }
@@ -21,6 +21,13 @@ namespace NCL {
             auto [writeState, writeLock] = GetWorldStates()->GetWriteState();
             std::unique_lock writeStateLock(writeState->Lock());
             writeState->UpdateState(StateType::Health, currentHealth);
+
+            if (deaths > lastRecordedDeaths) {
+                if (lastKilledBy) {
+                    writeState->UpdateState(StateType::ObjectID, lastKilledBy->GetWorldID());
+                }
+                lastRecordedDeaths = deaths;
+            }
         }
 
         void HealthAttrib::UpdateFromWorldState(float dt) {
@@ -55,8 +62,26 @@ namespace NCL {
             }
         }
 
-        std::vector<std::shared_ptr<Packet::Packet>> HealthAttrib::CreatePackets(int seuqnceNum) {
-            return {};
+        std::vector<std::shared_ptr<Packet::Packet>> HealthAttrib::CreatePackets(int sequenceNum) {
+            std::vector<std::shared_ptr<Packet::Packet>> packets;
+            auto [read, readLock] = GetWorldStates()->GetReadState();
+
+            StateValue killedByValue;
+
+            std::shared_lock readStateLock = read->Lock_Shared();
+            bool hasKilledBy = read->ReadState(StateType::ObjectID, &killedByValue);
+
+            readStateLock.unlock();
+            readLock.unlock();
+
+            if (hasKilledBy) {
+                packets.push_back(std::move(std::make_shared<Packet::DeathPacket>(
+                    std::get<int>(killedByValue),
+                    100.0f,
+                    sequenceNum
+                )));
+            }
+            return packets;
         }
 
         void HealthAttrib::Damage(float amount) {

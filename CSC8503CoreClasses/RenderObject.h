@@ -81,7 +81,7 @@ namespace NCL {
 
 		protected:
 			GameObject* parent;
-			Buffer* buffer;
+			Buffer* buffer = nullptr;
 			std::shared_ptr<Mesh> mesh;
 			Vector4		colour = Vector4(1, 1, 0, 0.99);
 			bool isFlat = false;
@@ -89,7 +89,7 @@ namespace NCL {
 			float texScaleMultiplier = 0.005f; //unless set to something else, all scaled textures will be scaled with this and their renderScale
 
 			//Animation stuff:
-			MeshAnimation* test;
+			MeshAnimation* test = nullptr;
 		
 
 

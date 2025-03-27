@@ -37,32 +37,70 @@ bool NavEntity::FollowPath(float dt) {
 		}
 	}
 	curPathPoint = newPathPoint;
-	yAdjustedPoint = curPathPoint;
-	yAdjustedPoint.setY(GroundAdjust(yAdjustedPoint));
+	adjustedPoint = curPathPoint;
+	switch (side) {
+	case(Side::BOTTOM):
+		adjustedPoint.setY(GroundAdjust(adjustedPoint));
+		break;
+	case(Side::TOP):
+		adjustedPoint.setY(GroundAdjust(adjustedPoint));
+		break;
+	case(Side::FRONT):
+		adjustedPoint.setZ(GroundAdjust(adjustedPoint));
+		break;
+	case(Side::BACK):
+		adjustedPoint.setZ(GroundAdjust(adjustedPoint));
+		break;
+	case(Side::LEFT):
+		adjustedPoint.setX(GroundAdjust(adjustedPoint));
+		break;
+	case(Side::RIGHT):
+		adjustedPoint.setX(GroundAdjust(adjustedPoint));
+		break;
+	}
+	
 	return true;
 }
 
 float NavEntity::GroundAdjust(btVector3 pos) {
 	btVector3 upPos, downPos, direction;
 	std::optional<ShotInfo> rayResult;
-	btIDebugDraw* debugDrawer = TutorialGame::getInstance()->getBulletWorld()->getDebugDrawer();
+
+	btTransform transform = GetTransform();
+	btVector3 upVector = transform.getBasis() * btVector3(0, 1, 0); // local "up" in world space
+
+	//btIDebugDraw* debugDrawer = TutorialGame::getInstance()->getBulletWorld()->getDebugDrawer();
+
+	upPos = pos + (upVector * 50.0f);
+	downPos = pos - (upVector * 1000.0f);
+
+	//debugDrawer->drawLine(upPos, downPos, Vector3(0, 0, 1));
+	direction = (downPos - upPos).normalized();
+
+	rayResult = Shoot::GetInstance()->RayClosest(upPos, direction, false, static_cast<GameObject*>(this));
+
+	if (!rayResult.has_value()) {
+		return 0.0f;  // No hit detected
+	}
+
 	switch (side) {
 	case(Side::BOTTOM):
-		upPos = pos + btVector3(0, 100.0f, 0);
-		downPos = pos + btVector3(0, -1000.0f, 0);
-		
-		//debugDrawer->drawLine(upPos, downPos, Vector3(0, 0, 1));
-		direction = (downPos - upPos).normalized();
-
-		rayResult = Shoot::GetInstance()->RayClosest(upPos, direction, false, static_cast<GameObject*>(this));
-
-		if (!rayResult.has_value()) {
-			return 0.0f;  // No hit detected
-		}
-
-		//return (pos.getY() - rayResult->hitPos.getY());
 		return rayResult->hitPos.getY();
+	case(Side::TOP):
+		return rayResult->hitPos.getY();
+	case(Side::FRONT):
+		return rayResult->hitPos.getZ();
+	case(Side::BACK):
+		return rayResult->hitPos.getZ();
+	case(Side::LEFT):
+		return rayResult->hitPos.getX();
+	case(Side::RIGHT):
+		return rayResult->hitPos.getX();
 	default:
-		return pos.getY();
+		return 0.0f;
 	}
+
+	
+
 }
+

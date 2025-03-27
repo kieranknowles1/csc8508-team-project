@@ -136,7 +136,7 @@ target_link_libraries(my_exe PRIVATE fmod)
 *Notes:*
 - You may bypass auto-platform-detection by explicitly setting the platform lib sub-folder via `set(FMOD_PLATFORM "macos" CACHE STRING "" FORCE)`
 - For HTML5 builds, if you set `FMOD_HTML5_REDUCED` to `ON` the interface will search for `fmod_reduced_wasm.a`, and `fmodstudio_wasm.a`, which both contain reduced features. Please check the HTML5-specific platform information in the FMOD docs for more info. `fmodstudioL_wasm.a` is the only non-reduced studio build, so this is the file the interface will search for when `FMOD_HTML5_REDUCED` is falsy.
-- If on Windows, to auto-copy .dll files to your exe's binary directory, call `fmod_copy_dlls()` after your `add_executable` declaration.
+- To auto-copy libraries to your exe's binary directory, call `fmod_copy_libs()` after your `add_executable` declaration.
 
 ## Contributing
 

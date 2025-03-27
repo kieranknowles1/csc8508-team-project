@@ -1,102 +1,151 @@
 #pragma once
 
-//#include "PushdownMachine.h"
 #include "PushdownState.h"
 #include <TutorialGame.h>
 #include <future>
-//#include "Window.h"
 #include <CSC8503CoreClasses/Debug.h>
 #include <iostream>
 #include "GameScreen.h"
 #include "LobbyScreen.h"
 #include "CreditsScreen.h"
+#include "GameTechRendererInterface.h"
+#include "AudioEngine.h"
 
 namespace NCL::CSC8503 {
 
-class MainMenuScreen : public PushdownState {
-    size_t selection = 0;
-    TutorialGame* game;
-    Controller* controller;
-    float connectionFailedTime = 0;
+    class MainMenuUI : public UiElement {
+        
+    public:
+        MainMenuUI(std::shared_ptr<NCL::Rendering::Texture> logo);
 
-public:
-    MainMenuScreen(Controller* controller, TutorialGame* game) : controller(controller), game(game), selection(0) {}
+        void render(std::vector<UiSprite>& sprites) override;
 
-    PushdownResult OnUpdate(float dt, PushdownState** newState) override {
-        const std::array<std::string, 5> menuItems = { "Singleplayer", "Host Game", "Join Game", "Credits", "Quit"};
-        bool ok = true;
+        void render(std::vector<UiText>& texts) override;
 
-        if (connectionFailedTime > 0) {
-            connectionFailedTime -= dt;
-            Debug::Print("Connection failed", Vector2(0.05f, 0.9f));
+        void Animate(float dt) override {};
+
+        void InitMenu();
+
+        void UpdateMenu(unsigned int);
+
+    private:
+
+        UIBox background;
+		UIBox fmodLogo;
+        Text title;
+        std::vector<Button> buttons;
+        std::vector<Text> buttonTexts;
+        Vector4 activeButton = Vector4(0.3, 0.3, 0.3, 0.5);
+        Vector4 inactiveButton = Vector4(0, 0, 0, 1);
+        std::shared_ptr<NCL::Rendering::Texture> fmodLogoTex;
+    };
+    
+    class MainMenuScreen : public PushdownState {
+        size_t selection = 0;
+        TutorialGame* game;
+        Controller* controller;
+        std::shared_ptr<NCL::Rendering::Texture> fmodLogoTex;
+        GameTechRendererInterface* renderer;
+        ResourceManager* resourceManager;
+		std::unique_ptr<MainMenuUI> ui;
+        float connectionFailedTime = 0;
+
+    public:
+        MainMenuScreen(Controller* controller, TutorialGame* game, GameTechRendererInterface* renderer) : controller(controller), game(game), selection(0), renderer(renderer) {
+
+            resourceManager = game->GetResourceManager();
+            fmodLogoTex = resourceManager->getTextures().get("FMOD Logo White - Black Background1.png");
+			
+            ui = std::make_unique<MainMenuUI>(fmodLogoTex);
+			renderer->AddUiElement(ui.get());
+			ui->SetActive(true);
+			ui->UpdateMenu((int)selection);
         }
 
-        if (controller->GetDigital(Controller::DigitalControl::MenuDown)) {
-            selection = (size_t)std::min((int)menuItems.size() - 1, (int)selection + 1);
-        }
-        if (controller->GetDigital(Controller::DigitalControl::MenuUp)) {
-            selection = (size_t)std::max(0, (int)selection - 1);
-        }
-        if (controller->GetDigital(Controller::DigitalControl::MenuConfirm)) {
-            GameMode mode = static_cast<GameMode>(selection);
+        PushdownResult OnUpdate(float dt, PushdownState** newState) override {
+            bool ok = true;
 
-            game->SetGameMode(mode);
-            switch (mode)
-            {
-            case GameMode::SINGLEPLAYER:
-                game->Start();
-                *newState = new GameScreen(controller, game);
-                return PushdownResult::Push;
+            if (connectionFailedTime > 0) {
+                connectionFailedTime -= dt;
+                Debug::Print("- Connection failed", Vector2(0.05f, 0.95f));
+            }
 
-            case GameMode::HOST_GAME:
-                game->StartMultiplayerGame(true); 
-                *newState = new HostLobbyScreen(controller, game);
-                return PushdownResult::Push;
-
-            case GameMode::JOIN_GAME:
-                ok = game->StartMultiplayerGame(false);
-
-                if (ok) {
-                    *newState = new ClientLobbyScreen(controller, game);
-                    return PushdownResult::Push;
+            if (controller->GetDigital(Controller::DigitalControl::MenuDown)) {
+                if (selection < 4) {
+                    selection++;
+					UpdateSelection((int)selection);
+                    int channelId = audioEngine.PlaySounds("MenuScroll.wav", Vector3(0, 0, 0), -12.0f);
+                    audioEngine.SetChannelPitchMultiplier(channelId, 0.9f);
                 }
-                connectionFailedTime = 3.0f;
-                return PushdownResult::NoChange;
+            }
+            if (controller->GetDigital(Controller::DigitalControl::MenuUp)) {
+                if (selection > 0) {
+                    selection--;
+					UpdateSelection((int)selection);
+                    audioEngine.PlaySounds("MenuScroll.wav", Vector3(0, 0, 0), -12.0f);
+                }
+            }
+            if (controller->GetDigital(Controller::DigitalControl::MenuConfirm)) {
+                GameMode mode = static_cast<GameMode>(selection);
 
-            case GameMode::CREDITS:
-                game->SetGameMode(GameMode::CREDITS);
-                *newState = new CreditsScreen(controller, Assets::CREDITS);
+                game->SetGameMode(mode);
+                switch (mode)
+                {
+                case GameMode::SINGLEPLAYER:
+                    game->SetGameMode(GameMode::SINGLEPLAYER);
+                    audioEngine.PlaySounds("MenuSelect.wav", Vector3(0, 0, 0), -18.0f);
+                    game->Start();
+                    *newState = new GameScreen(controller, game, game->GetPlayerController());
+                    break;
+                case GameMode::HOST_GAME:
+					ui->SetActive(false);
+                    audioEngine.PlaySounds("MenuSelect.wav", Vector3(0, 0, 0), -18.0f);
+                    game->StartMultiplayerGame(true);
+                    *newState = new HostLobbyScreen(controller, game);
+                    return PushdownResult::Push;
+                    break;
+                case GameMode::JOIN_GAME:
+                    ok = game->StartMultiplayerGame(false);
+                    audioEngine.PlaySounds("MenuSelect.wav", Vector3(0, 0, 0), -18.0f);
+
+                    if (ok) {
+						ui->SetActive(false);
+                        *newState = new ClientLobbyScreen(controller, game);
+                        return PushdownResult::Push;
+                    }
+                    connectionFailedTime = 3.0f;
+                    return PushdownResult::NoChange;
+                    break;
+                case GameMode::CREDITS:
+					ui->SetActive(false);
+                    game->SetGameMode(GameMode::CREDITS);
+                    audioEngine.PlaySounds("MenuSelect.wav", Vector3(0, 0, 0), -18.0f);
+                    *newState = new CreditsScreen(controller, Assets::CREDITS);
+                    return PushdownResult::Push;
+                    break;
+                case GameMode::QUIT:
+                    renderer->ClearUIElemets();
+                    game->SetGameMode(GameMode::QUIT);
+                    return PushdownResult::Pop;
+                default: assert(false);
+                }
+
                 return PushdownResult::Push;
-                break;
-            case GameMode::QUIT:
-                return PushdownResult::Pop;
-            default: assert(false);
             }
+            return PushdownResult::NoChange;
 
-            *newState = new GameScreen(controller, game);
-            return PushdownResult::Push;
         }
 
-        //Render menu
-        for (int i = 0; i < menuItems.size(); i++) {
-            std::string currentItem = menuItems[i];
-            if (i == (int) selection) {
-                currentItem = "> " + currentItem + " <";
-            }
-            else {
-                currentItem = "  " + currentItem;
-            }
+        void OnAwake() override {
 
-            Debug::Print(currentItem, Vector2(0.35f, 0.32f + (0.1f * i)));
+            game->getMainCam()->SetPosition({ 0, 0, 0 });
+            audioEngine.Update(game->getMainCam());
+            renderer->AddUiElement(ui.get());
+			ui->SetActive(true);
         }
-        return PushdownResult::NoChange;
 
-        //Add FMOD Logo here as well as the line "Audio Engine: FMOD Studio by Firelight Technologies Pty Ltd."
-    }
-
-    void OnAwake() override {
-
-    }
-};
-
+		void UpdateSelection(unsigned int selection) {
+			ui->UpdateMenu(selection);
+		}
+    };
 }

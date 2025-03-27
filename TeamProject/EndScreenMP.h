@@ -7,34 +7,16 @@
 #include "TutorialGame.h"
 #include "Debug.h"
 #include <iostream>
-#include "GameScreen.h"
 #include "CreditsScreen.h"
 
 using namespace NCL;
 using namespace NCL::CSC8503;
 
 
-struct UIBox {
-    Vector2 position;
-    Vector2 size;
-};
-
-struct Button {
-    Vector2 position;
-    Vector2 size;
-    Vector4 color = Vector4(0.4f, 0.4f, 0.4f, 1);
-};
-
-struct Text {
-    Vector2 position;
-    std::string text;
-    Vector4 color = Vector4(1, 1, 1, 1);
-};
-
-class EndScreenUI : public UiElement {
+class EndScreenMPUI : public UiElement {
 
 public:
-    EndScreenUI();
+    EndScreenMPUI();
 
     void render(std::vector<UiSprite>& sprites) override;
 
@@ -58,8 +40,13 @@ private:
     std::vector<Text> buttonTexts;
     Vector4 activeButton = Vector4(0.3, 0.3, 0.3, 0.5);
     Vector4 inactiveButton = Vector4(0, 0, 0, 1);
-    Vector4 activeText = Vector4(1, 1, 1, 1);
-    Vector4 inactiveText = Vector4(1, 1, 1, 1);
+    Vector4 textColor = Vector4(0, 0, 0, 1);
+
+    Vector4 backgroundColor = Vector4(0, 0, 0, 1);
+    Vector4 buttonColor = Vector4(0.4f, 0.4f, 0.4f, 1);
+    Vector4 borderColor = Vector4(0, 0, 0, 1);
+    Vector4 boxColor = Vector4(0.4f, 0.4f, 0.4f, 1);
+    float borderThickness = 0.005f;
 
     Vector2 leaderboardCenter = Vector2(0.5f, 0.6f);
     Vector2 leaderboardSize = Vector2(0.7f, 0.7f);
@@ -96,7 +83,7 @@ class EndScreenMP : public PushdownState {
 
 public:
     EndScreenMP(Controller* controller, TutorialGame* game) : controller(controller), game(game), selection(0) {
-		ui = std::make_unique<EndScreenUI>();
+		ui = std::make_unique<EndScreenMPUI>();
         renderer = game->GetUIRenderer();
 		renderer->AddUiElement(ui.get());
 		ui->SetActive(true);
@@ -141,6 +128,6 @@ public:
     }
 
 private:
-	std::unique_ptr<EndScreenUI> ui;
+	std::unique_ptr<EndScreenMPUI> ui;
 	GameTechRendererInterface* renderer;
 };

@@ -7,6 +7,8 @@
 #include <unordered_map>
 #include <variant>
 #include <vector>
+#include <optional>
+#include <mutex>
 
 namespace WorldState {
     using StateValue = std::variant<btVector3, btQuaternion, float, int>;
@@ -22,7 +24,10 @@ namespace WorldState {
         Normal,
         DamageDealt,
         Health,
-        ObjectID
+        ObjectID,
+        Score,
+        ScoreIncrease,
+        Animation
     };
 
 
@@ -60,7 +65,14 @@ namespace WorldState {
             }
             return false;
         }
-        
+
+        /**
+         * If they key exists, it will remove the value from the object state.
+         */
+        void RemoveState(StateType type) {
+            m_states.erase(type);
+        }
+
         /**
          * @brief Remove all states and their values.
          */
@@ -83,7 +95,7 @@ namespace WorldState {
     /**
      * @brief An object returned by the state buffer for reading and writing to
      * a state buffer.
-     * 
+     *
      * The reading mutex does not handling reading and writing operations to
      * the state but handles locking / unlocking the state buffer update.
      */
@@ -133,23 +145,16 @@ namespace WorldState {
     /**
      * @brief State buffer contains 3 different buffers for reading, writing
      * and interpolating world states.
-     * 
+     *
      * It's main use it to interpolate world states between current and read
      * while still allowing writes to the write state so that state swapping is
      * smooth and without delay.
      */
     class StateBuffer {
     public:
-        StateBuffer() {
-            m_stateMutexes = new std::shared_mutex[3];
-        }
-        ~StateBuffer() {
-            delete[] m_stateMutexes;
-        }
-
         /**
          * @brief Get the current ObjectState.
-         * 
+         *
          * Calling this function multiple times on the same thread without
          * unlocking will most likely result in a deadlock.
          */
@@ -160,7 +165,7 @@ namespace WorldState {
 
         /**
          * @brief Get the ObjectState to read from.
-         * 
+         *
          * Calling this function multiple times on the same thread without
          * unlocking will most likely result in a deadlock.
          */
@@ -171,7 +176,7 @@ namespace WorldState {
 
         /**
          * @brief Get the ObjectState to write to.
-         * 
+         *
          * Calling this function multiple times on the same thread without
          * unlocking will most likely result in a deadlock.
          */
@@ -182,7 +187,7 @@ namespace WorldState {
 
         /**
          * @brief Update the world states.
-         * 
+         *
          * Current becomes the previous read object state.
          * Read becomes the previous write object state.
          * Write is cleared.
@@ -199,8 +204,8 @@ namespace WorldState {
         }
 
     private:
+        std::array<std::shared_mutex, 3> m_stateMutexes;
         std::array<ObjectState, 3> m_states;
-        std::shared_mutex* m_stateMutexes;
 
         int current = 0;
         int read = 1;

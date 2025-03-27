@@ -25,6 +25,10 @@ public:
 	~Respawn() {};
 	static Respawn* GetInstance() { return instance; }
 
+	void ClearPlayers() {
+		players.clear();
+	}
+
 	void InsertRespawn(RespawnPoint* respawnPoint) {
 		respawnPoints.push_back(respawnPoint);
 	}
@@ -71,6 +75,10 @@ public:
 
 	void InsertPlayerObj(PlayerObject* playerObj) {
 		players.push_back(playerObj);
+	}
+
+	static std::vector<PlayerObject*> GetAllPlayers() {
+		return instance->players;
 	}
 
 private:
