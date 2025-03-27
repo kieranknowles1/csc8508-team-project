@@ -107,6 +107,7 @@ namespace NCL::CSC8503 {
                     break;
                 case GameMode::HOST_GAME:
                     textureUiElement->SetActive(false);
+					ui->SetActive(false);
                     audioEngine.PlaySounds("MenuSelect.wav", Vector3(0, 0, 0), -18.0f);
                     game->StartMultiplayerGame(true);
                     *newState = new HostLobbyScreen(controller, game);
@@ -123,6 +124,7 @@ namespace NCL::CSC8503 {
 
                     if (ok) {
                         textureUiElement->SetActive(false);
+						ui->SetActive(false);
                         *newState = new ClientLobbyScreen(controller, game);
                         return PushdownResult::Push;
                     }
