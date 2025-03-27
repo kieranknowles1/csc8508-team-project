@@ -29,42 +29,19 @@ namespace NCL::CSC8503 {
 		}
 
 		void UpdateSelection() {
-			size_t startSelection = selection;
-
-			// Check if all colors are taken
-			bool allColorsTaken = std::all_of(colourTaken.begin(), colourTaken.end(), [](bool taken) { return taken; });
-
 			if (controller->GetDigital(Controller::DigitalControl::MenuDown)) {
-				do {
-					if (selection == menuItems.size() - 1) break; // Prevent going out of bounds
-					selection = std::min(menuItems.size() - 1, selection + 1);
-				} while (selection < 8 && colourTaken[selection]); // Skip taken colors
-
-				if (selection != startSelection) {
+				if (selection < 1) {
+					selection++;
 					int channelId = audioEngine.PlaySounds("MenuScroll.wav", Vector3(0, 0, 0), -12.0f);
 					audioEngine.SetChannelPitchMultiplier(channelId, 0.9f);
 				}
 			}
 
 			if (controller->GetDigital(Controller::DigitalControl::MenuUp)) {
-				do {
-					if (selection == 0) break; // Prevent going out of bounds
-					selection = selection > 0 ? selection - 1 : selection;
-				} while (selection < 8 && colourTaken[selection]); // Skip taken colors
-
-				//Prevent Cursor from Moving to the Top if All Colors Above are Taken**
-				if (selection == 0 && colourTaken[selection]) {
-					selection = startSelection; // Stay in place if top color is taken
-				}
-
-				if (selection != startSelection) {
+				if (selection > 0) {
+					selection--;
 					audioEngine.PlaySounds("MenuScroll.wav", Vector3(0, 0, 0), -12.0f);
 				}
-			}
-
-			//Prevent moving back to colors if all are taken**
-			if (allColorsTaken && selection < 8) {
-				selection = 8; // Force cursor to "Close Lobby"
 			}
 		}
 
@@ -72,29 +49,18 @@ namespace NCL::CSC8503 {
 			UpdateSelection();
 
 			if (controller->GetDigital(Controller::DigitalControl::MenuConfirm)) {
-				if (selection < 8) {  // If a colour is selected
-					if (!colourTaken[selection]) {
-						colourTaken[selection] = true;
-						for (auto& player : playerList) {
-							if (player == "Empty") {
-								player = menuItems[selection]; // Assign colour to first empty slot
-								audioEngine.PlaySounds("MenuSelect.wav", Vector3(0, 0, 0), -18.0f);
-								break;
-							}
-						}
-					}
+				audioEngine.PlaySounds("MenuSelect.wav", Vector3(0, 0, 0), -18.0f);
+
+				if (selection == 0) {
+					// START GAME
+					game->Start();
+					game->GetServerInstance()->ResetTick();
+					*newState = new MultiplayerGameScreen(controller, game, game->GetPlayerController());
+					return PushdownResult::Push;
 				}
-				else if (selection == 8) {  // Close lobby button
-					audioEngine.PlaySounds("MenuSelect.wav", Vector3(0, 0, 0), -18.0f);
+				else if (selection == 1) {
+					// CLOSE LOBBY
 					return PushdownResult::Pop;
-				}
-				else if (selection == 9) {  // Start Button (only host can press)
-					//TODO: Let me know if this sound cuts off abruptly
-					audioEngine.PlaySounds("MenuSelect.wav", Vector3(0, 0, 0), -18.0f);
-                    game->Start();
-                    game->GetServerInstance()->ResetTick();
-                    *newState = new GameScreen(controller, game, game->GetPlayerController());
-                    return PushdownResult::Push;
 				}
 			}
 
@@ -103,42 +69,39 @@ namespace NCL::CSC8503 {
 		}
 
 		void RenderUI() {
-			Vector2 basePos = Vector2(0.01f, 0.2f);
-			Vector2 listPos = Vector2(0.8f, 0.2f);
+			Debug::Print("LOBBY", Vector2(0.42f, 0.1f));
 
-			Debug::Print("Select your colour!", Vector2(0.3f, 0.1f));
+			Vector2 leftStartPos = Vector2(0.3f, 0.3f);
+			Vector2 rightStartPos = Vector2(0.5f, 0.3f);
+			float verticalSpacing = 0.09f;
 
-			// Render Colour Options
-			for (size_t i = 0; i < 10; i++) {
-				std::string currentItem = (i == selection) ? "> " + std::to_string(i + 1) + ". " + (i < 8 && colourTaken[i] ? "Taken" : menuItems[i]) + " <"
-					: "  " + std::to_string(i + 1) + ". " + (i < 8 && colourTaken[i] ? "" : menuItems[i]);
+			for (int i = 0; i < 4; ++i) {
+				std::string colorName = menuItems[i];
+				btVector4 btColor = Color::GetPlayerColor(i);
+				Vector4 textColor(btColor.x(), btColor.y(), btColor.z(), btColor.w());
 
-				//Close lobby button
-				if (i == 8) {
-					currentItem = (i == selection) ? "> CLOSE LOBBY <" : "  CLOSE LOBBY";
-					Debug::Print(currentItem, basePos + Vector2(0, 0.07f * i));
-					continue;
-				}
-
-				//Start button
-				if (i == 9) {
-					currentItem = (i == selection) ? "> START GAME <" : "  START GAME";
-					Debug::Print(currentItem, basePos + Vector2(0.35f, 0.08f * i));
-					continue;
-				}
-
-				btVector4 btColour = Color::GetPlayerColor(i + 1);
-				Vector4 textColour(btColour.x(), btColour.y(), btColour.z(), btColour.w());
-				Debug::Print(currentItem, basePos + Vector2(0, 0.06f * i), textColour);
+				Vector2 pos = leftStartPos + Vector2(0, i * verticalSpacing);
+				Debug::Print(std::to_string(i + 1) + ". " + colorName, pos, textColor);
 			}
 
-			// Render Player List
-			Debug::Print("PLAYERS", listPos);
-			for (size_t i = 0; i < playerList.size(); i++) {
-				Debug::Print(std::to_string(i + 1) + ". " + playerList[i], listPos + Vector2(0, 0.05f * (i + 1)));
+			for (int i = 4; i < 8; ++i) {
+				std::string colorName = menuItems[i];
+				btVector4 btColor = Color::GetPlayerColor(i);
+				Vector4 textColor(btColor.x(), btColor.y(), btColor.z(), btColor.w());
+
+				Vector2 pos = rightStartPos + Vector2(0, (i - 4) * verticalSpacing);
+				Debug::Print(std::to_string(i + 1) + ". " + colorName, pos, textColor);
 			}
+
+			Vector2 buttonStart = Vector2(0.35f, 0.85f);
+			Vector2 spacing = Vector2(0, 0.09f);
+
+			std::string startLabel = (selection == 0) ? "> START GAME <" : "  START GAME";
+			std::string closeLabel = (selection == 1) ? "> CLOSE LOBBY <" : "  CLOSE LOBBY";
+
+			Debug::Print(startLabel, buttonStart);
+			Debug::Print(closeLabel, buttonStart + spacing);
 		}
-
 	protected:
 		TutorialGame* game;
 		Controller* controller;
@@ -161,74 +124,19 @@ namespace NCL::CSC8503 {
 			colourTaken.fill(false);
 		}
 
-		void UpdateSelection() {
-			size_t startSelection = selection;
-
-			// Check if all colors are taken
-			bool allColorsTaken = std::all_of(colourTaken.begin(), colourTaken.end(), [](bool taken) { return taken; });
-
-			if (controller->GetDigital(Controller::DigitalControl::MenuDown)) {
-				do {
-					if (selection == menuItems.size() - 1) break; // Prevent going out of bounds
-					selection = std::min(menuItems.size() - 1, selection + 1);
-				} while (selection < 8 && colourTaken[selection]); // Skip taken colors
-
-				if (selection != startSelection) {
-					int channelId = audioEngine.PlaySounds("MenuScroll.wav", Vector3(0, 0, 0), -12.0f);
-					audioEngine.SetChannelPitchMultiplier(channelId, 0.9f);
-				}
-			}
-
-			if (controller->GetDigital(Controller::DigitalControl::MenuUp)) {
-				do {
-					if (selection == 0) break; // Prevent going out of bounds
-					selection = selection > 0 ? selection - 1 : selection;
-				} while (selection < 8 && colourTaken[selection]); // Skip taken colors
-
-				//Prevent Cursor from Moving to the Top if All Colors Above are Taken**
-				if (selection == 0 && colourTaken[selection]) {
-					selection = startSelection; // Stay in place if top color is taken
-				}
-
-				if (selection != startSelection) {
-					audioEngine.PlaySounds("MenuScroll.wav", Vector3(0, 0, 0), -12.0f);
-				}
-			}
-
-			//Prevent moving back to colors if all are taken**
-			if (allColorsTaken && selection < 8) {
-				selection = 8; // Force cursor to "Close Lobby"
-			}
-		}
-
 		PushdownResult OnUpdate(float dt, PushdownState** newState) override {
-			UpdateSelection();
 
             if (game->GetState() == GameState::STARTING) {
                 game->Start();
                 game->GetServerInstance()->ResetTick();
                 game->SetState(GameState::ACTIVE);
-                *newState = new GameScreen(controller, game, game->GetPlayerController());
+                *newState = new MultiplayerGameScreen(controller, game, game->GetPlayerController());
                 return PushdownResult::Push;
             }
 
 			if (controller->GetDigital(Controller::DigitalControl::MenuConfirm)) {
-				if (selection < 8) {  // If a colour is selected
-					if (!colourTaken[selection]) {
-						colourTaken[selection] = true;
-						for (auto& player : playerList) {
-							if (player == "Empty") {
-								player = menuItems[selection]; // Assign colour to first empty slot
-								audioEngine.PlaySounds("MenuSelect.wav", Vector3(0, 0, 0), -18.0f);
-								break;
-							}
-						}
-					}
-				}
-				else if (selection == 8) {  // Close lobby button
-					audioEngine.PlaySounds("MenuSelect.wav", Vector3(0, 0, 0), -18.0f);
-					return PushdownResult::Pop;
-				}
+				audioEngine.PlaySounds("MenuSelect.wav", Vector3(0, 0, 0), -18.0f);
+				return PushdownResult::Pop;
 			}
 
 			RenderUI();
@@ -236,33 +144,37 @@ namespace NCL::CSC8503 {
 		}
 
 		void RenderUI() {
-			Vector2 basePos = Vector2(0.01f, 0.2f);
-			Vector2 listPos = Vector2(0.8f, 0.2f);
+			Debug::Print("LOBBY", Vector2(0.42f, 0.1f));
 
-			Debug::Print("Select your colour!", Vector2(0.3f, 0.1f));
+			Vector2 leftStartPos = Vector2(0.3f, 0.3f);
+			Vector2 rightStartPos = Vector2(0.5f, 0.3f);
+			float verticalSpacing = 0.09f;
 
-			// Render Colour Options
-			for (size_t i = 0; i < 9; i++) {
-				std::string currentItem = (i == selection) ? "> " + std::to_string(i + 1) + ". " + (i < 8 && colourTaken[i] ? "Taken" : menuItems[i]) + " <"
-					: "  " + std::to_string(i + 1) + ". " + (i < 8 && colourTaken[i] ? "" : menuItems[i]);
+			// Draw first 4 colors on the left
+			for (int i = 0; i < 4; ++i) {
+				std::string colorName = menuItems[i];
+				btVector4 btColor = Color::GetPlayerColor(i);
+				Vector4 textColor(btColor.x(), btColor.y(), btColor.z(), btColor.w());
 
-				//Leave button
-				if (i == 8) {
-					currentItem = (i == selection) ? "> LEAVE <" : "  LEAVE";
-					Debug::Print(currentItem, basePos + Vector2(0, 0.07f * i));
-					continue;
-				}
-
-				btVector4 btColour = Color::GetPlayerColor(i + 1);
-				Vector4 textColour(btColour.x(), btColour.y(), btColour.z(), btColour.w());
-				Debug::Print(currentItem, basePos + Vector2(0, 0.06f * i), textColour);
+				Vector2 pos = leftStartPos + Vector2(0, i * verticalSpacing);
+				Debug::Print(std::to_string(i + 1) + ". " + colorName, pos, textColor);
 			}
 
-			// Render Player List
-			Debug::Print("PLAYERS", listPos);
-			for (size_t i = 0; i < playerList.size(); i++) {
-				Debug::Print(std::to_string(i + 1) + ". " + playerList[i], listPos + Vector2(0, 0.05f * (i + 1)));
+			// Draw next 4 colors on the right
+			for (int i = 4; i < 8; ++i) {
+				std::string colorName = menuItems[i];
+				btVector4 btColor = Color::GetPlayerColor(i);
+				Vector4 textColor(btColor.x(), btColor.y(), btColor.z(), btColor.w());
+
+				Vector2 pos = rightStartPos + Vector2(0, (i - 4) * verticalSpacing);
+				Debug::Print(std::to_string(i + 1) + ". " + colorName, pos, textColor);
 			}
+
+			Vector2 buttonStart = Vector2(0.35f, 0.85f);
+
+			std::string leaveLabel = "> LEAVE LOBBY <";
+
+			Debug::Print(leaveLabel, buttonStart);
 		}
 
 	protected:
