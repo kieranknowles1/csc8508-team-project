@@ -4,6 +4,7 @@
 #include "Multiplayer/Server.hpp"
 #include "Health.h"
 #include "Respawn.h"
+#include "WorldState.h"
 #include "Score.h"
 
 #include <memory>
@@ -53,7 +54,7 @@ void PlayerObject::Update(float dt) {
     rightDirection = CalculateRightDirection(upDirection);
     forwardDirection = CalculateForwardDirection(upDirection, rightDirection);
     updateGravity(dt);
-    //Animation: 
+    //Animation:
     CorrectAnimation();
 
     if (renderObject->GetAnimation()) {
@@ -67,7 +68,7 @@ void PlayerObject::UpdateWorldState() {
     score->UpdateWorldState();
     health->UpdateWorldState();
     attack->UpdateWorldState();
-    GameObject::UpdateWorldState();
+    ServerObject::UpdateWorldState();
 
     auto [writeState, lock] = GetWorldStates()->GetWriteState();
     std::unique_lock stateLock(writeState->Lock());
@@ -77,11 +78,13 @@ void PlayerObject::UpdateWorldState() {
     writeState->UpdateState(StateType::Animation, animationInt);
 }
 
-void PlayerObject::UpdateFromWorldState(float tickProgress) {
-    score->UpdateFromWorldState(tickProgress);
-    attack->UpdateFromWorldState(tickProgress);
-    health->UpdateFromWorldState(tickProgress);
-    GameObject::UpdateFromWorldState(tickProgress);
+void PlayerObject::UpdateFromWorldState(float dt) {
+    attack->UpdateFromWorldState(dt);
+    score->UpdateFromWorldState(dt);
+    health->UpdateFromWorldState(dt);
+    ServerObject::UpdateFromWorldState(dt);
+
+    elapsedTickTime += dt;
 
     std::function lerp = [](float x, float y, float w) { return x + ((y - x) * w); };
 
@@ -110,9 +113,9 @@ void PlayerObject::UpdateFromWorldState(float tickProgress) {
         btVector3 currentUpVector = std::get<btVector3>(currentUpVectorValue);
         btVector3 targetUpVector = std::get<btVector3>(targetUpVectorValue);
         btVector3 interpolated = btVector3(
-            lerp(currentUpVector.x(), targetUpVector.x(), tickProgress),
-            lerp(currentUpVector.y(), targetUpVector.y(), tickProgress),
-            lerp(currentUpVector.z(), targetUpVector.z(), tickProgress)
+            lerp(currentUpVector.x(), targetUpVector.x(), dt),
+            lerp(currentUpVector.y(), targetUpVector.y(), dt),
+            lerp(currentUpVector.z(), targetUpVector.z(), dt)
         );
 
         setUpDirection(interpolated);
@@ -124,7 +127,7 @@ void PlayerObject::UpdateFromWorldState(float tickProgress) {
 }
 
 std::vector<std::shared_ptr<Packet::Packet>> PlayerObject::CreatePackets(int sequenceNum) {
-    std::vector<std::shared_ptr<Packet::Packet>> packets = GameObject::CreatePackets(sequenceNum);
+    std::vector<std::shared_ptr<Packet::Packet>> packets = ServerObject::CreatePackets(sequenceNum);
     std::vector<std::shared_ptr<Packet::Packet>> damagePackets = attack->CreatePackets(sequenceNum);
     std::vector<std::shared_ptr<Packet::Packet>> healthPackets = health->CreatePackets(sequenceNum);
     std::vector<std::shared_ptr<Packet::Packet>> scorePackets = score->CreatePackets(sequenceNum);

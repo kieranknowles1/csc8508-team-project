@@ -254,7 +254,11 @@ GameTechRenderer::GameTechRenderer(Window* window) : OGLRenderer(window), GameTe
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
 	animationShader = new OGLShader("skinningvert.glsl", "deferredscenefrag.glsl"); 
+	extractLightShader = new OGLShader("texturevert.glsl", "extractbrightnessfrag.glsl");
+	blurShader = new OGLShader("texturevert.glsl", "gaussianblurfrag.glsl");
+	bloomShader = new OGLShader("texturevert.glsl", "bloomcombinefrag.glsl");
 
+	glGenFramebuffers(1, &bloomFBO);
 }
 
 GameTechRenderer::~GameTechRenderer() {
@@ -285,7 +289,11 @@ GameTechRenderer::~GameTechRenderer() {
 	glDeleteFramebuffers(1, &edgeNormalsFBO);
 	glDeleteTextures(1, &edgeNormalsTex);
 
+	//delete MaleGuard;
     delete animationShader;
+	delete extractLightShader;
+    delete blurShader;
+    delete bloomShader;
 
 }
 
@@ -938,7 +946,8 @@ void GameTechRenderer::RenderDecals() {
 	glDepthFunc(GL_LEQUAL);
 }
 
-void GameTechRenderer::RenderPostProcessing() { 
+void GameTechRenderer::RenderPostProcessing() { //gonna try putting edge detection first: 
+
 
 		//Edge detection:
 		glBindFramebuffer(GL_FRAMEBUFFER, edgeNormalsFBO);
@@ -995,6 +1004,38 @@ void GameTechRenderer::RenderPostProcessing() {
 		BindMesh(*fullscreenQuad);
 		DrawBoundMesh();
 
+		//Bloom: scene currently held by laserAddedTex. Want the bloom to affect the lasers so do this after lasers
+	    //First create two textures, one holding the scene as is and another holding only the bright parts of the scene:
+		glBindFramebuffer(GL_FRAMEBUFFER, pointLightFBO); //need an FBO with multiple attachments and we no longer need the textures this one is holding
+		glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+		glDisable(GL_CULL_FACE);
+		glDisable(GL_BLEND);
+		glDisable(GL_DEPTH_TEST);
+		UseShader(*extractLightShader);
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, laserAddedTex); 
+		glUniform1i(glGetUniformLocation(extractLightShader->GetProgramID(), "diffuseTex"), 0);
+		BindMesh(*fullscreenQuad);
+		DrawBoundMesh(); //now the bright parts of the image have been extracted, need to blur that texture holding only the bright parts
+		//at this point laserAddedTex still does hold scene as is but so does diffuseLightTex
+		ApplyBlur();
+		//now combine:
+		glBindFramebuffer(GL_FRAMEBUFFER, hdrFBO);
+		glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+		glDisable(GL_CULL_FACE);
+		glDisable(GL_BLEND);
+		glDisable(GL_DEPTH_TEST);
+		UseShader(*bloomShader);
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, lightDiffuseTex); //could also try laserAddedTex which should still hold the scene //lightDiffuseTex
+		glUniform1i(glGetUniformLocation(bloomShader->GetProgramID(), "sceneTex"), 0);
+		glActiveTexture(GL_TEXTURE1);
+		glBindTexture(GL_TEXTURE_2D, bufferNormalTex);
+		glUniform1i(glGetUniformLocation(bloomShader->GetProgramID(), "blurredLights"), 1);
+		glUniform1i(glGetUniformLocation(bloomShader->GetProgramID(), "bloomOn"), GetBloomOn());
+		BindMesh(*fullscreenQuad);
+		DrawBoundMesh();
+
 	    //Vignette post processing:
 	    glBindFramebuffer(GL_FRAMEBUFFER, BFBO); 
 	    glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
@@ -1006,6 +1047,7 @@ void GameTechRenderer::RenderPostProcessing() {
 		glUniform1f(glGetUniformLocation(vignetteShader->GetProgramID(), "vignetteIntensity"), vignetteIntensity);
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, laserAddedTex); 
+		glBindTexture(GL_TEXTURE_2D, hdrTex); //was laserAddedTex for testing use lightSpecularTex //bufferNormalTex 
 		glUniform1i(glGetUniformLocation(vignetteShader->GetProgramID(), "diffuseTex"), 0);
 		glUniform2f(glGetUniformLocation(vignetteShader->GetProgramID(), "windowSize"), windowSize.x, windowSize.y);
 		glUniform3fv(glGetUniformLocation(vignetteShader->GetProgramID(), "effectColour"), 1, (float*)&vignetteColour);
@@ -1253,3 +1295,32 @@ void GameTechRenderer::RenderAnimations() {
 		}
 	}
 }
+
+void GameTechRenderer::ApplyBlur() { 
+	glBindFramebuffer(GL_FRAMEBUFFER, bloomFBO); 
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, bufferNormalTex, 0); 
+	glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT); 
+	UseShader(*blurShader); 
+
+	glDisable(GL_DEPTH_TEST);
+	glActiveTexture(GL_TEXTURE0);
+	glUniform1i(glGetUniformLocation(blurShader->GetProgramID(), "diffuseTex"), 0); 
+
+	for (int i = 0; i < 10; ++i) { //Higher number = stronger blur
+	    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, bufferNormalTex, 0); //could choose any floating point colour texture that won't be used elsewhere afterwards
+		glUniform1i(glGetUniformLocation(blurShader->GetProgramID(), "isVertical"), 0);
+
+	    glBindTexture(GL_TEXTURE_2D, lightSpecularTex); 
+	    BindMesh(*fullscreenQuad);
+	    DrawBoundMesh();
+		
+		//Then swap the colour buffers and process again:
+		glUniform1i(glGetUniformLocation(blurShader->GetProgramID(), "isVertical"), 1);
+		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, lightSpecularTex, 0); 
+		glBindTexture(GL_TEXTURE_2D, bufferNormalTex); 
+		BindMesh(*fullscreenQuad);
+		DrawBoundMesh();
+	}
+	glBindFramebuffer(GL_FRAMEBUFFER, 0); 
+	glEnable(GL_DEPTH_TEST); 
+} 

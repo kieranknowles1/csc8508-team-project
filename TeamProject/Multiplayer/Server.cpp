@@ -12,6 +12,7 @@
 #include "Multiplayer/Lobby.hpp"
 #include "Multiplayer/User.hpp"
 #include "WorldState.h"
+#include "ServerObject.h"
 
 using namespace Lobbies;
 
@@ -109,7 +110,7 @@ namespace Multiplayer {
 
     void Server::SendState(bool endOfTick) {
         if (endOfTick) return;
-        
+
         if (m_isHost && m_game->GetState() == GameState::STARTING) {
             std::shared_ptr<Packet::StartGamePacket> startGame = std::make_shared<Packet::StartGamePacket>();
             m_network->Broadcast(startGame);
@@ -119,10 +120,10 @@ namespace Multiplayer {
         if (m_game->GetState() != GameState::ACTIVE) return;
 
         m_game->GetWorld()->OperateOnContents([&](GameObject* object) {
+            if (!object->IsNetworked()) return;
             if (object->GetOwner() == nullptr) return;
             if (*(object->GetOwner()) != *m_user) return;
-            object->GetWorldStates()->UpdateBuffer();
-            
+
             if (object->getType() == GameObject::Type::Player) {
                 PlayerObject* player = (PlayerObject*)object;
                 player->GetAttackAttrib()->GetWorldStates()->UpdateBuffer();
@@ -130,7 +131,10 @@ namespace Multiplayer {
                 player->GetScoreAttrib()->GetWorldStates()->UpdateBuffer();
             }
 
-            std::vector<std::shared_ptr<Packet::Packet>> packets = object->CreatePackets(m_tickCount);
+            ServerObject* netObj = (ServerObject*)object;
+            netObj->GetWorldStates()->UpdateBuffer();
+
+            std::vector<std::shared_ptr<Packet::Packet>> packets = netObj->CreatePackets(m_tickCount);
             for (auto packet = packets.begin(); packet != packets.end(); packet++) {
                 m_network->Broadcast(*packet);
             }
@@ -201,9 +205,13 @@ namespace Multiplayer {
 
         // Swapping buffers after writing new states.
         m_game->GetWorld()->OperateOnContents([&](GameObject* object) {
-            if (object->GetOwner() == nullptr) return;
-            if (*(object->GetOwner()) == *m_user) return;
-            object->GetWorldStates()->UpdateBuffer();
+            if (!object->IsNetworked()) return;
+
+            ServerObject* netObj = (ServerObject*)object;
+
+            if (netObj->GetOwner() == nullptr) return;
+            if (*(netObj->GetOwner()) == *m_user) return;
+            netObj->GetWorldStates()->UpdateBuffer();
 
             if (object->getType() == GameObject::Type::Player) {
                 PlayerObject* player = (PlayerObject*)object;

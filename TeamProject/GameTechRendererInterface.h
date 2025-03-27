@@ -138,6 +138,14 @@ namespace NCL::CSC8503 {
 			uiElements.clear();
 		}
 
+		bool GetBloomOn() const {
+			return bloomOn;
+		}
+
+		void SetBloomOn(bool toggle) {
+			bloomOn = toggle;
+		}
+
 	protected:
 		// Post-processing settings
 		bool hdrOn = true;
@@ -149,6 +157,7 @@ namespace NCL::CSC8503 {
 		float delta = 0;
 		Window* window;
 		Camera* camera = nullptr;
+		bool bloomOn = true;
 
 		std::vector<RenderObject*> frameObjects;
         std::vector<UiSprite> frameSprites;
