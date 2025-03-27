@@ -158,7 +158,7 @@ namespace Multiplayer {
             else {
                 // Drop old packets.
                 if (currentPacket->GetSequenceNumber() >= m_processTick) {
-                    m_buffer[m_tickCount % TICK_BUFFER_SIZE].push_back(currentPacket);
+                    m_buffer[currentPacket->GetSequenceNumber() % TICK_BUFFER_SIZE].push_back(currentPacket);
 
                     if (currentPacket->GetSequenceNumber() < smallestIncoming) {
                         smallestIncoming = currentPacket->GetSequenceNumber();
