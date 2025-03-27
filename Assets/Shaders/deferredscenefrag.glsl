@@ -52,9 +52,4 @@ void main(void)   {
 	fragColour[1] = vec4(vecnormal.xyz * 0.5 + 0.5, 1.0); // Normal in RGB, alpha reserved
 	fragColour[2] = vec4(vec3(specular), 1.0);
 	fragColour[3] = vec4(vec3(gloss), 1.0);
-	
-
-// 	fragColour[0].rgb = albedo.rgb; //all the (non-lighting) colour information goes into here
-// 	fragColour[0].a = specular;
-// 	fragColour[1] = vec4(vecnormal.xyz * 0.5 + 0.5, 1.0); //(THE *0.5 + 0.5) may be unneccessary for floating point textures
 }
