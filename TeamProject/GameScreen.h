@@ -2,6 +2,7 @@
 
 #include <PauseScreen.h>
 #include "PushdownState.h"
+#include "EndScreenMP.h"
 
 namespace NCL::CSC8503 {
 
@@ -43,7 +44,18 @@ namespace NCL::CSC8503 {
                 isPaused = true;
                 game->SetPlayerUpdatePaused(true);
             }
+            gameTimer += dt;
+            if ((maxGameTime - gameTimer) > 0.1f) {
+                std::string asString = std::to_string((int)((maxGameTime - gameTimer) * 100));
+                asString = asString.substr(0, asString.size() - 2) + "." + asString.substr(asString.size() - 2, 2);
+                Debug::Print("TIME: " + asString, Vector2(0.75, 0.1));
+            }
 
+           
+            if (gameTimer >= maxGameTime) {
+                *newState = new EndScreenMP(controller, game);
+                return PushdownResult::Push;
+            }
             if (!isPaused) {
                 game->UpdatePlayer(dt);
             }
@@ -78,6 +90,8 @@ namespace NCL::CSC8503 {
         Controller* controller;
         TutorialGame* game;
         PlayerController* playerController;
+        float gameTimer = 0;
+        float maxGameTime = 300.0f;
 
         PushdownResult HandlePauseMenu(PushdownState** newState) {
             const std::array<std::string, 2> menuItems = { "Resume", "Exit" };

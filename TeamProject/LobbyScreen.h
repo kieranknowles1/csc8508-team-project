@@ -93,7 +93,7 @@ namespace NCL::CSC8503 {
 					audioEngine.PlaySounds("MenuSelect.wav", Vector3(0, 0, 0), -18.0f);
                     game->Start();
                     game->GetServerInstance()->ResetTick();
-                    *newState = new GameScreen(controller, game, game->GetPlayerController());
+                    *newState = new MultiplayerGameScreen(controller, game, game->GetPlayerController());
                     return PushdownResult::Push;
 				}
 			}
@@ -208,7 +208,7 @@ namespace NCL::CSC8503 {
                 game->Start();
                 game->GetServerInstance()->ResetTick();
                 game->SetState(GameState::ACTIVE);
-                *newState = new GameScreen(controller, game, game->GetPlayerController());
+                *newState = new MultiplayerGameScreen(controller, game, game->GetPlayerController());
                 return PushdownResult::Push;
             }
 
