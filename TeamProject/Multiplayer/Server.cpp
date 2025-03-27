@@ -170,8 +170,6 @@ namespace Multiplayer {
 
                     // Pass packets on to clients.
                     if (m_isHost) {
-                        // Add 1 to sequence number as this function is called at the end of a tick.
-                        currentPacket->SetSequenceNumber(currentPacket->GetSequenceNumber());
                         m_network->Broadcast(currentPacket);
                     }
                 }
