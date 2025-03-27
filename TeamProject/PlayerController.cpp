@@ -61,6 +61,7 @@ void PlayerController::UpdateMovement(float dt) {
         overheat->Animate(dt);
     }
     HandleYaw();
+    HandleHurtEffects();
     SpecialTypeCalculations();
     HandleSliding(dt);
 
@@ -72,14 +73,11 @@ void PlayerController::UpdateMovement(float dt) {
         return;
     }
     RotationCalculations();
- 
     CameraMovement();
     CheckForGround();
-
     GroundNormalCalculations();
     MovementCalculations(dt);
     HandleJumping();
-    HandleHurtEffects();
 
     previousVelocity = rb->getLinearVelocity();
     rb->setLinearVelocity(movement);
