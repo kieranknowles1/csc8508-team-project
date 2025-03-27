@@ -1,6 +1,7 @@
 #pragma once
 
 #include "AudioEngine.h"
+#include "Multiplayer/Server.hpp"
 
 using namespace NCL;
 using namespace NCL::CSC8503;
@@ -77,6 +78,7 @@ public:
                     }
                     playerController->getJumppadChannels().clear();
 
+                    game->GetServerInstance()->Stop();
                     game->ClearWorld();
                     return PushdownResult::Clear;
                 }
