@@ -25,6 +25,10 @@ public:
 	~Respawn() {};
 	static Respawn* GetInstance() { return instance; }
 
+	void ClearPlayers() {
+		players.clear();
+	}
+
 	void InsertRespawn(RespawnPoint* respawnPoint) {
 		respawnPoints.push_back(respawnPoint);
 	}
