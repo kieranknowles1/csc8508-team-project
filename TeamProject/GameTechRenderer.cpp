@@ -1306,7 +1306,7 @@ void GameTechRenderer::ApplyBlur() {
 	glActiveTexture(GL_TEXTURE0);
 	glUniform1i(glGetUniformLocation(blurShader->GetProgramID(), "diffuseTex"), 0); 
 
-	for (int i = 0; i < 10; ++i) { //Higher number = stronger blur
+	for (int i = 0; i < 50; ++i) { //Higher number = stronger blur
 	    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, bufferNormalTex, 0); //could choose any floating point colour texture that won't be used elsewhere afterwards
 		glUniform1i(glGetUniformLocation(blurShader->GetProgramID(), "isVertical"), 0);
 
