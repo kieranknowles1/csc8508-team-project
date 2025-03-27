@@ -2,9 +2,6 @@
 
 EndScreenMPUI::EndScreenMPUI()
 {
-
-	AddPlayer({ "Player1", 100, TeamColor::RED });
-	AddPlayer({ "Player2", 200, TeamColor::BLUE });
 	InitMenu();
 	PopulateLeaderboard();
 }
@@ -20,7 +17,7 @@ void EndScreenMPUI::render(std::vector<UiSprite>& sprites)
 
 	for (auto& button : buttons)
 	{
-		sprites.push_back({ button.position, button.size, button.color });
+		sprites.push_back({ button.position, button.size, activeButton });
 	}
 }
 
@@ -38,14 +35,11 @@ void EndScreenMPUI::render(std::vector<UiText>& texts)
 
 void EndScreenMPUI::InitMenu()
 {
-	Vector2 buttonSize = Vector2(0.3f, 0.075f);
 	background = { Vector2(0.5f, 0.5f), Vector2(1, 1) };
 	//created buttons
-	buttons.push_back({ Vector2(0.3f, 0.1f), buttonSize });
-	buttons.push_back({ Vector2(0.7f, 0.1f), buttonSize });
+	buttons.push_back({ Vector2(0.5f, 0.1f), buttonSize });
 
-	buttonTexts.push_back({ Vector2(0.3f - buttonSize.x / 3.5, 0.9f + buttonSize.y / 4), "Main Menu" });
-	buttonTexts.push_back({ Vector2(0.7f - buttonSize.x / 6, 0.9f + buttonSize.y / 4), "Quit" });
+	buttonTexts.push_back({ Vector2(0.45f - buttonSize.x / 3.5, 0.9f + buttonSize.y / 4), "Return to Main Menu" });
 
 	//created leaderboard
 	Vector2 boxSize = { leaderboardSize.x / columns, leaderboardSize.y / rows };
@@ -66,21 +60,6 @@ void EndScreenMPUI::InitMenu()
 			leaderboardTexts[i * columns].text = "Player:";
 			leaderboardTexts[i * columns + 1].text = "Color:";
 			leaderboardTexts[i * columns + 2].text = "Score:";
-		}
-	}
-}
-
-void EndScreenMPUI::UpdateMenu(unsigned int selection)
-{
-	for (int i = 0; i < buttons.size(); i++)
-	{
-		if (i == selection)
-		{
-			buttons[i].color = activeButton;
-		}
-		else
-		{
-			buttons[i].color = inactiveButton;
 		}
 	}
 }

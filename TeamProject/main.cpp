@@ -103,12 +103,6 @@ int main(int argc, char** argv) {
 
     //audioEngine.Init();
 
-    //PushdownMachine machine(new GameScreen(controller, game.get(), "Singleplayer"));
-
-
-    //PushdownMachine machine(new EndScreenMP(controller, game.get()));
-    //PushdownMachine machine(new EndScreenSP(controller, game.get()));
-
     PushdownMachine machine(new MainMenuScreen(controller, game.get(), renderer.get()));
 
     // Clear delta time to exclude start up time

@@ -19,7 +19,8 @@ namespace NCL::CSC8503 {
             game->UpdateGame(dt);
             game->UpdatePlayer(dt);
             if (game->getSPEnd()) {
-                *newState = new EndScreenSP(controller, game, game->GetSPMode()->getScore());
+                game->setSPEnd(false);
+                *newState = new EndScreenSP(controller, game, this->game->GetSPMode()->getScore());
                 std::cout << "Singeplayer game ended" << std::endl;
                 return PushdownResult::Push;
             }
