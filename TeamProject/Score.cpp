@@ -4,6 +4,7 @@
 #include "Multiplayer/GamePackets.hpp"
 #include "WorldState.h"
 #include "GameObject.h"
+#include "PlayerObject.h"
 
 using namespace WorldState;
 using namespace NCL::CSC8503;
@@ -39,7 +40,7 @@ void ScoreAttrib::UpdateFromWorldState(float tickProgress) {
     if (!hasCurrentScore && hasTargetScore) {
         std::unique_lock writeLock = current->Lock();
         current->UpdateState(StateType::Score, score);
-        hasCurrentScore == true;
+        hasCurrentScore = true;
         currentScoreValue = score;
     }
 
@@ -57,15 +58,16 @@ void ScoreAttrib::UpdateFromWorldState(float tickProgress) {
 
 
 std::vector<std::shared_ptr<Packet::Packet>> ScoreAttrib::CreatePackets(int sequenceNum) {
-    std::vector<std::shared_ptr<Packet::Packet>> packets;
+    //std::vector<std::shared_ptr<Packet::Packet>> packets;
 
-    std::shared_ptr<Packet::ScorePacket> scorePacket = std::make_shared<Packet::ScorePacket>(
-        GetParent()->GetWorldID(),
-        score,
-        sequenceNum
-    );
-    packets.push_back(scorePacket);
-    return std::move(packets);
+    //std::shared_ptr<Packet::DeathPacket> scorePacket = std::make_shared<Packet::DeathPacket>(
+    //    ((PlayerObject*)GetParent())->
+    //    score,
+    //    sequenceNum
+    //);
+    //packets.push_back(scorePacket);
+    //return std::move(packets);
+    return {};
 }
 
 

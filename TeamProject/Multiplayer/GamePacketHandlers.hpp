@@ -113,9 +113,9 @@ namespace Packet {
     }; 
 
 
-    class ScorePacketHandler : public PacketHandler {
+    class DeathPacketHandler : public PacketHandler {
     public:
-        ScorePacketHandler() : PacketHandler(static_cast<Type>(PacketType::SCORE)) {}
+        DeathPacketHandler() : PacketHandler(static_cast<Type>(PacketType::DEATH)) {}
 
         void Handle(const std::shared_ptr<Packet> packet) override;
         std::shared_ptr<Packet> Translate(const ENetEvent* event) const override;

@@ -590,10 +590,13 @@ namespace Packet {
     void DamagePacketHandler::Handle(const std::shared_ptr<Packet> packet) {
         const DamagePacket* damagePacket = std::static_pointer_cast<DamagePacket>(packet).get();
         PlayerObject* targetObject = (PlayerObject*) GameObject::GetGameObjectByID(damagePacket->GetTargetID());
+        GameObject* hitBy = GameObject::GetGameObjectByID(damagePacket->GetDamageDealer());
 
         if (targetObject == nullptr) return;
 
+        // NOTE: this is not threadsafe.
         HealthAttrib* health = targetObject->GetHealthAttrib();
+        health->SetLastHitBy(hitBy);
         health->Damage(damagePacket->GetDamage());
     }
 
@@ -770,22 +773,21 @@ namespace Packet {
 #pragma endregion Pong
 
 
-#pragma region ScorePacketHandler
-    void ScorePacketHandler::Handle(const std::shared_ptr<Packet> packet) {
-        const ScorePacket* scorePacket = std::static_pointer_cast<ScorePacket>(packet).get();
+#pragma region DeathPacketHandler
+    void DeathPacketHandler::Handle(const std::shared_ptr<Packet> packet) {
+        const DeathPacket* scorePacket = std::static_pointer_cast<DeathPacket>(packet).get();
         GameObject* object = GameObject::GetGameObjectByID(scorePacket->GetObjectID());
 
         if (object == nullptr) return;
-        if (object->GetOwner() == nullptr) return;
-
-        if (TutorialGame::getInstance()->GetServerInstance()->IsOwnerOf(object)) return;
 
         if (object->getType() == GameObject::Type::Player) {
-            ((PlayerObject*)object)->GetScoreAttrib()->SetScore(scorePacket->GetScore());
+            // NOTE: this is not threadsafe.
+            ScoreAttrib* scoreAttrib = ((PlayerObject*)object)->GetScoreAttrib();
+            scoreAttrib->AddToScore(scorePacket->GetScoreIncrease());
         }
     }
     
-    std::shared_ptr<Packet> ScorePacketHandler::Translate(const ENetEvent* event) const {
+    std::shared_ptr<Packet> DeathPacketHandler::Translate(const ENetEvent* event) const {
         ENetPacket* packet = event->packet;
         Type type;
         uint8_t channel;
@@ -805,10 +807,10 @@ namespace Packet {
         memcpy(&score, packet->data + offset, sizeof(float));
         offset += sizeof(float);
 
-        return std::make_shared<ScorePacket>(objectID, score, sequenceNumber);
+        return std::make_shared<DeathPacket>(objectID, score, sequenceNumber);
     }
     
-    ENetPacket* ScorePacketHandler::ToENetPacket(const std::shared_ptr<Packet> packet) const {
+    ENetPacket* DeathPacketHandler::ToENetPacket(const std::shared_ptr<Packet> packet) const {
         char* buffer = new char[
             sizeof(Type)
             + sizeof(uint8_t)
@@ -817,7 +819,7 @@ namespace Packet {
             + sizeof(float)
         ];
 
-        ScorePacket scorePacket = (*static_cast<ScorePacket*>(packet.get()));
+        DeathPacket scorePacket = (*static_cast<DeathPacket*>(packet.get()));
         size_t offset = 0;
 
         Type type = scorePacket.GetType();
@@ -836,7 +838,7 @@ namespace Packet {
         memcpy(buffer + offset, &objectID, sizeof(int));
         offset = offset + sizeof(int);
 
-        float score = scorePacket.GetScore();
+        float score = scorePacket.GetScoreIncrease();
         memcpy(buffer + offset, &score, sizeof(int));
         offset = offset + sizeof(int);
 
@@ -850,6 +852,6 @@ namespace Packet {
     }
 
 
-#pragma endregion ScorePacketHandler
+#pragma endregion DeathPacketHandler
 
 }

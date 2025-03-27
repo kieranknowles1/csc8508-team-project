@@ -65,6 +65,7 @@ void PlayerObject::Update(float dt) {
 
 void PlayerObject::UpdateWorldState() {
     score->UpdateWorldState();
+    health->UpdateWorldState();
     attack->UpdateWorldState();
     GameObject::UpdateWorldState();
 
@@ -79,6 +80,7 @@ void PlayerObject::UpdateWorldState() {
 void PlayerObject::UpdateFromWorldState(float tickProgress) {
     score->UpdateFromWorldState(tickProgress);
     attack->UpdateFromWorldState(tickProgress);
+    health->UpdateFromWorldState(tickProgress);
     GameObject::UpdateFromWorldState(tickProgress);
 
     std::function lerp = [](float x, float y, float w) { return x + ((y - x) * w); };
@@ -124,18 +126,23 @@ void PlayerObject::UpdateFromWorldState(float tickProgress) {
 std::vector<std::shared_ptr<Packet::Packet>> PlayerObject::CreatePackets(int sequenceNum) {
     std::vector<std::shared_ptr<Packet::Packet>> packets = GameObject::CreatePackets(sequenceNum);
     std::vector<std::shared_ptr<Packet::Packet>> damagePackets = attack->CreatePackets(sequenceNum);
+    std::vector<std::shared_ptr<Packet::Packet>> healthPackets = health->CreatePackets(sequenceNum);
     std::vector<std::shared_ptr<Packet::Packet>> scorePackets = score->CreatePackets(sequenceNum);
 
     packets.insert(packets.end(), damagePackets.begin(), damagePackets.end());
+    packets.insert(packets.end(), healthPackets.begin(), healthPackets.end());
     packets.insert(packets.end(), scorePackets.begin(), scorePackets.end());
 
     auto [read, readLock] = GetWorldStates()->GetReadState();
 
     StateValue upVector;
     StateValue animation;
+
     std::shared_lock readStateLock = read->Lock_Shared();
+
     bool hasUpVector = read->ReadState(StateType::UpVector, &upVector);
     bool hasAnimation = read->ReadState(StateType::Animation, &animation);
+
     readStateLock.unlock();
     readLock.unlock();
 

@@ -7,7 +7,7 @@
 namespace NCL::CSC8503 {
     class GameObject;
 
-    class ScoreAttrib : StateUpdater {
+    class ScoreAttrib : public StateUpdater {
     public:
         ScoreAttrib(GameObject* parent) : parent(parent) {}
 
