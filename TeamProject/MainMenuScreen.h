@@ -69,7 +69,6 @@ namespace NCL::CSC8503 {
         }
 
         PushdownResult OnUpdate(float dt, PushdownState** newState) override {
-            //const std::array<std::string, 5> menuItems = { "Singleplayer", "Host Game", "Join Game", "Credits", "Quit" };
             bool ok = true;
 
             if (connectionFailedTime > 0) {
