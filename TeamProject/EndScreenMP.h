@@ -93,6 +93,7 @@ public:
     PushdownResult OnUpdate(float dt, PushdownState** newState) override {
 
         if (controller->GetDigital(Controller::DigitalControl::MenuConfirm)) {
+            game->StopServer();
 			game->ClearWorld();
 			return PushdownResult::Clear;
         }
