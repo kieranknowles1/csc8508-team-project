@@ -87,7 +87,26 @@ Controller* createController(Window* window) {
 }
 bool locked = true;
 
+#ifdef _WIN32
+#include <windows.h>
+#include <psapi.h>
+
+size_t WindowsAllocatedMemory() {
+    PROCESS_MEMORY_COUNTERS info;
+    if (GetProcessMemoryInfo(GetCurrentProcess(), &info, sizeof(info))) {
+        return info.WorkingSetSize; 
+    }
+    return 0;
+}
+#endif
+
 int main(int argc, char** argv) {
+    std::function<size_t(void)> GetAllocatedMemory;
+
+#ifdef _WIN32
+    GetAllocatedMemory = &WindowsAllocatedMemory;
+#endif
+
     auto config = Config("user-config.jsonc", Assets::DEFAULTCONFIG);
     bool quickStart = config.get<bool>("quickStart");
 
@@ -109,8 +128,11 @@ int main(int argc, char** argv) {
     window->GetTimer().GetTimeDeltaSeconds();
 
     bool quit = false;
+    
     int fps = 0;
     int frames = 0;
+    int megabytes = 0;
+
     float elapsed = 0;
     float last = 0;
 
@@ -123,13 +145,22 @@ int main(int argc, char** argv) {
         float dt = window->GetTimer().GetTimeDeltaSeconds();
         elapsed += dt;
         
+        // Update Display Statistics.
         if (elapsed - last >= 0.5) {
+            // Framerate
             fps = frames * 2;
             frames = 0;
+
+            // Memory Usage.
+            if (GetAllocatedMemory != nullptr) {
+                size_t allocatedMemory = GetAllocatedMemory();
+                megabytes = (int)allocatedMemory / (1024 * 1024);
+            }
+
             last += 0.5;
         }
-
         Debug::Print("FPS: " + std::to_string(fps), { 1.875, 0.05 }, { 1, 1, 1, 1 }, 0.5f);
+        Debug::Print("RAM: " + std::to_string(megabytes) + "MB", {1.675, 0.05}, {1, 1, 1, 1}, 0.5f);
 
         controller->Update(dt);
         window->SetTitle("Gametech frame time:" + std::to_string(1000.0f * dt));
