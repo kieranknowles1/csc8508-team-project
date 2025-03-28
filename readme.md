@@ -7,7 +7,7 @@
     - [Linux](#linux)
     - [PS5](#ps5)
   - [Debug Controls](#debug-controls)
-  - [Unity Importer](#Unity-Exporter)
+  - [Unity Exporter](#Unity-Exporter)
 
 For further information, see [docs/readme.md](docs/readme.md)
 
