@@ -372,6 +372,14 @@ void TutorialGame::LoadWorldFromFile(int levelNum) {
 
 
 void TutorialGame::ClearWorld() {
+    state = GameState::IDLE;
+
+    playerController.reset();
+    player = nullptr;
+
+    delete instance->spGameController;
+    instance->spGameController = nullptr;
+
     DestroyBullet();
     world->ClearAndErase();
     renderer->GetDecalSystem().ClearDecalsFromWorld();
