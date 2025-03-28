@@ -2,12 +2,12 @@
 // Should not normally be modified, instead create a `user-config.jsonc`
 // Use this as a reference for what options are available
 {
-    "windowWidth": 1280,
-    "windowHeight": 720,
+    "windowWidth": 1920,
+    "windowHeight": 1200,
     // One of "None", "Exclusive", "Borderless"
     // If borderless, then windowWidth and height should match your display
     // resolution
-    "fullscreen": "None",
+    "fullscreen": "Borderless",
 
     // The default host to use when joining a game
     "defaultHost": "10.70.33.113",

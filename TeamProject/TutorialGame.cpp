@@ -331,7 +331,7 @@ void TutorialGame::StopServer() {
 
 
 void TutorialGame::InitCamera() {
-    mainCamera->SetFieldOfVision(90);
+    mainCamera->SetFieldOfVision(105);
     world->GetMainCamera().SetNearPlane(1.75f);
     world->GetMainCamera().SetFarPlane(5000.0f);
     world->GetMainCamera().SetPitch(-15.0f);
