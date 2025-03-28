@@ -54,5 +54,5 @@ void main() {
 
     // Output final color
     //FragColor = finalColor;
-    FragColor = vec4(finalColor.rgb*50, finalColor.a);
+    FragColor = vec4(finalColor.rgb*75.0f, finalColor.a);
 }
