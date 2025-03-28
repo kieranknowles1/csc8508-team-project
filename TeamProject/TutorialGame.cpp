@@ -145,8 +145,10 @@ void TutorialGame::UpdatePlayer(float dt, bool camOnly) {
 
     numDeaths = player->GetHealthAttrib()->DeathCount();
 
-    std::string out = "Lives: " + std::to_string(3 - numDeaths);
-    Debug::Print(out, Vector2(0.05f, 0.2f));
+    if (gameMode == GameMode::SINGLEPLAYER) {
+        std::string out = "Lives: " + std::to_string(3 - numDeaths);
+        Debug::Print(out, Vector2(0.05f, 0.2f));
+    }
 
     if (player->GetHealthAttrib()->GetHealthState() == AliveState::DEAD) {
         player->GetHealthAttrib()->AddDeath();
