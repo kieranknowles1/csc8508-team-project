@@ -48,6 +48,9 @@ TutorialGame::TutorialGame(GameTechRendererInterface* renderer, Controller* cont
     new Respawn();
     //audioEngine.Init();
     audioEngine.Init();
+    audioEngine.LoadSound("MonoBeam.mp3", true, false, false);
+    audioEngine.LoadSound("jump_mono.wav", true, false, false);
+    audioEngine.LoadSound("JumpPad_mono.wav", true, false, false);
     audioEngine.LoadSound("Beam.mp3", true, true, false);
     audioEngine.LoadSound("HeartbeatLoop.wav", false, true, false);
     audioEngine.LoadSound("JumpPad.wav", true, false, false);

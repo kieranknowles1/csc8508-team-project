@@ -164,7 +164,7 @@ void PlayerController::HandleShooting(float dt) {
                 audioEngine.SetChannelPlaybackPosition(beamSoundChannel, startTimeMs);
             }
             else {
-                beamSoundChannel = audioEngine.PlaySounds("Beam.mp3", camera->GetPosition(), 0.0f);
+                beamSoundChannel = audioEngine.PlaySounds("MonoBeam.mp3", camera->GetPosition(), 0.0f);
                 if (beamSoundChannel != -1) {
                     audioEngine.SetChannel3dPosition(beamSoundChannel, camera->GetPosition());
                     audioEngine.SetChannelPlaybackPosition(beamSoundChannel, startTimeMs);
@@ -173,7 +173,7 @@ void PlayerController::HandleShooting(float dt) {
                 if (TutorialGame::getInstance()->GetServerInstance() != nullptr) {
                     auto pos = camera->GetPosition();
                     auto soundPacket = std::make_shared<Packet::SoundPacket>(
-                        "Beam.mp3", btVector3(pos.x, pos.y, pos.z), 0.0f, 1.0f, playbackTime, player->GetWorldID());
+                        "MonoBeam.mp3", btVector3(pos.x, pos.y, pos.z), 0.0f, 1.0f, playbackTime, player->GetWorldID());
                     TutorialGame::getInstance()->GetServerInstance()->GetNetwork()->Broadcast(soundPacket);
 
                     auto updatePacket = std::make_shared<Packet::SoundUpdatePacket>(player->GetWorldID(), camera->GetPosition());
@@ -404,6 +404,8 @@ void PlayerController::RotationCalculations() {
     up = rotationMatrix * btVector3(0, 1, 0);
     right = rotationMatrix * btVector3(1, 0, 0);
 
+    audioEngine.Set3dListenerAndOrientation(camera->GetPosition(), forward, up);
+
 };
 
 //camera follows player, lowers if crouching, don't change if third person
@@ -484,13 +486,13 @@ void PlayerController::MovementCalculations(float dt) {
 
 void PlayerController::HandleJumping() {
     if (controller->GetDigital(Controller::DigitalControl::Jump) && player->getCollided() && inAirTime <= 0) {
-        audioEngine.PlaySounds("jump.wav", camera->GetPosition(), -16.0f);
+        audioEngine.PlaySounds("jump_mono.wav", camera->GetPosition(), -16.0f);
         if (TutorialGame::getInstance()->GetServerInstance() != nullptr) {
             auto pos = camera->GetPosition();
             std::cout << "[Emitter] Jump sound at: " << pos << std::endl;
 
             auto jumpSoundPacket = std::make_shared<Packet::SoundPacket>(
-                "jump.wav",
+                "jump_mono.wav",
                 btVector3(pos.x, pos.y, pos.z),
                 -16.0f,
                 1.0f,   
@@ -555,13 +557,13 @@ void PlayerController::GetAllDirections() {
     Vector3 camUp = camera->GetUpVector();
    
     std::cout << "[Listener] Position: " << camera->GetPosition()
-        << " | Forward: " << camForward
-        << " | Up: " << camUp << std::endl;
+        << " | Forward: " << forward
+        << " | Up: " << up << std::endl;
 
     std::cout << "[Camera] Yaw: " << camera->GetYaw() << " | Pitch: " << camera->GetPitch() << std::endl;
 
     //Update FMod listener each frame so audio is correctly positioned
-    audioEngine.Set3dListenerAndOrientation(camera->GetPosition(), camForward, camUp);
+    
 }
 
 Vector2 PlayerController::getDirectionalInput() const

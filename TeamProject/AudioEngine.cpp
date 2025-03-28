@@ -15,10 +15,19 @@ CAudioEngine audioEngine;
 Implementation::Implementation() {
     mpStudioSystem = NULL;
     CAudioEngine::ErrorCheck(FMOD::Studio::System::create(&mpStudioSystem));
-    CAudioEngine::ErrorCheck(mpStudioSystem->initialize(32, FMOD_STUDIO_INIT_LIVEUPDATE, FMOD_INIT_PROFILE_ENABLE, NULL));
-
     mpSystem = NULL;
     CAudioEngine::ErrorCheck(mpStudioSystem->getCoreSystem(&mpSystem));
+
+    CAudioEngine::ErrorCheck(mpSystem->setSoftwareFormat(0, FMOD_SPEAKERMODE_STEREO, 0));
+    CAudioEngine::ErrorCheck(mpStudioSystem->initialize(32, FMOD_STUDIO_INIT_LIVEUPDATE, FMOD_INIT_PROFILE_ENABLE, NULL));
+
+    FMOD_SPEAKERMODE mode;
+    int channels;
+    CAudioEngine::ErrorCheck(mpSystem->getSoftwareFormat(nullptr, &mode, &channels));
+    std::cout << "[FMOD] Speaker mode: " << mode << ", Channels: " << channels << std::endl;
+
+    //mpSystem = NULL;
+    //CAudioEngine::ErrorCheck(mpStudioSystem->getCoreSystem(&mpSystem));
 }
 
 //Destructor
@@ -243,20 +252,20 @@ void CAudioEngine::Set3dListenerAndOrientation(const NCL::Maths::Vector3& vPosit
     const NCL::Maths::Vector3& vLook,
     const NCL::Maths::Vector3& vUp) {
     
-    NCL::Maths::Vector3 forward = -NCL::Maths::Vector::Normalise(vLook);
-    NCL::Maths::Vector3 up = NCL::Maths::Vector::Normalise(vUp);
+    //NCL::Maths::Vector3 forward = NCL::Maths::Vector::Normalise(vLook);
+    //NCL::Maths::Vector3 up = NCL::Maths::Vector::Normalise(vUp);
     //forward = -forward;
-    NCL::Maths::Vector3 rightUnNormalised = NCL::Maths::Vector::Cross(up, forward);
-    NCL::Maths::Vector3 right = -NCL::Maths::Vector::Normalise(rightUnNormalised);
-    NCL::Maths::Vector3 fwdUnNormalised = NCL::Maths::Vector::Cross(up, right);
-    forward = NCL::Maths::Vector::Normalise(fwdUnNormalised);
+    //NCL::Maths::Vector3 rightUnNormalised = NCL::Maths::Vector::Cross(up, forward);
+    //NCL::Maths::Vector3 right = -NCL::Maths::Vector::Normalise(rightUnNormalised);
+    //NCL::Maths::Vector3 fwdUnNormalised = NCL::Maths::Vector::Cross(up, right);
+    //forward = NCL::Maths::Vector::Normalise(fwdUnNormalised);
 
     //forward = -forward;
     //up.z *= -1.0f;
 
     FMOD_VECTOR fmodPosition = VectorToFmod(vPosition);
-    FMOD_VECTOR fmodForward = VectorToFmod(forward); 
-    FMOD_VECTOR fmodUp = VectorToFmod(up);
+    FMOD_VECTOR fmodForward = VectorToFmod(vLook); 
+    FMOD_VECTOR fmodUp = VectorToFmod(vUp);
 
     FMOD_VECTOR fmodVelocity = { 0.0f, 0.0f, 0.0f };
 
