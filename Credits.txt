@@ -27,8 +27,8 @@ Credits
   Head of Graphics Engineering
   
 - Thomas Johnson
-  Head of Networking.
-  Assisted in Gameplay.
+  Head of Networking
+  Assisted in Gameplay
 
 ================================================================================
 Assets
