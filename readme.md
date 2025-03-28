@@ -7,6 +7,7 @@
     - [Linux](#linux)
     - [PS5](#ps5)
   - [Debug Controls](#debug-controls)
+  - [Unity Importer](#Unity-Exporter)
 
 For further information, see [docs/readme.md](docs/readme.md)
 
@@ -55,3 +56,7 @@ On Keyboard/Controller:
 - **F3/Dpad up**: Toggle Bullet debug draw
 - **F4/Dpad right**: Toggle showing time usage
 - **H/Dpad left**: Toggle free cam
+
+  ## Unity Exporter
+  [Repository for the Unity expoerter and map](https://github.com/A-Barnett/Unity-Exporter)
+ 
