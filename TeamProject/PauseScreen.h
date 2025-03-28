@@ -78,7 +78,7 @@ public:
                     }
                     playerController->getJumppadChannels().clear();
 
-                    game->GetServerInstance()->Stop();
+                    game->StopServer();
                     game->ClearWorld();
                     return PushdownResult::Clear;
                 }
