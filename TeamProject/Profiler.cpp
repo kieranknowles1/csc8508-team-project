@@ -18,7 +18,7 @@ namespace NCL::CSC8503 {
 
 	void Profiler::printTimes()
 	{
-		Vector2 position(1.7, 0.15);
+		Vector2 position(1.7, 0.3);
 		for (auto& section : times) {
 			std::stringstream str;
 			str << section.first << ": " << std::chrono::duration_cast<std::chrono::microseconds>(section.second).count() / 1000.0f << "ms";
