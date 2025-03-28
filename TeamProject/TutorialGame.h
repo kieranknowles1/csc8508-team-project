@@ -133,6 +133,14 @@ namespace NCL {
                 return player;
             }
 
+            GameObject* getLocalPlayer() {
+                return player;
+            }
+
+            int GetLocalPlayerID() const {
+                return player ? player->GetWorldID() : -1;
+            }
+
             PerspectiveCamera* getMainCam() {
                 return mainCamera;
             }

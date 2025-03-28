@@ -469,6 +469,20 @@ void PlayerController::MovementCalculations(float dt) {
 void PlayerController::HandleJumping() {
     if (controller->GetDigital(Controller::DigitalControl::Jump) && player->getCollided() && inAirTime <= 0) {
         audioEngine.PlaySounds("jump.wav", camera->GetPosition(), -16.0f);
+        if (TutorialGame::getInstance()->GetServerInstance() != nullptr) {
+            auto pos = camera->GetPosition();
+
+            auto jumpSoundPacket = std::make_shared<Packet::SoundPacket>(
+                "jump.wav",
+                btVector3(pos.x, pos.y, pos.z),
+                -16.0f,
+                1.0f,   
+                0.0f,  
+                player->GetWorldID()
+            );
+
+            TutorialGame::getInstance()->GetServerInstance()->GetNetwork()->Broadcast(jumpSoundPacket);
+        }
         btVector3 normal = FindFloorNormal();
         float dotProduct = normal.dot(upDirection.absolute());
         if (fabs(dotProduct <= 1)) {

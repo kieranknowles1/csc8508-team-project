@@ -9,6 +9,9 @@
 #include "Score.h"
 #include <AudioEngine.h>
 
+std::unordered_map <int, int> Packet::PacketHandler::activeChannelPerObject;
+std::unordered_map <int, std::string> Packet::PacketHandler::activeSoundPerObject;
+
 using namespace Lobbies;
 
 namespace Packet {
@@ -860,10 +863,36 @@ namespace Packet {
 
     void SoundPacketHandler::Handle(const std::shared_ptr<Packet> packet) {
         auto sound = std::static_pointer_cast<SoundPacket>(packet);
-        GameObject* obj = GameObject::GetGameObjectByID(sound->GetObjectID());
+        int objectID = sound->GetObjectID();
+
+        /*if (sound->GetSoundName() == "Beam.mp3") {
+            auto it = activeSoundPerObject.find(objectID);
+
+            if (it != activeSoundPerObject.end() && it->second == "Beam.mp3") {
+                return;
+            }
+        }*/
+        GameObject* obj = GameObject::GetGameObjectByID(objectID);
+        int localID = TutorialGame::getInstance()->GetLocalPlayerID();
+
+        if (objectID == localID) return;
+        
         if (!obj) return;
 
         Vector3 pos(sound->GetPosition().x(), sound->GetPosition().y(), sound->GetPosition().z());
+
+        auto it = PacketHandler::activeChannelPerObject.find(objectID);
+        if (it != PacketHandler::activeChannelPerObject.end()) {
+            int existingChannel = it->second;
+            if (audioEngine.IsPlaying(existingChannel)) {
+                // Already playing, don’t play again
+                return;
+            }
+            else {
+                // Cleanup if the sound ended naturally
+                PacketHandler::activeChannelPerObject.erase(objectID);
+            }
+        }
         float volume = sound->GetVolume();
         float playbackTime = sound->GetPlaybackTime();
 
@@ -872,8 +901,10 @@ namespace Packet {
             audioEngine.SetChannel3dPosition(channel, pos);
             audioEngine.SetChannelPlaybackPosition(channel, static_cast<unsigned int>(playbackTime * 1000));
             obj->SetSoundChannelID(channel);
-            audioEngine.Set3dListenerAndOrientation(TutorialGame::getInstance()->getMainCam()->GetPosition(), TutorialGame::getInstance()->getPlayerObject()->getForwardDirection(), TutorialGame::getInstance()->getPlayerObject()->getUpDirection());
+            //audioEngine.Set3dListenerAndOrientation(TutorialGame::getInstance()->getMainCam()->GetPosition(), TutorialGame::getInstance()->getPlayerObject()->getForwardDirection(), TutorialGame::getInstance()->getPlayerObject()->getUpDirection());
             audioEngine.SetChannel3dMinMaxDistance(channel, 100.0f, 700.0f);
+            PacketHandler::activeChannelPerObject[objectID] = channel;
+            PacketHandler::activeSoundPerObject[objectID] = sound->GetSoundName();
         }
 
         
@@ -1048,7 +1079,11 @@ namespace Packet {
             //obj->SetSoundChannelID(-1);
             audioEngine.StopChannel(channel);
             obj->ClearSoundChannel();
+
+            
         }
+        PacketHandler::activeChannelPerObject.erase(objectID);
+        PacketHandler::activeSoundPerObject.erase(objectID);
     }
 
     std::shared_ptr<Packet> StopSoundPacketHandler::Translate(const ENetEvent* event) const {

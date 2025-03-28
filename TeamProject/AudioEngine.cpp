@@ -224,18 +224,41 @@ void CAudioEngine::SetChannelPlaybackPosition(int channelId, unsigned int positi
     ErrorCheck(result);
 }
 
-void CAudioEngine::Set3dListenerAndOrientation(const NCL::Maths::Vector3& vPosition, const NCL::Maths::Vector3& vLook, const NCL::Maths::Vector3& vUp) {
+/*void CAudioEngine::Set3dListenerAndOrientation(const NCL::Maths::Vector3& vPosition, const NCL::Maths::Vector3& vLook, const NCL::Maths::Vector3& vUp) {
     FMOD_VECTOR fmodPosition = VectorToFmod(vPosition);
     //FMOD_VECTOR fmodLook = VectorToFmod(vLook);
     //FMOD_VECTOR fmodUp = VectorToFmod(vUp);
 
-    FMOD_VECTOR fmodForward = { vLook.x, vLook.y, vLook.z };
-    FMOD_VECTOR fmodUp = { vUp.x, vUp.y, -vUp.z };
+    FMOD_VECTOR fmodForward = { -vLook.x, -vLook.y, -vLook.z };
+    FMOD_VECTOR fmodUp = { vUp.x, vUp.y, vUp.z };
 
     FMOD_VECTOR fmodVelocity = { 0.0f, 0.0f, 0.0f }; // Velocity is usually needed for Doppler effect, but we don't have it here
 
     if (sgpImplementation && sgpImplementation->mpSystem) {
         sgpImplementation->mpSystem->set3DListenerAttributes(0, &fmodPosition, &fmodVelocity, &fmodForward, &fmodUp);
+    }
+}*/
+
+void CAudioEngine::Set3dListenerAndOrientation(const NCL::Maths::Vector3& vPosition,
+    const NCL::Maths::Vector3& vLook,
+    const NCL::Maths::Vector3& vUp) {
+    // Ensure right-handed coordinate system
+    NCL::Maths::Vector3 forward = NCL::Maths::Vector::Normalise(vLook);
+    NCL::Maths::Vector3 up = NCL::Maths::Vector::Normalise(vUp);
+    NCL::Maths::Vector3 rightUnNormalised = NCL::Maths::Vector::Cross(up, forward);
+    NCL::Maths::Vector3 right = NCL::Maths::Vector::Normalise(right);
+    NCL::Maths::Vector3 fwdUnNormalised = NCL::Maths::Vector::Cross(right, up);
+    forward = NCL::Maths::Vector::Normalise(fwdUnNormalised);
+
+    FMOD_VECTOR fmodPosition = VectorToFmod(vPosition);
+    FMOD_VECTOR fmodForward = VectorToFmod(forward * -1.0f); 
+    FMOD_VECTOR fmodUp = VectorToFmod(up);
+
+    FMOD_VECTOR fmodVelocity = { 0.0f, 0.0f, 0.0f };
+
+    if (sgpImplementation && sgpImplementation->mpSystem) {
+        sgpImplementation->mpSystem->set3DListenerAttributes(
+            0, &fmodPosition, &fmodVelocity, &fmodForward, &fmodUp);
     }
 }
 
@@ -407,7 +430,7 @@ FMOD_VECTOR CAudioEngine::VectorToFmod(const NCL::Maths::Vector3& vPosition) {
     FMOD_VECTOR fVec;
     fVec.x = vPosition.x;
     fVec.y = vPosition.y;
-    fVec.z = -vPosition.z;
+    fVec.z = vPosition.z;
 
     return fVec;
 }
