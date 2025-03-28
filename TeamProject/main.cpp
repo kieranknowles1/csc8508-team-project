@@ -159,8 +159,11 @@ int main(int argc, char** argv) {
 
             last += 0.5;
         }
-        Debug::Print("FPS: " + std::to_string(fps), { 1.875, 0.05 }, { 1, 1, 1, 1 }, 0.5f);
-        Debug::Print("RAM: " + std::to_string(megabytes) + "MB", {1.675, 0.05}, {1, 1, 1, 1}, 0.5f);
+
+        if (game->ShowingProfiler()) {
+            Debug::Print("FPS: " + std::to_string(fps), { 1.875, 0.05 }, { 1, 1, 1, 1 }, 0.5f);
+            Debug::Print("RAM: " + std::to_string(megabytes) + "MB", { 1.675, 0.05 }, { 1, 1, 1, 1 }, 0.5f);
+        }
 
         controller->Update(dt);
         window->SetTitle("Gametech frame time:" + std::to_string(1000.0f * dt));
@@ -210,6 +213,7 @@ int main(int argc, char** argv) {
         game->GetResourceManager()->update(dt);
         renderer->collectFrameObjects(game->GetWorld());
         renderer->drawFrame(dt);
+
         Debug::UpdateRenderables(dt);
         frames++;
     }
