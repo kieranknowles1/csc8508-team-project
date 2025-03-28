@@ -30,11 +30,9 @@ namespace NCL {
             }
         }
 
-        void HealthAttrib::UpdateFromWorldState(float dt) {
-            elapsedTickTime += dt;
-
+        void HealthAttrib::UpdateFromWorldState(float tickProgress) {
             std::function lerp = [](float x, float y, float w) { return x + ((y - x) * w); };
-            float weight = fmod(elapsedTickTime, TICK_UPDATE_RATE) / TICK_UPDATE_RATE;
+            float weight = tickProgress;
 
             auto [current, currentLock] = GetWorldStates()->GetCurrentState();
             auto [read, readLock] = GetWorldStates()->GetReadState();
