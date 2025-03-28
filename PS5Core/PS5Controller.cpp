@@ -16,6 +16,9 @@ PS5Controller::PS5Controller(SceUserServiceUserId id) {
 	padHandle = scePadOpen(id, SCE_PAD_PORT_TYPE_STANDARD, 0, NULL);
 
 	scePadGetControllerInformation(padHandle, &padInfo);
+
+	memset(&data, 0, sizeof(data));
+	memset(&prevData, 0, sizeof(prevData));
 }
 
 PS5Controller::~PS5Controller(void) {
@@ -23,10 +26,17 @@ PS5Controller::~PS5Controller(void) {
 }
 
 void PS5Controller::Update(float dt) {
+	prevData = data;
 	int ret = scePadReadState(padHandle, &data);
 	if (ret != SCE_OK) {
 		std::cerr << "Failed to read input" << std::endl;
 	}
+
+	ScePadLightBarParam light;
+	light.r = feedback.color.x * 255.0f;
+	light.g = feedback.color.y * 255.0f;
+	light.b = feedback.color.z * 255.0f;
+	scePadSetLightBar(padHandle, &light);
 	JoystickController::Update(dt);
 }
 
@@ -47,6 +57,7 @@ ScePadButtonDataOffset toSce(JoystickController::Button button) {
 	case L3: return SCE_PAD_BUTTON_L3;
 	case R1: return SCE_PAD_BUTTON_R1;
 	case R3: return SCE_PAD_BUTTON_R3;
+	case TrackpadClick: return SCE_PAD_BUTTON_TOUCH_PAD;
 	case Select:
 	case DeckL4:
 	case DeckL5:
@@ -74,7 +85,18 @@ float triggerValue(uint8_t raw) {
 	return float(raw) / 256.0f;
 }
 
-float NCL::PS5::PS5Controller::internalAnalogueValue(Analogue analogue)
+Maths::Vector2 PS5Controller::trackMovement() const {
+	if (data.touchData.touchNum == 0 || prevData.touchData.touchNum == 0) {
+		return Maths::Vector2(0, 0);
+	}
+
+	return Maths::Vector2(
+		(data.touchData.touch[0].x - prevData.touchData.touch[0].x) / 32.0f,
+		(data.touchData.touch[0].y - prevData.touchData.touch[0].y) / 32.0f
+	);
+}
+
+float PS5Controller::internalAnalogueValue(Analogue analogue)
 {
 	using enum JoystickController::Analogue;
 	switch (analogue)
@@ -85,6 +107,8 @@ float NCL::PS5::PS5Controller::internalAnalogueValue(Analogue analogue)
 	case RightStickY: return  ConvertAxis(data.rightStick.y, padInfo.stickInfo.deadZoneRight);
 	case L2: return triggerValue(data.analogButtons.l2);
 	case R2: return triggerValue(data.analogButtons.r2);
+	case TrackpadX: return trackMovement().x;
+	case TrackpadY: return trackMovement().y;
 	default: assert(false);
 	}
 }

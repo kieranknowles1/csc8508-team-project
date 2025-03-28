@@ -102,6 +102,8 @@ size_t GetAllocatedMemory() {
     }
     return 0;
 #endif
+
+    return 0;
 }
 
 int main(int argc, char** argv) {
