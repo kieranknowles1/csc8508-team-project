@@ -64,6 +64,7 @@ namespace NCL {
             }
 
             static void Start();
+            void StopServer();
 
 
             /**

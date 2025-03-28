@@ -60,7 +60,7 @@ namespace NCL::CSC8503 {
 				}
 				else if (selection == 1) {
 					// CLOSE LOBBY
-					game->GetServerInstance()->Stop();
+					game->StopServer();
 					return PushdownResult::Pop;
 				}
 
@@ -149,7 +149,7 @@ namespace NCL::CSC8503 {
 
 			if (controller->GetDigital(Controller::DigitalControl::MenuConfirm)) {
 				audioEngine.PlaySounds("MenuSelect.wav", Vector3(0, 0, 0), -18.0f);
-                game->GetServerInstance()->Stop();
+			    game->StopServer();
 				return PushdownResult::Pop;
 			}
 

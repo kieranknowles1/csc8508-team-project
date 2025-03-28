@@ -128,6 +128,7 @@ namespace NCL::CSC8503 {
                     }
                 }
                 else if (selection == 1) { // Exit
+                    game->StopServer();
                     game->ClearWorld();
                     return PushdownResult::Clear;
                 }

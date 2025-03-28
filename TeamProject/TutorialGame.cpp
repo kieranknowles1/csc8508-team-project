@@ -318,6 +318,14 @@ void TutorialGame::clearGraveyard() {
 }
 
 
+void TutorialGame::StopServer() {
+    if (server) {
+        server->Stop();
+        server = nullptr;
+    }
+}
+
+
 void TutorialGame::InitCamera() {
     mainCamera->SetFieldOfVision(90);
     world->GetMainCamera().SetNearPlane(1.75f);
@@ -604,9 +612,10 @@ bool TutorialGame::StartMultiplayerGame(bool isHost) {
         server->JoinGame("127.0.0.1", 1.0f);
         //std::string host = config.get<std::string>("defaultHost");
         //server->JoinGame(host.c_str(), 1.0f);
-       
     }
-    return server->IsConnected();
+    bool success = server->IsConnected();
+    if (!success) StopServer();
+    return success;
 }
 
 
