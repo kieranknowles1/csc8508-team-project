@@ -40,8 +40,8 @@ namespace NCL {
 
 			StateMachine* stateMachine;
 			void UpdatePlayerDistance();
-			float senseDistance = 100.0f;
-			float playerDist = 100.0f;
+			float senseDistance = 250.0f;
+			float playerDist = 250.0f;
 			btVector3 offset;
 
 			PlayerObject* player;
