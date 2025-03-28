@@ -31,6 +31,12 @@ void PS5Controller::Update(float dt) {
 	if (ret != SCE_OK) {
 		std::cerr << "Failed to read input" << std::endl;
 	}
+
+	ScePadLightBarParam light;
+	light.r = feedback.color.x * 255.0f;
+	light.g = feedback.color.y * 255.0f;
+	light.b = feedback.color.z * 255.0f;
+	scePadSetLightBar(padHandle, &light);
 	JoystickController::Update(dt);
 }
 
