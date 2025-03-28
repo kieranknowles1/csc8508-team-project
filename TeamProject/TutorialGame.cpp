@@ -52,7 +52,6 @@ TutorialGame::TutorialGame(GameTechRendererInterface* renderer, Controller* cont
     InitialiseAssets();
     InitCamera();
     InitWorld();
-
 }
 
 /*
