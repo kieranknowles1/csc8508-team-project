@@ -163,6 +163,8 @@ namespace NCL {
 
             void SetFreeCam(bool b) { freeCam = b; }
 
+            bool ShowingProfiler() { return showProfiling; }
+
         protected:
             void InitialiseAssets();
 

@@ -93,7 +93,7 @@ void TutorialGame::UpdateGame(float dt) {
     //float maxDt = btMin(PHYSICS_PERIOD, dt);
     int steps = bulletWorld->stepSimulation(dt, substeps, PHYSICS_PERIOD);
 
-    profiler.startSection("Network Updates");
+    profiler.startSection("Network");
     if (server != nullptr) {
         std::unique_lock ticklock = server->LockTick();
 
@@ -108,24 +108,24 @@ void TutorialGame::UpdateGame(float dt) {
             });
     }
 
-    profiler.startSection("Update World");
+    profiler.startSection("World");
 
     if(spGameController) spGameController->Update(dt);
 
     UpdateKeys();
     world->UpdateWorld(dt);
-    profiler.startSection("Check Collisions");
+    profiler.startSection("Collisions");
     // Check for collisions
     CheckCollisions();
 
-    profiler.startSection("Update Audio");
+    profiler.startSection("Audio");
     audioEngine.Update(&world->GetMainCamera());
 
     clearGraveyard();
-    profiler.startSection("Prepare Render");
+    profiler.startSection("RenderPrep");
     bulletWorld->debugDrawWorld();
 
-    profiler.startSection("Render Decals");
+    profiler.startSection("Decals");
     // Fade decal after sometime - @Kieran: Didn't forget to call the Update function this time :)
     renderer->GetDecalSystem().Update(dt);
 
@@ -162,7 +162,6 @@ void TutorialGame::UpdatePlayer(float dt, bool camOnly) {
         if (player->GetOwner()) respawn = instance->GetRandomRespawn(player->GetOwner()->GetUserID() - 1);
         else respawn = instance->GetRandomRespawn(1);
 
-        std::cout << "Here" << std::endl;
         btTransform& transform = player->GetPhysicsObject()->GetRigidBody()->getWorldTransform();
 
         transform.setOrigin(respawn->position);
