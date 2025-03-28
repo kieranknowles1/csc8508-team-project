@@ -64,6 +64,7 @@ namespace NCL {
             }
 
             static void Start();
+            void StopServer();
 
 
             /**
@@ -161,6 +162,8 @@ namespace NCL {
             SPGameController* GetSPMode() { return spGameController; }
 
             void SetFreeCam(bool b) { freeCam = b; }
+
+            bool ShowingProfiler() { return showProfiling; }
 
         protected:
             void InitialiseAssets();

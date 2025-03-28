@@ -52,7 +52,6 @@ TutorialGame::TutorialGame(GameTechRendererInterface* renderer, Controller* cont
     InitialiseAssets();
     InitCamera();
     InitWorld();
-
 }
 
 /*
@@ -94,7 +93,7 @@ void TutorialGame::UpdateGame(float dt) {
     //float maxDt = btMin(PHYSICS_PERIOD, dt);
     int steps = bulletWorld->stepSimulation(dt, substeps, PHYSICS_PERIOD);
 
-    profiler.startSection("Network Updates");
+    profiler.startSection("Network");
     if (server != nullptr) {
         std::unique_lock ticklock = server->LockTick();
 
@@ -109,24 +108,24 @@ void TutorialGame::UpdateGame(float dt) {
             });
     }
 
-    profiler.startSection("Update World");
+    profiler.startSection("World");
 
     if(spGameController) spGameController->Update(dt);
 
     UpdateKeys();
     world->UpdateWorld(dt);
-    profiler.startSection("Check Collisions");
+    profiler.startSection("Collisions");
     // Check for collisions
     CheckCollisions();
 
-    profiler.startSection("Update Audio");
+    profiler.startSection("Audio");
     audioEngine.Update(&world->GetMainCamera());
 
     clearGraveyard();
-    profiler.startSection("Prepare Render");
+    profiler.startSection("RenderPrep");
     bulletWorld->debugDrawWorld();
 
-    profiler.startSection("Render Decals");
+    profiler.startSection("Decals");
     // Fade decal after sometime - @Kieran: Didn't forget to call the Update function this time :)
     renderer->GetDecalSystem().Update(dt);
 
@@ -143,9 +142,14 @@ void TutorialGame::UpdateGame(float dt) {
 }
 
 void TutorialGame::UpdatePlayer(float dt, bool camOnly) {
+
+    numDeaths = player->GetHealthAttrib()->DeathCount();
+
+    std::string out = "Lives: " + std::to_string(3 - numDeaths);
+    Debug::Print(out, Vector2(0.05f, 0.2f));
+
     if (player->GetHealthAttrib()->GetHealthState() == AliveState::DEAD) {
         player->GetHealthAttrib()->AddDeath();
-
         numDeaths = player->GetHealthAttrib()->DeathCount();
 
         if (gameMode == GameMode::SINGLEPLAYER && numDeaths > 2) {
@@ -158,7 +162,6 @@ void TutorialGame::UpdatePlayer(float dt, bool camOnly) {
         if (player->GetOwner()) respawn = instance->GetRandomRespawn(player->GetOwner()->GetUserID() - 1);
         else respawn = instance->GetRandomRespawn(1);
 
-        std::cout << "Here" << std::endl;
         btTransform& transform = player->GetPhysicsObject()->GetRigidBody()->getWorldTransform();
 
         transform.setOrigin(respawn->position);
@@ -319,6 +322,14 @@ void TutorialGame::clearGraveyard() {
 }
 
 
+void TutorialGame::StopServer() {
+    if (server) {
+        server->Stop();
+        server = nullptr;
+    }
+}
+
+
 void TutorialGame::InitCamera() {
     mainCamera->SetFieldOfVision(90);
     world->GetMainCamera().SetNearPlane(1.75f);
@@ -355,7 +366,6 @@ void TutorialGame::InitBullet() {
 }
 
 void TutorialGame::LoadWorldFromFile(int levelNum) {
-    ClearWorld();
     InitWorld();
 
     LevelImporter levelImporter(resourceManager.get(), world.get(), bulletWorld);
@@ -365,6 +375,14 @@ void TutorialGame::LoadWorldFromFile(int levelNum) {
 
 
 void TutorialGame::ClearWorld() {
+    state = GameState::IDLE;
+
+    playerController.reset();
+    player = nullptr;
+
+    delete instance->spGameController;
+    instance->spGameController = nullptr;
+
     DestroyBullet();
     world->ClearAndErase();
     renderer->GetDecalSystem().ClearDecalsFromWorld();
@@ -403,7 +421,7 @@ PlayerObject* TutorialGame::InitPlayer(btVector3 position, btVector3 upDir, bool
 
 GameObject* TutorialGame::AddGunToWorld(const Vector3& position, Vector3 dimensions, float inverseMass, bool hasCollision)
 {
-    GameObject* gun = new GameObject();
+    GameObject* gun = new ServerObject();
 
     // Setting the transform properties for the gun
     gun->setInitialPosition(position);
@@ -605,9 +623,10 @@ bool TutorialGame::StartMultiplayerGame(bool isHost) {
         //server->JoinGame("127.0.0.1", 1.0f);
         std::string host = config.get<std::string>("defaultHost");
         server->JoinGame(host.c_str(), 1.0f);
-       
     }
-    return server->IsConnected();
+    bool success = server->IsConnected();
+    if (!success) StopServer();
+    return success;
 }
 
 

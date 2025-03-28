@@ -34,11 +34,14 @@ namespace Multiplayer {
 
         // Max number of incoming connections is 1 less (because of host).
         m_network = new Network(&networkAddr, isHost ? MAX_PLAYERS - 1 : 1);
+        if (m_network->GetState() == NetworkStates::NetworkState::ERRORED) return;
+
         m_network->AddTickListener([&](bool endOfTick) { SendState(endOfTick); });
         m_network->AddTickListener([&](bool endOfTick) { ProcessPackets(endOfTick); });
 
         if (isHost) {
             m_network->SetConnectCallback([&](ENetPeer* client) { OnClientJoin(client); });
+            m_connected = true;
         }
     }
 
