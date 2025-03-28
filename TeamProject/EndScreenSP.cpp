@@ -11,7 +11,7 @@ void EndScreenSPUI::render(std::vector<UiSprite>& sprites)
 
 	for (auto& button : buttons)
 	{
-		sprites.push_back({ button.position, button.size, button.color });
+		sprites.push_back({ button.position, button.size, activeButton });
 	}
 }
 
@@ -31,24 +31,7 @@ void EndScreenSPUI::InitMenu()
 {
 	background = { Vector2(0.5f, 0.5f), Vector2(1, 1) };
 	//created buttons
-	buttons.push_back({ Vector2(0.3f, 0.1f), buttonSize });
-	buttons.push_back({ Vector2(0.7f, 0.1f), buttonSize });
+	buttons.push_back({ Vector2(0.5f, 0.2f), buttonSize });
 
-	buttonTexts.push_back({ Vector2(0.3f - buttonSize.x / 3.5, 0.9f + buttonSize.y / 4), "Main Menu" });
-	buttonTexts.push_back({ Vector2(0.7f - buttonSize.x / 6, 0.9f + buttonSize.y / 4), "Quit" });
-}
-
-void EndScreenSPUI::UpdateMenu(unsigned int selection)
-{
-	for (int i = 0; i < buttons.size(); i++)
-	{
-		if (i == selection)
-		{
-			buttons[i].color = activeButton;
-		}
-		else
-		{
-			buttons[i].color = inactiveButton;
-		}
-	}
+	buttonTexts.push_back({ Vector2(0.45f - buttonSize.x / 3.5, 0.8f + buttonSize.y / 4), "Return to Main Menu" });
 }

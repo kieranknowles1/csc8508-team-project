@@ -34,7 +34,6 @@ TutorialGame::TutorialGame(GameTechRendererInterface* renderer, Controller* cont
     instance = this;
 
     stateMutex = new std::shared_mutex();
-
     world = std::make_unique<GameWorld>();
     renderer->setCamera(&world->GetMainCamera());
 
@@ -120,8 +119,6 @@ void TutorialGame::UpdateGame(float dt) {
     // Check for collisions
     CheckCollisions();
 
-    if (playerController && !isPlayerUpdatePaused) UpdatePlayer(dt);
-
     profiler.startSection("Update Audio");
     audioEngine.Update(&world->GetMainCamera());
 
@@ -148,12 +145,20 @@ void TutorialGame::UpdateGame(float dt) {
 void TutorialGame::UpdatePlayer(float dt, bool camOnly) {
     if (player->GetHealthAttrib()->GetHealthState() == AliveState::DEAD) {
         player->GetHealthAttrib()->AddDeath();
+
+        numDeaths = player->GetHealthAttrib()->DeathCount();
+
+        if (gameMode == GameMode::SINGLEPLAYER && numDeaths > 2) {
+            spEnd = true;
+        }
+
         Respawn* instance = Respawn::GetInstance();
         RespawnPoint* respawn;
 
         if (player->GetOwner()) respawn = instance->GetRandomRespawn(player->GetOwner()->GetUserID() - 1);
         else respawn = instance->GetRandomRespawn(1);
 
+        std::cout << "Here" << std::endl;
         btTransform& transform = player->GetPhysicsObject()->GetRigidBody()->getWorldTransform();
 
         transform.setOrigin(respawn->position);
@@ -162,6 +167,7 @@ void TutorialGame::UpdatePlayer(float dt, bool camOnly) {
 
         player->setCollided(0);
         player->GetHealthAttrib()->Respawn();
+
     }
 
     // Display Score if networked.
@@ -177,7 +183,6 @@ void TutorialGame::UpdatePlayer(float dt, bool camOnly) {
     }
     else {
  
-      
         //player Movement
         if (camOnly) {
             playerController->UpdateCamOnly();
@@ -364,6 +369,7 @@ void TutorialGame::ClearWorld() {
     world->ClearAndErase();
     renderer->GetDecalSystem().ClearDecalsFromWorld();
     renderer->ClearUIElemets();
+    Respawn::GetInstance()->ClearPlayers();
     earlyGraveyard.clear();
     lateGraveyard.clear();
 }

@@ -1,5 +1,8 @@
 #version 330 core
 
+//HDR Method from LearnOpenGL:
+// https://learnopengl.com/Advanced-Lighting/HDR
+
 uniform sampler2D hdrTex;
 uniform bool hdrOn = true;
 

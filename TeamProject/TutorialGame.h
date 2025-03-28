@@ -145,6 +145,14 @@ namespace NCL {
                 return playerController.get();
             }
 
+            bool getSPEnd() {
+                return spEnd;
+            }
+
+			void setSPEnd(bool b) {
+				spEnd = b;
+			}
+
             void SetGameMode(GameMode gm) { gameMode = gm; }
 
             bool isPlayerUpdatePaused = false;
@@ -242,6 +250,9 @@ namespace NCL {
             GameState state = GameState::IDLE;
 
             GameMode gameMode;
+
+            bool spEnd = false;
+			int numDeaths;
         };
     }
 }

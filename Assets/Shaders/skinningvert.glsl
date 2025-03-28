@@ -4,8 +4,8 @@ uniform mat4 modelMatrix;
 uniform mat4 viewMatrix;
 uniform mat4 projMatrix;
 
-layout(location = 0) in vec3 position; //might need to do the layout location thing here
-//added to make it match up with deferredscenefrag.glsl:
+layout(location = 0) in vec3 position; 
+
 layout(location = 1) in vec4 colour; 
 layout(location = 2) in vec2 texCoord;
 layout(location = 3) in vec3 normal;

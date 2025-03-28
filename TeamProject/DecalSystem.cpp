@@ -7,13 +7,13 @@ using namespace NCL::Rendering;
 using namespace NCL::CSC8503;
 
 DecalSystem::DecalSystem(int width, int height)
-    : decayRate(0.1f), textureWidth(width), textureHeight(height), gen(std::random_device{}()), angleDis(0.0f, 360.0f), indexDist(0, 0)
+    : decayRate(0.97f), textureWidth(width), textureHeight(height), gen(std::random_device{}()), angleDis(0.0f, 360.0f), indexDist(0, 0)
 {
 #ifndef __PROSPERO__
 	// Create an empty texture to store the applied decals
 	glGenTextures(1, &decalTexture);
 	glBindTexture(GL_TEXTURE_2D, decalTexture);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, width, height, 0, GL_RGBA, GL_FLOAT, NULL);//GL_RGBA and GL_UNSIGNED_BYTE
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
@@ -52,7 +52,7 @@ void DecalSystem::Update(float dt)
 	for (auto it = decals.begin(); it != decals.end();)
 	{
 		// Fade out the decal
-		it->alphaFade = std::max(it->alphaFade - decayRate * dt, 0.0f); // clamp alphaFade to 0.0f if it goes below 0.0f
+		it->alphaFade -= (1- (it->alphaFade * decayRate )) * dt; // clamp alphaFade to 0.0f if it goes below 0.0f
 		
 		// Remove the decal if it has faded out
 		if (it->alphaFade <= 0.0f) {
