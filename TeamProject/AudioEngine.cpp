@@ -264,8 +264,9 @@ void CAudioEngine::Set3dListenerAndOrientation(const NCL::Maths::Vector3& vPosit
     //up.z *= -1.0f;
 
     FMOD_VECTOR fmodPosition = VectorToFmod(vPosition);
-    FMOD_VECTOR fmodForward = VectorToFmod(vLook); 
-    FMOD_VECTOR fmodUp = VectorToFmod(vUp);
+    //FMOD_VECTOR fmodForward = VectorToFmod(NCL::Maths::Vector3(-vLook.x, vLook.y, vLook.z)); 
+    FMOD_VECTOR fmodUp = VectorToFmod(NCL::Maths::Vector3(vUp.x, vUp.y, vUp.z));
+    FMOD_VECTOR fmodForward = VectorToFmod(NCL::Maths::Vector3(vLook.z, vLook.y, -vLook.x));
 
     FMOD_VECTOR fmodVelocity = { 0.0f, 0.0f, 0.0f };
 

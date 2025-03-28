@@ -488,12 +488,12 @@ void PlayerController::HandleJumping() {
     if (controller->GetDigital(Controller::DigitalControl::Jump) && player->getCollided() && inAirTime <= 0) {
         audioEngine.PlaySounds("jump_mono.wav", camera->GetPosition(), -16.0f);
         if (TutorialGame::getInstance()->GetServerInstance() != nullptr) {
-            auto pos = camera->GetPosition();
+            btVector3 pos = camera->GetPosition();
             std::cout << "[Emitter] Jump sound at: " << pos << std::endl;
 
             auto jumpSoundPacket = std::make_shared<Packet::SoundPacket>(
                 "jump_mono.wav",
-                btVector3(pos.x, pos.y, pos.z),
+                 pos,
                 -16.0f,
                 1.0f,   
                 0.0f,  
