@@ -51,6 +51,7 @@ TutorialGame::TutorialGame(GameTechRendererInterface* renderer, Controller* cont
     audioEngine.LoadSound("Beam.mp3", true, true, false);
     audioEngine.LoadSound("HeartbeatLoop.wav", false, true, false);
     audioEngine.LoadSound("JumpPad.wav", true, false, false);
+    audioEngine.LoadSound("MenuSelect.wav", true, false, false);
     InitialiseAssets();
     InitCamera();
     InitWorld();

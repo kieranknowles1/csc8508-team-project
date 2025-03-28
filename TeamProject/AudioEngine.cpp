@@ -242,16 +242,20 @@ void CAudioEngine::SetChannelPlaybackPosition(int channelId, unsigned int positi
 void CAudioEngine::Set3dListenerAndOrientation(const NCL::Maths::Vector3& vPosition,
     const NCL::Maths::Vector3& vLook,
     const NCL::Maths::Vector3& vUp) {
-    // Ensure right-handed coordinate system
-    NCL::Maths::Vector3 forward = NCL::Maths::Vector::Normalise(vLook);
+    
+    NCL::Maths::Vector3 forward = -NCL::Maths::Vector::Normalise(vLook);
     NCL::Maths::Vector3 up = NCL::Maths::Vector::Normalise(vUp);
+    //forward = -forward;
     NCL::Maths::Vector3 rightUnNormalised = NCL::Maths::Vector::Cross(up, forward);
-    NCL::Maths::Vector3 right = NCL::Maths::Vector::Normalise(right);
-    NCL::Maths::Vector3 fwdUnNormalised = NCL::Maths::Vector::Cross(right, up);
+    NCL::Maths::Vector3 right = -NCL::Maths::Vector::Normalise(rightUnNormalised);
+    NCL::Maths::Vector3 fwdUnNormalised = NCL::Maths::Vector::Cross(up, right);
     forward = NCL::Maths::Vector::Normalise(fwdUnNormalised);
 
+    //forward = -forward;
+    //up.z *= -1.0f;
+
     FMOD_VECTOR fmodPosition = VectorToFmod(vPosition);
-    FMOD_VECTOR fmodForward = VectorToFmod(forward * -1.0f); 
+    FMOD_VECTOR fmodForward = VectorToFmod(forward); 
     FMOD_VECTOR fmodUp = VectorToFmod(up);
 
     FMOD_VECTOR fmodVelocity = { 0.0f, 0.0f, 0.0f };

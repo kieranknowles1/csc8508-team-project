@@ -58,6 +58,10 @@ namespace NCL::CSC8503 {
                 Debug::Print("TIME: " + asString, Vector2(0.75, 0.1));
             }
 
+            Vector3 camFwd = game->getMainCam()->GetForwardVector();
+            std::string camLook = "Camera Forward: (" + std::to_string(camFwd.x) + ", " + std::to_string(camFwd.y) + ", " + std::to_string(camFwd.z) + ")";
+            Debug::Print(camLook, Vector2(0.01f, 0.5f));
+
            
             if (gameTimer >= maxGameTime) {
                 *newState = new EndScreenMP(controller, game);

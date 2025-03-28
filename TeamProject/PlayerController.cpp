@@ -85,6 +85,7 @@ void PlayerController::UpdateMovement(float dt) {
     rb->activate();
     HandleShooting(dt);
 	ToggleScoreboard();
+    //Test3DAudioEmitters();
 }
 
 void PlayerController::UpdateCamOnly() {
@@ -344,6 +345,20 @@ void PlayerController::SpecialTypeCalculations() {
         rb->applyCentralImpulse(movement);
         int channelId = audioEngine.PlaySounds("JumpPad.wav", player->getCollisionPoint(), 0.0f);
         jumppadChannels.push_back(channelId);
+        if (TutorialGame::getInstance()->GetServerInstance() != nullptr) {
+            auto pos = camera->GetPosition();
+
+            auto jumpPadSoundPacket = std::make_shared<Packet::SoundPacket>(
+                "JumpPad.wav",
+                player->getCollisionPoint(),
+                -6.0f,
+                1.0f,
+                0.0f,
+                player->GetWorldID()
+            );
+
+            TutorialGame::getInstance()->GetServerInstance()->GetNetwork()->Broadcast(jumpPadSoundPacket);
+        }
         break;
     } case GameObject::Type::Slime: {
         onIce = false;
@@ -371,6 +386,7 @@ void PlayerController::SpecialTypeCalculations() {
 
 void PlayerController::HandleYaw() {
     yaw = fmod(yaw - controller->GetAnalogue(Controller::AnalogueControl::LookX) + 360.0f, 360.0f);
+    float lookX = controller->GetAnalogue(Controller::AnalogueControl::LookX);
     camera->SetYaw(yaw);
     btVector3 rot = GetEulerAngles(camRotOffset);
     camera->setRotation(rot);
@@ -471,6 +487,7 @@ void PlayerController::HandleJumping() {
         audioEngine.PlaySounds("jump.wav", camera->GetPosition(), -16.0f);
         if (TutorialGame::getInstance()->GetServerInstance() != nullptr) {
             auto pos = camera->GetPosition();
+            std::cout << "[Emitter] Jump sound at: " << pos << std::endl;
 
             auto jumpSoundPacket = std::make_shared<Packet::SoundPacket>(
                 "jump.wav",
@@ -531,10 +548,20 @@ void PlayerController::GetAllDirections() {
     upDirection = player->getUpDirection();
     rightDirection = player->getRightDirection();
     forwardDirection = player->getForwardDirection();
+
     camRotOffset = player->getCamOffset();
 
+    Vector3 camForward = camera->GetForwardVector();
+    Vector3 camUp = camera->GetUpVector();
+   
+    std::cout << "[Listener] Position: " << camera->GetPosition()
+        << " | Forward: " << camForward
+        << " | Up: " << camUp << std::endl;
+
+    std::cout << "[Camera] Yaw: " << camera->GetYaw() << " | Pitch: " << camera->GetPitch() << std::endl;
+
     //Update FMod listener each frame so audio is correctly positioned
-    audioEngine.Set3dListenerAndOrientation(camera->GetPosition(), forwardDirection, upDirection);
+    audioEngine.Set3dListenerAndOrientation(camera->GetPosition(), camForward, camUp);
 }
 
 Vector2 PlayerController::getDirectionalInput() const
@@ -549,4 +576,39 @@ void PlayerController::ToggleScoreboard() {
 		scoreboardActive = !scoreboardActive;
         scoreboard->SetActive(scoreboardActive);
 	}
+}
+
+void PlayerController::Test3DAudioEmitters() {
+    static bool keyPressed = false;
+
+    if (controller->GetDigital(Controller::DigitalControl::Scoreboard)) {
+        if (!keyPressed) {
+            Vector3 playerPos = camera->GetPosition();
+
+            struct TestSound {
+                Vector3 offset;
+                std::string label;
+            };
+
+            std::vector<TestSound> emitters = {
+                {{50, 0, 0},   "Right (+X)"},
+                {{-50, 0, 0},  "Left (-X)"},
+                {{0, 0, 50},   "Forward (+Z)"},
+                {{0, 0, -50},  "Back (-Z)"},
+                {{0, 50, 0},   "Up (+Y)"},
+                {{0, -50, 0},  "Down (-Y)"},
+            };
+
+            for (const auto& emitter : emitters) {
+                Vector3 pos = playerPos + emitter.offset;
+                audioEngine.PlaySounds("MenuSelect.wav", pos, 0.0f); // Use a clear ping sound for localization
+            }
+
+            std::cout << "Played test emitters around listener.\n";
+            keyPressed = true;
+        }
+    }
+    else {
+        keyPressed = false;
+    }
 }

@@ -98,6 +98,8 @@ namespace NCL {
 				return controller;
 			}
 
+			void Test3DAudioEmitters();
+
 			Scoreboard* GetScoreboard() { return scoreboard.get(); }
 
 		private:
