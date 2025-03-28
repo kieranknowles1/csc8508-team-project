@@ -32,6 +32,8 @@ namespace NCL {
             DeckR4,
             DeckR5,
 
+            TrackpadClick,
+
             Max,
 
             // Aliases, to account for different layouts
@@ -49,6 +51,9 @@ namespace NCL {
 
             L2,
             R2,
+
+            TrackpadX,
+            TrackpadY,
 
             Max
         };

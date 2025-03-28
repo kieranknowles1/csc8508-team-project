@@ -53,5 +53,6 @@ void main() {
     finalColor.a *= alphaFade;
 
     // Output final color
-    FragColor = finalColor;
+    //FragColor = finalColor;
+    FragColor = vec4(finalColor.rgb*75.0f, finalColor.a);
 }

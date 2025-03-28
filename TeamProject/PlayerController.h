@@ -27,7 +27,7 @@ namespace NCL {
 
 		class PlayerController {
 		public:
-			PlayerController(PlayerObject* playerIn, const Controller* c, Camera* cam, btDiscreteDynamicsWorld* bulletWorldIn, GameTechRendererInterface* rendererIn) {
+			PlayerController(PlayerObject* playerIn, Controller* c, Camera* cam, btDiscreteDynamicsWorld* bulletWorldIn, GameTechRendererInterface* rendererIn) {
 				player = playerIn;
 				controller = c;
 				camera = cam;
@@ -150,7 +150,7 @@ namespace NCL {
 			float inAirTime = 0.0f;
 			btDiscreteDynamicsWorld* bulletWorld;
 			PlayerObject* player;
-			const Controller* controller = nullptr;
+			Controller* controller = nullptr;
 			Camera* camera = nullptr;
 			float yaw = 0.0f;
 			bool isSliding = false;
@@ -195,6 +195,7 @@ namespace NCL {
 			void HandleYaw();
 			void RotationCalculations();
 			void CameraMovement();
+			void CheckForGround();
 			void GroundNormalCalculations();
 			void MovementCalculations(float dt);
 			void HandleJumping();

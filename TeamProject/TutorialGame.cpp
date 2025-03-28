@@ -34,7 +34,6 @@ TutorialGame::TutorialGame(GameTechRendererInterface* renderer, Controller* cont
     instance = this;
 
     stateMutex = new std::shared_mutex();
-
     world = std::make_unique<GameWorld>();
     renderer->setCamera(&world->GetMainCamera());
 
@@ -58,7 +57,6 @@ TutorialGame::TutorialGame(GameTechRendererInterface* renderer, Controller* cont
     InitialiseAssets();
     InitCamera();
     InitWorld();
-
 }
 
 /*
@@ -100,7 +98,7 @@ void TutorialGame::UpdateGame(float dt) {
     //float maxDt = btMin(PHYSICS_PERIOD, dt);
     int steps = bulletWorld->stepSimulation(dt, substeps, PHYSICS_PERIOD);
 
-    profiler.startSection("Network Updates");
+    profiler.startSection("Network");
     if (server != nullptr) {
         std::unique_lock ticklock = server->LockTick();
 
@@ -115,26 +113,24 @@ void TutorialGame::UpdateGame(float dt) {
             });
     }
 
-    profiler.startSection("Update World");
+    profiler.startSection("World");
 
     if(spGameController) spGameController->Update(dt);
 
     UpdateKeys();
     world->UpdateWorld(dt);
-    profiler.startSection("Check Collisions");
+    profiler.startSection("Collisions");
     // Check for collisions
     CheckCollisions();
 
-    if (playerController && !isPlayerUpdatePaused) UpdatePlayer(dt);
-
-    profiler.startSection("Update Audio");
+    profiler.startSection("Audio");
     audioEngine.Update(&world->GetMainCamera());
 
     clearGraveyard();
-    profiler.startSection("Prepare Render");
+    profiler.startSection("RenderPrep");
     bulletWorld->debugDrawWorld();
 
-    profiler.startSection("Render Decals");
+    profiler.startSection("Decals");
     // Fade decal after sometime - @Kieran: Didn't forget to call the Update function this time :)
     renderer->GetDecalSystem().Update(dt);
 
@@ -151,12 +147,19 @@ void TutorialGame::UpdateGame(float dt) {
 }
 
 void TutorialGame::UpdatePlayer(float dt, bool camOnly) {
+
+    numDeaths = player->GetHealthAttrib()->DeathCount();
+
+    if (gameMode == GameMode::SINGLEPLAYER) {
+        std::string out = "Lives: " + std::to_string(3 - numDeaths);
+        Debug::Print(out, Vector2(0.05f, 0.2f));
+    }
+
     if (player->GetHealthAttrib()->GetHealthState() == AliveState::DEAD) {
         player->GetHealthAttrib()->AddDeath();
+        numDeaths = player->GetHealthAttrib()->DeathCount();
 
-        int numDeaths = player->GetHealthAttrib()->DeathCount();
-
-        if (gameMode == GameMode::SINGLEPLAYER && numDeaths > 0) {
+        if (gameMode == GameMode::SINGLEPLAYER && numDeaths > 2) {
             spEnd = true;
         }
 
@@ -190,7 +193,6 @@ void TutorialGame::UpdatePlayer(float dt, bool camOnly) {
     }
     else {
  
-      
         //player Movement
         if (camOnly) {
             playerController->UpdateCamOnly();
@@ -327,8 +329,16 @@ void TutorialGame::clearGraveyard() {
 }
 
 
+void TutorialGame::StopServer() {
+    if (server) {
+        server->Stop();
+        server = nullptr;
+    }
+}
+
+
 void TutorialGame::InitCamera() {
-    mainCamera->SetFieldOfVision(90);
+    mainCamera->SetFieldOfVision(105);
     world->GetMainCamera().SetNearPlane(1.75f);
     world->GetMainCamera().SetFarPlane(5000.0f);
     world->GetMainCamera().SetPitch(-15.0f);
@@ -363,7 +373,6 @@ void TutorialGame::InitBullet() {
 }
 
 void TutorialGame::LoadWorldFromFile(int levelNum) {
-    ClearWorld();
     InitWorld();
 
     LevelImporter levelImporter(resourceManager.get(), world.get(), bulletWorld);
@@ -373,10 +382,19 @@ void TutorialGame::LoadWorldFromFile(int levelNum) {
 
 
 void TutorialGame::ClearWorld() {
+    state = GameState::IDLE;
+
+    playerController.reset();
+    player = nullptr;
+
+    delete instance->spGameController;
+    instance->spGameController = nullptr;
+
     DestroyBullet();
     world->ClearAndErase();
     renderer->GetDecalSystem().ClearDecalsFromWorld();
     renderer->ClearUIElemets();
+    Respawn::GetInstance()->ClearPlayers();
     earlyGraveyard.clear();
     lateGraveyard.clear();
 }
@@ -410,7 +428,7 @@ PlayerObject* TutorialGame::InitPlayer(btVector3 position, btVector3 upDir, bool
 
 GameObject* TutorialGame::AddGunToWorld(const Vector3& position, Vector3 dimensions, float inverseMass, bool hasCollision)
 {
-    GameObject* gun = new GameObject();
+    GameObject* gun = new ServerObject();
 
     // Setting the transform properties for the gun
     gun->setInitialPosition(position);
@@ -609,12 +627,14 @@ bool TutorialGame::StartMultiplayerGame(bool isHost) {
     server->Start();
 
     if (!isHost) {
-        server->JoinGame("127.0.0.1", 1.0f);
-        //std::string host = config.get<std::string>("defaultHost");
-        //server->JoinGame(host.c_str(), 1.0f);
-       
+        //server->JoinGame("127.0.0.1", 1.0f);
+        std::string host = config.get<std::string>("defaultHost");
+        server->JoinGame(host.c_str(), 1.0f);
+
     }
-    return server->IsConnected();
+    bool success = server->IsConnected();
+    if (!success) StopServer();
+    return success;
 }
 
 

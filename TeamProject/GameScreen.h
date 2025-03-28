@@ -17,9 +17,10 @@ namespace NCL::CSC8503 {
 
         PushdownResult OnUpdate(float dt, PushdownState** newState) override {
             game->UpdateGame(dt);
-
+            game->UpdatePlayer(dt);
             if (game->getSPEnd()) {
-                *newState = new EndScreenSP(controller, game, game->GetSPMode()->getScore());
+                game->setSPEnd(false);
+                *newState = new EndScreenSP(controller, game, this->game->GetSPMode()->getScore());
                 std::cout << "Singeplayer game ended" << std::endl;
                 return PushdownResult::Push;
             }
@@ -64,7 +65,15 @@ namespace NCL::CSC8503 {
 
            
             if (gameTimer >= maxGameTime) {
-                *newState = new EndScreenMP(controller, game);
+                EndScreenMP* endScreen = new EndScreenMP(controller, game);
+                EndScreenMPUI* scoreboard = endScreen->GetScoreboard();
+
+                for (Player p : playerController->GetScoreboard()->GetPlayers()) {
+                    scoreboard->AddPlayer(p);
+                }
+                scoreboard->PopulateLeaderboard();
+
+                *newState = endScreen;
                 return PushdownResult::Push;
             }
             if (!isPaused) {
@@ -131,6 +140,7 @@ namespace NCL::CSC8503 {
                     }
                 }
                 else if (selection == 1) { // Exit
+                    game->StopServer();
                     game->ClearWorld();
                     return PushdownResult::Clear;
                 }

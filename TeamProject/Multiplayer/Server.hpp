@@ -48,6 +48,7 @@ namespace Multiplayer {
         Lobbies::Lobby* GetLobby() const { return m_lobby; }
 
         void Start() { m_network->Start(); }
+        void Stop() { m_network->Close(); }
 
         /**
          * @brief Determine if the owner of the server is also the owner of the

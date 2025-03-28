@@ -256,6 +256,9 @@ set(SCE_DEPENDENCIES
 
 if(PS5_BUILD)
     target_link_libraries(${PROJECT_NAME} PUBLIC ${SCE_DEPENDENCIES})
+    set_target_properties(${PROJECT_NAME} PROPERTIES
+        VS_DEBUGGER_WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+    )
 
     foreach(file ${SCE_MODULES})
         file(COPY ${PS5_SCE_MODULE}/${file} DESTINATION ${CMAKE_BINARY_DIR}/sce_module/)

@@ -96,14 +96,21 @@ namespace NCL::CSC8503 {
                     audioEngine.PlaySounds("MenuSelect.wav", Vector3(0, 0, 0), -18.0f);
                     game->Start();
                     *newState = new GameScreen(controller, game, game->GetPlayerController());
-                    break;
-                case GameMode::HOST_GAME:
-					ui->SetActive(false);
-                    audioEngine.PlaySounds("MenuSelect.wav", Vector3(0, 0, 0), -18.0f);
-                    game->StartMultiplayerGame(true);
-                    *newState = new HostLobbyScreen(controller, game);
+                    ui->SetActive(false);
                     return PushdownResult::Push;
-                    break;
+
+                case GameMode::HOST_GAME:
+                    audioEngine.PlaySounds("MenuSelect.wav", Vector3(0, 0, 0), -18.0f);
+
+                    ok = game->StartMultiplayerGame(true);
+                    if (ok) {
+                        ui->SetActive(false);
+                        *newState = new HostLobbyScreen(controller, game);
+                        return PushdownResult::Push;
+                    }
+                    connectionFailedTime = 3.0f;
+                    return PushdownResult::NoChange;
+
                 case GameMode::JOIN_GAME:
                     ok = game->StartMultiplayerGame(false);
                     audioEngine.PlaySounds("MenuSelect.wav", Vector3(0, 0, 0), -18.0f);
@@ -115,18 +122,19 @@ namespace NCL::CSC8503 {
                     }
                     connectionFailedTime = 3.0f;
                     return PushdownResult::NoChange;
-                    break;
+
                 case GameMode::CREDITS:
 					ui->SetActive(false);
                     game->SetGameMode(GameMode::CREDITS);
                     audioEngine.PlaySounds("MenuSelect.wav", Vector3(0, 0, 0), -18.0f);
                     *newState = new CreditsScreen(controller, Assets::CREDITS);
                     return PushdownResult::Push;
-                    break;
+
                 case GameMode::QUIT:
                     renderer->ClearUIElemets();
                     game->SetGameMode(GameMode::QUIT);
                     return PushdownResult::Pop;
+
                 default: assert(false);
                 }
 

@@ -45,7 +45,7 @@ void Scoreboard::PopulateScoreboard() {
 		Player player;
 		player.name = "Player " + std::to_string(i);
 		player.score = 0;
-		player.color = static_cast<TeamColor>(i % 3);
+		player.color = colors[(i - 1)];
 		player.playerID = i;
 		player.ping = 0;
 		players.push_back(player);
