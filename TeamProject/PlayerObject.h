@@ -182,7 +182,7 @@ namespace NCL::CSC8503 {
 		bool rotationChanging = false;
 		AnimationState animationState = AnimationState::IDLE;
 
-        btVector3 gunCameraOffset = btVector3(5.5, -2.5, 2.0); // x axis is forward (front +ve/ back -ve), y is up, z is right (left -ve/ right +ve)
+        btVector3 gunCameraOffset = btVector3(5.0, -2.5, 2.5); // x axis is forward (front +ve/ back -ve), y is up, z is right (left -ve/ right +ve)
 		GameObject* gun;
 		LaserObject* laser = nullptr;
         AnimationObject* animationObject;
