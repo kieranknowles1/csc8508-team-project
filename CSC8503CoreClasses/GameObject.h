@@ -11,6 +11,7 @@
 #include "AliveState.h"
 #include "../TeamProject/Multiplayer/User.hpp"
 #include "../TeamProject/PointLight.h"
+//#include "../TeamProject/AudioEngine.h"
 
 namespace Packet {
     class Packet;
@@ -161,6 +162,25 @@ namespace NCL::CSC8503 {
 			jumpPadStrength = jumpIn;
 		}
 
+        void SetSoundChannelID(int ID) {
+            soundChannelID = ID;
+        }
+        int GetChannelID() const {
+            return soundChannelID;
+        }
+        /*void StopSound(CAudioEngine& audioEngine) {
+            if (soundChannelID != -1) {
+                audioEngine.SetChannelVolume(soundChannelID, -100.0f);
+                soundChannelID = -1;
+            }
+        }*/
+        void ClearSoundChannel() {
+            soundChannelID = -1;
+        }
+        bool HasAudioChannel() const {
+            return soundChannelID != -1;
+        }
+
         static GameObject* GetGameObjectByID(int id) {
             if (objects.contains(id)) return objects[id];
             return nullptr;
@@ -212,5 +232,7 @@ namespace NCL::CSC8503 {
 		float jumpPadStrength = 0.0f;
 
         AliveState state;
+
+        int soundChannelID = -1;
 	};
 }

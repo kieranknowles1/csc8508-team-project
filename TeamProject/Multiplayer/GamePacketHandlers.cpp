@@ -7,6 +7,10 @@
 #include "Network/Network.hpp"
 #include "Health.h"
 #include "Score.h"
+#include <AudioEngine.h>
+
+std::unordered_map <int, int> Packet::PacketHandler::activeChannelPerObject;
+std::unordered_map <int, std::string> Packet::PacketHandler::activeSoundPerObject;
 
 using namespace Lobbies;
 
@@ -854,4 +858,274 @@ namespace Packet {
 
 #pragma endregion DeathPacketHandler
 
+
+#pragma region SoundPacketHandler
+
+    void SoundPacketHandler::Handle(const std::shared_ptr<Packet> packet) {
+        auto sound = std::static_pointer_cast<SoundPacket>(packet);
+        int objectID = sound->GetObjectID();
+
+        /*if (sound->GetSoundName() == "Beam.mp3") {
+            auto it = activeSoundPerObject.find(objectID);
+
+            if (it != activeSoundPerObject.end() && it->second == "Beam.mp3") {
+                return;
+            }
+        }*/
+        GameObject* obj = GameObject::GetGameObjectByID(objectID);
+        int localID = TutorialGame::getInstance()->GetLocalPlayerID();
+
+        if (objectID == localID) return;
+        
+        if (!obj) return;
+
+        Vector3 pos(sound->GetPosition().x(), sound->GetPosition().y(), sound->GetPosition().z());
+
+        auto it = PacketHandler::activeChannelPerObject.find(objectID);
+        if (it != PacketHandler::activeChannelPerObject.end()) {
+            int existingChannel = it->second;
+            if (audioEngine.IsPlaying(existingChannel)) {
+                // Already playing, don’t play again
+                return;
+            }
+            else {
+                // Cleanup if the sound ended naturally
+                PacketHandler::activeChannelPerObject.erase(objectID);
+            }
+        }
+        float volume = sound->GetVolume();
+        float playbackTime = sound->GetPlaybackTime();
+
+        int channel = audioEngine.PlaySounds(sound->GetSoundName(), pos, volume);
+        if (channel != -1) {
+            audioEngine.SetChannel3dPosition(channel, pos);
+            audioEngine.SetChannelPlaybackPosition(channel, static_cast<unsigned int>(playbackTime * 1000));
+            obj->SetSoundChannelID(channel);
+            //audioEngine.Set3dListenerAndOrientation(TutorialGame::getInstance()->getMainCam()->GetPosition(), TutorialGame::getInstance()->getPlayerObject()->getForwardDirection(), TutorialGame::getInstance()->getPlayerObject()->getUpDirection());
+            audioEngine.SetChannel3dMinMaxDistance(channel, 100.0f, 700.0f);
+            PacketHandler::activeChannelPerObject[objectID] = channel;
+            PacketHandler::activeSoundPerObject[objectID] = sound->GetSoundName();
+        }
+
+        
+        /*audioEngine.PlaySounds(
+            sound->GetSoundName(),
+            Vector3(sound->GetPosition().x(), sound->GetPosition().y(), sound->GetPosition().z()),
+            sound->GetVolume()
+        );*/
+    }
+
+    std::shared_ptr<Packet> SoundPacketHandler::Translate(const ENetEvent* event) const {
+        ENetPacket* pkt = event->packet;
+        Type type;
+        uint8_t channel;
+        uint32_t sequence;
+
+        GetBaseData(pkt, &type, &channel, &sequence);
+
+        size_t offset = sizeof(Type) + sizeof(uint8_t) + sizeof(uint32_t);
+
+        btVector3 position;
+        memcpy(&position, pkt->data + offset, sizeof(btVector3));
+        offset += sizeof(btVector3);
+
+        float volume, pitch, playbackTime;
+        memcpy(&volume, pkt->data + offset, sizeof(float));
+        offset += sizeof(float);
+        memcpy(&pitch, pkt->data + offset, sizeof(float));
+        offset += sizeof(float);
+
+        int objectID;
+        memcpy(&objectID, pkt->data + offset, sizeof(int));
+        offset += sizeof(int);
+
+        memcpy(&playbackTime, pkt->data + offset, sizeof(float));
+        offset += sizeof(float);
+
+        int nameLen;
+        memcpy(&nameLen, pkt->data + offset, sizeof(int));
+        offset += sizeof(int);
+
+        std::string soundName(reinterpret_cast<char*>(pkt->data + offset), nameLen);
+
+        return std::make_shared<SoundPacket>(soundName, position, volume, pitch, playbackTime, objectID);
+    }
+
+    ENetPacket* SoundPacketHandler::ToENetPacket(const std::shared_ptr<Packet> packet) const {
+        auto sound = *static_cast<SoundPacket*>(packet.get());
+
+        //int nameLen = (int)sound.GetSoundName().size();
+        int nameLen = static_cast<int>(sound.GetSoundName().size());
+        size_t totalSize =
+            sizeof(Type) + sizeof(uint8_t) + sizeof(uint32_t) +
+            sizeof(btVector3) + sizeof(float) + sizeof(float) +
+            sizeof(int) + sizeof(float) + sizeof(int) + nameLen;
+
+        char* buffer = new char[totalSize];
+        size_t offset = 0;
+
+        Type type = sound.GetType();
+        memcpy(buffer + offset, &type, sizeof(Type)); offset += sizeof(Type);
+        uint8_t channel = sound.GetChannel();
+        memcpy(buffer + offset, &channel, sizeof(uint8_t)); offset += sizeof(uint8_t);
+        uint32_t seq = sound.GetSequenceNumber();
+        memcpy(buffer + offset, &seq, sizeof(uint32_t)); offset += sizeof(uint32_t);
+
+        btVector3 pos = sound.GetPosition();
+        memcpy(buffer + offset, &pos, sizeof(btVector3)); offset += sizeof(btVector3);
+        float vol = sound.GetVolume();
+        memcpy(buffer + offset, &vol, sizeof(float)); offset += sizeof(float);
+        float pitch = sound.GetPitch();
+        memcpy(buffer + offset, &pitch, sizeof(float)); offset += sizeof(float);
+
+        int objID = sound.GetObjectID();
+        memcpy(buffer + offset, &objID, sizeof(int)); offset += sizeof(int);
+
+        float playback = sound.GetPlaybackTime();
+        memcpy(buffer + offset, &playback, sizeof(float)); offset += sizeof(float);
+
+        //int len = (int)sound.GetSoundName().size();
+        int len = static_cast<int>(sound.GetSoundName().size());
+        memcpy(buffer + offset, &len, sizeof(int)); offset += sizeof(int);
+        memcpy(buffer + offset, sound.GetSoundName().c_str(), len); offset += len;
+
+        ENetPacket* pkt = enet_packet_create(buffer, offset, ENET_PACKET_FLAG_RELIABLE);
+        delete[] buffer;
+        return pkt;
+    }
+
+#pragma endregion SoundPacketHandler
+
+#pragma region SoundUpdatePacketHandler
+
+    void SoundUpdatePacketHandler::Handle(const std::shared_ptr<Packet> packet) {
+        const auto* soundUpdate = static_cast<SoundUpdatePacket*>(packet.get());
+        int objectID = soundUpdate->GetSourceID();
+        const btVector3& pos = soundUpdate->GetPosition();
+
+        GameObject* obj = GameObject::GetGameObjectByID(objectID);
+        if (!obj) return;
+
+        
+        int channel = obj->GetChannelID();
+
+        if (channel != -1) {
+            audioEngine.SetChannel3dPosition(channel, Vector3(pos.x(), pos.y(), pos.z()));
+        }
+    }
+
+    std::shared_ptr<Packet> SoundUpdatePacketHandler::Translate(const ENetEvent* event) const {
+        Type type;
+        uint8_t channel;
+        uint32_t sequence;
+        int objectID;
+        btVector3 position;
+
+        GetBaseData(event->packet, &type, &channel, &sequence);
+        size_t offset = sizeof(Type) + sizeof(uint8_t) + sizeof(uint32_t);
+
+        memcpy(&objectID, event->packet->data + offset, sizeof(int));
+        offset += sizeof(int);
+
+        memcpy(&position, event->packet->data + offset, sizeof(btVector3));
+
+        return std::make_shared<SoundUpdatePacket>(objectID, position);
+    }
+
+    ENetPacket* SoundUpdatePacketHandler::ToENetPacket(const std::shared_ptr<Packet> packet) const {
+        const SoundUpdatePacket& sound = *static_cast<SoundUpdatePacket*>(packet.get());
+
+        char* buffer = new char[
+            sizeof(Type) + sizeof(uint8_t) + sizeof(uint32_t) +
+                sizeof(int) + sizeof(btVector3)
+        ];
+
+        size_t offset = 0;
+
+        Type type = sound.GetType();
+        memcpy(buffer + offset, &type, sizeof(Type)); offset += sizeof(Type);
+
+        uint8_t channel = sound.GetChannel();
+        memcpy(buffer + offset, &channel, sizeof(uint8_t)); offset += sizeof(uint8_t);
+
+        uint32_t seq = sound.GetSequenceNumber();
+        memcpy(buffer + offset, &seq, sizeof(uint32_t)); offset += sizeof(uint32_t);
+
+        int objID = sound.GetSourceID();
+        memcpy(buffer + offset, &objID, sizeof(int)); offset += sizeof(int);
+
+        btVector3 pos = sound.GetPosition();
+        memcpy(buffer + offset, &pos, sizeof(btVector3)); offset += sizeof(btVector3);
+
+        ENetPacket* enetPacket = enet_packet_create(buffer, offset, ENET_PACKET_FLAG_UNSEQUENCED);
+        delete[] buffer;
+        return enetPacket;
+    }
+
+#pragma endregion SoundUpdatePacketHandler
+
+#pragma region StopSoundPacketHandler
+
+    void StopSoundPacketHandler::Handle(const std::shared_ptr<Packet> packet) {
+        const auto* stopSound = static_cast<StopSoundPacket*>(packet.get());
+        int objectID = stopSound->GetObjectID();
+
+        GameObject* obj = GameObject::GetGameObjectByID(objectID);
+        if (!obj) return;
+
+        if (obj->HasAudioChannel()) {
+            int channel = obj->GetChannelID();
+            //audioEngine.SetChannelVolume(channel, -100.0f);
+            //obj->SetSoundChannelID(-1);
+            audioEngine.StopChannel(channel);
+            obj->ClearSoundChannel();
+
+            
+        }
+        PacketHandler::activeChannelPerObject.erase(objectID);
+        PacketHandler::activeSoundPerObject.erase(objectID);
+    }
+
+    std::shared_ptr<Packet> StopSoundPacketHandler::Translate(const ENetEvent* event) const {
+        Type type;
+        uint8_t channel;
+        uint32_t sequence;
+        int objectID;
+
+        GetBaseData(event->packet, &type, &channel, &sequence);
+        size_t offset = sizeof(Type) + sizeof(uint8_t) + sizeof(uint32_t);
+
+        memcpy(&objectID, event->packet->data + offset, sizeof(int));
+
+        return std::make_shared<StopSoundPacket>(objectID);
+    }
+
+    ENetPacket* StopSoundPacketHandler::ToENetPacket(const std::shared_ptr<Packet> packet) const {
+        const StopSoundPacket& sound = *static_cast<StopSoundPacket*>(packet.get());
+
+        char* buffer = new char[
+            sizeof(Type) + sizeof(uint8_t) + sizeof(uint32_t) +
+                sizeof(int)
+        ];
+
+        size_t offset = 0;
+
+        Type type = sound.GetType();
+        memcpy(buffer + offset, &type, sizeof(Type)); offset += sizeof(Type);
+
+        uint8_t channel = sound.GetChannel();
+        memcpy(buffer + offset, &channel, sizeof(uint8_t)); offset += sizeof(uint8_t);
+
+        uint32_t seq = sound.GetSequenceNumber();
+        memcpy(buffer + offset, &seq, sizeof(uint32_t)); offset += sizeof(uint32_t);
+
+        int objID = sound.GetObjectID();
+        memcpy(buffer + offset, &objID, sizeof(int)); offset += sizeof(int);
+
+        ENetPacket* enetPacket = enet_packet_create(buffer, offset, ENET_PACKET_FLAG_UNSEQUENCED);
+        delete[] buffer;
+        return enetPacket;
+    }
+
+#pragma endregion StopSoundPacketHandler
 }

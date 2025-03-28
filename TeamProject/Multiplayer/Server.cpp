@@ -80,6 +80,15 @@ namespace Multiplayer {
 
         m_handlers.push_back(std::make_unique<Packet::PlayerAnimationPacketHandler>());
         Packet::PacketRegister::Register(m_handlers.back().get());
+
+        m_handlers.push_back(std::make_unique<Packet::SoundPacketHandler>());
+        Packet::PacketRegister::Register(m_handlers.back().get());
+
+        m_handlers.push_back(std::make_unique<Packet::StopSoundPacketHandler>());
+        Packet::PacketRegister::Register(m_handlers.back().get());
+
+        m_handlers.push_back(std::make_unique<Packet::SoundUpdatePacketHandler>());
+        Packet::PacketRegister::Register(m_handlers.back().get());
     }
 
     void Server::JoinGame(const std::string& ip, float waitSeconds) {

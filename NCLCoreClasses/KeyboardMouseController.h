@@ -25,6 +25,10 @@ namespace NCL {
 		float	GetAnalogue(AnalogueControl axis) const override;
 		bool GetDigital(DigitalControl control) const override;
 
+		const Mouse& GetMouse() {
+			return mouse;
+		}
+
 	protected:
 		const Keyboard&		keyboard;
 		const Mouse&		mouse;

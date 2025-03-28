@@ -88,6 +88,7 @@ public:
 	void StopAllChannels();
 	void StopAllNonUISounds();
 	void SetChannel3dPosition(int nChannelId, const NCL::Maths::Vector3& vPosition);
+	void SetChannel3dMinMaxDistance(int channelId, float minDist, float maxDist);
 	void SetChannelPlaybackPosition(int channelId, unsigned int positionMs);
 	void SetChannelVolume(int nChannelId, float fVolumedB);
 	void SetChannelFrequencyHz(int channelId, float frequency);

@@ -58,8 +58,7 @@ namespace NCL::CSC8503 {
                 asString = asString.substr(0, asString.size() - 2) + "." + asString.substr(asString.size() - 2, 2);
                 Debug::Print("TIME: " + asString, Vector2(0.75, 0.1));
             }
-
-           
+    
             if (gameTimer >= maxGameTime) {
                 EndScreenMP* endScreen = new EndScreenMP(controller, game);
                 EndScreenMPUI* scoreboard = endScreen->GetScoreboard();

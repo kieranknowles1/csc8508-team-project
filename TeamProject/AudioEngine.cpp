@@ -15,10 +15,19 @@ CAudioEngine audioEngine;
 Implementation::Implementation() {
     mpStudioSystem = NULL;
     CAudioEngine::ErrorCheck(FMOD::Studio::System::create(&mpStudioSystem));
-    CAudioEngine::ErrorCheck(mpStudioSystem->initialize(32, FMOD_STUDIO_INIT_LIVEUPDATE, FMOD_INIT_PROFILE_ENABLE, NULL));
-
     mpSystem = NULL;
     CAudioEngine::ErrorCheck(mpStudioSystem->getCoreSystem(&mpSystem));
+
+    CAudioEngine::ErrorCheck(mpSystem->setSoftwareFormat(0, FMOD_SPEAKERMODE_STEREO, 0));
+    CAudioEngine::ErrorCheck(mpStudioSystem->initialize(32, FMOD_STUDIO_INIT_LIVEUPDATE, FMOD_INIT_PROFILE_ENABLE, NULL));
+
+    FMOD_SPEAKERMODE mode;
+    int channels;
+    CAudioEngine::ErrorCheck(mpSystem->getSoftwareFormat(nullptr, &mode, &channels));
+    std::cout << "[FMOD] Speaker mode: " << mode << ", Channels: " << channels << std::endl;
+
+    //mpSystem = NULL;
+    //CAudioEngine::ErrorCheck(mpStudioSystem->getCoreSystem(&mpSystem));
 }
 
 //Destructor
@@ -125,6 +134,8 @@ int CAudioEngine::PlaySounds(const std::string& strSoundName, const NCL::Maths::
         if (currMode & FMOD_3D) {
             FMOD_VECTOR position = VectorToFmod(vPosition);
             CAudioEngine::ErrorCheck(pChannel->set3DAttributes(&position, nullptr));
+
+            CAudioEngine::ErrorCheck(pChannel->setMode(FMOD_3D | FMOD_3D_LINEARROLLOFF));
         }
         CAudioEngine::ErrorCheck(pChannel->setVolume(dbToVolume(fVolumedB)));
         CAudioEngine::ErrorCheck(pChannel->setPaused(false));
@@ -205,6 +216,13 @@ void CAudioEngine::SetChannel3dPosition(int nChannelId, const NCL::Maths::Vector
     CAudioEngine::ErrorCheck(tFoundIt->second->set3DAttributes(&position, NULL));
 }
 
+void CAudioEngine::SetChannel3dMinMaxDistance(int channelId, float minDist, float maxDist) {
+    auto it = sgpImplementation->mChannels.find(channelId);
+    if (it == sgpImplementation->mChannels.end()) return;
+
+    CAudioEngine::ErrorCheck(it->second->set3DMinMaxDistance(minDist, maxDist));
+}
+
 void CAudioEngine::SetChannelPlaybackPosition(int channelId, unsigned int positionMs) {
     auto tFoundIt = sgpImplementation->mChannels.find(channelId);
     if (tFoundIt == sgpImplementation->mChannels.end()) {
@@ -215,15 +233,46 @@ void CAudioEngine::SetChannelPlaybackPosition(int channelId, unsigned int positi
     ErrorCheck(result);
 }
 
-void CAudioEngine::Set3dListenerAndOrientation(const NCL::Maths::Vector3& vPosition, const NCL::Maths::Vector3& vLook, const NCL::Maths::Vector3& vUp) {
+/*void CAudioEngine::Set3dListenerAndOrientation(const NCL::Maths::Vector3& vPosition, const NCL::Maths::Vector3& vLook, const NCL::Maths::Vector3& vUp) {
     FMOD_VECTOR fmodPosition = VectorToFmod(vPosition);
-    FMOD_VECTOR fmodLook = VectorToFmod(vLook);
-    FMOD_VECTOR fmodUp = VectorToFmod(vUp);
+    //FMOD_VECTOR fmodLook = VectorToFmod(vLook);
+    //FMOD_VECTOR fmodUp = VectorToFmod(vUp);
+
+    FMOD_VECTOR fmodForward = { -vLook.x, -vLook.y, -vLook.z };
+    FMOD_VECTOR fmodUp = { vUp.x, vUp.y, vUp.z };
 
     FMOD_VECTOR fmodVelocity = { 0.0f, 0.0f, 0.0f }; // Velocity is usually needed for Doppler effect, but we don't have it here
 
     if (sgpImplementation && sgpImplementation->mpSystem) {
-        sgpImplementation->mpSystem->set3DListenerAttributes(0, &fmodPosition, &fmodVelocity, &fmodLook, &fmodUp);
+        sgpImplementation->mpSystem->set3DListenerAttributes(0, &fmodPosition, &fmodVelocity, &fmodForward, &fmodUp);
+    }
+}*/
+
+void CAudioEngine::Set3dListenerAndOrientation(const NCL::Maths::Vector3& vPosition,
+    const NCL::Maths::Vector3& vLook,
+    const NCL::Maths::Vector3& vUp) {
+    
+    //NCL::Maths::Vector3 forward = NCL::Maths::Vector::Normalise(vLook);
+    //NCL::Maths::Vector3 up = NCL::Maths::Vector::Normalise(vUp);
+    //forward = -forward;
+    //NCL::Maths::Vector3 rightUnNormalised = NCL::Maths::Vector::Cross(up, forward);
+    //NCL::Maths::Vector3 right = -NCL::Maths::Vector::Normalise(rightUnNormalised);
+    //NCL::Maths::Vector3 fwdUnNormalised = NCL::Maths::Vector::Cross(up, right);
+    //forward = NCL::Maths::Vector::Normalise(fwdUnNormalised);
+
+    //forward = -forward;
+    //up.z *= -1.0f;
+
+    FMOD_VECTOR fmodPosition = VectorToFmod(vPosition);
+    //FMOD_VECTOR fmodForward = VectorToFmod(NCL::Maths::Vector3(-vLook.x, vLook.y, vLook.z)); 
+    FMOD_VECTOR fmodUp = VectorToFmod(NCL::Maths::Vector3(vUp.x, vUp.y, vUp.z));
+    FMOD_VECTOR fmodForward = VectorToFmod(NCL::Maths::Vector3(vLook.z, vLook.y, -vLook.x));
+
+    FMOD_VECTOR fmodVelocity = { 0.0f, 0.0f, 0.0f };
+
+    if (sgpImplementation && sgpImplementation->mpSystem) {
+        sgpImplementation->mpSystem->set3DListenerAttributes(
+            0, &fmodPosition, &fmodVelocity, &fmodForward, &fmodUp);
     }
 }
 

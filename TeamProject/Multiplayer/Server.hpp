@@ -43,6 +43,8 @@ namespace Multiplayer {
 
         Lobbies::User* GetUser() const { return m_user; }
 
+        Network* GetNetwork() const { return m_network; }
+
         Lobbies::Lobby* GetLobby() const { return m_lobby; }
 
         void Start() { m_network->Start(); }

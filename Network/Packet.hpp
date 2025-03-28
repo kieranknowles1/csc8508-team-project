@@ -112,6 +112,8 @@ namespace Packet {
         bool operator==(const PacketHandler& other) const {
             return m_type == other.GetType();
         }
+        static std::unordered_map<int, int> activeChannelPerObject;
+        static std::unordered_map<int, std::string> activeSoundPerObject;
 
     protected:
         void GetBaseData(const ENetPacket* packet, Type* type, uint8_t* channel, uint32_t* sequenceNum) const {

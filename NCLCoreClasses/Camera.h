@@ -94,6 +94,19 @@ namespace NCL {
 		float	GetSpeed() const	{ return speed; }
 		Camera& SetSpeed(float s)	{ speed = s; return *this; }
 
+		Vector3 GetForwardVector() const {
+			float cosPitch = cosf(Maths::DegreesToRadians(pitch));
+			float sinPitch = sinf(Maths::DegreesToRadians(pitch));
+			float cosYaw = cosf(Maths::DegreesToRadians(yaw));
+			float sinYaw = sinf(Maths::DegreesToRadians(yaw));
+
+			Vector3 returnVec = NCL::Maths::Vector::Normalise(Vector3(-cosPitch * sinYaw, sinPitch, -cosPitch * cosYaw));
+			return returnVec;
+		}
+		Vector3 GetUpVector() const {
+			return Vector3(0, 1, 0);
+		}
+
 	protected:
 		float	nearPlane;
 		float	farPlane;
