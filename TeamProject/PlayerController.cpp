@@ -503,7 +503,6 @@ void PlayerController::HandleJumping() {
         audioEngine.PlaySounds("jump_mono.wav", camera->GetPosition(), -16.0f);
         if (TutorialGame::getInstance()->GetServerInstance() != nullptr) {
             btVector3 pos = camera->GetPosition();
-            std::cout << "[Emitter] Jump sound at: " << pos << std::endl;
 
             auto jumpSoundPacket = std::make_shared<Packet::SoundPacket>(
                 "jump_mono.wav",
@@ -569,14 +568,6 @@ void PlayerController::GetAllDirections() {
 
     Vector3 camForward = camera->GetForwardVector();
     Vector3 camUp = camera->GetUpVector();
-   
-    std::cout << "[Listener] Position: " << camera->GetPosition()
-        << " | Forward: " << forward
-        << " | Up: " << up << std::endl;
-
-    std::cout << "[Camera] Yaw: " << camera->GetYaw() << " | Pitch: " << camera->GetPitch() << std::endl;
-
-    //Update FMod listener each frame so audio is correctly positioned
     
 }
 
