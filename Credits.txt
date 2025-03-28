@@ -1,4 +1,6 @@
-TODO: Credit ourselves, add in what each of us did
+================================================================================
+Credits
+---------------------------------------------------------------------------------------------------
 
 - Alex Barnett
   Head of Gameplay Programming, Level Creation, and Creative Director
@@ -11,11 +13,11 @@ TODO: Credit ourselves, add in what each of us did
   Head of AI and Single Player Game Mode
 
 - Harsh Naidu
-  ...
-  ...
+  Head of Physics
+  Assisted in Graphics Engineering
 
 - Joshua Kadhim
-  Head of UI Design and Integration
+  Head of UI Design and UI Integration
 
 - Kieran Knowles
   Head of PS5 Support and Linux Support
@@ -24,14 +26,13 @@ TODO: Credit ourselves, add in what each of us did
 - Max Davidson
   Head of Graphics Engineering
   
-
 - Thomas Johnson
   Head of Networking.
   Assisted in Gameplay.
 
 ================================================================================
 Assets
--------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 
 Comicy font by Syafrizal a.k.a. Khurasan, free for personal and commercial use.
 https://www.dafont.com/comicy.font
@@ -39,8 +40,6 @@ https://www.dafont.com/comicy.font
 Paintball Gun: "Atom Ray Gun Waterpistol" (https://skfb.ly/oorJF) by akselmot
 is licensed under Creative Commons Attribution
 (http://creativecommons.org/licenses/by/4.0/).
-
-Evil Genius Assets used with permission from Rebellion.
 
 Textures by TextureCan, under Creative Commons CC0
 https://www.texturecan.com/
@@ -52,7 +51,7 @@ Heartbeat loop by .name -- https://freesound.org/s/418866/ -- License: Attributi
 
 ================================================================================
 Libraries
---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 
 Made using FMOD Studio by Firelight Technologies Pty Ltd.
 
@@ -96,17 +95,14 @@ https://github.com/nothings/stb/
 
 ================================================================================
 Tooling
---------------------------------------------------------------------------------
-
+---------------------------------------------------------------------------------------------------
 Unity used for level design, Copyright (c) Unity Technologies
 
 ================================================================================
 Licenses
---------------------------------------------------------------------------------
-
---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 The Happy Bunny License (Modified MIT License)
---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 Copyright (c) 2005 - G-Truc Creation
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -131,9 +127,9 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 
---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 The MIT License
---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 
 Version N/A	SPDX short identifier: MIT
 Open Source Initiative Approved License
@@ -157,9 +153,9 @@ COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
 IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 The Unlicense
---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 This is free and unencumbered software released into the public domain.
 
 Anyone is free to copy, modify, publish, use, compile, sell, or
@@ -185,9 +181,9 @@ OTHER DEALINGS IN THE SOFTWARE.
 
 For more information, please refer to <https://unlicense.org/>
 
---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 The zlib/libpng License
---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
 
 SPDX short identifier: Zlib
 

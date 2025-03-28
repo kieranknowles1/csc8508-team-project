@@ -97,9 +97,11 @@ GameTechRenderer::GameTechRenderer(Window* window) : OGLRenderer(window), GameTe
 	glGenFramebuffers(1, &laserAddFBO);
 	glGenFramebuffers(1, &edgeNormalsFBO);
 
-	GLenum buffers[2] = {
+	GLenum buffers[4] = {
 	GL_COLOR_ATTACHMENT0,
-	GL_COLOR_ATTACHMENT1
+	GL_COLOR_ATTACHMENT1,
+    GL_COLOR_ATTACHMENT2,
+    GL_COLOR_ATTACHMENT3
 	};
 
 	GenerateScreenTexture(bufferDepthTex, true);
@@ -116,13 +118,18 @@ GameTechRenderer::GameTechRenderer(Window* window) : OGLRenderer(window), GameTe
 	GenerateScreenTexture(laserPostTex2);
 	GenerateScreenTexture(laserAddedTex);
 	GenerateScreenTexture(edgeNormalsTex);
+
+    GenerateScreenTexture(glossBufferTex);
+    GenerateScreenTexture(specularBufferTex);
 	//attach textures to FBOS:
 	//first pass:
 	glBindFramebuffer(GL_FRAMEBUFFER, bufferFBO);
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, bufferColourTex, 0);
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, bufferNormalTex, 0);
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, bufferDepthTex, 0);
-	glDrawBuffers(2, buffers);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT2, GL_TEXTURE_2D, glossBufferTex, 0);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT3, GL_TEXTURE_2D, specularBufferTex, 0);
+	glDrawBuffers(4, buffers);
 
 	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE || !bufferColourTex || !bufferNormalTex || !bufferDepthTex ) {//check attachment success
 		return;
@@ -379,6 +386,8 @@ void GameTechRenderer::RenderCamera() {
 	int texRepeatingLocation = glGetUniformLocation(deferredsceneShader->GetProgramID(), "texRepeating");
 	int texScaleLocation = glGetUniformLocation(deferredsceneShader->GetProgramID(), "texScale");
 	int invertYLocation = glGetUniformLocation(deferredsceneShader->GetProgramID(), "invertY");
+    int hasGlossLocation = glGetUniformLocation(deferredsceneShader->GetProgramID(), "hasGloss");
+    int hasSpecularLocation = glGetUniformLocation(deferredsceneShader->GetProgramID(), "hasSpecular");
 
 	int cameraLocation = glGetUniformLocation(deferredsceneShader->GetProgramID(), "cameraPos"); 
 
@@ -413,6 +422,9 @@ void GameTechRenderer::RenderCamera() {
 
 			bool hasTex = layer && layer->diffuse;
 			bool hasNormal = layer && layer->normal;
+            bool hasGloss = layer && layer->gloss;
+            bool hasSpecular = layer && layer->specular;
+
             //Bind textures per submesh
             if (hasTex) {
                 BindTextureToShader(*layer->diffuse, "diffuseTex", 0);
@@ -421,6 +433,15 @@ void GameTechRenderer::RenderCamera() {
             if (hasNormal) {
                 BindTextureToShader(*layer->normal, "normalTex", 1);
             }
+
+            if (hasGloss) {
+                BindTextureToShader(*layer->gloss, "glossTex", 2);
+            }
+
+            if (hasSpecular) {
+                BindTextureToShader(*layer->specular, "specularTex", 3);
+            }
+
             Vector3 texScale;
             // TODO: Proper flag to control this, named something like scaleTextureWithSize (but shorter)
             if (i->GetTexRepeating()) {
@@ -447,9 +468,9 @@ void GameTechRenderer::RenderCamera() {
             glUniform1i(hasVColLocation, !(*i).GetMesh()->GetColourData().empty());
 
             glUniform1i(hasTexLocation, hasTex);
-            // TODO: Add metallic maps
-            //glUniform1i(hasMetallicLocation, i->GetMetallicMaps().size() > subMeshIndex && i->GetMetallicMaps()[subMeshIndex] != nullptr);
-            glUniform1i(hasFlatLocation, i->GetIsFlat());
+            glUniform1i(hasGlossLocation, hasGloss);
+            glUniform1i(hasSpecularLocation, hasSpecular);
+            //glUniform1i(hasFlatLocation, i->GetIsFlat());
             glUniform1i(hasNormalLocation, hasNormal);
 
             BindMesh((OGLMesh&)*(*i).GetMesh());
@@ -866,7 +887,7 @@ void GameTechRenderer::RenderQuad() {
 
 void GameTechRenderer::RenderDecals() {
 	// Bind the decal FBO to keep decal rendering separate from the main scene
-	glBindFramebuffer(GL_FRAMEBUFFER, decalSystem.GetDecalFBO());
+	glBindFramebuffer(GL_FRAMEBUFFER, decalSystem.GetDecalFBO()); 
 
 	// Copy the scene depth buffer to the decal FBO
 	glBindFramebuffer(GL_READ_FRAMEBUFFER, bufferFBO); //was hdrFBO. Depth can now come from bufferFBO
@@ -1213,6 +1234,14 @@ void GameTechRenderer::CombineBuffers() {//basically final post processing outpu
 	glActiveTexture(GL_TEXTURE2);
 	glBindTexture(GL_TEXTURE_2D, lightSpecularTex);
 
+    glUniform1i(glGetUniformLocation(combineShader->GetProgramID(), "glossBufferTex"), 3);
+    glActiveTexture(GL_TEXTURE3);
+    glBindTexture(GL_TEXTURE_2D, glossBufferTex);
+    
+    glUniform1i(glGetUniformLocation(combineShader->GetProgramID(), "specularBufferTex"), 4);
+    glActiveTexture(GL_TEXTURE4);
+    glBindTexture(GL_TEXTURE_2D, specularBufferTex);
+
 	BindMesh(*fullscreenQuad);
 	DrawBoundMesh();
 	glBindFramebuffer(GL_FRAMEBUFFER, 0); 
@@ -1306,7 +1335,7 @@ void GameTechRenderer::ApplyBlur() {
 	glActiveTexture(GL_TEXTURE0);
 	glUniform1i(glGetUniformLocation(blurShader->GetProgramID(), "diffuseTex"), 0); 
 
-	for (int i = 0; i < 10; ++i) { //Higher number = stronger blur
+	for (int i = 0; i < 50; ++i) { //Higher number = stronger blur
 	    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, bufferNormalTex, 0); //could choose any floating point colour texture that won't be used elsewhere afterwards
 		glUniform1i(glGetUniformLocation(blurShader->GetProgramID(), "isVertical"), 0);
 

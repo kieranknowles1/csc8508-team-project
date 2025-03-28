@@ -22,7 +22,9 @@ namespace NCL {
 		struct Layer {
 			std::shared_ptr<Rendering::Texture> diffuse;
 			std::shared_ptr<Rendering::Texture> normal;
-            bool invertY = false;
+            std::shared_ptr<Rendering::Texture> gloss;
+            std::shared_ptr<Rendering::Texture> specular;
+			bool invertY = false;
             // Does renderObject.color affect this material?
             bool useColor = true;
 		};
