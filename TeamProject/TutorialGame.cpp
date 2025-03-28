@@ -362,7 +362,6 @@ void TutorialGame::InitBullet() {
 }
 
 void TutorialGame::LoadWorldFromFile(int levelNum) {
-    ClearWorld();
     InitWorld();
 
     LevelImporter levelImporter(resourceManager.get(), world.get(), bulletWorld);
