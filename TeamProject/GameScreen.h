@@ -61,7 +61,15 @@ namespace NCL::CSC8503 {
 
            
             if (gameTimer >= maxGameTime) {
-                *newState = new EndScreenMP(controller, game);
+                EndScreenMP* endScreen = new EndScreenMP(controller, game);
+                EndScreenMPUI* scoreboard = endScreen->GetScoreboard();
+
+                for (Player p : playerController->GetScoreboard()->GetPlayers()) {
+                    scoreboard->AddPlayer(p);
+                }
+                scoreboard->PopulateLeaderboard();
+
+                *newState = endScreen;
                 return PushdownResult::Push;
             }
             if (!isPaused) {

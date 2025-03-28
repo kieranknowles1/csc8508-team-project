@@ -29,9 +29,9 @@ public:
     void AddPlayer(Player playerData) {
         players.push_back(playerData);
     }
+	void PopulateLeaderboard();
 
 private:
-	void PopulateLeaderboard();
     
     UIBox background;
     std::vector<Button> buttons;
@@ -87,6 +87,9 @@ public:
 		renderer->AddUiElement(ui.get());
 		ui->SetActive(true);
     }
+
+    EndScreenMPUI* GetScoreboard() { return ui.get(); }
+
     Controller* controller;
     TutorialGame* game;
 
