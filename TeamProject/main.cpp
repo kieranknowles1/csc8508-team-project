@@ -109,6 +109,11 @@ int main(int argc, char** argv) {
     window->GetTimer().GetTimeDeltaSeconds();
 
     bool quit = false;
+    int fps = 0;
+    int frames = 0;
+    float elapsed = 0;
+    float last = 0;
+
     while (window->UpdateWindow() && !window->GetKeyboard()->KeyPressed(KeyCodes::ESCAPE) && !quit) {
         if (window->GetKeyboard()->KeyPressed(KeyCodes::NUM1)) {
             locked = !locked;
@@ -116,6 +121,16 @@ int main(int argc, char** argv) {
             window->LockMouseToWindow(locked);
         }
         float dt = window->GetTimer().GetTimeDeltaSeconds();
+        elapsed += dt;
+        
+        if (elapsed - last >= 0.5) {
+            fps = frames * 2;
+            frames = 0;
+            last += 0.5;
+        }
+
+        Debug::Print("FPS: " + std::to_string(fps), { 1.875, 0.05 }, { 1, 1, 1, 1 }, 0.5f);
+
         controller->Update(dt);
         window->SetTitle("Gametech frame time:" + std::to_string(1000.0f * dt));
 
@@ -165,5 +180,6 @@ int main(int argc, char** argv) {
         renderer->collectFrameObjects(game->GetWorld());
         renderer->drawFrame(dt);
         Debug::UpdateRenderables(dt);
+        frames++;
     }
 }
