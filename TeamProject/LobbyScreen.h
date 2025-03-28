@@ -86,22 +86,24 @@ namespace NCL::CSC8503 {
 			Vector2 rightStartPos = Vector2(0.5f, 0.3f);
 			float verticalSpacing = 0.09f;
 
-			for (int i = 0; i < 4; ++i) {
-				std::string colorName = menuItems[i];
-				btVector4 btColor = Color::GetPlayerColor(i);
-				Vector4 textColor(btColor.x(), btColor.y(), btColor.z(), btColor.w());
+			Vector2 posStart[2] = { leftStartPos, rightStartPos };
+			Vector2 youOffset[2] = { Vector2(-0.1, 0), Vector2(0.1425, 0) };
 
-				Vector2 pos = leftStartPos + Vector2(0, i * verticalSpacing);
-				Debug::Print(std::to_string(i + 1) + ". " + colorName, pos, textColor);
-			}
+			for (int i = 0; i < 8; ++i) {
+				std::string displayName = "Empty";
+				std::string you = (i / 4) == 0 ? "YOU > " : " < YOU";
+				Vector2 pos = posStart[i / 4] + Vector2(0, (i % 4) * verticalSpacing);
+				Vector4 color = Color::GetPlayerColor(i);
 
-			for (int i = 4; i < 8; ++i) {
-				std::string colorName = menuItems[i];
-				btVector4 btColor = Color::GetPlayerColor(i);
-				Vector4 textColor(btColor.x(), btColor.y(), btColor.z(), btColor.w());
+				if (i < game->GetServerInstance()->ClientCount()) {
+					displayName = "Player " + std::to_string(i + 1);
 
-				Vector2 pos = rightStartPos + Vector2(0, (i - 4) * verticalSpacing);
-				Debug::Print(std::to_string(i + 1) + ". " + colorName, pos, textColor);
+					Lobbies::User* user = game->GetServerInstance()->GetUser();
+					if (user && i + 1 == user->GetUserID()) {
+                        Debug::Print(you, pos + youOffset[i / 4], color);
+					}
+				}
+				Debug::Print(displayName, pos, color);
 			}
 
 			Vector2 buttonStart = Vector2(0.35f, 0.85f);
@@ -162,24 +164,24 @@ namespace NCL::CSC8503 {
 			Vector2 rightStartPos = Vector2(0.5f, 0.3f);
 			float verticalSpacing = 0.09f;
 
-			// Draw first 4 colors on the left
-			for (int i = 0; i < 4; ++i) {
-				std::string colorName = menuItems[i];
-				btVector4 btColor = Color::GetPlayerColor(i);
-				Vector4 textColor(btColor.x(), btColor.y(), btColor.z(), btColor.w());
+			Vector2 posStart[2] = { leftStartPos, rightStartPos };
+			Vector2 youOffset[2] = { Vector2(-0.1, 0), Vector2(0.1425, 0) };
 
-				Vector2 pos = leftStartPos + Vector2(0, i * verticalSpacing);
-				Debug::Print(std::to_string(i + 1) + ". " + colorName, pos, textColor);
-			}
+			for (int i = 0; i < 8; ++i) {
+				std::string displayName = "Empty";
+				std::string you = (i / 4) == 0 ? "YOU > " : " < YOU";
+				Vector2 pos = posStart[i / 4] + Vector2(0, (i % 4) * verticalSpacing);
+				Vector4 color = Color::GetPlayerColor(i);
 
-			// Draw next 4 colors on the right
-			for (int i = 4; i < 8; ++i) {
-				std::string colorName = menuItems[i];
-				btVector4 btColor = Color::GetPlayerColor(i);
-				Vector4 textColor(btColor.x(), btColor.y(), btColor.z(), btColor.w());
+				if (i < game->GetServerInstance()->ClientCount()) {
+					displayName = "Player " + std::to_string(i + 1);
 
-				Vector2 pos = rightStartPos + Vector2(0, (i - 4) * verticalSpacing);
-				Debug::Print(std::to_string(i + 1) + ". " + colorName, pos, textColor);
+					Lobbies::User* user = game->GetServerInstance()->GetUser();
+					if (user && i + 1 == user->GetUserID()) {
+                        Debug::Print(you, pos + youOffset[i / 4], color);
+					}
+				}
+				Debug::Print(displayName, pos, color);
 			}
 
 			Vector2 buttonStart = Vector2(0.35f, 0.85f);
