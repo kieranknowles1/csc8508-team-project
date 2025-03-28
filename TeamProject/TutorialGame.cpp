@@ -403,7 +403,7 @@ PlayerObject* TutorialGame::InitPlayer(btVector3 position, btVector3 upDir, bool
 
 GameObject* TutorialGame::AddGunToWorld(const Vector3& position, Vector3 dimensions, float inverseMass, bool hasCollision)
 {
-    GameObject* gun = new GameObject();
+    GameObject* gun = new ServerObject();
 
     // Setting the transform properties for the gun
     gun->setInitialPosition(position);
@@ -602,9 +602,9 @@ bool TutorialGame::StartMultiplayerGame(bool isHost) {
     server->Start();
 
     if (!isHost) {
-        //server->JoinGame("127.0.0.1", 1.0f);
-        std::string host = config.get<std::string>("defaultHost");
-        server->JoinGame(host.c_str(), 1.0f);
+        server->JoinGame("127.0.0.1", 1.0f);
+        //std::string host = config.get<std::string>("defaultHost");
+        //server->JoinGame(host.c_str(), 1.0f);
        
     }
     return server->IsConnected();
