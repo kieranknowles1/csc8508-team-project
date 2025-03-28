@@ -96,6 +96,7 @@ namespace NCL::CSC8503 {
                     audioEngine.PlaySounds("MenuSelect.wav", Vector3(0, 0, 0), -18.0f);
                     game->Start();
                     *newState = new GameScreen(controller, game, game->GetPlayerController());
+                    ui->SetActive(false);
                     return PushdownResult::Push;
 
                 case GameMode::HOST_GAME:
