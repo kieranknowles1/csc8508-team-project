@@ -627,10 +627,8 @@ bool TutorialGame::StartMultiplayerGame(bool isHost) {
     server->Start();
 
     if (!isHost) {
-        //server->JoinGame("127.0.0.1", 1.0f);
         std::string host = config.get<std::string>("defaultHost");
         server->JoinGame(host.c_str(), 1.0f);
-
     }
     bool success = server->IsConnected();
     if (!success) StopServer();
