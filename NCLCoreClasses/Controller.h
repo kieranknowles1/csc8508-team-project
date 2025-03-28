@@ -8,6 +8,8 @@ https://research.ncl.ac.uk/game/
 */
 #pragma once
 
+#include "Vector.h"
+
 class Controller	{
 public:
 	// Between a range:
@@ -58,6 +60,15 @@ public:
 		Scoreboard
 	};
 
+	// Basic feedback that the controller can give to the user
+	// Controllers that can't show these should ignore them
+	struct Feedback {
+		// A colour to show
+		NCL::Maths::Vector3 color;
+		// Desired rumble frequency
+		float rumble;
+	};
+
 	Controller() {
 
 	}
@@ -69,4 +80,9 @@ public:
 	virtual bool GetDigital(DigitalControl control) const = 0;
 
 	virtual void Update(float dt = 0.0f) {};
+
+	Feedback& getFeedback() { return feedback; }
+
+protected:
+	Feedback feedback;
 };

@@ -66,7 +66,7 @@ namespace NCL {
         case DigitalControl::Pause: case DigitalControl::Unpause:
             return buttonPressed(Button::Start, false, true);
         case DigitalControl::Scoreboard: // We can't use select on PS5 :(, check for it still since it works on other controllers
-            return buttonPressed(Button::TrackpadClick, false, true) >= fireThreshold || buttonPressed(Button::Select);
+            return buttonPressed({ Button::TrackpadClick, Button::Select }, false, true);
         case DigitalControl::PauseQuit: return buttonPressed(Button::Start, true, true);
         case DigitalControl::ThirdPerson:
         case DigitalControl::DebugReloadWorld:
