@@ -9,8 +9,8 @@
     // resolution
     "fullscreen": "Borderless",
 
-    // The default host to use when joining a game
-    "defaultHost": "10.70.33.113",
+    // The default host to use when joining a game, set this to the ip adress of the computer you are using as host
+    "defaultHost": "127.0.0.1",
 
     // Allocate a number of resource loader threads equal to
     // max(1, ceil(physicalThreads * threadMult))
