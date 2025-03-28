@@ -417,7 +417,7 @@ PlayerObject* TutorialGame::InitPlayer(btVector3 position, btVector3 upDir, bool
 
 GameObject* TutorialGame::AddGunToWorld(const Vector3& position, Vector3 dimensions, float inverseMass, bool hasCollision)
 {
-    GameObject* gun = new GameObject();
+    GameObject* gun = new ServerObject();
 
     // Setting the transform properties for the gun
     gun->setInitialPosition(position);
