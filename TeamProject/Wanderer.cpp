@@ -93,13 +93,17 @@ Wanderer::Wanderer(PlayerObject* p, NavMesh* mesh, Side side, GameTechRendererIn
 
 
 	health = std::make_unique<HealthAttrib>(this);
-	health->SetMaxHealth(25.0f * difficulty);
+	health->SetMaxHealth(20.0f * difficulty);
 	health->SetCurrentHealth(health->GetMaxHealth());
 
 	attack = std::make_unique<AttackAttrib>();
-	attack->SetDamageAmount(10.0f * difficulty);
+	attack->SetDamageAmount(5.0f * difficulty);
 	attack->SetDamageType(DamageType::CONTINUOUS);
 	attack->SetHealthAttrib(health.get());
+
+	speed = 10.0f * (difficulty);
+	senseDistance = 100.0f * (difficulty * 0.75f);
+	playerDist = senseDistance;
 }
 
 Wanderer::~Wanderer() {

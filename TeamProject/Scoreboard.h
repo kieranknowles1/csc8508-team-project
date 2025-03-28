@@ -38,6 +38,8 @@ public:
     void render(std::vector<UiText>& texts) override;
     void Animate(float dt) override {}
 
+    std::vector<Player> GetPlayers() { return players; }
+
     void AddPlayer(Player playerData) {
         players.push_back(playerData);
     }

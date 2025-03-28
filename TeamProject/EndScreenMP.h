@@ -26,14 +26,12 @@ public:
 
     void InitMenu();
 
-    void UpdateMenu(unsigned int);
-
     void AddPlayer(Player playerData) {
         players.push_back(playerData);
     }
+	void PopulateLeaderboard();
 
 private:
-	void PopulateLeaderboard();
     
     UIBox background;
     std::vector<Button> buttons;
@@ -47,6 +45,7 @@ private:
     Vector4 borderColor = Vector4(0, 0, 0, 1);
     Vector4 boxColor = Vector4(0.4f, 0.4f, 0.4f, 1);
     float borderThickness = 0.005f;
+    Vector2 buttonSize = Vector2(0.4f, 0.1f);
 
     Vector2 leaderboardCenter = Vector2(0.5f, 0.6f);
     Vector2 leaderboardSize = Vector2(0.7f, 0.7f);
@@ -87,41 +86,22 @@ public:
         renderer = game->GetUIRenderer();
 		renderer->AddUiElement(ui.get());
 		ui->SetActive(true);
-		ui->UpdateMenu(selection);
     }
+
+    EndScreenMPUI* GetScoreboard() { return ui.get(); }
+
     Controller* controller;
     TutorialGame* game;
 
     PushdownResult OnUpdate(float dt, PushdownState** newState) override {
-        
-        if (controller->GetDigital(Controller::DigitalControl::MenuRight)) {
-            selection = 1;
-            UpdateSelection(selection);
-        }
-        if (controller->GetDigital(Controller::DigitalControl::MenuLeft)) {
-            selection = 0;
-			UpdateSelection(selection);
-        }
-        if (controller->GetDigital(Controller::DigitalControl::MenuConfirm)) {
 
-            switch (selection)
-            {
-            case 0:
-                //Main Menu
-                break;
-            case 1:
-                //Quit
-                break;
-            default:
-                break;
-            }
+        if (controller->GetDigital(Controller::DigitalControl::MenuConfirm)) {
+            game->StopServer();
+			game->ClearWorld();
+			return PushdownResult::Clear;
         }
 
         return PushdownResult::NoChange;
-    }
-
-    void UpdateSelection(unsigned int selection) {
-		ui->UpdateMenu(selection);
     }
 
     void OnAwake() override {

@@ -45,6 +45,9 @@ btVector3 GetEulerAngles(btQuaternion quat) {
 
 
 void PlayerController::UpdateMovement(float dt) {
+    controller->getFeedback().color = Vector3(player->GetRenderObject()->GetColour());
+    controller->getFeedback().rumble = firing ? 512.0f : 0.0f;
+
     // Updating the scoreboard here.
     if (TutorialGame::getInstance()->GetServerInstance() != nullptr) {
         for (PlayerObject* player : Respawn::GetAllPlayers()) {
@@ -62,6 +65,7 @@ void PlayerController::UpdateMovement(float dt) {
         overheat->Animate(dt);
     }
     HandleYaw();
+    HandleHurtEffects();
     SpecialTypeCalculations();
     HandleSliding(dt);
 
@@ -73,12 +77,11 @@ void PlayerController::UpdateMovement(float dt) {
         return;
     }
     RotationCalculations();
- 
     CameraMovement();
+    CheckForGround();
     GroundNormalCalculations();
     MovementCalculations(dt);
     HandleJumping();
-    HandleHurtEffects();
 
     previousVelocity = rb->getLinearVelocity();
     rb->setLinearVelocity(movement);
@@ -134,7 +137,7 @@ void PlayerController::UpdateCamOnly() {
             player->updateLaser(btVector3(0,0,0), btVector3(0,0,0));
             crosshair->stopFiring();
             overheat->stopFiring();
-            
+
             if (beamSoundChannel != -1) {
                 audioEngine.SetChannelVolume(beamSoundChannel, -100.0f);
                 beamSoundChannel = -1;
@@ -227,7 +230,7 @@ void PlayerController::FireShot(float dt) {
     btMatrix3x3 rotationMatrix(bulletRotation);
     btVector3 forwardDir = rotationMatrix * btVector3(0, 0, -1);
     btVector3 adjustedOffset = rotationMatrix * gunCameraOffset; // Apply rotation to the offset
-    
+
     // Calculate forward direction based on where crosshair lands.
     std::optional<ShotInfo> crosshairRay = Shoot::GetInstance()->RayClosest(
         camera->GetPosition(), forwardDir
@@ -422,6 +425,17 @@ void PlayerController::CameraMovement() {
     }
 };
 
+void PlayerController::CheckForGround() {
+    if (inAirTime > 0 || player->getCollided() == 0) return;
+    btVector3 btBelowPlayerPos = btPlayerPos;
+    btBelowPlayerPos -= (upDirection * 50);
+    btCollisionWorld::ClosestRayResultCallback callback(btPlayerPos, btBelowPlayerPos);
+    bulletWorld->rayTest(btPlayerPos, btBelowPlayerPos, callback);
+    if (!callback.hasHit()) {
+        player->setCollided(0);
+    }
+}
+
 //if on ground, movement based on floor angle
 void PlayerController::GroundNormalCalculations() {
     if (player->getCollided() > 0 && inAirTime <=0.0f) {
@@ -519,7 +533,7 @@ void PlayerController::HandleJumping() {
         else {
             player->SetAnimationState(AnimationState::JUMPING_STANDING);
         }
-        
+
     }
 };
 
@@ -534,9 +548,9 @@ void PlayerController::HandleHurtEffects() {
         }
 
         float lowHealthRatio = 1.0f - (health->GetCurrentHealth() / (health->GetMaxHealth() * 0.5f));
-        float pitch = 1.0f + (lowHealthRatio * 1.0f); 
+        float pitch = 1.0f + (lowHealthRatio * 1.0f);
 
-        audioEngine.SetChannelPitch(heartbeatChannel, pitch); 
+        audioEngine.SetChannelPitch(heartbeatChannel, pitch);
     }
     else {
         if (heartbeatChannel != -1) {

@@ -64,6 +64,7 @@ namespace NCL {
             }
 
             static void Start();
+            void StopServer();
 
 
             /**
@@ -157,6 +158,10 @@ namespace NCL {
                 return spEnd;
             }
 
+			void setSPEnd(bool b) {
+				spEnd = b;
+			}
+
             void SetGameMode(GameMode gm) { gameMode = gm; }
 
             bool isPlayerUpdatePaused = false;
@@ -165,6 +170,8 @@ namespace NCL {
             SPGameController* GetSPMode() { return spGameController; }
 
             void SetFreeCam(bool b) { freeCam = b; }
+
+            bool ShowingProfiler() { return showProfiling; }
 
         protected:
             void InitialiseAssets();
@@ -256,6 +263,7 @@ namespace NCL {
             GameMode gameMode;
 
             bool spEnd = false;
+			int numDeaths;
         };
     }
 }

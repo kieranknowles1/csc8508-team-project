@@ -48,6 +48,7 @@ namespace NCL::UnixCode {
             case DeckR5: return SDL_CONTROLLER_BUTTON_PADDLE2;
             case DeckL4: return SDL_CONTROLLER_BUTTON_PADDLE3;
             case DeckL5: return SDL_CONTROLLER_BUTTON_PADDLE4;
+            case TrackpadClick: return SDL_CONTROLLER_BUTTON_TOUCHPAD;
             default: assert(false);
         }
     }
@@ -73,6 +74,11 @@ namespace NCL::UnixCode {
 
     float SDLJoystick::internalAnalogueValue(Analogue analogue)
     {
+        // TODO: Support trackpad
+        if (analogue == Analogue::TrackpadX || analogue == Analogue::TrackpadY) {
+            return 0.0f;
+        }
+
         auto sdl = toSdlAxis(analogue);
         int raw = SDL_GameControllerGetAxis(stick, sdl);
         if (std::abs(raw) < deadzone) return 0;

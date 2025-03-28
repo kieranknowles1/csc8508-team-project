@@ -50,7 +50,7 @@ SPGameController::SPGameController(PlayerObject* p, TutorialGame* g, GameTechRen
 void SPGameController::InitLevel(int curLevel) {
     ClearAIs();
 
-    for (int i = 0; (i < std::min(5 + curLevel, 100)); i++) {
+    for (int i = 0; (i < std::min(3 * curLevel, 100)); i++) {
         AddWandererToWorld(bottom, Side::BOTTOM);
         AddWandererToWorld(top, Side::TOP);
         AddWandererToWorld(front, Side::FRONT);
@@ -83,10 +83,10 @@ void SPGameController::Update(float dt) {
         multTimer = 0;
     }
 
-    int totalWanderers = std::min(5 + level, 100) * 6;
+    int totalWanderers = std::min(3 * level, 100) * 6;
 
     // 0.33 ~ 2 walls worth
-    if (defeated > std::floor(totalWanderers * 0.33f)) {
+    if (defeated > std::floor(totalWanderers * (0.33f / 2.0f))) {
         level++;
         defeated = 0;
         InitLevel(level);
@@ -105,6 +105,8 @@ void SPGameController::Update(float dt) {
 
     out = "Level: " + std::to_string(level);
     Debug::Print(out, Vector2(0.05f, 0.15f));
+
+
 
     if (navMeshDebug) VisualiseNavMesh();
 }
