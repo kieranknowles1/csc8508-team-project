@@ -90,23 +90,21 @@ bool locked = true;
 #ifdef _WIN32
 #include <windows.h>
 #include <psapi.h>
+#endif
 
-size_t WindowsAllocatedMemory() {
+// Get total memory usage in bytes
+// Returns 0 if unknown
+size_t GetAllocatedMemory() {
+#ifdef _WIN32
     PROCESS_MEMORY_COUNTERS info;
     if (GetProcessMemoryInfo(GetCurrentProcess(), &info, sizeof(info))) {
         return info.WorkingSetSize; 
     }
     return 0;
-}
 #endif
+}
 
 int main(int argc, char** argv) {
-    std::function<size_t(void)> GetAllocatedMemory;
-
-#ifdef _WIN32
-    GetAllocatedMemory = &WindowsAllocatedMemory;
-#endif
-
     auto config = Config("user-config.jsonc", Assets::DEFAULTCONFIG);
     bool quickStart = config.get<bool>("quickStart");
 
@@ -131,7 +129,7 @@ int main(int argc, char** argv) {
     
     int fps = 0;
     int frames = 0;
-    int megabytes = 0;
+    size_t megabytes = 0;
 
     float elapsed = 0;
     float last = 0;
@@ -151,18 +149,15 @@ int main(int argc, char** argv) {
             fps = frames * 2;
             frames = 0;
 
-            // Memory Usage.
-            if (GetAllocatedMemory != nullptr) {
-                size_t allocatedMemory = GetAllocatedMemory();
-                megabytes = (int)allocatedMemory / (1024 * 1024);
-            }
+            megabytes = GetAllocatedMemory() / (1024 * 1024);
 
             last += 0.5;
         }
 
         if (game->ShowingProfiler()) {
             Debug::Print("FPS: " + std::to_string(fps), { 1.875, 0.05 }, { 1, 1, 1, 1 }, 0.5f);
-            Debug::Print("RAM: " + std::to_string(megabytes) + "MB", { 1.675, 0.05 }, { 1, 1, 1, 1 }, 0.5f);
+            std::string ramUse = megabytes > 0 ? std::to_string(megabytes) : "unknown ";
+            Debug::Print("RAM: " + ramUse + "MB", { 1.675, 0.05 }, { 1, 1, 1, 1 }, 0.5f);
         }
 
         controller->Update(dt);
